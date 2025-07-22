@@ -24,7 +24,7 @@ const AppSidebar = () => {
   const navigationItems = [
     { title: "Dashboard", url: "/dashboard", icon: null },
     { title: "Mis Oportunidades", url: "/dashboard/opportunities", icon: null },
-    { title: "Buscar Talento", url: "/dashboard/talent", icon: null },
+    { title: "Explorar Talento", url: "/dashboard/talent", icon: null },
     { title: "Marketplace de Servicios", url: "/dashboard/services", icon: null },
   ];
 
