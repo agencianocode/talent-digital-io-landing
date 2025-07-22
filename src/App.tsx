@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -36,50 +38,64 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/user-selector" element={<UserSelector />} />
-          <Route path="/company-search" element={<CompanySearch />} />
-          <Route path="/company-profile" element={<CompanyProfile />} />
-          <Route path="/personal-profile" element={<PersonalProfile />} />
-          <Route path="/company-onboarding" element={<CompanyOnboarding />} />
-          <Route path="/user-profile" element={<UserProfile />} />
-          <Route path="/welcome" element={<Welcome />} />
-          <Route path="/business-dashboard" element={<BusinessDashboard />} />
-          <Route path="/job-categories" element={<JobCategories />} />
-          <Route path="/talent-register" element={<TalentRegister />} />
-          <Route path="/talent-dashboard" element={<TalentDashboard />} />
-          
-          {/* Dashboard Routes with Layout */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardHome />} />
-            <Route path="opportunities" element={<OpportunitiesPage />} />
-            <Route path="opportunities/new" element={<NewOpportunity />} />
-            <Route path="opportunities/:id" element={<OpportunityDetail />} />
-            <Route path="talent" element={<TalentSearchPage />} />
-            <Route path="services" element={<ServicesPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-          </Route>
-          
-          {/* Talent Dashboard Routes with Layout */}
-          <Route path="/talent-dashboard" element={<TalentDashboardLayout />}>
-            <Route index element={<TalentDashboardHome />} />
-            <Route path="opportunities" element={<TalentOpportunities />} />
-            <Route path="explore" element={<TalentExplore />} />
-            <Route path="marketplace" element={<TalentMarketplace />} />
-          </Route>
-          
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/user-selector" element={<UserSelector />} />
+            <Route path="/job-categories" element={<JobCategories />} />
+            
+            {/* Business Flow */}
+            <Route path="/company-search" element={<CompanySearch />} />
+            <Route path="/company-profile" element={<CompanyProfile />} />
+            <Route path="/personal-profile" element={<PersonalProfile />} />
+            <Route path="/company-onboarding" element={<CompanyOnboarding />} />
+            <Route path="/user-profile" element={<UserProfile />} />
+            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/business-dashboard" element={<BusinessDashboard />} />
+            
+            {/* Talent Flow */}
+            <Route path="/talent-register" element={<TalentRegister />} />
+            <Route path="/talent-dashboard" element={<TalentDashboard />} />
+            
+            {/* Protected Business Dashboard Routes */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute requiredUserType="business">
+                <DashboardLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<DashboardHome />} />
+              <Route path="opportunities" element={<OpportunitiesPage />} />
+              <Route path="opportunities/new" element={<NewOpportunity />} />
+              <Route path="opportunities/:id" element={<OpportunityDetail />} />
+              <Route path="talent" element={<TalentSearchPage />} />
+              <Route path="services" element={<ServicesPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
+            
+            {/* Protected Talent Dashboard Routes */}
+            <Route path="/talent-dashboard" element={
+              <ProtectedRoute requiredUserType="talent">
+                <TalentDashboardLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<TalentDashboardHome />} />
+              <Route path="opportunities" element={<TalentOpportunities />} />
+              <Route path="explore" element={<TalentExplore />} />
+              <Route path="marketplace" element={<TalentMarketplace />} />
+            </Route>
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

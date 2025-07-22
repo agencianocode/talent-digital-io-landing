@@ -1,19 +1,21 @@
-const JobCategories = () => {
-  const jobCategories = {
-    "Ventas": ["Closer de ventas", "SDR / Vendedor remoto", "Appointment Setter", "Triage", "Director comercial"],
-    "Marketing": ["Media Buyer", "Marketing Expert", "Content Specialist", "Editor de video"], 
-    "Operaciones": ["Asistente Operativo", "Asistente Personal Virtual", "Project Manager", "Experto en Automatizaciones"],
-    "Fulfillment": ["CSM", "Atención al cliente"]
-  };
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
-  // Featured categories as shown in wireframe
-  const featuredCategories = [
-    "Closer de ventas",
-    "Appointment Setter", 
-    "Closer de ventas",
-    "Closer de ventas",
-    "Closer de ventas"
-  ];
+const JobCategories = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const handleCategorySelect = (category: string) => {
+    // Mock login for talent user
+    login({
+      id: '1',
+      name: 'Talent User',
+      email: 'talent@example.com',
+      type: 'talent',
+      role: category
+    });
+    navigate('/talent-dashboard');
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -24,8 +26,10 @@ const JobCategories = () => {
         
         {/* Featured Categories Grid */}
         <div className="grid grid-cols-2 gap-6 mb-8">
-          {/* Top row - 2 cards */}
-          <div className="bg-secondary p-12 rounded-lg cursor-pointer hover:bg-card-hover transition-colors">
+          <div 
+            className="bg-secondary p-12 rounded-lg cursor-pointer hover:bg-card-hover transition-colors hover-scale animate-fade-in"
+            onClick={() => handleCategorySelect('Closer de ventas')}
+          >
             <div className="text-center">
               <h2 className="text-xl font-semibold text-foreground">
                 Closer de ventas
@@ -33,7 +37,10 @@ const JobCategories = () => {
             </div>
           </div>
 
-          <div className="bg-secondary p-12 rounded-lg cursor-pointer hover:bg-card-hover transition-colors">
+          <div 
+            className="bg-secondary p-12 rounded-lg cursor-pointer hover:bg-card-hover transition-colors hover-scale animate-fade-in"
+            onClick={() => handleCategorySelect('Appointment Setter')}
+          >
             <div className="text-center">
               <h2 className="text-xl font-semibold text-foreground">
                 Appointment Setter
@@ -42,15 +49,15 @@ const JobCategories = () => {
           </div>
         </div>
 
-        {/* Bottom row - 3 cards */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
             <div 
               key={i}
-              className="bg-secondary p-12 rounded-lg cursor-pointer hover:bg-card-hover transition-colors"
+              className="bg-secondary p-8 sm:p-12 rounded-lg cursor-pointer hover:bg-card-hover transition-colors hover-scale animate-fade-in"
+              onClick={() => handleCategorySelect('Closer de ventas')}
             >
               <div className="text-center">
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="text-lg sm:text-xl font-semibold text-foreground">
                   Closer de ventas
                 </h2>
               </div>

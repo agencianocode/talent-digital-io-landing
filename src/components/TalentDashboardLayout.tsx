@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { NavLink, useLocation, Outlet } from "react-router-dom";
-import { LogOut, User, Settings } from "lucide-react";
+import { User, Settings, Menu } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,11 +11,15 @@ import {
   SidebarMenuButton,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import LogoutButton from "./LogoutButton";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TalentAppSidebar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
-  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const { user } = useAuth();
 
   const navigationItems = [
     { title: "Dashboard", url: "/talent-dashboard", icon: null },
@@ -31,7 +36,7 @@ const TalentAppSidebar = () => {
         {/* Header */}
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h1 className="text-lg font-bold text-foreground">TalentoDigital.io</h1>
-          <LogOut className="h-5 w-5 text-muted-foreground cursor-pointer hover:text-foreground" />
+          <LogoutButton />
         </div>
 
         {/* Navigation */}
@@ -70,7 +75,7 @@ const TalentAppSidebar = () => {
             </div>
             <div className="flex-1">
               <div className="text-sm font-medium text-foreground">
-                {userData.name || 'Usuario Talento'}
+                {user?.name || 'Usuario Talento'}
               </div>
             </div>
           </div>
@@ -86,11 +91,33 @@ const TalentAppSidebar = () => {
 };
 
 const TalentDashboardLayout = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <TalentAppSidebar />
-        <main className="flex-1">
+        {/* Mobile Header */}
+        <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border p-4 flex items-center justify-between">
+          <h1 className="text-lg font-bold text-foreground">TalentoDigital.io</h1>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0">
+              <TalentAppSidebar />
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <TalentAppSidebar />
+        </div>
+        
+        {/* Main Content */}
+        <main className="flex-1 md:ml-0 pt-16 md:pt-0">
           <Outlet />
         </main>
       </div>
