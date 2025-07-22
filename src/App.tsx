@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -39,6 +40,11 @@ import TalentMarketplace from "./pages/TalentMarketplace";
 import TalentProfilePage from "./pages/TalentProfilePage";
 import NotFound from "./pages/NotFound";
 import MessagesPage from "./pages/MessagesPage";
+import SettingsLayout from "./components/SettingsLayout";
+import CompanySettings from "./pages/settings/CompanySettings";
+import UserManagement from "./pages/settings/UserManagement";
+import ProfileSettings from "./pages/settings/ProfileSettings";
+import TalentProfileSettings from "./pages/settings/TalentProfileSettings";
 
 const queryClient = new QueryClient();
 
@@ -97,6 +103,18 @@ const App = () => (
                     <Route path="opportunities" element={<TalentOpportunities />} />
                     <Route path="explore" element={<TalentExplore />} />
                     <Route path="marketplace" element={<TalentMarketplace />} />
+                  </Route>
+                  
+                  {/* Settings Routes */}
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <SettingsLayout />
+                    </ProtectedRoute>
+                  }>
+                    <Route path="company" element={<CompanySettings />} />
+                    <Route path="users" element={<UserManagement />} />
+                    <Route path="profile" element={<ProfileSettings />} />
+                    <Route path="talent-profile" element={<TalentProfileSettings />} />
                   </Route>
                   
                   {/* Public Talent Routes */}
