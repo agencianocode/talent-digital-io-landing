@@ -30,6 +30,9 @@ import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { OpportunitiesProvider } from '@/contexts/OpportunitiesContext';
 import { SupabaseAuthProvider } from '@/contexts/SupabaseAuthContext';
 import Auth from './pages/Auth';
+import LandingPage from './pages/LandingPage';
+import RegisterBusiness from './pages/RegisterBusiness';
+import RegisterTalent from './pages/RegisterTalent';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,10 +60,12 @@ function App() {
                     <div className="min-h-screen bg-background text-foreground">
                       <Routes>
                         {/* Auth Routes */}
-                        <Route path="/" element={<Login />} />
+                        <Route path="/" element={<LandingPage />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
+                        <Route path="/register-business" element={<RegisterBusiness />} />
+                        <Route path="/register-talent" element={<RegisterTalent />} />
                         
                         {/* Onboarding Routes */}
                         <Route path="/company-search" element={<CompanySearch />} />
