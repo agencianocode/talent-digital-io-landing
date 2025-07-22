@@ -21,6 +21,8 @@ import DashboardHome from "./pages/DashboardHome";
 import OpportunitiesPage from "./pages/OpportunitiesPage";
 import TalentSearchPage from "./pages/TalentSearchPage";
 import ServicesPage from "./pages/ServicesPage";
+import OpportunityDetail from "./pages/OpportunityDetail";
+import NewOpportunity from "./pages/NewOpportunity";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +52,8 @@ const App = () => (
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="opportunities" element={<OpportunitiesPage />} />
+            <Route path="opportunities/new" element={<NewOpportunity />} />
+            <Route path="opportunities/:id" element={<OpportunityDetail />} />
             <Route path="talent" element={<TalentSearchPage />} />
             <Route path="services" element={<ServicesPage />} />
           </Route>
