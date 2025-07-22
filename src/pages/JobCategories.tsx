@@ -1,23 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContextEnhanced";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 
 const JobCategories = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { isAuthenticated } = useSupabaseAuth();
 
   const handleCategorySelect = (category: string) => {
-    // Mock login for talent user
-    login({
-      id: '1',
-      name: 'Talent User',
-      email: 'talent@example.com',
-      type: 'talent',
-      profile: {
-        role: category
-      }
-    });
-    navigate('/talent-dashboard');
+    // Redirect to talent registration with category preference
+    navigate('/register-talent', { state: { category } });
   };
 
   return (

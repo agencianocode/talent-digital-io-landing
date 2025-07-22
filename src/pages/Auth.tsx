@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,15 @@ import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { signIn, signUp, isLoading } = useSupabaseAuth();
+  const { signIn, signUp, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && userRole) {
+      const redirectPath = userRole === 'business' ? '/dashboard' : '/talent-dashboard';
+      navigate(redirectPath);
+    }
+  }, [isAuthenticated, userRole, navigate]);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -51,9 +59,8 @@ const Auth = () => {
       setError(error.message === 'Invalid login credentials' 
         ? 'Credenciales inválidas. Verifica tu email y contraseña.' 
         : 'Error al iniciar sesión. Intenta nuevamente.');
-    } else {
-      navigate('/dashboard');
     }
+    // La redirección se maneja automáticamente en useEffect
     
     setIsSubmitting(false);
   };

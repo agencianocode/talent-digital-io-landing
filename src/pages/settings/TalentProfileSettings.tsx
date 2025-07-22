@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContextEnhanced';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 import { Plus, X, Briefcase, GraduationCap, Award } from 'lucide-react';
 
@@ -43,7 +43,7 @@ const talentProfileSchema = z.object({
 type TalentProfileFormData = z.infer<typeof talentProfileSchema>;
 
 const TalentProfileSettings = () => {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [newSkill, setNewSkill] = useState('');
 

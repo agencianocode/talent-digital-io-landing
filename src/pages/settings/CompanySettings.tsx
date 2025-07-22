@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useAuth } from '@/contexts/AuthContextEnhanced';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
 
@@ -23,17 +23,17 @@ const companySchema = z.object({
 type CompanyFormData = z.infer<typeof companySchema>;
 
 const CompanySettings = () => {
-  const { user, updateCompany } = useAuth();
+  const { company, updateCompany } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
     defaultValues: {
-      name: user?.company?.name || '',
-      description: user?.company?.description || '',
-      website: user?.company?.website || '',
-      location: user?.company?.location || '',
-      logo: user?.company?.logo || '',
+      name: company?.name || '',
+      description: company?.description || '',
+      website: company?.website || '',
+      location: company?.location || '',
+      logo: company?.logo_url || '',
     },
   });
 
@@ -76,7 +76,7 @@ const CompanySettings = () => {
 
   const handleLogoUpload = () => {
     // Simulate file upload
-    const fakeUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${user?.company?.name || 'Company'}`;
+    const fakeUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${company?.name || 'Company'}`;
     form.setValue('logo', fakeUrl);
     toast.success('Logo actualizado (simulado)');
   };

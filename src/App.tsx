@@ -33,6 +33,7 @@ import Auth from './pages/Auth';
 import LandingPage from './pages/LandingPage';
 import RegisterBusiness from './pages/RegisterBusiness';
 import RegisterTalent from './pages/RegisterTalent';
+import JobCategories from './pages/JobCategories';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +67,7 @@ function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/register-business" element={<RegisterBusiness />} />
                         <Route path="/register-talent" element={<RegisterTalent />} />
+                        <Route path="/job-categories" element={<JobCategories />} />
                         
                         {/* Onboarding Routes */}
                         <Route path="/company-search" element={<CompanySearch />} />
@@ -80,6 +82,7 @@ function App() {
                         
                         {/* Dashboard Routes */}
                         <Route path="/dashboard" element={<BusinessDashboard />} />
+                        <Route path="/talent-dashboard" element={<TalentDashboard />} />
                         <Route path="/dashboard/home" element={<DashboardHome />} />
                         <Route path="/talent/home" element={<TalentDashboardHome />} />
                         
