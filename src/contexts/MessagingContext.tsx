@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useAuth } from './AuthContextEnhanced';
+import { useSupabaseAuth } from './SupabaseAuthContext';
 import { useNotifications } from './NotificationsContext';
 
 interface Message {
@@ -46,7 +46,7 @@ const STORAGE_KEY = 'talento_digital_conversations';
 const MESSAGES_STORAGE_KEY = 'talento_digital_messages';
 
 export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useSupabaseAuth();
   const { addNotification } = useNotifications();
   
   const [state, setState] = useState<MessagingState>({
