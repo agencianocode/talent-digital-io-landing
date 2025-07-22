@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContextEnhanced";
 import { OpportunitiesProvider } from "@/contexts/OpportunitiesContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { MessagingProvider } from "@/contexts/MessagingContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -37,6 +38,7 @@ import TalentExplore from "./pages/TalentExplore";
 import TalentMarketplace from "./pages/TalentMarketplace";
 import TalentProfilePage from "./pages/TalentProfilePage";
 import NotFound from "./pages/NotFound";
+import MessagesPage from "./pages/MessagesPage";
 
 const queryClient = new QueryClient();
 
@@ -45,73 +47,87 @@ const App = () => (
     <AuthProvider>
       <OpportunitiesProvider>
         <NotificationsProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/user-selector" element={<UserSelector />} />
-            <Route path="/job-categories" element={<JobCategories />} />
-            
-            {/* Business Flow */}
-            <Route path="/company-search" element={<CompanySearch />} />
-            <Route path="/company-profile" element={<CompanyProfile />} />
-            <Route path="/personal-profile" element={<PersonalProfile />} />
-            <Route path="/company-onboarding" element={<CompanyOnboarding />} />
-            <Route path="/user-profile" element={<UserProfile />} />
-            <Route path="/welcome" element={<Welcome />} />
-            <Route path="/business-dashboard" element={<BusinessDashboard />} />
-            
-            {/* Talent Flow */}
-            <Route path="/talent-register" element={<TalentRegister />} />
-            <Route path="/talent-dashboard" element={<TalentDashboard />} />
-            
-            {/* Protected Business Dashboard Routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute requiredUserType="business">
-                <DashboardLayout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<DashboardHome />} />
-              <Route path="opportunities" element={<OpportunitiesPage />} />
-              <Route path="opportunities/new" element={<NewOpportunity />} />
-              <Route path="opportunities/:id" element={<OpportunityDetail />} />
-              <Route path="talent" element={<TalentSearchPage />} />
-              <Route path="services" element={<ServicesPage />} />
-              <Route path="profile" element={<ProfilePage />} />
-            </Route>
-            
-            {/* Protected Talent Dashboard Routes */}
-            <Route path="/talent-dashboard" element={
-              <ProtectedRoute requiredUserType="talent">
-                <TalentDashboardLayout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<TalentDashboardHome />} />
-              <Route path="opportunities" element={<TalentOpportunities />} />
-              <Route path="explore" element={<TalentExplore />} />
-              <Route path="marketplace" element={<TalentMarketplace />} />
-            </Route>
-            
-            {/* Public Talent Routes */}
-            <Route path="/talent/marketplace" element={<TalentMarketplace />} />
-            
-            {/* Talent Profile Routes */}
-            <Route path="/talent-profile/:id" element={<TalentProfilePage />} />
-            <Route path="/opportunities/:id" element={<OpportunityDetail />} />
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </NotificationsProvider>
-    </OpportunitiesProvider>
-  </AuthProvider>
-</QueryClientProvider>
+          <MessagingProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/user-selector" element={<UserSelector />} />
+                  <Route path="/job-categories" element={<JobCategories />} />
+                  
+                  {/* Business Flow */}
+                  <Route path="/company-search" element={<CompanySearch />} />
+                  <Route path="/company-profile" element={<CompanyProfile />} />
+                  <Route path="/personal-profile" element={<PersonalProfile />} />
+                  <Route path="/company-onboarding" element={<CompanyOnboarding />} />
+                  <Route path="/user-profile" element={<UserProfile />} />
+                  <Route path="/welcome" element={<Welcome />} />
+                  <Route path="/business-dashboard" element={<BusinessDashboard />} />
+                  
+                  {/* Talent Flow */}
+                  <Route path="/talent-register" element={<TalentRegister />} />
+                  <Route path="/talent-dashboard" element={<TalentDashboard />} />
+                  
+                  {/* Protected Business Dashboard Routes */}
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute requiredUserType="business">
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<DashboardHome />} />
+                    <Route path="opportunities" element={<OpportunitiesPage />} />
+                    <Route path="opportunities/new" element={<NewOpportunity />} />
+                    <Route path="opportunities/:id" element={<OpportunityDetail />} />
+                    <Route path="talent" element={<TalentSearchPage />} />
+                    <Route path="services" element={<ServicesPage />} />
+                    <Route path="profile" element={<ProfilePage />} />
+                  </Route>
+                  
+                  {/* Protected Talent Dashboard Routes */}
+                  <Route path="/talent-dashboard" element={
+                    <ProtectedRoute requiredUserType="talent">
+                      <TalentDashboardLayout />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<TalentDashboardHome />} />
+                    <Route path="opportunities" element={<TalentOpportunities />} />
+                    <Route path="explore" element={<TalentExplore />} />
+                    <Route path="marketplace" element={<TalentMarketplace />} />
+                  </Route>
+                  
+                  {/* Public Talent Routes */}
+                  <Route path="/talent/marketplace" element={<TalentMarketplace />} />
+                  
+                  {/* Talent Profile Routes */}
+                  <Route path="/talent-profile/:id" element={<TalentProfilePage />} />
+                  <Route path="/opportunities/:id" element={<OpportunityDetail />} />
+                  
+                  {/* Messages Route */}
+                  <Route path="/messages" element={
+                    <ProtectedRoute>
+                      <MessagesPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/messages/:conversationId" element={
+                    <ProtectedRoute>
+                      <MessagesPage />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Catch-all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </MessagingProvider>
+        </NotificationsProvider>
+      </OpportunitiesProvider>
+    </AuthProvider>
+  </QueryClientProvider>
 );
 
 export default App;

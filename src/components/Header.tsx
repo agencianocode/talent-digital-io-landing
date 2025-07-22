@@ -1,8 +1,12 @@
+
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContextEnhanced";
+import NotificationCenter from "./NotificationCenter";
 
 const Header = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   return (
     <header className="bg-card shadow-sm border-b border-border">
@@ -26,21 +30,27 @@ const Header = () => {
             </a>
           </nav>
 
-          {/* Auth Buttons */}
+          {/* Auth Buttons / User Actions */}
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/login')}
-              className="font-medium"
-            >
-              Iniciar Sesión
-            </Button>
-            <Button 
-              onClick={() => navigate('/register')}
-              className="font-medium"
-            >
-              Comenzar Gratis
-            </Button>
+            {isAuthenticated ? (
+              <NotificationCenter />
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/login')}
+                  className="font-medium"
+                >
+                  Iniciar Sesión
+                </Button>
+                <Button 
+                  onClick={() => navigate('/register')}
+                  className="font-medium"
+                >
+                  Comenzar Gratis
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

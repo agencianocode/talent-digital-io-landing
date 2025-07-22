@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation, Outlet } from "react-router-dom";
-import { User, Settings, Menu, X } from "lucide-react";
+import { User, Settings, Menu, X, MessageCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +29,7 @@ const AppSidebar = () => {
     { title: "Mis Oportunidades", url: "/dashboard/opportunities", icon: null },
     { title: "Explorar Talento", url: "/dashboard/talent", icon: null },
     { title: "Marketplace de Servicios", url: "/dashboard/services", icon: null },
+    { title: "Mensajes", url: "/messages", icon: MessageCircle },
   ];
 
   const isActive = (path: string) => currentPath === path || currentPath.startsWith(path + '/');
