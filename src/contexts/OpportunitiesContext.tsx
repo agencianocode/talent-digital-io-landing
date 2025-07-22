@@ -11,6 +11,8 @@ interface Opportunity {
   location: string;
   type: 'remote' | 'hybrid' | 'onsite';
   category: string;
+  subcategory?: string;
+  experienceLevel?: 'junior' | 'semi-senior' | 'senior';
   tags: string[];
   salary?: {
     min: number;
@@ -76,41 +78,132 @@ const STORAGE_KEY = 'talento_digital_opportunities';
 const APPLICATIONS_STORAGE_KEY = 'talento_digital_applications';
 const SAVED_STORAGE_KEY = 'talento_digital_saved';
 
-// Mock data
+// Enhanced mock data with more fields
 const mockOpportunities: Opportunity[] = [
   {
     id: 'opp_1',
     title: 'Closer de ventas B2B',
     company: 'SalesXcelerator',
     companyId: 'comp_1',
-    description: 'Buscamos un closer de ventas experimentado para unirse a nuestro equipo de alto rendimiento.',
-    requirements: ['Experiencia en ventas B2B', 'Excelentes habilidades de comunicación', 'Orientado a resultados'],
+    description: 'Buscamos un closer de ventas experimentado para unirse a nuestro equipo de alto rendimiento. Trabajarás con leads cualificados y tendrás la oportunidad de generar ingresos significativos.',
+    requirements: [
+      'Experiencia mínima de 2 años en ventas B2B',
+      'Excelentes habilidades de comunicación',
+      'Orientado a resultados y metas',
+      'Experiencia con CRM (HubSpot, Salesforce)',
+      'Capacidad de trabajar bajo presión'
+    ],
     location: 'Madrid, España',
     type: 'remote',
-    category: 'Ventas',
-    tags: ['Ventas', 'Closer de ventas', 'Vendedor remoto', 'B2B'],
-    salary: { min: 2000, max: 4000, currency: 'EUR' },
+    category: 'ventas',
+    subcategory: 'closer',
+    experienceLevel: 'semi-senior',
+    tags: ['Ventas', 'Closer de ventas', 'Vendedor remoto', 'B2B', 'CRM', 'HubSpot'],
+    salary: { min: 35, max: 60, currency: 'EUR' },
     status: 'active',
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z',
-    applicantsCount: 5
+    applicantsCount: 8
   },
   {
     id: 'opp_2',
     title: 'Media Buyer para Agencia de Diseño',
     company: 'Creative Agency',
     companyId: 'comp_2',
-    description: 'Necesitamos un media buyer experto en Meta Ads y Google Ads para nuestros clientes.',
-    requirements: ['Experiencia con Meta Ads', 'Conocimiento de Google Ads', 'Analítico'],
+    description: 'Necesitamos un media buyer experto en Meta Ads y Google Ads para nuestros clientes. Manejarás presupuestos significativos y optimizarás campañas para maximizar el ROI.',
+    requirements: [
+      'Experiencia de 3+ años con Meta Ads',
+      'Conocimiento avanzado de Google Ads',
+      'Experiencia con herramientas de análisis',
+      'Capacidad analítica y de optimización',
+      'Portfolio demostrable de campañas exitosas'
+    ],
     location: 'Barcelona, España',
     type: 'hybrid',
-    category: 'Marketing',
-    tags: ['Ads', 'Media Buyer', 'Marketing', 'Meta Ads', 'Google Ads'],
-    salary: { min: 1800, max: 3500, currency: 'EUR' },
+    category: 'marketing',
+    subcategory: 'media-buyer',
+    experienceLevel: 'senior',
+    tags: ['Ads', 'Media Buyer', 'Marketing', 'Meta Ads', 'Google Ads', 'PPC', 'ROI'],
+    salary: { min: 40, max: 65, currency: 'EUR' },
     status: 'active',
     createdAt: '2024-01-10T09:30:00Z',
     updatedAt: '2024-01-10T09:30:00Z',
-    applicantsCount: 3
+    applicantsCount: 12
+  },
+  {
+    id: 'opp_3',
+    title: 'SDR - Sales Development Representative',
+    company: 'TechStartup Pro',
+    companyId: 'comp_3',
+    description: 'Únete a nuestro equipo como SDR y ayúdanos a generar leads cualificados para nuestro equipo de ventas. Posición ideal para alguien que quiera crecer en ventas.',
+    requirements: [
+      'Experiencia de 1+ año en prospección',
+      'Conocimiento de LinkedIn Sales Navigator',
+      'Excelentes habilidades de comunicación escrita',
+      'Proactividad y perseverancia',
+      'Nivel de inglés conversacional'
+    ],
+    location: 'Valencia, España',
+    type: 'remote',
+    category: 'ventas',
+    subcategory: 'sdr',
+    experienceLevel: 'junior',
+    tags: ['SDR', 'Prospección', 'LinkedIn', 'Lead Generation', 'Sales Navigator'],
+    salary: { min: 25, max: 35, currency: 'EUR' },
+    status: 'active',
+    createdAt: '2024-01-08T14:20:00Z',
+    updatedAt: '2024-01-08T14:20:00Z',
+    applicantsCount: 5
+  },
+  {
+    id: 'opp_4',
+    title: 'Content Creator & Social Media Manager',
+    company: 'Influencer Marketing Hub',
+    companyId: 'comp_4',
+    description: 'Buscamos un creador de contenido que maneje nuestras redes sociales y cree contenido viral para nuestros clientes en el sector del marketing de influencers.',
+    requirements: [
+      'Portfolio de contenido en redes sociales',
+      'Experiencia con herramientas de diseño (Canva, Photoshop)',
+      'Conocimiento de tendencias en redes sociales',
+      'Capacidad de storytelling',
+      'Experiencia con scheduling tools'
+    ],
+    location: 'Sevilla, España',
+    type: 'hybrid',
+    category: 'marketing',
+    subcategory: 'content-creator',
+    experienceLevel: 'semi-senior',
+    tags: ['Content Creator', 'Social Media', 'Instagram', 'TikTok', 'Diseño', 'Storytelling'],
+    salary: { min: 30, max: 45, currency: 'EUR' },
+    status: 'active',
+    createdAt: '2024-01-05T11:15:00Z',
+    updatedAt: '2024-01-05T11:15:00Z',
+    applicantsCount: 15
+  },
+  {
+    id: 'opp_5',
+    title: 'Operations Manager - E-commerce',
+    company: 'EcommercePro Solutions',
+    companyId: 'comp_5',
+    description: 'Gestiona las operaciones diarias de nuestro e-commerce, coordina con proveedores, maneja inventario y optimiza procesos para maximizar la eficiencia.',
+    requirements: [
+      'Experiencia de 4+ años en operaciones',
+      'Conocimiento de e-commerce platforms',
+      'Habilidades de gestión de equipos',
+      'Experiencia con análisis de datos',
+      'Capacidad de optimización de procesos'
+    ],
+    location: 'Bilbao, España',
+    type: 'onsite',
+    category: 'operaciones',
+    subcategory: 'operations-manager',
+    experienceLevel: 'senior',
+    tags: ['Operations', 'E-commerce', 'Management', 'Inventario', 'Proveedores', 'Análisis'],
+    salary: { min: 45, max: 70, currency: 'EUR' },
+    status: 'active',
+    createdAt: '2024-01-03T16:45:00Z',
+    updatedAt: '2024-01-03T16:45:00Z',
+    applicantsCount: 7
   }
 ];
 
@@ -290,21 +383,39 @@ export const OpportunitiesProvider: React.FC<{ children: React.ReactNode }> = ({
       opp.title.toLowerCase().includes(lowerQuery) ||
       opp.company.toLowerCase().includes(lowerQuery) ||
       opp.description.toLowerCase().includes(lowerQuery) ||
-      opp.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
+      opp.location.toLowerCase().includes(lowerQuery) ||
+      opp.category.toLowerCase().includes(lowerQuery) ||
+      opp.subcategory?.toLowerCase().includes(lowerQuery) ||
+      opp.tags.some(tag => tag.toLowerCase().includes(lowerQuery)) ||
+      opp.requirements.some(req => req.toLowerCase().includes(lowerQuery))
     );
   }, [state.opportunities]);
 
   const filterOpportunities = useCallback((filters: {
     category?: string;
+    subcategory?: string;
     location?: string;
     type?: string;
     status?: string;
+    experienceLevel?: string;
+    salaryRange?: number[];
+    workMode?: string;
   }) => {
     return state.opportunities.filter(opp => {
       if (filters.category && opp.category !== filters.category) return false;
+      if (filters.subcategory && opp.subcategory !== filters.subcategory) return false;
       if (filters.location && !opp.location.toLowerCase().includes(filters.location.toLowerCase())) return false;
       if (filters.type && opp.type !== filters.type) return false;
+      if (filters.workMode && opp.type !== filters.workMode) return false;
       if (filters.status && opp.status !== filters.status) return false;
+      if (filters.experienceLevel && opp.experienceLevel !== filters.experienceLevel) return false;
+      
+      // Salary range filter
+      if (filters.salaryRange && opp.salary) {
+        const [minSalary, maxSalary] = filters.salaryRange;
+        if (opp.salary.max < minSalary || opp.salary.min > maxSalary) return false;
+      }
+      
       return true;
     });
   }, [state.opportunities]);
