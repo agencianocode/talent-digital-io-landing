@@ -1,21 +1,30 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContextEnhanced';
+import { useSupabaseAuth, UserRole } from '@/contexts/SupabaseAuthContext';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredUserType?: 'business' | 'talent';
+  requiredUserType?: UserRole;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredUserType }) => {
-  const { isAuthenticated, userType } = useAuth();
+  const { isAuthenticated, userRole, isLoading } = useSupabaseAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
-  if (requiredUserType && userType !== requiredUserType) {
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (requiredUserType && userRole !== requiredUserType) {
     // Redirect to appropriate dashboard based on user type
-    const redirectPath = userType === 'business' ? '/dashboard' : '/talent-dashboard';
+    const redirectPath = userRole === 'business' ? '/dashboard' : '/talent-dashboard';
     return <Navigate to={redirectPath} replace />;
   }
 

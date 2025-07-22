@@ -32,6 +32,16 @@ const Login = () => {
           >
             Busco trabajo
           </Button>
+
+          <div className="pt-4 border-t border-border">
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/auth')}
+              className="w-full text-lg py-4 h-auto font-semibold"
+            >
+              Iniciar Sesión / Registrarse
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -28,7 +28,8 @@ import { ToastProvider } from '@/contexts/ToastContext';
 import { MessagingProvider } from '@/contexts/MessagingContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { OpportunitiesProvider } from '@/contexts/OpportunitiesContext';
-import { AuthProvider } from '@/contexts/AuthContextEnhanced';
+import { SupabaseAuthProvider } from '@/contexts/SupabaseAuthContext';
+import Auth from './pages/Auth';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,7 +49,7 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <AuthProvider>
+          <SupabaseAuthProvider>
             <NotificationsProvider>
               <OpportunitiesProvider>
                 <MessagingProvider>
@@ -57,6 +58,7 @@ function App() {
                       <Routes>
                         {/* Auth Routes */}
                         <Route path="/" element={<Login />} />
+                        <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         
@@ -100,7 +102,7 @@ function App() {
                 </MessagingProvider>
               </OpportunitiesProvider>
             </NotificationsProvider>
-          </AuthProvider>
+          </SupabaseAuthProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </ErrorBoundary>

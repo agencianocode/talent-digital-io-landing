@@ -12,21 +12,24 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { LogOut } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContextEnhanced';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const LogoutButton = () => {
-  const { logout } = useAuth();
+  const { signOut } = useSupabaseAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = async () => {
     setIsLoading(true);
-    // Simulate logout delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    logout();
-    navigate('/');
-    setIsLoading(false);
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
