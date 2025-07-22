@@ -12,7 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { LogOut } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContextEnhanced';
 import { useNavigate } from 'react-router-dom';
 
 const LogoutButton = () => {

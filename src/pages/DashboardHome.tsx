@@ -1,16 +1,21 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContextEnhanced";
+import { useDashboardMetrics } from "@/hooks/useCustomHooks";
 
 const DashboardHome = () => {
   const navigate = useNavigate();
-  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const { user } = useAuth();
+  const { getBusinessMetrics } = useDashboardMetrics();
+  
+  const metrics = getBusinessMetrics();
 
   return (
     <div className="p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-foreground">
-          ¡Bienvenida, Wendy!
+          ¡Bienvenida, {user?.name || 'Usuario'}!
         </h1>
         <Button 
           onClick={() => navigate('/dashboard/opportunities/new')}
@@ -21,22 +26,31 @@ const DashboardHome = () => {
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <div className="bg-secondary p-6 rounded-lg">
           <div className="text-center">
             <h3 className="font-medium text-foreground">Oportunidades Activas</h3>
+            <p className="text-2xl font-bold text-foreground mt-2">
+              {metrics?.activeOpportunities || 0}
+            </p>
           </div>
         </div>
 
         <div className="bg-secondary p-6 rounded-lg">
           <div className="text-center">
             <h3 className="font-medium text-foreground">Aplicaciones sin revisar</h3>
+            <p className="text-2xl font-bold text-foreground mt-2">
+              {metrics?.pendingApplications || 0}
+            </p>
           </div>
         </div>
 
         <div className="bg-secondary p-6 rounded-lg">
           <div className="text-center">
             <h3 className="font-medium text-foreground">Mensajes sin leer</h3>
+            <p className="text-2xl font-bold text-foreground mt-2">
+              {metrics?.unreadMessages || 0}
+            </p>
           </div>
         </div>
       </div>

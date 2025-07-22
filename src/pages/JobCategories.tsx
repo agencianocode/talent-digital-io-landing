@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextEnhanced";
 
 const JobCategories = () => {
   const navigate = useNavigate();
@@ -13,7 +13,9 @@ const JobCategories = () => {
       name: 'Talent User',
       email: 'talent@example.com',
       type: 'talent',
-      role: category
+      profile: {
+        role: category
+      }
     });
     navigate('/talent-dashboard');
   };

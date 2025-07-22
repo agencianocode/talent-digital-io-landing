@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LogoutButton from "./LogoutButton";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextEnhanced";
 
 const TalentAppSidebar = () => {
   const location = useLocation();

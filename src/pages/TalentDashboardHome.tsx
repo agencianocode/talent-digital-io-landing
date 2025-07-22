@@ -1,14 +1,19 @@
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContextEnhanced";
+import { useDashboardMetrics } from "@/hooks/useCustomHooks";
 
 const TalentDashboardHome = () => {
-  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const { user } = useAuth();
+  const { getTalentMetrics } = useDashboardMetrics();
+  
+  const metrics = getTalentMetrics();
 
   return (
     <div className="p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-foreground">
-          ¡Bienvenido, {userData.name || 'Talento'}!
+          ¡Bienvenido, {user?.name || 'Talento'}!
         </h1>
         <Button className="font-semibold">
           Explorar Oportunidades
@@ -16,25 +21,31 @@ const TalentDashboardHome = () => {
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <div className="bg-secondary p-6 rounded-lg">
           <div className="text-center">
             <h3 className="font-medium text-foreground">Aplicaciones Enviadas</h3>
-            <p className="text-2xl font-bold text-foreground mt-2">12</p>
+            <p className="text-2xl font-bold text-foreground mt-2">
+              {metrics?.appliedJobs || 0}
+            </p>
           </div>
         </div>
 
         <div className="bg-secondary p-6 rounded-lg">
           <div className="text-center">
             <h3 className="font-medium text-foreground">Entrevistas Programadas</h3>
-            <p className="text-2xl font-bold text-foreground mt-2">3</p>
+            <p className="text-2xl font-bold text-foreground mt-2">
+              {metrics?.scheduledInterviews || 0}
+            </p>
           </div>
         </div>
 
         <div className="bg-secondary p-6 rounded-lg">
           <div className="text-center">
             <h3 className="font-medium text-foreground">Mensajes sin leer</h3>
-            <p className="text-2xl font-bold text-foreground mt-2">5</p>
+            <p className="text-2xl font-bold text-foreground mt-2">
+              {metrics?.unreadMessages || 0}
+            </p>
           </div>
         </div>
       </div>
