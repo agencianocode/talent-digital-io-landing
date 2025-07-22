@@ -43,14 +43,14 @@ const talentProfileSchema = z.object({
 type TalentProfileFormData = z.infer<typeof talentProfileSchema>;
 
 const TalentProfileSettings = () => {
-  const { user, updateProfile } = useSupabaseAuth();
+  const { user, profile, updateProfile } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [newSkill, setNewSkill] = useState('');
 
   const form = useForm<TalentProfileFormData>({
     resolver: zodResolver(talentProfileSchema),
     defaultValues: {
-      title: user?.profile?.position || '',
+      title: profile?.full_name || '',
       specialty: '',
       bio: '',
       skills: ['JavaScript', 'React', 'Node.js'], // Mock data
@@ -91,8 +91,8 @@ const TalentProfileSettings = () => {
     setIsLoading(true);
     try {
       await updateProfile({
-        position: data.title,
-        // Save other profile data to context/localStorage
+        full_name: data.title,
+        // Note: Additional profile data would need separate storage in Supabase
       });
       toast.success('Perfil profesional actualizado');
     } catch (error) {
