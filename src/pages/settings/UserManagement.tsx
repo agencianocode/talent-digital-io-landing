@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,26 +84,26 @@ const UserManagement = () => {
   };
 
   const getRoleBadge = (role: string) => {
-    const variants = {
+    const variants: { [key: string]: "default" | "destructive" | "outline" | "secondary" } = {
       'Owner': 'destructive',
       'Admin': 'secondary',
       'Viewer': 'outline'
     };
-    return <Badge variant={variants[role as keyof typeof variants] || 'outline'}>{role}</Badge>;
+    return <Badge variant={variants[role] || 'outline'}>{role}</Badge>;
   };
 
   const getStatusBadge = (status: string) => {
-    const variants = {
+    const variants: { [key: string]: "default" | "destructive" | "outline" | "secondary" } = {
       'active': 'default',
       'inactive': 'secondary',
       'pending': 'outline'
     };
-    const labels = {
+    const labels: { [key: string]: string } = {
       'active': 'Activo',
       'inactive': 'Inactivo',
       'pending': 'Pendiente'
     };
-    return <Badge variant={variants[status as keyof typeof variants]}>{labels[status as keyof typeof labels]}</Badge>;
+    return <Badge variant={variants[status] || 'default'}>{labels[status] || status}</Badge>;
   };
 
   return (

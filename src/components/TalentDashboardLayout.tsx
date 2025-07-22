@@ -38,7 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { NotificationCenter } from "@/components/NotificationCenter";
+import NotificationCenter from "@/components/NotificationCenter";
 
 const TalentDashboardLayout = () => {
   const { user, logout } = useAuth();

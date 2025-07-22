@@ -41,7 +41,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { NotificationCenter } from "@/components/NotificationCenter";
+import NotificationCenter from "@/components/NotificationCenter";
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
