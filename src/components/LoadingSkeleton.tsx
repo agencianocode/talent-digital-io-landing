@@ -1,13 +1,50 @@
+
 import React from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonCard, SkeletonTable, SkeletonProfile } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 interface LoadingSkeletonProps {
-  type: 'opportunities' | 'talent';
+  type: 'opportunities' | 'talent' | 'table' | 'profile' | 'list' | 'card';
   count?: number;
 }
 
 const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ type, count = 6 }) => {
+  if (type === 'profile') {
+    return <SkeletonProfile />;
+  }
+
+  if (type === 'table') {
+    return <SkeletonTable />;
+  }
+
+  if (type === 'card') {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: count }).map((_, index) => (
+          <SkeletonCard key={index} />
+        ))}
+      </div>
+    );
+  }
+
+  if (type === 'list') {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: count }).map((_, index) => (
+          <div key={index} className="flex items-center space-x-4 p-4 border rounded-lg">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+            <Skeleton className="h-8 w-16" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Default grid layout for opportunities and talent
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {Array.from({ length: count }).map((_, index) => (
