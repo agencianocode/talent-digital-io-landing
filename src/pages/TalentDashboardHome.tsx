@@ -15,7 +15,10 @@ const TalentDashboardHome = () => {
         <h1 className="text-3xl font-bold text-foreground">
           ¡Bienvenido, {user?.name || 'Talento'}!
         </h1>
-        <Button className="font-semibold">
+        <Button 
+          className="font-semibold"
+          onClick={() => window.location.href = '/talent/marketplace'}
+        >
           Explorar Oportunidades
         </Button>
       </div>

@@ -1,50 +1,34 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MoreHorizontal } from "lucide-react";
-
-const opportunities = [
-  {
-    id: 1,
-    title: "Closer de ventas B2B",
-    status: "ACTIVA",
-    tags: ["Ventas", "Closer de ventas", "Vendedor remoto"],
-    applicants: 0,
-    description: "Buscamos un closer de ventas especializado en B2B para unirse a nuestro equipo. El candidato ideal tendrá experiencia en ventas consultivas y manejo de CRM."
-  },
-  {
-    id: 2, 
-    title: "Media Buyer para Agencia de Diseño",
-    status: "ACTIVA",
-    tags: ["Ads", "Media Buyer", "Marketing"],
-    applicants: 0,
-    description: "Agencia de diseño busca Media Buyer experimentado para manejar campañas publicitarias en Facebook, Google y otras plataformas digitales."
-  },
-  {
-    id: 3,
-    title: "Closer de ventas B2B", 
-    status: "CERRADA",
-    tags: ["Ventas", "Closer de ventas", "Vendedor remoto"],
-    applicants: 0,
-    description: "Posición cerrada - Closer de ventas B2B con experiencia en tecnología."
-  }
-];
+import { useOpportunities } from "@/contexts/OpportunitiesContext";
+import ApplicantsList from "@/components/ApplicantsList";
 
 const OpportunityDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("preview");
+  const { opportunities } = useOpportunities();
   
-  const opportunity = opportunities.find(opp => opp.id === parseInt(id || "1"));
+  const opportunity = opportunities.find(opp => opp.id === id);
 
   if (!opportunity) {
-    return <div>Oportunidad no encontrada</div>;
+    return (
+      <div className="p-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Oportunidad no encontrada</h1>
+          <Button onClick={() => navigate('/dashboard/opportunities')}>
+            Volver a oportunidades
+          </Button>
+        </div>
+      </div>
+    );
   }
 
-  const getStatusBadgeClass = (status: string) => {
-    return status === "ACTIVA" 
-      ? "bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium"
-      : "bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium";
+  const getStatusVariant = (status: string) => {
+    return status === 'active' ? 'default' : 'secondary';
   };
 
   return (
@@ -66,9 +50,10 @@ const OpportunityDetail = () => {
           <h1 className="text-2xl font-bold text-foreground">
             {opportunity.title}
           </h1>
-          <span className={getStatusBadgeClass(opportunity.status)}>
-            {opportunity.status}
-          </span>
+          <Badge variant={getStatusVariant(opportunity.status)}>
+            {opportunity.status === 'active' ? 'ACTIVA' : 
+             opportunity.status === 'paused' ? 'PAUSADA' : 'CERRADA'}
+          </Badge>
         </div>
         
         <Button variant="outline" size="icon">
@@ -97,7 +82,7 @@ const OpportunityDetail = () => {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Postulantes
+            Postulantes ({opportunity.applicantsCount})
           </button>
         </div>
       </div>
@@ -120,15 +105,56 @@ const OpportunityDetail = () => {
             ))}
           </div>
           
-          <div className="prose max-w-none">
-            <p className="text-foreground leading-relaxed">
+          <div className="prose max-w-none mb-6">
+            <h3 className="text-lg font-semibold mb-3">Descripción</h3>
+            <p className="text-foreground leading-relaxed mb-4">
               {opportunity.description}
             </p>
+
+            {opportunity.requirements && opportunity.requirements.length > 0 && (
+              <div className="mb-4">
+                <h4 className="font-semibold mb-2">Requisitos:</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  {opportunity.requirements.map((req, index) => (
+                    <li key={index} className="text-foreground">{req}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div>
+                <h4 className="font-semibold mb-2">Ubicación:</h4>
+                <p className="text-foreground">{opportunity.location}</p>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Modalidad:</h4>
+                <p className="text-foreground">
+                  {opportunity.type === 'remote' ? 'Remoto' : 
+                   opportunity.type === 'hybrid' ? 'Híbrido' : 'Presencial'}
+                </p>
+              </div>
+
+              {opportunity.salary && (
+                <div>
+                  <h4 className="font-semibold mb-2">Salario:</h4>
+                  <p className="text-foreground">
+                    {opportunity.salary.min.toLocaleString()} - {opportunity.salary.max.toLocaleString()} {opportunity.salary.currency}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <h4 className="font-semibold mb-2">Categoría:</h4>
+                <p className="text-foreground">{opportunity.category}</p>
+              </div>
+            </div>
           </div>
           
           <div className="mt-8 pt-6 border-t border-border">
             <p className="text-muted-foreground text-sm">
-              {opportunity.applicants} personas han aplicado a esta oportunidad
+              {opportunity.applicantsCount} persona{opportunity.applicantsCount !== 1 ? 's han' : ' ha'} aplicado a esta oportunidad
             </p>
           </div>
         </div>
@@ -136,12 +162,10 @@ const OpportunityDetail = () => {
 
       {activeTab === "applicants" && (
         <div className="bg-card p-8 rounded-lg border border-border">
-          <h2 className="text-xl font-bold text-foreground mb-4">
-            Postulantes
+          <h2 className="text-xl font-bold text-foreground mb-6">
+            Postulantes ({opportunity.applicantsCount})
           </h2>
-          <p className="text-muted-foreground text-center py-12">
-            Aún no hay postulantes para esta oportunidad
-          </p>
+          <ApplicantsList opportunityId={opportunity.id} />
         </div>
       )}
     </div>

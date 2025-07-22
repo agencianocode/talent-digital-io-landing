@@ -35,6 +35,7 @@ import TalentDashboardHome from "./pages/TalentDashboardHome";
 import TalentOpportunities from "./pages/TalentOpportunities";
 import TalentExplore from "./pages/TalentExplore";
 import TalentMarketplace from "./pages/TalentMarketplace";
+import TalentProfilePage from "./pages/TalentProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -94,6 +95,13 @@ const App = () => (
               <Route path="explore" element={<TalentExplore />} />
               <Route path="marketplace" element={<TalentMarketplace />} />
             </Route>
+            
+            {/* Public Talent Routes */}
+            <Route path="/talent/marketplace" element={<TalentMarketplace />} />
+            
+            {/* Talent Profile Routes */}
+            <Route path="/talent-profile/:id" element={<TalentProfilePage />} />
+            <Route path="/opportunities/:id" element={<OpportunityDetail />} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
