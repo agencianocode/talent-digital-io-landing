@@ -208,7 +208,7 @@ const mockOpportunities: Opportunity[] = [
 ];
 
 export const OpportunitiesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated } = useSupabaseAuth();
+  const { user, isAuthenticated, userRole, company, profile } = useSupabaseAuth();
   const [state, setState] = useState<OpportunitiesState>({
     opportunities: [],
     applications: [],
@@ -268,13 +268,13 @@ export const OpportunitiesProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const createOpportunity = useCallback(async (opportunityData: Omit<Opportunity, 'id' | 'createdAt' | 'updatedAt' | 'applicantsCount'>) => {
-    if (!user || user.type !== 'business') return;
+    if (!user || userRole !== 'business') return;
 
     const newOpportunity: Opportunity = {
       ...opportunityData,
       id: `opp_${Date.now()}`,
-      companyId: user.company?.id || user.id,
-      company: user.company?.name || 'Unknown Company',
+      companyId: company?.id || user.id,
+      company: company?.name || 'Mi Empresa',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       applicantsCount: 0
@@ -300,14 +300,14 @@ export const OpportunitiesProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [state.opportunities, saveToStorage]);
 
   const applyToOpportunity = useCallback(async (opportunityId: string, message: string) => {
-    if (!user || user.type !== 'talent') return;
+    if (!user || userRole !== 'talent') return;
 
     const application: Application = {
       id: `app_${Date.now()}`,
       opportunityId,
       applicantId: user.id,
-      applicantName: user.name,
-      applicantEmail: user.email,
+      applicantName: profile?.full_name || 'Usuario',
+      applicantEmail: user?.email || '',
       status: 'pending',
       appliedAt: new Date().toISOString(),
       message

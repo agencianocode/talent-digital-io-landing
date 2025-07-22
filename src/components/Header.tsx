@@ -1,12 +1,12 @@
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContextEnhanced";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import NotificationCenter from "./NotificationCenter";
 
 const Header = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSupabaseAuth();
 
   return (
     <header className="bg-card shadow-sm border-b border-border">

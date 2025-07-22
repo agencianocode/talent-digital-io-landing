@@ -46,7 +46,7 @@ const STORAGE_KEY = 'talento_digital_conversations';
 const MESSAGES_STORAGE_KEY = 'talento_digital_messages';
 
 export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated } = useSupabaseAuth();
+  const { user, isAuthenticated, profile } = useSupabaseAuth();
   const { addNotification } = useNotifications();
   
   const [state, setState] = useState<MessagingState>({
@@ -121,7 +121,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const newConversation: Conversation = {
       id: conversationId,
       participants: [user.id, participantId],
-      participantNames: [user.name, participantName],
+      participantNames: [profile?.full_name || 'Usuario', participantName],
       lastMessage: '',
       lastMessageAt: new Date().toISOString(),
       unreadCount: 0,
@@ -150,7 +150,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       conversationId,
       senderId: user.id,
-      senderName: user.name,
+      senderName: profile?.full_name || 'Usuario',
       content: content.trim(),
       timestamp: new Date().toISOString(),
       read: false
@@ -186,11 +186,11 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Send notification to other participant
     const conversation = state.conversations.find(c => c.id === conversationId);
     if (conversation) {
-      const otherParticipantName = conversation.participantNames.find(name => name !== user.name);
+      const otherParticipantName = conversation.participantNames.find(name => name !== (profile?.full_name || 'Usuario'));
       addNotification({
         type: 'info',
         title: 'Nuevo mensaje',
-        message: `${user.name} te ha enviado un mensaje`,
+        message: `${profile?.full_name || 'Usuario'} te ha enviado un mensaje`,
         actionUrl: `/messages/${conversationId}`,
         actionText: 'Ver conversación'
       });

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
-import { useAuth } from "@/contexts/AuthContextEnhanced";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -44,13 +44,13 @@ import {
 import NotificationCenter from "@/components/NotificationCenter";
 
 const DashboardLayout = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut, profile, company } = useSupabaseAuth();
   const { notifications } = useNotifications();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    await signOut();
+    navigate('/');
   };
 
   return (
@@ -173,13 +173,13 @@ const DashboardLayout = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 h-auto">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.profile?.photo || user?.company?.logo} />
+                    <AvatarImage src={profile?.avatar_url || company?.logo_url} />
                     <AvatarFallback>
-                      {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                      {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">{user?.name}</p>
+                    <p className="text-sm font-medium">{profile?.full_name || 'Usuario'}</p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                   </div>
                   <ChevronUp className="h-4 w-4" />

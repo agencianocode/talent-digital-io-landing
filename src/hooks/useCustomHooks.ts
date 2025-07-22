@@ -1,10 +1,10 @@
-import { useAuth } from '@/contexts/AuthContextEnhanced';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useOpportunities } from '@/contexts/OpportunitiesContext';
 import { useCallback } from 'react';
 
 // Custom hook for application management
 export const useApplications = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useSupabaseAuth();
   const { 
     applications, 
     userApplications, 
@@ -14,7 +14,7 @@ export const useApplications = () => {
   } = useOpportunities();
 
   const applyToJob = useCallback(async (opportunityId: string, message: string) => {
-    if (!user || user.type !== 'talent') {
+    if (!user || userRole !== 'talent') {
       throw new Error('Only talent users can apply to opportunities');
     }
 
@@ -59,7 +59,7 @@ export const useApplications = () => {
 
 // Custom hook for form auto-save functionality
 export const useAutoSave = (key: string, initialData: any = {}) => {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const storageKey = `autosave_${key}_${user?.id || 'guest'}`;
 
   const saveData = useCallback((data: any) => {
@@ -98,14 +98,14 @@ export const useAutoSave = (key: string, initialData: any = {}) => {
 
 // Custom hook for managing dashboard metrics
 export const useDashboardMetrics = () => {
-  const { user } = useAuth();
+  const { user, userRole, company } = useSupabaseAuth();
   const { opportunities, applications, userApplications } = useOpportunities();
 
   const getBusinessMetrics = useCallback(() => {
-    if (!user || user.type !== 'business') return null;
+    if (!user || userRole !== 'business') return null;
 
     const companyOpportunities = opportunities.filter(
-      opp => opp.companyId === user.company?.id || opp.companyId === user.id
+      opp => opp.companyId === company?.id || opp.companyId === user.id
     );
 
     const activeOpportunities = companyOpportunities.filter(
@@ -130,7 +130,7 @@ export const useDashboardMetrics = () => {
   }, [user, opportunities, applications]);
 
   const getTalentMetrics = useCallback(() => {
-    if (!user || user.type !== 'talent') return null;
+    if (!user || userRole !== 'talent') return null;
 
     const appliedJobs = userApplications.length;
     const pendingApplications = userApplications.filter(
