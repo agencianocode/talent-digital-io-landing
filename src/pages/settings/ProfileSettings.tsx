@@ -34,7 +34,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
 const ProfileSettings = () => {
-  const { user, updateProfile } = useSupabaseAuth();
+  const { user, profile, updateProfile } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
@@ -45,12 +45,12 @@ const ProfileSettings = () => {
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user?.name || '',
+      name: profile?.full_name || '',
       email: user?.email || '',
-      phone: user?.profile?.linkedin || '',
-      position: user?.profile?.position || '',
-      linkedin: user?.profile?.linkedin || '',
-      photo: user?.profile?.photo || '',
+      phone: profile?.phone || '',
+      position: '',
+      linkedin: '',
+      photo: profile?.avatar_url || '',
     },
   });
 
@@ -80,15 +80,10 @@ const ProfileSettings = () => {
 
   const handleAutoSave = async (data: ProfileFormData) => {
     try {
-      await updateUser({
-        name: data.name,
-        email: data.email,
-        profile: {
-          ...user?.profile,
-          position: data.position,
-          linkedin: data.linkedin,
-          photo: data.photo,
-        }
+      await updateProfile({
+        full_name: data.name,
+        phone: data.phone,
+        avatar_url: data.photo,
       });
       toast.success('Cambios guardados automáticamente');
     } catch (error) {
@@ -99,15 +94,10 @@ const ProfileSettings = () => {
   const onProfileSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
     try {
-      await updateUser({
-        name: data.name,
-        email: data.email,
-        profile: {
-          ...user?.profile,
-          position: data.position,
-          linkedin: data.linkedin,
-          photo: data.photo,
-        }
+      await updateProfile({
+        full_name: data.name,
+        phone: data.phone,
+        avatar_url: data.photo,
       });
       toast.success('Perfil actualizado correctamente');
       profileForm.reset(data);
@@ -134,7 +124,7 @@ const ProfileSettings = () => {
 
   const handlePhotoUpload = () => {
     // Simulate file upload
-    const fakeUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`;
+    const fakeUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || 'User'}`;
     profileForm.setValue('photo', fakeUrl);
     toast.success('Foto actualizada (simulado)');
   };
@@ -166,7 +156,7 @@ const ProfileSettings = () => {
                 <Avatar className="w-20 h-20">
                   <AvatarImage src={profileForm.watch('photo')} />
                   <AvatarFallback className="text-lg">
-                    {user?.name.split(' ').map(n => n[0]).join('')}
+                    {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
