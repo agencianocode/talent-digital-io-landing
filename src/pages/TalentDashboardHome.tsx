@@ -1,0 +1,64 @@
+import { Button } from "@/components/ui/button";
+
+const TalentDashboardHome = () => {
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+
+  return (
+    <div className="p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-foreground">
+          ¡Bienvenido, {userData.name || 'Talento'}!
+        </h1>
+        <Button className="font-semibold">
+          Explorar Oportunidades
+        </Button>
+      </div>
+
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="bg-secondary p-6 rounded-lg">
+          <div className="text-center">
+            <h3 className="font-medium text-foreground">Aplicaciones Enviadas</h3>
+            <p className="text-2xl font-bold text-foreground mt-2">12</p>
+          </div>
+        </div>
+
+        <div className="bg-secondary p-6 rounded-lg">
+          <div className="text-center">
+            <h3 className="font-medium text-foreground">Entrevistas Programadas</h3>
+            <p className="text-2xl font-bold text-foreground mt-2">3</p>
+          </div>
+        </div>
+
+        <div className="bg-secondary p-6 rounded-lg">
+          <div className="text-center">
+            <h3 className="font-medium text-foreground">Mensajes sin leer</h3>
+            <p className="text-2xl font-bold text-foreground mt-2">5</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Dashboard Card */}
+      <div className="bg-secondary p-8 rounded-lg">
+        <h2 className="text-2xl font-bold text-foreground mb-4">
+          Dashboard: Oportunidades recomendadas y estado de aplicaciones
+        </h2>
+        <p className="text-muted-foreground">
+          Aquí podrás ver las oportunidades que mejor se adapten a tu perfil y hacer seguimiento de tus aplicaciones.
+        </p>
+      </div>
+
+      {/* Bottom Card */}
+      <div className="bg-secondary p-8 rounded-lg mt-6">
+        <div className="min-h-[200px] flex items-center justify-center">
+          <p className="text-muted-foreground">
+            Funcionalidades adicionales próximamente...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TalentDashboardHome;

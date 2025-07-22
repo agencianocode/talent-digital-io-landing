@@ -27,7 +27,7 @@ const Login = () => {
           
           <Button 
             variant="secondary"
-            onClick={() => navigate('/talent-register')}
+            onClick={() => navigate('/job-categories')}
             className="w-full text-lg py-6 h-auto font-semibold hover:bg-card-hover"
           >
             Busco trabajo

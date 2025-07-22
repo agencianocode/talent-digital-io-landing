@@ -24,6 +24,12 @@ import ServicesPage from "./pages/ServicesPage";
 import OpportunityDetail from "./pages/OpportunityDetail";
 import NewOpportunity from "./pages/NewOpportunity";
 import ProfilePage from "./pages/ProfilePage";
+import JobCategories from "./pages/JobCategories";
+import TalentDashboardLayout from "./components/TalentDashboardLayout";
+import TalentDashboardHome from "./pages/TalentDashboardHome";
+import TalentOpportunities from "./pages/TalentOpportunities";
+import TalentExplore from "./pages/TalentExplore";
+import TalentMarketplace from "./pages/TalentMarketplace";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +52,7 @@ const App = () => (
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/business-dashboard" element={<BusinessDashboard />} />
+          <Route path="/job-categories" element={<JobCategories />} />
           <Route path="/talent-register" element={<TalentRegister />} />
           <Route path="/talent-dashboard" element={<TalentDashboard />} />
           
@@ -58,6 +65,14 @@ const App = () => (
             <Route path="talent" element={<TalentSearchPage />} />
             <Route path="services" element={<ServicesPage />} />
             <Route path="profile" element={<ProfilePage />} />
+          </Route>
+          
+          {/* Talent Dashboard Routes with Layout */}
+          <Route path="/talent-dashboard" element={<TalentDashboardLayout />}>
+            <Route index element={<TalentDashboardHome />} />
+            <Route path="opportunities" element={<TalentOpportunities />} />
+            <Route path="explore" element={<TalentExplore />} />
+            <Route path="marketplace" element={<TalentMarketplace />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
