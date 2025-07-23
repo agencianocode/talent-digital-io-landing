@@ -2,9 +2,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, MapPin, Clock, DollarSign, Briefcase } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
+import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { Search, MapPin, Clock, DollarSign, Briefcase, Heart, HeartOff } from "lucide-react";
+import { toast } from "sonner";
 
 interface Opportunity {
   id: string;
@@ -24,80 +28,152 @@ interface Opportunity {
 }
 
 const TalentMarketplace = () => {
-  const { user } = useSupabaseAuth();
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, userRole } = useSupabaseAuth();
+  const { 
+    opportunities, 
+    isLoading, 
+    applyToOpportunity, 
+    hasApplied,
+    getApplicationStatus 
+  } = useSupabaseOpportunities();
+  
+  const {
+    saveOpportunity,
+    unsaveOpportunity,
+    isOpportunitySaved
+  } = useSavedOpportunities();
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [locationFilter, setLocationFilter] = useState<string>("");
   const [applying, setApplying] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchOpportunities();
-  }, []);
-
-  const fetchOpportunities = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select(`
-          id,
-          title,
-          description,
-          location,
-          type,
-          category,
-          salary_min,
-          salary_max,
-          currency,
-          company_id,
-          companies (
-            name,
-            logo_url
-          )
-        `)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setOpportunities(data || []);
-    } catch (error) {
-      console.error('Error fetching opportunities:', error);
-    } finally {
-      setLoading(false);
-    }
+  // Job categories with subcategories (same as OpportunitiesPage)
+  const jobCategories = {
+    'Ventas': [
+      'Closer de ventas',
+      'SDR / Vendedor remoto', 
+      'Appointment Setter',
+      'Triage',
+      'Director comercial'
+    ],
+    'Marketing': [
+      'Media Buyer',
+      'Marketing Expert', 
+      'Content Specialist',
+      'Editor de video'
+    ],
+    'Operaciones': [
+      'Asistente Operativo',
+      'Asistente Personal Virtual',
+      'Project Manager', 
+      'Experto en Automatizaciones'
+    ],
+    'Fulfillment': [
+      'CSM',
+      'Atención al cliente'
+    ],
+    'Desarrollo': [
+      'Frontend Developer',
+      'Backend Developer',
+      'Full Stack Developer'
+    ],
+    'Diseño': [
+      'UI/UX Designer', 
+      'Graphic Designer',
+      'Web Designer'
+    ]
   };
 
+  const jobTypes = [
+    { value: 'full-time', label: 'Tiempo Completo' },
+    { value: 'part-time', label: 'Medio Tiempo' },
+    { value: 'contract', label: 'Por Contrato' },
+    { value: 'freelance', label: 'Freelance' }
+  ];
+
+  // Get subcategories for selected category
+  const availableSubcategories = categoryFilter ? (jobCategories[categoryFilter as keyof typeof jobCategories] || []) : [];
+
+  // Reset subcategory when category changes
+  useEffect(() => {
+    if (categoryFilter && !availableSubcategories.includes(subcategoryFilter)) {
+      setSubcategoryFilter("");
+    }
+  }, [categoryFilter, subcategoryFilter, availableSubcategories]);
+
+  // Apply all filters
+  const filteredOpportunities = opportunities.filter(opp => {
+    const matchesSearch = !searchTerm || 
+      opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      opp.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      opp.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      opp.category.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = !categoryFilter || opp.category === categoryFilter;
+    const matchesSubcategory = !subcategoryFilter || opp.title.toLowerCase().includes(subcategoryFilter.toLowerCase());
+    const matchesType = !typeFilter || opp.type === typeFilter;
+    const matchesLocation = !locationFilter || 
+      (opp.location && opp.location.toLowerCase().includes(locationFilter.toLowerCase()));
+    
+    return matchesSearch && matchesCategory && matchesSubcategory && matchesType && matchesLocation;
+  });
+
   const handleApply = async (opportunityId: string) => {
-    if (!user) return;
+    if (!user || userRole !== 'talent') {
+      toast.error('Solo los talentos pueden aplicar a oportunidades');
+      return;
+    }
+
+    if (hasApplied(opportunityId)) {
+      toast.error('Ya has aplicado a esta oportunidad');
+      return;
+    }
 
     setApplying(opportunityId);
     try {
-      const { error } = await supabase
-        .from('applications')
-        .insert({
-          user_id: user.id,
-          opportunity_id: opportunityId,
-          status: 'pending'
-        });
-
-      if (error) throw error;
-      
-      // Show success message or update UI
-      alert('¡Aplicación enviada exitosamente!');
+      await applyToOpportunity(opportunityId, ''); // Cover letter can be added later
+      toast.success('¡Aplicación enviada exitosamente!');
     } catch (error) {
       console.error('Error applying to opportunity:', error);
-      alert('Error al enviar la aplicación. Intenta de nuevo.');
+      toast.error('Error al enviar la aplicación. Intenta de nuevo.');
     } finally {
       setApplying(null);
     }
   };
 
-  const filteredOpportunities = opportunities.filter(opp =>
-    opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    opp.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    opp.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSaveToggle = async (opportunityId: string) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para guardar oportunidades');
+      return;
+    }
 
-  if (loading) {
+    try {
+      if (isOpportunitySaved(opportunityId)) {
+        await unsaveOpportunity(opportunityId);
+        toast.success('Oportunidad removida de guardados');
+      } else {
+        await saveOpportunity(opportunityId);
+        toast.success('Oportunidad guardada');
+      }
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      toast.error('Error al guardar/remover oportunidad');
+    }
+  };
+
+  if (userRole !== 'talent') {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Acceso Denegado</h1>
+        <p>Solo los talentos pueden acceder a esta página.</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return (
       <div className="p-8">
         <div className="animate-pulse space-y-4">
@@ -115,28 +191,96 @@ const TalentMarketplace = () => {
 
   return (
     <div className="p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4 flex-1">
-          <div className="relative flex-1 max-w-md">
+      {/* Header with advanced filters */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-3xl font-bold text-foreground">
+            Marketplace de Oportunidades ({filteredOpportunities.length})
+          </h1>
+        </div>
+
+        {/* Advanced Search and Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div className="relative lg:col-span-2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="text"
-              placeholder="Buscar oportunidades..."
+              placeholder="Buscar oportunidades, empresas..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
+          
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todas las categorías</SelectItem>
+              {Object.keys(jobCategories).map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {categoryFilter && (
+            <Select value={subcategoryFilter} onValueChange={setSubcategoryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Especialidad" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas las especialidades</SelectItem>
+                {availableSubcategories.map((subcategory) => (
+                  <SelectItem key={subcategory} value={subcategory}>
+                    {subcategory}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todos los tipos</SelectItem>
+              {jobTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <Input
+            type="text"
+            placeholder="Ubicación (ej: Remoto, CDMX...)"
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+            className="max-w-xs"
+          />
+          
+          {(categoryFilter || subcategoryFilter || typeFilter || locationFilter) && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCategoryFilter("");
+                setSubcategoryFilter("");
+                setTypeFilter("");
+                setLocationFilter("");
+              }}
+            >
+              Limpiar Filtros
+            </Button>
+          )}
         </div>
       </div>
-
-      <h1 className="text-3xl font-bold text-foreground mb-8">
-        Marketplace de Oportunidades ({filteredOpportunities.length})
-      </h1>
       
       {/* Opportunities List */}
       {filteredOpportunities.length === 0 ? (
@@ -162,9 +306,14 @@ const TalentMarketplace = () => {
                     <h3 className="text-xl font-semibold text-foreground">
                       {opportunity.title}
                     </h3>
-                    <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
+                    <Badge variant="secondary">
                       {opportunity.category}
-                    </span>
+                    </Badge>
+                    {jobTypes.find(t => t.value === opportunity.type) && (
+                      <Badge variant="outline">
+                        {jobTypes.find(t => t.value === opportunity.type)?.label}
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-4">
@@ -201,12 +350,35 @@ const TalentMarketplace = () => {
                 
                 <div className="flex flex-col items-end space-y-2 ml-4">
                   <Button 
-                    onClick={() => handleApply(opportunity.id)}
-                    disabled={applying === opportunity.id}
-                    className="min-w-[120px]"
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => handleSaveToggle(opportunity.id)}
+                    className="mb-2"
+                    title={isOpportunitySaved(opportunity.id) ? "Remover de guardados" : "Guardar oportunidad"}
                   >
-                    {applying === opportunity.id ? 'Aplicando...' : 'Aplicar'}
+                    {isOpportunitySaved(opportunity.id) ? (
+                      <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+                    ) : (
+                      <HeartOff className="h-5 w-5" />
+                    )}
                   </Button>
+                  
+                  {hasApplied(opportunity.id) ? (
+                    <Badge variant="secondary" className="min-w-[120px] justify-center">
+                      {getApplicationStatus(opportunity.id) === 'pending' && 'En Revisión'}
+                      {getApplicationStatus(opportunity.id) === 'accepted' && 'Aceptado'}
+                      {getApplicationStatus(opportunity.id) === 'rejected' && 'Rechazado'}
+                    </Badge>
+                  ) : (
+                    <Button 
+                      onClick={() => handleApply(opportunity.id)}
+                      disabled={applying === opportunity.id}
+                      className="min-w-[120px]"
+                    >
+                      {applying === opportunity.id ? 'Aplicando...' : 'Aplicar'}
+                    </Button>
+                  )}
+                  
                   <Button variant="outline" size="sm">
                     Ver Detalles
                   </Button>
