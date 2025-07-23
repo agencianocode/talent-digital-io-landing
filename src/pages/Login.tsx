@@ -19,7 +19,7 @@ const Login = () => {
         <div className="space-y-4">
           <Button 
             variant="secondary"
-            onClick={() => navigate('/company-search')}
+            onClick={() => navigate('/register-business')}
             className="w-full text-lg py-6 h-auto font-semibold hover:bg-card-hover"
           >
             Busco Talento para mi negocio
@@ -27,7 +27,7 @@ const Login = () => {
           
           <Button 
             variant="secondary"
-            onClick={() => navigate('/job-categories')}
+            onClick={() => navigate('/register-talent')}
             className="w-full text-lg py-6 h-auto font-semibold hover:bg-card-hover"
           >
             Busco trabajo

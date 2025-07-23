@@ -1,7 +1,25 @@
 import { useNavigate } from "react-router-dom";
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const UserSelector = () => {
   const navigate = useNavigate();
+  const { switchUserType, isAuthenticated } = useSupabaseAuth();
+
+  const handleSelectBusinessType = async () => {
+    if (isAuthenticated) {
+      // If user is logged in, switch their role
+      await switchUserType('business');
+    }
+    navigate('/dashboard');
+  };
+
+  const handleSelectTalentType = async () => {
+    if (isAuthenticated) {
+      // If user is logged in, switch their role
+      await switchUserType('talent');
+    }
+    navigate('/talent-dashboard');
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -10,7 +28,7 @@ const UserSelector = () => {
           {/* Business Card */}
           <div 
             className="bg-secondary p-12 rounded-2xl cursor-pointer transition-colors hover:bg-card-hover group"
-            onClick={() => navigate('/business-dashboard')}
+            onClick={handleSelectBusinessType}
           >
             <div className="text-center">
               <h2 className="text-2xl font-bold text-foreground">
@@ -22,7 +40,7 @@ const UserSelector = () => {
           {/* Talent Card */}
           <div 
             className="bg-secondary p-12 rounded-2xl cursor-pointer transition-colors hover:bg-card-hover group"
-            onClick={() => navigate('/talent-dashboard')}
+            onClick={handleSelectTalentType}
           >
             <div className="text-center">
               <h2 className="text-2xl font-bold text-foreground">
