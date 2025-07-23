@@ -191,7 +191,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -199,7 +199,26 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         data: metadata
       }
     });
-    
+
+    // If signup was successful and user was created, wait a bit for the trigger to execute
+    if (!error && data.user) {
+      // Small delay to allow database trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Try to fetch the user data to ensure it was created properly
+      try {
+        const userData = await fetchUserData(data.user.id);
+        setAuthState(prev => ({
+          ...prev,
+          profile: userData.profile,
+          userRole: userData.role,
+          company: userData.company
+        }));
+      } catch (fetchError) {
+        console.error('Error fetching user data after signup:', fetchError);
+      }
+    }
+
     return { error };
   };
 

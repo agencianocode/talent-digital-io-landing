@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Loader2, Eye, EyeOff, Building2, ArrowLeft } from 'lucide-react';
 
 const RegisterBusiness = () => {
   const navigate = useNavigate();
-  const { signUp, isLoading } = useSupabaseAuth();
+  const { signUp, isLoading, userRole, isAuthenticated } = useSupabaseAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -24,6 +24,14 @@ const RegisterBusiness = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+
+  // Effect to handle redirection after successful registration
+  useEffect(() => {
+    if (registrationComplete && isAuthenticated && userRole === 'business') {
+      navigate('/dashboard');
+    }
+  }, [registrationComplete, isAuthenticated, userRole, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -66,12 +74,12 @@ const RegisterBusiness = () => {
       setError(error.message === 'User already registered' 
         ? 'Este email ya está registrado. Intenta iniciar sesión.' 
         : 'Error al crear la cuenta. Intenta nuevamente.');
+      setIsSubmitting(false);
     } else {
-      setMessage('¡Cuenta creada exitosamente! Revisa tu email para confirmar tu cuenta.');
-      setTimeout(() => navigate('/dashboard'), 2000);
+      setMessage('¡Cuenta creada exitosamente! Redirigiendo al dashboard empresarial...');
+      setRegistrationComplete(true);
+      // The useEffect will handle navigation once userRole is loaded
     }
-    
-    setIsSubmitting(false);
   };
 
   if (isLoading) {
