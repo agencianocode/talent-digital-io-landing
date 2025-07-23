@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, MapPin, Clock, DollarSign } from "lucide-react";
+import { Search, Filter, MapPin, Clock, DollarSign, Briefcase } from "lucide-react";
 import { useApplications } from "@/hooks/useCustomHooks";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
