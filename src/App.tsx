@@ -10,11 +10,14 @@ import { MessagingProvider } from '@/contexts/MessagingContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { OpportunitiesProvider } from '@/contexts/OpportunitiesContext';
 import { SupabaseAuthProvider } from '@/contexts/SupabaseAuthContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 // Load critical pages immediately
 import Login from './pages/Login';
 import LandingPage from './pages/LandingPage';
 import Auth from './pages/Auth';
+import TalentDashboardLayout from '@/components/TalentDashboardLayout';
+import DashboardLayout from '@/components/DashboardLayout';
 
 // Lazy load non-critical pages
 const Register = lazy(() => import('./pages/Register'));
@@ -30,6 +33,8 @@ const OpportunityDetail = lazy(() => import('./pages/OpportunityDetail'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const DashboardHome = lazy(() => import('./pages/DashboardHome'));
 const TalentDashboardHome = lazy(() => import('./pages/TalentDashboardHome'));
+const TalentOpportunities = lazy(() => import('./pages/TalentOpportunities'));
+const TalentExplore = lazy(() => import('./pages/TalentExplore'));
 const CompanySettings = lazy(() => import('./pages/settings/CompanySettings'));
 const ProfileSettings = lazy(() => import('./pages/settings/ProfileSettings'));
 const TalentProfileSettings = lazy(() => import('./pages/settings/TalentProfileSettings'));
@@ -65,12 +70,12 @@ function App() {
                   <ToastProvider>
                     <div className="min-h-screen bg-background text-foreground">
                       <Routes>
-                        {/* Auth Routes - Critical pages loaded immediately */}
+                        {/* Public Routes */}
                         <Route path="/" element={<LandingPage />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Login />} />
                         
-                        {/* Lazy loaded routes */}
+                        {/* Registration Routes */}
                         <Route path="/register" element={
                           <Suspense fallback={<LoadingSkeleton type="card" />}>
                             <Register />
@@ -86,13 +91,13 @@ function App() {
                             <RegisterTalent />
                           </Suspense>
                         } />
+                        
+                        {/* Onboarding Routes */}
                         <Route path="/job-categories" element={
                           <Suspense fallback={<LoadingSkeleton type="list" />}>
                             <JobCategories />
                           </Suspense>
                         } />
-                        
-                        {/* Onboarding Routes */}
                         <Route path="/company-search" element={
                           <Suspense fallback={<LoadingSkeleton type="list" />}>
                             <CompanySearch />
@@ -109,94 +114,115 @@ function App() {
                           </Suspense>
                         } />
                         
-                        {/* Main App Routes */}
-                        <Route path="/talent/marketplace" element={
-                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                            <TalentMarketplace />
-                          </Suspense>
-                        } />
+                        {/* Business Dashboard Routes */}
+                        <Route path="/dashboard" element={
+                          <ProtectedRoute requiredUserType="business">
+                            <DashboardLayout />
+                          </ProtectedRoute>
+                        }>
+                          <Route index element={
+                            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                              <DashboardHome />
+                            </Suspense>
+                          } />
+                          <Route path="home" element={
+                            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                              <DashboardHome />
+                            </Suspense>
+                          } />
+                          <Route path="opportunities" element={
+                            <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                              <OpportunitiesPage />
+                            </Suspense>
+                          } />
+                          <Route path="opportunities/new" element={
+                            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                              <NewOpportunity />
+                            </Suspense>
+                          } />
+                          <Route path="opportunities/:id" element={
+                            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                              <OpportunityDetail />
+                            </Suspense>
+                          } />
+                        </Route>
+
+                        {/* Talent Dashboard Routes */}
+                        <Route path="/talent-dashboard" element={
+                          <ProtectedRoute requiredUserType="talent">
+                            <TalentDashboardLayout />
+                          </ProtectedRoute>
+                        }>
+                          <Route index element={
+                            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                              <TalentDashboardHome />
+                            </Suspense>
+                          } />
+                          <Route path="opportunities" element={
+                            <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                              <TalentOpportunities />
+                            </Suspense>
+                          } />
+                          <Route path="explore" element={
+                            <Suspense fallback={<LoadingSkeleton type="list" />}>
+                              <TalentExplore />
+                            </Suspense>
+                          } />
+                          <Route path="marketplace" element={
+                            <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                              <TalentMarketplace />
+                            </Suspense>
+                          } />
+                        </Route>
+
+                        {/* Legacy Routes - Redirect to new structure */}
+                        <Route path="/business/dashboard" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/talent/dashboard" element={<Navigate to="/talent-dashboard" replace />} />
+                        <Route path="/talent/home" element={<Navigate to="/talent-dashboard" replace />} />
+                        <Route path="/talent/marketplace" element={<Navigate to="/talent-dashboard/marketplace" replace />} />
                         <Route path="/talent/search" element={
                           <Suspense fallback={<LoadingSkeleton type="talent" />}>
                             <TalentSearchPage />
                           </Suspense>
                         } />
-                        <Route path="/business/dashboard" element={
-                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                            <BusinessDashboard />
-                          </Suspense>
-                        } />
-                        <Route path="/talent/dashboard" element={
-                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                            <TalentDashboard />
-                          </Suspense>
-                        } />
-                        
-                        {/* Dashboard Routes */}
-                        <Route path="/dashboard" element={
-                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                            <BusinessDashboard />
-                          </Suspense>
-                        } />
-                        <Route path="/talent-dashboard" element={
-                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                            <TalentDashboard />
-                          </Suspense>
-                        } />
-                        <Route path="/dashboard/home" element={
-                          <Suspense fallback={<LoadingSkeleton type="card" />}>
-                            <DashboardHome />
-                          </Suspense>
-                        } />
-                        <Route path="/talent/home" element={
-                          <Suspense fallback={<LoadingSkeleton type="card" />}>
-                            <TalentDashboardHome />
-                          </Suspense>
-                        } />
-                        
-                        {/* Opportunities Routes */}
-                        <Route path="/dashboard/opportunities" element={
-                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                            <OpportunitiesPage />
-                          </Suspense>
-                        } />
-                        <Route path="/dashboard/opportunities/new" element={
-                          <Suspense fallback={<LoadingSkeleton type="card" />}>
-                            <NewOpportunity />
-                          </Suspense>
-                        } />
-                        <Route path="/dashboard/opportunities/:id" element={
-                          <Suspense fallback={<LoadingSkeleton type="card" />}>
-                            <OpportunityDetail />
-                          </Suspense>
-                        } />
                         
                         {/* Messages */}
                         <Route path="/messages" element={
-                          <Suspense fallback={<LoadingSkeleton type="list" />}>
-                            <MessagesPage />
-                          </Suspense>
+                          <ProtectedRoute>
+                            <Suspense fallback={<LoadingSkeleton type="list" />}>
+                              <MessagesPage />
+                            </Suspense>
+                          </ProtectedRoute>
                         } />
                         
                         {/* Settings Routes */}
                         <Route path="/settings/company" element={
-                          <Suspense fallback={<LoadingSkeleton type="profile" />}>
-                            <CompanySettings />
-                          </Suspense>
+                          <ProtectedRoute requiredUserType="business">
+                            <Suspense fallback={<LoadingSkeleton type="profile" />}>
+                              <CompanySettings />
+                            </Suspense>
+                          </ProtectedRoute>
                         } />
                         <Route path="/settings/profile" element={
-                          <Suspense fallback={<LoadingSkeleton type="profile" />}>
-                            <ProfileSettings />
-                          </Suspense>
+                          <ProtectedRoute>
+                            <Suspense fallback={<LoadingSkeleton type="profile" />}>
+                              <ProfileSettings />
+                            </Suspense>
+                          </ProtectedRoute>
                         } />
                         <Route path="/settings/talent-profile" element={
-                          <Suspense fallback={<LoadingSkeleton type="profile" />}>
-                            <TalentProfileSettings />
-                          </Suspense>
+                          <ProtectedRoute requiredUserType="talent">
+                            <Suspense fallback={<LoadingSkeleton type="profile" />}>
+                              <TalentProfileSettings />
+                            </Suspense>
+                          </ProtectedRoute>
                         } />
                         <Route path="/settings/users" element={
-                          <Suspense fallback={<LoadingSkeleton type="table" />}>
-                            <UserManagement />
-                          </Suspense>
+                          <ProtectedRoute requiredUserType="admin">
+                            <Suspense fallback={<LoadingSkeleton type="table" />}>
+                              <UserManagement />
+                            </Suspense>
+                          </ProtectedRoute>
                         } />
                         
                         {/* 404 */}

@@ -1,3 +1,4 @@
+
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useOpportunities } from '@/contexts/OpportunitiesContext';
 import { useCallback } from 'react';

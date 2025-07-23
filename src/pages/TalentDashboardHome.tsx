@@ -1,9 +1,10 @@
+
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContextEnhanced";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useDashboardMetrics } from "@/hooks/useCustomHooks";
 
 const TalentDashboardHome = () => {
-  const { user } = useAuth();
+  const { profile } = useSupabaseAuth();
   const { getTalentMetrics } = useDashboardMetrics();
   
   const metrics = getTalentMetrics();
@@ -13,7 +14,7 @@ const TalentDashboardHome = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-foreground">
-          ¡Bienvenido, {user?.name || 'Talento'}!
+          ¡Bienvenido, {profile?.full_name || 'Talento'}!
         </h1>
         <Button 
           className="font-semibold"

@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Home,
@@ -42,7 +43,6 @@ import NotificationCenter from "@/components/NotificationCenter";
 
 const TalentDashboardLayout = () => {
   const { user, signOut, profile } = useSupabaseAuth();
-  const { notifications } = useNotifications();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
