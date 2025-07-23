@@ -43,7 +43,7 @@ const TalentSearchPage = lazy(() => import('./pages/TalentSearchPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const RegisterBusiness = lazy(() => import('./pages/RegisterBusiness'));
 const RegisterTalent = lazy(() => import('./pages/RegisterTalent'));
-const JobCategories = lazy(() => import('./pages/JobCategories'));
+const SavedOpportunities = lazy(() => import('./pages/SavedOpportunities'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,11 +93,6 @@ function App() {
                         } />
                         
                         {/* Onboarding Routes */}
-                        <Route path="/job-categories" element={
-                          <Suspense fallback={<LoadingSkeleton type="list" />}>
-                            <JobCategories />
-                          </Suspense>
-                        } />
                         <Route path="/company-search" element={
                           <Suspense fallback={<LoadingSkeleton type="list" />}>
                             <CompanySearch />
@@ -165,7 +160,12 @@ function App() {
                           } />
                           <Route path="explore" element={
                             <Suspense fallback={<LoadingSkeleton type="list" />}>
-                              <TalentExplore />
+                              <TalentMarketplace />
+                            </Suspense>
+                          } />
+                          <Route path="saved" element={
+                            <Suspense fallback={<LoadingSkeleton type="list" />}>
+                              <SavedOpportunities />
                             </Suspense>
                           } />
                           <Route path="marketplace" element={

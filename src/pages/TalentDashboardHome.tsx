@@ -1,9 +1,11 @@
 
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 
 const TalentDashboardHome = () => {
+  const navigate = useNavigate();
   const { profile } = useSupabaseAuth();
   const { getTalentMetrics } = useDashboardMetrics();
   
@@ -18,9 +20,9 @@ const TalentDashboardHome = () => {
         </h1>
         <Button 
           className="font-semibold"
-          onClick={() => window.location.href = '/talent/marketplace'}
+          onClick={() => navigate('/talent-dashboard/explore')}
         >
-          Explorar Oportunidades
+          Buscar Oportunidades
         </Button>
       </div>
 

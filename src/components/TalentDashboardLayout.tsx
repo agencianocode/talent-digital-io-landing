@@ -118,7 +118,7 @@ const TalentDashboardLayout = () => {
                         }
                       >
                         <Search className="h-4 w-4" />
-                        Explorar
+                        Buscar Oportunidades
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -126,7 +126,7 @@ const TalentDashboardLayout = () => {
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <NavLink
-                        to="/talent-dashboard/marketplace"
+                        to="/talent-dashboard/saved"
                         className={({ isActive }) =>
                           cn(
                             "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
@@ -137,7 +137,7 @@ const TalentDashboardLayout = () => {
                         }
                       >
                         <Store className="h-4 w-4" />
-                        Marketplace
+                        Oportunidades Guardadas
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

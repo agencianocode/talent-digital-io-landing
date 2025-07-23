@@ -1,173 +1,331 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MoreHorizontal } from "lucide-react";
-import { useOpportunities } from "@/contexts/OpportunitiesContext";
-import ApplicantsList from "@/components/ApplicantsList";
+import { ArrowLeft, MoreHorizontal, MapPin, DollarSign, Briefcase, Clock, Heart, Send } from "lucide-react";
+import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
+import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const OpportunityDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [activeTab, setActiveTab] = useState("preview");
-  const { opportunities } = useOpportunities();
+  const { userRole } = useSupabaseAuth();
+  const { applyToOpportunity, hasApplied, getApplicationStatus } = useSupabaseOpportunities();
+  const { isOpportunitySaved, saveOpportunity, unsaveOpportunity } = useSavedOpportunities();
   
-  const opportunity = opportunities.find(opp => opp.id === id);
+  const [opportunity, setOpportunity] = useState<any>(null);
+  const [company, setCompany] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [isApplying, setIsApplying] = useState(false);
+  const [showApplicationDialog, setShowApplicationDialog] = useState(false);
+
+  const jobTypes = [
+    { value: 'full-time', label: 'Tiempo Completo' },
+    { value: 'part-time', label: 'Medio Tiempo' },
+    { value: 'contract', label: 'Por Contrato' },
+    { value: 'freelance', label: 'Freelance' }
+  ];
+
+  useEffect(() => {
+    const fetchOpportunity = async () => {
+      if (!id) return;
+      
+      setIsLoading(true);
+      try {
+        const { data: opportunityData, error: opportunityError } = await supabase
+          .from('opportunities')
+          .select(`
+            *,
+            companies (
+              name,
+              logo_url,
+              description,
+              website,
+              location,
+              industry
+            )
+          `)
+          .eq('id', id)
+          .single();
+
+        if (opportunityError) throw opportunityError;
+        
+        setOpportunity(opportunityData);
+        setCompany(opportunityData.companies);
+      } catch (error) {
+        console.error('Error fetching opportunity:', error);
+        toast.error('Error al cargar la oportunidad');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOpportunity();
+  }, [id]);
+
+  const handleApply = async () => {
+    if (!opportunity) return;
+    
+    setIsApplying(true);
+    try {
+      await applyToOpportunity(opportunity.id, coverLetter);
+      toast.success('¡Aplicación enviada exitosamente!');
+      setShowApplicationDialog(false);
+      setCoverLetter("");
+    } catch (error) {
+      console.error('Error applying:', error);
+      toast.error('Error al enviar la aplicación');
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const handleSaveToggle = async () => {
+    if (!opportunity) return;
+    
+    try {
+      if (isOpportunitySaved(opportunity.id)) {
+        await unsaveOpportunity(opportunity.id);
+        toast.success('Oportunidad removida de guardados');
+      } else {
+        await saveOpportunity(opportunity.id);
+        toast.success('Oportunidad guardada');
+      }
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      toast.error('Error al guardar/quitar la oportunidad');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-8">
+        <LoadingSkeleton type="list" count={5} />
+      </div>
+    );
+  }
 
   if (!opportunity) {
     return (
       <div className="p-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Oportunidad no encontrada</h1>
-          <Button onClick={() => navigate('/dashboard/opportunities')}>
-            Volver a oportunidades
+          <Button onClick={() => navigate(-1)}>
+            Volver
           </Button>
         </div>
       </div>
     );
   }
 
-  const getStatusVariant = (status: string) => {
-    return status === 'active' ? 'default' : 'secondary';
-  };
+  const applied = hasApplied(opportunity.id);
+  const saved = isOpportunitySaved(opportunity.id);
+  const applicationStatus = getApplicationStatus(opportunity.id);
 
   return (
     <div className="p-8">
       {/* Breadcrumb */}
       <div className="mb-6">
         <button 
-          onClick={() => navigate('/dashboard/opportunities')}
+          onClick={() => navigate(-1)}
           className="flex items-center text-foreground hover:text-muted-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver a oportunidades publicadas
+          Volver
         </button>
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <h1 className="text-2xl font-bold text-foreground">
-            {opportunity.title}
-          </h1>
-          <Badge variant={getStatusVariant(opportunity.status)}>
-            {opportunity.status === 'active' ? 'ACTIVA' : 
-             opportunity.status === 'paused' ? 'PAUSADA' : 'CERRADA'}
-          </Badge>
-        </div>
-        
-        <Button variant="outline" size="icon">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-border mb-6">
-        <div className="flex space-x-8">
-          <button
-            onClick={() => setActiveTab("preview")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "preview"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Vista Previa
-          </button>
-          <button
-            onClick={() => setActiveTab("applicants")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "applicants"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Postulantes ({opportunity.applicantsCount})
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
-      {activeTab === "preview" && (
-        <div className="bg-card p-8 rounded-lg border border-border">
-          <h2 className="text-xl font-bold text-foreground mb-4">
-            {opportunity.title}
-          </h2>
-          
-          <div className="flex flex-wrap gap-2 mb-6">
-            {opportunity.tags.map((tag, index) => (
-              <span 
-                key={index}
-                className="bg-secondary text-foreground px-3 py-1 rounded text-sm"
-              >
-                {tag}
-              </span>
-            ))}
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-3">
+            <h1 className="text-3xl font-bold text-foreground">
+              {opportunity.title}
+            </h1>
+            {applied && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                {applicationStatus || 'Aplicado'}
+              </Badge>
+            )}
+            <Badge variant={opportunity.is_active ? "default" : "secondary"}>
+              {opportunity.is_active ? 'ACTIVA' : 'INACTIVA'}
+            </Badge>
           </div>
           
-          <div className="prose max-w-none mb-6">
-            <h3 className="text-lg font-semibold mb-3">Descripción</h3>
-            <p className="text-foreground leading-relaxed mb-4">
-              {opportunity.description}
-            </p>
-
-            {opportunity.requirements && opportunity.requirements.length > 0 && (
-              <div className="mb-4">
-                <h4 className="font-semibold mb-2">Requisitos:</h4>
-                <ul className="list-disc list-inside space-y-1">
-                  {opportunity.requirements.map((req, index) => (
-                    <li key={index} className="text-foreground">{req}</li>
-                  ))}
-                </ul>
+          {company && (
+            <div className="flex items-center gap-4 text-muted-foreground mb-4">
+              <div className="flex items-center gap-1">
+                <Briefcase className="h-4 w-4" />
+                <span>{company.name}</span>
               </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              <div>
-                <h4 className="font-semibold mb-2">Ubicación:</h4>
-                <p className="text-foreground">{opportunity.location}</p>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold mb-2">Modalidad:</h4>
-                <p className="text-foreground">
-                  {opportunity.type === 'remote' ? 'Remoto' : 
-                   opportunity.type === 'hybrid' ? 'Híbrido' : 'Presencial'}
-                </p>
-              </div>
-
-              {opportunity.salary && (
-                <div>
-                  <h4 className="font-semibold mb-2">Salario:</h4>
-                  <p className="text-foreground">
-                    {opportunity.salary.min.toLocaleString()} - {opportunity.salary.max.toLocaleString()} {opportunity.salary.currency}
-                  </p>
+              {opportunity.location && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  <span>{opportunity.location}</span>
                 </div>
               )}
-
-              <div>
-                <h4 className="font-semibold mb-2">Categoría:</h4>
-                <p className="text-foreground">{opportunity.category}</p>
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                <span>{jobTypes.find(t => t.value === opportunity.type)?.label || opportunity.type}</span>
               </div>
             </div>
-          </div>
-          
-          <div className="mt-8 pt-6 border-t border-border">
-            <p className="text-muted-foreground text-sm">
-              {opportunity.applicantsCount} persona{opportunity.applicantsCount !== 1 ? 's han' : ' ha'} aplicado a esta oportunidad
-            </p>
-          </div>
+          )}
         </div>
-      )}
+        
+        {userRole === 'talent' && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleSaveToggle}
+              className={saved ? "text-red-600 hover:text-red-700" : ""}
+            >
+              <Heart className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
+            </Button>
+            
+            {!applied && opportunity.is_active && (
+              <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2">
+                    <Send className="h-4 w-4" />
+                    Aplicar
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Aplicar a {opportunity.title}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Carta de Presentación (Opcional)</label>
+                      <Textarea
+                        placeholder="Cuéntanos por qué eres ideal para esta posición..."
+                        value={coverLetter}
+                        onChange={(e) => setCoverLetter(e.target.value)}
+                        rows={4}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleApply}
+                        disabled={isApplying}
+                        className="flex-1"
+                      >
+                        {isApplying ? 'Enviando...' : 'Enviar Aplicación'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowApplicationDialog(false)}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+        )}
+      </div>
 
-      {activeTab === "applicants" && (
-        <div className="bg-card p-8 rounded-lg border border-border">
-          <h2 className="text-xl font-bold text-foreground mb-6">
-            Postulantes ({opportunity.applicantsCount})
-          </h2>
-          <ApplicantsList opportunityId={opportunity.id} />
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Job Details */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-card p-6 rounded-lg border">
+            <h2 className="text-xl font-semibold mb-4">Descripción del Trabajo</h2>
+            <div className="prose max-w-none">
+              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                {opportunity.description}
+              </p>
+            </div>
+          </div>
+
+          {opportunity.requirements && (
+            <div className="bg-card p-6 rounded-lg border">
+              <h2 className="text-xl font-semibold mb-4">Requisitos</h2>
+              <div className="prose max-w-none">
+                <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                  {opportunity.requirements}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Job Info */}
+          <div className="bg-card p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold mb-4">Información del Trabajo</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">{opportunity.category}</Badge>
+              </div>
+              
+              {opportunity.salary_min && (
+                <div className="flex items-center gap-2 text-sm">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    ${opportunity.salary_min.toLocaleString()}
+                    {opportunity.salary_max && ` - $${opportunity.salary_max.toLocaleString()}`}
+                    {` ${opportunity.currency || 'USD'}`}
+                  </span>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span>{jobTypes.find(t => t.value === opportunity.type)?.label || opportunity.type}</span>
+              </div>
+              
+              {opportunity.location && (
+                <div className="flex items-center gap-2 text-sm">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span>{opportunity.location}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Company Info */}
+          {company && (
+            <div className="bg-card p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">Acerca de la Empresa</h3>
+              <div className="space-y-3">
+                <h4 className="font-medium">{company.name}</h4>
+                {company.description && (
+                  <p className="text-sm text-muted-foreground">{company.description}</p>
+                )}
+                {company.industry && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Industria:</span> {company.industry}
+                  </div>
+                )}
+                {company.website && (
+                  <div className="text-sm">
+                    <a 
+                      href={company.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      Sitio web de la empresa
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
