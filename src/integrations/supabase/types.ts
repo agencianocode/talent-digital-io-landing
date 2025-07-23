@@ -97,6 +97,39 @@ export type Database = {
         }
         Relationships: []
       }
+      education: {
+        Row: {
+          created_at: string
+          degree: string
+          description: string | null
+          field_of_study: string | null
+          graduation_year: number | null
+          id: string
+          institution: string
+          talent_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          degree: string
+          description?: string | null
+          field_of_study?: string | null
+          graduation_year?: number | null
+          id?: string
+          institution: string
+          talent_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          degree?: string
+          description?: string | null
+          field_of_study?: string | null
+          graduation_year?: number | null
+          id?: string
+          institution?: string
+          talent_profile_id?: string
+        }
+        Relationships: []
+      }
       opportunities: {
         Row: {
           category: string
@@ -186,6 +219,81 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_opportunities: {
+        Row: {
+          created_at: string
+          id: string
+          opportunity_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opportunity_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opportunity_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      talent_profiles: {
+        Row: {
+          availability: string | null
+          bio: string | null
+          created_at: string
+          currency: string | null
+          hourly_rate_max: number | null
+          hourly_rate_min: number | null
+          id: string
+          linkedin_url: string | null
+          portfolio_url: string | null
+          skills: string[] | null
+          specialty: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          availability?: string | null
+          bio?: string | null
+          created_at?: string
+          currency?: string | null
+          hourly_rate_max?: number | null
+          hourly_rate_min?: number | null
+          id?: string
+          linkedin_url?: string | null
+          portfolio_url?: string | null
+          skills?: string[] | null
+          specialty?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          availability?: string | null
+          bio?: string | null
+          created_at?: string
+          currency?: string | null
+          hourly_rate_max?: number | null
+          hourly_rate_min?: number | null
+          id?: string
+          linkedin_url?: string | null
+          portfolio_url?: string | null
+          skills?: string[] | null
+          specialty?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -204,6 +312,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      work_experience: {
+        Row: {
+          company: string
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          is_current: boolean | null
+          position: string
+          start_date: string | null
+          talent_profile_id: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_current?: boolean | null
+          position: string
+          start_date?: string | null
+          talent_profile_id: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_current?: boolean | null
+          position?: string
+          start_date?: string | null
+          talent_profile_id?: string
         }
         Relationships: []
       }

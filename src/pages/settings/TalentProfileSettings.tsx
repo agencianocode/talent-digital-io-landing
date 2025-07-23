@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Plus, X, Briefcase, GraduationCap, Award } from 'lucide-react';
 
@@ -18,14 +19,15 @@ const experienceSchema = z.object({
   company: z.string().min(1, 'Empresa requerida'),
   startDate: z.string().min(1, 'Fecha de inicio requerida'),
   endDate: z.string().optional(),
-  current: z.boolean().default(false),
+  isCurrent: z.boolean().default(false),
   description: z.string().optional(),
 });
 
 const educationSchema = z.object({
   degree: z.string().min(1, 'Título requerido'),
   institution: z.string().min(1, 'Institución requerida'),
-  year: z.string().min(1, 'Año requerido'),
+  graduationYear: z.number().min(1900, 'Año válido requerido'),
+  fieldOfStudy: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -36,46 +38,103 @@ const talentProfileSchema = z.object({
   skills: z.array(z.string()).min(1, 'Agrega al menos una habilidad'),
   experience: z.array(experienceSchema),
   education: z.array(educationSchema),
-  yearsExperience: z.string().min(1, 'Años de experiencia requeridos'),
+  yearsExperience: z.number().min(0, 'Años de experiencia requeridos'),
   availability: z.string().min(1, 'Disponibilidad requerida'),
 });
 
 type TalentProfileFormData = z.infer<typeof talentProfileSchema>;
 
 const TalentProfileSettings = () => {
-  const { user, profile, updateProfile } = useSupabaseAuth();
+  const { user } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [newSkill, setNewSkill] = useState('');
+  const [talentProfile, setTalentProfile] = useState(null);
 
   const form = useForm<TalentProfileFormData>({
     resolver: zodResolver(talentProfileSchema),
     defaultValues: {
-      title: profile?.full_name || '',
+      title: '',
       specialty: '',
       bio: '',
-      skills: ['JavaScript', 'React', 'Node.js'], // Mock data
-      experience: [
-        {
-          position: 'Senior Sales Executive',
-          company: 'TechCorp Solutions',
-          startDate: '2022-01',
-          endDate: '',
-          current: true,
-          description: 'Responsable de cuentas estratégicas...'
-        }
-      ],
-      education: [
-        {
-          degree: 'Grado en Comercio y Marketing',
-          institution: 'Universidad Autónoma de Madrid',
-          year: '2018',
-          description: ''
-        }
-      ],
-      yearsExperience: '5',
-      availability: 'Inmediata',
+      skills: [],
+      experience: [],
+      education: [],
+      yearsExperience: 0,
+      availability: 'full-time',
     },
   });
+
+  // Load talent profile data
+  useEffect(() => {
+    if (user) {
+      loadTalentProfile();
+    }
+  }, [user]);
+
+  const loadTalentProfile = async () => {
+    if (!user) return;
+
+    try {
+      // Get talent profile
+      const { data: profile, error: profileError } = await supabase
+        .from('talent_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      if (profile) {
+        setTalentProfile(profile);
+
+        // Get work experience
+        const { data: experience, error: expError } = await supabase
+          .from('work_experience')
+          .select('*')
+          .eq('talent_profile_id', profile.id)
+          .order('start_date', { ascending: false });
+
+        if (expError) throw expError;
+
+        // Get education
+        const { data: education, error: eduError } = await supabase
+          .from('education')
+          .select('*')
+          .eq('talent_profile_id', profile.id)
+          .order('graduation_year', { ascending: false });
+
+        if (eduError) throw eduError;
+
+        // Update form with loaded data
+        form.reset({
+          title: profile.title || '',
+          specialty: profile.specialty || '',
+          bio: profile.bio || '',
+          skills: profile.skills || [],
+          experience: experience?.map(exp => ({
+            company: exp.company,
+            position: exp.position,
+            description: exp.description || '',
+            startDate: exp.start_date,
+            endDate: exp.end_date,
+            isCurrent: exp.is_current || false
+          })) || [],
+          education: education?.map(edu => ({
+            institution: edu.institution,
+            degree: edu.degree,
+            fieldOfStudy: edu.field_of_study || '',
+            graduationYear: edu.graduation_year,
+            description: edu.description || ''
+          })) || [],
+          yearsExperience: profile.years_experience || 0,
+          availability: profile.availability || 'full-time',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading talent profile:', error);
+      toast.error('No se pudo cargar el perfil de talento');
+    }
+  };
 
   const { fields: experienceFields, append: appendExperience, remove: removeExperience } = useFieldArray({
     control: form.control,
@@ -88,14 +147,99 @@ const TalentProfileSettings = () => {
   });
 
   const onSubmit = async (data: TalentProfileFormData) => {
+    if (!user) return;
+
     setIsLoading(true);
     try {
-      await updateProfile({
-        full_name: data.title,
-        // Note: Additional profile data would need separate storage in Supabase
-      });
+      let profileId = talentProfile?.id;
+
+      // Create or update talent profile
+      if (!talentProfile) {
+        const { data: newProfile, error: profileError } = await supabase
+          .from('talent_profiles')
+          .insert({
+            user_id: user.id,
+            title: data.title,
+            specialty: data.specialty,
+            bio: data.bio,
+            skills: data.skills,
+            years_experience: data.yearsExperience,
+            availability: data.availability,
+          })
+          .select()
+          .single();
+
+        if (profileError) throw profileError;
+        profileId = newProfile.id;
+        setTalentProfile(newProfile);
+      } else {
+        const { error: updateError } = await supabase
+          .from('talent_profiles')
+          .update({
+            title: data.title,
+            specialty: data.specialty,
+            bio: data.bio,
+            skills: data.skills,
+            years_experience: data.yearsExperience,
+            availability: data.availability,
+          })
+          .eq('id', talentProfile.id);
+
+        if (updateError) throw updateError;
+      }
+
+      // Update work experience
+      if (profileId) {
+        // Delete existing experience
+        await supabase
+          .from('work_experience')
+          .delete()
+          .eq('talent_profile_id', profileId);
+
+        // Insert new experience
+        if (data.experience.length > 0) {
+          const { error: expError } = await supabase
+            .from('work_experience')
+            .insert(data.experience.map(exp => ({
+              talent_profile_id: profileId,
+              company: exp.company,
+              position: exp.position,
+              description: exp.description,
+              start_date: exp.startDate,
+              end_date: exp.endDate,
+              is_current: exp.isCurrent,
+            })));
+
+          if (expError) throw expError;
+        }
+
+        // Update education
+        // Delete existing education
+        await supabase
+          .from('education')
+          .delete()
+          .eq('talent_profile_id', profileId);
+
+        // Insert new education
+        if (data.education.length > 0) {
+          const { error: eduError } = await supabase
+            .from('education')
+            .insert(data.education.map(edu => ({
+              talent_profile_id: profileId,
+              institution: edu.institution,
+              degree: edu.degree,
+              field_of_study: edu.fieldOfStudy,
+              graduation_year: edu.graduationYear,
+              description: edu.description,
+            })));
+
+          if (eduError) throw eduError;
+        }
+      }
+
       toast.success('Perfil profesional actualizado');
     } catch (error) {
+      console.error('Error updating talent profile:', error);
       toast.error('Error al actualizar el perfil');
     } finally {
       setIsLoading(false);
@@ -170,7 +314,12 @@ const TalentProfileSettings = () => {
                     <FormItem>
                       <FormLabel>Años de Experiencia</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej: 5" {...field} />
+                        <Input 
+                          type="number" 
+                          placeholder="Ej: 5" 
+                          {...field} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -267,7 +416,7 @@ const TalentProfileSettings = () => {
                     company: '',
                     startDate: '',
                     endDate: '',
-                    current: false,
+                    isCurrent: false,
                     description: ''
                   })}
                 >
@@ -341,9 +490,9 @@ const TalentProfileSettings = () => {
                         <FormItem>
                           <FormLabel>Fecha Fin</FormLabel>
                           <FormControl>
-                            <Input 
+                    <Input 
                               type="month" 
-                              disabled={form.watch(`experience.${index}.current`)}
+                              disabled={form.watch(`experience.${index}.isCurrent`)}
                               {...field} 
                             />
                           </FormControl>
@@ -389,7 +538,8 @@ const TalentProfileSettings = () => {
                   onClick={() => appendEducation({
                     degree: '',
                     institution: '',
-                    year: '',
+                    graduationYear: new Date().getFullYear(),
+                    fieldOfStudy: '',
                     description: ''
                   })}
                 >
@@ -444,12 +594,17 @@ const TalentProfileSettings = () => {
 
                     <FormField
                       control={form.control}
-                      name={`education.${index}.year`}
+                      name={`education.${index}.graduationYear`}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Año</FormLabel>
                           <FormControl>
-                            <Input placeholder="2020" {...field} />
+                            <Input 
+                              type="number" 
+                              placeholder="2020" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || new Date().getFullYear())}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
