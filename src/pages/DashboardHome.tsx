@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
-import { useDashboardMetrics } from "@/hooks/useCustomHooks";
+import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 
 const DashboardHome = () => {
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ const DashboardHome = () => {
           <div className="text-center">
             <h3 className="font-medium text-foreground">Mensajes sin leer</h3>
             <p className="text-2xl font-bold text-foreground mt-2">
-              {metrics?.unreadMessages || 0}
+              {metrics?.newMessages || 0}
             </p>
           </div>
         </div>

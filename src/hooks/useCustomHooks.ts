@@ -1,18 +1,19 @@
 
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useOpportunities } from '@/contexts/OpportunitiesContext';
+import { useSupabaseOpportunities } from './useSupabaseOpportunities';
 import { useCallback } from 'react';
 
-// Custom hook for application management
+// Custom hook for application management using real Supabase data
 export const useApplications = () => {
   const { user, userRole } = useSupabaseAuth();
   const { 
-    applications, 
-    userApplications, 
+    applications,
     applyToOpportunity, 
-    updateApplicationStatus,
-    getApplicationsByOpportunity 
-  } = useOpportunities();
+    hasApplied,
+    getApplicationStatus,
+    getApplicationsByOpportunity,
+    updateApplicationStatus
+  } = useSupabaseOpportunities();
 
   const applyToJob = useCallback(async (opportunityId: string, message: string) => {
     if (!user || userRole !== 'talent') {
@@ -20,41 +21,25 @@ export const useApplications = () => {
     }
 
     // Check if already applied
-    const existingApplication = userApplications.find(
-      app => app.opportunityId === opportunityId
-    );
-
-    if (existingApplication) {
+    if (hasApplied(opportunityId)) {
       throw new Error('You have already applied to this opportunity');
     }
 
     await applyToOpportunity(opportunityId, message);
-  }, [user, userApplications, applyToOpportunity]);
+  }, [user, userRole, hasApplied, applyToOpportunity]);
 
   const getMyApplications = useCallback(() => {
-    return userApplications;
-  }, [userApplications]);
-
-  const getApplicationStatus = useCallback((opportunityId: string) => {
-    const application = userApplications.find(
-      app => app.opportunityId === opportunityId
-    );
-    return application?.status || null;
-  }, [userApplications, user]);
-
-  const hasApplied = useCallback((opportunityId: string) => {
-    return userApplications.some(app => app.opportunityId === opportunityId);
-  }, [userApplications]);
+    return applications;
+  }, [applications]);
 
   return {
     applications,
-    userApplications,
     applyToJob,
-    updateApplicationStatus,
-    getApplicationsByOpportunity,
     getMyApplications,
     getApplicationStatus,
-    hasApplied
+    hasApplied,
+    getApplicationsByOpportunity,
+    updateApplicationStatus
   };
 };
 
@@ -97,84 +82,19 @@ export const useAutoSave = (key: string, initialData: any = {}) => {
   return { saveData, loadData, clearSaved };
 };
 
-// Custom hook for managing dashboard metrics
-export const useDashboardMetrics = () => {
-  const { user, userRole, company } = useSupabaseAuth();
-  const { opportunities, applications, userApplications } = useOpportunities();
-
-  const getBusinessMetrics = useCallback(() => {
-    if (!user || userRole !== 'business') return null;
-
-    const companyOpportunities = opportunities.filter(
-      opp => opp.companyId === company?.id || opp.companyId === user.id
-    );
-
-    const activeOpportunities = companyOpportunities.filter(
-      opp => opp.status === 'active'
-    );
-
-    const totalApplications = applications.filter(app =>
-      companyOpportunities.some(opp => opp.id === app.opportunityId)
-    );
-
-    const pendingApplications = totalApplications.filter(
-      app => app.status === 'pending'
-    );
-
-    return {
-      activeOpportunities: activeOpportunities.length,
-      totalOpportunities: companyOpportunities.length,
-      pendingApplications: pendingApplications.length,
-      totalApplications: totalApplications.length,
-      unreadMessages: 0 // Placeholder
-    };
-  }, [user, opportunities, applications]);
-
-  const getTalentMetrics = useCallback(() => {
-    if (!user || userRole !== 'talent') return null;
-
-    const appliedJobs = userApplications.length;
-    const pendingApplications = userApplications.filter(
-      app => app.status === 'pending'
-    ).length;
-    const acceptedApplications = userApplications.filter(
-      app => app.status === 'accepted'
-    ).length;
-
-    return {
-      appliedJobs,
-      pendingApplications,
-      acceptedApplications,
-      scheduledInterviews: acceptedApplications, // Simplified
-      unreadMessages: 0 // Placeholder
-    };
-  }, [user, userApplications]);
-
-  return {
-    getBusinessMetrics,
-    getTalentMetrics
-  };
-};
-
-// Custom hook for search and filtering
+// Custom hook for search and filtering using real Supabase data
 export const useSearch = () => {
-  const { searchOpportunities, filterOpportunities } = useOpportunities();
+  const { searchOpportunities, filterOpportunities } = useSupabaseOpportunities();
 
   const performSearch = useCallback((query: string, filters?: any) => {
     let results = searchOpportunities(query);
     
     if (filters) {
-      results = results.filter(opp => {
-        if (filters.category && opp.category !== filters.category) return false;
-        if (filters.location && !opp.location.toLowerCase().includes(filters.location.toLowerCase())) return false;
-        if (filters.type && opp.type !== filters.type) return false;
-        if (filters.status && opp.status !== filters.status) return false;
-        return true;
-      });
+      results = filterOpportunities(filters);
     }
 
     return results;
-  }, [searchOpportunities]);
+  }, [searchOpportunities, filterOpportunities]);
 
   return {
     searchOpportunities,

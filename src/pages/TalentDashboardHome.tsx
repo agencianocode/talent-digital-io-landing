@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
-import { useDashboardMetrics } from "@/hooks/useCustomHooks";
+import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 
 const TalentDashboardHome = () => {
   const { profile } = useSupabaseAuth();

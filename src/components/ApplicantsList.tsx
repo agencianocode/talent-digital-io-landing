@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { useApplications } from '@/hooks/useCustomHooks';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 import ApplicationStatusBadge from './ApplicationStatusBadge';
 
 interface Application {
@@ -28,10 +29,43 @@ interface ApplicantsListProps {
 
 const ApplicantsList: React.FC<ApplicantsListProps> = ({ opportunityId }) => {
   const navigate = useNavigate();
-  const { getApplicationsByOpportunity, updateApplicationStatus } = useApplications();
+  const { updateApplicationStatus } = useApplications();
   const { toast } = useToast();
+  const [applications, setApplications] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const applications = getApplicationsByOpportunity(opportunityId);
+  // Fetch applications for this opportunity
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('applications')
+          .select(`
+            *,
+            profiles (
+              full_name
+            )
+          `)
+          .eq('opportunity_id', opportunityId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setApplications(data || []);
+      } catch (err) {
+        console.error('Error fetching applications:', err);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar las aplicaciones",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, [opportunityId, toast]);
 
   const handleStatusUpdate = async (applicationId: string, newStatus: Application['status']) => {
     try {
@@ -53,6 +87,14 @@ const ApplicantsList: React.FC<ApplicantsListProps> = ({ opportunityId }) => {
     navigate(`/talent-profile/${applicantId}`);
   };
 
+  if (isLoading) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Cargando aplicaciones...</p>
+      </div>
+    );
+  }
+
   if (applications.length === 0) {
     return (
       <div className="text-center py-12">
@@ -71,29 +113,29 @@ const ApplicantsList: React.FC<ApplicantsListProps> = ({ opportunityId }) => {
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-4 flex-1">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${application.applicantId}`} />
+                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${application.user_id}`} />
                   <AvatarFallback>
-                    {application.applicantName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    {(application.profiles?.full_name || 'U').split(' ').map(n => n[0]).join('').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
 
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="font-semibold text-lg">{application.applicantName}</h3>
+                    <h3 className="font-semibold text-lg">{application.profiles?.full_name || 'Usuario'}</h3>
                     <ApplicationStatusBadge status={application.status} />
                   </div>
                   
                   <p className="text-sm text-muted-foreground mb-3">
-                    {application.applicantEmail}
+                    {application.user_id}
                   </p>
 
                   <div className="bg-secondary p-3 rounded-lg mb-3">
                     <p className="text-sm font-medium mb-1">Mensaje de aplicación:</p>
-                    <p className="text-sm text-foreground">{application.message}</p>
+                    <p className="text-sm text-foreground">{application.cover_letter || 'Sin mensaje'}</p>
                   </div>
 
                   <p className="text-xs text-muted-foreground">
-                    Aplicó el {format(new Date(application.appliedAt), 'dd MMM yyyy, HH:mm', { locale: es })}
+                    Aplicó el {format(new Date(application.created_at), 'dd MMM yyyy, HH:mm', { locale: es })}
                   </p>
                 </div>
               </div>
@@ -102,7 +144,7 @@ const ApplicantsList: React.FC<ApplicantsListProps> = ({ opportunityId }) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleViewProfile(application.applicantId)}
+                  onClick={() => handleViewProfile(application.user_id)}
                 >
                   Ver Perfil
                 </Button>
