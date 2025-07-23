@@ -3,11 +3,11 @@ import React from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { Building2, User, Users, Shield, Bell, CreditCard, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContextEnhanced';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const SettingsLayout = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
 
   const companySettings = [
     { href: '/settings/company', icon: Building2, label: 'Información de la Empresa' },
@@ -36,7 +36,7 @@ const SettingsLayout = () => {
         <div className="flex gap-8">
           {/* Sidebar */}
           <div className="w-64 space-y-6">
-            {user?.type === 'business' && (
+            {user && (
               <div>
                 <h3 className="font-semibold text-foreground mb-3">Empresa</h3>
                 <nav className="space-y-1">
@@ -84,7 +84,7 @@ const SettingsLayout = () => {
               </nav>
             </div>
 
-            {user?.type === 'talent' && (
+            {user && (
               <div>
                 <h3 className="font-semibold text-foreground mb-3">Talento</h3>
                 <nav className="space-y-1">

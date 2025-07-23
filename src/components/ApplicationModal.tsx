@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContextEnhanced';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useApplications } from '@/hooks/useCustomHooks';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,7 +26,7 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
 }) => {
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { applyToJob } = useApplications();
   const { toast } = useToast();
 
@@ -84,14 +84,14 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
             <CardContent className="p-4">
               <div className="flex items-center space-x-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src={user.profile?.photo} />
+                  <AvatarImage src="" />
                   <AvatarFallback>
-                    {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    {user.email.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-lg">{user.name}</h3>
-                  <p className="text-muted-foreground">{user.profile?.position || 'Profesional'}</p>
+                  <h3 className="font-semibold text-lg">{user.email}</h3>
+                  <p className="text-muted-foreground">Profesional</p>
                   <p className="text-sm text-muted-foreground">{user.email}</p>
                 </div>
               </div>

@@ -3,7 +3,7 @@ import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/AuthContextEnhanced';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { MessageCircle } from 'lucide-react';
@@ -30,12 +30,12 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   activeConversationId,
   onSelectConversation
 }) => {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
 
   if (!user) return null;
 
   const getOtherParticipantName = (conversation: Conversation) => {
-    return conversation.participantNames.find(name => name !== user.name) || 'Usuario';
+    return conversation.participantNames.find(name => name !== user.email) || 'Usuario';
   };
 
   const getInitials = (name: string) => {

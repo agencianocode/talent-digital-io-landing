@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContextEnhanced";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useDashboardMetrics } from "@/hooks/useCustomHooks";
 
 const DashboardHome = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { getBusinessMetrics } = useDashboardMetrics();
   
   const metrics = getBusinessMetrics();
@@ -15,7 +15,7 @@ const DashboardHome = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-foreground">
-          ¡Bienvenida, {user?.name || 'Usuario'}!
+          ¡Bienvenida, {user?.email || 'Usuario'}!
         </h1>
         <Button 
           onClick={() => navigate('/dashboard/opportunities/new')}

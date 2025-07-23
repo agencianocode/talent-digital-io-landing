@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/AuthContextEnhanced';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Send, MessageCircle } from 'lucide-react';
@@ -37,7 +37,7 @@ interface ChatViewProps {
 }
 
 const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessage }) => {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const [messageText, setMessageText] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -61,7 +61,7 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
     );
   }
 
-  const otherParticipantName = conversation.participantNames.find(name => name !== user.name) || 'Usuario';
+  const otherParticipantName = conversation.participantNames.find(name => name !== user.email) || 'Usuario';
 
   const handleSendMessage = () => {
     if (messageText.trim()) {
