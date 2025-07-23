@@ -106,24 +106,37 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Set up auth state listener
   useEffect(() => {
+    let isMounted = true;
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setAuthState(prev => ({ ...prev, session, user: session?.user ?? null }));
+      (event, session) => {
+        if (!isMounted) return;
+        
+        setAuthState(prev => ({ 
+          ...prev, 
+          session, 
+          user: session?.user ?? null,
+          isAuthenticated: !!session?.user,
+          isLoading: !!session?.user // Keep loading true while fetching user data
+        }));
         
         if (session?.user) {
-          // Defer user data fetching to prevent blocking
-          setTimeout(async () => {
-            const userData = await fetchUserData(session.user.id);
+          // Fetch user data immediately but non-blocking
+          fetchUserData(session.user.id).then(userData => {
+            if (!isMounted) return;
             setAuthState(prev => ({
               ...prev,
               profile: userData.profile,
               userRole: userData.role,
               company: userData.company,
-              isAuthenticated: true,
               isLoading: false
             }));
-          }, 0);
+          }).catch(error => {
+            console.error('Error fetching user data:', error);
+            if (!isMounted) return;
+            setAuthState(prev => ({ ...prev, isLoading: false }));
+          });
         } else {
           setAuthState(prev => ({
             ...prev,
@@ -139,26 +152,40 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setAuthState(prev => ({ ...prev, session, user: session?.user ?? null }));
+      if (!isMounted) return;
+      
+      setAuthState(prev => ({ 
+        ...prev, 
+        session, 
+        user: session?.user ?? null,
+        isAuthenticated: !!session?.user,
+        isLoading: !!session?.user
+      }));
       
       if (session?.user) {
-        setTimeout(async () => {
-          const userData = await fetchUserData(session.user.id);
+        fetchUserData(session.user.id).then(userData => {
+          if (!isMounted) return;
           setAuthState(prev => ({
             ...prev,
             profile: userData.profile,
             userRole: userData.role,
             company: userData.company,
-            isAuthenticated: true,
             isLoading: false
           }));
-        }, 0);
+        }).catch(error => {
+          console.error('Error fetching user data:', error);
+          if (!isMounted) return;
+          setAuthState(prev => ({ ...prev, isLoading: false }));
+        });
       } else {
         setAuthState(prev => ({ ...prev, isLoading: false }));
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
