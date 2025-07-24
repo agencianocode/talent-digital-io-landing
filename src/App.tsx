@@ -110,7 +110,7 @@ function App() {
                         } />
                         
                         {/* Business Dashboard Routes */}
-                        <Route path="/dashboard" element={
+                        <Route path="/business-dashboard" element={
                           <ProtectedRoute requiredUserType="business">
                             <DashboardLayout />
                           </ProtectedRoute>
@@ -176,7 +176,8 @@ function App() {
                         </Route>
 
                         {/* Legacy Routes - Redirect to new structure */}
-                        <Route path="/business/dashboard" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/dashboard" element={<Navigate to="/business-dashboard" replace />} />
+                        <Route path="/business/dashboard" element={<Navigate to="/business-dashboard" replace />} />
                         <Route path="/talent/dashboard" element={<Navigate to="/talent-dashboard" replace />} />
                         <Route path="/talent/home" element={<Navigate to="/talent-dashboard" replace />} />
                         <Route path="/talent/marketplace" element={<Navigate to="/talent-dashboard/marketplace" replace />} />

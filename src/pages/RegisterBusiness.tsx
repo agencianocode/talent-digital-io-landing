@@ -29,7 +29,7 @@ const RegisterBusiness = () => {
   // Effect to handle redirection after successful registration
   useEffect(() => {
     if (registrationComplete && isAuthenticated && userRole === 'business') {
-      navigate('/dashboard');
+      navigate('/business-dashboard');
     }
   }, [registrationComplete, isAuthenticated, userRole, navigate]);
 

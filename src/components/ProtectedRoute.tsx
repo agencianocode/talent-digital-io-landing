@@ -24,7 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredUserT
 
   if (requiredUserType && userRole !== requiredUserType) {
     // Only redirect if there's a mismatch between required and actual roles
-    const redirectPath = userRole === 'business' ? '/dashboard' : '/talent-dashboard';
+    const redirectPath = userRole === 'business' ? '/business-dashboard' : '/talent-dashboard';
     return <Navigate to={redirectPath} replace />;
   }
 

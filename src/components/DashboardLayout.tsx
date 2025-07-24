@@ -71,7 +71,7 @@ const DashboardLayout = () => {
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <NavLink
-                        to="/dashboard"
+                        to="/business-dashboard"
                         end
                         className={({ isActive }) =>
                           cn(
@@ -91,7 +91,7 @@ const DashboardLayout = () => {
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <NavLink
-                        to="/dashboard/opportunities"
+                        to="/business-dashboard/opportunities"
                         className={({ isActive }) =>
                           cn(
                             "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
@@ -110,7 +110,7 @@ const DashboardLayout = () => {
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <NavLink
-                        to="/dashboard/talent"
+                        to="/business-dashboard/talent"
                         className={({ isActive }) =>
                           cn(
                             "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
@@ -148,7 +148,7 @@ const DashboardLayout = () => {
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <NavLink
-                        to="/dashboard/services"
+                        to="/business-dashboard/services"
                         className={({ isActive }) =>
                           cn(
                             "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",

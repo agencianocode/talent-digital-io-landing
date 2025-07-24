@@ -10,7 +10,7 @@ const UserSelector = () => {
       // If user is logged in, switch their role
       await switchUserType('business');
     }
-    navigate('/dashboard');
+    navigate('/business-dashboard');
   };
 
   const handleSelectTalentType = async () => {

@@ -65,7 +65,7 @@ const Welcome = () => {
 
         <div className="text-center">
           <button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/business-dashboard')}
             className="text-foreground hover:text-muted-foreground underline"
           >
             Cerrar
