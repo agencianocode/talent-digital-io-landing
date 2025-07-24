@@ -360,6 +360,10 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      switch_user_role: {
+        Args: { new_role: Database["public"]["Enums"]["user_role"] }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "admin" | "business" | "talent"

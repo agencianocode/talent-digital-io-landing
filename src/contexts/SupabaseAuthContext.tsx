@@ -293,12 +293,13 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const switchUserType = async (newRole: UserRole) => {
     if (!authState.user) return { error: new Error('User not authenticated') };
 
-    const { error } = await supabase
-      .from('user_roles')
-      .update({ role: newRole })
-      .eq('user_id', authState.user.id);
+    // Use the new security definer function
+    const { data, error } = await supabase.rpc('switch_user_role', { 
+      new_role: newRole 
+    });
 
-    if (!error) {
+    if (!error && data) {
+      // Update the local state immediately
       setAuthState(prev => ({
         ...prev,
         userRole: newRole
