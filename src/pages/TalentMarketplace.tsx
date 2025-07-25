@@ -44,9 +44,9 @@ const TalentMarketplace = () => {
   } = useSavedOpportunities();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("");
   const [applying, setApplying] = useState<string | null>(null);
 
@@ -99,8 +99,8 @@ const TalentMarketplace = () => {
 
   // Reset subcategory when category changes
   useEffect(() => {
-    if (categoryFilter && !availableSubcategories.includes(subcategoryFilter)) {
-      setSubcategoryFilter("");
+    if (categoryFilter && categoryFilter !== "all" && !availableSubcategories.includes(subcategoryFilter)) {
+      setSubcategoryFilter("all");
     }
   }, [categoryFilter, subcategoryFilter, availableSubcategories]);
 
@@ -112,9 +112,9 @@ const TalentMarketplace = () => {
       opp.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       opp.category.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = !categoryFilter || opp.category === categoryFilter;
-    const matchesSubcategory = !subcategoryFilter || opp.title.toLowerCase().includes(subcategoryFilter.toLowerCase());
-    const matchesType = !typeFilter || opp.type === typeFilter;
+    const matchesCategory = !categoryFilter || categoryFilter === "all" || opp.category === categoryFilter;
+    const matchesSubcategory = !subcategoryFilter || subcategoryFilter === "all" || opp.title.toLowerCase().includes(subcategoryFilter.toLowerCase());
+    const matchesType = !typeFilter || typeFilter === "all" || opp.type === typeFilter;
     const matchesLocation = !locationFilter || 
       (opp.location && opp.location.toLowerCase().includes(locationFilter.toLowerCase()));
     
@@ -217,7 +217,7 @@ const TalentMarketplace = () => {
               <SelectValue placeholder="Categoría" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las categorías</SelectItem>
+              <SelectItem value="all">Todas las categorías</SelectItem>
               {Object.keys(jobCategories).map((category) => (
                 <SelectItem key={category} value={category}>
                   {category}
@@ -232,7 +232,7 @@ const TalentMarketplace = () => {
                 <SelectValue placeholder="Especialidad" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas las especialidades</SelectItem>
+                <SelectItem value="all">Todas las especialidades</SelectItem>
                 {availableSubcategories.map((subcategory) => (
                   <SelectItem key={subcategory} value={subcategory}>
                     {subcategory}
@@ -247,7 +247,7 @@ const TalentMarketplace = () => {
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos los tipos</SelectItem>
+              <SelectItem value="all">Todos los tipos</SelectItem>
               {jobTypes.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   {type.label}
@@ -266,13 +266,13 @@ const TalentMarketplace = () => {
             className="max-w-xs"
           />
           
-          {(categoryFilter || subcategoryFilter || typeFilter || locationFilter) && (
+          {(categoryFilter && categoryFilter !== "all" || subcategoryFilter && subcategoryFilter !== "all" || typeFilter && typeFilter !== "all" || locationFilter) && (
             <Button
               variant="outline"
               onClick={() => {
-                setCategoryFilter("");
-                setSubcategoryFilter("");
-                setTypeFilter("");
+                setCategoryFilter("all");
+                setSubcategoryFilter("all");
+                setTypeFilter("all");
                 setLocationFilter("");
               }}
             >

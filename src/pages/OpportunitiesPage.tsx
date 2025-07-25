@@ -14,8 +14,8 @@ const OpportunitiesPage = () => {
   const { userRole, company } = useSupabaseAuth();
   const { opportunities, isLoading, getApplicationsByOpportunity } = useSupabaseOpportunities();
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [applicationCounts, setApplicationCounts] = useState<Record<string, number>>({});
 
   // Job categories with subcategories
@@ -74,8 +74,8 @@ const OpportunitiesPage = () => {
       opp.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       opp.category.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = !categoryFilter || opp.category === categoryFilter;
-    const matchesType = !typeFilter || opp.type === typeFilter;
+    const matchesCategory = !categoryFilter || categoryFilter === "all" || opp.category === categoryFilter;
+    const matchesType = !typeFilter || typeFilter === "all" || opp.type === typeFilter;
     
     return matchesSearch && matchesCategory && matchesType;
   });
@@ -168,7 +168,7 @@ const OpportunitiesPage = () => {
               <SelectValue placeholder="Todas las categorías" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las categorías</SelectItem>
+              <SelectItem value="all">Todas las categorías</SelectItem>
               {Object.keys(jobCategories).map((category) => (
                 <SelectItem key={category} value={category}>
                   {category}
@@ -182,7 +182,7 @@ const OpportunitiesPage = () => {
               <SelectValue placeholder="Tipo de trabajo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos los tipos</SelectItem>
+              <SelectItem value="all">Todos los tipos</SelectItem>
               {jobTypes.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   {type.label}

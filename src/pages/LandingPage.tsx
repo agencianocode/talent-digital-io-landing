@@ -18,21 +18,21 @@ const LandingPage = () => {
               <nav className="hidden md:flex space-x-6">
                 <Button 
                   variant="ghost" 
-                  onClick={() => navigate('/opportunities')}
+                  onClick={() => navigate('/oportunidades-laborales')}
                   className="text-muted-foreground hover:text-foreground"
                 >
                   Oportunidades Laborales
                 </Button>
                 <Button 
                   variant="ghost" 
-                  onClick={() => navigate('/talent')}
+                  onClick={() => navigate('/para-talento-digital')}
                   className="text-muted-foreground hover:text-foreground"
                 >
                   Para Talento Digital
                 </Button>
                 <Button 
                   variant="ghost" 
-                  onClick={() => navigate('/business')}
+                  onClick={() => navigate('/para-negocios')}
                   className="text-muted-foreground hover:text-foreground"
                 >
                   Para Negocios

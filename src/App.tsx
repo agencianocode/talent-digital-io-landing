@@ -44,6 +44,9 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const RegisterBusiness = lazy(() => import('./pages/RegisterBusiness'));
 const RegisterTalent = lazy(() => import('./pages/RegisterTalent'));
 const SavedOpportunities = lazy(() => import('./pages/SavedOpportunities'));
+const OpportunitiesLanding = lazy(() => import('./pages/OpportunitiesLanding'));
+const TalentLanding = lazy(() => import('./pages/TalentLanding'));
+const BusinessLanding = lazy(() => import('./pages/BusinessLanding'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +77,23 @@ function App() {
                         <Route path="/" element={<LandingPage />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Login />} />
+                        
+                        {/* Landing Pages */}
+                        <Route path="/oportunidades-laborales" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <OpportunitiesLanding />
+                          </Suspense>
+                        } />
+                        <Route path="/para-talento-digital" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <TalentLanding />
+                          </Suspense>
+                        } />
+                        <Route path="/para-negocios" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <BusinessLanding />
+                          </Suspense>
+                        } />
                         
                         {/* Registration Routes */}
                         <Route path="/register" element={
