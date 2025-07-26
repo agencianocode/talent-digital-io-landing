@@ -143,7 +143,7 @@ const OpportunitiesPage = () => {
             Mis Oportunidades ({filteredOpportunities.length})
           </h1>
           <Button 
-            onClick={() => navigate('/dashboard/opportunities/new')}
+            onClick={() => navigate('/business-dashboard/opportunities/new')}
             className="font-semibold"
           >
             Publicar Oportunidad
@@ -207,7 +207,7 @@ const OpportunitiesPage = () => {
             }
           </p>
           {companyOpportunities.length === 0 && (
-            <Button onClick={() => navigate('/dashboard/opportunities/new')}>
+            <Button onClick={() => navigate('/business-dashboard/opportunities/new')}>
               Publicar Primera Oportunidad
             </Button>
           )}
@@ -262,7 +262,7 @@ const OpportunitiesPage = () => {
                   <Button 
                     variant="outline" 
                     size="icon"
-                    onClick={() => navigate(`/dashboard/opportunities/${opportunity.id}`)}
+                    onClick={() => navigate(`/business-dashboard/opportunities/${opportunity.id}`)}
                     title="Ver detalles"
                   >
                     <Eye className="h-4 w-4" />

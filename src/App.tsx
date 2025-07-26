@@ -47,6 +47,7 @@ const SavedOpportunities = lazy(() => import('./pages/SavedOpportunities'));
 const OpportunitiesLanding = lazy(() => import('./pages/OpportunitiesLanding'));
 const TalentLanding = lazy(() => import('./pages/TalentLanding'));
 const BusinessLanding = lazy(() => import('./pages/BusinessLanding'));
+const ServicesPage = lazy(() => import('./pages/ServicesPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -155,12 +156,22 @@ function App() {
                               <NewOpportunity />
                             </Suspense>
                           } />
-                          <Route path="opportunities/:id" element={
-                            <Suspense fallback={<LoadingSkeleton type="card" />}>
-                              <OpportunityDetail />
-                            </Suspense>
-                          } />
-                        </Route>
+                           <Route path="opportunities/:id" element={
+                             <Suspense fallback={<LoadingSkeleton type="card" />}>
+                               <OpportunityDetail />
+                             </Suspense>
+                           } />
+                           <Route path="talent" element={
+                             <Suspense fallback={<LoadingSkeleton type="talent" />}>
+                               <TalentSearchPage />
+                             </Suspense>
+                           } />
+                           <Route path="services" element={
+                             <Suspense fallback={<LoadingSkeleton type="card" />}>
+                               <ServicesPage />
+                             </Suspense>
+                           } />
+                         </Route>
 
                         {/* Talent Dashboard Routes */}
                         <Route path="/talent-dashboard" element={

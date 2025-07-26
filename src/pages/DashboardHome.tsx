@@ -18,7 +18,7 @@ const DashboardHome = () => {
           ¡Bienvenida, {user?.email || 'Usuario'}!
         </h1>
         <Button 
-          onClick={() => navigate('/dashboard/opportunities/new')}
+          onClick={() => navigate('/business-dashboard/opportunities/new')}
           className="font-semibold"
         >
           Publicar Oportunidad
