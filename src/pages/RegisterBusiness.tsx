@@ -96,7 +96,7 @@ const RegisterBusiness = () => {
         <Button 
           variant="ghost" 
           onClick={() => navigate('/')}
-          className="mb-6 text-foreground hover:text-primary hover:bg-muted"
+          className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver al inicio

@@ -1,34 +1,9 @@
-import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Login = () => {
   const navigate = useNavigate();
-  
-  const handleBusinessClick = () => {
-    try {
-      navigate('/register-business');
-    } catch (error) {
-      console.error('Error navigating to business register:', error);
-    }
-  };
-  
-  const handleTalentClick = () => {
-    try {
-      navigate('/register-talent');
-    } catch (error) {
-      console.error('Error navigating to talent register:', error);
-    }
-  };
-  
-  const handleAuthClick = () => {
-    try {
-      navigate('/auth');
-    } catch (error) {
-      console.error('Error navigating to auth:', error);
-    }
-  };
-  
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="max-w-lg w-full text-center space-y-8">
@@ -44,7 +19,7 @@ const Login = () => {
         <div className="space-y-4">
           <Button 
             variant="secondary"
-            onClick={handleBusinessClick}
+            onClick={() => navigate('/register-business')}
             className="w-full text-lg py-6 h-auto font-semibold hover:bg-card-hover"
           >
             Busco Talento para mi negocio
@@ -52,7 +27,7 @@ const Login = () => {
           
           <Button 
             variant="secondary"
-            onClick={handleTalentClick}
+            onClick={() => navigate('/register-talent')}
             className="w-full text-lg py-6 h-auto font-semibold hover:bg-card-hover"
           >
             Busco trabajo
@@ -61,7 +36,7 @@ const Login = () => {
           <div className="pt-4 border-t border-border">
             <Button 
               variant="outline"
-              onClick={handleAuthClick}
+              onClick={() => navigate('/auth')}
               className="w-full text-lg py-4 h-auto font-semibold"
             >
               Iniciar Sesión / Registrarse

@@ -49,12 +49,10 @@ const CompanySettings = lazy(() => import('./pages/settings/CompanySettings'));
 const OpportunitiesLanding = lazy(() => import('./pages/OpportunitiesLanding'));
 const TalentLanding = lazy(() => import('./pages/TalentLanding'));
 const BusinessLanding = lazy(() => import('./pages/BusinessLanding'));
-const ServicesPage = lazy(() => import('./pages/ServicesPage'));
 
 // Lazy load otras páginas
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const PublicOpportunity = lazy(() => import('./pages/PublicOpportunity'));
-const PersonalProfile = lazy(() => import('./pages/PersonalProfile'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
@@ -74,13 +72,22 @@ function App() {
                   <div className="min-h-screen bg-background text-foreground">
                     <Routes>
                       <Route path="/" element={<LandingPage />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/login" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <Login />
+                        </Suspense>
+                      } />
+                      <Route path="/auth" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <Auth />
+                        </Suspense>
+                      } />
                       <Route path="/register" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <Register />
                         </Suspense>
                       } />
+
                       <Route path="/register-business" element={
                         <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
                           <RegisterBusiness />
@@ -109,8 +116,13 @@ function App() {
                         </Suspense>
                       } />
 
+                      {/* Talent Dashboard Routes */}
                       <Route path="/talent-dashboard" element={<TalentDashboardLayout />}>
-                        <Route index element={<TalentDashboardHome />} />
+                        <Route index element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <TalentDashboardHome />
+                          </Suspense>
+                        } />
                         <Route path="opportunities" element={
                           <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
                             <TalentOpportunities />
@@ -220,13 +232,6 @@ function App() {
                         </Suspense>
                       } />
                       <Route path="*" element={<NotFound />} />
-
-                      {/* Personal Profile - moved outside dashboard */}
-                      <Route path="/personal-profile" element={
-                        <Suspense fallback={<LoadingSkeleton type="profile" />}>
-                          <PersonalProfile />
-                        </Suspense>
-                      } />
                     </Routes>
                     <ToastContainer />
                   </div>

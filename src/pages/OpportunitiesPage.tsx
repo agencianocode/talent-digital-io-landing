@@ -346,7 +346,7 @@ const OpportunitiesPage = () => {
                   <Button 
                     variant="outline" 
                     size="icon"
-                    onClick={() => navigate(`/business-dashboard/opportunities/${opportunity.id}`)}
+                    onClick={() => handleViewOpportunity(opportunity.id)}
                     title="Ver detalles"
                   >
                     <Eye className="h-4 w-4" />
