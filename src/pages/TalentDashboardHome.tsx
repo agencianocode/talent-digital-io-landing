@@ -51,7 +51,7 @@ const TalentDashboardHome = () => {
         </h1>
         <Button 
           className="font-semibold w-full sm:w-auto"
-          onClick={() => navigate('/talent-dashboard/marketplace')}
+          onClick={() => navigate('/talent-dashboard/explore')}
         >
           Buscar Oportunidades
         </Button>
