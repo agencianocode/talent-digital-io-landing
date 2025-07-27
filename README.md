@@ -1,8 +1,27 @@
-# Welcome to your Lovable project
+# TalentoDigital.io - Plataforma de Conectores de Talento
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/899b083e-2899-4a3a-b80a-8eda4ce47f6b
+**Demo Local**: http://localhost:3002/
+**Demo Red**: http://192.168.1.7:3002/
+
+## Descripción del Proyecto
+
+TalentoDigital.io es una plataforma completa para conectar empresas con talento especializado en ventas, marketing digital y más. La aplicación incluye:
+
+### 🎯 Funcionalidades Principales
+
+- **Landing Pages Específicas**: Para talento digital y empresas
+- **Sistema de Autenticación**: Registro e inicio de sesión
+- **Dashboards Separados**: 
+  - Dashboard para Empresas (business-dashboard)
+  - Dashboard para Talento (talent-dashboard)
+- **Gestión de Oportunidades**: Crear, editar, compartir y gestionar
+- **Sistema de Aplicaciones**: Para talentos aplicar a oportunidades
+- **Perfiles Complejos**: Para talentos y empresas
+- **Sistema de Mensajería**: Comunicación entre usuarios
+- **Configuraciones Avanzadas**: Personalización de dashboards
 
 ## How can I edit this code?
 
