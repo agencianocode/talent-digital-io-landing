@@ -7,7 +7,7 @@ import { useState } from "react";
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header/Navigation */}
@@ -54,7 +54,7 @@ const LandingPage = () => {
                 </Button>
               </div>
               <Button 
-                variant="outline" 
+                variant="outline"
                 onClick={() => navigate('/auth')}
                 size="sm"
                 className="sm:hidden"

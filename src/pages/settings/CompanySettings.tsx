@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
@@ -18,6 +19,21 @@ const companySchema = z.object({
   website: z.string().url('Ingresa una URL válida').optional().or(z.literal('')),
   location: z.string().min(2, 'La ubicación es requerida'),
   logo: z.string().optional(),
+  // Nuevos campos
+  industry: z.string().min(2, 'La industria es requerida'),
+  companySize: z.string().min(1, 'El tamaño de la empresa es requerido'),
+  foundedYear: z.string().min(4, 'El año debe tener 4 dígitos').max(4),
+  email: z.string().email('Ingresa un email válido'),
+  phone: z.string().min(10, 'El teléfono debe tener al menos 10 dígitos'),
+  address: z.string().min(10, 'La dirección debe tener al menos 10 caracteres'),
+  socialMedia: z.object({
+    linkedin: z.string().url('Ingresa una URL válida').optional().or(z.literal('')),
+    twitter: z.string().url('Ingresa una URL válida').optional().or(z.literal('')),
+    facebook: z.string().url('Ingresa una URL válida').optional().or(z.literal('')),
+  }),
+  companyType: z.string().min(1, 'El tipo de empresa es requerido'),
+  mission: z.string().min(20, 'La misión debe tener al menos 20 caracteres'),
+  values: z.string().min(20, 'Los valores deben tener al menos 20 caracteres'),
 });
 
 type CompanyFormData = z.infer<typeof companySchema>;
@@ -34,6 +50,21 @@ const CompanySettings = () => {
       website: company?.website || '',
       location: company?.location || '',
       logo: company?.logo_url || '',
+      // Nuevos campos con valores por defecto
+      industry: company?.industry || '',
+      companySize: company?.size || '',
+      foundedYear: '',
+      email: '',
+      phone: '',
+      address: '',
+      socialMedia: {
+        linkedin: '',
+        twitter: '',
+        facebook: '',
+      },
+      companyType: '',
+      mission: '',
+      values: '',
     },
   });
 
@@ -173,6 +204,217 @@ const CompanySettings = () => {
                   )}
                 />
               </div>
+
+              {/* Nuevos campos */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="industry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Industria</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Tecnología, Finanzas, Salud..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="companySize"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tamaño de la Empresa</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona el tamaño" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="1-10">1-10 empleados</SelectItem>
+                          <SelectItem value="11-50">11-50 empleados</SelectItem>
+                          <SelectItem value="51-200">51-200 empleados</SelectItem>
+                          <SelectItem value="201-500">201-500 empleados</SelectItem>
+                          <SelectItem value="500+">500+ empleados</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="foundedYear"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Año de Fundación</FormLabel>
+                      <FormControl>
+                        <Input placeholder="2020" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="companyType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Empresa</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona el tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="startup">Startup</SelectItem>
+                          <SelectItem value="sme">PYME</SelectItem>
+                          <SelectItem value="enterprise">Empresa Grande</SelectItem>
+                          <SelectItem value="agency">Agencia</SelectItem>
+                          <SelectItem value="consulting">Consultoría</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email de Contacto</FormLabel>
+                      <FormControl>
+                        <Input placeholder="contacto@tuempresa.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Teléfono</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+1 234 567 8900" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dirección</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Calle, Ciudad, Estado, Código Postal" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Redes Sociales */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Redes Sociales</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="socialMedia.linkedin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>LinkedIn</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://linkedin.com/company/tuempresa" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="socialMedia.twitter"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Twitter</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://twitter.com/tuempresa" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="socialMedia.facebook"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Facebook</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://facebook.com/tuempresa" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="mission"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Misión</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Describe la misión de tu empresa..."
+                        className="min-h-[100px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="values"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valores</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Describe los valores y principios de tu empresa..."
+                        className="min-h-[100px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="flex justify-end gap-4">
                 <Button type="button" variant="outline" onClick={() => form.reset()}>

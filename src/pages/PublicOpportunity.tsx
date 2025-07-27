@@ -118,7 +118,10 @@ const PublicOpportunity = () => {
               <p className="text-muted-foreground mb-4">
                 {error || 'La oportunidad que buscas no existe o ha sido removida.'}
               </p>
-              <Button onClick={() => navigate('/')}>
+              <Button 
+                onClick={() => navigate('/')}
+                className="text-foreground hover:text-primary hover:bg-muted"
+              >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Volver al inicio
               </Button>
@@ -140,6 +143,7 @@ const PublicOpportunity = () => {
                 variant="ghost" 
                 size="sm"
                 onClick={() => navigate('/')}
+                className="text-foreground hover:text-primary hover:bg-muted"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Volver

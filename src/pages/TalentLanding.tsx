@@ -84,7 +84,7 @@ const TalentLanding = () => {
             <Button 
               variant="ghost" 
               onClick={() => navigate('/')}
-              className="text-foreground hover:text-foreground"
+              className="text-foreground hover:text-primary hover:bg-muted"
             >
               ← Volver al Inicio
             </Button>

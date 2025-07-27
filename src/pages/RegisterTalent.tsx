@@ -87,7 +87,7 @@ const RegisterTalent = () => {
         <Button 
           variant="ghost" 
           onClick={() => navigate('/')}
-          className="mb-6"
+          className="mb-6 text-foreground hover:text-primary hover:bg-muted"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver al inicio

@@ -112,7 +112,7 @@ const Auth = () => {
       </div>
     );
   }
-
+  
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
@@ -332,7 +332,7 @@ const Auth = () => {
           <Button 
             variant="ghost" 
             onClick={() => navigate('/')}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-primary hover:bg-muted"
           >
             Volver al inicio
           </Button>
