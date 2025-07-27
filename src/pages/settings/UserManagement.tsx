@@ -1,161 +1,258 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, MoreHorizontal, Mail, Trash2, Edit } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import { useCompanyUserRoles, CompanyUserRole } from '@/hooks/useCompanyUserRoles';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
+import { 
+  Plus, 
+  MoreHorizontal, 
+  Crown, 
+  Shield, 
+  Eye, 
+  UserPlus, 
+  Trash2, 
+  Edit,
+  Mail,
+  Clock,
+  CheckCircle,
+  XCircle
+} from 'lucide-react';
 
-const mockUsers = [
-  {
-    id: '1',
-    name: 'Ana García',
-    email: 'ana.garcia@empresa.com',
-    role: 'Owner',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ana',
-    lastActive: '2024-01-15T10:30:00Z',
-    status: 'active'
-  },
-  {
-    id: '2',
-    name: 'Carlos López',
-    email: 'carlos.lopez@empresa.com',
-    role: 'Admin',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=carlos',
-    lastActive: '2024-01-14T15:20:00Z',
-    status: 'active'
-  },
-  {
-    id: '3',
-    name: 'María González',
-    email: 'maria.gonzalez@empresa.com',
-    role: 'Viewer',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=maria',
-    lastActive: '2024-01-13T09:45:00Z',
-    status: 'inactive'
-  }
-];
+const inviteUserSchema = z.object({
+  email: z.string().email('Email inválido'),
+  role: z.enum(['admin', 'viewer']),
+});
+
+type InviteUserFormData = z.infer<typeof inviteUserSchema>;
 
 const UserManagement = () => {
-  const [users, setUsers] = useState(mockUsers);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('Viewer');
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const { user } = useSupabaseAuth();
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<CompanyUserRole | null>(null);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
 
-  const handleInviteUser = () => {
-    if (!inviteEmail) {
-      toast.error('Ingresa un email válido');
-      return;
+  // TODO: Get company ID from context or props
+  const companyId = 'your-company-id'; // This should come from the company context
+
+  const {
+    userRoles,
+    currentUserRole,
+    isLoading,
+    inviteUser,
+    updateUserRole,
+    removeUser,
+    transferOwnership,
+    hasPermission
+  } = useCompanyUserRoles(companyId);
+
+  const form = useForm<InviteUserFormData>({
+    resolver: zodResolver(inviteUserSchema),
+    defaultValues: {
+      email: '',
+      role: 'viewer',
+    },
+  });
+
+  const onSubmitInvite = async (data: InviteUserFormData) => {
+    await inviteUser({
+      email: data.email,
+      role: data.role,
+      company_id: companyId,
+    });
+    setIsInviteDialogOpen(false);
+    form.reset();
+  };
+
+  const handleUpdateRole = async (newRole: 'owner' | 'admin' | 'viewer') => {
+    if (!selectedUser) return;
+    
+    if (newRole === 'owner') {
+      await transferOwnership(selectedUser.id);
+    } else {
+      await updateUserRole(selectedUser.id, newRole);
     }
-
-    const newUser = {
-      id: Date.now().toString(),
-      name: inviteEmail.split('@')[0],
-      email: inviteEmail,
-      role: inviteRole,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${inviteEmail}`,
-      lastActive: new Date().toISOString(),
-      status: 'pending'
-    };
-
-    setUsers([...users, newUser]);
-    setInviteEmail('');
-    setInviteRole('Viewer');
-    setIsInviteOpen(false);
-    toast.success(`Invitación enviada a ${inviteEmail}`);
+    setIsUpdateDialogOpen(false);
+    setSelectedUser(null);
   };
 
-  const handleRoleChange = (userId: string, newRole: string) => {
-    setUsers(users.map(user => 
-      user.id === userId ? { ...user, role: newRole } : user
-    ));
-    toast.success('Rol actualizado');
+  const handleRemoveUser = async (userRole: CompanyUserRole) => {
+    if (confirm(`¿Estás seguro de que quieres remover a ${userRole.user_id} de la empresa?`)) {
+      await removeUser(userRole.id);
+    }
   };
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter(user => user.id !== userId));
-    toast.success('Usuario eliminado');
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'owner':
+        return <Crown className="h-4 w-4 text-yellow-500" />;
+      case 'admin':
+        return <Shield className="h-4 w-4 text-blue-500" />;
+      case 'viewer':
+        return <Eye className="h-4 w-4 text-gray-500" />;
+      default:
+        return <UserPlus className="h-4 w-4" />;
+    }
   };
 
-  const getRoleBadge = (role: string) => {
-    const variants: { [key: string]: "default" | "destructive" | "outline" | "secondary" } = {
-      'Owner': 'destructive',
-      'Admin': 'secondary',
-      'Viewer': 'outline'
-    };
-    return <Badge variant={variants[role] || 'outline'}>{role}</Badge>;
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'owner':
+        return 'default';
+      case 'admin':
+        return 'secondary';
+      case 'viewer':
+        return 'outline';
+      default:
+        return 'outline';
+    }
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants: { [key: string]: "default" | "destructive" | "outline" | "secondary" } = {
-      'active': 'default',
-      'inactive': 'secondary',
-      'pending': 'outline'
-    };
-    const labels: { [key: string]: string } = {
-      'active': 'Activo',
-      'inactive': 'Inactivo',
-      'pending': 'Pendiente'
-    };
-    return <Badge variant={variants[status] || 'default'}>{labels[status] || status}</Badge>;
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'accepted':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'pending':
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'declined':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Mail className="h-4 w-4 text-gray-500" />;
+    }
   };
+
+  // Temporary: Allow access while table is being created
+  if (!hasPermission('admin') && false) { // Temporarily disabled
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Acceso Restringido</h3>
+              <p className="text-muted-foreground">
+                Necesitas permisos de administrador para gestionar usuarios.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* Temporary notice */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center gap-2">
+          <Shield className="h-5 w-5 text-blue-600" />
+          <div>
+            <h3 className="font-medium text-blue-900">Configuración en Progreso</h3>
+            <p className="text-sm text-blue-700">
+              La tabla de roles de usuario está siendo configurada. Las funcionalidades estarán disponibles pronto.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Gestión de Usuarios</h2>
-          <p className="text-muted-foreground">Administra los usuarios de tu empresa</p>
+          <p className="text-muted-foreground">
+            Administra los usuarios y permisos de tu empresa
+          </p>
         </div>
-
-        <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+        <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <UserPlus className="h-4 w-4 mr-2" />
               Invitar Usuario
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Invitar Nuevo Usuario</DialogTitle>
+              <DialogTitle>Invitar Usuario</DialogTitle>
+              <DialogDescription>
+                Invita a un nuevo usuario a tu empresa con un rol específico.
+              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <Input
-                  type="email"
-                  placeholder="usuario@ejemplo.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmitInvite)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email del Usuario</FormLabel>
+                      <FormControl>
+                        <Input placeholder="usuario@ejemplo.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Rol</label>
-                <Select value={inviteRole} onValueChange={setInviteRole}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                    <SelectItem value="Viewer">Viewer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleInviteUser}>
-                  Enviar Invitación
-                </Button>
-              </div>
-            </div>
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rol</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona un rol" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="admin">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4" />
+                              Admin - Puede crear oportunidades y gestionar aplicaciones
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="viewer">
+                            <div className="flex items-center gap-2">
+                              <Eye className="h-4 w-4" />
+                              Viewer - Solo puede ver aplicaciones y reportes
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsInviteDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">Enviar Invitación</Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
@@ -165,37 +262,75 @@ const UserManagement = () => {
           <CardTitle>Usuarios de la Empresa</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Usuario</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Última Actividad</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar} />
-                        <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{user.name}</span>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Cargando usuarios...</p>
+            </div>
+          ) : userRoles.length === 0 ? (
+            <div className="text-center py-8">
+              <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No hay usuarios</h3>
+              <p className="text-muted-foreground mb-4">
+                Invita a usuarios para comenzar a colaborar en tu empresa.
+              </p>
+              <Button onClick={() => setIsInviteDialogOpen(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Invitar Primer Usuario
+              </Button>
+              
+              {/* Temporary: Show example data */}
+              <div className="mt-8 p-4 border border-dashed border-gray-300 rounded-lg">
+                <h4 className="font-medium text-gray-700 mb-2">Ejemplo de usuarios (después de ejecutar SQL):</h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-yellow-500" />
+                    <span>👑 Owner - Propietario de la empresa</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-blue-500" />
+                    <span>⚙️ Admin - Puede crear oportunidades y gestionar aplicaciones</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-gray-500" />
+                    <span>👁️ Viewer - Solo puede ver aplicaciones y reportes</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {userRoles.map((userRole) => (
+                <div
+                  key={userRole.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
+                  <div className="flex items-center gap-4">
+                    <Avatar>
+                      <AvatarImage src={userRole.user_id} />
+                      <AvatarFallback>
+                        {userRole.user_id.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium">{userRole.user_id}</h4>
+                        <Badge variant={getRoleBadgeVariant(userRole.role)}>
+                          <div className="flex items-center gap-1">
+                            {getRoleIcon(userRole.role)}
+                            {userRole.role}
+                          </div>
+                        </Badge>
+                        {getStatusIcon(userRole.status)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Invitado el {new Date(userRole.invited_at).toLocaleDateString()}
+                      </p>
                     </div>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{getRoleBadge(user.role)}</TableCell>
-                  <TableCell>{getStatusBadge(user.status)}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(user.lastActive).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    {user.role !== 'Owner' && (
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {hasPermission('admin') && userRole.user_id !== user?.id && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
@@ -203,46 +338,85 @@ const UserManagement = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => toast.info('Función de edición próximamente')}>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedUser(userRole);
+                              setIsUpdateDialogOpen(true);
+                            }}
+                          >
                             <Edit className="h-4 w-4 mr-2" />
-                            Editar
+                            Cambiar Rol
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toast.info('Función de reenvío próximamente')}>
-                            <Mail className="h-4 w-4 mr-2" />
-                            Reenviar Invitación
+                          {hasPermission('owner') && userRole.role !== 'owner' && (
+                            <DropdownMenuItem
+                              onClick={() => transferOwnership(userRole.id)}
+                            >
+                              <Crown className="h-4 w-4 mr-2" />
+                              Transferir Propiedad
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => handleRemoveUser(userRole)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Remover Usuario
                           </DropdownMenuItem>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Eliminar
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta acción no se puede deshacer. El usuario perderá acceso a la empresa.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>
-                                  Eliminar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     )}
-                  </TableCell>
-                </TableRow>
+                  </div>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Update Role Dialog */}
+      <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cambiar Rol de Usuario</DialogTitle>
+            <DialogDescription>
+              Selecciona el nuevo rol para {selectedUser?.user_id}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => handleUpdateRole('admin')}
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Admin - Puede crear oportunidades y gestionar aplicaciones
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => handleUpdateRole('viewer')}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Viewer - Solo puede ver aplicaciones y reportes
+            </Button>
+            {hasPermission('owner') && selectedUser?.role !== 'owner' && (
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleUpdateRole('owner')}
+              >
+                <Crown className="h-4 w-4 mr-2" />
+                Owner - Propietario de la empresa
+              </Button>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -50,12 +50,12 @@ const NotificationCenter = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
+        <Button variant="outline" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <Badge 
               variant="destructive" 
-              className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 text-xs"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
@@ -63,7 +63,7 @@ const NotificationCenter = () => {
         </Button>
       </DropdownMenuTrigger>
       
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-[90vw] sm:w-80 max-w-sm">
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>Notificaciones</span>
           {unreadCount > 0 && (
@@ -81,21 +81,21 @@ const NotificationCenter = () => {
         
         <DropdownMenuSeparator />
         
-        <ScrollArea className="h-80">
+        <ScrollArea className="h-64 sm:h-80">
           {notifications.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">
-              <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <Bell className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No tienes notificaciones</p>
             </div>
           ) : (
             notifications.slice(0, 10).map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
-                className={`p-3 cursor-pointer ${!notification.read ? 'bg-secondary/50' : ''}`}
+                className={`p-2 sm:p-3 cursor-pointer ${!notification.read ? 'bg-secondary/50' : ''}`}
                 onClick={() => handleNotificationClick(notification)}
               >
-                <div className="flex items-start space-x-3 w-full">
-                  <div className="text-lg">
+                <div className="flex items-start space-x-2 sm:space-x-3 w-full">
+                  <div className="text-base sm:text-lg">
                     {getNotificationIcon(notification.type)}
                   </div>
                   

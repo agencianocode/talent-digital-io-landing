@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,7 +29,8 @@ interface Opportunity {
 }
 
 const TalentMarketplace = () => {
-  const { user, userRole } = useSupabaseAuth();
+  const navigate = useNavigate();
+  const { user, userRole, isAuthenticated } = useSupabaseAuth();
   const { 
     opportunities, 
     isLoading, 
@@ -40,8 +42,12 @@ const TalentMarketplace = () => {
   const {
     saveOpportunity,
     unsaveOpportunity,
-    isOpportunitySaved
+    isOpportunitySaved,
+    savedOpportunities,
+    isLoading: savedLoading
   } = useSavedOpportunities();
+
+
 
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -197,6 +203,7 @@ const TalentMarketplace = () => {
           <h1 className="text-3xl font-bold text-foreground">
             Marketplace de Oportunidades ({filteredOpportunities.length})
           </h1>
+
         </div>
 
         {/* Advanced Search and Filters */}
@@ -362,6 +369,7 @@ const TalentMarketplace = () => {
                       <HeartOff className="h-5 w-5" />
                     )}
                   </Button>
+
                   
                   {hasApplied(opportunity.id) ? (
                     <Badge variant="secondary" className="min-w-[120px] justify-center">
@@ -379,7 +387,11 @@ const TalentMarketplace = () => {
                     </Button>
                   )}
                   
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
+                  >
                     Ver Detalles
                   </Button>
                 </div>

@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, MapPin, Clock, DollarSign, Briefcase } from "lucide-react";
@@ -29,6 +30,7 @@ interface Application {
 
 const TalentOpportunities = () => {
   const { user } = useSupabaseAuth();
+  const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,6 +51,7 @@ const TalentOpportunities = () => {
           status,
           created_at,
           opportunities (
+            id,
             title,
             company_id,
             location,
@@ -56,7 +59,9 @@ const TalentOpportunities = () => {
             salary_min,
             salary_max,
             currency,
+            is_active,
             companies (
+              id,
               name,
               logo_url
             )
@@ -107,7 +112,7 @@ const TalentOpportunities = () => {
 
   if (loading) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/3"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -122,10 +127,10 @@ const TalentOpportunities = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4 flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -142,10 +147,12 @@ const TalentOpportunities = () => {
         </div>
       </div>
 
-      <h1 className="text-3xl font-bold text-foreground mb-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-6 sm:mb-8">
         Mis Aplicaciones ({filteredApplications.length})
       </h1>
       
+
+
       {/* Applications List */}
       {filteredApplications.length === 0 ? (
         <div className="text-center py-12">
@@ -168,10 +175,10 @@ const TalentOpportunities = () => {
       ) : (
         <div className="space-y-4">
           {filteredApplications.map((application) => (
-            <div key={application.id} className="bg-secondary p-6 rounded-lg">
-              <div className="flex items-start justify-between">
+            <div key={application.id} className="bg-secondary p-4 sm:p-6 rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
                     <h3 className="text-lg font-semibold text-foreground">
                       {application.opportunities?.title}
                     </h3>
@@ -180,7 +187,7 @@ const TalentOpportunities = () => {
                     </span>
                   </div>
                   
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground mb-3">
                     <span className="font-medium text-foreground">
                       {application.opportunities?.companies?.name}
                     </span>
@@ -216,8 +223,13 @@ const TalentOpportunities = () => {
                   </p>
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm">
+                <div className="flex items-center justify-start sm:justify-end">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/talent-dashboard/opportunities/${application.opportunity_id}`)}
+                    className="w-full sm:w-auto"
+                  >
                     Ver Detalles
                   </Button>
                 </div>

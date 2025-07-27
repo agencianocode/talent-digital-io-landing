@@ -116,6 +116,25 @@ const BusinessLanding = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+              className="text-foreground hover:text-foreground"
+            >
+              ← Volver al Inicio
+            </Button>
+            <h1 className="text-xl font-bold text-foreground">
+              Talento Digital
+            </h1>
+            <div className="w-20"></div> {/* Spacer for centering */}
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-primary to-primary-foreground text-primary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
@@ -130,13 +149,14 @@ const BusinessLanding = () => {
               size="lg" 
               variant="secondary"
               onClick={() => navigate('/register-business')}
+              className="hover-lift"
             >
               Comenzar Ahora
             </Button>
             <Button 
               size="lg" 
               variant="outline"
-              className="border-white text-white hover:bg-white hover:text-primary"
+              className="border-white text-white hover:bg-white hover:text-primary hover-lift"
               onClick={() => navigate('/auth')}
             >
               Ver Demo

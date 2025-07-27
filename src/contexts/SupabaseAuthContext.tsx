@@ -65,18 +65,50 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const fetchUserData = async (userId: string) => {
     try {
       // Fetch profile
-      const { data: profile } = await supabase
+      let { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
+      // If profile doesn't exist, create it
+      if (profileError && profileError.code === 'PGRST116') {
+        console.log('Profile not found, creating new profile for user:', userId);
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({ user_id: userId })
+          .select()
+          .single();
+        
+        if (createError) {
+          console.error('Error creating profile:', createError);
+        } else {
+          profile = newProfile;
+        }
+      }
+
       // Fetch role
-      const { data: roleData } = await supabase
+      let { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .single();
+
+      // If role doesn't exist, create it
+      if (roleError && roleError.code === 'PGRST116') {
+        console.log('Role not found, creating default role for user:', userId);
+        const { data: newRole, error: createRoleError } = await supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role: 'talent' })
+          .select()
+          .single();
+        
+        if (createRoleError) {
+          console.error('Error creating role:', createRoleError);
+        } else {
+          roleData = newRole;
+        }
+      }
 
       // Fetch company if user is business
       let company = null;
@@ -243,11 +275,27 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       .update(data)
       .eq('user_id', authState.user.id);
 
-    if (!error && authState.profile) {
-      setAuthState(prev => ({
-        ...prev,
-        profile: { ...prev.profile!, ...data }
-      }));
+    if (!error) {
+      // Recargar los datos del perfil desde la base de datos
+      try {
+        const userData = await fetchUserData(authState.user.id);
+        setAuthState(prev => ({
+          ...prev,
+          profile: userData.profile,
+          userRole: userData.role,
+          company: userData.company
+        }));
+        console.log('Perfil actualizado y recargado:', userData.profile);
+      } catch (fetchError) {
+        console.error('Error recargando datos del perfil:', fetchError);
+        // Si falla la recarga, actualizar con los datos proporcionados
+        if (authState.profile) {
+          setAuthState(prev => ({
+            ...prev,
+            profile: { ...prev.profile!, ...data }
+          }));
+        }
+      }
     }
 
     return { error };

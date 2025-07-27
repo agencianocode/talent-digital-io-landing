@@ -1,9 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users, Briefcase, Search, Star, CheckCircle } from "lucide-react";
+import { ArrowRight, Users, Briefcase, Search, Star, CheckCircle, Menu, X } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useState } from "react";
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -11,97 +14,140 @@ const LandingPage = () => {
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-foreground">
+            <div className="flex items-center space-x-4 lg:space-x-8">
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground">
                 Talento Digital
               </h1>
-              <nav className="hidden md:flex space-x-6">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => navigate('/oportunidades-laborales')}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Oportunidades Laborales
-                </Button>
+              <nav className="hidden lg:flex space-x-6">
                 <Button 
                   variant="ghost" 
                   onClick={() => navigate('/para-talento-digital')}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted"
                 >
-                  Para Talento Digital
+                  Buscar Trabajo
                 </Button>
                 <Button 
                   variant="ghost" 
                   onClick={() => navigate('/para-negocios')}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted"
                 >
-                  Para Negocios
+                  Contratar Talento
                 </Button>
               </nav>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 lg:space-x-4">
+              <ThemeToggle />
+              <div className="hidden sm:flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/auth')}
+                  size="sm"
+                >
+                  Iniciar Sesión
+                </Button>
+                <Button 
+                  onClick={() => navigate('/auth')}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  size="sm"
+                >
+                  Comenzar Gratis
+                </Button>
+              </div>
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/auth')}
+                size="sm"
+                className="sm:hidden"
               >
-                Iniciar Sesión
+                Entrar
               </Button>
-              <Button 
-                onClick={() => navigate('/auth')}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden p-2"
               >
-                Comenzar Gratis
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
             </div>
           </div>
+          
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="lg:hidden mt-4 pb-4 border-t pt-4">
+              <nav className="flex flex-col space-y-2">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => {
+                    navigate('/para-talento-digital');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted justify-start"
+                >
+                  Buscar Trabajo
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => {
+                    navigate('/para-negocios');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted justify-start"
+                >
+                  Contratar Talento
+                </Button>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
+      <section className="py-12 lg:py-20 px-4">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-foreground mb-4 lg:mb-6">
             Conecta con el mejor{" "}
-            <span className="text-primary">talento digital</span>
+            <span className="text-primary font-black">talento digital</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            La plataforma líder para encontrar profesionales especializados en marketing digital, 
-            ventas y tecnología. Conecta empresas con talento excepcional.
+          <p className="text-lg lg:text-xl text-muted-foreground mb-6 lg:mb-8 max-w-2xl mx-auto px-4">
+            La plataforma líder para conectar empresas con talento digital especializado. 
+            Encuentra tu próxima oportunidad o contrata al profesional ideal.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 lg:mb-12 px-4">
             <Button 
               size="lg"
               onClick={() => navigate('/register-business')}
-              className="text-lg px-8 py-6"
+              className="text-base lg:text-lg px-6 lg:px-8 py-4 lg:py-6 hover-lift btn-primary group"
             >
-              <Briefcase className="mr-2 h-5 w-5" />
-              Busco Talento
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <Briefcase className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
+              Contratar Talento
+              <ArrowRight className="ml-2 h-4 w-4 lg:h-5 lg:w-5 transition-transform group-hover:translate-x-1" />
             </Button>
             <Button 
               size="lg" 
               variant="outline"
               onClick={() => navigate('/register-talent')}
-              className="text-lg px-8 py-6"
+              className="text-base lg:text-lg px-6 lg:px-8 py-4 lg:py-6 hover-lift btn-secondary group"
             >
-              <Users className="mr-2 h-5 w-5" />
-              Busco Trabajo
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <Users className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
+              Buscar Trabajo
+              <ArrowRight className="ml-2 h-4 w-4 lg:h-5 lg:w-5 transition-transform group-hover:translate-x-1" />
             </Button>
           </div>
 
           <div className="flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
             <div className="flex items-center">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+              <CheckCircle className="h-4 w-4 text-primary mr-2" />
               Verificación de perfiles
             </div>
             <div className="flex items-center">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+              <CheckCircle className="h-4 w-4 text-primary mr-2" />
               Proceso seguro
             </div>
             <div className="flex items-center">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+              <CheckCircle className="h-4 w-4 text-primary mr-2" />
               Soporte 24/7
             </div>
           </div>
@@ -109,29 +155,29 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-secondary">
+      <section className="py-12 lg:py-20 px-4 bg-secondary">
         <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">
+          <h2 className="text-2xl lg:text-3xl font-bold text-center mb-8 lg:mb-12">
             ¿Por qué elegir Talento Digital?
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <div className="text-center p-6 card-hover rounded-xl transition-all duration-300 hover:bg-card/50">
+              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 hover-scale">
                 <Search className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Búsqueda Inteligente</h3>
+              <h3 className="text-xl font-semibold mb-3 font-heading">Búsqueda Inteligente</h3>
               <p className="text-muted-foreground">
                 Encuentra el talento perfecto con nuestro sistema de filtros avanzados 
                 y algoritmos de matching inteligente.
               </p>
             </div>
 
-            <div className="text-center p-6">
-              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center p-6 card-hover rounded-xl transition-all duration-300 hover:bg-card/50">
+              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 hover-scale">
                 <Star className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Perfiles Verificados</h3>
+              <h3 className="text-xl font-semibold mb-3 font-heading">Perfiles Verificados</h3>
               <p className="text-muted-foreground">
                 Todos los profesionales pasan por un proceso de verificación 
                 para garantizar la calidad y autenticidad.

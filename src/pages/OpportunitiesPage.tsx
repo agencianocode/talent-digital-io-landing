@@ -4,15 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
-import { Search, Filter, Eye, Edit, Link, MoreHorizontal, Briefcase, Users } from "lucide-react";
+import { Search, Filter, Eye, Edit, Link, MoreHorizontal, Briefcase, Users, Copy, Trash2, Archive, Share2 } from "lucide-react";
 import { toast } from "sonner";
+import StaticShareButton from '@/components/StaticShareButton';
 
 const OpportunitiesPage = () => {
   const navigate = useNavigate();
   const { userRole, company } = useSupabaseAuth();
-  const { opportunities, isLoading, getApplicationsByOpportunity } = useSupabaseOpportunities();
+  const { 
+    opportunities, 
+    isLoading, 
+    getApplicationsByOpportunity,
+    deleteOpportunity,
+    toggleOpportunityStatus
+  } = useSupabaseOpportunities();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -101,12 +109,62 @@ const OpportunitiesPage = () => {
     if (companyOpportunities.length > 0) {
       loadApplicationCounts();
     }
-  }, [companyOpportunities, getApplicationsByOpportunity]);
+  }, [companyOpportunities.length]); // Only depend on length, not the full array
 
   const getStatusBadgeClass = (isActive: boolean) => {
     return isActive 
       ? "bg-green-100 text-green-800"
       : "bg-gray-100 text-gray-800";
+  };
+
+  // Funciones para manejar las acciones de los botones
+  const handleViewOpportunity = (opportunityId: string) => {
+    navigate(`/business-dashboard/opportunities/${opportunityId}`);
+  };
+
+  const handleEditOpportunity = (opportunityId: string) => {
+    navigate(`/business-dashboard/opportunities/${opportunityId}/edit`);
+  };
+
+  const handleShareOpportunity = (opportunityId: string) => {
+    // This will be handled by the ShareOpportunity component
+    console.log('Share opportunity:', opportunityId);
+  };
+
+  const handleCopyOpportunity = (opportunityId: string) => {
+    // Aquí podrías implementar la lógica para duplicar una oportunidad
+    toast.success('Funcionalidad de duplicar próximamente');
+  };
+
+  const handleArchiveOpportunity = async (opportunityId: string) => {
+    try {
+      // Por ahora, archivar es lo mismo que desactivar
+      await toggleOpportunityStatus(opportunityId, true);
+      toast.success('Oportunidad archivada');
+    } catch (error) {
+      toast.error('Error al archivar la oportunidad');
+    }
+  };
+
+  const handleDeleteOpportunity = async (opportunityId: string) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta oportunidad? Esta acción no se puede deshacer.')) {
+      try {
+        await deleteOpportunity(opportunityId);
+        toast.success('Oportunidad eliminada');
+      } catch (error) {
+        toast.error('Error al eliminar la oportunidad');
+      }
+    }
+  };
+
+  const handleToggleStatus = async (opportunityId: string, currentStatus: boolean) => {
+    try {
+      await toggleOpportunityStatus(opportunityId, currentStatus);
+      const newStatus = !currentStatus;
+      toast.success(`Oportunidad ${newStatus ? 'activada' : 'desactivada'}`);
+    } catch (error) {
+      toast.error('Error al cambiar el estado de la oportunidad');
+    }
   };
 
   if (userRole !== 'business') {
@@ -135,24 +193,26 @@ const OpportunitiesPage = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 lg:p-8">
       {/* Header with advanced filters */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-3xl font-bold text-foreground">
+      <div className="mb-6 lg:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
             Mis Oportunidades ({filteredOpportunities.length})
           </h1>
-          <Button 
-            onClick={() => navigate('/dashboard/opportunities/new')}
-            className="font-semibold"
-          >
-            Publicar Oportunidad
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button 
+              onClick={() => navigate('/business-dashboard/opportunities/new')}
+              className="font-semibold w-full sm:w-auto"
+            >
+              Publicar Oportunidad
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex items-center space-x-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="relative flex-1 w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="text"
@@ -164,7 +224,7 @@ const OpportunitiesPage = () => {
           </div>
           
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Todas las categorías" />
             </SelectTrigger>
             <SelectContent>
@@ -178,7 +238,7 @@ const OpportunitiesPage = () => {
           </Select>
 
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Tipo de trabajo" />
             </SelectTrigger>
             <SelectContent>
@@ -207,7 +267,7 @@ const OpportunitiesPage = () => {
             }
           </p>
           {companyOpportunities.length === 0 && (
-            <Button onClick={() => navigate('/dashboard/opportunities/new')}>
+            <Button onClick={() => navigate('/business-dashboard/opportunities/new')}>
               Publicar Primera Oportunidad
             </Button>
           )}
@@ -215,11 +275,11 @@ const OpportunitiesPage = () => {
       ) : (
         <div className="space-y-4">
           {filteredOpportunities.map((opportunity) => (
-            <div key={opportunity.id} className="bg-card p-6 rounded-lg border">
-              <div className="flex items-center justify-between">
+            <div key={opportunity.id} className="bg-card p-4 lg:p-6 rounded-lg border">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <h3 className="text-lg font-semibold text-foreground">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <h3 className="text-lg font-semibold text-foreground w-full sm:w-auto">
                       {opportunity.title}
                     </h3>
                     <Badge 
@@ -240,7 +300,7 @@ const OpportunitiesPage = () => {
                     {opportunity.description}
                   </p>
                   
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
                     {opportunity.location && (
                       <span>📍 {opportunity.location}</span>
                     )}
@@ -253,16 +313,40 @@ const OpportunitiesPage = () => {
                     )}
                     <div className="flex items-center space-x-1">
                       <Users className="h-4 w-4" />
-                      <span>{applicationCounts[opportunity.id] || 0} postulantes</span>
+                      <span className={applicationCounts[opportunity.id] > 0 ? "font-semibold text-green-600" : ""}>
+                        {applicationCounts[opportunity.id] || 0} postulantes
+                      </span>
+                      {applicationCounts[opportunity.id] > 0 && (
+                        <Badge variant="secondary" className="ml-1 bg-green-100 text-green-800 text-xs">
+                          Nuevas
+                        </Badge>
+                      )}
                     </div>
+                  </div>
+                  
+                  {/* Application count with link */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
+                    <Button
+                      variant={applicationCounts[opportunity.id] > 0 ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => navigate(`/business-dashboard/applications?opportunity=${opportunity.id}`)}
+                      className={`text-xs w-full sm:w-auto ${applicationCounts[opportunity.id] > 0 ? "bg-green-600 hover:bg-green-700" : ""}`}
+                    >
+                      Ver Aplicaciones ({applicationCounts[opportunity.id] || 0})
+                      {applicationCounts[opportunity.id] > 0 && (
+                        <Badge variant="secondary" className="ml-1 bg-white text-green-600 text-xs">
+                          {applicationCounts[opportunity.id]}
+                        </Badge>
+                      )}
+                    </Button>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-center sm:justify-end gap-2">
                   <Button 
                     variant="outline" 
                     size="icon"
-                    onClick={() => navigate(`/dashboard/opportunities/${opportunity.id}`)}
+                    onClick={() => handleViewOpportunity(opportunity.id)}
                     title="Ver detalles"
                   >
                     <Eye className="h-4 w-4" />
@@ -270,29 +354,43 @@ const OpportunitiesPage = () => {
                   <Button 
                     variant="outline" 
                     size="icon"
+                    onClick={() => handleEditOpportunity(opportunity.id)}
                     title="Editar"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    title="Compartir"
-                    onClick={() => {
-                      const url = `${window.location.origin}/opportunities/${opportunity.id}`;
-                      navigator.clipboard.writeText(url);
-                      toast.success('Enlace copiado al portapapeles');
-                    }}
-                  >
-                    <Link className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    title="Más opciones"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
+                  <StaticShareButton 
+                    opportunityId={opportunity.id}
+                    opportunityTitle={opportunity.title}
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        title="Más opciones"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleCopyOpportunity(opportunity.id)}>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Duplicar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleToggleStatus(opportunity.id, opportunity.is_active)}>
+                        <Archive className="h-4 w-4 mr-2" />
+                        {opportunity.is_active ? 'Desactivar' : 'Activar'}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteOpportunity(opportunity.id)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>

@@ -9,10 +9,10 @@ const Welcome = () => {
         // Handle onboarding call scheduling
         break;
       case 'publish':
-        navigate('/dashboard/opportunities/new');
+        navigate('/business-dashboard/opportunities/new');
         break;
       case 'explore':
-        navigate('/dashboard/talent');
+        navigate('/business-dashboard/talent');
         break;
       default:
         break;

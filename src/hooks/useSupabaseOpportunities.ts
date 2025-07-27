@@ -152,16 +152,11 @@ export const useSupabaseOpportunities = () => {
     try {
       const { data, error } = await supabase
         .from('applications')
-        .select(`
-          *,
-          profiles (
-            full_name
-          )
-        `)
-        .eq('opportunity_id', opportunityId)
-        .order('created_at', { ascending: false });
+        .select('*')
+        .eq('opportunity_id', opportunityId);
 
       if (error) throw error;
+      
       return data || [];
     } catch (err) {
       console.error('Error fetching applications for opportunity:', err);
@@ -186,6 +181,60 @@ export const useSupabaseOpportunities = () => {
       throw err;
     }
   }, [fetchUserApplications]);
+
+  // Update opportunity (for business users)
+  const updateOpportunity = useCallback(async (opportunityId: string, updates: Partial<SupabaseOpportunity>) => {
+    try {
+      const { error } = await supabase
+        .from('opportunities')
+        .update(updates)
+        .eq('id', opportunityId);
+
+      if (error) throw error;
+      
+      // Refresh opportunities
+      await fetchOpportunities();
+    } catch (err) {
+      console.error('Error updating opportunity:', err);
+      throw err;
+    }
+  }, [fetchOpportunities]);
+
+  // Delete opportunity (for business users)
+  const deleteOpportunity = useCallback(async (opportunityId: string) => {
+    try {
+      const { error } = await supabase
+        .from('opportunities')
+        .delete()
+        .eq('id', opportunityId);
+
+      if (error) throw error;
+      
+      // Refresh opportunities
+      await fetchOpportunities();
+    } catch (err) {
+      console.error('Error deleting opportunity:', err);
+      throw err;
+    }
+  }, [fetchOpportunities]);
+
+  // Toggle opportunity status (for business users)
+  const toggleOpportunityStatus = useCallback(async (opportunityId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('opportunities')
+        .update({ is_active: !currentStatus })
+        .eq('id', opportunityId);
+
+      if (error) throw error;
+      
+      // Refresh opportunities
+      await fetchOpportunities();
+    } catch (err) {
+      console.error('Error toggling opportunity status:', err);
+      throw err;
+    }
+  }, [fetchOpportunities]);
 
   // Filter opportunities
   const filterOpportunities = useCallback((filters: {
@@ -228,6 +277,9 @@ export const useSupabaseOpportunities = () => {
     filterOpportunities,
     getApplicationsByOpportunity,
     updateApplicationStatus,
+    updateOpportunity,
+    deleteOpportunity,
+    toggleOpportunityStatus,
     refreshOpportunities: fetchOpportunities,
     refreshApplications: fetchUserApplications
   };

@@ -51,7 +51,7 @@ export const useSavedOpportunities = () => {
     if (savedOpportunities.includes(opportunityId)) {
       return; // Already saved
     }
-
+    
     try {
       const { error } = await supabase
         .from('saved_opportunities')
@@ -98,26 +98,52 @@ export const useSavedOpportunities = () => {
 
   // Get saved opportunities with full data
   const getSavedOpportunitiesWithData = useCallback(async () => {
-    if (!isAuthenticated || !user) return [];
+    if (!isAuthenticated || !user) {
+      return [];
+    }
 
     try {
-      const { data, error } = await supabase
+      // First get saved opportunities
+      const { data: savedData, error: savedError } = await supabase
         .from('saved_opportunities')
-        .select(`
-          *,
-          opportunities (
-            *,
-            companies (
-              name,
-              logo_url
-            )
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (savedError) throw savedError;
+
+      if (!savedData || savedData.length === 0) {
+        return [];
+      }
+
+      // Then get full opportunity data
+      const enrichedData = await Promise.all(
+        savedData.map(async (savedItem) => {
+          const { data: opportunityData, error: oppError } = await supabase
+            .from('opportunities')
+            .select(`
+              *,
+              companies (
+                name,
+                logo_url
+              )
+            `)
+            .eq('id', savedItem.opportunity_id)
+            .single();
+
+          if (oppError) {
+            console.error('Error fetching opportunity:', oppError);
+            return null;
+          }
+
+          return {
+            ...savedItem,
+            opportunities: opportunityData
+          };
+        })
+      );
+
+      return enrichedData.filter(item => item !== null);
     } catch (err) {
       console.error('Error fetching saved opportunities with data:', err);
       return [];

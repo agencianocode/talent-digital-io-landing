@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,8 +11,10 @@ import { toast } from "sonner";
 
 const NewOpportunity = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { user, company, userRole } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -24,6 +26,46 @@ const NewOpportunity = () => {
     category: "",
     currency: "MXN"
   });
+
+  // Cargar datos de la oportunidad si estamos editando
+  useEffect(() => {
+    const loadOpportunity = async () => {
+      if (!id) return;
+      
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('opportunities')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+
+        setFormData({
+          title: data.title || "",
+          description: data.description || "",
+          requirements: data.requirements || "",
+          salaryMin: data.salary_min?.toString() || "",
+          salaryMax: data.salary_max?.toString() || "",
+          location: data.location || "",
+          type: data.type || "full-time",
+          category: data.category || "",
+          currency: data.currency || "MXN"
+        });
+        setIsEditing(true);
+      } catch (error) {
+        console.error('Error loading opportunity:', error);
+        toast.error('Error al cargar la oportunidad');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      loadOpportunity();
+    }
+  }, [id]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -45,28 +87,44 @@ const NewOpportunity = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('opportunities')
-        .insert({
-          company_id: company.id,
-          title: formData.title,
-          description: formData.description,
-          requirements: formData.requirements || null,
-          location: formData.location || null,
-          type: formData.type,
-          category: formData.category,
-          salary_min: formData.salaryMin ? parseInt(formData.salaryMin) : null,
-          salary_max: formData.salaryMax ? parseInt(formData.salaryMax) : null,
-          currency: formData.currency,
-        });
+      const opportunityData = {
+        title: formData.title,
+        description: formData.description,
+        requirements: formData.requirements || null,
+        location: formData.location || null,
+        type: formData.type,
+        category: formData.category,
+        salary_min: formData.salaryMin ? parseInt(formData.salaryMin) : null,
+        salary_max: formData.salaryMax ? parseInt(formData.salaryMax) : null,
+        currency: formData.currency,
+      };
+
+      let error;
+      if (isEditing && id) {
+        // Actualizar oportunidad existente
+        const { error: updateError } = await supabase
+          .from('opportunities')
+          .update(opportunityData)
+          .eq('id', id);
+        error = updateError;
+      } else {
+        // Crear nueva oportunidad
+        const { error: insertError } = await supabase
+          .from('opportunities')
+          .insert({
+            ...opportunityData,
+            company_id: company.id,
+          });
+        error = insertError;
+      }
 
       if (error) throw error;
 
-      toast.success('Oportunidad publicada exitosamente');
-      navigate('/dashboard/opportunities');
+      toast.success(isEditing ? 'Oportunidad actualizada exitosamente' : 'Oportunidad publicada exitosamente');
+      navigate('/business-dashboard/opportunities');
     } catch (error) {
-      console.error('Error creating opportunity:', error);
-      toast.error('Error al publicar la oportunidad');
+      console.error('Error saving opportunity:', error);
+      toast.error(isEditing ? 'Error al actualizar la oportunidad' : 'Error al publicar la oportunidad');
     } finally {
       setIsLoading(false);
     }
@@ -95,15 +153,21 @@ const NewOpportunity = () => {
       {/* Header */}
       <div className="mb-6">
         <button 
-          onClick={() => navigate('/dashboard/opportunities')}
+          onClick={() => navigate('/business-dashboard/opportunities')}
           className="flex items-center text-foreground hover:text-muted-foreground transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver a oportunidades
         </button>
         <h1 className="text-3xl font-bold text-foreground">
-          Publicar Nueva Oportunidad
+          {isEditing ? 'Editar Oportunidad' : 'Publicar Nueva Oportunidad'}
         </h1>
+        <p className="text-muted-foreground mt-2">
+          {isEditing 
+            ? 'Modifica la información de tu oportunidad laboral'
+            : 'Completa la información para publicar tu oportunidad laboral'
+          }
+        </p>
       </div>
 
       {/* Form */}
@@ -241,7 +305,7 @@ const NewOpportunity = () => {
             <div className="flex items-center justify-between pt-6">
               <Button 
                 variant="outline"
-                onClick={() => navigate('/dashboard/opportunities')}
+                onClick={() => navigate('/business-dashboard/opportunities')}
               >
                 Cancelar
               </Button>
@@ -251,7 +315,7 @@ const NewOpportunity = () => {
                 disabled={!isFormValid || isLoading}
                 className="font-semibold"
               >
-                {isLoading ? 'Publicando...' : 'Publicar Oportunidad'}
+                {isLoading ? (isEditing ? 'Actualizando...' : 'Publicando...') : (isEditing ? 'Actualizar Oportunidad' : 'Publicar Oportunidad')}
               </Button>
             </div>
           </div>

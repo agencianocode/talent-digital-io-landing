@@ -4,16 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Bookmark, Eye, Briefcase, MapPin, DollarSign } from "lucide-react";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import EmptyState from "@/components/EmptyState";
 
 const SavedOpportunities = () => {
   const navigate = useNavigate();
+  const { user } = useSupabaseAuth();
   const { getSavedOpportunitiesWithData, unsaveOpportunity, isLoading } = useSavedOpportunities();
   const { hasApplied } = useSupabaseOpportunities();
   const [savedOpportunities, setSavedOpportunities] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+
+
 
   const jobTypes = [
     { value: 'full-time', label: 'Tiempo Completo' },
@@ -38,6 +42,8 @@ const SavedOpportunities = () => {
     loadSavedOpportunities();
   }, [getSavedOpportunitiesWithData]);
 
+
+
   const handleUnsave = async (opportunityId: string) => {
     try {
       await unsaveOpportunity(opportunityId);
@@ -51,9 +57,9 @@ const SavedOpportunities = () => {
 
   if (loadingData || isLoading) {
     return (
-      <div className="p-8">
+      <div className="p-4 lg:p-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
             Oportunidades Guardadas
           </h1>
           <p className="text-muted-foreground">
@@ -67,9 +73,9 @@ const SavedOpportunities = () => {
 
   if (savedOpportunities.length === 0) {
     return (
-      <div className="p-8">
+      <div className="p-4 lg:p-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
             Oportunidades Guardadas
           </h1>
           <p className="text-muted-foreground">
@@ -89,14 +95,19 @@ const SavedOpportunities = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 lg:p-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Oportunidades Guardadas ({savedOpportunities.length})
-        </h1>
-        <p className="text-muted-foreground">
-          Oportunidades que has guardado para revisar más tarde
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+                Oportunidades Guardadas ({savedOpportunities.length})
+              </h1>
+              <p className="text-muted-foreground">
+                Oportunidades que has guardado para revisar más tarde
+              </p>
+            </div>
+
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -106,11 +117,11 @@ const SavedOpportunities = () => {
           const applied = hasApplied(opportunity.id);
 
           return (
-            <div key={opportunity.id} className="bg-card p-6 rounded-lg border hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between">
+            <div key={opportunity.id} className="bg-card p-4 lg:p-6 rounded-lg border hover:shadow-md transition-shadow">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <h3 className="text-xl font-semibold text-foreground">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <h3 className="text-lg lg:text-xl font-semibold text-foreground w-full lg:w-auto">
                       {opportunity.title}
                     </h3>
                     {applied && (
@@ -126,7 +137,7 @@ const SavedOpportunities = () => {
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3 text-sm text-muted-foreground">
                     {company && (
                       <div className="flex items-center gap-1">
                         <Briefcase className="h-4 w-4" />
@@ -160,12 +171,13 @@ const SavedOpportunities = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center justify-center lg:justify-end gap-2">
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => navigate(`/opportunities/${opportunity.id}`)}
+                    onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
                     title="Ver detalles"
+                    className="hover:bg-muted/50"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>

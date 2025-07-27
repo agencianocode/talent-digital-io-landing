@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import NotificationCenter from "./NotificationCenter";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ const Header = () => {
 
           {/* Auth Buttons / User Actions */}
           <div className="flex items-center space-x-4">
+            <ThemeToggle />
             {isAuthenticated ? (
               <NotificationCenter />
             ) : (

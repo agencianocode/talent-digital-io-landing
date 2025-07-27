@@ -16,7 +16,7 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && userRole) {
-      const redirectPath = userRole === 'business' ? '/dashboard' : '/talent-dashboard';
+      const redirectPath = userRole === 'business' ? '/business-dashboard' : '/talent-dashboard';
       navigate(redirectPath);
     }
   }, [isAuthenticated, userRole, navigate]);
