@@ -62,7 +62,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   });
 
   // Fetch user profile and role
-  const fetchUserData = async (userId: string) => {
+  const fetchUserData = async (userId: string, userType?: string) => {
     try {
       // Fetch profile
       let { data: profile, error: profileError } = await supabase
@@ -96,10 +96,12 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       // If role doesn't exist, create it
       if (roleError && roleError.code === 'PGRST116') {
-        console.log('Role not found, creating default role for user:', userId);
+        console.log('Role not found, creating role for user:', userId, 'with type:', userType);
+        // Use the provided userType or default to 'talent'
+        const defaultRole = userType === 'business' ? 'business' : 'talent';
         const { data: newRole, error: createRoleError } = await supabase
           .from('user_roles')
-          .insert({ user_id: userId, role: 'talent' })
+          .insert({ user_id: userId, role: defaultRole })
           .select()
           .single();
         
@@ -239,7 +241,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       // Try to fetch the user data to ensure it was created properly
       try {
-        const userData = await fetchUserData(data.user.id);
+        const userData = await fetchUserData(data.user.id, metadata?.user_type);
         setAuthState(prev => ({
           ...prev,
           profile: userData.profile,
