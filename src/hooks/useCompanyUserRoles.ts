@@ -34,9 +34,11 @@ export const useCompanyUserRoles = (companyId?: string) => {
 
     setIsLoading(true);
     try {
-      // Fetch all user roles for the company using raw query
-      const { data: roles, error } = await supabase
-        .rpc('get_company_user_roles', { p_company_id: companyId });
+      // Fetch all user roles for the company (using any until types are regenerated)
+      const { data: roles, error } = await (supabase as any)
+        .from('company_user_roles')
+        .select('*')
+        .eq('company_id', companyId);
 
       if (error) throw error;
 
@@ -57,33 +59,158 @@ export const useCompanyUserRoles = (companyId?: string) => {
 
   // Invite a new user to the company
   const inviteUser = useCallback(async (inviteData: InviteUserData) => {
-    toast.info(`Invitación a ${inviteData.email} como ${inviteData.role} - Ejecuta el SQL primero para activar`);
-  }, []);
+    if (!user) return;
+
+    try {
+      // Create invitation record (using any until types are regenerated)
+      const { data, error } = await (supabase as any)
+        .from('company_user_roles')
+        .insert({
+          company_id: inviteData.company_id,
+          user_id: null, // Will be set when user accepts
+          role: inviteData.role,
+          invited_by: user.id,
+          status: 'pending',
+          invited_at: new Date().toISOString(),
+          // Store email temporarily in metadata (we'll need to extend table or use another approach)
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Send invitation email
+      const { error: emailError } = await supabase.functions.invoke('send-invitation', {
+        body: {
+          email: inviteData.email,
+          role: inviteData.role,
+          company_id: inviteData.company_id,
+          invited_by: user.email,
+          invitation_id: data.id
+        }
+      });
+
+      if (emailError) {
+        console.error('Error sending email:', emailError);
+        toast.error('Invitación creada pero error al enviar email');
+      } else {
+        toast.success(`Invitación enviada a ${inviteData.email}`);
+      }
+
+      // Reload user roles
+      await loadUserRoles();
+    } catch (error) {
+      console.error('Error inviting user:', error);
+      toast.error('Error al enviar invitación');
+    }
+  }, [user, loadUserRoles]);
 
   // Update user role
   const updateUserRole = useCallback(async (roleId: string, newRole: 'owner' | 'admin' | 'viewer') => {
-    toast.info('Funcionalidad de actualización próximamente - Ejecuta el SQL primero');
-  }, []);
+    try {
+      const { error } = await (supabase as any)
+        .from('company_user_roles')
+        .update({ role: newRole })
+        .eq('id', roleId);
+
+      if (error) throw error;
+
+      toast.success('Rol actualizado correctamente');
+      await loadUserRoles();
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      toast.error('Error al actualizar rol');
+    }
+  }, [loadUserRoles]);
 
   // Remove user from company
   const removeUser = useCallback(async (roleId: string) => {
-    toast.info('Funcionalidad de remoción próximamente - Ejecuta el SQL primero');
-  }, []);
+    try {
+      const { error } = await (supabase as any)
+        .from('company_user_roles')
+        .delete()
+        .eq('id', roleId);
+
+      if (error) throw error;
+
+      toast.success('Usuario removido de la empresa');
+      await loadUserRoles();
+    } catch (error) {
+      console.error('Error removing user:', error);
+      toast.error('Error al remover usuario');
+    }
+  }, [loadUserRoles]);
 
   // Transfer ownership
   const transferOwnership = useCallback(async (newOwnerRoleId: string) => {
-    toast.info('Funcionalidad de transferencia próximamente - Ejecuta el SQL primero');
-  }, []);
+    if (!user) return;
+
+    try {
+      // Start transaction: demote current owner to admin, promote new user to owner
+      const { error: demoteError } = await (supabase as any)
+        .from('company_user_roles')
+        .update({ role: 'admin' })
+        .eq('user_id', user.id)
+        .eq('role', 'owner');
+
+      if (demoteError) throw demoteError;
+
+      const { error: promoteError } = await (supabase as any)
+        .from('company_user_roles')
+        .update({ role: 'owner' })
+        .eq('id', newOwnerRoleId);
+
+      if (promoteError) throw promoteError;
+
+      toast.success('Propiedad transferida correctamente');
+      await loadUserRoles();
+    } catch (error) {
+      console.error('Error transferring ownership:', error);
+      toast.error('Error al transferir propiedad');
+    }
+  }, [user, loadUserRoles]);
 
   // Accept invitation
   const acceptInvitation = useCallback(async (roleId: string) => {
-    toast.info('Funcionalidad de aceptación próximamente - Ejecuta el SQL primero');
-  }, []);
+    if (!user) return;
+
+    try {
+      const { error } = await (supabase as any)
+        .from('company_user_roles')
+        .update({ 
+          status: 'accepted',
+          user_id: user.id,
+          accepted_at: new Date().toISOString()
+        })
+        .eq('id', roleId);
+
+      if (error) throw error;
+
+      toast.success('Invitación aceptada');
+      await loadUserRoles();
+    } catch (error) {
+      console.error('Error accepting invitation:', error);
+      toast.error('Error al aceptar invitación');
+    }
+  }, [user, loadUserRoles]);
 
   // Decline invitation
   const declineInvitation = useCallback(async (roleId: string) => {
-    toast.info('Funcionalidad de rechazo próximamente - Ejecuta el SQL primero');
-  }, []);
+    try {
+      const { error } = await (supabase as any)
+        .from('company_user_roles')
+        .update({ status: 'declined' })
+        .eq('id', roleId);
+
+      if (error) throw error;
+
+      toast.success('Invitación rechazada');
+      await loadUserRoles();
+    } catch (error) {
+      console.error('Error declining invitation:', error);
+      toast.error('Error al rechazar invitación');
+    }
+  }, [loadUserRoles]);
 
   // Check if current user has permission
   const hasPermission = useCallback((requiredRole: 'owner' | 'admin' | 'viewer') => {
