@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useSupabaseAuth, isTalentRole } from "@/contexts/SupabaseAuthContext";
 import { Search, MapPin, Clock, DollarSign, Briefcase, Heart, HeartOff } from "lucide-react";
 import { toast } from "sonner";
 

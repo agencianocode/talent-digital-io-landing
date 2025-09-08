@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MoreHorizontal, MapPin, DollarSign, Briefcase, Clock, Heart, Send } from "lucide-react";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useSupabaseAuth, isTalentRole } from "@/contexts/SupabaseAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
