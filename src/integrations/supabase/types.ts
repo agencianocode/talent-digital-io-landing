@@ -443,6 +443,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          features: Json | null
+          id: string
+          started_at: string
+          status: string
+          subscription_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          features?: Json | null
+          id?: string
+          started_at?: string
+          status?: string
+          subscription_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          features?: Json | null
+          id?: string
+          started_at?: string
+          status?: string
+          subscription_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       work_experience: {
         Row: {
           company: string
