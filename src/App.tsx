@@ -12,7 +12,6 @@ import LoadingSkeleton from '@/components/LoadingSkeleton';
 
 // Importar páginas básicas
 import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
 import Auth from './pages/Auth';
 
 // Importar layouts de dashboard
@@ -36,7 +35,7 @@ const TalentProfilePage = lazy(() => import('./pages/TalentProfilePage'));
 const UserManagement = lazy(() => import('./pages/settings/UserManagement'));
 
 // Lazy load páginas de registro
-const Register = lazy(() => import('./pages/Register'));
+const UserTypeSelector = lazy(() => import('./pages/UserTypeSelector'));
 const RegisterBusiness = lazy(() => import('./pages/RegisterBusiness'));
 const RegisterTalent = lazy(() => import('./pages/RegisterTalent'));
 
@@ -73,19 +72,14 @@ function App() {
                   <div className="min-h-screen bg-background text-foreground">
                     <Routes>
                       <Route path="/" element={<LandingPage />} />
-                      <Route path="/login" element={
-                        <Suspense fallback={<LoadingSkeleton type="card" />}>
-                          <Login />
-                        </Suspense>
-                      } />
                       <Route path="/auth" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <Auth />
                         </Suspense>
                       } />
-                      <Route path="/register" element={
+                      <Route path="/user-selector" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
-                          <Register />
+                          <UserTypeSelector />
                         </Suspense>
                       } />
 

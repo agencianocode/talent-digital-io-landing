@@ -40,13 +40,13 @@ const Header = () => {
               <>
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/auth')}
                   className="font-medium"
                 >
                   Iniciar Sesión
                 </Button>
                 <Button 
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate('/user-selector')}
                   className="font-medium"
                 >
                   Comenzar Gratis
