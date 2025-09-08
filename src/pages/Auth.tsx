@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isBusinessRole, isAdminRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 
@@ -17,7 +17,14 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && userRole) {
-      const redirectPath = isBusinessRole(userRole) ? '/business-dashboard' : '/talent-dashboard';
+      let redirectPath = '/talent-dashboard'; // default
+      
+      if (isAdminRole(userRole)) {
+        redirectPath = '/admin';
+      } else if (isBusinessRole(userRole)) {
+        redirectPath = '/business-dashboard';
+      }
+      
       navigate(redirectPath);
     }
   }, [isAuthenticated, userRole, navigate]);
