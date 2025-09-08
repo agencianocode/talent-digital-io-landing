@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
 
 interface SupabaseOpportunity {
   id: string;
@@ -69,7 +69,7 @@ export const useSupabaseOpportunities = () => {
 
   // Fetch user applications
   const fetchUserApplications = useCallback(async () => {
-    if (!user || userRole !== 'talent') return;
+    if (!user || !isTalentRole(userRole)) return;
 
     try {
       const { data, error } = await supabase
@@ -97,7 +97,7 @@ export const useSupabaseOpportunities = () => {
 
   // Apply to opportunity
   const applyToOpportunity = useCallback(async (opportunityId: string, coverLetter: string) => {
-    if (!user || userRole !== 'talent') {
+    if (!user || !isTalentRole(userRole)) {
       throw new Error('Only talent users can apply to opportunities');
     }
 
@@ -260,7 +260,7 @@ export const useSupabaseOpportunities = () => {
   }, [fetchOpportunities]);
 
   useEffect(() => {
-    if (isAuthenticated && user && userRole === 'talent') {
+    if (isAuthenticated && user && isTalentRole(userRole)) {
       fetchUserApplications();
     }
   }, [isAuthenticated, user, userRole, fetchUserApplications]);

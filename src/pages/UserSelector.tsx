@@ -8,7 +8,7 @@ const UserSelector = () => {
   const handleSelectBusinessType = async () => {
     if (isAuthenticated) {
       // If user is logged in, switch their role
-      await switchUserType('business');
+      await switchUserType('freemium_business');
     }
     navigate('/business-dashboard');
   };
@@ -16,7 +16,7 @@ const UserSelector = () => {
   const handleSelectTalentType = async () => {
     if (isAuthenticated) {
       // If user is logged in, switch their role
-      await switchUserType('talent');
+      await switchUserType('freemium_talent');
     }
     navigate('/talent-dashboard');
   };

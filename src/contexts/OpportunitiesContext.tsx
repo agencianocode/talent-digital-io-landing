@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useSupabaseAuth } from './SupabaseAuthContext';
+import { useSupabaseAuth, isBusinessRole, isTalentRole } from './SupabaseAuthContext';
 
 interface Opportunity {
   id: string;
@@ -268,7 +268,7 @@ export const OpportunitiesProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const createOpportunity = useCallback(async (opportunityData: Omit<Opportunity, 'id' | 'createdAt' | 'updatedAt' | 'applicantsCount'>) => {
-    if (!user || userRole !== 'business') return;
+    if (!user || !isBusinessRole(userRole)) return;
 
     const newOpportunity: Opportunity = {
       ...opportunityData,
@@ -300,7 +300,7 @@ export const OpportunitiesProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [state.opportunities, saveToStorage]);
 
   const applyToOpportunity = useCallback(async (opportunityId: string, message: string) => {
-    if (!user || userRole !== 'talent') return;
+    if (!user || !isTalentRole(userRole)) return;
 
     const application: Application = {
       id: `app_${Date.now()}`,

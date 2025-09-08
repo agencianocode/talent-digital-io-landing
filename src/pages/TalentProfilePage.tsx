@@ -186,7 +186,7 @@ const TalentProfilePage = () => {
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
             Perfil de Talento
           </h1>
-          {userRole === 'business' && (
+          {isBusinessRole(userRole) && (
             <Button onClick={handleContact} className="w-full sm:w-auto">
               Contactar
             </Button>
@@ -428,7 +428,7 @@ const TalentProfilePage = () => {
           </Card>
 
           {/* Contact Actions */}
-          {userRole === 'business' && (
+          {isBusinessRole(userRole) && (
             <Card>
               <CardHeader>
                 <CardTitle>Acciones</CardTitle>

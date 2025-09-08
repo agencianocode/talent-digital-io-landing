@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Filter, Eye, MessageSquare, Calendar, MapPin } from "lucide-react";
@@ -41,7 +41,7 @@ const ApplicationsPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
-    if (userRole === 'business' && company) {
+    if (isBusinessRole(userRole) && company) {
       fetchApplications();
     }
   }, [userRole, company]);
@@ -146,7 +146,7 @@ const ApplicationsPage = () => {
     return matchesSearch && matchesStatus;
   });
 
-  if (userRole !== 'business') {
+  if (!isBusinessRole(userRole)) {
     return (
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Acceso Denegado</h1>

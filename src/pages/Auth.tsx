@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 const Auth = () => {
@@ -16,7 +16,7 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && userRole) {
-      const redirectPath = userRole === 'business' ? '/business-dashboard' : '/talent-dashboard';
+      const redirectPath = isBusinessRole(userRole) ? '/business-dashboard' : '/talent-dashboard';
       navigate(redirectPath);
     }
   }, [isAuthenticated, userRole, navigate]);

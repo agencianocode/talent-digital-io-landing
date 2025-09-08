@@ -197,7 +197,7 @@ const OpportunityDetail = () => {
           )}
         </div>
         
-        {userRole === 'talent' && (
+        {isTalentRole(userRole) && (
           <div className="flex items-center gap-2 self-start">
             <Button
               variant="outline"

@@ -56,7 +56,7 @@ const TalentSearchPage = () => {
   const [experienceFilter, setExperienceFilter] = useState<string>("all");
 
   useEffect(() => {
-    if (userRole === 'business') {
+    if (isBusinessRole(userRole)) {
       fetchTalents();
     }
   }, [userRole]);
@@ -180,7 +180,7 @@ const TalentSearchPage = () => {
     console.log('All talents:', talents.length);
   }, [searchTerm, filteredTalents, talents]);
 
-  if (userRole !== 'business') {
+  if (!isBusinessRole(userRole)) {
     return (
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Acceso Denegado</h1>

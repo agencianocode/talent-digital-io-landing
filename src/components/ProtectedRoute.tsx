@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { useSupabaseAuth, UserRole } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, UserRole, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -24,7 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredUserT
 
   if (requiredUserType && userRole !== requiredUserType) {
     // Only redirect if there's a mismatch between required and actual roles
-    const redirectPath = userRole === 'business' ? '/business-dashboard' : '/talent-dashboard';
+    const redirectPath = isBusinessRole(userRole) ? '/business-dashboard' : '/talent-dashboard';
     return <Navigate to={redirectPath} replace />;
   }
 

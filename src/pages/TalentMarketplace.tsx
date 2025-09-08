@@ -128,7 +128,7 @@ const TalentMarketplace = () => {
   });
 
   const handleApply = async (opportunityId: string) => {
-    if (!user || userRole !== 'talent') {
+    if (!user || !isTalentRole(userRole)) {
       toast.error('Solo los talentos pueden aplicar a oportunidades');
       return;
     }
@@ -170,7 +170,7 @@ const TalentMarketplace = () => {
     }
   };
 
-  if (userRole !== 'talent') {
+  if (!isTalentRole(userRole)) {
     return (
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Acceso Denegado</h1>

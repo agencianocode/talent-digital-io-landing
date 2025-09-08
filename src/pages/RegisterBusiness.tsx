@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff, Building2, ArrowLeft } from 'lucide-react';
 
 const RegisterBusiness = () => {
@@ -28,7 +28,7 @@ const RegisterBusiness = () => {
 
   // Effect to handle redirection after successful registration
   useEffect(() => {
-    if (registrationComplete && isAuthenticated && userRole === 'business') {
+    if (registrationComplete && isAuthenticated && isBusinessRole(userRole)) {
       navigate('/business-dashboard');
     }
   }, [registrationComplete, isAuthenticated, userRole, navigate]);

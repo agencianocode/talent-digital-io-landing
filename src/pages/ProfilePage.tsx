@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isBusinessRole, isTalentRole } from '@/contexts/SupabaseAuthContext';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -9,9 +9,9 @@ const ProfilePage = () => {
 
   useEffect(() => {
     // Redirect to appropriate settings page based on user type
-    if (userRole === 'business') {
+    if (isBusinessRole(userRole)) {
       navigate('/settings/company');
-    } else if (userRole === 'talent') {
+    } else if (isTalentRole(userRole)) {
       navigate('/settings/talent-profile');
     } else {
       navigate('/settings/profile');

@@ -1,5 +1,5 @@
 
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
 import { useSupabaseOpportunities } from './useSupabaseOpportunities';
 import { useCallback } from 'react';
 
@@ -16,7 +16,7 @@ export const useApplications = () => {
   } = useSupabaseOpportunities();
 
   const applyToJob = useCallback(async (opportunityId: string, message: string) => {
-    if (!user || userRole !== 'talent') {
+    if (!user || !isTalentRole(userRole)) {
       throw new Error('Only talent users can apply to opportunities');
     }
 

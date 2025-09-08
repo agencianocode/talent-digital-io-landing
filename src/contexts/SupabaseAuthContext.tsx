@@ -2,7 +2,24 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'admin' | 'business' | 'talent';
+export type UserRole = 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'premium_academy' | 'admin';
+
+// Utility functions to check user types
+export const isTalentRole = (role: UserRole | null): boolean => {
+  return role === 'freemium_talent' || role === 'premium_talent';
+};
+
+export const isBusinessRole = (role: UserRole | null): boolean => {
+  return role === 'freemium_business' || role === 'premium_business' || role === 'premium_academy';
+};
+
+export const isPremiumRole = (role: UserRole | null): boolean => {
+  return role === 'premium_talent' || role === 'premium_business' || role === 'premium_academy';
+};
+
+export const isAdminRole = (role: UserRole | null): boolean => {
+  return role === 'admin';
+};
 
 interface UserProfile {
   id: string;
@@ -97,8 +114,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // If role doesn't exist, create it
       if (roleError && roleError.code === 'PGRST116') {
         console.log('Role not found, creating role for user:', userId, 'with type:', userType);
-        // Use the provided userType or default to 'talent'
-        const defaultRole = userType === 'business' ? 'business' : 'talent';
+        // Use the provided userType or default to 'freemium_talent'
+        const defaultRole: UserRole = userType === 'business' ? 'freemium_business' : 'freemium_talent';
         const { data: newRole, error: createRoleError } = await supabase
           .from('user_roles')
           .insert({ user_id: userId, role: defaultRole })
@@ -114,7 +131,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       // Fetch company if user is business
       let company = null;
-      if (roleData?.role === 'business') {
+      if (roleData?.role && isBusinessRole(roleData.role as UserRole)) {
         const { data: companyData } = await supabase
           .from('companies')
           .select('*')
@@ -125,14 +142,14 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       return {
         profile: profile || null,
-        role: roleData?.role || 'talent',
+        role: (roleData?.role as UserRole) || 'freemium_talent',
         company
       };
     } catch (error) {
       console.error('Error fetching user data:', error);
       return {
         profile: null,
-        role: 'talent' as UserRole,
+        role: 'freemium_talent' as UserRole,
         company: null
       };
     }

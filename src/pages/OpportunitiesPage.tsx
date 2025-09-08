@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
 import { Search, Filter, Eye, Edit, Link, MoreHorizontal, Briefcase, Users, Copy, Trash2, Archive, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import StaticShareButton from '@/components/StaticShareButton';
@@ -167,7 +167,7 @@ const OpportunitiesPage = () => {
     }
   };
 
-  if (userRole !== 'business') {
+  if (!isBusinessRole(userRole)) {
     return (
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Acceso Denegado</h1>
