@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -195,7 +195,9 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          linkedin: string | null
           phone: string | null
+          position: string | null
           updated_at: string
           user_id: string
         }
@@ -204,7 +206,9 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          linkedin?: string | null
           phone?: string | null
+          position?: string | null
           updated_at?: string
           user_id: string
         }
@@ -213,8 +217,40 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          linkedin?: string | null
           phone?: string | null
+          position?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      role_change_audit: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          id: string
+          new_role: string
+          old_role: string | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_role: string
+          old_role?: string | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_role?: string
+          old_role?: string | null
+          reason?: string | null
           user_id?: string
         }
         Relationships: []
@@ -361,7 +397,9 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       switch_user_role: {
-        Args: { new_role: Database["public"]["Enums"]["user_role"] }
+        Args:
+          | { new_role: Database["public"]["Enums"]["user_role"] }
+          | { new_role: string }
         Returns: boolean
       }
     }
