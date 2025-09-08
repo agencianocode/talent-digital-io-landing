@@ -14,6 +14,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Plus, X, Award, GraduationCap, Briefcase } from 'lucide-react';
+import UpgradeRequestButton from '@/components/UpgradeRequestButton';
 
 // Simplified schemas for education and work experience
 const educationSchema = z.object({
@@ -350,6 +351,9 @@ const TalentProfileSettings = () => {
         <h2 className="text-2xl font-bold text-foreground">Perfil Profesional</h2>
         <p className="text-muted-foreground">Gestiona tu información profesional y experiencia</p>
       </div>
+
+      {/* Upgrade Request Button */}
+      <UpgradeRequestButton />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

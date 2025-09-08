@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
+import UpgradeRequestButton from '@/components/UpgradeRequestButton';
 
 const companySchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -87,6 +88,9 @@ const CompanySettings = () => {
         <h2 className="text-2xl font-bold text-foreground">Información de la Empresa</h2>
         <p className="text-muted-foreground">Gestiona la información básica de tu empresa</p>
       </div>
+
+      {/* Upgrade Request Button */}
+      <UpgradeRequestButton />
 
       <Card>
         <CardHeader>

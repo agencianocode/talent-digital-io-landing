@@ -51,6 +51,7 @@ const TalentLanding = lazy(() => import('./pages/TalentLanding'));
 const BusinessLanding = lazy(() => import('./pages/BusinessLanding'));
 
 // Lazy load otras páginas
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const PublicOpportunity = lazy(() => import('./pages/PublicOpportunity'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -208,6 +209,13 @@ function App() {
                       <Route path="/settings/company" element={
                         <Suspense fallback={<LoadingSkeleton type="profile" />}>
                           <CompanySettings />
+                        </Suspense>
+                      } />
+
+                      {/* Admin Panel */}
+                      <Route path="/admin" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <AdminPanel />
                         </Suspense>
                       } />
 
