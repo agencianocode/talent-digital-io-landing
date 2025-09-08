@@ -19,12 +19,14 @@ import {
   TrendingUp,
   Building,
   GraduationCap,
-  User
+  User,
+  LogOut
 } from 'lucide-react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useUpgradeRequests } from '@/hooks/useUpgradeRequests';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import LogoutButton from '@/components/LogoutButton';
 
 interface AdminStats {
   totalUsers: number;
@@ -182,12 +184,15 @@ const AdminPanel: React.FC = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Shield className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-3xl font-bold">Panel de Administración</h1>
-          <p className="text-muted-foreground">Gestión de usuarios y solicitudes</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Shield className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Panel de Administración</h1>
+            <p className="text-muted-foreground">Gestión de usuarios y solicitudes</p>
+          </div>
         </div>
+        <LogoutButton />
       </div>
 
       {/* Stats Cards */}
