@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export interface CompanyUserRole {
@@ -33,24 +34,20 @@ export const useCompanyUserRoles = (companyId?: string) => {
 
     setIsLoading(true);
     try {
-      // For now, return empty array until table is created
-      console.log('Table not created yet, using empty array');
-      setUserRoles([]);
-      
-      // Temporary: Set current user as owner for testing
-      const tempRole: CompanyUserRole = {
-        id: 'temp-role',
-        company_id: companyId,
-        user_id: user.id,
-        role: 'owner',
-        status: 'accepted',
-        invited_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setCurrentUserRole(tempRole);
+      // Fetch all user roles for the company using raw query
+      const { data: roles, error } = await supabase
+        .rpc('get_company_user_roles', { p_company_id: companyId });
+
+      if (error) throw error;
+
+      setUserRoles(roles || []);
+
+      // Find current user's role
+      const currentRole = roles?.find((role: any) => role.user_id === user.id);
+      setCurrentUserRole(currentRole || null);
     } catch (error) {
       console.error('Error loading user roles:', error);
+      toast.error('Error al cargar roles de usuario');
       setUserRoles([]);
       setCurrentUserRole(null);
     } finally {
