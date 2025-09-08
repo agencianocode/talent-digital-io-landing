@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_students: {
+        Row: {
+          academy_id: string
+          created_at: string
+          enrollment_date: string | null
+          graduation_date: string | null
+          id: string
+          program_name: string | null
+          status: string | null
+          student_email: string
+          student_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          academy_id: string
+          created_at?: string
+          enrollment_date?: string | null
+          graduation_date?: string | null
+          id?: string
+          program_name?: string | null
+          status?: string | null
+          student_email: string
+          student_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          academy_id?: string
+          created_at?: string
+          enrollment_date?: string | null
+          graduation_date?: string | null
+          id?: string
+          program_name?: string | null
+          status?: string | null
+          student_email?: string
+          student_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_students_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           cover_letter: string | null
@@ -57,6 +104,7 @@ export type Database = {
       }
       companies: {
         Row: {
+          business_type: string | null
           created_at: string
           description: string | null
           id: string
@@ -70,6 +118,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          business_type?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -83,6 +132,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          business_type?: string | null
           created_at?: string
           description?: string | null
           id?: string

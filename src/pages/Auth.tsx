@@ -8,10 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Separator } from "@/components/ui/separator";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { signIn, signUp, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+  const { signIn, signUp, signInWithGoogle, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
   
   // Redirect if already authenticated
   useEffect(() => {

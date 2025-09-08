@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'premium_academy' | 'admin';
+export type UserRole = 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'admin';
 
 // Utility functions to check user types
 export const isTalentRole = (role: UserRole | null): boolean => {
@@ -10,15 +10,20 @@ export const isTalentRole = (role: UserRole | null): boolean => {
 };
 
 export const isBusinessRole = (role: UserRole | null): boolean => {
-  return role === 'freemium_business' || role === 'premium_business' || role === 'premium_academy';
+  return role === 'freemium_business' || role === 'premium_business';
 };
 
 export const isPremiumRole = (role: UserRole | null): boolean => {
-  return role === 'premium_talent' || role === 'premium_business' || role === 'premium_academy';
+  return role === 'premium_talent' || role === 'premium_business';
 };
 
 export const isAdminRole = (role: UserRole | null): boolean => {
   return role === 'admin';
+};
+
+// Check if user's company is an academy
+export const isAcademy = (company: Company | null): boolean => {
+  return company?.business_type === 'academy';
 };
 
 interface UserProfile {
@@ -41,6 +46,7 @@ interface Company {
   size?: string;
   location?: string;
   logo_url?: string;
+  business_type?: 'company' | 'academy';
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +64,7 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   signUp: (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: any }>;
   updateCompany: (data: Partial<Company>) => Promise<{ error: any }>;
@@ -282,6 +289,17 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return { error };
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`
+      }
+    });
+    
+    return { error };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -331,7 +349,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!error && authState.company) {
       setAuthState(prev => ({
         ...prev,
-        company: { ...prev.company!, ...data }
+        company: { ...prev.company!, ...data } as Company
       }));
     }
 
@@ -350,7 +368,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!error && company) {
       setAuthState(prev => ({
         ...prev,
-        company
+        company: company as Company
       }));
     }
 
@@ -381,6 +399,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       ...authState,
       signUp,
       signIn,
+      signInWithGoogle,
       signOut,
       updateProfile,
       updateCompany,
