@@ -46,7 +46,7 @@ const LandingPage = () => {
                   Iniciar Sesión
                 </Button>
                 <Button 
-                  onClick={() => navigate('/auth')}
+                  onClick={() => navigate('/user-selector')}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                   size="sm"
                 >
@@ -55,11 +55,11 @@ const LandingPage = () => {
               </div>
               <Button 
                 variant="outline" 
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/user-selector')}
                 size="sm"
                 className="sm:hidden"
               >
-                Entrar
+                Comenzar
               </Button>
               {/* Mobile Menu Button */}
               <Button
@@ -118,7 +118,7 @@ const LandingPage = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 lg:mb-12 px-4">
             <Button 
               size="lg"
-              onClick={() => navigate('/register-business')}
+              onClick={() => navigate('/user-selector')}
               className="text-base lg:text-lg px-6 lg:px-8 py-4 lg:py-6 hover-lift btn-primary group"
             >
               <Briefcase className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
@@ -128,7 +128,7 @@ const LandingPage = () => {
             <Button 
               size="lg" 
               variant="outline"
-              onClick={() => navigate('/register-talent')}
+              onClick={() => navigate('/user-selector')}
               className="text-base lg:text-lg px-6 lg:px-8 py-4 lg:py-6 hover-lift btn-secondary group"
             >
               <Users className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
@@ -235,7 +235,7 @@ const LandingPage = () => {
             <Button 
               size="lg" 
               variant="secondary"
-              onClick={() => navigate('/register-business')}
+              onClick={() => navigate('/user-selector')}
               className="text-lg px-8 py-6"
             >
               Registrar Empresa
@@ -243,7 +243,7 @@ const LandingPage = () => {
             <Button 
               size="lg" 
               variant="outline"
-              onClick={() => navigate('/register-talent')}
+              onClick={() => navigate('/user-selector')}
               className="text-lg px-8 py-6 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
             >
               Registrarse como Talento
