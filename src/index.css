@@ -208,6 +208,16 @@
     background: hsl(var(--foreground));
   }
 
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Text truncation utilities */
   .truncate-2 {
     display: -webkit-box;

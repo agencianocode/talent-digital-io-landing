@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Globe, Linkedin, Youtube, Github, Twitter, ExternalLink, CheckCircle } from 'lucide-react';
+import { Globe, Linkedin, Youtube, Github, Twitter, ExternalLink, CheckCircle, Instagram } from 'lucide-react';
 import { WizardData } from '../TalentProfileWizard';
 
 const urlSchema = z.string().url('Debe ser una URL válida').optional().or(z.literal(''));
@@ -19,6 +19,7 @@ const socialLinksSchema = z.object({
   website: urlSchema,
   github: urlSchema,
   twitter: urlSchema,
+  instagram: urlSchema,
 });
 
 type SocialLinksFormData = z.infer<typeof socialLinksSchema>;
@@ -44,6 +45,7 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
       website: data.social_links?.website || '',
       github: data.social_links?.github || '',
       twitter: data.social_links?.twitter || '',
+      instagram: data.social_links?.instagram || '',
     },
   });
 
@@ -55,6 +57,7 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
         website: formData.website || undefined,
         github: formData.github || undefined,
         twitter: formData.twitter || undefined,
+        instagram: formData.instagram || undefined,
       },
     });
     onNext();
@@ -98,6 +101,15 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
       priority: 'medium',
     },
     {
+      name: 'instagram' as keyof SocialLinksFormData,
+      label: 'Instagram',
+      icon: <Instagram className="h-5 w-5" />,
+      placeholder: 'https://instagram.com/tu-usuario',
+      description: 'Perfil profesional (no personal)',
+      color: 'text-pink-600',
+      priority: 'medium',
+    },
+    {
       name: 'twitter' as keyof SocialLinksFormData,
       label: 'Twitter (X)',
       icon: <Twitter className="h-5 w-5" />,
@@ -121,6 +133,7 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
       github: /^https:\/\/(www\.)?github\.com\//,
       youtube: /^https:\/\/(www\.)?youtube\.com\//,
       twitter: /^https:\/\/(www\.)?(twitter\.com|x\.com)\//,
+      instagram: /^https:\/\/(www\.)?instagram\.com\//,
     };
 
     const validation = platformValidations[platform];
@@ -228,14 +241,18 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
           <Alert>
             <CheckCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Consejos para tus redes sociales:</strong>
+              <strong>Consejos para tus redes sociales profesionales:</strong>
               <ul className="mt-2 space-y-1 text-sm">
                 <li>• <strong>LinkedIn:</strong> Mantén tu perfil actualizado y profesional</li>
                 <li>• <strong>GitHub:</strong> Muestra proyectos activos y código limpio</li>
                 <li>• <strong>Portfolio:</strong> Destaca tus mejores trabajos con descripciones</li>
+                <li>• <strong>Instagram:</strong> Usa como portafolio visual, evita contenido personal</li>
                 <li>• <strong>YouTube:</strong> Comparte conocimientos y tutoriales</li>
                 <li>• <strong>Twitter:</strong> Participa en conversaciones de tu industria</li>
               </ul>
+              <p className="mt-3 text-xs text-muted-foreground">
+                <strong>Importante:</strong> Asegúrate de que todos tus perfiles reflejen una imagen profesional coherente.
+              </p>
             </AlertDescription>
           </Alert>
 
