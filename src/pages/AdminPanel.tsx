@@ -72,7 +72,8 @@ const AdminPanel: React.FC = () => {
   }
 
   // Redirect if not authenticated or not admin
-  if (!isAuthenticated || userRole !== 'admin') {
+  // Add additional null checks to prevent React error #300 during logout
+  if (!isAuthenticated || !userRole || userRole !== 'admin') {
     console.log('AdminPanel: Redirecting - isAuthenticated:', isAuthenticated, 'userRole:', userRole);
     return <Navigate to="/auth" replace />;
   }

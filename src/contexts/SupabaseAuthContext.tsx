@@ -301,15 +301,21 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('Iniciando proceso de logout...');
       
-      // Clear all local storage and session storage
-      localStorage.clear();
-      sessionStorage.clear();
+      // Set loading state first to prevent component rendering issues
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: true
+      }));
       
-      // Sign out from Supabase
+      // Sign out from Supabase first
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error during Supabase signOut:', error);
       }
+      
+      // Clear all local storage and session storage
+      localStorage.clear();
+      sessionStorage.clear();
       
       // Force clear authentication state
       setAuthState({
@@ -324,14 +330,12 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       console.log('Logout completado, estado limpiado');
       
-      // Force page reload to ensure complete state cleanup
-      setTimeout(() => {
-        window.location.replace('/');
-      }, 100);
+      // Immediate redirect without timeout to prevent race conditions
+      window.location.replace('/');
       
     } catch (error) {
       console.error('Error during logout:', error);
-      // Even if there's an error, clear the state and redirect
+      // Even if there's an error, clear the state and redirect immediately
       setAuthState({
         user: null,
         session: null,
@@ -341,6 +345,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         isAuthenticated: false,
         isLoading: false
       });
+      // Immediate redirect on error too
       window.location.replace('/');
     }
   };

@@ -25,15 +25,14 @@ const LogoutButton = () => {
     console.log('LogoutButton: Iniciando logout...');
     try {
       await signOut();
-      // No need to navigate since signOut will handle the redirect
       console.log('LogoutButton: Logout exitoso');
+      // signOut will handle the redirect immediately
     } catch (error) {
       console.error('Error signing out:', error);
       // Force redirect even if there's an error
       window.location.replace('/');
-    } finally {
-      setIsLoading(false);
     }
+    // Don't set loading to false since we're redirecting
   };
 
   return (
