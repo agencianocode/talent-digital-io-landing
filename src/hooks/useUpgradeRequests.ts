@@ -55,23 +55,47 @@ export const useUpgradeRequests = () => {
   const loadAllRequests = useCallback(async () => {
     if (!user || userRole !== 'admin') return;
 
-    setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      setIsLoading(true);
+      
+      // Get upgrade requests first
+      const { data: requestsData, error: requestsError } = await supabase
         .from('upgrade_requests')
-        .select(`
-          *,
-          profiles!upgrade_requests_user_id_fkey(full_name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error loading all requests:', error);
+      if (requestsError) {
+        console.error('Error loading requests:', requestsError);
         toast.error('Error al cargar solicitudes');
         return;
       }
 
-      setRequests((data || []) as UpgradeRequest[]);
+      if (!requestsData || requestsData.length === 0) {
+        setRequests([]);
+        return;
+      }
+
+      // Get user profiles separately
+      const userIds = requestsData.map(req => req.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError);
+        // Continue without profile data
+        setRequests(requestsData as UpgradeRequest[]);
+        return;
+      }
+
+      // Combine the data
+      const enrichedRequests = requestsData.map(request => ({
+        ...request,
+        profiles: profilesData?.find(profile => profile.user_id === request.user_id) || null
+      }));
+
+      setRequests(enrichedRequests as UpgradeRequest[]);
     } catch (error) {
       console.error('Error loading all requests:', error);
       toast.error('Error al cargar solicitudes');

@@ -84,25 +84,38 @@ const AdminPanel: React.FC = () => {
   // Load all users
   const loadUsers = async () => {
     try {
-      const { data, error } = await supabase
+      // Get profiles first
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          user_id,
-          full_name,
-          created_at,
-          user_roles!inner(role)
-        `)
+        .select('id, user_id, full_name, created_at')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
-      const formattedUsers = data?.map(user => ({
-        id: user.user_id,
-        full_name: user.full_name || 'Sin nombre',
-        role: (user.user_roles[0] as any)?.role || 'unknown',
-        created_at: user.created_at
-      })) || [];
+      if (!profilesData || profilesData.length === 0) {
+        setUsers([]);
+        return;
+      }
+
+      // Get user roles separately
+      const userIds = profilesData.map(p => p.user_id);
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
+
+      if (rolesError) throw rolesError;
+
+      // Combine the data
+      const formattedUsers = profilesData.map(profile => {
+        const userRole = rolesData?.find(role => role.user_id === profile.user_id);
+        return {
+          id: profile.user_id,
+          full_name: profile.full_name || 'Sin nombre',
+          role: userRole?.role || 'unknown',
+          created_at: profile.created_at
+        };
+      });
 
       setUsers(formattedUsers);
     } catch (error) {
