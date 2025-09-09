@@ -298,7 +298,51 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      console.log('Iniciando proceso de logout...');
+      
+      // Clear all local storage and session storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error during Supabase signOut:', error);
+      }
+      
+      // Force clear authentication state
+      setAuthState({
+        user: null,
+        session: null,
+        profile: null,
+        company: null,
+        userRole: null,
+        isAuthenticated: false,
+        isLoading: false
+      });
+      
+      console.log('Logout completado, estado limpiado');
+      
+      // Force page reload to ensure complete state cleanup
+      setTimeout(() => {
+        window.location.replace('/');
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Even if there's an error, clear the state and redirect
+      setAuthState({
+        user: null,
+        session: null,
+        profile: null,
+        company: null,
+        userRole: null,
+        isAuthenticated: false,
+        isLoading: false
+      });
+      window.location.replace('/');
+    }
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {

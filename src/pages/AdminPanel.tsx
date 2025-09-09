@@ -46,8 +46,8 @@ interface UserData {
 }
 
 const AdminPanel: React.FC = () => {
-  const { userRole } = useSupabaseAuth();
-  const { requests, isLoading, approveRequest, rejectRequest, loadAllRequests } = useUpgradeRequests();
+  const { userRole, isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
+  const { requests, isLoading: requestsLoading, approveRequest, rejectRequest, loadAllRequests } = useUpgradeRequests();
   const [stats, setStats] = useState<AdminStats>({ totalUsers: 0, pendingRequests: 0, usersByRole: {} });
   const [users, setUsers] = useState<UserData[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
@@ -62,9 +62,19 @@ const AdminPanel: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 10;
 
-  // Redirect if not admin
-  if (userRole !== 'admin') {
-    return <Navigate to="/" replace />;
+  // Show loading while authentication is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated or not admin
+  if (!isAuthenticated || userRole !== 'admin') {
+    console.log('AdminPanel: Redirecting - isAuthenticated:', isAuthenticated, 'userRole:', userRole);
+    return <Navigate to="/auth" replace />;
   }
 
   // Load admin stats using secure function
@@ -316,7 +326,7 @@ const AdminPanel: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
+              {requestsLoading ? (
                 <div className="text-center py-8">Cargando solicitudes...</div>
               ) : requests.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
