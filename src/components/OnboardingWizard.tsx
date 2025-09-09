@@ -282,7 +282,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
             <ProfileTemplates 
               onApplyTemplate={(data) => {
                 // Apply template data and proceed
-                console.log('Applying template:', data);
+                // Apply template data
                 setCurrentStep(currentStep + 1);
               }}
             />

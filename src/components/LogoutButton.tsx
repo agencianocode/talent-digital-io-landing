@@ -14,6 +14,7 @@ import {
 import { LogOut } from "lucide-react";
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { logger } from '@/lib/logger';
 
 const LogoutButton = () => {
   const { signOut } = useSupabaseAuth();
@@ -22,13 +23,13 @@ const LogoutButton = () => {
 
   const handleLogout = async () => {
     setIsLoading(true);
-    console.log('LogoutButton: Iniciando logout...');
+    logger.debug('LogoutButton: Iniciando logout...');
     try {
       await signOut();
-      console.log('LogoutButton: Logout exitoso');
+      logger.debug('LogoutButton: Logout exitoso');
       // signOut will handle the redirect immediately
     } catch (error) {
-      console.error('Error signing out:', error);
+      logger.error('Error signing out', error);
       // Force redirect even if there's an error
       window.location.replace('/');
     }

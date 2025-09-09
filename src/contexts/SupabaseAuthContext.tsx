@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export type UserRole = 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'admin';
 
@@ -111,7 +112,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       // If profile doesn't exist, create it
       if (profileError && profileError.code === 'PGRST116') {
-        console.log('Profile not found, creating new profile for user:', userId);
+        logger.debug('Profile not found, creating new profile for user:', userId);
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert({ user_id: userId })
@@ -119,7 +120,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           .single();
         
         if (createError) {
-          console.error('Error creating profile:', createError);
+          logger.error('Error creating profile', createError);
         } else {
           profile = newProfile;
         }
@@ -134,7 +135,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       // If role doesn't exist, create it
       if (roleError && roleError.code === 'PGRST116') {
-        console.log('Role not found, creating role for user:', userId, 'with type:', userType);
+        logger.debug('Role not found, creating role for user:', userId, 'with type:', userType);
         // Use the provided userType or default to 'freemium_talent'
         const defaultRole: UserRole = userType === 'business' ? 'freemium_business' : 'freemium_talent';
         const { data: newRole, error: createRoleError } = await supabase
@@ -144,7 +145,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           .single();
         
         if (createRoleError) {
-          console.error('Error creating role:', createRoleError);
+          logger.error('Error creating role', createRoleError);
         } else {
           roleData = newRole;
         }
@@ -324,7 +325,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const signOut = async () => {
     try {
-      console.log('Iniciando proceso de logout...');
+      logger.debug('Iniciando proceso de logout...');
       
       // Set loading state first to prevent component rendering issues
       setAuthState(prev => ({
@@ -335,7 +336,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Sign out from Supabase first
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Error during Supabase signOut:', error);
+        logger.error('Error during Supabase signOut', error);
       }
       
       // Clear all local storage and session storage

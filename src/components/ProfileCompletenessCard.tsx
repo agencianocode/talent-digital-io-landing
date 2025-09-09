@@ -26,8 +26,7 @@ export const ProfileCompletenessCard: React.FC = () => {
     const personalScore = breakdown.basic_info || 0;
     const professionalScore = Math.min(breakdown.professional_info || 0, breakdown.skills_and_bio || 0);
     
-    console.log('ProfileCompletenessCard: personalScore', personalScore);
-    console.log('ProfileCompletenessCard: professionalScore', professionalScore);
+    // Removed debug logs for production
     
     // If professional area is significantly lower, go to professional tab
     if (professionalScore < personalScore && professionalScore < 80) {
@@ -40,9 +39,7 @@ export const ProfileCompletenessCard: React.FC = () => {
   const handleImproveProfile = () => {
     const targetTab = getTargetTab();
     
-    console.log('ProfileCompletenessCard: handleImproveProfile clicked');
-    console.log('ProfileCompletenessCard: targetTab', targetTab);
-    console.log('ProfileCompletenessCard: current location', location.pathname);
+    // Navigate to profile settings with target tab
     
     // Always navigate to ensure tab switching works properly
     navigate(`/settings/profile?tab=${targetTab}`, { replace: true });
