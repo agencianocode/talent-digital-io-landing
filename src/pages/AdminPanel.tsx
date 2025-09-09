@@ -57,25 +57,25 @@ const AdminPanel: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
-  // Load admin statistics
+  // Load admin stats
   const loadStats = async () => {
     try {
-      // Get total users and roles
-      const { data: rolesData, error: rolesError } = await supabase
+      const { data: userRolesData, error } = await supabase
         .from('user_roles')
         .select('role');
 
-      if (rolesError) throw rolesError;
+      if (error) throw error;
 
-      const totalUsers = rolesData?.length || 0;
-      const usersByRole = rolesData?.reduce((acc, { role }) => {
-        acc[role] = (acc[role] || 0) + 1;
+      const usersByRole = userRolesData?.reduce((acc, user) => {
+        acc[user.role] = (acc[user.role] || 0) + 1;
         return acc;
       }, {} as Record<string, number>) || {};
 
-      const pendingRequests = requests.filter(r => r.status === 'pending').length;
-
-      setStats({ totalUsers, pendingRequests, usersByRole });
+      setStats({
+        totalUsers: userRolesData?.length || 0,
+        pendingRequests: requests.filter(r => r.status === 'pending').length,
+        usersByRole
+      });
     } catch (error) {
       console.error('Error loading stats:', error);
     }
@@ -123,8 +123,8 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  // Change user role
-  const changeUserRole = async () => {
+  // Handle role change
+  const handleRoleChange = async () => {
     if (!selectedUser || !newRole) return;
 
     try {
@@ -135,64 +135,51 @@ const AdminPanel: React.FC = () => {
 
       if (error) throw error;
 
-      toast.success(`Rol actualizado para ${selectedUser.full_name}`);
+      toast.success('Rol actualizado exitosamente');
       setIsRoleChangeOpen(false);
       setSelectedUser(null);
       setNewRole('');
       loadUsers();
       loadStats();
     } catch (error) {
-      console.error('Error changing role:', error);
-      toast.error('Error al cambiar el rol');
+      console.error('Error updating role:', error);
+      toast.error('Error al actualizar el rol');
     }
   };
 
-  // Handle approve request
-  const handleApprove = async (requestId: string) => {
-    const success = await approveRequest(requestId, adminNotes);
-    if (success) {
-      setAdminNotes('');
-      setIsDialogOpen(false);
-      loadStats();
+  // Get role badge variant
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'admin': return 'destructive';
+      case 'premium_business': 
+      case 'premium_talent': return 'default';
+      case 'freemium_business': 
+      case 'freemium_talent': return 'secondary';
+      default: return 'outline';
     }
   };
 
-  // Handle reject request
-  const handleReject = async (requestId: string) => {
-    const success = await rejectRequest(requestId, adminNotes);
-    if (success) {
-      setAdminNotes('');
-      setIsDialogOpen(false);
-      loadStats();
+  // Get role display text
+  const getRoleDisplayText = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Administrador';
+      case 'premium_business': return 'Empresa Premium';
+      case 'freemium_business': return 'Empresa Freemium';
+      case 'premium_talent': return 'Talento Premium';
+      case 'freemium_talent': return 'Talento Freemium';
+      default: return role;
     }
   };
 
   useEffect(() => {
     loadStats();
     loadUsers();
+    loadAllRequests();
+  }, [loadAllRequests]);
+
+  useEffect(() => {
+    loadStats();
   }, [requests]);
-
-  const getRoleIcon = (role: string) => {
-    if (role.includes('talent')) return <User className="h-4 w-4" />;
-    if (role.includes('business')) return <Building className="h-4 w-4" />;
-    if (role.includes('academy')) return <GraduationCap className="h-4 w-4" />;
-    return <User className="h-4 w-4" />;
-  };
-
-  const getRoleBadgeVariant = (role: string) => {
-    if (role === 'admin') return 'destructive';
-    if (role.includes('premium')) return 'default';
-    return 'secondary';
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending': return <Clock className="h-4 w-4" />;
-      case 'approved': return <CheckCircle className="h-4 w-4" />;
-      case 'rejected': return <XCircle className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
-    }
-  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -226,7 +213,7 @@ const AdminPanel: React.FC = () => {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingRequests}</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.pendingRequests}</div>
           </CardContent>
         </Card>
 
@@ -236,10 +223,8 @@ const AdminPanel: React.FC = () => {
             <Crown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {Object.entries(stats.usersByRole)
-                .filter(([role]) => role.includes('premium'))
-                .reduce((sum, [, count]) => sum + count, 0)}
+            <div className="text-2xl font-bold text-yellow-600">
+              {(stats.usersByRole['premium_business'] || 0) + (stats.usersByRole['premium_talent'] || 0)}
             </div>
           </CardContent>
         </Card>
@@ -250,30 +235,31 @@ const AdminPanel: React.FC = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {Object.entries(stats.usersByRole)
-                .filter(([role]) => role.includes('freemium'))
-                .reduce((sum, [, count]) => sum + count, 0)}
+            <div className="text-2xl font-bold text-green-600">
+              {(stats.usersByRole['freemium_business'] || 0) + (stats.usersByRole['freemium_talent'] || 0)}
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue="requests" className="space-y-4">
+      <Tabs defaultValue="upgrade-requests" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="requests">Solicitudes de Upgrade</TabsTrigger>
-          <TabsTrigger value="users">Gestión de Usuarios</TabsTrigger>
+          <TabsTrigger value="upgrade-requests">Solicitudes de Upgrade</TabsTrigger>
+          <TabsTrigger value="user-management">Gestión de Usuarios</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="requests">
+        <TabsContent value="upgrade-requests">
           <Card>
             <CardHeader>
-              <CardTitle>Solicitudes de Upgrade Pendientes</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5" />
+                Solicitudes de Upgrade Pendientes
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <div className="text-center py-8">Cargando...</div>
+                <div className="text-center py-8">Cargando solicitudes...</div>
               ) : requests.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No hay solicitudes pendientes
@@ -282,91 +268,106 @@ const AdminPanel: React.FC = () => {
                 <div className="space-y-4">
                   {requests.map((request) => (
                     <div key={request.id} className="border rounded-lg p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(request.status)}
-                            <Badge variant={request.status === 'pending' ? 'secondary' : 'default'}>
-                              {request.status}
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              <span className="font-medium">
+                                {(request as any).profiles?.full_name || 'Usuario sin nombre'}
+                              </span>
+                            </div>
+                            <Badge variant="outline">
+                              {getRoleDisplayText(request.user_current_role)}
+                            </Badge>
+                            <span className="text-muted-foreground">→</span>
+                            <Badge variant={getRoleBadgeVariant(request.requested_role)}>
+                              {getRoleDisplayText(request.requested_role)}
                             </Badge>
                           </div>
+                          
+                          {request.reason && (
+                            <div className="text-sm text-muted-foreground">
+                              <strong>Razón:</strong> {request.reason}
+                            </div>
+                          )}
+                          
+                          <div className="text-xs text-muted-foreground">
+                            Solicitado el {new Date(request.created_at).toLocaleDateString()}
+                          </div>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date(request.created_at).toLocaleDateString('es-ES')}
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <Label className="text-sm font-medium">Usuario</Label>
-                          <p className="text-sm">{request.user_id}</p>
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium">Rol Actual</Label>
-                          <Badge variant="outline" className="flex items-center gap-1 w-fit">
-                            {getRoleIcon(request.user_current_role)}
-                            {request.user_current_role}
-                          </Badge>
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium">Rol Solicitado</Label>
-                          <Badge variant="default" className="flex items-center gap-1 w-fit">
-                            {getRoleIcon(request.requested_role)}
-                            {request.requested_role}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {request.reason && (
-                        <div>
-                          <Label className="text-sm font-medium">Razón</Label>
-                          <p className="text-sm text-muted-foreground">{request.reason}</p>
-                        </div>
-                      )}
-
-                      {request.status === 'pending' && (
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-2">
                           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                Revisar
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setSelectedUser({ 
+                                  id: request.user_id, 
+                                  full_name: (request as any).profiles?.full_name || 'Usuario sin nombre',
+                                  role: request.user_current_role,
+                                  created_at: request.created_at 
+                                })}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Aprobar
                               </Button>
                             </DialogTrigger>
                             <DialogContent>
                               <DialogHeader>
-                                <DialogTitle>Revisar Solicitud</DialogTitle>
+                                <DialogTitle>Aprobar Solicitud de Upgrade</DialogTitle>
                               </DialogHeader>
                               <div className="space-y-4">
                                 <div>
-                                  <Label>Notas del Administrador</Label>
+                                  <Label htmlFor="admin-notes">Notas del Administrador (Opcional)</Label>
                                   <Textarea
+                                    id="admin-notes"
+                                    placeholder="Agregar notas sobre la aprobación..."
                                     value={adminNotes}
                                     onChange={(e) => setAdminNotes(e.target.value)}
-                                    placeholder="Agregar notas opcionales..."
                                   />
                                 </div>
                                 <div className="flex gap-2">
                                   <Button 
-                                    onClick={() => handleApprove(request.id)}
+                                    onClick={async () => {
+                                      if (selectedUser) {
+                                        await approveRequest(request.id, adminNotes);
+                                        setIsDialogOpen(false);
+                                        setAdminNotes('');
+                                        setSelectedUser(null);
+                                      }
+                                    }}
                                     className="flex-1"
                                   >
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Aprobar
+                                    Confirmar Aprobación
                                   </Button>
                                   <Button 
-                                    variant="destructive"
-                                    onClick={() => handleReject(request.id)}
+                                    variant="outline" 
+                                    onClick={() => {
+                                      setIsDialogOpen(false);
+                                      setAdminNotes('');
+                                      setSelectedUser(null);
+                                    }}
                                     className="flex-1"
                                   >
-                                    <XCircle className="h-4 w-4 mr-2" />
-                                    Rechazar
+                                    Cancelar
                                   </Button>
                                 </div>
                               </div>
                             </DialogContent>
                           </Dialog>
+
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => rejectRequest(request.id, 'Solicitud rechazada por el administrador')}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Rechazar
+                          </Button>
                         </div>
-                      )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -375,86 +376,88 @@ const AdminPanel: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="users">
+        <TabsContent value="user-management">
           <Card>
             <CardHeader>
-              <CardTitle>Gestión de Usuarios</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Gestión de Usuarios
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {users.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between border rounded-lg p-4">
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <p className="font-medium">{user.full_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Registro: {new Date(user.created_at).toLocaleDateString('es-ES')}
-                        </p>
-                      </div>
-                      <Badge variant={getRoleBadgeVariant(user.role)} className="flex items-center gap-1">
-                        {getRoleIcon(user.role)}
-                        {user.role}
-                      </Badge>
-                    </div>
-                    
-                    <Dialog open={isRoleChangeOpen} onOpenChange={setIsRoleChangeOpen}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setSelectedUser(user)}
-                        >
-                          Cambiar Rol
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Cambiar Rol de Usuario</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label>Usuario: {selectedUser?.full_name}</Label>
-                            <p className="text-sm text-muted-foreground">Rol actual: {selectedUser?.role}</p>
-                          </div>
-                          <div>
-                            <Label>Nuevo Rol</Label>
-                            <Select value={newRole} onValueChange={setNewRole}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar rol" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="freemium_talent">Freemium Talent</SelectItem>
-                                <SelectItem value="premium_talent">Premium Talent</SelectItem>
-                                <SelectItem value="freemium_business">Freemium Business</SelectItem>
-                                <SelectItem value="premium_business">Premium Business</SelectItem>
-                                <SelectItem value="premium_academy">Premium Academy</SelectItem>
-                                <SelectItem value="admin">Administrador</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button 
-                              onClick={changeUserRole}
-                              disabled={!newRole}
-                              className="flex-1"
-                            >
-                              Cambiar Rol
-                            </Button>
-                            <Button 
-                              variant="outline"
-                              onClick={() => {
-                                setIsRoleChangeOpen(false);
-                                setSelectedUser(null);
-                                setNewRole('');
-                              }}
-                              className="flex-1"
-                            >
-                              Cancelar
-                            </Button>
+                  <div key={user.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <User className="h-5 w-5" />
+                        <div>
+                          <div className="font-medium">{user.full_name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            Registro: {new Date(user.created_at).toLocaleDateString()}
                           </div>
                         </div>
-                      </DialogContent>
-                    </Dialog>
+                        <Badge variant={getRoleBadgeVariant(user.role)}>
+                          {getRoleDisplayText(user.role)}
+                        </Badge>
+                      </div>
+
+                      <Dialog open={isRoleChangeOpen} onOpenChange={setIsRoleChangeOpen}>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setNewRole(user.role);
+                            }}
+                          >
+                            Cambiar Rol
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Cambiar Rol de Usuario</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <Label>Usuario: {selectedUser?.full_name}</Label>
+                            </div>
+                            <div>
+                              <Label htmlFor="new-role">Nuevo Rol</Label>
+                              <Select value={newRole} onValueChange={setNewRole}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleccionar rol" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="admin">Administrador</SelectItem>
+                                  <SelectItem value="premium_business">Empresa Premium</SelectItem>
+                                  <SelectItem value="freemium_business">Empresa Freemium</SelectItem>
+                                  <SelectItem value="premium_talent">Talento Premium</SelectItem>
+                                  <SelectItem value="freemium_talent">Talento Freemium</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button onClick={handleRoleChange} className="flex-1">
+                                Cambiar Rol
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                onClick={() => {
+                                  setIsRoleChangeOpen(false);
+                                  setSelectedUser(null);
+                                  setNewRole('');
+                                }}
+                                className="flex-1"
+                              >
+                                Cancelar
+                              </Button>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
                 ))}
               </div>
