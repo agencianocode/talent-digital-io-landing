@@ -18,8 +18,10 @@ import Auth from './pages/Auth';
 import TalentDashboardLayout from '@/components/TalentDashboardLayout';
 import DashboardLayout from '@/components/DashboardLayout';
 
+// Importar TalentDashboardHome directamente para evitar problemas de lazy loading
+import TalentDashboardHome from './pages/TalentDashboardHome';
+
 // Lazy load páginas de talent dashboard
-const TalentDashboardHome = lazy(() => import('./pages/TalentDashboardHome'));
 const TalentOpportunities = lazy(() => import('./pages/TalentOpportunities'));
 const TalentMarketplace = lazy(() => import('./pages/TalentMarketplace'));
 const SavedOpportunities = lazy(() => import('./pages/SavedOpportunities'));
@@ -113,12 +115,8 @@ function App() {
                       } />
 
                       {/* Talent Dashboard Routes */}
-                      <Route path="/talent-dashboard" element={<TalentDashboardLayout />}>
-                        <Route index element={
-                          <Suspense fallback={<LoadingSkeleton type="card" />}>
-                            <TalentDashboardHome />
-                          </Suspense>
-                        } />
+                       <Route path="/talent-dashboard" element={<TalentDashboardLayout />}>
+                         <Route index element={<TalentDashboardHome />} />
                         <Route path="opportunities" element={
                           <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
                             <TalentOpportunities />
