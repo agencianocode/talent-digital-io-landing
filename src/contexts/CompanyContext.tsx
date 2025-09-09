@@ -56,6 +56,9 @@ interface CompanyContextType {
   hasPermission: (permission: 'owner' | 'admin' | 'viewer') => boolean;
   canManageUsers: () => boolean;
   canCreateOpportunities: () => boolean;
+  canManageApplications: () => boolean;
+  canEditCompany: () => boolean;
+  canDeleteOpportunities: () => boolean;
 }
 
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
@@ -203,6 +206,9 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
   // Helper functions
   const canManageUsers = () => hasPermission('admin');
   const canCreateOpportunities = () => hasPermission('admin');
+  const canManageApplications = () => hasPermission('viewer'); // All roles can view applications
+  const canEditCompany = () => hasPermission('admin');
+  const canDeleteOpportunities = () => hasPermission('owner'); // Only owners can delete
 
   // Refresh companies data
   const refreshCompanies = async () => {
@@ -235,6 +241,9 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
     hasPermission,
     canManageUsers,
     canCreateOpportunities,
+    canManageApplications,
+    canEditCompany,
+    canDeleteOpportunities,
   };
 
   return (

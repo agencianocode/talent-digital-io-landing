@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
+import { useCompany } from "@/contexts/CompanyContext";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Filter, Eye, MessageSquare, Calendar, MapPin } from "lucide-react";
@@ -33,7 +34,8 @@ interface Application {
 
 const ApplicationsPage = () => {
   const navigate = useNavigate();
-  const { userRole, company } = useSupabaseAuth();
+  const { userRole } = useSupabaseAuth();
+  const { activeCompany, hasPermission } = useCompany();
   const { updateApplicationStatus } = useSupabaseOpportunities();
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,10 +43,10 @@ const ApplicationsPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
-    if (isBusinessRole(userRole) && company) {
+    if (isBusinessRole(userRole) && activeCompany) {
       fetchApplications();
     }
-  }, [userRole, company]);
+  }, [userRole, activeCompany]);
 
   const fetchApplications = async () => {
     try {
@@ -82,7 +84,7 @@ const ApplicationsPage = () => {
 
       // Filter by company
       const filteredApplications = enrichedApplications.filter(app => 
-        app.opportunities.company_id === company?.id
+        app.opportunities.company_id === activeCompany?.id
       );
 
       setApplications(filteredApplications);
@@ -293,7 +295,7 @@ const ApplicationsPage = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    {application.status === 'pending' && (
+                    {hasPermission('admin') && application.status === 'pending' && (
                       <>
                         <Button
                           size="sm"
@@ -312,7 +314,7 @@ const ApplicationsPage = () => {
                         </Button>
                       </>
                     )}
-                    {application.status === 'pending' && (
+                    {hasPermission('admin') && application.status === 'pending' && (
                       <Button
                         variant="outline"
                         size="sm"

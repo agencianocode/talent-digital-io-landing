@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useCompany } from "@/contexts/CompanyContext";
 
 const BusinessDashboard = () => {
   const navigate = useNavigate();
+  const { activeCompany, canCreateOpportunities } = useCompany();
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,7 +38,13 @@ const BusinessDashboard = () => {
             <p className="text-muted-foreground mb-4">
               Publica una nueva oportunidad laboral para closers, SDRs y appointment setters
             </p>
-            <Button className="w-full">Crear Vacante</Button>
+            <Button 
+              className="w-full" 
+              disabled={!canCreateOpportunities()}
+              onClick={() => navigate('/business-dashboard/opportunities/new')}
+            >
+              {canCreateOpportunities() ? 'Crear Vacante' : 'Permisos insuficientes'}
+            </Button>
           </div>
 
           <div className="bg-card p-6 rounded-lg border border-border">
@@ -44,7 +52,13 @@ const BusinessDashboard = () => {
             <p className="text-muted-foreground mb-4">
               Explora perfiles de talento digital disponible
             </p>
-            <Button variant="outline" className="w-full">Explorar Talento</Button>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => navigate('/talent-search')}
+            >
+              Explorar Talento
+            </Button>
           </div>
         </div>
       </div>

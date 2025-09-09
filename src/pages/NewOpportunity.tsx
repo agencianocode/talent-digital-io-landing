@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
+import { useCompany } from "@/contexts/CompanyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -12,7 +13,8 @@ import { toast } from "sonner";
 const NewOpportunity = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { user, company, userRole } = useSupabaseAuth();
+  const { user, userRole } = useSupabaseAuth();
+  const { activeCompany, canCreateOpportunities } = useCompany();
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -75,8 +77,8 @@ const NewOpportunity = () => {
   };
 
   const handleSubmit = async () => {
-    if (!user || !isBusinessRole(userRole) || !company) {
-      toast.error('Solo los usuarios de empresa pueden crear oportunidades');
+    if (!user || !isBusinessRole(userRole) || !activeCompany || !canCreateOpportunities()) {
+      toast.error('No tienes permisos para crear oportunidades en esta empresa');
       return;
     }
 
@@ -113,7 +115,7 @@ const NewOpportunity = () => {
           .from('opportunities')
           .insert({
             ...opportunityData,
-            company_id: company.id,
+            company_id: activeCompany.id,
           });
         error = insertError;
       }

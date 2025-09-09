@@ -7,13 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
+import { useCompany } from "@/contexts/CompanyContext";
 import { Search, Filter, Eye, Edit, Link, MoreHorizontal, Briefcase, Users, Copy, Trash2, Archive, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import StaticShareButton from '@/components/StaticShareButton';
 
 const OpportunitiesPage = () => {
   const navigate = useNavigate();
-  const { userRole, company } = useSupabaseAuth();
+  const { userRole } = useSupabaseAuth();
+  const { activeCompany, canCreateOpportunities, hasPermission } = useCompany();
   const { 
     opportunities, 
     isLoading, 
@@ -72,7 +74,7 @@ const OpportunitiesPage = () => {
 
   // Filter opportunities by company (business users only see their own)
   const companyOpportunities = opportunities.filter(opp => 
-    !company || opp.company_id === company.id
+    !activeCompany || opp.company_id === activeCompany.id
   );
 
   // Apply search and filters
@@ -201,12 +203,14 @@ const OpportunitiesPage = () => {
             Mis Oportunidades ({filteredOpportunities.length})
           </h1>
           <div className="flex items-center space-x-2">
-            <Button 
-              onClick={() => navigate('/business-dashboard/opportunities/new')}
-              className="font-semibold w-full sm:w-auto"
-            >
-              Publicar Oportunidad
-            </Button>
+            {canCreateOpportunities() && (
+              <Button 
+                onClick={() => navigate('/business-dashboard/opportunities/new')}
+                className="font-semibold w-full sm:w-auto"
+              >
+                Publicar Oportunidad
+              </Button>
+            )}
           </div>
         </div>
 
@@ -266,7 +270,7 @@ const OpportunitiesPage = () => {
               : 'Intenta con otros términos de búsqueda o filtros'
             }
           </p>
-          {companyOpportunities.length === 0 && (
+          {companyOpportunities.length === 0 && canCreateOpportunities() && (
             <Button onClick={() => navigate('/business-dashboard/opportunities/new')}>
               Publicar Primera Oportunidad
             </Button>
@@ -351,14 +355,16 @@ const OpportunitiesPage = () => {
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={() => handleEditOpportunity(opportunity.id)}
-                    title="Editar"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  {hasPermission('admin') && (
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => handleEditOpportunity(opportunity.id)}
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
                   <StaticShareButton 
                     opportunityId={opportunity.id}
                     opportunityTitle={opportunity.title}
@@ -374,21 +380,27 @@ const OpportunitiesPage = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleCopyOpportunity(opportunity.id)}>
-                        <Copy className="h-4 w-4 mr-2" />
-                        Duplicar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleToggleStatus(opportunity.id, opportunity.is_active)}>
-                        <Archive className="h-4 w-4 mr-2" />
-                        {opportunity.is_active ? 'Desactivar' : 'Activar'}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDeleteOpportunity(opportunity.id)}
-                        className="text-red-600 focus:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Eliminar
-                      </DropdownMenuItem>
+                      {hasPermission('admin') && (
+                        <>
+                          <DropdownMenuItem onClick={() => handleCopyOpportunity(opportunity.id)}>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Duplicar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleStatus(opportunity.id, opportunity.is_active)}>
+                            <Archive className="h-4 w-4 mr-2" />
+                            {opportunity.is_active ? 'Desactivar' : 'Activar'}
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {hasPermission('owner') && (
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteOpportunity(opportunity.id)}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Eliminar
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>

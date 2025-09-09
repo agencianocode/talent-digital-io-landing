@@ -27,6 +27,7 @@ import {
 import { useCompanyUserRoles, CompanyUserRole } from '@/hooks/useCompanyUserRoles';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
+import PermissionDenied from '@/components/PermissionDenied';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
@@ -53,7 +54,7 @@ type InviteUserFormData = z.infer<typeof inviteUserSchema>;
 
 const UserManagement = () => {
   const { user } = useSupabaseAuth();
-  const { activeCompany, hasPermission } = useCompany();
+  const { activeCompany, hasPermission, canManageUsers } = useCompany();
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<CompanyUserRole | null>(null);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
@@ -167,6 +168,17 @@ const UserManagement = () => {
     );
   }
 
+  // Permission check - only admins and owners can manage users
+  if (!canManageUsers()) {
+    return (
+      <PermissionDenied 
+        title="Gestión de Usuarios"
+        message="Solo los propietarios y administradores pueden gestionar usuarios de la empresa."
+        requiredRole="admin"
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -176,13 +188,14 @@ const UserManagement = () => {
             Administra los usuarios y permisos de <span className="font-medium">{activeCompany.name}</span>
           </p>
         </div>
-        <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Invitar Usuario
-            </Button>
-          </DialogTrigger>
+        {hasPermission('admin') && (
+          <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Invitar Usuario
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Invitar Usuario</DialogTitle>
@@ -246,6 +259,7 @@ const UserManagement = () => {
             </Form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <Card>
