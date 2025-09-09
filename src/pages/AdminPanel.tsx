@@ -71,55 +71,71 @@ const AdminPanel: React.FC = () => {
         return acc;
       }, {} as Record<string, number>) || {};
 
+      const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
+
       setStats({
         totalUsers: userRolesData?.length || 0,
-        pendingRequests: requests.filter(r => r.status === 'pending').length,
+        pendingRequests: pendingRequestsCount,
+        usersByRole
+      });
+
+      console.log('Admin stats loaded:', {
+        totalUsers: userRolesData?.length || 0,
+        pendingRequests: pendingRequestsCount,
         usersByRole
       });
     } catch (error) {
       console.error('Error loading stats:', error);
+      toast.error('Error cargando estadísticas');
     }
   };
 
   // Load all users
   const loadUsers = async () => {
     try {
-      // Get profiles first
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, user_id, full_name, created_at')
+      // First get all user roles (admin can see all)
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
         .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
+      if (rolesError) throw rolesError;
 
-      if (!profilesData || profilesData.length === 0) {
+      if (!rolesData || rolesData.length === 0) {
         setUsers([]);
         return;
       }
 
-      // Get user roles separately
-      const userIds = profilesData.map(p => p.user_id);
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
+      // Get profiles for all users found in roles
+      const userIds = rolesData.map(r => r.user_id);
+      
+      // Use RPC or direct auth.users query if needed for admin access
+      // For now, try to get profiles where they exist
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, created_at')
         .in('user_id', userIds);
 
-      if (rolesError) throw rolesError;
+      if (profilesError) {
+        console.warn('Error loading profiles:', profilesError);
+        // Continue with just role data if profiles fail
+      }
 
-      // Combine the data
-      const formattedUsers = profilesData.map(profile => {
-        const userRole = rolesData?.find(role => role.user_id === profile.user_id);
+      // Combine the data, using role data as primary source
+      const formattedUsers = rolesData.map(roleEntry => {
+        const profile = profilesData?.find(p => p.user_id === roleEntry.user_id);
         return {
-          id: profile.user_id,
-          full_name: profile.full_name || 'Sin nombre',
-          role: userRole?.role || 'unknown',
-          created_at: profile.created_at
+          id: roleEntry.user_id,
+          full_name: profile?.full_name || `Usuario ${roleEntry.user_id.slice(0, 8)}`,
+          role: roleEntry.role,
+          created_at: profile?.created_at || new Date().toISOString()
         };
       });
 
       setUsers(formattedUsers);
     } catch (error) {
       console.error('Error loading users:', error);
+      toast.error('Error cargando usuarios');
     }
   };
 
