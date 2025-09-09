@@ -31,7 +31,11 @@ interface OnboardingStep {
   action: () => void;
 }
 
-export const OnboardingWizard: React.FC = () => {
+interface OnboardingWizardProps {
+  isFirstTimeUser?: boolean;
+}
+
+export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeUser = false }) => {
   const { profile, userRole } = useSupabaseAuth();
   const { categories } = useProfessionalData();
   const navigate = useNavigate();

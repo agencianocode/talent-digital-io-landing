@@ -67,7 +67,7 @@ const RegisterTalent = () => {
         : 'Error al crear la cuenta. Intenta nuevamente.');
     } else {
       setMessage('¡Cuenta creada exitosamente! Revisa tu email para confirmar tu cuenta.');
-      setTimeout(() => navigate('/talent-dashboard'), 2000);
+      setTimeout(() => navigate('/onboarding'), 2000);
     }
     
     setIsSubmitting(false);
