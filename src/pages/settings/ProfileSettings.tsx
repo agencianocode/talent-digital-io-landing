@@ -9,8 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isTalentRole, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { TalentProfileWizard } from '@/components/wizard/TalentProfileWizard';
+import { CompanyProfileWizard } from '@/components/wizard/CompanyProfileWizard';
 import { ProfileCompletenessCard } from '@/components/ProfileCompletenessCard';
 import { toast } from 'sonner';
 import { Upload, Eye, EyeOff, Loader2, ArrowLeft, User, Briefcase } from 'lucide-react';
@@ -308,10 +309,18 @@ const ProfileSettings = () => {
             <User className="h-4 w-4" />
             Información Personal
           </TabsTrigger>
-          {isTalentRole(userRole) && <TabsTrigger value="professional" className="flex items-center gap-2">
+          {isTalentRole(userRole) && (
+            <TabsTrigger value="professional" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
               Perfil Profesional
-            </TabsTrigger>}
+            </TabsTrigger>
+          )}
+          {isBusinessRole(userRole) && (
+            <TabsTrigger value="corporate" className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              Perfil Corporativo
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="personal" className="mt-6">
@@ -489,6 +498,11 @@ const ProfileSettings = () => {
         {/* Professional Profile Tab */}
         {isTalentRole(userRole) && <TabsContent value="professional" className="mt-6">
             <TalentProfileWizard />
+          </TabsContent>}
+
+        {/* Corporate Profile Tab */}
+        {isBusinessRole(userRole) && <TabsContent value="corporate" className="mt-6">
+            <CompanyProfileWizard />
           </TabsContent>}
       </Tabs>
     </div>;
