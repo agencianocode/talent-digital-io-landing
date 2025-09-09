@@ -104,48 +104,121 @@ export type Database = {
       }
       companies: {
         Row: {
+          annual_revenue_range: string | null
           business_type: string | null
           created_at: string
           description: string | null
+          employee_count_range: string | null
+          gallery_urls: Json | null
           id: string
           industry: string | null
+          industry_id: string | null
           location: string | null
           logo_url: string | null
           name: string
           size: string | null
+          social_links: Json | null
           updated_at: string
           user_id: string
           website: string | null
         }
         Insert: {
+          annual_revenue_range?: string | null
           business_type?: string | null
           created_at?: string
           description?: string | null
+          employee_count_range?: string | null
+          gallery_urls?: Json | null
           id?: string
           industry?: string | null
+          industry_id?: string | null
           location?: string | null
           logo_url?: string | null
           name: string
           size?: string | null
+          social_links?: Json | null
           updated_at?: string
           user_id: string
           website?: string | null
         }
         Update: {
+          annual_revenue_range?: string | null
           business_type?: string | null
           created_at?: string
           description?: string | null
+          employee_count_range?: string | null
+          gallery_urls?: Json | null
           id?: string
           industry?: string | null
+          industry_id?: string | null
           location?: string | null
           logo_url?: string | null
           name?: string
           size?: string | null
+          social_links?: Json | null
           updated_at?: string
           user_id?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_industry_id_fkey"
+            columns: ["industry_id"]
+            isOneToOne: false
+            referencedRelation: "industries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_directory: {
+        Row: {
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          id: string
+          industry_id: string | null
+          is_claimed: boolean | null
+          location: string | null
+          logo_url: string | null
+          name: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          industry_id?: string | null
+          is_claimed?: boolean | null
+          location?: string | null
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          industry_id?: string | null
+          is_claimed?: boolean | null
+          location?: string | null
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_directory_industry_id_fkey"
+            columns: ["industry_id"]
+            isOneToOne: false
+            referencedRelation: "industries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_user_roles: {
         Row: {
@@ -230,6 +303,30 @@ export type Database = {
         }
         Relationships: []
       }
+      industries: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       opportunities: {
         Row: {
           category: string
@@ -289,39 +386,160 @@ export type Database = {
           },
         ]
       }
+      professional_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      professional_subcategories: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_subcategories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "professional_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_templates: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string | null
+          example_data: Json | null
+          id: string
+          name: string
+          suggestions: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description?: string | null
+          example_data?: Json | null
+          id?: string
+          name: string
+          suggestions?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          example_data?: Json | null
+          id?: string
+          name?: string
+          suggestions?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_templates_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "professional_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          city: string | null
+          country: string | null
           created_at: string
           full_name: string | null
+          hide_location: boolean | null
           id: string
           linkedin: string | null
           phone: string | null
           position: string | null
+          profile_completeness: number | null
+          social_links: Json | null
           updated_at: string
           user_id: string
+          video_presentation_url: string | null
         }
         Insert: {
           avatar_url?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           full_name?: string | null
+          hide_location?: boolean | null
           id?: string
           linkedin?: string | null
           phone?: string | null
           position?: string | null
+          profile_completeness?: number | null
+          social_links?: Json | null
           updated_at?: string
           user_id: string
+          video_presentation_url?: string | null
         }
         Update: {
           avatar_url?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           full_name?: string | null
+          hide_location?: boolean | null
           id?: string
           linkedin?: string | null
           phone?: string | null
           position?: string | null
+          profile_completeness?: number | null
+          social_links?: Json | null
           updated_at?: string
           user_id?: string
+          video_presentation_url?: string | null
         }
         Relationships: []
       }
@@ -382,11 +600,15 @@ export type Database = {
           bio: string | null
           created_at: string
           currency: string | null
+          experience_level: string | null
           hourly_rate_max: number | null
           hourly_rate_min: number | null
           id: string
+          industries_of_interest: string[] | null
           linkedin_url: string | null
           portfolio_url: string | null
+          primary_category_id: string | null
+          secondary_category_id: string | null
           skills: string[] | null
           specialty: string | null
           title: string | null
@@ -399,11 +621,15 @@ export type Database = {
           bio?: string | null
           created_at?: string
           currency?: string | null
+          experience_level?: string | null
           hourly_rate_max?: number | null
           hourly_rate_min?: number | null
           id?: string
+          industries_of_interest?: string[] | null
           linkedin_url?: string | null
           portfolio_url?: string | null
+          primary_category_id?: string | null
+          secondary_category_id?: string | null
           skills?: string[] | null
           specialty?: string | null
           title?: string | null
@@ -416,11 +642,15 @@ export type Database = {
           bio?: string | null
           created_at?: string
           currency?: string | null
+          experience_level?: string | null
           hourly_rate_max?: number | null
           hourly_rate_min?: number | null
           id?: string
+          industries_of_interest?: string[] | null
           linkedin_url?: string | null
           portfolio_url?: string | null
+          primary_category_id?: string | null
+          secondary_category_id?: string | null
           skills?: string[] | null
           specialty?: string | null
           title?: string | null
@@ -428,7 +658,22 @@ export type Database = {
           user_id?: string
           years_experience?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "talent_profiles_primary_category_id_fkey"
+            columns: ["primary_category_id"]
+            isOneToOne: false
+            referencedRelation: "professional_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_profiles_secondary_category_id_fkey"
+            columns: ["secondary_category_id"]
+            isOneToOne: false
+            referencedRelation: "professional_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       upgrade_requests: {
         Row: {
@@ -578,6 +823,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_company_to_directory: {
+        Args: {
+          company_industry_id?: string
+          company_location?: string
+          company_name: string
+          company_website?: string
+        }
+        Returns: string
+      }
+      calculate_profile_completeness: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
+      claim_company_from_directory: {
+        Args: { directory_company_id: string; user_uuid: string }
+        Returns: string
+      }
       get_all_users_for_admin: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -585,6 +847,33 @@ export type Database = {
           full_name: string
           role: Database["public"]["Enums"]["user_role"]
           user_id: string
+        }[]
+      }
+      get_industries: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          description: string
+          id: string
+          name: string
+        }[]
+      }
+      get_professional_categories: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          description: string
+          icon: string
+          id: string
+          name: string
+          subcategories: Json
+        }[]
+      }
+      get_profile_suggestions: {
+        Args: { category_id: string }
+        Returns: {
+          industry_recommendations: string[]
+          suggested_bio_template: string
+          suggested_skills: string[]
+          suggested_title_examples: string[]
         }[]
       }
       get_user_companies: {
@@ -627,11 +916,30 @@ export type Database = {
         Args: { company_uuid: string; user_uuid: string }
         Returns: boolean
       }
+      migrate_existing_talent_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      search_companies_directory: {
+        Args: { search_term?: string }
+        Returns: {
+          id: string
+          industry_name: string
+          is_claimed: boolean
+          location: string
+          logo_url: string
+          name: string
+        }[]
+      }
       switch_user_role: {
         Args:
           | { new_role: Database["public"]["Enums"]["user_role"] }
           | { new_role: string }
         Returns: boolean
+      }
+      update_profile_completeness: {
+        Args: { user_uuid: string }
+        Returns: number
       }
     }
     Enums: {
