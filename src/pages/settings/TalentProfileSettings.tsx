@@ -6,19 +6,11 @@ import { ArrowLeft, Shield, Bell, Target } from 'lucide-react';
 import PrivacySettings from './PrivacySettings';
 import NotificationSettings from './NotificationSettings';
 import ProfessionalPreferences from './ProfessionalPreferences';
-
 const TalentProfileSettings = () => {
   const navigate = useNavigate();
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6 mx-[20px] my-[20px] px-[20px] py-[20px]">
       <div className="flex items-center gap-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2"
-        >
+        <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" />
           Volver
         </Button>
@@ -56,8 +48,6 @@ const TalentProfileSettings = () => {
           <ProfessionalPreferences />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
-
 export default TalentProfileSettings;
