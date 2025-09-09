@@ -22,7 +22,7 @@ const SettingsLayout = () => {
   ];
 
   const talentSettings = [
-    { href: '/settings/talent-profile', icon: Briefcase, label: 'Perfil Profesional' },
+    { href: '/settings/talent-profile', icon: Briefcase, label: 'Configuración Profesional' },
   ];
 
   return (

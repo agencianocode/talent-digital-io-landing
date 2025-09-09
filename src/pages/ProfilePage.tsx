@@ -11,8 +11,6 @@ const ProfilePage = () => {
     // Redirect to appropriate settings page based on user type
     if (isBusinessRole(userRole)) {
       navigate('/settings/company');
-    } else if (isTalentRole(userRole)) {
-      navigate('/settings/talent-profile');
     } else {
       navigate('/settings/profile');
     }

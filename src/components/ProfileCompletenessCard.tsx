@@ -20,7 +20,7 @@ export const ProfileCompletenessCard: React.FC = () => {
   const navigate = useNavigate();
 
   const handleImproveProfile = () => {
-    navigate('/settings/talent-profile');
+    navigate('/settings/profile');
   };
 
   if (loading) {
