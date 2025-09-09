@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { Lightbulb, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 export const ProfileCompletenessCard: React.FC = () => {
   const { 
@@ -18,25 +18,55 @@ export const ProfileCompletenessCard: React.FC = () => {
   } = useProfileCompleteness();
   
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const getTargetTab = () => {
-    // Determine which tab to navigate to based on missing fields
-    if (breakdown.basic_info < 100) {
-      return 'personal';
-    }
-    if (breakdown.professional_info < 100 || breakdown.skills_and_bio < 100) {
+    // Professional fields that should go to professional tab
+    const professionalFields = [
+      'Categoría profesional',
+      'Nivel de experiencia', 
+      'Industrias de interés',
+      'Habilidades',
+      'Bio profesional',
+      'Educación',
+      'Experiencia laboral'
+    ];
+    
+    // Check if most missing fields are professional
+    const professionalMissing = breakdown.missing_fields.filter(field => 
+      professionalFields.some(profField => field.includes(profField.split(' ')[0]))
+    );
+    
+    console.log('ProfileCompletenessCard: professionalMissing', professionalMissing);
+    console.log('ProfileCompletenessCard: total missing', breakdown.missing_fields.length);
+    
+    // If more than half of missing fields are professional, go to professional tab
+    if (professionalMissing.length > breakdown.missing_fields.length / 2) {
       return 'professional';
     }
-    return 'personal'; // Default fallback
+    
+    return 'personal';
   };
 
   const handleImproveProfile = () => {
     const targetTab = getTargetTab();
+    const currentTab = searchParams.get('tab') || 'personal';
+    
     console.log('ProfileCompletenessCard: handleImproveProfile clicked');
     console.log('ProfileCompletenessCard: breakdown', breakdown);
     console.log('ProfileCompletenessCard: targetTab', targetTab);
-    console.log('ProfileCompletenessCard: navigating to', `/settings/profile?tab=${targetTab}`);
-    navigate(`/settings/profile?tab=${targetTab}`);
+    console.log('ProfileCompletenessCard: currentTab', currentTab);
+    console.log('ProfileCompletenessCard: current location', location.pathname);
+    
+    // If we're already on the profile settings page, just switch tabs
+    if (location.pathname === '/settings/profile') {
+      console.log('ProfileCompletenessCard: already on profile page, switching tab to', targetTab);
+      navigate(`/settings/profile?tab=${targetTab}`, { replace: true });
+    } else {
+      console.log('ProfileCompletenessCard: navigating to', `/settings/profile?tab=${targetTab}`);
+      navigate(`/settings/profile?tab=${targetTab}`);
+    }
   };
 
   if (loading) {
