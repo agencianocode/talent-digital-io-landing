@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
-import { Upload, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Upload, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 const profileSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -30,6 +31,7 @@ const passwordSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 const ProfileSettings = () => {
+  const navigate = useNavigate();
   const {
     user,
     profile,
@@ -356,9 +358,20 @@ const ProfileSettings = () => {
     }));
   };
   return <div className="space-y-6 mx-[20px] my-[20px] py-[20px] px-[20px]">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Perfil Personal</h2>
-        <p className="text-muted-foreground">Gestiona tu información personal y configuración de cuenta</p>
+      <div className="flex items-center gap-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver
+        </Button>
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Perfil Personal</h2>
+          <p className="text-muted-foreground">Gestiona tu información personal y configuración de cuenta</p>
+        </div>
       </div>
 
       {/* Profile Information */}
