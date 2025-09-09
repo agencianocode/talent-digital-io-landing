@@ -14,8 +14,7 @@ const BusinessProfileSettings = () => {
 
   const handleBackClick = () => {
     startTransition(() => {
-      const dashboardPath = isTalentRole(userRole) ? '/talent-dashboard' : '/business-dashboard';
-      navigate(dashboardPath);
+      navigate('/settings/profile');
     });
   };
 
