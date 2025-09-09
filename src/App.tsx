@@ -43,6 +43,7 @@ const RegisterTalent = lazy(() => import('./pages/RegisterTalent'));
 const ProfileSettings = lazy(() => import('./pages/settings/ProfileSettings'));
 const TalentProfileSettings = lazy(() => import('./pages/settings/TalentProfileSettings'));
 const CompanySettings = lazy(() => import('./pages/settings/CompanySettings'));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 
 // Lazy load páginas de landing específicas
 const OpportunitiesLanding = lazy(() => import('./pages/OpportunitiesLanding'));
@@ -203,6 +204,11 @@ function App() {
                       <Route path="/settings/company" element={
                         <Suspense fallback={<LoadingSkeleton type="profile" />}>
                           <CompanySettings />
+                        </Suspense>
+                      } />
+                      <Route path="/onboarding" element={
+                        <Suspense fallback={<LoadingSkeleton type="profile" />}>
+                          <OnboardingPage />
                         </Suspense>
                       } />
 

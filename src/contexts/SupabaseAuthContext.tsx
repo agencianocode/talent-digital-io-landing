@@ -32,6 +32,9 @@ interface UserProfile {
   full_name?: string;
   avatar_url?: string;
   phone?: string;
+  profile_completeness?: number;
+  country?: string;
+  city?: string;
   created_at: string;
   updated_at: string;
 }
