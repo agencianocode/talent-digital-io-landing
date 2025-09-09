@@ -69,20 +69,21 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
     };
 
     loadSuggestions();
-  }, [data.primary_category_id, getProfileSuggestions]);
+  }, [data.primary_category_id]); // Removed getProfileSuggestions from deps
 
   // Filter suggested skills based on input
   useEffect(() => {
     if (suggestions?.suggested_skills && newSkill.length > 0) {
+      const currentSkills = form.getValues('skills');
       const filtered = suggestions.suggested_skills.filter(skill =>
         skill.toLowerCase().includes(newSkill.toLowerCase()) &&
-        !form.getValues('skills').includes(skill)
+        !currentSkills.includes(skill)
       );
       setFilteredSkills(filtered);
     } else {
       setFilteredSkills([]);
     }
-  }, [newSkill, suggestions, form.watch('skills')]);
+  }, [newSkill, suggestions]); // Removed form.watch from deps
 
   const addSkill = (skill: string) => {
     const currentSkills = form.getValues('skills');
@@ -124,8 +125,9 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
     form.setValue('industries_of_interest', updated);
   };
 
+  const currentSkills = form.watch('skills');
   const remainingSuggestedSkills = suggestions?.suggested_skills?.filter(
-    skill => !form.watch('skills').includes(skill)
+    skill => !currentSkills.includes(skill)
   ) || [];
 
   return (
@@ -275,7 +277,7 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
                         >
                           <Checkbox
                             checked={field.value.includes(industry.id)}
-                            onChange={() => toggleIndustry(industry.id)}
+                            onCheckedChange={() => {}} // Prevent double calls
                           />
                           <div className="flex-1">
                             <p className="font-medium">{industry.name}</p>
