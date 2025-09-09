@@ -389,20 +389,19 @@ export const TalentProfileWizard: React.FC = () => {
       <Card>
         <CardContent className="p-6">
           <div className="relative">
-            {/* Navigation arrows for mobile */}
-            <div className="flex justify-between items-center mb-4 md:hidden">
+            {/* Navigation arrows */}
+            <div className="flex justify-between items-center mb-4">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => {
                   const container = document.getElementById('steps-container');
                   if (container) {
-                    const cardWidth = 240; // w-56 + gap
+                    const cardWidth = 268; // w-64 + gap
                     container.scrollLeft -= cardWidth;
                   }
                 }}
                 className="h-8 w-8 p-0"
-                disabled={currentStep === 0}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -415,113 +414,57 @@ export const TalentProfileWizard: React.FC = () => {
                 onClick={() => {
                   const container = document.getElementById('steps-container');
                   if (container) {
-                    const cardWidth = 240; // w-56 + gap
+                    const cardWidth = 268; // w-64 + gap
                     container.scrollLeft += cardWidth;
                   }
                 }}
                 className="h-8 w-8 p-0"
-                disabled={currentStep === steps.length - 1}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
             
-            {/* Steps container - Mobile: horizontal scroll, Desktop: grid */}
-            <div className="md:hidden">
-              {/* Mobile horizontal scroll container */}
-              <div 
-                id="steps-container"
-                className="overflow-x-auto scrollbar-hide pb-2"
-                style={{ scrollSnapType: 'x mandatory' }}
-              >
-                <div className="flex gap-3 min-w-max px-1">
-                  {steps.map((step, index) => (
-                    <button
-                      key={step.id}
-                      onClick={() => goToStep(index)}
-                      className={`flex-shrink-0 w-56 p-3 rounded-lg border text-left transition-all hover:shadow-md ${
-                        currentStep === index
-                          ? 'border-primary bg-primary/5'
-                          : step.isCompleted
-                          ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
-                          : 'border-muted bg-background'
-                      }`}
-                      style={{ scrollSnapAlign: 'start' }}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-full flex-shrink-0 ${
-                          currentStep === index
-                            ? 'bg-primary text-primary-foreground'
-                            : step.isCompleted
-                            ? 'bg-green-500 text-white'
-                            : 'bg-muted text-muted-foreground'
-                        }`}>
-                          {step.isCompleted ? <Check className="h-4 w-4" /> : step.icon}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm">{step.title}</h3>
-                          <p className="text-xs text-muted-foreground line-clamp-2">{step.description}</p>
-                          {step.isOptional && (
-                            <Badge variant="outline" className="mt-1 text-xs">
-                              Opcional
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop grid container */}
-            <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-7 gap-4">
-              {steps.map((step, index) => (
-                <button
-                  key={step.id}
-                  onClick={() => goToStep(index)}
-                  className={`p-3 rounded-lg border text-left transition-all hover:shadow-md ${
-                    currentStep === index
-                      ? 'border-primary bg-primary/5'
-                      : step.isCompleted
-                      ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
-                      : 'border-muted bg-background'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-full flex-shrink-0 ${
+            {/* Steps container - Always horizontal scroll */}
+            <div 
+              id="steps-container"
+              className="overflow-x-auto scrollbar-hide pb-2"
+              style={{ scrollSnapType: 'x mandatory' }}
+            >
+              <div className="flex gap-3 min-w-max px-1">
+                {steps.map((step, index) => (
+                  <button
+                    key={step.id}
+                    onClick={() => goToStep(index)}
+                    className={`flex-shrink-0 w-64 p-4 rounded-lg border text-left transition-all hover:shadow-md ${
                       currentStep === index
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'border-primary bg-primary/5'
                         : step.isCompleted
-                        ? 'bg-green-500 text-white'
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {step.isCompleted ? <Check className="h-4 w-4" /> : step.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm">{step.title}</h3>
-                      <p className="text-xs text-muted-foreground">{step.description}</p>
-                      {step.isOptional && (
-                        <Badge variant="outline" className="mt-1 text-xs">
-                          Opcional
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-            
-            {/* Scroll indicators for mobile */}
-            <div className="flex justify-center mt-4 md:hidden">
-              <div className="flex space-x-1">
-                {steps.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-2 w-2 rounded-full transition-colors ${
-                      currentStep === index ? 'bg-primary' : 'bg-muted'
+                        ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
+                        : 'border-muted bg-background'
                     }`}
-                  />
+                    style={{ scrollSnapAlign: 'start' }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-full flex-shrink-0 ${
+                        currentStep === index
+                          ? 'bg-primary text-primary-foreground'
+                          : step.isCompleted
+                          ? 'bg-green-500 text-white'
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {step.isCompleted ? <Check className="h-4 w-4" /> : step.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm">{step.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{step.description}</p>
+                        {step.isOptional && (
+                          <Badge variant="outline" className="mt-1 text-xs">
+                            Opcional
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </button>
                 ))}
               </div>
             </div>
