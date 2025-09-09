@@ -43,7 +43,21 @@ const ProfileSettings = () => {
     userRole
   } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'personal');
+  const [activeTab, setActiveTab] = useState(() => {
+    const tabParam = searchParams.get('tab');
+    console.log('ProfileSettings: initial tab from URL', tabParam);
+    return tabParam || 'personal';
+  });
+
+  // Listen for URL changes
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    console.log('ProfileSettings: URL changed, new tab param:', tabParam);
+    if (tabParam && tabParam !== activeTab) {
+      console.log('ProfileSettings: updating activeTab to:', tabParam);
+      setActiveTab(tabParam);
+    }
+  }, [searchParams, activeTab]);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -279,7 +293,10 @@ const ProfileSettings = () => {
       {/* Profile Completeness Card for Talent */}
       {isTalentRole(userRole) && <ProfileCompletenessCard />}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={(newTab) => {
+        console.log('ProfileSettings: tab changed to', newTab);
+        setActiveTab(newTab);
+      }} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="personal" className="flex items-center gap-2">
             <User className="h-4 w-4" />

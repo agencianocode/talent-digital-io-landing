@@ -32,6 +32,10 @@ export const ProfileCompletenessCard: React.FC = () => {
 
   const handleImproveProfile = () => {
     const targetTab = getTargetTab();
+    console.log('ProfileCompletenessCard: handleImproveProfile clicked');
+    console.log('ProfileCompletenessCard: breakdown', breakdown);
+    console.log('ProfileCompletenessCard: targetTab', targetTab);
+    console.log('ProfileCompletenessCard: navigating to', `/settings/profile?tab=${targetTab}`);
     navigate(`/settings/profile?tab=${targetTab}`);
   };
 
