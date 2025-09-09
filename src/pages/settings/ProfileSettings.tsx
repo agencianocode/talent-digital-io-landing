@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +35,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 const ProfileSettings = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const {
     user,
     profile,
@@ -42,6 +43,7 @@ const ProfileSettings = () => {
     userRole
   } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'personal');
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -277,7 +279,7 @@ const ProfileSettings = () => {
       {/* Profile Completeness Card for Talent */}
       {isTalentRole(userRole) && <ProfileCompletenessCard />}
 
-      <Tabs defaultValue="personal" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="personal" className="flex items-center gap-2">
             <User className="h-4 w-4" />

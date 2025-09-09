@@ -19,8 +19,20 @@ export const ProfileCompletenessCard: React.FC = () => {
   
   const navigate = useNavigate();
 
+  const getTargetTab = () => {
+    // Determine which tab to navigate to based on missing fields
+    if (breakdown.basic_info < 100) {
+      return 'personal';
+    }
+    if (breakdown.professional_info < 100 || breakdown.skills_and_bio < 100) {
+      return 'professional';
+    }
+    return 'personal'; // Default fallback
+  };
+
   const handleImproveProfile = () => {
-    navigate('/settings/profile');
+    const targetTab = getTargetTab();
+    navigate(`/settings/profile?tab=${targetTab}`);
   };
 
   if (loading) {
