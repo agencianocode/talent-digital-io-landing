@@ -57,7 +57,7 @@ const ProfileSettings = () => {
       console.log('ProfileSettings: updating activeTab to:', tabParam);
       setActiveTab(tabParam);
     }
-  }, [searchParams]); // Removed activeTab dependency to prevent circular updates
+  }, [searchParams.get('tab')]); // Only depend on the actual tab parameter
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -295,10 +295,9 @@ const ProfileSettings = () => {
 
       <Tabs value={activeTab} onValueChange={(newTab) => {
         console.log('ProfileSettings: tab changed to', newTab);
-        setActiveTab(newTab);
-        // Update URL when tab changes, but use replace to avoid history entries
-        const currentTab = searchParams.get('tab');
-        if (currentTab !== newTab) {
+        if (newTab !== activeTab) {
+          setActiveTab(newTab);
+          // Update URL when tab changes, but use replace to avoid history entries
           navigate(`/settings/profile?tab=${newTab}`, { replace: true });
         }
       }} className="w-full">

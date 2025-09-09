@@ -41,6 +41,8 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
   const [newSkill, setNewSkill] = useState('');
   const [suggestions, setSuggestions] = useState<ProfileSuggestions | null>(null);
   const [filteredSkills, setFilteredSkills] = useState<string[]>([]);
+  // Use local state for skills to avoid infinite re-renders
+  const [localSkills, setLocalSkills] = useState<string[]>(data.skills);
 
   const form = useForm<SkillsExperienceFormData>({
     resolver: zodResolver(skillsExperienceSchema),
@@ -58,8 +60,8 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
           const categoryData = await getProfileSuggestions(data.primary_category_id);
           setSuggestions(categoryData);
           
-          // Set recommended industries if none selected
-          if (data.industries_of_interest.length === 0 && categoryData?.industry_recommendations) {
+          // Only set recommended industries if none selected and this is the first time loading
+          if (data.industries_of_interest.length === 0 && categoryData?.industry_recommendations && !suggestions) {
             form.setValue('industries_of_interest', categoryData.industry_recommendations);
           }
         } catch (error) {
@@ -69,35 +71,38 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
     };
 
     loadSuggestions();
-  }, [data.primary_category_id]); // Removed getProfileSuggestions from deps
+  }, [data.primary_category_id]); // Removed dependencies that could cause loops
 
   // Filter suggested skills based on input
   useEffect(() => {
     if (suggestions?.suggested_skills && newSkill.length > 0) {
-      const currentSkills = form.getValues('skills');
       const filtered = suggestions.suggested_skills.filter(skill =>
         skill.toLowerCase().includes(newSkill.toLowerCase()) &&
-        !currentSkills.includes(skill)
+        !localSkills.includes(skill)
       );
       setFilteredSkills(filtered);
     } else {
       setFilteredSkills([]);
     }
-  }, [newSkill, suggestions]); // Removed form.watch from deps
+  }, [newSkill, suggestions, localSkills]);
 
-  const addSkill = (skill: string) => {
+  const addSkill = useCallback((skill: string) => {
     const currentSkills = form.getValues('skills');
     if (!currentSkills.includes(skill)) {
-      form.setValue('skills', [...currentSkills, skill]);
+      const newSkills = [...currentSkills, skill];
+      form.setValue('skills', newSkills);
+      setLocalSkills(newSkills); // Update local state
       setNewSkill('');
       setFilteredSkills([]);
     }
-  };
+  }, [form]);
 
-  const removeSkill = (skillToRemove: string) => {
+  const removeSkill = useCallback((skillToRemove: string) => {
     const currentSkills = form.getValues('skills');
-    form.setValue('skills', currentSkills.filter(skill => skill !== skillToRemove));
-  };
+    const newSkills = currentSkills.filter(skill => skill !== skillToRemove);
+    form.setValue('skills', newSkills);
+    setLocalSkills(newSkills); // Update local state
+  }, [form]);
 
   const addSuggestedSkill = (skill: string) => {
     addSkill(skill);
@@ -117,6 +122,11 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
     onNext();
   };
 
+  // Update local skills when form skills change (but only on mount/data prop change)
+  useEffect(() => {
+    setLocalSkills(data.skills);
+  }, [data.skills]);
+
   const toggleIndustry = useCallback((industryId: string) => {
     const current = form.getValues('industries_of_interest');
     const updated = current.includes(industryId)
@@ -125,9 +135,8 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
     form.setValue('industries_of_interest', updated);
   }, [form]);
 
-  const currentSkills = form.watch('skills');
   const remainingSuggestedSkills = suggestions?.suggested_skills?.filter(
-    skill => !currentSkills.includes(skill)
+    skill => !localSkills.includes(skill)
   ) || [];
 
   return (
@@ -222,9 +231,9 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
                 name="skills"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tus Habilidades ({field.value.length}/20)</FormLabel>
+                    <FormLabel>Tus Habilidades ({localSkills.length}/20)</FormLabel>
                     <div className="flex flex-wrap gap-2">
-                      {field.value.map((skill, index) => (
+                      {localSkills.map((skill, index) => (
                         <Badge key={index} variant="secondary" className="flex items-center gap-1">
                           {skill}
                           <button
@@ -266,18 +275,17 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
                   <FormItem>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {industries.map((industry) => (
-                        <div
+                         <div
                           key={industry.id}
-                          className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${
                             field.value.includes(industry.id)
                               ? 'border-primary bg-primary/5'
                               : 'border-muted hover:border-primary/50'
                           }`}
-                          onClick={() => toggleIndustry(industry.id)}
                         >
                           <Checkbox
                             checked={field.value.includes(industry.id)}
-                            onCheckedChange={() => {}} // Prevent double calls
+                            onCheckedChange={() => toggleIndustry(industry.id)}
                           />
                           <div className="flex-1">
                             <p className="font-medium">{industry.name}</p>
