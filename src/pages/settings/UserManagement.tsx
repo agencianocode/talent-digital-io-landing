@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { useCompanyUserRoles, CompanyUserRole } from '@/hooks/useCompanyUserRoles';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
   Plus, 
@@ -55,8 +56,31 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<CompanyUserRole | null>(null);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
 
-  // TODO: Get company ID from context or props
-  const companyId = 'your-company-id'; // This should come from the company context
+  // TODO: Get company ID from context - using first company for now
+  const [companyId, setCompanyId] = useState<string | null>(null);
+
+  // Load user's first company ID
+  React.useEffect(() => {
+    const loadCompanyId = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: companies } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
+        
+        if (companies && companies.length > 0) {
+          setCompanyId(companies[0].id);
+        }
+      } catch (error) {
+        console.error('Error loading company:', error);
+      }
+    };
+
+    loadCompanyId();
+  }, [user]);
 
   const {
     userRoles,
@@ -78,6 +102,11 @@ const UserManagement = () => {
   });
 
   const onSubmitInvite = async (data: InviteUserFormData) => {
+    if (!companyId) {
+      toast.error('No se pudo determinar la empresa');
+      return;
+    }
+    
     await inviteUser({
       email: data.email,
       role: data.role,
@@ -144,8 +173,8 @@ const UserManagement = () => {
     }
   };
 
-  // Temporary: Allow access while table is being created
-  if (!hasPermission('admin') && false) { // Temporarily disabled
+  // Check permissions
+  if (!hasPermission('admin')) {
     return (
       <div className="flex items-center justify-center h-64">
         <Card className="w-full max-w-md">
@@ -165,18 +194,6 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Temporary notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-blue-600" />
-          <div>
-            <h3 className="font-medium text-blue-900">Configuración en Progreso</h3>
-            <p className="text-sm text-blue-700">
-              La tabla de roles de usuario está siendo configurada. Las funcionalidades estarán disponibles pronto.
-            </p>
-          </div>
-        </div>
-      </div>
 
       <div className="flex justify-between items-center">
         <div>
