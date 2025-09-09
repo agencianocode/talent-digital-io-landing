@@ -3,14 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Shield, Bell, Target } from 'lucide-react';
+import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import PrivacySettings from './PrivacySettings';
 import NotificationSettings from './NotificationSettings';
 import ProfessionalPreferences from './ProfessionalPreferences';
+
 const TalentProfileSettings = () => {
   const navigate = useNavigate();
+  const { userRole } = useSupabaseAuth();
+
+  const handleBackClick = () => {
+    startTransition(() => {
+      const dashboardPath = isBusinessRole(userRole) ? '/business-dashboard' : '/talent-dashboard';
+      navigate(dashboardPath);
+    });
+  };
   return <div className="space-y-6 mx-[20px] my-[20px] px-[20px] py-[20px]">
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={() => startTransition(() => navigate('/dashboard'))} className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={handleBackClick} className="flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" />
           Volver
         </Button>

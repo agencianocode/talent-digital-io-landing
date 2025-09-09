@@ -113,18 +113,10 @@ const ProfileSettings = () => {
       if (!user) {
         throw new Error('Usuario no autenticado');
       }
-      const {
-        error: directError
-      } = await supabase.from('profiles').update({
-        full_name: data.name,
-        phone: data.phone,
-        position: data.position,
-        linkedin: data.linkedin,
-        avatar_url: data.photo
-      } as any).eq('user_id', user.id);
-      if (directError) {
-        throw directError;
-      }
+
+      console.log('Guardando datos del perfil:', data);
+
+      // Solo usar el contexto para actualizar, que maneja tanto Supabase como el estado
       const result = await updateProfile({
         full_name: data.name,
         phone: data.phone,
@@ -132,14 +124,18 @@ const ProfileSettings = () => {
         linkedin: data.linkedin,
         avatar_url: data.photo
       } as any);
+
       if (result.error) {
-        console.error('Error al actualizar contexto:', result.error);
+        console.error('Error al actualizar perfil:', result.error);
+        throw new Error(result.error.message || 'Error al actualizar el perfil');
       }
+
+      console.log('Perfil actualizado exitosamente');
       toast.success('Perfil actualizado correctamente');
+      
+      // Reset form with the new data to mark it as clean
       profileForm.reset(data);
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      
     } catch (error) {
       console.error('Error en onProfileSubmit:', error);
       toast.error(`Error al actualizar el perfil: ${error instanceof Error ? error.message : 'Error desconocido'}`);
@@ -241,18 +237,24 @@ const ProfileSettings = () => {
       if (directUpdateError) {
         throw directUpdateError;
       }
+      // Update form value
       profileForm.setValue('photo', publicUrl);
+      
+      // Update profile through context which handles both Supabase and state
       if (updateProfile) {
-        await updateProfile({
+        const updateResult = await updateProfile({
           full_name: profile?.full_name || '',
           phone: profile?.phone || '',
           avatar_url: publicUrl
         });
+        
+        if (updateResult.error) {
+          console.error('Error actualizando contexto:', updateResult.error);
+        }
       }
+      
+      console.log('Foto actualizada exitosamente');
       toast.success('Foto actualizada correctamente');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
     } catch (error: any) {
       let errorMsg = '';
       if (typeof error === 'string') {
