@@ -13,6 +13,17 @@ export interface Company {
   location?: string;
   logo_url?: string;
   business_type?: string;
+  employee_count_range?: string;
+  annual_revenue_range?: string;
+  social_links?: Record<string, string>;
+  gallery_urls?: Array<{
+    id: string;
+    type: 'image' | 'video' | 'document' | 'link';
+    url: string;
+    title: string;
+    description?: string;
+    thumbnail?: string;
+  }>;
   user_id: string;
   created_at: string;
   updated_at: string;
@@ -125,7 +136,18 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
 
       if (rolesError) throw rolesError;
 
-      setUserCompanies(companies || []);
+      setUserCompanies((companies || []).map(company => ({
+        ...company,
+        social_links: (company.social_links as Record<string, string>) || {},
+        gallery_urls: ((company.gallery_urls as any[]) || []).map((item: any) => ({
+          id: item?.id || Math.random().toString(),
+          type: item?.type || 'image',
+          url: item?.url || '',
+          title: item?.title || 'Sin título',
+          description: item?.description,
+          thumbnail: item?.thumbnail
+        }))
+      })));
       
       // Map roles to ensure all required fields are present
       const mappedRoles: CompanyUserRole[] = (roles || []).map(role => ({

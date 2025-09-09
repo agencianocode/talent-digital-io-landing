@@ -47,6 +47,17 @@ interface Company {
   location?: string;
   logo_url?: string;
   business_type?: 'company' | 'academy';
+  employee_count_range?: string;
+  annual_revenue_range?: string;
+  social_links?: Record<string, string>;
+  gallery_urls?: Array<{
+    id: string;
+    type: 'image' | 'video' | 'document' | 'link';
+    url: string;
+    title: string;
+    description?: string;
+    thumbnail?: string;
+  }>;
   created_at: string;
   updated_at: string;
 }
@@ -144,7 +155,18 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           .select('*')
           .eq('user_id', userId)
           .single();
-        company = companyData;
+        company = companyData ? {
+          ...companyData,
+          social_links: (companyData.social_links as Record<string, string>) || {},
+          gallery_urls: ((companyData.gallery_urls as any[]) || []).map((item: any) => ({
+            id: item?.id || Math.random().toString(),
+            type: item?.type || 'image',
+            url: item?.url || '',
+            title: item?.title || 'Sin título',
+            description: item?.description,
+            thumbnail: item?.thumbnail
+          }))
+        } : null;
       }
 
       return {
@@ -414,7 +436,18 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!error && company) {
       setAuthState(prev => ({
         ...prev,
-        company: company as Company
+        company: company ? {
+          ...company,
+          social_links: (company.social_links as Record<string, string>) || {},
+          gallery_urls: ((company.gallery_urls as any[]) || []).map((item: any) => ({
+            id: item?.id || Math.random().toString(),
+            type: item?.type || 'image',
+            url: item?.url || '',
+            title: item?.title || 'Sin título',
+            description: item?.description,
+            thumbnail: item?.thumbnail
+          }))
+        } as Company : null
       }));
     }
 

@@ -74,26 +74,28 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
     try {
       setIsLoading(true);
       
-      // Get company user roles with user profiles
+      // Get company user roles with user profiles  
       const { data: roles, error } = await supabase
         .from('company_user_roles')
         .select(`
           *,
-          user_profile:user_id (
+          profiles!company_user_roles_user_id_fkey (
             full_name,
             avatar_url
           )
         `)
         .eq('company_id', companyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading roles:', error);
+      }
 
       // Get company owner
       const { data: company, error: companyError } = await supabase
         .from('companies')
         .select(`
           user_id,
-          user_profile:user_id (
+          profiles!companies_user_id_fkey (
             full_name,
             avatar_url
           )
@@ -101,36 +103,48 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
         .eq('id', companyId)
         .single();
 
-      if (companyError) throw companyError;
+      if (companyError) {
+        console.error('Error loading company:', companyError);
+      }
 
       // Combine owner and team members
       const members: TeamMember[] = [];
 
       // Add owner
-      if (company) {
+      if (company && company.profiles) {
+        const ownerProfile = Array.isArray(company.profiles) ? company.profiles[0] : company.profiles;
         members.push({
           id: `owner-${company.user_id}`,
           user_id: company.user_id,
           role: 'owner',
           status: 'accepted',
           created_at: '',
-          user_profile: company.user_profile
+          user_profile: {
+            full_name: ownerProfile?.full_name || 'Owner',
+            avatar_url: ownerProfile?.avatar_url,
+            email: 'owner@company.com' // This will be replaced with real email when available
+          }
         });
       }
 
       // Add team members
       if (roles) {
         roles.forEach(role => {
+          const profile = Array.isArray(role.profiles) ? role.profiles[0] : role.profiles;
           members.push({
             id: role.id,
             user_id: role.user_id,
             invited_email: role.invited_email,
             role: role.role,
-            status: role.status,
+            status: role.status as 'accepted' | 'pending' | 'declined',
             invited_by: role.invited_by,
             accepted_at: role.accepted_at,
             created_at: role.created_at,
-            user_profile: role.user_profile
+            user_profile: profile ? {
+              full_name: profile.full_name || 'Unknown User',
+              avatar_url: profile.avatar_url,
+              email: role.invited_email || 'unknown@email.com'
+            } : undefined
           });
         });
       }
@@ -155,13 +169,14 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
     try {
       const { error } = await supabase
         .from('company_user_roles')
-        .insert([{
+        .insert({
           company_id: companyId,
           invited_email: data.email,
           role: data.role,
           invited_by: user?.id,
-          status: 'pending'
-        }]);
+          status: 'pending',
+          user_id: '' // This will be updated when user accepts
+        });
 
       if (error) throw error;
 

@@ -139,7 +139,11 @@ const CompanySettings = () => {
 
   const handleAutoSave = async (data: CompanyFormData) => {
     try {
-      await updateCompany({ ...data, gallery_urls: mediaItems });
+      await updateCompany({ 
+        ...data, 
+        gallery_urls: mediaItems as any,
+        business_type: data.business_type as 'company' | 'academy'
+      });
       toast.success('Cambios guardados automáticamente');
     } catch (error) {
       console.error('Auto-save failed:', error);
@@ -149,7 +153,11 @@ const CompanySettings = () => {
   const onSubmit = async (data: CompanyFormData) => {
     setIsLoading(true);
     try {
-      await updateCompany({ ...data, gallery_urls: mediaItems });
+      await updateCompany({ 
+        ...data, 
+        gallery_urls: mediaItems as any,
+        business_type: data.business_type as 'company' | 'academy'
+      });
       toast.success('Información de la empresa actualizada');
       form.reset(data);
     } catch (error) {
