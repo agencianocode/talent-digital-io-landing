@@ -147,6 +147,56 @@ export type Database = {
         }
         Relationships: []
       }
+      company_user_roles: {
+        Row: {
+          accepted_at: string | null
+          company_id: string
+          created_at: string
+          id: string
+          invitation_token: string | null
+          invited_by: string | null
+          invited_email: string | null
+          role: Database["public"]["Enums"]["company_role"]
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          invitation_token?: string | null
+          invited_by?: string | null
+          invited_email?: string | null
+          role?: Database["public"]["Enums"]["company_role"]
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          invitation_token?: string | null
+          invited_by?: string | null
+          invited_email?: string | null
+          role?: Database["public"]["Enums"]["company_role"]
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_user_roles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       education: {
         Row: {
           created_at: string
@@ -520,12 +570,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_companies: {
+        Args: { user_uuid: string }
+        Returns: string[]
+      }
+      get_user_company_role: {
+        Args: { company_uuid: string; user_uuid: string }
+        Returns: Database["public"]["Enums"]["company_role"]
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      get_user_role_in_company: {
+        Args: { company_uuid: string; user_uuid: string }
+        Returns: Database["public"]["Enums"]["company_role"]
+      }
+      has_company_permission: {
+        Args: {
+          company_uuid: string
+          required_role: Database["public"]["Enums"]["company_role"]
+          user_uuid: string
+        }
+        Returns: boolean
+      }
       insert_user_role_trigger: {
         Args: { p_role: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_company_member: {
+        Args: { company_uuid: string; user_uuid: string }
         Returns: boolean
       }
       switch_user_role: {
@@ -536,6 +610,7 @@ export type Database = {
       }
     }
     Enums: {
+      company_role: "owner" | "admin" | "viewer"
       user_role:
         | "admin"
         | "business"
@@ -672,6 +747,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      company_role: ["owner", "admin", "viewer"],
       user_role: [
         "admin",
         "business",

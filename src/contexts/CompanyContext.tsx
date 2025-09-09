@@ -89,45 +89,70 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
 
     setIsLoading(true);
     try {
-      // Load owned companies
-      const { data: ownedCompanies, error: ownedError } = await supabase
+      // Use the new helper function to get user companies
+      const { data: userCompanyIds, error: companiesError } = await supabase
+        .rpc('get_user_companies', { user_uuid: user.id });
+
+      if (companiesError) {
+        console.error('Error getting user companies:', companiesError);
+        throw companiesError;
+      }
+
+      if (!userCompanyIds || userCompanyIds.length === 0) {
+        setUserCompanies([]);
+        setUserRoles([]);
+        setActiveCompanyState(null);
+        setCurrentUserRole(null);
+        localStorage.removeItem('activeCompanyId');
+        return;
+      }
+
+      // Load full company details
+      const { data: companies, error: companyDetailsError } = await supabase
         .from('companies')
         .select('*')
-        .eq('user_id', user.id);
+        .in('id', userCompanyIds);
 
-      if (ownedError) throw ownedError;
+      if (companyDetailsError) throw companyDetailsError;
 
-      // Load roles in other companies (using any until types are regenerated)
-      const { data: roles, error: rolesError } = await (supabase as any)
+      // Load user roles for these companies
+      const { data: roles, error: rolesError } = await supabase
         .from('company_user_roles')
-        .select('*, companies(*)')
+        .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'accepted');
+        .eq('status', 'accepted')
+        .in('company_id', userCompanyIds);
 
       if (rolesError) throw rolesError;
 
-      // Combine owned companies with member companies
-      const memberCompanies = roles?.map((role: any) => role.companies).filter(Boolean) || [];
-      const allCompanies = [...(ownedCompanies || []), ...memberCompanies];
+      setUserCompanies(companies || []);
       
-      // Remove duplicates by id
-      const uniqueCompanies = allCompanies.filter(
-        (company, index, self) => index === self.findIndex(c => c.id === company.id)
-      );
-
-      setUserCompanies(uniqueCompanies);
-      setUserRoles(roles || []);
+      // Map roles to ensure all required fields are present
+      const mappedRoles: CompanyUserRole[] = (roles || []).map(role => ({
+        id: role.id,
+        company_id: role.company_id,
+        user_id: role.user_id,
+        role: role.role as 'owner' | 'admin' | 'viewer',
+        status: role.status as 'pending' | 'accepted' | 'declined',
+        invited_by: role.invited_by || undefined,
+        invited_at: role.created_at, // Use created_at as invited_at since it's when the record was created
+        accepted_at: role.accepted_at || undefined,
+        created_at: role.created_at,
+        updated_at: role.updated_at,
+      }));
+      
+      setUserRoles(mappedRoles);
 
       // Set active company from localStorage or first available
       const savedCompanyId = localStorage.getItem('activeCompanyId');
       let activeComp = null;
 
       if (savedCompanyId) {
-        activeComp = uniqueCompanies.find(c => c.id === savedCompanyId);
+        activeComp = companies?.find(c => c.id === savedCompanyId);
       }
       
-      if (!activeComp && uniqueCompanies.length > 0) {
-        activeComp = uniqueCompanies[0];
+      if (!activeComp && companies && companies.length > 0) {
+        activeComp = companies[0];
       }
 
       if (activeComp) {
@@ -135,13 +160,15 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
         localStorage.setItem('activeCompanyId', activeComp.id);
         
         // Set current user role
-        const userRole = roles?.find((role: any) => role.company_id === activeComp.id) || 
-          (ownedCompanies?.find(c => c.id === activeComp.id) ? {
+        const existingRole = mappedRoles.find(role => role.company_id === activeComp.id);
+        const userRole: CompanyUserRole | null = existingRole || 
+          (activeComp.user_id === user.id ? {
             id: 'owner-role',
             company_id: activeComp.id,
             user_id: user.id,
             role: 'owner' as const,
             status: 'accepted' as const,
+            invited_by: undefined,
             invited_at: activeComp.created_at,
             accepted_at: activeComp.created_at,
             created_at: activeComp.created_at,
@@ -154,6 +181,12 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
     } catch (error) {
       console.error('Error loading companies:', error);
       toast.error('Error al cargar empresas');
+      
+      // Reset state on error to prevent inconsistent UI
+      setUserCompanies([]);
+      setUserRoles([]);
+      setActiveCompanyState(null);
+      setCurrentUserRole(null);
     } finally {
       setIsLoading(false);
     }
@@ -167,13 +200,15 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
       localStorage.setItem('activeCompanyId', companyId);
       
       // Update current user role
-      const userRole = userRoles.find(role => role.company_id === companyId) ||
+      const existingRole = userRoles.find(role => role.company_id === companyId);
+      const userRole: CompanyUserRole | null = existingRole ||
         (company.user_id === user?.id ? {
           id: 'owner-role',
           company_id: company.id,
           user_id: user.id,
           role: 'owner' as const,
           status: 'accepted' as const,
+          invited_by: undefined,
           invited_at: company.created_at,
           accepted_at: company.created_at,
           created_at: company.created_at,
