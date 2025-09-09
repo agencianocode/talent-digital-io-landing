@@ -390,7 +390,7 @@ export const TalentProfileWizard: React.FC = () => {
         <CardContent className="p-6">
           <div className="relative">
             {/* Navigation arrows for mobile */}
-            <div className="flex justify-between items-center mb-4 lg:hidden">
+            <div className="flex justify-between items-center mb-4 md:hidden">
               <Button
                 variant="outline"
                 size="sm"
@@ -422,21 +422,21 @@ export const TalentProfileWizard: React.FC = () => {
               </Button>
             </div>
             
-            {/* Steps container with horizontal scroll */}
+            {/* Steps container with horizontal scroll for mobile, grid for desktop */}
             <div 
               id="steps-container"
-              className="overflow-x-auto scrollbar-hide lg:overflow-visible"
+              className="overflow-x-auto scrollbar-hide md:overflow-visible"
             >
-              <div className="flex gap-4 lg:grid lg:grid-cols-7 lg:gap-4 min-w-max lg:min-w-0">
+              <div className="flex gap-4 md:grid md:grid-cols-4 lg:grid-cols-7 md:gap-4">
                 {steps.map((step, index) => (
                   <button
                     key={step.id}
                     onClick={() => goToStep(index)}
-                    className={`flex-shrink-0 w-64 lg:w-auto p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                    className={`flex-shrink-0 w-72 md:w-auto p-3 rounded-lg border text-left transition-all hover:shadow-md ${
                       currentStep === index
                         ? 'border-primary bg-primary/5'
                         : step.isCompleted
-                        ? 'border-green-200 bg-green-50'
+                        ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
                         : 'border-muted bg-background'
                     }`}
                   >
@@ -451,8 +451,8 @@ export const TalentProfileWizard: React.FC = () => {
                         {step.isCompleted ? <Check className="h-4 w-4" /> : step.icon}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm truncate">{step.title}</h3>
-                        <p className="text-xs text-muted-foreground truncate lg:text-wrap">{step.description}</p>
+                        <h3 className="font-semibold text-sm">{step.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 md:line-clamp-none">{step.description}</p>
                         {step.isOptional && (
                           <Badge variant="outline" className="mt-1 text-xs">
                             Opcional
@@ -461,6 +461,20 @@ export const TalentProfileWizard: React.FC = () => {
                       </div>
                     </div>
                   </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Scroll indicators for mobile */}
+            <div className="flex justify-center mt-4 md:hidden">
+              <div className="flex space-x-1">
+                {steps.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-2 w-2 rounded-full transition-colors ${
+                      currentStep === index ? 'bg-primary' : 'bg-muted'
+                    }`}
+                  />
                 ))}
               </div>
             </div>
