@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -66,7 +66,7 @@ export const useProfessionalData = () => {
   };
 
   // Get profile suggestions based on category
-  const getProfileSuggestions = async (categoryId: string): Promise<ProfileSuggestions | null> => {
+  const getProfileSuggestions = useCallback(async (categoryId: string): Promise<ProfileSuggestions | null> => {
     try {
       const { data, error } = await supabase.rpc('get_profile_suggestions', {
         category_id: categoryId
@@ -78,7 +78,7 @@ export const useProfessionalData = () => {
       toast.error('Error al obtener sugerencias de perfil');
       return null;
     }
-  };
+  }, []);
 
   // Search companies in directory
   const searchCompaniesDirectory = async (searchTerm: string = ''): Promise<CompanyDirectory[]> => {

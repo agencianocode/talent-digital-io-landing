@@ -73,7 +73,7 @@ export const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
     };
 
     loadSuggestions();
-  }, [selectedCategory, getProfileSuggestions]);
+  }, [selectedCategory]); // Removed getProfileSuggestions dependency
 
   const onSubmit = (formData: ProfessionalInfoFormData) => {
     updateData(formData);

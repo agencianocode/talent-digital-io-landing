@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -117,13 +117,13 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
     onNext();
   };
 
-  const toggleIndustry = (industryId: string) => {
+  const toggleIndustry = useCallback((industryId: string) => {
     const current = form.getValues('industries_of_interest');
     const updated = current.includes(industryId)
       ? current.filter(id => id !== industryId)
       : [...current, industryId];
     form.setValue('industries_of_interest', updated);
-  };
+  }, [form]);
 
   const currentSkills = form.watch('skills');
   const remainingSuggestedSkills = suggestions?.suggested_skills?.filter(
