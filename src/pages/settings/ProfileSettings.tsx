@@ -296,6 +296,8 @@ const ProfileSettings = () => {
       <Tabs value={activeTab} onValueChange={(newTab) => {
         console.log('ProfileSettings: tab changed to', newTab);
         setActiveTab(newTab);
+        // Update URL when tab changes
+        navigate(`/settings/profile?tab=${newTab}`, { replace: true });
       }} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="personal" className="flex items-center gap-2">
