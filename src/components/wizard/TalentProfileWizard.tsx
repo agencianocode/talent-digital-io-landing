@@ -397,10 +397,12 @@ export const TalentProfileWizard: React.FC = () => {
                 onClick={() => {
                   const container = document.getElementById('steps-container');
                   if (container) {
-                    container.scrollLeft -= 200;
+                    const cardWidth = 240; // w-56 + gap
+                    container.scrollLeft -= cardWidth;
                   }
                 }}
                 className="h-8 w-8 p-0"
+                disabled={currentStep === 0}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -413,56 +415,101 @@ export const TalentProfileWizard: React.FC = () => {
                 onClick={() => {
                   const container = document.getElementById('steps-container');
                   if (container) {
-                    container.scrollLeft += 200;
+                    const cardWidth = 240; // w-56 + gap
+                    container.scrollLeft += cardWidth;
                   }
                 }}
                 className="h-8 w-8 p-0"
+                disabled={currentStep === steps.length - 1}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
             
-            {/* Steps container with horizontal scroll for mobile, grid for desktop */}
-            <div 
-              id="steps-container"
-              className="overflow-x-auto scrollbar-hide md:overflow-visible"
-            >
-              <div className="flex gap-4 md:grid md:grid-cols-4 lg:grid-cols-7 md:gap-4">
-                {steps.map((step, index) => (
-                  <button
-                    key={step.id}
-                    onClick={() => goToStep(index)}
-                    className={`flex-shrink-0 w-72 md:w-auto p-3 rounded-lg border text-left transition-all hover:shadow-md ${
-                      currentStep === index
-                        ? 'border-primary bg-primary/5'
-                        : step.isCompleted
-                        ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
-                        : 'border-muted bg-background'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-full flex-shrink-0 ${
+            {/* Steps container - Mobile: horizontal scroll, Desktop: grid */}
+            <div className="md:hidden">
+              {/* Mobile horizontal scroll container */}
+              <div 
+                id="steps-container"
+                className="overflow-x-auto scrollbar-hide pb-2"
+                style={{ scrollSnapType: 'x mandatory' }}
+              >
+                <div className="flex gap-3 min-w-max px-1">
+                  {steps.map((step, index) => (
+                    <button
+                      key={step.id}
+                      onClick={() => goToStep(index)}
+                      className={`flex-shrink-0 w-56 p-3 rounded-lg border text-left transition-all hover:shadow-md ${
                         currentStep === index
-                          ? 'bg-primary text-primary-foreground'
+                          ? 'border-primary bg-primary/5'
                           : step.isCompleted
-                          ? 'bg-green-500 text-white'
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
-                        {step.isCompleted ? <Check className="h-4 w-4" /> : step.icon}
+                          ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
+                          : 'border-muted bg-background'
+                      }`}
+                      style={{ scrollSnapAlign: 'start' }}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-2 rounded-full flex-shrink-0 ${
+                          currentStep === index
+                            ? 'bg-primary text-primary-foreground'
+                            : step.isCompleted
+                            ? 'bg-green-500 text-white'
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {step.isCompleted ? <Check className="h-4 w-4" /> : step.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm">{step.title}</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{step.description}</p>
+                          {step.isOptional && (
+                            <Badge variant="outline" className="mt-1 text-xs">
+                              Opcional
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm">{step.title}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-2 md:line-clamp-none">{step.description}</p>
-                        {step.isOptional && (
-                          <Badge variant="outline" className="mt-1 text-xs">
-                            Opcional
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  ))}
+                </div>
               </div>
+            </div>
+
+            {/* Desktop grid container */}
+            <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-7 gap-4">
+              {steps.map((step, index) => (
+                <button
+                  key={step.id}
+                  onClick={() => goToStep(index)}
+                  className={`p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                    currentStep === index
+                      ? 'border-primary bg-primary/5'
+                      : step.isCompleted
+                      ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
+                      : 'border-muted bg-background'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-full flex-shrink-0 ${
+                      currentStep === index
+                        ? 'bg-primary text-primary-foreground'
+                        : step.isCompleted
+                        ? 'bg-green-500 text-white'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {step.isCompleted ? <Check className="h-4 w-4" /> : step.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm">{step.title}</h3>
+                      <p className="text-xs text-muted-foreground">{step.description}</p>
+                      {step.isOptional && (
+                        <Badge variant="outline" className="mt-1 text-xs">
+                          Opcional
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
             </div>
             
             {/* Scroll indicators for mobile */}
