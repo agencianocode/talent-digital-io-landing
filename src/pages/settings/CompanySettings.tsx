@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
-import { Upload } from 'lucide-react';
+import { Upload, ArrowLeft } from 'lucide-react';
 import UpgradeRequestButton from '@/components/UpgradeRequestButton';
 const companySchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -20,6 +21,7 @@ const companySchema = z.object({
 });
 type CompanyFormData = z.infer<typeof companySchema>;
 const CompanySettings = () => {
+  const navigate = useNavigate();
   const {
     company,
     updateCompany
@@ -75,9 +77,20 @@ const CompanySettings = () => {
     toast.success('Logo actualizado (simulado)');
   };
   return <div className="space-y-6 mx-[5px] my-[5px] px-[20px] py-[20px]">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Información de la Empresa</h2>
-        <p className="text-muted-foreground">Gestiona la información básica de tu empresa</p>
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver
+        </Button>
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Información de la Empresa</h2>
+          <p className="text-muted-foreground">Gestiona la información básica de tu empresa</p>
+        </div>
       </div>
 
       {/* Upgrade Request Button */}
