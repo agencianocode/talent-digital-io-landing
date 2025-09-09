@@ -578,6 +578,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_all_users_for_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          full_name: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }[]
+      }
       get_user_companies: {
         Args: { user_uuid: string }
         Returns: string[]
@@ -593,6 +602,14 @@ export type Database = {
       get_user_role_in_company: {
         Args: { company_uuid: string; user_uuid: string }
         Returns: Database["public"]["Enums"]["company_role"]
+      }
+      get_user_stats_for_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          role_count: number
+          role_name: Database["public"]["Enums"]["user_role"]
+          total_users: number
+        }[]
       }
       has_company_permission: {
         Args: {

@@ -57,30 +57,39 @@ const AdminPanel: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
-  // Load admin stats
+  // Load admin stats using secure function
   const loadStats = async () => {
     try {
-      const { data: userRolesData, error } = await supabase
-        .from('user_roles')
-        .select('role');
+      const { data: statsData, error } = await supabase
+        .rpc('get_user_stats_for_admin');
 
       if (error) throw error;
 
-      const usersByRole = userRolesData?.reduce((acc, user) => {
-        acc[user.role] = (acc[user.role] || 0) + 1;
+      console.log('Raw stats data:', statsData);
+
+      if (!statsData || statsData.length === 0) {
+        setStats({ totalUsers: 0, pendingRequests: 0, usersByRole: {} });
+        return;
+      }
+
+      const totalUsers = statsData[0]?.total_users || 0;
+      const usersByRole = statsData.reduce((acc, stat) => {
+        if (stat.role_name) {
+          acc[stat.role_name] = stat.role_count;
+        }
         return acc;
-      }, {} as Record<string, number>) || {};
+      }, {} as Record<string, number>);
 
       const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
 
       setStats({
-        totalUsers: userRolesData?.length || 0,
+        totalUsers: Number(totalUsers),
         pendingRequests: pendingRequestsCount,
         usersByRole
       });
 
       console.log('Admin stats loaded:', {
-        totalUsers: userRolesData?.length || 0,
+        totalUsers: Number(totalUsers),
         pendingRequests: pendingRequestsCount,
         usersByRole
       });
@@ -90,49 +99,30 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  // Load all users
+  // Load all users using secure function
   const loadUsers = async () => {
     try {
-      // First get all user roles (admin can see all)
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .order('created_at', { ascending: false });
+      const { data: usersData, error } = await supabase
+        .rpc('get_all_users_for_admin');
 
-      if (rolesError) throw rolesError;
+      if (error) throw error;
 
-      if (!rolesData || rolesData.length === 0) {
+      console.log('Raw users data:', usersData);
+
+      if (!usersData || usersData.length === 0) {
         setUsers([]);
         return;
       }
 
-      // Get profiles for all users found in roles
-      const userIds = rolesData.map(r => r.user_id);
-      
-      // Use RPC or direct auth.users query if needed for admin access
-      // For now, try to get profiles where they exist
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, created_at')
-        .in('user_id', userIds);
-
-      if (profilesError) {
-        console.warn('Error loading profiles:', profilesError);
-        // Continue with just role data if profiles fail
-      }
-
-      // Combine the data, using role data as primary source
-      const formattedUsers = rolesData.map(roleEntry => {
-        const profile = profilesData?.find(p => p.user_id === roleEntry.user_id);
-        return {
-          id: roleEntry.user_id,
-          full_name: profile?.full_name || `Usuario ${roleEntry.user_id.slice(0, 8)}`,
-          role: roleEntry.role,
-          created_at: profile?.created_at || new Date().toISOString()
-        };
-      });
+      const formattedUsers = usersData.map(user => ({
+        id: user.user_id,
+        full_name: user.full_name,
+        role: user.role,
+        created_at: user.created_at
+      }));
 
       setUsers(formattedUsers);
+      console.log('Users loaded:', formattedUsers.length, 'users');
     } catch (error) {
       console.error('Error loading users:', error);
       toast.error('Error cargando usuarios');
