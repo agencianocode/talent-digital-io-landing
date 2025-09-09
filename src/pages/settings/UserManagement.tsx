@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { useCompanyUserRoles, CompanyUserRole } from '@/hooks/useCompanyUserRoles';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
@@ -52,35 +53,10 @@ type InviteUserFormData = z.infer<typeof inviteUserSchema>;
 
 const UserManagement = () => {
   const { user } = useSupabaseAuth();
+  const { activeCompany, hasPermission } = useCompany();
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<CompanyUserRole | null>(null);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-
-  // TODO: Get company ID from context - using first company for now
-  const [companyId, setCompanyId] = useState<string | null>(null);
-
-  // Load user's first company ID
-  React.useEffect(() => {
-    const loadCompanyId = async () => {
-      if (!user) return;
-      
-      try {
-        const { data: companies } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('user_id', user.id)
-          .limit(1);
-        
-        if (companies && companies.length > 0) {
-          setCompanyId(companies[0].id);
-        }
-      } catch (error) {
-        console.error('Error loading company:', error);
-      }
-    };
-
-    loadCompanyId();
-  }, [user]);
 
   const {
     userRoles,
@@ -90,8 +66,7 @@ const UserManagement = () => {
     updateUserRole,
     removeUser,
     transferOwnership,
-    hasPermission
-  } = useCompanyUserRoles(companyId);
+  } = useCompanyUserRoles(activeCompany?.id);
 
   const form = useForm<InviteUserFormData>({
     resolver: zodResolver(inviteUserSchema),
@@ -102,15 +77,15 @@ const UserManagement = () => {
   });
 
   const onSubmitInvite = async (data: InviteUserFormData) => {
-    if (!companyId) {
-      toast.error('No se pudo determinar la empresa');
+    if (!activeCompany) {
+      toast.error('No hay empresa activa seleccionada');
       return;
     }
     
     await inviteUser({
       email: data.email,
       role: data.role,
-      company_id: companyId,
+      company_id: activeCompany.id,
     });
     setIsInviteDialogOpen(false);
     form.reset();
@@ -173,17 +148,17 @@ const UserManagement = () => {
     }
   };
 
-  // Check permissions
-  if (!hasPermission('admin')) {
+  // Show message if no company is selected
+  if (!activeCompany) {
     return (
       <div className="flex items-center justify-center h-64">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center">
               <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Acceso Restringido</h3>
+              <h3 className="text-lg font-semibold mb-2">No hay empresa seleccionada</h3>
               <p className="text-muted-foreground">
-                Necesitas permisos de administrador para gestionar usuarios.
+                Selecciona una empresa desde el selector en la barra lateral para gestionar usuarios.
               </p>
             </div>
           </CardContent>
@@ -194,12 +169,11 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
-
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Gestión de Usuarios</h2>
           <p className="text-muted-foreground">
-            Administra los usuarios y permisos de tu empresa
+            Administra los usuarios y permisos de <span className="font-medium">{activeCompany.name}</span>
           </p>
         </div>
         <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>

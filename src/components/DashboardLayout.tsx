@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useCompany } from "@/contexts/CompanyContext";
 import { Button } from "@/components/ui/button";
 import { Home, LogOut, Briefcase, Users, MessageSquare, User, Settings, Building, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import CompanySwitcher from "@/components/CompanySwitcher";
 
 const DashboardLayout = () => {
   const { user, signOut, profile } = useSupabaseAuth();
+  const { activeCompany, canManageUsers } = useCompany();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -21,7 +24,7 @@ const DashboardLayout = () => {
     { to: "/business-dashboard/opportunities", icon: Briefcase, label: "Oportunidades" },
     { to: "/business-dashboard/applications", icon: Users, label: "Aplicaciones" },
     { to: "/business-dashboard/talent", icon: Users, label: "Buscar Talento" },
-    { to: "/business-dashboard/users", icon: Building, label: "Usuarios" },
+    ...(canManageUsers() ? [{ to: "/business-dashboard/users", icon: Building, label: "Usuarios" }] : []),
     { to: "/messages", icon: MessageSquare, label: "Mensajes" },
   ];
 
@@ -56,12 +59,13 @@ const DashboardLayout = () => {
         <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={closeMobileMenu}>
           <div className="fixed left-0 top-0 h-full w-80 bg-card border-r" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold">Panel Empresarial</h2>
                 <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="p-2">
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+              <CompanySwitcher />
             </div>
             
             <nav className="p-4">
@@ -121,7 +125,8 @@ const DashboardLayout = () => {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block w-64 border-r bg-card">
         <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">Panel Empresarial</h2>
+          <h2 className="text-lg font-semibold mb-3">Panel Empresarial</h2>
+          <CompanySwitcher showCreateButton />
         </div>
         
         <nav className="p-4">
@@ -185,6 +190,11 @@ const DashboardLayout = () => {
                 <Home className="h-4 w-4 mr-2" />
                 Volver al Sitio
               </Button>
+              {activeCompany && (
+                <span className="text-sm text-muted-foreground">
+                  Empresa actual: <span className="font-medium">{activeCompany.name}</span>
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
