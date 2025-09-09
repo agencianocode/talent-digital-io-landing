@@ -25,6 +25,9 @@ import { BasicInfoStep } from './steps/BasicInfoStep';
 import { ProfessionalInfoStep } from './steps/ProfessionalInfoStep';
 import { SkillsAndExperienceStep } from './steps/SkillsAndExperienceStep';
 import { WorkExperienceStep } from './steps/WorkExperienceStep';
+import { EducationStep } from './steps/EducationStep';
+import { MultimediaStep } from './steps/MultimediaStep';
+import { SocialLinksStep } from './steps/SocialLinksStep';
 
 export interface WizardStep {
   id: string;
@@ -153,6 +156,30 @@ export const TalentProfileWizard: React.FC = () => {
       description: 'Historial profesional',
       icon: <Building className="h-5 w-5" />,
       isCompleted: wizardData.work_experience.length > 0,
+    },
+    {
+      id: 'education',
+      title: 'Educación',
+      description: 'Formación académica',
+      icon: <GraduationCap className="h-5 w-5" />,
+      isCompleted: wizardData.education.length > 0,
+      isOptional: true,
+    },
+    {
+      id: 'multimedia',
+      title: 'Portfolio & Media',
+      description: 'Video y trabajos',
+      icon: <Video className="h-5 w-5" />,
+      isCompleted: !!wizardData.video_presentation_url || !!wizardData.portfolio_url,
+      isOptional: true,
+    },
+    {
+      id: 'social-links',
+      title: 'Redes Sociales',
+      description: 'Enlaces profesionales',
+      icon: <Globe className="h-5 w-5" />,
+      isCompleted: Object.values(wizardData.social_links).some(link => !!link),
+      isOptional: true,
     },
   ];
 
@@ -299,6 +326,12 @@ export const TalentProfileWizard: React.FC = () => {
         return <SkillsAndExperienceStep {...stepProps} />;
       case 'work-experience':
         return <WorkExperienceStep {...stepProps} />;
+      case 'education':
+        return <EducationStep {...stepProps} />;
+      case 'multimedia':
+        return <MultimediaStep {...stepProps} />;
+      case 'social-links':
+        return <SocialLinksStep {...stepProps} />;
       default:
         return (
           <div className="text-center py-8">
@@ -354,7 +387,7 @@ export const TalentProfileWizard: React.FC = () => {
       {/* Steps Navigation */}
       <Card>
         <CardContent className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
             {steps.map((step, index) => (
               <button
                 key={step.id}

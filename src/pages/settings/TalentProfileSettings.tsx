@@ -2,11 +2,12 @@ import React, { startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, Bell, Target } from 'lucide-react';
+import { ArrowLeft, Shield, Bell, Target, User } from 'lucide-react';
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import PrivacySettings from './PrivacySettings';
 import NotificationSettings from './NotificationSettings';
 import ProfessionalPreferences from './ProfessionalPreferences';
+import { TalentProfileWizard } from '@/components/wizard/TalentProfileWizard';
 
 const TalentProfileSettings = () => {
   const navigate = useNavigate();
@@ -30,8 +31,12 @@ const TalentProfileSettings = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="privacy" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="profile" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Perfil
+          </TabsTrigger>
           <TabsTrigger value="privacy" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Privacidad
@@ -45,6 +50,10 @@ const TalentProfileSettings = () => {
             Preferencias
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="profile" className="mt-6">
+          <TalentProfileWizard />
+        </TabsContent>
 
         <TabsContent value="privacy" className="mt-6">
           <PrivacySettings />
