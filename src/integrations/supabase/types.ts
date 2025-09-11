@@ -327,6 +327,39 @@ export type Database = {
         }
         Relationships: []
       }
+      job_titles: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          industry_tags: string[] | null
+          is_verified: boolean | null
+          title: string
+          updated_at: string
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          industry_tags?: string[] | null
+          is_verified?: boolean | null
+          title: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          industry_tags?: string[] | null
+          is_verified?: boolean | null
+          title?: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       opportunities: {
         Row: {
           category: string
@@ -908,6 +941,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_job_title_usage: {
+        Args: { job_title_text: string }
+        Returns: string
+      }
       insert_user_role_trigger: {
         Args: { p_role: string; p_user_id: string }
         Returns: boolean
@@ -929,6 +966,15 @@ export type Database = {
           location: string
           logo_url: string
           name: string
+        }[]
+      }
+      search_job_titles: {
+        Args: { search_term?: string }
+        Returns: {
+          category: string
+          id: string
+          title: string
+          usage_count: number
         }[]
       }
       switch_user_role: {

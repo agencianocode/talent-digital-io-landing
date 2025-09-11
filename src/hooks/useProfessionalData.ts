@@ -36,6 +36,13 @@ export interface CompanyDirectory {
   logo_url: string | null;
 }
 
+export interface JobTitle {
+  id: string;
+  title: string;
+  category: string | null;
+  usage_count: number;
+}
+
 export const useProfessionalData = () => {
   const [categories, setCategories] = useState<ProfessionalCategory[]>([]);
   const [industries, setIndustries] = useState<Industry[]>([]);
@@ -139,6 +146,35 @@ export const useProfessionalData = () => {
     }
   };
 
+  // Search job titles
+  const searchJobTitles = async (searchTerm: string = ''): Promise<JobTitle[]> => {
+    try {
+      const { data, error } = await supabase.rpc('search_job_titles', {
+        search_term: searchTerm
+      });
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error searching job titles:', error);
+      toast.error('Error al buscar puestos de trabajo');
+      return [];
+    }
+  };
+
+  // Increment job title usage (when user selects/creates a job title)
+  const incrementJobTitleUsage = async (jobTitle: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase.rpc('increment_job_title_usage', {
+        job_title_text: jobTitle
+      });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error incrementing job title usage:', error);
+      return null;
+    }
+  };
+
   // Update profile completeness
   const updateProfileCompleteness = async (userId: string): Promise<number> => {
     try {
@@ -171,6 +207,8 @@ export const useProfessionalData = () => {
     searchCompaniesDirectory,
     addCompanyToDirectory,
     claimCompanyFromDirectory,
+    searchJobTitles,
+    incrementJobTitleUsage,
     updateProfileCompleteness,
     refetchCategories: fetchCategories,
     refetchIndustries: fetchIndustries

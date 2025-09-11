@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,9 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Building, Plus, X, Search } from 'lucide-react';
+import { Combobox, ComboboxOption } from '@/components/ui/combobox';
+import { CreateCompanyModal } from '@/components/ui/create-company-modal';
+import { Building, Plus, X, Search, Briefcase } from 'lucide-react';
 import { WizardData } from '../TalentProfileWizard';
-import { useProfessionalData, CompanyDirectory } from '@/hooks/useProfessionalData';
+import { useProfessionalData, CompanyDirectory, JobTitle } from '@/hooks/useProfessionalData';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const workExperienceSchema = z.object({
   work_experience: z.array(z.object({
@@ -40,9 +43,20 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
   onNext,
   onPrev,
 }) => {
-  const { searchCompaniesDirectory } = useProfessionalData();
+  const { searchCompaniesDirectory, searchJobTitles, incrementJobTitleUsage, addCompanyToDirectory } = useProfessionalData();
   const [searchResults, setSearchResults] = useState<{ [key: number]: CompanyDirectory[] }>({});
   const [isSearching, setIsSearching] = useState<{ [key: number]: boolean }>({});
+  const [jobTitleResults, setJobTitleResults] = useState<{ [key: number]: JobTitle[] }>({});
+  const [isSearchingJobs, setIsSearchingJobs] = useState<{ [key: number]: boolean }>({});
+  const [createCompanyModal, setCreateCompanyModal] = useState<{
+    open: boolean;
+    fieldIndex: number;
+    companyName: string;
+  }>({
+    open: false,
+    fieldIndex: -1,
+    companyName: '',
+  });
 
   // Create proper default values
   const getDefaultWorkExperience = () => ({
@@ -98,6 +112,54 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
     form.setValue(`work_experience.${fieldIndex}.company`, company.name);
     form.setValue(`work_experience.${fieldIndex}.company_directory_id`, company.id);
     setSearchResults(prev => ({ ...prev, [fieldIndex]: [] }));
+  };
+
+  // Job title search functionality
+  const searchJobTitlesDebounced = useCallback(async (searchTerm: string, fieldIndex: number) => {
+    if (searchTerm.length < 2) {
+      setJobTitleResults(prev => ({ ...prev, [fieldIndex]: [] }));
+      return;
+    }
+
+    setIsSearchingJobs(prev => ({ ...prev, [fieldIndex]: true }));
+    try {
+      const results = await searchJobTitles(searchTerm);
+      setJobTitleResults(prev => ({ ...prev, [fieldIndex]: results }));
+    } catch (error) {
+      console.error('Error searching job titles:', error);
+    } finally {
+      setIsSearchingJobs(prev => ({ ...prev, [fieldIndex]: false }));
+    }
+  }, [searchJobTitles]);
+
+  const debouncedJobSearch = useDebounce(searchJobTitlesDebounced, 300);
+
+  const selectJobTitle = useCallback(async (jobTitle: string, fieldIndex: number) => {
+    form.setValue(`work_experience.${fieldIndex}.position`, jobTitle);
+    setJobTitleResults(prev => ({ ...prev, [fieldIndex]: [] }));
+    
+    // Track usage
+    try {
+      await incrementJobTitleUsage(jobTitle);
+    } catch (error) {
+      console.error('Error tracking job title usage:', error);
+    }
+  }, [form, incrementJobTitleUsage]);
+
+  // Company creation functionality
+  const handleCreateCompany = (companyName: string, fieldIndex: number) => {
+    setCreateCompanyModal({
+      open: true,
+      fieldIndex,
+      companyName,
+    });
+  };
+
+  const handleCompanyCreated = (companyId: string, companyName: string) => {
+    const fieldIndex = createCompanyModal.fieldIndex;
+    form.setValue(`work_experience.${fieldIndex}.company`, companyName);
+    form.setValue(`work_experience.${fieldIndex}.company_directory_id`, companyId);
+    setCreateCompanyModal({ open: false, fieldIndex: -1, companyName: '' });
   };
 
   const addNewExperience = () => {
@@ -200,6 +262,51 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
                                 </div>
                               </button>
                             ))}
+                            {/* Add "Create New" option */}
+                            {form.watch(`work_experience.${index}.company`) && 
+                             !searchResults[index].some(company => 
+                               company.name.toLowerCase() === form.watch(`work_experience.${index}.company`).toLowerCase()
+                             ) && (
+                              <button
+                                type="button"
+                                className="w-full px-3 py-2 text-left hover:bg-muted border-t"
+                                onClick={() => handleCreateCompany(form.watch(`work_experience.${index}.company`), index)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Plus className="h-4 w-4 text-primary" />
+                                  <div>
+                                    <p className="font-medium text-primary">Crear nueva empresa</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      "{form.watch(`work_experience.${index}.company`)}"
+                                    </p>
+                                  </div>
+                                </div>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Show create option when no results found */}
+                        {form.watch(`work_experience.${index}.company`) && 
+                         form.watch(`work_experience.${index}.company`).length >= 2 &&
+                         (!searchResults[index] || searchResults[index].length === 0) &&
+                         !isSearching[index] && (
+                          <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border rounded-md shadow-lg">
+                            <button
+                              type="button"
+                              className="w-full px-3 py-2 text-left hover:bg-muted"
+                              onClick={() => handleCreateCompany(form.watch(`work_experience.${index}.company`), index)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Plus className="h-4 w-4 text-primary" />
+                                <div>
+                                  <p className="font-medium text-primary">Crear nueva empresa</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    "{form.watch(`work_experience.${index}.company`)}"
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
                           </div>
                         )}
                       </div>
@@ -211,16 +318,57 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
                   )}
                 />
 
-                {/* Position */}
+                {/* Position with autocomplete */}
                 <FormField
                   control={form.control}
                   name={`work_experience.${index}.position`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Puesto *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: Marketing Manager, Frontend Developer..." {...field} />
-                      </FormControl>
+                      <div className="relative">
+                        <FormControl>
+                          <Input
+                            placeholder="Ej: Marketing Manager, Frontend Developer..."
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              debouncedJobSearch(e.target.value, index);
+                            }}
+                          />
+                        </FormControl>
+                        <Briefcase className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        
+                        {/* Job Title Results */}
+                        {jobTitleResults[index] && jobTitleResults[index].length > 0 && (
+                          <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                            {jobTitleResults[index].map((jobTitle) => (
+                              <button
+                                key={jobTitle.id}
+                                type="button"
+                                className="w-full px-3 py-2 text-left hover:bg-muted"
+                                onClick={() => selectJobTitle(jobTitle.title, index)}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <p className="font-medium">{jobTitle.title}</p>
+                                    {jobTitle.category && (
+                                      <p className="text-sm text-muted-foreground">{jobTitle.category}</p>
+                                    )}
+                                  </div>
+                                  {jobTitle.usage_count > 0 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      Popular
+                                    </Badge>
+                                  )}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <FormDescription>
+                        Sugerencias basadas en puestos comunes en la industria
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -329,6 +477,14 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
           </div>
         </form>
       </Form>
+
+      {/* Create Company Modal */}
+      <CreateCompanyModal
+        open={createCompanyModal.open}
+        onOpenChange={(open) => setCreateCompanyModal(prev => ({ ...prev, open }))}
+        onCompanyCreated={handleCompanyCreated}
+        initialName={createCompanyModal.companyName}
+      />
     </div>
   );
 };
