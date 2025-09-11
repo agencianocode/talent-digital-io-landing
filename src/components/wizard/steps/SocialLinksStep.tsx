@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Globe, Linkedin, Youtube, Github, Twitter, ExternalLink, CheckCircle, Instagram } from 'lucide-react';
 import { WizardData } from '../TalentProfileWizard';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const urlSchema = z.string().url('Debe ser una URL válida').optional().or(z.literal(''));
 
@@ -37,6 +38,7 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
   onNext,
   onPrev,
 }) => {
+  const { updateProfile } = useSupabaseAuth();
   const form = useForm<SocialLinksFormData>({
     resolver: zodResolver(socialLinksSchema),
     defaultValues: {
@@ -50,16 +52,20 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
   });
 
   const onSubmit = async (formData: SocialLinksFormData) => {
-    await updateData({
-      social_links: {
-        linkedin: formData.linkedin || undefined,
-        youtube: formData.youtube || undefined,
-        website: formData.website || undefined,
-        github: formData.github || undefined,
-        twitter: formData.twitter || undefined,
-        instagram: formData.instagram || undefined,
-      },
-    });
+    const socialLinks = {
+      linkedin: formData.linkedin || undefined,
+      youtube: formData.youtube || undefined,
+      website: formData.website || undefined,
+      github: formData.github || undefined,
+      twitter: formData.twitter || undefined,
+      instagram: formData.instagram || undefined,
+    };
+
+    // Use updateProfile from context to ensure profile is refreshed
+    await updateProfile({ social_links: socialLinks } as any);
+    
+    // Also update wizard data
+    await updateData({ social_links: socialLinks });
     onNext();
   };
 

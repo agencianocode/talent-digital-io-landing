@@ -684,9 +684,15 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
                     description: "Tu perfil profesional ha sido guardado exitosamente.",
                   });
                   
-                  onComplete?.();
-                  // Navigate to onboarding or dashboard
-                  navigate('/onboarding');
+                   // Clean localStorage flags to prevent redirection loops
+                   try {
+                     localStorage.removeItem('onboarding.returnToStep');
+                     localStorage.removeItem('onboarding.currentStep');
+                   } catch {}
+                   
+                   onComplete?.();
+                   // Navigate to onboarding or dashboard
+                   navigate('/onboarding');
                 } catch (error) {
                   console.error('Error completing wizard:', error);
                   const { toast } = await import('@/hooks/use-toast');

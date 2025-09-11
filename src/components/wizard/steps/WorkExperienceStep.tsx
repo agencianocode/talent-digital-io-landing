@@ -78,8 +78,8 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
             company_directory_id: exp.company_directory_id || '',
             position: exp.position || '',
             description: exp.description || '',
-            start_date: exp.start_date || '',
-            end_date: exp.end_date || '',
+            start_date: exp.start_date ? exp.start_date.substring(0, 7) : '', // Convert YYYY-MM-DD to YYYY-MM
+            end_date: exp.end_date ? exp.end_date.substring(0, 7) : '', // Convert YYYY-MM-DD to YYYY-MM
             is_current: exp.is_current || false,
           }))
         : [getDefaultWorkExperience()],
@@ -167,15 +167,15 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
   };
 
   const onSubmit = async (formData: WorkExperienceFormData) => {
-    // Map form data to proper WizardData format
+    // Map form data to proper WizardData format with date conversion
     const mappedWorkExperience = formData.work_experience.map(exp => ({
       id: undefined, // Will be assigned when saved
       company: exp.company,
       company_directory_id: exp.company_directory_id,
       position: exp.position,
       description: exp.description,
-      start_date: exp.start_date,
-      end_date: exp.end_date || '',
+      start_date: exp.start_date ? `${exp.start_date}-01` : '', // Convert YYYY-MM to YYYY-MM-DD
+      end_date: exp.end_date ? `${exp.end_date}-01` : '', // Convert YYYY-MM to YYYY-MM-DD
       is_current: exp.is_current,
     }));
 
