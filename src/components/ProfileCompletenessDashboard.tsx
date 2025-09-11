@@ -33,6 +33,8 @@ interface DashboardSection {
   actionLabel: string;
   actionRoute: string;
   priority: 'high' | 'medium' | 'low';
+  completionTips?: string[];
+  estimatedTime?: string;
 }
 
 export const ProfileCompletenessDashboard: React.FC = () => {
@@ -48,6 +50,22 @@ export const ProfileCompletenessDashboard: React.FC = () => {
   const { profile } = useSupabaseAuth();
   const navigate = useNavigate();
   const [showTemplates, setShowTemplates] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshCompleteness();
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const sections: DashboardSection[] = [
     {
@@ -59,7 +77,13 @@ export const ProfileCompletenessDashboard: React.FC = () => {
       status: breakdown.basic_info >= 30 ? 'complete' : breakdown.basic_info > 0 ? 'in-progress' : 'not-started',
       actionLabel: 'Completar Información Personal',
       actionRoute: '/settings/profile?tab=personal',
-      priority: breakdown.basic_info < 20 ? 'high' : 'medium'
+      priority: breakdown.basic_info < 20 ? 'high' : 'medium',
+      completionTips: [
+        'Agrega tu nombre completo y foto de perfil',
+        'Incluye tu ubicación y contacto',
+        'Conecta tus redes sociales profesionales'
+      ],
+      estimatedTime: '5 min'
     },
     {
       id: 'professional',
@@ -70,7 +94,13 @@ export const ProfileCompletenessDashboard: React.FC = () => {
       status: breakdown.professional_info >= 25 ? 'complete' : breakdown.professional_info > 0 ? 'in-progress' : 'not-started',
       actionLabel: 'Configurar Perfil Profesional',
       actionRoute: '/settings/profile?tab=professional',
-      priority: breakdown.professional_info < 15 ? 'high' : 'medium'
+      priority: breakdown.professional_info < 15 ? 'high' : 'medium',
+      completionTips: [
+        'Selecciona tu categoría profesional',
+        'Define tu título y nivel de experiencia',
+        'Establece tus tarifas y disponibilidad'
+      ],
+      estimatedTime: '8 min'
     },
     {
       id: 'skills',
@@ -81,7 +111,13 @@ export const ProfileCompletenessDashboard: React.FC = () => {
       status: breakdown.skills_and_bio >= 18 ? 'complete' : breakdown.skills_and_bio > 0 ? 'in-progress' : 'not-started',
       actionLabel: 'Agregar Habilidades',
       actionRoute: '/settings/profile?tab=professional',
-      priority: breakdown.skills_and_bio < 10 ? 'high' : 'low'
+      priority: breakdown.skills_and_bio < 10 ? 'high' : 'low',
+      completionTips: [
+        'Lista tus habilidades técnicas clave',
+        'Escribe una biografía atractiva',
+        'Selecciona industrias de interés'
+      ],
+      estimatedTime: '10 min'
     }
   ];
 
@@ -134,7 +170,9 @@ export const ProfileCompletenessDashboard: React.FC = () => {
     return incompleteSections.slice(0, 3);
   };
 
-  if (loading) {
+  // Get priority actions for the user
+
+  if (loading && completeness === 0) {
     return (
       <div className="space-y-6">
         <Card>
