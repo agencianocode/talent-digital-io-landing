@@ -145,9 +145,9 @@ export const useProfileCompleteness = () => {
     const total = Math.min(basicInfo + professionalInfo + skillsAndBio, 100);
 
     setBreakdown({
-      basic_info: basicInfo,
-      professional_info: professionalInfo,
-      skills_and_bio: skillsAndBio,
+      basic_info: Math.round((basicInfo / 40) * 100), // Normalize to percentage
+      professional_info: Math.round((professionalInfo / 35) * 100), // Normalize to percentage
+      skills_and_bio: Math.round((skillsAndBio / 25) * 100), // Normalize to percentage
       total,
       missing_fields: missingFields,
       suggestions

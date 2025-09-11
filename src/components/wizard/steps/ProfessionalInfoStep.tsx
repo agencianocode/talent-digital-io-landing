@@ -30,6 +30,7 @@ interface ProfessionalInfoStepProps {
   categories: ProfessionalCategory[];
   onNext: () => void;
   onPrev: () => void;
+  hideNavigationButtons?: boolean;
 }
 
 export const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
@@ -38,6 +39,7 @@ export const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
   categories,
   onNext,
   onPrev,
+  hideNavigationButtons = false,
 }) => {
   const { getProfileSuggestions } = useProfessionalData();
   const [suggestions, setSuggestions] = useState<ProfileSuggestions | null>(null);
@@ -307,14 +309,16 @@ export const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
             )}
           />
 
-          <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={onPrev}>
-              Anterior
-            </Button>
-            <Button type="submit">
-              Continuar
-            </Button>
-          </div>
+          {!hideNavigationButtons && (
+            <div className="flex justify-between">
+              <Button type="button" variant="outline" onClick={onPrev}>
+                Anterior
+              </Button>
+              <Button type="submit">
+                Continuar
+              </Button>
+            </div>
+          )}
         </form>
       </Form>
     </div>

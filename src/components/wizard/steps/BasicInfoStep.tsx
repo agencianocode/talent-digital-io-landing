@@ -25,12 +25,14 @@ interface BasicInfoStepProps {
   updateData: (updates: Partial<WizardData>) => Promise<void>;
   onNext: () => void;
   onPrev: () => void;
+  hideNavigationButtons?: boolean;
 }
 
 export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
   data,
   updateData,
   onNext,
+  hideNavigationButtons = false,
 }) => {
   const form = useForm<BasicInfoFormData>({
     resolver: zodResolver(basicInfoSchema),
@@ -148,11 +150,13 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
             </CardContent>
           </Card>
 
-          <div className="flex justify-end">
-            <Button type="submit" size="lg">
-              Continuar
-            </Button>
-          </div>
+          {!hideNavigationButtons && (
+            <div className="flex justify-end">
+              <Button type="submit" size="lg">
+                Continuar
+              </Button>
+            </div>
+          )}
         </form>
       </Form>
     </div>

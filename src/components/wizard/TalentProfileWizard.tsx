@@ -493,6 +493,7 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
       industries,
       onNext: nextStep,
       onPrev: prevStep,
+      hideNavigationButtons: true, // Hide step-level navigation buttons
     };
 
     switch (steps[currentStep].id) {
