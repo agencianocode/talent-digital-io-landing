@@ -20,8 +20,8 @@ const profileSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.string().email('Ingresa un email válido'),
   phone: z.string().optional(),
-  position: z.string().optional(),
-  linkedin: z.string().url('Ingresa una URL válida').optional().or(z.literal('')),
+  country: z.string().optional(),
+  city: z.string().optional(),
   photo: z.string().optional()
 });
 const passwordSchema = z.object({
@@ -70,8 +70,8 @@ const ProfileSettings = () => {
       name: profile?.full_name || '',
       email: user?.email || '',
       phone: profile?.phone || '',
-      position: '',
-      linkedin: '',
+      country: profile?.country || '',
+      city: profile?.city || '',
       photo: profile?.avatar_url || ''
     }
   });
@@ -91,8 +91,8 @@ const ProfileSettings = () => {
         name: profile.full_name || '',
         email: user?.email || '',
         phone: profile.phone || '',
-        position: (profile as any).position || '',
-        linkedin: (profile as any).linkedin || '',
+        country: profile.country || '',
+        city: profile.city || '',
         photo: profile.avatar_url || ''
       };
       profileForm.reset(formData);
@@ -121,8 +121,8 @@ const ProfileSettings = () => {
       const result = await updateProfile({
         full_name: data.name,
         phone: data.phone,
-        position: data.position,
-        linkedin: data.linkedin,
+        country: data.country,
+        city: data.city,
         avatar_url: data.photo
       } as any);
 
@@ -392,26 +392,26 @@ const ProfileSettings = () => {
                           <FormMessage />
                         </FormItem>} />
 
-                    <FormField control={profileForm.control} name="position" render={({
+                    <FormField control={profileForm.control} name="country" render={({
                     field
                   }) => <FormItem>
-                          <FormLabel>Posición</FormLabel>
+                          <FormLabel>País</FormLabel>
                           <FormControl>
-                            <Input placeholder="Tu posición en la empresa" {...field} />
+                            <Input placeholder="Tu país" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
+
+                    <FormField control={profileForm.control} name="city" render={({
+                    field
+                  }) => <FormItem>
+                          <FormLabel>Ciudad</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Tu ciudad" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>} />
                   </div>
-
-                  <FormField control={profileForm.control} name="linkedin" render={({
-                  field
-                }) => <FormItem>
-                        <FormLabel>LinkedIn</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://linkedin.com/in/tu-perfil" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
 
                   <div className="flex justify-end gap-4">
                     <Button type="button" variant="outline" onClick={() => profileForm.reset()}>
