@@ -36,6 +36,7 @@ interface OnboardingWizardProps {
 }
 
 export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeUser = false }) => {
+  // ALL HOOKS MUST BE CALLED FIRST - NO CONDITIONAL LOGIC BEFORE THIS
   const { profile, user } = useSupabaseAuth();
   const { completeness, breakdown, loading } = useProfileCompleteness();
   const { syncProfile } = useProfileSync();
@@ -53,6 +54,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
           setIsInitialized(true);
         } catch (error) {
           console.error('Error initializing onboarding:', error);
+          setIsInitialized(true); // Set to true even on error to prevent infinite loop
         }
       }
     };
@@ -60,7 +62,35 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
     initialize();
   }, [user?.id, syncProfile, isInitialized]);
 
-  // Safely check profile completion
+  // Callback functions
+  const handleStepAction = useCallback((stepIndex: number) => {
+    setCurrentStep(stepIndex);
+  }, []);
+
+  const handleProfessionalStep = useCallback(() => {
+    setShowWizard(true);
+  }, []);
+
+  const handleNext = useCallback(() => {
+    if (currentStep < 4) { // Fixed length
+      setCurrentStep(currentStep + 1);
+    }
+  }, [currentStep]);
+
+  const handleSkip = useCallback(() => {
+    navigate('/talent-dashboard');
+  }, [navigate]);
+
+  const handleWizardComplete = useCallback(async () => {
+    setShowWizard(false);
+    try {
+      await syncProfile();
+    } catch (error) {
+      console.error('Error syncing after wizard completion:', error);
+    }
+  }, [syncProfile]);
+
+  // Derived state calculations (after all hooks)
   const profileData = profile as any;
   const isBasicComplete = Boolean(
     profile?.full_name && 
@@ -117,33 +147,18 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
     }
   ];
 
-  const handleStepAction = useCallback((stepIndex: number) => {
-    setCurrentStep(stepIndex);
-  }, []);
-
-  const handleProfessionalStep = useCallback(() => {
-    setShowWizard(true);
-  }, []);
-
-  const handleNext = useCallback(() => {
-    if (currentStep < onboardingSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
+  // Auto-advance effect (using fixed dependencies)
+  useEffect(() => {
+    if (isInitialized && currentStep < onboardingSteps.length && onboardingSteps[currentStep]?.completed) {
+      const nextStepIndex = onboardingSteps.findIndex((step, index) => index > currentStep && !step.completed);
+      if (nextStepIndex !== -1) {
+        setCurrentStep(nextStepIndex);
+      }
     }
-  }, [currentStep, onboardingSteps.length]);
+  }, [isInitialized, currentStep, completeness, isBasicComplete]); // Fixed dependencies
 
-  const handleSkip = useCallback(() => {
-    navigate('/talent-dashboard');
-  }, [navigate]);
-
-  const handleWizardComplete = useCallback(async () => {
-    setShowWizard(false);
-    try {
-      await syncProfile();
-    } catch (error) {
-      console.error('Error syncing after wizard completion:', error);
-    }
-  }, [syncProfile]);
-
+  // RENDER LOGIC STARTS HERE - ALL HOOKS MUST BE CALLED BEFORE THIS POINT
+  
   // Show loading state during initialization
   if (!isInitialized || loading) {
     return (
@@ -186,16 +201,6 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
       </Tabs>
     );
   }
-
-  // Auto-advance to next incomplete step if current step is completed
-  useEffect(() => {
-    if (isInitialized && onboardingSteps[currentStep]?.completed) {
-      const nextStep = getNextIncompleteStep(onboardingSteps);
-      if (nextStep !== -1 && nextStep !== currentStep) {
-        setCurrentStep(nextStep);
-      }
-    }
-  }, [isInitialized, currentStep, onboardingSteps]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -300,7 +305,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
               
               <Button 
                 onClick={handleNext}
-                disabled={currentStep >= onboardingSteps.length - 1}
+                disabled={currentStep >= 4}
               >
                 Siguiente
                 <ArrowRight className="h-4 w-4 ml-2" />
