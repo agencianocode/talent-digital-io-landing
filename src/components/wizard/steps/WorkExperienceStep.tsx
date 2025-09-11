@@ -35,6 +35,7 @@ interface WorkExperienceStepProps {
   updateData: (updates: Partial<WizardData>) => Promise<void>;
   onNext: () => void;
   onPrev: () => void;
+  hideNavigationButtons?: boolean;
 }
 
 export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
@@ -42,6 +43,7 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
   updateData,
   onNext,
   onPrev,
+  hideNavigationButtons = false,
 }) => {
   const { searchCompaniesDirectory, searchJobTitles, incrementJobTitleUsage, addCompanyToDirectory } = useProfessionalData();
   const [searchResults, setSearchResults] = useState<{ [key: number]: CompanyDirectory[] }>({});
@@ -468,14 +470,16 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
             Agregar Más Experiencia
           </Button>
 
-          <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={onPrev}>
-              Anterior
-            </Button>
-            <Button type="submit">
-              Continuar
-            </Button>
-          </div>
+          {!hideNavigationButtons && (
+            <div className="flex justify-between">
+              <Button type="button" variant="outline" onClick={onPrev}>
+                Anterior
+              </Button>
+              <Button type="submit">
+                Continuar
+              </Button>
+            </div>
+          )}
         </form>
       </Form>
 

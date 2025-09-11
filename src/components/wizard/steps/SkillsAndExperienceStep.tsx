@@ -27,6 +27,7 @@ interface SkillsAndExperienceStepProps {
   industries: Industry[];
   onNext: () => void;
   onPrev: () => void;
+  hideNavigationButtons?: boolean;
 }
 
 export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = ({
@@ -36,6 +37,7 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
   industries,
   onNext,
   onPrev,
+  hideNavigationButtons = false,
 }) => {
   const { getProfileSuggestions } = useProfessionalData();
   const [newSkill, setNewSkill] = useState('');
@@ -306,14 +308,16 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
             </CardContent>
           </Card>
 
-          <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={onPrev}>
-              Anterior
-            </Button>
-            <Button type="submit">
-              Continuar
-            </Button>
-          </div>
+          {!hideNavigationButtons && (
+            <div className="flex justify-between">
+              <Button type="button" variant="outline" onClick={onPrev}>
+                Anterior
+              </Button>
+              <Button type="submit">
+                Continuar
+              </Button>
+            </div>
+          )}
         </form>
       </Form>
     </div>

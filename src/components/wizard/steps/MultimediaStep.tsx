@@ -26,6 +26,7 @@ interface MultimediaStepProps {
   updateData: (updates: Partial<WizardData>) => Promise<void>;
   onNext: () => void;
   onPrev: () => void;
+  hideNavigationButtons?: boolean;
 }
 
 export const MultimediaStep: React.FC<MultimediaStepProps> = ({
@@ -33,6 +34,7 @@ export const MultimediaStep: React.FC<MultimediaStepProps> = ({
   updateData,
   onNext,
   onPrev,
+  hideNavigationButtons = false,
 }) => {
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
@@ -281,14 +283,16 @@ export const MultimediaStep: React.FC<MultimediaStepProps> = ({
             </AlertDescription>
           </Alert>
 
-          <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={onPrev}>
-              Anterior
-            </Button>
-            <Button type="submit">
-              Continuar
-            </Button>
-          </div>
+          {!hideNavigationButtons && (
+            <div className="flex justify-between">
+              <Button type="button" variant="outline" onClick={onPrev}>
+                Anterior
+              </Button>
+              <Button type="submit">
+                Continuar
+              </Button>
+            </div>
+          )}
         </form>
       </Form>
     </div>

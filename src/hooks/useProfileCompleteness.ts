@@ -91,7 +91,7 @@ export const useProfileCompleteness = () => {
       suggestions.push('Conecta tus redes profesionales como LinkedIn');
     }
 
-    // Professional Info (35% total)
+    // Professional Info (35% total) - includes bio
     if (talentProfile) {
       if (talentProfile.primary_category_id) {
         professionalInfo += 15;
@@ -108,34 +108,34 @@ export const useProfileCompleteness = () => {
       }
 
       if (talentProfile.experience_level) {
-        professionalInfo += 10;
+        professionalInfo += 5;
       } else {
         missingFields.push('Nivel de experiencia');
         suggestions.push('Indica tu nivel de experiencia profesional');
+      }
+
+      if (talentProfile.bio) {
+        professionalInfo += 5;
+      } else {
+        missingFields.push('Biografía profesional');
+        suggestions.push('Escribe una descripción atractiva de tu experiencia');
       }
     } else {
       missingFields.push('Perfil de talento');
       suggestions.push('Completa tu perfil profesional para mostrar tus habilidades');
     }
 
-    // Skills and Bio (25% total)
+    // Skills and Bio (25% total) - only skills and industries
     if (talentProfile) {
-      if (talentProfile.bio) {
-        skillsAndBio += 10;
-      } else {
-        missingFields.push('Biografía profesional');
-        suggestions.push('Escribe una descripción atractiva de tu experiencia');
-      }
-
       if (talentProfile.skills && talentProfile.skills.length > 0) {
-        skillsAndBio += 10;
+        skillsAndBio += 15;
       } else {
         missingFields.push('Habilidades');
         suggestions.push('Lista las habilidades que te destacan');
       }
 
       if (talentProfile.industries_of_interest && talentProfile.industries_of_interest.length > 0) {
-        skillsAndBio += 5;
+        skillsAndBio += 10;
       } else {
         missingFields.push('Industrias de interés');
         suggestions.push('Selecciona las industrias donde quieres trabajar');

@@ -30,6 +30,7 @@ interface SocialLinksStepProps {
   updateData: (updates: Partial<WizardData>) => Promise<void>;
   onNext: () => void;
   onPrev: () => void;
+  hideNavigationButtons?: boolean;
 }
 
 export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
@@ -37,6 +38,7 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
   updateData,
   onNext,
   onPrev,
+  hideNavigationButtons = false,
 }) => {
   const { updateProfile } = useSupabaseAuth();
   const form = useForm<SocialLinksFormData>({
@@ -262,14 +264,16 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
             </AlertDescription>
           </Alert>
 
-          <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={onPrev}>
-              Anterior
-            </Button>
-            <Button type="submit">
-              Guardar Enlaces
-            </Button>
-          </div>
+          {!hideNavigationButtons && (
+            <div className="flex justify-between">
+              <Button type="button" variant="outline" onClick={onPrev}>
+                Anterior
+              </Button>
+              <Button type="submit">
+                Guardar Enlaces
+              </Button>
+            </div>
+          )}
         </form>
       </Form>
     </div>

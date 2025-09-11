@@ -28,6 +28,7 @@ interface EducationStepProps {
   updateData: (updates: Partial<WizardData>) => Promise<void>;
   onNext: () => void;
   onPrev: () => void;
+  hideNavigationButtons?: boolean;
 }
 
 export const EducationStep: React.FC<EducationStepProps> = ({
@@ -35,6 +36,7 @@ export const EducationStep: React.FC<EducationStepProps> = ({
   updateData,
   onNext,
   onPrev,
+  hideNavigationButtons = false,
 }) => {
   const form = useForm<EducationFormData>({
     resolver: zodResolver(educationSchema),
@@ -217,14 +219,16 @@ export const EducationStep: React.FC<EducationStepProps> = ({
             </Button>
           </div>
 
-          <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={onPrev}>
-              Anterior
-            </Button>
-            <Button type="submit">
-              Continuar
-            </Button>
-          </div>
+          {!hideNavigationButtons && (
+            <div className="flex justify-between">
+              <Button type="button" variant="outline" onClick={onPrev}>
+                Anterior
+              </Button>
+              <Button type="submit">
+                Continuar
+              </Button>
+            </div>
+          )}
         </form>
       </Form>
     </div>
