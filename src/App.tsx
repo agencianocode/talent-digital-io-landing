@@ -8,6 +8,7 @@ import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { OpportunitiesProvider } from '@/contexts/OpportunitiesContext';
 import { MessagingProvider } from '@/contexts/MessagingContext';
 import { NavigationFlowProvider } from '@/components/NavigationFlowProvider';
+import { ProfileManagerProvider } from '@/contexts/ProfileManagerContext';
 import ToastContainer from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 
@@ -69,12 +70,13 @@ function App() {
       disableTransitionOnChange
     >
       <SupabaseAuthProvider>
-        <NotificationsProvider>
-          <OpportunitiesProvider>
-            <MessagingProvider>
-              <ToastProvider>
-                <BrowserRouter>
-                  <NavigationFlowProvider>
+        <ProfileManagerProvider>
+          <NotificationsProvider>
+            <OpportunitiesProvider>
+              <MessagingProvider>
+                <ToastProvider>
+                  <BrowserRouter>
+                    <NavigationFlowProvider>
                     <div className="min-h-screen bg-background text-foreground">
                     <Routes>
                       <Route path="/" element={<LandingPage />} />
@@ -261,12 +263,13 @@ function App() {
                     </Routes>
                     <ToastContainer />
                   </div>
-                  </NavigationFlowProvider>
-                </BrowserRouter>
-              </ToastProvider>
-            </MessagingProvider>
-          </OpportunitiesProvider>
+                    </NavigationFlowProvider>
+                  </BrowserRouter>
+                </ToastProvider>
+              </MessagingProvider>
+            </OpportunitiesProvider>
         </NotificationsProvider>
+        </ProfileManagerProvider>
       </SupabaseAuthProvider>
     </ThemeProvider>
   );
