@@ -267,7 +267,7 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
               Anterior
             </Button>
             <Button type="submit">
-              Finalizar Perfil
+              Guardar Enlaces
             </Button>
           </div>
         </form>

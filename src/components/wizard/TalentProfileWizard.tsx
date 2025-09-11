@@ -677,43 +677,49 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
-            <Button
-              onClick={async () => {
-                try {
-                  // Final save and refresh completeness
-                  await saveCurrentData(wizardData);
-                  await refreshCompleteness();
-                  
-                  const { toast } = await import('@/hooks/use-toast');
-                  toast({
-                    title: "¡Perfil completado!",
-                    description: "Tu perfil profesional ha sido guardado exitosamente.",
-                  });
-                  
-                   // Clean localStorage flags to prevent redirection loops
-                   try {
-                     localStorage.removeItem('onboarding.returnToStep');
-                     localStorage.removeItem('onboarding.currentStep');
-                   } catch {}
-                   
-                   onComplete?.();
-                   // Navigate to onboarding or dashboard
-                   navigate('/onboarding');
-                } catch (error) {
-                  console.error('Error completing wizard:', error);
-                  const { toast } = await import('@/hooks/use-toast');
-                  toast({
-                    title: "Error",
-                    description: "Hubo un error al guardar tu perfil. Inténtalo de nuevo.",
-                    variant: "destructive",
-                  });
-                }
-              }}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Check className="h-4 w-4 mr-2" />
-              Finalizar Wizard
-            </Button>
+            <div className="flex flex-col items-end space-y-2">
+              <div className="text-sm text-muted-foreground">
+                ¡Ya casi terminas! Completa tu perfil ahora
+              </div>
+              <Button
+                onClick={async () => {
+                  try {
+                    // Final save and refresh completeness
+                    await saveCurrentData(wizardData);
+                    await refreshCompleteness();
+                    
+                    const { toast } = await import('@/hooks/use-toast');
+                    toast({
+                      title: "¡Perfil completado exitosamente!",
+                      description: "Tu perfil profesional está listo. Ahora puedes explorar oportunidades.",
+                    });
+                    
+                     // Clean localStorage flags to prevent redirection loops
+                     try {
+                       localStorage.removeItem('onboarding.returnToStep');
+                       localStorage.removeItem('onboarding.currentStep');
+                     } catch {}
+                     
+                     onComplete?.();
+                     // Navigate to onboarding or dashboard
+                     navigate('/onboarding');
+                  } catch (error) {
+                    console.error('Error completing wizard:', error);
+                    const { toast } = await import('@/hooks/use-toast');
+                    toast({
+                      title: "Error",
+                      description: "Hubo un error al guardar tu perfil. Inténtalo de nuevo.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-3 text-lg shadow-lg"
+                size="lg"
+              >
+                <Check className="h-5 w-5 mr-2" />
+                ¡Finalizar Mi Perfil!
+              </Button>
+            </div>
           )}
         </div>
       </div>
