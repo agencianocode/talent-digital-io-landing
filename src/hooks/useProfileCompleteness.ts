@@ -91,7 +91,7 @@ export const useProfileCompleteness = () => {
       suggestions.push('Conecta tus redes profesionales como LinkedIn');
     }
 
-    // Professional Info (35% total) - includes bio
+    // Professional Info (30% total) - includes bio
     if (talentProfile) {
       if (talentProfile.primary_category_id) {
         professionalInfo += 15;
@@ -101,21 +101,21 @@ export const useProfileCompleteness = () => {
       }
 
       if (talentProfile.title) {
-        professionalInfo += 10;
+        professionalInfo += 8;
       } else {
         missingFields.push('Título profesional');
         suggestions.push('Define un título que represente tu rol actual');
       }
 
       if (talentProfile.experience_level) {
-        professionalInfo += 5;
+        professionalInfo += 4;
       } else {
         missingFields.push('Nivel de experiencia');
         suggestions.push('Indica tu nivel de experiencia profesional');
       }
 
       if (talentProfile.bio) {
-        professionalInfo += 5;
+        professionalInfo += 3;
       } else {
         missingFields.push('Biografía profesional');
         suggestions.push('Escribe una descripción atractiva de tu experiencia');
@@ -125,7 +125,7 @@ export const useProfileCompleteness = () => {
       suggestions.push('Completa tu perfil profesional para mostrar tus habilidades');
     }
 
-    // Skills and Bio (25% total) - only skills and industries
+    // Skills and Industries (20% total)
     if (talentProfile) {
       if (talentProfile.skills && talentProfile.skills.length > 0) {
         skillsAndBio += 15;
@@ -135,19 +135,35 @@ export const useProfileCompleteness = () => {
       }
 
       if (talentProfile.industries_of_interest && talentProfile.industries_of_interest.length > 0) {
-        skillsAndBio += 10;
+        skillsAndBio += 5;
       } else {
         missingFields.push('Industrias de interés');
         suggestions.push('Selecciona las industrias donde quieres trabajar');
       }
     }
 
-    const total = Math.min(basicInfo + professionalInfo + skillsAndBio, 100);
+    // Portfolio and Multimedia (10% total) - estos campos son importantes
+    let portfolioAndMultimedia = 0;
+    if (profileData?.video_presentation_url) {
+      portfolioAndMultimedia += 5;
+    } else {
+      missingFields.push('Video de presentación');
+      suggestions.push('Sube un video de presentación para destacar');
+    }
+
+    if (talentProfile?.portfolio_url) {
+      portfolioAndMultimedia += 5;
+    } else {
+      missingFields.push('Portfolio online');
+      suggestions.push('Agrega un enlace a tu portfolio o trabajos');
+    }
+
+    const total = Math.min(basicInfo + professionalInfo + skillsAndBio + portfolioAndMultimedia, 100);
 
     setBreakdown({
       basic_info: Math.round((basicInfo / 40) * 100), // Normalize to percentage
-      professional_info: Math.round((professionalInfo / 35) * 100), // Normalize to percentage
-      skills_and_bio: Math.round((skillsAndBio / 25) * 100), // Normalize to percentage
+      professional_info: Math.round((professionalInfo / 30) * 100), // Normalize to percentage  
+      skills_and_bio: Math.round(((skillsAndBio + portfolioAndMultimedia) / 30) * 100), // Include portfolio in skills section display
       total,
       missing_fields: missingFields,
       suggestions
