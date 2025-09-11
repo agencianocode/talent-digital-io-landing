@@ -26,7 +26,7 @@ type SocialLinksFormData = z.infer<typeof socialLinksSchema>;
 
 interface SocialLinksStepProps {
   data: WizardData;
-  updateData: (updates: Partial<WizardData>) => void;
+  updateData: (updates: Partial<WizardData>) => Promise<void>;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -49,8 +49,8 @@ export const SocialLinksStep: React.FC<SocialLinksStepProps> = ({
     },
   });
 
-  const onSubmit = (formData: SocialLinksFormData) => {
-    updateData({
+  const onSubmit = async (formData: SocialLinksFormData) => {
+    await updateData({
       social_links: {
         linkedin: formData.linkedin || undefined,
         youtube: formData.youtube || undefined,

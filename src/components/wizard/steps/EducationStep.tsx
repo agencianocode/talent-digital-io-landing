@@ -25,7 +25,7 @@ type EducationFormData = z.infer<typeof educationSchema>;
 
 interface EducationStepProps {
   data: WizardData;
-  updateData: (updates: Partial<WizardData>) => void;
+  updateData: (updates: Partial<WizardData>) => Promise<void>;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -54,8 +54,8 @@ export const EducationStep: React.FC<EducationStepProps> = ({
     name: 'education',
   });
 
-  const onSubmit = (formData: EducationFormData) => {
-    updateData({
+  const onSubmit = async (formData: EducationFormData) => {
+    await updateData({
       education: formData.education.map(edu => ({
         id: edu.id,
         institution: edu.institution,

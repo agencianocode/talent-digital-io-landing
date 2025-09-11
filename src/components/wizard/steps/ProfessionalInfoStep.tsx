@@ -26,7 +26,7 @@ type ProfessionalInfoFormData = z.infer<typeof professionalInfoSchema>;
 
 interface ProfessionalInfoStepProps {
   data: WizardData;
-  updateData: (updates: Partial<WizardData>) => void;
+  updateData: (updates: Partial<WizardData>) => Promise<void>;
   categories: ProfessionalCategory[];
   onNext: () => void;
   onPrev: () => void;
@@ -75,8 +75,8 @@ export const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
     loadSuggestions();
   }, [selectedCategory]); // Removed getProfileSuggestions dependency
 
-  const onSubmit = (formData: ProfessionalInfoFormData) => {
-    updateData(formData);
+  const onSubmit = async (formData: ProfessionalInfoFormData) => {
+    await updateData(formData);
     onNext();
   };
 

@@ -32,7 +32,7 @@ type WorkExperienceFormData = z.infer<typeof workExperienceSchema>;
 
 interface WorkExperienceStepProps {
   data: WizardData;
-  updateData: (updates: Partial<WizardData>) => void;
+  updateData: (updates: Partial<WizardData>) => Promise<void>;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -166,7 +166,7 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
     append(getDefaultWorkExperience());
   };
 
-  const onSubmit = (formData: WorkExperienceFormData) => {
+  const onSubmit = async (formData: WorkExperienceFormData) => {
     // Map form data to proper WizardData format
     const mappedWorkExperience = formData.work_experience.map(exp => ({
       id: undefined, // Will be assigned when saved
@@ -179,7 +179,7 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
       is_current: exp.is_current,
     }));
 
-    updateData({ work_experience: mappedWorkExperience });
+    await updateData({ work_experience: mappedWorkExperience });
     onNext();
   };
 

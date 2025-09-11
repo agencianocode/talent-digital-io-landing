@@ -23,7 +23,7 @@ type MultimediaFormData = z.infer<typeof multimediaSchema>;
 
 interface MultimediaStepProps {
   data: WizardData;
-  updateData: (updates: Partial<WizardData>) => void;
+  updateData: (updates: Partial<WizardData>) => Promise<void>;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -49,8 +49,8 @@ export const MultimediaStep: React.FC<MultimediaStepProps> = ({
     },
   });
 
-  const onSubmit = (formData: MultimediaFormData) => {
-    updateData({
+  const onSubmit = async (formData: MultimediaFormData) => {
+    await updateData({
       video_presentation_url: uploadedVideo || formData.video_presentation_url || '',
       portfolio_url: formData.portfolio_url || '',
     });

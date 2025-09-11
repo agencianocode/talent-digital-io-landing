@@ -22,7 +22,7 @@ type SkillsExperienceFormData = z.infer<typeof skillsExperienceSchema>;
 
 interface SkillsAndExperienceStepProps {
   data: WizardData;
-  updateData: (updates: Partial<WizardData>) => void;
+  updateData: (updates: Partial<WizardData>) => Promise<void>;
   categories: ProfessionalCategory[];
   industries: Industry[];
   onNext: () => void;
@@ -117,8 +117,8 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
     }
   };
 
-  const onSubmit = (formData: SkillsExperienceFormData) => {
-    updateData(formData);
+  const onSubmit = async (formData: SkillsExperienceFormData) => {
+    await updateData(formData);
     onNext();
   };
 

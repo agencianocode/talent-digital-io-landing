@@ -290,8 +290,153 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
     }
   };
 
-  const updateWizardData = (updates: Partial<WizardData>) => {
+  const updateWizardData = async (updates: Partial<WizardData>) => {
     setWizardData(prev => ({ ...prev, ...updates }));
+    
+    // Auto-save profile and talent profile data to Supabase
+    if (user?.id) {
+      await saveCurrentData({ ...wizardData, ...updates });
+    }
+  };
+
+  // Save profile and talent profile data to Supabase
+  const saveCurrentData = async (data: WizardData) => {
+    if (!user?.id) return;
+
+    try {
+      const { toast } = await import('@/hooks/use-toast');
+      
+      // Update profiles table
+      const profileUpdates = {
+        country: data.country,
+        city: data.city,
+        hide_location: data.hide_location,
+        phone: data.phone,
+        social_links: data.social_links,
+        video_presentation_url: data.video_presentation_url,
+      };
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('user_id', user.id);
+
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
+        return;
+      }
+
+      // Upsert talent profile
+      const talentProfileData = {
+        user_id: user.id,
+        primary_category_id: data.primary_category_id || null,
+        secondary_category_id: data.secondary_category_id || null,
+        title: data.title,
+        experience_level: data.experience_level,
+        bio: data.bio,
+        skills: data.skills,
+        industries_of_interest: data.industries_of_interest,
+        portfolio_url: data.portfolio_url,
+        hourly_rate_min: data.hourly_rate_min,
+        hourly_rate_max: data.hourly_rate_max,
+        currency: data.currency,
+        availability: data.availability,
+      };
+
+      const { data: existingTalentProfile } = await supabase
+        .from('talent_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingTalentProfile) {
+        const { error: talentError } = await supabase
+          .from('talent_profiles')
+          .update(talentProfileData)
+          .eq('user_id', user.id);
+
+        if (talentError) {
+          console.error('Error updating talent profile:', talentError);
+          return;
+        }
+      } else {
+        const { error: talentError } = await supabase
+          .from('talent_profiles')
+          .insert(talentProfileData);
+
+        if (talentError) {
+          console.error('Error creating talent profile:', talentError);
+          return;
+        }
+      }
+
+      // Get the talent profile ID for work experience and education
+      const { data: talentProfile } = await supabase
+        .from('talent_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (talentProfile) {
+        // Save work experience
+        if (data.work_experience.length > 0) {
+          // Delete existing work experience
+          await supabase
+            .from('work_experience')
+            .delete()
+            .eq('talent_profile_id', talentProfile.id);
+
+          // Insert new work experience
+          const workExperienceData = data.work_experience.map(exp => ({
+            talent_profile_id: talentProfile.id,
+            company: exp.company,
+            position: exp.position,
+            description: exp.description,
+            start_date: exp.start_date,
+            end_date: exp.end_date || null,
+            is_current: exp.is_current,
+          }));
+
+          const { error: workError } = await supabase
+            .from('work_experience')
+            .insert(workExperienceData);
+
+          if (workError) {
+            console.error('Error saving work experience:', workError);
+          }
+        }
+
+        // Save education
+        if (data.education.length > 0) {
+          // Delete existing education
+          await supabase
+            .from('education')
+            .delete()
+            .eq('talent_profile_id', talentProfile.id);
+
+          // Insert new education
+          const educationData = data.education.map(edu => ({
+            talent_profile_id: talentProfile.id,
+            institution: edu.institution,
+            degree: edu.degree,
+            field_of_study: edu.field_of_study,
+            description: edu.description || '',
+            graduation_year: edu.graduation_year,
+          }));
+
+          const { error: eduError } = await supabase
+            .from('education')
+            .insert(educationData);
+
+          if (eduError) {
+            console.error('Error saving education:', eduError);
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error('Error saving wizard data:', error);
+    }
   };
 
   const nextStep = () => {
@@ -508,12 +653,30 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
             </Button>
           ) : (
             <Button
-              onClick={() => {
-                // Refresh completeness and notify parent
-                refreshCompleteness();
-                onComplete?.();
-                // Navigate to onboarding or dashboard
-                navigate('/onboarding');
+              onClick={async () => {
+                try {
+                  // Final save and refresh completeness
+                  await saveCurrentData(wizardData);
+                  await refreshCompleteness();
+                  
+                  const { toast } = await import('@/hooks/use-toast');
+                  toast({
+                    title: "¡Perfil completado!",
+                    description: "Tu perfil profesional ha sido guardado exitosamente.",
+                  });
+                  
+                  onComplete?.();
+                  // Navigate to onboarding or dashboard
+                  navigate('/onboarding');
+                } catch (error) {
+                  console.error('Error completing wizard:', error);
+                  const { toast } = await import('@/hooks/use-toast');
+                  toast({
+                    title: "Error",
+                    description: "Hubo un error al guardar tu perfil. Inténtalo de nuevo.",
+                    variant: "destructive",
+                  });
+                }
               }}
               className="bg-green-600 hover:bg-green-700"
             >

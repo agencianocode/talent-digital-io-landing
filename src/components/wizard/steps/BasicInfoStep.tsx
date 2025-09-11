@@ -22,7 +22,7 @@ type BasicInfoFormData = z.infer<typeof basicInfoSchema>;
 
 interface BasicInfoStepProps {
   data: WizardData;
-  updateData: (updates: Partial<WizardData>) => void;
+  updateData: (updates: Partial<WizardData>) => Promise<void>;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -42,8 +42,8 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
     },
   });
 
-  const onSubmit = (formData: BasicInfoFormData) => {
-    updateData(formData);
+  const onSubmit = async (formData: BasicInfoFormData) => {
+    await updateData(formData);
     onNext();
   };
 
