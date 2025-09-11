@@ -14,7 +14,7 @@ import { CreateCompanyModal } from '@/components/ui/create-company-modal';
 import { Building, Plus, X, Search, Briefcase } from 'lucide-react';
 import { WizardData } from '../TalentProfileWizard';
 import { useProfessionalData, CompanyDirectory, JobTitle } from '@/hooks/useProfessionalData';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useDebounceCallback } from '@/hooks/useDebounce';
 
 const workExperienceSchema = z.object({
   work_experience: z.array(z.object({
@@ -132,7 +132,7 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
     }
   }, [searchJobTitles]);
 
-  const debouncedJobSearch = useDebounce(searchJobTitlesDebounced, 300);
+  const debouncedJobSearch = useDebounceCallback(searchJobTitlesDebounced, 300);
 
   const selectJobTitle = useCallback(async (jobTitle: string, fieldIndex: number) => {
     form.setValue(`work_experience.${fieldIndex}.position`, jobTitle);
@@ -286,9 +286,10 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
                           </div>
                         )}
                         
-                        {/* Show create option when no results found */}
+                        {/* Show create option when no results found and no company selected from directory */}
                         {form.watch(`work_experience.${index}.company`) && 
                          form.watch(`work_experience.${index}.company`).length >= 2 &&
+                         !form.watch(`work_experience.${index}.company_directory_id`) &&
                          (!searchResults[index] || searchResults[index].length === 0) &&
                          !isSearching[index] && (
                           <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border rounded-md shadow-lg">
@@ -332,7 +333,7 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
                             {...field}
                             onChange={(e) => {
                               field.onChange(e);
-                              debouncedJobSearch(e.target.value, index);
+                              searchJobTitlesDebounced(e.target.value, index);
                             }}
                           />
                         </FormControl>
