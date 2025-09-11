@@ -69,13 +69,13 @@ function App() {
       disableTransitionOnChange
     >
       <SupabaseAuthProvider>
-        <NavigationFlowProvider>
-          <NotificationsProvider>
-            <OpportunitiesProvider>
-              <MessagingProvider>
+        <NotificationsProvider>
+          <OpportunitiesProvider>
+            <MessagingProvider>
               <ToastProvider>
                 <BrowserRouter>
-                  <div className="min-h-screen bg-background text-foreground">
+                  <NavigationFlowProvider>
+                    <div className="min-h-screen bg-background text-foreground">
                     <Routes>
                       <Route path="/" element={<LandingPage />} />
                       <Route path="/auth" element={
@@ -261,12 +261,12 @@ function App() {
                     </Routes>
                     <ToastContainer />
                   </div>
+                  </NavigationFlowProvider>
                 </BrowserRouter>
               </ToastProvider>
             </MessagingProvider>
           </OpportunitiesProvider>
         </NotificationsProvider>
-        </NavigationFlowProvider>
       </SupabaseAuthProvider>
     </ThemeProvider>
   );
