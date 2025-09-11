@@ -48,6 +48,9 @@ export const ROUTES = {
  * Get the appropriate dashboard route based on user role
  */
 export const getDashboardRoute = (userRole: UserRole | null): string => {
+  if (userRole === 'admin') {
+    return ROUTES.ADMIN;
+  }
   if (isBusinessRole(userRole)) {
     return ROUTES.BUSINESS_DASHBOARD;
   }

@@ -1,12 +1,29 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users, Briefcase, Search, Star, CheckCircle, Menu, X } from "lucide-react";
+import { ArrowRight, Users, Briefcase, Search, Star, CheckCircle, Menu, X, LogOut, Settings } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useState } from "react";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { getDashboardRoute } from "@/lib/navigation";
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated, userRole, signOut } = useSupabaseAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleGoToDashboard = () => {
+    const dashboardRoute = getDashboardRoute(userRole);
+    navigate(dashboardRoute);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,30 +54,53 @@ const LandingPage = () => {
             </div>
             <div className="flex items-center space-x-2 lg:space-x-4">
               <ThemeToggle />
-              <div className="hidden sm:flex items-center space-x-2">
+              {isAuthenticated ? (
+                <div className="hidden sm:flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleGoToDashboard}
+                    size="sm"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Ir al Panel
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={handleSignOut}
+                    size="sm"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Cerrar Sesión
+                  </Button>
+                </div>
+              ) : (
+                <div className="hidden sm:flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/auth')}
+                    size="sm"
+                  >
+                    Iniciar Sesión
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/user-selector')}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    size="sm"
+                  >
+                    Comenzar Gratis
+                  </Button>
+                </div>
+              )}
+              {!isAuthenticated && (
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate('/auth')}
-                  size="sm"
-                >
-                  Iniciar Sesión
-                </Button>
-                <Button 
                   onClick={() => navigate('/user-selector')}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                   size="sm"
+                  className="sm:hidden"
                 >
-                  Comenzar Gratis
+                  Comenzar
                 </Button>
-              </div>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/user-selector')}
-                size="sm"
-                className="sm:hidden"
-              >
-                Comenzar
-              </Button>
+              )}
               {/* Mobile Menu Button */}
               <Button
                 variant="ghost"
@@ -97,6 +137,32 @@ const LandingPage = () => {
                 >
                   Contratar Talento
                 </Button>
+                {isAuthenticated && (
+                  <>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => {
+                        handleGoToDashboard();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="text-muted-foreground hover:text-foreground hover:bg-muted justify-start"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Ir al Panel
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="text-muted-foreground hover:text-foreground hover:bg-muted justify-start"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Cerrar Sesión
+                    </Button>
+                  </>
+                )}
               </nav>
             </div>
           )}

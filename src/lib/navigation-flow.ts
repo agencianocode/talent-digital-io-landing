@@ -192,6 +192,11 @@ export const getRouteForUserState = (
     return '/auth';
   }
   
+  // Admin users go to admin panel
+  if (userRole === 'admin') {
+    return '/admin';
+  }
+  
   // Business users go to business dashboard
   if (isBusinessRole(userRole)) {
     return '/business-dashboard';
