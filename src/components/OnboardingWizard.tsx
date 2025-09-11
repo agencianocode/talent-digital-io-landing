@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, startTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -50,11 +50,18 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
     const initialize = async () => {
       if (user?.id && !isInitialized) {
         try {
-          await syncProfile();
-          setIsInitialized(true);
+          // Wrap async operations in startTransition to avoid suspense errors
+          startTransition(() => {
+            syncProfile().then(() => {
+              setIsInitialized(true);
+            }).catch((error) => {
+              console.error('Error initializing onboarding:', error);
+              setIsInitialized(true); // Set to true even on error to prevent infinite loop
+            });
+          });
         } catch (error) {
           console.error('Error initializing onboarding:', error);
-          setIsInitialized(true); // Set to true even on error to prevent infinite loop
+          setIsInitialized(true);
         }
       }
     };
@@ -83,11 +90,12 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
 
   const handleWizardComplete = useCallback(async () => {
     setShowWizard(false);
-    try {
-      await syncProfile();
-    } catch (error) {
-      console.error('Error syncing after wizard completion:', error);
-    }
+    // Wrap async operation in startTransition
+    startTransition(() => {
+      syncProfile().catch((error) => {
+        console.error('Error syncing after wizard completion:', error);
+      });
+    });
   }, [syncProfile]);
 
   // Derived state calculations (after all hooks)
@@ -147,12 +155,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
     }
   ];
 
-  // Auto-advance effect (using fixed dependencies)
+  // Auto-advance effect (using fixed dependencies and startTransition)
   useEffect(() => {
     if (isInitialized && currentStep < onboardingSteps.length && onboardingSteps[currentStep]?.completed) {
       const nextStepIndex = onboardingSteps.findIndex((step, index) => index > currentStep && !step.completed);
       if (nextStepIndex !== -1) {
-        setCurrentStep(nextStepIndex);
+        // Use startTransition for state updates that might cause suspense
+        startTransition(() => {
+          setCurrentStep(nextStepIndex);
+        });
       }
     }
   }, [isInitialized, currentStep, completeness, isBasicComplete]); // Fixed dependencies
@@ -273,13 +284,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
           </CardHeader>
           <CardContent>
             <ProfileTemplates 
-              onApplyTemplate={async (data) => {
-                try {
-                  await syncProfile();
-                  setCurrentStep(4);
-                } catch (error) {
-                  console.error('Error applying template:', error);
-                }
+              onApplyTemplate={(data) => {
+                // Wrap async operations in startTransition
+                startTransition(() => {
+                  syncProfile().then(() => {
+                    setCurrentStep(4);
+                  }).catch((error) => {
+                    console.error('Error applying template:', error);
+                  });
+                });
               }}
             />
           </CardContent>
