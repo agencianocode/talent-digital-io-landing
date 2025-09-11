@@ -326,7 +326,7 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
         return;
       }
 
-      // Upsert talent profile
+      // Upsert talent profile with FK error handling
       const talentProfileData = {
         user_id: user.id,
         primary_category_id: data.primary_category_id || null,
@@ -355,7 +355,17 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
           .update(talentProfileData)
           .eq('user_id', user.id);
 
-        if (talentError) {
+        if (talentError && talentError.code === '23503' && talentError.message?.includes('secondary_category_id')) {
+          // Retry without secondary_category_id if FK constraint fails
+          const { error: retryError } = await supabase
+            .from('talent_profiles')
+            .update({ ...talentProfileData, secondary_category_id: null })
+            .eq('user_id', user.id);
+          if (retryError) {
+            console.error('Error updating talent profile (retry):', retryError);
+            return;
+          }
+        } else if (talentError) {
           console.error('Error updating talent profile:', talentError);
           return;
         }
@@ -364,7 +374,16 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
           .from('talent_profiles')
           .insert(talentProfileData);
 
-        if (talentError) {
+        if (talentError && talentError.code === '23503' && talentError.message?.includes('secondary_category_id')) {
+          // Retry without secondary_category_id if FK constraint fails
+          const { error: retryError } = await supabase
+            .from('talent_profiles')
+            .insert({ ...talentProfileData, secondary_category_id: null });
+          if (retryError) {
+            console.error('Error creating talent profile (retry):', retryError);
+            return;
+          }
+        } else if (talentError) {
           console.error('Error creating talent profile:', talentError);
           return;
         }
@@ -508,9 +527,9 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
     );
   }
 
-  const completedSteps = steps.filter(step => step.isCompleted).length;
-  const totalSteps = steps.length;
-  const progressPercentage = (completedSteps / totalSteps) * 100;
+  const requiredSteps = steps.filter(step => !step.isOptional);
+  const completedRequiredSteps = requiredSteps.filter(step => step.isCompleted).length;
+  const progressPercentage = Math.min((completedRequiredSteps / requiredSteps.length) * 100, 100);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

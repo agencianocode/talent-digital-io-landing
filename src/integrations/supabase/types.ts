@@ -703,7 +703,7 @@ export type Database = {
             foreignKeyName: "talent_profiles_secondary_category_id_fkey"
             columns: ["secondary_category_id"]
             isOneToOne: false
-            referencedRelation: "professional_categories"
+            referencedRelation: "professional_subcategories"
             referencedColumns: ["id"]
           },
         ]

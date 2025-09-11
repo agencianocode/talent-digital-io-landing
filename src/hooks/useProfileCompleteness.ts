@@ -204,9 +204,17 @@ export const useProfileCompleteness = () => {
     fetchTalentProfile();
   }, [user?.id]);
 
+  // Prioritize server-calculated completeness over client calculation
   useEffect(() => {
-    calculateDetailedCompleteness();
-  }, [profile, talentProfile, user]);
+    if (profile && talentProfile) {
+      // Use server score if available, otherwise calculate client-side
+      if (profile.profile_completeness > 0) {
+        setCompleteness(profile.profile_completeness);
+      }
+      // Always calculate breakdown for detailed view
+      calculateDetailedCompleteness();
+    }
+  }, [profile?.updated_at, profile?.profile_completeness, talentProfile, user]);
 
   const getCompletenessColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
