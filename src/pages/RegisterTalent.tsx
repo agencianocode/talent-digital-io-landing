@@ -56,18 +56,22 @@ const RegisterTalent = () => {
       return;
     }
 
-    const { error } = await signUp(formData.email, formData.password, {
-      full_name: formData.fullName,
-      user_type: 'talent'
-    });
-    
-    if (error) {
-      setError(error.message === 'User already registered' 
-        ? 'Este email ya está registrado. Intenta iniciar sesión.' 
-        : 'Error al crear la cuenta. Intenta nuevamente.');
-    } else {
-      setMessage('¡Cuenta creada exitosamente! Revisa tu email para confirmar tu cuenta.');
-      setTimeout(() => navigate('/onboarding'), 2000);
+    try {
+      const { error } = await signUp(formData.email, formData.password, {
+        full_name: formData.fullName,
+        user_type: 'talent'
+      });
+      
+      if (error) {
+        setError(error.message === 'User already registered' 
+          ? 'Este email ya está registrado. Intenta iniciar sesión.' 
+          : 'Error al crear la cuenta. Intenta nuevamente.');
+      } else {
+        setMessage('¡Cuenta creada exitosamente! Revisa tu email para confirmar tu cuenta, luego serás redirigido automáticamente.');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setError('Error inesperado. Intenta nuevamente.');
     }
     
     setIsSubmitting(false);

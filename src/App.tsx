@@ -7,6 +7,7 @@ import { ToastProvider } from '@/contexts/ToastContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { OpportunitiesProvider } from '@/contexts/OpportunitiesContext';
 import { MessagingProvider } from '@/contexts/MessagingContext';
+import { NavigationFlowProvider } from '@/components/NavigationFlowProvider';
 import ToastContainer from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 
@@ -56,6 +57,7 @@ const BusinessLanding = lazy(() => import('./pages/BusinessLanding'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const PublicOpportunity = lazy(() => import('./pages/PublicOpportunity'));
+const WelcomePage = lazy(() => import('./pages/WelcomePage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
@@ -67,9 +69,10 @@ function App() {
       disableTransitionOnChange
     >
       <SupabaseAuthProvider>
-        <NotificationsProvider>
-          <OpportunitiesProvider>
-            <MessagingProvider>
+        <NavigationFlowProvider>
+          <NotificationsProvider>
+            <OpportunitiesProvider>
+              <MessagingProvider>
               <ToastProvider>
                 <BrowserRouter>
                   <div className="min-h-screen bg-background text-foreground">
@@ -147,7 +150,14 @@ function App() {
                               <OpportunityDetail />
                             </Suspense>
                           } />
-                        </Route>
+                      </Route>
+
+                      {/* Welcome Page */}
+                      <Route path="/welcome" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <WelcomePage />
+                        </Suspense>
+                      } />
 
                       {/* Business Dashboard Routes */}
                       <Route path="/business-dashboard" element={<DashboardLayout />}>
@@ -256,6 +266,7 @@ function App() {
             </MessagingProvider>
           </OpportunitiesProvider>
         </NotificationsProvider>
+        </NavigationFlowProvider>
       </SupabaseAuthProvider>
     </ThemeProvider>
   );
