@@ -20,6 +20,7 @@ import {
   Globe,
   Check
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 // Import step components
 import { BasicInfoStep } from './steps/BasicInfoStep';
