@@ -143,7 +143,10 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
       icon: <BookOpen className="h-6 w-6" />,
       completed: isBasicComplete,
       estimatedTime: '3 min',
-      action: () => navigate('/settings/profile?tab=personal&from=onboarding')
+      action: () => {
+        try { localStorage.setItem('onboarding.returnToStep', 'professional'); } catch {}
+        navigate('/settings/profile?tab=personal&from=onboarding');
+      }
     },
     {
       id: 'professional',
@@ -165,18 +168,31 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
     }
   ];
 
+  // If user returns from Basic Info, jump to Professional step
+  useEffect(() => {
+    try {
+      const flag = localStorage.getItem('onboarding.returnToStep');
+      if (flag === 'professional') {
+        const professionalIndex = onboardingSteps.findIndex((s) => s.id === 'professional');
+        if (professionalIndex !== -1 && isBasicComplete) {
+          setCurrentStep(professionalIndex);
+          localStorage.removeItem('onboarding.returnToStep');
+        }
+      }
+    } catch {}
+  }, [isInitialized, isBasicComplete]);
+
   // Auto-advance effect (using fixed dependencies and startTransition)
   useEffect(() => {
     if (isInitialized && currentStep < onboardingSteps.length && onboardingSteps[currentStep]?.completed) {
       const nextStepIndex = onboardingSteps.findIndex((step, index) => index > currentStep && !step.completed);
       if (nextStepIndex !== -1) {
-        // Use startTransition for state updates that might cause suspense
         startTransition(() => {
           setCurrentStep(nextStepIndex);
         });
       }
     }
-  }, [isInitialized, currentStep, completeness, isBasicComplete]); // Fixed dependencies
+  }, [isInitialized, currentStep, completeness, isBasicComplete, onboardingSteps.length]);
 
   // Ensure we position user on the next incomplete step (forward-only)
   useEffect(() => {
