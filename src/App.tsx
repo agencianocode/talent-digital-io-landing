@@ -42,7 +42,7 @@ const RegisterBusiness = lazy(() => import('./pages/RegisterBusiness'));
 const RegisterTalent = lazy(() => import('./pages/RegisterTalent'));
 
 // Lazy load páginas de configuración
-const ProfileSettings = lazy(() => import('./pages/settings/ProfileSettings'));
+import ProfileSettings from './pages/settings/ProfileSettings';
 const TalentProfileSettings = lazy(() => import('./pages/settings/TalentProfileSettings'));
 const CompanySettings = lazy(() => import('./pages/settings/CompanySettings'));
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
