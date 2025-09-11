@@ -174,13 +174,16 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
       const flag = localStorage.getItem('onboarding.returnToStep');
       if (flag === 'professional') {
         const professionalIndex = onboardingSteps.findIndex((s) => s.id === 'professional');
-        if (professionalIndex !== -1 && isBasicComplete) {
-          setCurrentStep(professionalIndex);
+        if (professionalIndex !== -1) {
+          // Remove the isBasicComplete dependency to allow immediate advancement
+          startTransition(() => {
+            setCurrentStep(professionalIndex);
+          });
           localStorage.removeItem('onboarding.returnToStep');
         }
       }
     } catch {}
-  }, [isInitialized, isBasicComplete]);
+  }, [isInitialized]);
 
   // Auto-advance effect (using fixed dependencies and startTransition)
   useEffect(() => {
