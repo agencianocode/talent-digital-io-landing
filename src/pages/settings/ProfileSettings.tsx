@@ -146,6 +146,12 @@ const ProfileSettings = () => {
         // Navigate back to onboarding if came from there
         const fromOnboarding = searchParams.get('from') === 'onboarding';
         if (fromOnboarding) {
+          // Set flag to advance to professional step
+          try {
+            localStorage.setItem('onboarding.returnToStep', 'professional');
+          } catch (e) {
+            console.warn('Could not set localStorage flag:', e);
+          }
           setTimeout(() => navigate('/onboarding'), 500); // Small delay for better UX
         }
       });
