@@ -6,15 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { useProfileSync } from '@/hooks/useProfileSync';
-import { ProfileTemplates } from '@/components/ProfileTemplates';
+
 import { ProfileCompletenessDashboard } from '@/components/ProfileCompletenessDashboard';
 import { TalentProfileWizard } from '@/components/wizard/TalentProfileWizard';
 import { OnboardingSteps } from '@/components/OnboardingSteps';
-import { shouldShowAdvancedView, getNextIncompleteStep } from '@/lib/onboarding-utils';
+import { shouldShowAdvancedView } from '@/lib/onboarding-utils';
 import { 
   GraduationCap, 
   Rocket, 
-  Star, 
   ArrowRight,
   BookOpen,
   Target
@@ -44,6 +43,26 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
   const [currentStep, setCurrentStep] = useState(0);
   const [showWizard, setShowWizard] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Restore last visited onboarding step
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('onboarding.currentStep');
+      if (saved !== null) {
+        const parsed = parseInt(saved, 10);
+        if (!Number.isNaN(parsed)) {
+          setCurrentStep(parsed);
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Persist current step
+  useEffect(() => {
+    try {
+      localStorage.setItem('onboarding.currentStep', String(currentStep));
+    } catch {}
+  }, [currentStep]);
 
   // Initialize data when component mounts
   useEffect(() => {
@@ -79,7 +98,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
   }, []);
 
   const handleNext = useCallback(() => {
-    if (currentStep < 3) { // Updated for 4 steps (0-3)
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
   }, [currentStep]);
@@ -136,15 +155,6 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
       action: () => handleProfessionalStep()
     },
     {
-      id: 'templates',
-      title: 'Usar Plantillas',
-      description: 'Acelera el proceso usando plantillas pre-definidas',
-      icon: <Star className="h-6 w-6" />,
-      completed: false,
-      estimatedTime: '2 min',
-      action: () => handleStepAction(3)
-    },
-    {
       id: 'complete',
       title: '¡Perfil Completo!',
       description: 'Tu perfil está listo para recibir oportunidades',
@@ -168,9 +178,18 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
     }
   }, [isInitialized, currentStep, completeness, isBasicComplete]); // Fixed dependencies
 
-  // RENDER LOGIC STARTS HERE - ALL HOOKS MUST BE CALLED BEFORE THIS POINT
-  
-  // Show loading state during initialization
+  // Ensure we position user on the next incomplete step (forward-only)
+  useEffect(() => {
+    if (!isInitialized) return;
+    const target = !isBasicComplete ? 1 : completeness < 30 ? 2 : 3;
+    if (currentStep < target) {
+      setCurrentStep(target);
+    }
+  }, [isInitialized, isBasicComplete, completeness, currentStep]);
+ 
+   // RENDER LOGIC STARTS HERE - ALL HOOKS MUST BE CALLED BEFORE THIS POINT
+   
+   // Show loading state during initialization
   if (!isInitialized || loading) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
@@ -192,18 +211,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
   if (shouldShowAdvancedView(completeness)) {
     return (
       <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="templates">Plantillas</TabsTrigger>
           <TabsTrigger value="wizard">Wizard Completo</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
           <ProfileCompletenessDashboard />
-        </TabsContent>
-
-        <TabsContent value="templates">
-          <ProfileTemplates />
         </TabsContent>
 
         <TabsContent value="wizard">
@@ -294,7 +308,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
               
               <Button 
                 onClick={handleNext}
-                disabled={currentStep >= 3}
+                disabled={currentStep >= (onboardingSteps.length - 1)}
               >
                 Siguiente
                 <ArrowRight className="h-4 w-4 ml-2" />
