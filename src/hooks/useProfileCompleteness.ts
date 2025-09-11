@@ -28,7 +28,18 @@ export const useProfileCompleteness = () => {
   const [loading, setLoading] = useState(false);
 
   const calculateDetailedCompleteness = () => {
-    if (!profile || !user) return;
+    if (!profile || !user) {
+      setCompleteness(0);
+      setBreakdown({
+        basic_info: 0,
+        professional_info: 0,
+        skills_and_bio: 0,
+        total: 0,
+        missing_fields: ['Perfil no encontrado'],
+        suggestions: ['Completa tu perfil básico para comenzar']
+      });
+      return;
+    }
 
     let basicInfo = 0;
     let professionalInfo = 0;
@@ -58,21 +69,22 @@ export const useProfileCompleteness = () => {
       suggestions.push('Agrega tu número de teléfono para contacto directo');
     }
 
-    if ((profile as any).country) {
+    const profileData = profile as any;
+    if (profileData?.country) {
       basicInfo += 5;
     } else {
       missingFields.push('País');
       suggestions.push('Indica tu ubicación para oportunidades locales');
     }
 
-    if ((profile as any).city) {
+    if (profileData?.city) {
       basicInfo += 5;
     } else {
       missingFields.push('Ciudad');
       suggestions.push('Especifica tu ciudad para oportunidades cercanas');
     }
 
-    if ((profile as any).social_links && Object.keys((profile as any).social_links || {}).length > 0) {
+    if (profileData?.social_links && Object.keys(profileData.social_links || {}).length > 0) {
       basicInfo += 10;
     } else {
       missingFields.push('Redes sociales');
@@ -145,15 +157,28 @@ export const useProfileCompleteness = () => {
   };
 
   const refreshCompleteness = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.warn('Cannot refresh completeness: user ID not available');
+      return;
+    }
     
     setLoading(true);
     try {
       const score = await updateProfileCompleteness(user.id);
-      setCompleteness(score);
+      setCompleteness(score || 0);
       calculateDetailedCompleteness();
     } catch (error) {
       console.error('Error refreshing completeness:', error);
+      // Set default values on error
+      setCompleteness(0);
+      setBreakdown({
+        basic_info: 0,
+        professional_info: 0,
+        skills_and_bio: 0,
+        total: 0,
+        missing_fields: ['Error al cargar datos'],
+        suggestions: ['Intenta recargar la página']
+      });
     } finally {
       setLoading(false);
     }

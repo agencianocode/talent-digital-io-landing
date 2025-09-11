@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useProfessionalData } from '@/hooks/useProfessionalData';
 import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { useProfileSync } from '@/hooks/useProfileSync';
 import { ProfileTemplates } from '@/components/ProfileTemplates';
 import { ProfileCompletenessDashboard } from '@/components/ProfileCompletenessDashboard';
 import { TalentProfileWizard } from '@/components/wizard/TalentProfileWizard';
+import { OnboardingSteps } from '@/components/OnboardingSteps';
+import { shouldShowAdvancedView, getNextIncompleteStep } from '@/lib/onboarding-utils';
 import { 
   GraduationCap, 
   Rocket, 
   Star, 
   ArrowRight,
-  CheckCircle,
-  Play,
   BookOpen,
   Target
 } from 'lucide-react';
@@ -38,22 +36,38 @@ interface OnboardingWizardProps {
 }
 
 export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeUser = false }) => {
-  const { profile, userRole } = useSupabaseAuth();
-  const { categories } = useProfessionalData();
-  const { completeness, refreshCompleteness } = useProfileCompleteness();
+  const { profile, user } = useSupabaseAuth();
+  const { completeness, breakdown, loading } = useProfileCompleteness();
   const { syncProfile } = useProfileSync();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [showWizard, setShowWizard] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Refresh data when component mounts or becomes visible
+  // Initialize data when component mounts
   useEffect(() => {
-    syncProfile();
-  }, [syncProfile]);
+    const initialize = async () => {
+      if (user?.id && !isInitialized) {
+        try {
+          await syncProfile();
+          setIsInitialized(true);
+        } catch (error) {
+          console.error('Error initializing onboarding:', error);
+        }
+      }
+    };
+    
+    initialize();
+  }, [user?.id, syncProfile, isInitialized]);
 
-  // Check if user has completed basic onboarding using real-time data
-  const isBasicComplete = profile?.full_name && profile?.avatar_url && profile?.phone;
-  const isProfessionalComplete = completeness >= 60;
+  // Safely check profile completion
+  const profileData = profile as any;
+  const isBasicComplete = Boolean(
+    profile?.full_name && 
+    profile?.avatar_url && 
+    profile?.phone && 
+    profileData?.country
+  );
 
   const onboardingSteps: OnboardingStep[] = [
     {
@@ -63,14 +77,14 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
       icon: <Rocket className="h-6 w-6" />,
       completed: false,
       estimatedTime: '1 min',
-      action: () => setCurrentStep(1)
+      action: () => handleStepAction(1)
     },
     {
       id: 'basic-info',
       title: 'Información Básica',
       description: 'Completa tu nombre, foto y datos de contacto',
       icon: <BookOpen className="h-6 w-6" />,
-      completed: Boolean(profile?.full_name && profile?.avatar_url && profile?.phone && profile?.country),
+      completed: isBasicComplete,
       estimatedTime: '3 min',
       action: () => navigate('/settings/profile?tab=personal&from=onboarding')
     },
@@ -79,9 +93,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
       title: 'Perfil Profesional',
       description: 'Define tu especialidad, habilidades y experiencia',
       icon: <Target className="h-6 w-6" />,
-      completed: Boolean(completeness > 30),
+      completed: completeness >= 30,
       estimatedTime: '5 min',
-      action: () => setShowWizard(true)
+      action: () => handleProfessionalStep()
     },
     {
       id: 'templates',
@@ -90,53 +104,66 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
       icon: <Star className="h-6 w-6" />,
       completed: false,
       estimatedTime: '2 min',
-      action: () => setCurrentStep(4)
+      action: () => handleStepAction(3)
     },
     {
       id: 'complete',
       title: '¡Perfil Completo!',
       description: 'Tu perfil está listo para recibir oportunidades',
-      icon: <CheckCircle className="h-6 w-6" />,
-      completed: Boolean(completeness >= 80),
+      icon: <Target className="h-6 w-6" />,
+      completed: completeness >= 80,
       estimatedTime: '¡Hecho!',
       action: () => navigate('/talent-dashboard')
     }
   ];
 
-  const getStepStatus = (index: number) => {
-    if (onboardingSteps[index].completed) return 'completed';
-    if (index === currentStep) return 'current';
-    if (index < currentStep) return 'completed';
-    return 'upcoming';
-  };
+  const handleStepAction = useCallback((stepIndex: number) => {
+    setCurrentStep(stepIndex);
+  }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'text-green-600 bg-green-100';
-      case 'current': return 'text-blue-600 bg-blue-100';
-      default: return 'text-gray-400 bg-gray-100';
-    }
-  };
+  const handleProfessionalStep = useCallback(() => {
+    setShowWizard(true);
+  }, []);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentStep < onboardingSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
-  };
+  }, [currentStep, onboardingSteps.length]);
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     navigate('/talent-dashboard');
-  };
+  }, [navigate]);
+
+  const handleWizardComplete = useCallback(async () => {
+    setShowWizard(false);
+    try {
+      await syncProfile();
+    } catch (error) {
+      console.error('Error syncing after wizard completion:', error);
+    }
+  }, [syncProfile]);
+
+  // Show loading state during initialization
+  if (!isInitialized || loading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Cargando tu perfil...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (showWizard) {
-    return <TalentProfileWizard onComplete={() => {
-      setShowWizard(false);
-      syncProfile();
-    }} />;
+    return <TalentProfileWizard onComplete={handleWizardComplete} />;
   }
 
   // Show full dashboard if user is already advanced
-  if (completeness > 50) {
+  if (shouldShowAdvancedView(completeness)) {
     return (
       <Tabs defaultValue="dashboard" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
@@ -154,24 +181,34 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
         </TabsContent>
 
         <TabsContent value="wizard">
-          <TalentProfileWizard />
+          <TalentProfileWizard onComplete={handleWizardComplete} />
         </TabsContent>
       </Tabs>
     );
   }
 
+  // Auto-advance to next incomplete step if current step is completed
+  useEffect(() => {
+    if (isInitialized && onboardingSteps[currentStep]?.completed) {
+      const nextStep = getNextIncompleteStep(onboardingSteps);
+      if (nextStep !== -1 && nextStep !== currentStep) {
+        setCurrentStep(nextStep);
+      }
+    }
+  }, [isInitialized, currentStep, onboardingSteps]);
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
         <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <GraduationCap className="h-8 w-8 text-blue-600" />
+          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <GraduationCap className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold text-blue-900">
+          <CardTitle className="text-2xl font-bold">
             ¡Vamos a crear tu perfil perfecto!
           </CardTitle>
-          <p className="text-blue-700">
+          <p className="text-muted-foreground">
             Te guiaremos paso a paso para crear un perfil que destaque
           </p>
         </CardHeader>
@@ -196,74 +233,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
       </Card>
 
       {/* Steps */}
-      <div className="space-y-4">
-        {onboardingSteps.map((step, index) => {
-          const status = getStepStatus(index);
-          const isActive = index === currentStep;
-          
-          return (
-            <Card 
-              key={step.id} 
-              className={`transition-all duration-300 ${
-                isActive ? 'ring-2 ring-blue-500 shadow-lg' : ''
-              } ${status === 'completed' ? 'bg-green-50 border-green-200' : ''}`}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStatusColor(status)}`}>
-                    {status === 'completed' ? (
-                      <CheckCircle className="h-6 w-6" />
-                    ) : (
-                      step.icon
-                    )}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold">{step.title}</h3>
-                      {step.completed && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          Completado
-                        </Badge>
-                      )}
-                      {isActive && (
-                        <Badge className="bg-blue-100 text-blue-800">
-                          Actual
-                        </Badge>
-                      )}
-                      <Badge variant="outline" className="text-xs">
-                        {step.estimatedTime}
-                      </Badge>
-                    </div>
-                    <p className="text-muted-foreground">{step.description}</p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    {isActive && !step.completed && (
-                      <Button onClick={step.action} className="flex items-center gap-2">
-                        <Play className="h-4 w-4" />
-                        Comenzar
-                      </Button>
-                    )}
-                    
-                    {step.completed && (
-                      <Button variant="outline" onClick={step.action}>
-                        Revisar
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <OnboardingSteps steps={onboardingSteps} currentStep={currentStep} />
 
       {/* Current Step Content */}
       {currentStep === 0 && (
         <Card>
           <CardContent className="p-8 text-center">
-            <Rocket className="h-16 w-16 mx-auto text-blue-600 mb-4" />
+            <Rocket className="h-16 w-16 mx-auto text-primary mb-4" />
             <h2 className="text-xl font-bold mb-2">¡Comencemos!</h2>
             <p className="text-muted-foreground mb-6">
               Crear un perfil completo te ayudará a encontrar mejores oportunidades laborales.
@@ -282,7 +258,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
         </Card>
       )}
 
-      {currentStep === 4 && (
+      {currentStep === 3 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -292,10 +268,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
           </CardHeader>
           <CardContent>
             <ProfileTemplates 
-              onApplyTemplate={(data) => {
-                // Apply template data and proceed
-                // Apply template data
-                setCurrentStep(currentStep + 1);
+              onApplyTemplate={async (data) => {
+                try {
+                  await syncProfile();
+                  setCurrentStep(4);
+                } catch (error) {
+                  console.error('Error applying template:', error);
+                }
               }}
             />
           </CardContent>
