@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Filter, Eye, MessageSquare, MapPin, Star, Briefcase, DollarSign } from "lucide-react";
+import { Eye, MessageSquare, MapPin, Star, Briefcase, DollarSign, Grid3X3, List, CheckCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
+import FilterBar from "@/components/FilterBar";
+import { useProfessionalData } from "@/hooks/useProfessionalData";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 interface TalentProfile {
   id: string;
@@ -25,6 +26,8 @@ interface TalentProfile {
   hourly_rate_min: number;
   hourly_rate_max: number;
   currency: string;
+  primary_category_id: string;
+  experience_level: string;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +40,9 @@ interface UserProfile {
   phone: string;
   position?: string;
   linkedin?: string;
+  country?: string;
+  city?: string;
+  profile_completeness?: number;
   created_at: string;
   updated_at: string;
 }
@@ -44,28 +50,32 @@ interface UserProfile {
 interface TalentWithProfile {
   talent: TalentProfile;
   profile: UserProfile;
+  categoryName?: string;
+  isFeatured?: boolean;
 }
 
 const TalentSearchPage = () => {
   const navigate = useNavigate();
   const { userRole } = useSupabaseAuth();
+  const { categories, loading: categoriesLoading } = useProfessionalData();
   const [talents, setTalents] = useState<TalentWithProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [specialtyFilter, setSpecialtyFilter] = useState<string>("all");
-  const [experienceFilter, setExperienceFilter] = useState<string>("all");
+  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState('featured');
 
   useEffect(() => {
-    if (isBusinessRole(userRole)) {
+    if (isBusinessRole(userRole) && !categoriesLoading) {
       fetchTalents();
     }
-  }, [userRole]);
+  }, [userRole, categoriesLoading]);
 
   const fetchTalents = async () => {
     try {
       setIsLoading(true);
       
-      // Fetch all talent profiles with their user profiles
+      // Fetch talent profiles first
       const { data: talentData, error: talentError } = await supabase
         .from('talent_profiles')
         .select('*')
@@ -76,7 +86,7 @@ const TalentSearchPage = () => {
       console.log('Talent profiles found:', talentData?.length || 0);
 
       // Fetch user profiles for all talents
-      const talentWithProfiles = await Promise.all(
+      const talentWithProfiles: TalentWithProfile[] = await Promise.all(
         (talentData || []).map(async (talent) => {
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
@@ -84,6 +94,10 @@ const TalentSearchPage = () => {
             .eq('user_id', talent.user_id)
             .single();
 
+          const categoryName = categories.find(cat => cat.id === talent.primary_category_id)?.name || 'Sin categoría';
+          const profileCompleteness = profileData?.profile_completeness || 0;
+          const isFeatured = profileCompleteness >= 80; // Featured if profile is 80%+ complete
+          
           return {
             talent,
             profile: profileData || {
@@ -92,11 +106,14 @@ const TalentSearchPage = () => {
               full_name: 'Usuario',
               avatar_url: '',
               phone: '',
-              position: '',
-              linkedin: '',
+              country: '',
+              city: '',
+              profile_completeness: 0,
               created_at: talent.created_at,
               updated_at: talent.updated_at
-            }
+            },
+            categoryName,
+            isFeatured
           };
         })
       );
@@ -120,58 +137,83 @@ const TalentSearchPage = () => {
     toast.info(`Funcionalidad de contacto próximamente para ${talent.profile.full_name}`);
   };
 
-  const getExperienceLevel = (years: number) => {
-    if (years < 1) return 'Junior';
-    if (years < 3) return 'Mid-level';
-    if (years < 5) return 'Senior';
-    return 'Expert';
+  const getExperienceLevel = (experienceLevel: string, years?: number) => {
+    if (experienceLevel) {
+      switch (experienceLevel) {
+        case '0-1': return 'Junior';
+        case '1-3': return 'Mid-level';
+        case '3-6': return 'Senior';
+        case '6+': return 'Expert';
+        default: return experienceLevel;
+      }
+    }
+    if (years !== undefined) {
+      if (years < 1) return 'Junior';
+      if (years < 3) return 'Mid-level';
+      if (years < 6) return 'Senior';
+      return 'Expert';
+    }
+    return 'Sin especificar';
   };
 
-  const getExperienceBadgeClass = (years: number) => {
-    if (years < 1) return "bg-blue-100 text-blue-800";
-    if (years < 3) return "bg-yellow-100 text-yellow-800";
-    if (years < 5) return "bg-orange-100 text-orange-800";
-    return "bg-red-100 text-red-800";
+  const getExperienceBadgeClass = (experienceLevel: string, years?: number) => {
+    const level = getExperienceLevel(experienceLevel, years);
+    switch (level) {
+      case 'Junior': return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case 'Mid-level': return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case 'Senior': return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+      case 'Expert': return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
+    }
   };
 
   const filteredTalents = talents.filter(talent => {
     const searchLower = searchTerm.toLowerCase();
     
+    // Enhanced search that includes categories
     const matchesSearch = !searchTerm || 
       talent.profile.full_name?.toLowerCase().includes(searchLower) ||
       talent.talent.title?.toLowerCase().includes(searchLower) ||
       talent.talent.specialty?.toLowerCase().includes(searchLower) ||
       talent.talent.bio?.toLowerCase().includes(searchLower) ||
+      talent.categoryName?.toLowerCase().includes(searchLower) ||
       talent.talent.skills?.some(skill => skill.toLowerCase().includes(searchLower)) ||
-      // Búsqueda más flexible para "No Code"
-      (searchLower.includes('no code') && (
-        talent.talent.title?.toLowerCase().includes('no code') ||
-        talent.talent.specialty?.toLowerCase().includes('no code') ||
-        talent.talent.bio?.toLowerCase().includes('no code') ||
-        talent.talent.skills?.some(skill => 
-          skill.toLowerCase().includes('bubble') ||
-          skill.toLowerCase().includes('webflow') ||
-          skill.toLowerCase().includes('zapier') ||
-          skill.toLowerCase().includes('airtable') ||
-          skill.toLowerCase().includes('notion') ||
-          skill.toLowerCase().includes('make.com') ||
-          skill.toLowerCase().includes('softr') ||
-          skill.toLowerCase().includes('glide')
-        )
-      ));
+      talent.profile.country?.toLowerCase().includes(searchLower) ||
+      talent.profile.city?.toLowerCase().includes(searchLower);
     
-    const matchesSpecialty = !specialtyFilter || specialtyFilter === "all" || talent.talent.specialty === specialtyFilter;
+    // Filter by specialty/category
+    const matchesSpecialty = !filters.specialty || talent.categoryName?.toLowerCase() === filters.specialty;
     
-    const matchesExperience = !experienceFilter || experienceFilter === "all" || 
-      (experienceFilter === "junior" && talent.talent.years_experience < 1) ||
-      (experienceFilter === "mid" && talent.talent.years_experience >= 1 && talent.talent.years_experience < 3) ||
-      (experienceFilter === "senior" && talent.talent.years_experience >= 3 && talent.talent.years_experience < 5) ||
-      (experienceFilter === "expert" && talent.talent.years_experience >= 5);
+    // Filter by experience years
+    const matchesExperience = !filters.experienceYears || 
+      (filters.experienceYears === "junior" && talent.talent.experience_level === '0-1') ||
+      (filters.experienceYears === "semi-senior" && (talent.talent.experience_level === '1-3' || talent.talent.experience_level === '3-6')) ||
+      (filters.experienceYears === "senior" && talent.talent.experience_level === '6+');
     
-    return matchesSearch && matchesSpecialty && matchesExperience;
+    // Filter by country
+    const matchesCountry = !filters.country || talent.profile.country?.toLowerCase().includes(filters.country);
+    
+    // Filter by availability
+    const matchesAvailability = !filters.availability || talent.talent.availability === filters.availability;
+    
+    return matchesSearch && matchesSpecialty && matchesExperience && matchesCountry && matchesAvailability;
   });
 
-  const specialties = Array.from(new Set(talents.map(t => t.talent.specialty).filter(Boolean)));
+  // Sort talents with featured first
+  const sortedTalents = [...filteredTalents].sort((a, b) => {
+    if (sortBy === 'featured') {
+      if (a.isFeatured && !b.isFeatured) return -1;
+      if (!a.isFeatured && b.isFeatured) return 1;
+      return (b.profile.profile_completeness || 0) - (a.profile.profile_completeness || 0);
+    }
+    if (sortBy === 'experience') {
+      return (b.talent.years_experience || 0) - (a.talent.years_experience || 0);
+    }
+    if (sortBy === 'name') {
+      return (a.profile.full_name || '').localeCompare(b.profile.full_name || '');
+    }
+    return 0;
+  });
 
   // Debug: Log filtered results
   useEffect(() => {
@@ -189,18 +231,10 @@ const TalentSearchPage = () => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || categoriesLoading) {
     return (
       <div className="p-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
+        <LoadingSkeleton type="talent" count={6} />
       </div>
     );
   }
@@ -208,7 +242,7 @@ const TalentSearchPage = () => {
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
             Buscar Talento
@@ -217,55 +251,70 @@ const TalentSearchPage = () => {
             Encuentra el mejor talento digital para tu empresa
           </p>
         </div>
-        <Button 
-          onClick={() => navigate('/business-dashboard/opportunities/new')}
-          variant="outline"
-        >
-          Publicar Oportunidad
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => navigate('/business-dashboard/opportunities/new')}
+            variant="outline"
+          >
+            Publicar Oportunidad
+          </Button>
+        </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex items-center space-x-4 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            type="text"
-            placeholder="Buscar por nombre, especialidad, habilidades..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      {/* Enhanced Search and Filters */}
+      <div className="space-y-6 mb-8">
+        <FilterBar
+          filters={filters}
+          onFilterChange={setFilters}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          type="talent"
+          resultCount={sortedTalents.length}
+          isLoading={isLoading}
+        />
+        
+        {/* View Controls */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Ordenar por:</span>
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="text-sm border rounded px-2 py-1 bg-background"
+              >
+                <option value="featured">Destacados</option>
+                <option value="experience">Experiencia</option>
+                <option value="name">Nombre</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="text-sm text-muted-foreground">
+            {sortedTalents.length} de {talents.length} perfiles
+          </div>
         </div>
-        <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Especialidad" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las especialidades</SelectItem>
-            {specialties.map(specialty => (
-              <SelectItem key={specialty} value={specialty}>
-                {specialty}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={experienceFilter} onValueChange={setExperienceFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Experiencia" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los niveles</SelectItem>
-            <SelectItem value="junior">Junior (0-1 años)</SelectItem>
-            <SelectItem value="mid">Mid-level (1-3 años)</SelectItem>
-            <SelectItem value="senior">Senior (3-5 años)</SelectItem>
-            <SelectItem value="expert">Expert (5+ años)</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Results */}
-      {filteredTalents.length === 0 ? (
+      {sortedTalents.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-muted-foreground mb-4">
             {talents.length === 0 
@@ -280,89 +329,196 @@ const TalentSearchPage = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTalents.map((talentWithProfile) => (
-            <Card key={talentWithProfile.talent.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-start space-x-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={talentWithProfile.profile.avatar_url} />
-                    <AvatarFallback className="text-lg">
-                      {talentWithProfile.profile.full_name?.charAt(0) || 'T'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{talentWithProfile.profile.full_name}</CardTitle>
-                    <p className="text-muted-foreground text-sm">{talentWithProfile.talent.title}</p>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Badge className={getExperienceBadgeClass(talentWithProfile.talent.years_experience)}>
-                        {getExperienceLevel(talentWithProfile.talent.years_experience)}
-                      </Badge>
-                      {talentWithProfile.talent.specialty && (
-                        <Badge variant="outline">{talentWithProfile.talent.specialty}</Badge>
+        <div className={viewMode === 'grid' ? 
+          "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : 
+          "space-y-4"
+        }>
+          {sortedTalents.map((talentWithProfile) => (
+            <Card 
+              key={talentWithProfile.talent.id} 
+              className={`hover:shadow-md transition-shadow relative ${
+                talentWithProfile.isFeatured ? 'ring-2 ring-primary/20' : ''
+              }`}
+            >
+              {talentWithProfile.isFeatured && (
+                <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-current" />
+                  Destacado
+                </div>
+              )}
+              
+              {viewMode === 'grid' ? (
+                <>
+                  <CardHeader>
+                    <div className="flex items-start space-x-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={talentWithProfile.profile.avatar_url} />
+                        <AvatarFallback className="text-lg">
+                          {talentWithProfile.profile.full_name?.charAt(0) || 'T'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <CardTitle className="text-lg">{talentWithProfile.profile.full_name}</CardTitle>
+                        <p className="text-muted-foreground text-sm">{talentWithProfile.talent.title}</p>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Badge className={getExperienceBadgeClass(talentWithProfile.talent.experience_level, talentWithProfile.talent.years_experience)}>
+                            {getExperienceLevel(talentWithProfile.talent.experience_level, talentWithProfile.talent.years_experience)}
+                          </Badge>
+                          {talentWithProfile.categoryName && (
+                            <Badge variant="outline">{talentWithProfile.categoryName}</Badge>
+                          )}
+                        </div>
+                        {(talentWithProfile.profile.country || talentWithProfile.profile.city) && (
+                          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            <span>{[talentWithProfile.profile.city, talentWithProfile.profile.country].filter(Boolean).join(', ')}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {talentWithProfile.talent.bio && (
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+                        {talentWithProfile.talent.bio}
+                      </p>
+                    )}
+                    
+                    {talentWithProfile.talent.skills && talentWithProfile.talent.skills.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium mb-2">Habilidades principales:</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {talentWithProfile.talent.skills.slice(0, 3).map((skill, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                          {talentWithProfile.talent.skills.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{talentWithProfile.talent.skills.length - 3} más
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                      <div className="flex items-center space-x-1">
+                        <Briefcase className="h-4 w-4" />
+                        <span>{talentWithProfile.talent.years_experience || 0} años</span>
+                      </div>
+                      {talentWithProfile.talent.hourly_rate_min && talentWithProfile.talent.hourly_rate_max && (
+                        <div className="flex items-center space-x-1">
+                          <DollarSign className="h-4 w-4" />
+                          <span>${talentWithProfile.talent.hourly_rate_min}-${talentWithProfile.talent.hourly_rate_max}/h</span>
+                        </div>
+                      )}
+                      {talentWithProfile.talent.availability && (
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-4 w-4" />
+                          <span className="capitalize">{talentWithProfile.talent.availability}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewProfile(talentWithProfile.profile.user_id)}
+                        className="flex-1"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Ver Perfil
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleContact(talentWithProfile)}
+                        className="flex-1"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        Contactar
+                      </Button>
+                    </div>
+                  </CardContent>
+                </>
+              ) : (
+                // List view
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-6">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={talentWithProfile.profile.avatar_url} />
+                      <AvatarFallback className="text-lg">
+                        {talentWithProfile.profile.full_name?.charAt(0) || 'T'}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold">{talentWithProfile.profile.full_name}</h3>
+                          <p className="text-muted-foreground">{talentWithProfile.talent.title}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge className={getExperienceBadgeClass(talentWithProfile.talent.experience_level, talentWithProfile.talent.years_experience)}>
+                              {getExperienceLevel(talentWithProfile.talent.experience_level, talentWithProfile.talent.years_experience)}
+                            </Badge>
+                            {talentWithProfile.categoryName && (
+                              <Badge variant="outline">{talentWithProfile.categoryName}</Badge>
+                            )}
+                            {(talentWithProfile.profile.country || talentWithProfile.profile.city) && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                <span>{[talentWithProfile.profile.city, talentWithProfile.profile.country].filter(Boolean).join(', ')}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewProfile(talentWithProfile.profile.user_id)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver Perfil
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleContact(talentWithProfile)}
+                          >
+                            <MessageSquare className="h-4 w-4 mr-1" />
+                            Contactar
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {talentWithProfile.talent.bio && (
+                        <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
+                          {talentWithProfile.talent.bio}
+                        </p>
+                      )}
+                      
+                      {talentWithProfile.talent.skills && talentWithProfile.talent.skills.length > 0 && (
+                        <div className="mt-3">
+                          <div className="flex flex-wrap gap-1">
+                            {talentWithProfile.talent.skills.slice(0, 5).map((skill, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                            {talentWithProfile.talent.skills.length > 5 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{talentWithProfile.talent.skills.length - 5} más
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {talentWithProfile.talent.bio && (
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-                    {talentWithProfile.talent.bio}
-                  </p>
-                )}
-                
-                {talentWithProfile.talent.skills && talentWithProfile.talent.skills.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium mb-2">Habilidades principales:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {talentWithProfile.talent.skills.slice(0, 3).map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {skill}
-                        </Badge>
-                      ))}
-                      {talentWithProfile.talent.skills.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{talentWithProfile.talent.skills.length - 3} más
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                  <div className="flex items-center space-x-1">
-                    <Briefcase className="h-4 w-4" />
-                    <span>{talentWithProfile.talent.years_experience} años</span>
-                  </div>
-                  {talentWithProfile.talent.hourly_rate_min && talentWithProfile.talent.hourly_rate_max && (
-                    <div className="flex items-center space-x-1">
-                      <DollarSign className="h-4 w-4" />
-                      <span>${talentWithProfile.talent.hourly_rate_min}-${talentWithProfile.talent.hourly_rate_max}/h</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleViewProfile(talentWithProfile.profile.user_id)}
-                    className="flex-1"
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Ver Perfil
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleContact(talentWithProfile)}
-                    className="flex-1"
-                  >
-                    <MessageSquare className="h-4 w-4 mr-1" />
-                    Contactar
-                  </Button>
-                </div>
-              </CardContent>
+                </CardContent>
+              )}
             </Card>
           ))}
         </div>
