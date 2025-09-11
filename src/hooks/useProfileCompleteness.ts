@@ -164,11 +164,37 @@ export const useProfileCompleteness = () => {
     
     setLoading(true);
     try {
+      console.log('🔄 Refreshing profile completeness for user:', user.id);
+      
+      // First update the server-side completeness score
       const score = await updateProfileCompleteness(user.id);
+      console.log('✅ Server completeness score updated:', score);
+      
+      // Add delay to allow DB propagation
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Re-fetch talent profile data to ensure we have latest
+      const { data: freshTalentProfile } = await supabase
+        .from('talent_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (freshTalentProfile) {
+        console.log('🔄 Fresh talent profile data loaded');
+        setTalentProfile(freshTalentProfile);
+      }
+      
+      // Set the completeness score and calculate breakdown
       setCompleteness(score || 0);
-      calculateDetailedCompleteness();
+      
+      // Force recalculation after state update
+      setTimeout(() => {
+        calculateDetailedCompleteness();
+      }, 100);
+      
     } catch (error) {
-      console.error('Error refreshing completeness:', error);
+      console.error('❌ Error refreshing completeness:', error);
       // Set default values on error
       setCompleteness(0);
       setBreakdown({

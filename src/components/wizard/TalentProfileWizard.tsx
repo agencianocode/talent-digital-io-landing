@@ -701,8 +701,10 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
                      } catch {}
                      
                      onComplete?.();
-                     // Navigate to onboarding or dashboard
-                     navigate('/onboarding');
+                     // Navigate directly to dashboard with fresh data
+                     setTimeout(() => {
+                       navigate('/talent-dashboard');
+                     }, 1000);
                   } catch (error) {
                     console.error('Error completing wizard:', error);
                     const { toast } = await import('@/hooks/use-toast');

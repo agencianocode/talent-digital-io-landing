@@ -56,7 +56,7 @@ export const ProfileCompletenessDashboard: React.FC = () => {
       description: 'Nombre, foto, contacto y ubicación',
       icon: <User className="h-5 w-5" />,
       progress: breakdown.basic_info,
-      status: breakdown.basic_info >= 35 ? 'complete' : breakdown.basic_info > 0 ? 'in-progress' : 'not-started',
+      status: breakdown.basic_info >= 30 ? 'complete' : breakdown.basic_info > 0 ? 'in-progress' : 'not-started',
       actionLabel: 'Completar Información Personal',
       actionRoute: '/settings/profile?tab=personal',
       priority: breakdown.basic_info < 20 ? 'high' : 'medium'
@@ -67,7 +67,7 @@ export const ProfileCompletenessDashboard: React.FC = () => {
       description: 'Categoría, título y nivel de experiencia',
       icon: <Briefcase className="h-5 w-5" />,
       progress: breakdown.professional_info,
-      status: breakdown.professional_info >= 30 ? 'complete' : breakdown.professional_info > 0 ? 'in-progress' : 'not-started',
+      status: breakdown.professional_info >= 25 ? 'complete' : breakdown.professional_info > 0 ? 'in-progress' : 'not-started',
       actionLabel: 'Configurar Perfil Profesional',
       actionRoute: '/settings/profile?tab=professional',
       priority: breakdown.professional_info < 15 ? 'high' : 'medium'
@@ -78,7 +78,7 @@ export const ProfileCompletenessDashboard: React.FC = () => {
       description: 'Skills, bio e industrias de interés',
       icon: <Award className="h-5 w-5" />,
       progress: breakdown.skills_and_bio,
-      status: breakdown.skills_and_bio >= 20 ? 'complete' : breakdown.skills_and_bio > 0 ? 'in-progress' : 'not-started',
+      status: breakdown.skills_and_bio >= 18 ? 'complete' : breakdown.skills_and_bio > 0 ? 'in-progress' : 'not-started',
       actionLabel: 'Agregar Habilidades',
       actionRoute: '/settings/profile?tab=professional',
       priority: breakdown.skills_and_bio < 10 ? 'high' : 'low'
