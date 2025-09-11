@@ -79,7 +79,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
   }, []);
 
   const handleNext = useCallback(() => {
-    if (currentStep < 4) { // Fixed length
+    if (currentStep < 3) { // Updated for 4 steps (0-3)
       setCurrentStep(currentStep + 1);
     }
   }, [currentStep]);
@@ -274,30 +274,6 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
         </Card>
       )}
 
-      {currentStep === 3 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-yellow-500" />
-              Plantillas Recomendadas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ProfileTemplates 
-              onApplyTemplate={(data) => {
-                // Wrap async operations in startTransition
-                startTransition(() => {
-                  syncProfile().then(() => {
-                    setCurrentStep(4);
-                  }).catch((error) => {
-                    console.error('Error applying template:', error);
-                  });
-                });
-              }}
-            />
-          </CardContent>
-        </Card>
-      )}
 
       {/* Navigation */}
       <Card>
@@ -318,7 +294,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
               
               <Button 
                 onClick={handleNext}
-                disabled={currentStep >= 4}
+                disabled={currentStep >= 3}
               >
                 Siguiente
                 <ArrowRight className="h-4 w-4 ml-2" />
