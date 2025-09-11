@@ -6,6 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useProfessionalData } from '@/hooks/useProfessionalData';
+import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
+import { useProfileSync } from '@/hooks/useProfileSync';
 import { ProfileTemplates } from '@/components/ProfileTemplates';
 import { ProfileCompletenessDashboard } from '@/components/ProfileCompletenessDashboard';
 import { TalentProfileWizard } from '@/components/wizard/TalentProfileWizard';
@@ -38,13 +40,20 @@ interface OnboardingWizardProps {
 export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeUser = false }) => {
   const { profile, userRole } = useSupabaseAuth();
   const { categories } = useProfessionalData();
+  const { completeness, refreshCompleteness } = useProfileCompleteness();
+  const { syncProfile } = useProfileSync();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [showWizard, setShowWizard] = useState(false);
 
-  // Check if user has completed basic onboarding
-  const isBasicComplete = profile?.full_name && profile?.avatar_url;
-  const isProfessionalComplete = (profile?.profile_completeness || 0) > 60;
+  // Refresh data when component mounts or becomes visible
+  useEffect(() => {
+    syncProfile();
+  }, [syncProfile]);
+
+  // Check if user has completed basic onboarding using real-time data
+  const isBasicComplete = profile?.full_name && profile?.avatar_url && profile?.phone;
+  const isProfessionalComplete = completeness >= 60;
 
   const onboardingSteps: OnboardingStep[] = [
     {
@@ -61,16 +70,16 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
       title: 'Información Básica',
       description: 'Completa tu nombre, foto y datos de contacto',
       icon: <BookOpen className="h-6 w-6" />,
-      completed: Boolean(profile?.full_name && profile?.avatar_url),
+      completed: Boolean(profile?.full_name && profile?.avatar_url && profile?.phone && profile?.country),
       estimatedTime: '3 min',
-      action: () => navigate('/settings/profile?tab=personal')
+      action: () => navigate('/settings/profile?tab=personal&from=onboarding')
     },
     {
       id: 'professional',
       title: 'Perfil Profesional',
       description: 'Define tu especialidad, habilidades y experiencia',
       icon: <Target className="h-6 w-6" />,
-      completed: Boolean((profile?.profile_completeness || 0) > 30),
+      completed: Boolean(completeness > 30),
       estimatedTime: '5 min',
       action: () => setShowWizard(true)
     },
@@ -88,7 +97,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
       title: '¡Perfil Completo!',
       description: 'Tu perfil está listo para recibir oportunidades',
       icon: <CheckCircle className="h-6 w-6" />,
-      completed: Boolean((profile?.profile_completeness || 0) >= 80),
+      completed: Boolean(completeness >= 80),
       estimatedTime: '¡Hecho!',
       action: () => navigate('/talent-dashboard')
     }
@@ -120,11 +129,14 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeU
   };
 
   if (showWizard) {
-    return <TalentProfileWizard />;
+    return <TalentProfileWizard onComplete={() => {
+      setShowWizard(false);
+      syncProfile();
+    }} />;
   }
 
   // Show full dashboard if user is already advanced
-  if ((profile?.profile_completeness || 0) > 50) {
+  if (completeness > 50) {
     return (
       <Tabs defaultValue="dashboard" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">

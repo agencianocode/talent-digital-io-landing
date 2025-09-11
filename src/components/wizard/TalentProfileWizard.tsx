@@ -7,6 +7,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useProfessionalData, ProfessionalCategory, Industry } from '@/hooks/useProfessionalData';
 import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -99,10 +100,15 @@ export interface WizardData {
   availability: string;
 }
 
-export const TalentProfileWizard: React.FC = () => {
+interface TalentProfileWizardProps {
+  onComplete?: () => void;
+}
+
+export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComplete }) => {
   const { user, profile } = useSupabaseAuth();
   const { categories, industries, loading: dataLoading } = useProfessionalData();
   const { completeness, refreshCompleteness } = useProfileCompleteness();
+  const navigate = useNavigate();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -491,13 +497,27 @@ export const TalentProfileWizard: React.FC = () => {
         </Button>
 
         <div className="flex space-x-2">
-          {currentStep < steps.length - 1 && (
+          {currentStep < steps.length - 1 ? (
             <Button
               onClick={nextStep}
               disabled={!canProceedToNext()}
             >
               Siguiente
               <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                // Refresh completeness and notify parent
+                refreshCompleteness();
+                onComplete?.();
+                // Navigate to onboarding or dashboard
+                navigate('/onboarding');
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Check className="h-4 w-4 mr-2" />
+              Finalizar Wizard
             </Button>
           )}
         </div>

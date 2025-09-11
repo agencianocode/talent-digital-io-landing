@@ -13,6 +13,8 @@ import { useSupabaseAuth, isTalentRole, isBusinessRole } from '@/contexts/Supaba
 import { TalentProfileWizard } from '@/components/wizard/TalentProfileWizard';
 import { CompanyProfileWizard } from '@/components/wizard/CompanyProfileWizard';
 import { ProfileCompletenessCard } from '@/components/ProfileCompletenessCard';
+import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
+import { useProfileSync } from '@/hooks/useProfileSync';
 import { toast } from 'sonner';
 import { Upload, Eye, EyeOff, Loader2, ArrowLeft, User, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +45,8 @@ const ProfileSettings = () => {
     updateProfile,
     userRole
   } = useSupabaseAuth();
+  const { refreshCompleteness } = useProfileCompleteness();
+  const { handleProfileUpdate } = useProfileSync();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     const tabParam = searchParams.get('tab');
@@ -134,8 +138,17 @@ const ProfileSettings = () => {
       console.log('Perfil actualizado exitosamente');
       toast.success('Perfil actualizado correctamente');
       
-      // Reset form with the new data to mark it as clean
-      profileForm.reset(data);
+      // Sync profile across the app
+      await handleProfileUpdate(() => {
+        // Reset form with the new data to mark it as clean
+        profileForm.reset(data);
+        
+        // Navigate back to onboarding if came from there
+        const fromOnboarding = searchParams.get('from') === 'onboarding';
+        if (fromOnboarding) {
+          setTimeout(() => navigate('/onboarding'), 500); // Small delay for better UX
+        }
+      });
       
     } catch (error) {
       console.error('Error en onProfileSubmit:', error);
