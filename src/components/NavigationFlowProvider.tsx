@@ -173,6 +173,7 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
       (
         (currentPath === '/' && idealRoute !== '/') ||
         (currentPath === '/auth' && idealRoute !== '/auth') ||
+        (currentPath.includes('/register') && user) || // Redirect if authenticated and on registration
         (currentPath.includes('/onboarding') && !shouldShowOnboarding)
       )
     );
