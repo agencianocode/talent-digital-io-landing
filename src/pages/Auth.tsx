@@ -13,7 +13,7 @@ import AuthDebugInfo from '@/components/AuthDebugInfo';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { signIn, signUp, signInWithGoogle, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
   
   // Track if redirect has happened to prevent multiple redirects
   const [hasRedirected, setHasRedirected] = useState(false);
@@ -53,6 +53,8 @@ const Auth = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -89,7 +91,6 @@ const Auth = () => {
     setIsSubmitting(false);
   };
 
-
   const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
     setError('');
@@ -100,6 +101,31 @@ const Auth = () => {
       setError('Error al iniciar sesión con Google. Intenta nuevamente.');
     }
     // La redirección se maneja automáticamente en useEffect
+    
+    setIsSubmitting(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+    setMessage('');
+
+    if (!resetEmail) {
+      setError('Por favor ingresa tu email');
+      setIsSubmitting(false);
+      return;
+    }
+
+    const { error } = await resetPassword(resetEmail);
+    
+    if (error) {
+      setError('Error al enviar el email de recuperación. Intenta nuevamente.');
+    } else {
+      setMessage('Se ha enviado un email con las instrucciones para restablecer tu contraseña.');
+      setShowForgotPassword(false);
+      setResetEmail('');
+    }
     
     setIsSubmitting(false);
   };
@@ -170,6 +196,18 @@ const Auth = () => {
                     ) : (
                       <Eye className="h-4 w-4" />
                     )}
+                  </Button>
+                </div>
+                
+                <div className="text-right">
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-primary hover:text-primary/80 p-0 h-auto"
+                  >
+                    ¿Olvidaste tu contraseña?
                   </Button>
                 </div>
               </div>
@@ -264,6 +302,65 @@ const Auth = () => {
           </Button>
         </div>
       </div>
+
+      {/* Modal de recuperación de contraseña */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Recuperar contraseña</CardTitle>
+              <CardDescription>
+                Ingresa tu email y te enviaremos las instrucciones para restablecer tu contraseña
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="tu@email.com"
+                    required
+                  />
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      'Enviar instrucciones'
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setResetEmail('');
+                      setError('');
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <AuthDebugInfo />
     </div>
   );

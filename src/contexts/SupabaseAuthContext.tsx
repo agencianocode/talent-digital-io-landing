@@ -85,6 +85,7 @@ interface AuthContextType extends AuthState {
   updateCompany: (data: Partial<Company>) => Promise<{ error: any }>;
   createCompany: (data: Omit<Company, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<{ error: any }>;
   switchUserType: (newRole: UserRole) => Promise<{ error: any }>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -483,6 +484,16 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return { error };
   };
 
+  const resetPassword = async (email: string) => {
+    const redirectUrl = `${window.location.origin}/auth?reset=true`;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl
+    });
+
+    return { error };
+  };
+
   return (
     <AuthContext.Provider value={{
       ...authState,
@@ -493,7 +504,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       updateProfile,
       updateCompany,
       createCompany,
-      switchUserType
+      switchUserType,
+      resetPassword
     }}>
       {children}
     </AuthContext.Provider>
