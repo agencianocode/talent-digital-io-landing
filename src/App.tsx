@@ -11,6 +11,7 @@ import { NavigationFlowProvider } from '@/components/NavigationFlowProvider';
 import { ProfileManagerProvider } from '@/contexts/ProfileManagerContext';
 import ToastContainer from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+import AccessibilityWrapper from '@/components/AccessibilityWrapper';
 
 // Importar páginas básicas
 import LandingPage from './pages/LandingPage';
@@ -77,8 +78,9 @@ function App() {
                 <ToastProvider>
                   <BrowserRouter>
                     <NavigationFlowProvider>
-                    <div className="min-h-screen bg-background text-foreground">
-                    <Routes>
+                      <AccessibilityWrapper>
+                        <div className="min-h-screen bg-background text-foreground">
+                          <Routes>
                       <Route path="/" element={<LandingPage />} />
                       <Route path="/auth" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
@@ -260,9 +262,10 @@ function App() {
                         </Suspense>
                       } />
                       <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <ToastContainer />
-                  </div>
+                          </Routes>
+                          <ToastContainer />
+                        </div>
+                      </AccessibilityWrapper>
                     </NavigationFlowProvider>
                   </BrowserRouter>
                 </ToastProvider>
