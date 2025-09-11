@@ -147,6 +147,18 @@
     @apply border-accent focus:border-accent focus:ring-accent;
   }
 
+  /* Autofill text color fix for inputs and textareas */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    -webkit-box-shadow: 0 0 0px 1000px hsl(var(--secondary)) inset;
+    caret-color: hsl(var(--foreground));
+  }
+
   /* Gradient backgrounds */
   .gradient-primary {
     @apply bg-gradient-to-r from-primary to-primary/80;
