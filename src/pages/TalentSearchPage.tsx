@@ -81,11 +81,12 @@ const TalentSearchPage = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (talentError) throw talentError;
+      console.log('Talent query result:', { data: talentData, error: talentError });
+      console.log('Raw talent data length:', talentData?.length || 0);
 
-      console.log('Talent profiles found:', talentData?.length || 0);
-
-      // Fetch user profiles for all talents
+      console.log('fetchTalents: Starting talent fetch...');
+      console.log('fetchTalents: User role is:', userRole);
+      console.log('fetchTalents: Categories loaded:', categories.length);
       const talentWithProfiles: TalentWithProfile[] = await Promise.all(
         (talentData || []).map(async (talent) => {
           const { data: profileData, error: profileError } = await supabase

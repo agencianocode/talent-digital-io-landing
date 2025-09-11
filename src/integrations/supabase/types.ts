@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_student_audit: {
+        Row: {
+          action: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          performed_at: string | null
+          performed_by: string | null
+          student_id: string | null
+        }
+        Insert: {
+          action: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          performed_at?: string | null
+          performed_by?: string | null
+          student_id?: string | null
+        }
+        Update: {
+          action?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          performed_at?: string | null
+          performed_by?: string | null
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_student_audit_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "academy_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       academy_students: {
         Row: {
           academy_id: string
@@ -54,6 +92,13 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "academy_students_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valid_academy_reference"
             columns: ["academy_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -873,6 +918,31 @@ export type Database = {
         Args: { directory_company_id: string; user_uuid: string }
         Returns: string
       }
+      get_academy_students: {
+        Args: { academy_uuid: string }
+        Returns: {
+          enrollment_date: string
+          graduation_date: string
+          id: string
+          program_name: string
+          status: string
+          student_email: string
+          student_name: string
+        }[]
+      }
+      get_academy_students_secure: {
+        Args: { academy_uuid: string }
+        Returns: {
+          created_at: string
+          enrollment_date: string
+          graduation_date: string
+          id: string
+          program_name: string
+          status: string
+          student_email: string
+          student_name: string
+        }[]
+      }
       get_all_users_for_admin: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -947,6 +1017,10 @@ export type Database = {
       }
       insert_user_role_trigger: {
         Args: { p_role: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_academy_owner: {
+        Args: { academy_uuid: string; user_uuid: string }
         Returns: boolean
       }
       is_company_member: {
