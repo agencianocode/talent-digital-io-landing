@@ -12,6 +12,7 @@ import { ProfileManagerProvider } from '@/contexts/ProfileManagerContext';
 import ToastContainer from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import AccessibilityWrapper from '@/components/AccessibilityWrapper';
+import AuthErrorBoundary from '@/components/AuthErrorBoundary';
 
 // Importar páginas básicas
 import LandingPage from './pages/LandingPage';
@@ -83,9 +84,11 @@ function App() {
                           <Routes>
                       <Route path="/" element={<LandingPage />} />
                       <Route path="/auth" element={
-                        <Suspense fallback={<LoadingSkeleton type="card" />}>
-                          <Auth />
-                        </Suspense>
+                        <AuthErrorBoundary>
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <Auth />
+                          </Suspense>
+                        </AuthErrorBoundary>
                       } />
                       <Route path="/user-selector" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>

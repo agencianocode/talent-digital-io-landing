@@ -26,7 +26,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import OptimizedSearch from '@/components/OptimizedSearch';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { useUpgradeRequests } from '@/hooks/useUpgradeRequests';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -64,6 +64,7 @@ const AdminPanel: React.FC = () => {
 
   // Show loading while authentication is being checked
   if (authLoading) {
+    console.log('AdminPanel: Showing loading state - authLoading:', authLoading);
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -71,12 +72,29 @@ const AdminPanel: React.FC = () => {
     );
   }
 
-  // Redirect if not authenticated or not admin
-  // Add additional null checks to prevent React error #300 during logout
-  if (!isAuthenticated || !userRole || userRole !== 'admin') {
-    console.log('AdminPanel: Redirecting - isAuthenticated:', isAuthenticated, 'userRole:', userRole);
+  // Enhanced validation with better logging
+  if (!isAuthenticated) {
+    console.log('AdminPanel: User not authenticated, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
+
+  if (!userRole) {
+    console.log('AdminPanel: No user role available, showing loading');
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (userRole !== 'admin') {
+    console.log('AdminPanel: User role is not admin:', userRole, '- redirecting to appropriate dashboard');
+    // Redirect to appropriate dashboard based on role
+    const redirectPath = isBusinessRole(userRole) ? '/business-dashboard' : '/talent-dashboard';
+    return <Navigate to={redirectPath} replace />;
+  }
+
+  console.log('AdminPanel: User authenticated as admin, rendering panel');
 
   // Load admin stats using secure function
   const loadStats = async () => {

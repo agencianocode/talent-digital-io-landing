@@ -188,15 +188,23 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // Set up auth state listener
+  // Set up auth state listener with improved race condition handling
   useEffect(() => {
     let isMounted = true;
+    let isProcessingAuth = false;
 
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!isMounted) return;
-        
+    const processAuthState = async (session: Session | null, isInitial = false) => {
+      if (!isMounted || isProcessingAuth) return;
+      isProcessingAuth = true;
+
+      try {
+        console.log('SupabaseAuth: Processing auth state', { 
+          hasSession: !!session, 
+          hasUser: !!session?.user,
+          isInitial 
+        });
+
+        // Update basic auth state immediately
         setAuthState(prev => ({ 
           ...prev, 
           session, 
@@ -206,9 +214,19 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }));
         
         if (session?.user) {
-          // Fetch user data immediately but non-blocking
-          fetchUserData(session.user.id).then(userData => {
+          console.log('SupabaseAuth: Fetching user data for:', session.user.id);
+          
+          try {
+            const userData = await fetchUserData(session.user.id);
+            
             if (!isMounted) return;
+            
+            console.log('SupabaseAuth: User data fetched:', {
+              profile: !!userData.profile,
+              role: userData.role,
+              company: !!userData.company
+            });
+            
             setAuthState(prev => ({
               ...prev,
               profile: userData.profile,
@@ -216,12 +234,13 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
               company: userData.company,
               isLoading: false
             }));
-          }).catch(error => {
-            console.error('Error fetching user data:', error);
+          } catch (error) {
+            console.error('SupabaseAuth: Error fetching user data:', error);
             if (!isMounted) return;
             setAuthState(prev => ({ ...prev, isLoading: false }));
-          });
+          }
         } else {
+          console.log('SupabaseAuth: No session, clearing state');
           setAuthState(prev => ({
             ...prev,
             profile: null,
@@ -231,42 +250,29 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             isLoading: false
           }));
         }
+      } finally {
+        isProcessingAuth = false;
+      }
+    };
+
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!isMounted) return;
+        console.log('SupabaseAuth: Auth state changed:', event);
+        processAuthState(session, false);
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!isMounted) return;
-      
-      setAuthState(prev => ({ 
-        ...prev, 
-        session, 
-        user: session?.user ?? null,
-        isAuthenticated: !!session?.user,
-        isLoading: !!session?.user
-      }));
-      
-      if (session?.user) {
-        fetchUserData(session.user.id).then(userData => {
-          if (!isMounted) return;
-          setAuthState(prev => ({
-            ...prev,
-            profile: userData.profile,
-            userRole: userData.role,
-            company: userData.company,
-            isLoading: false
-          }));
-        }).catch(error => {
-          console.error('Error fetching user data:', error);
-          if (!isMounted) return;
-          setAuthState(prev => ({ ...prev, isLoading: false }));
-        });
-      } else {
-        setAuthState(prev => ({ ...prev, isLoading: false }));
-      }
+      console.log('SupabaseAuth: Initial session check:', !!session);
+      processAuthState(session, true);
     });
 
     return () => {
+      console.log('SupabaseAuth: Cleaning up auth listener');
       isMounted = false;
       subscription.unsubscribe();
     };

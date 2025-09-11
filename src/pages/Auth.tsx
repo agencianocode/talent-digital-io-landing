@@ -9,25 +9,40 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSupabaseAuth, isBusinessRole, isAdminRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
+import AuthDebugInfo from '@/components/AuthDebugInfo';
 
 const Auth = () => {
   const navigate = useNavigate();
   const { signIn, signUp, signInWithGoogle, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
   
-  // Redirect if already authenticated
+  // Track if redirect has happened to prevent multiple redirects
+  const [hasRedirected, setHasRedirected] = useState(false);
+  
+  // Redirect if already authenticated - with race condition protection
   useEffect(() => {
-    if (isAuthenticated && userRole) {
+    // Only redirect if we have both auth status and role, and haven't redirected yet
+    if (isAuthenticated && userRole && !hasRedirected && !isLoading) {
+      console.log('Auth.tsx: Redirecting user with role:', userRole);
+      setHasRedirected(true);
+      
       let redirectPath = '/talent-dashboard'; // default
       
       if (isAdminRole(userRole)) {
         redirectPath = '/admin';
+        console.log('Auth.tsx: Redirecting admin to:', redirectPath);
       } else if (isBusinessRole(userRole)) {
         redirectPath = '/business-dashboard';
+        console.log('Auth.tsx: Redirecting business to:', redirectPath);
+      } else {
+        console.log('Auth.tsx: Redirecting talent to:', redirectPath);
       }
       
-      navigate(redirectPath);
+      // Add a small delay to ensure the auth context is fully loaded
+      setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 100);
     }
-  }, [isAuthenticated, userRole, navigate]);
+  }, [isAuthenticated, userRole, hasRedirected, isLoading, navigate]);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -58,12 +73,16 @@ const Auth = () => {
       return;
     }
 
+    console.log('Auth.tsx: Starting sign in process...');
     const { error } = await signIn(formData.email, formData.password);
     
     if (error) {
+      console.error('Auth.tsx: Sign in error:', error);
       setError(error.message === 'Invalid login credentials' 
         ? 'Credenciales inválidas. Verifica tu email y contraseña.' 
         : 'Error al iniciar sesión. Intenta nuevamente.');
+    } else {
+      console.log('Auth.tsx: Sign in successful, waiting for auth state update...');
     }
     // La redirección se maneja automáticamente en useEffect
     
@@ -245,6 +264,7 @@ const Auth = () => {
           </Button>
         </div>
       </div>
+      <AuthDebugInfo />
     </div>
   );
 };
