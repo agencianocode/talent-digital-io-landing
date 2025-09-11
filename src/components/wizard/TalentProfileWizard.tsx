@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, startTransition } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -460,18 +460,24 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      startTransition(() => {
+        setCurrentStep(currentStep + 1);
+      });
     }
   };
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      startTransition(() => {
+        setCurrentStep(currentStep - 1);
+      });
     }
   };
 
   const goToStep = (stepIndex: number) => {
-    setCurrentStep(stepIndex);
+    startTransition(() => {
+      setCurrentStep(stepIndex);
+    });
   };
 
   const canProceedToNext = () => {
