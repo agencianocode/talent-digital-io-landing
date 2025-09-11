@@ -145,8 +145,8 @@ const OpportunityDetail = () => {
               navigate('/business-dashboard/opportunities');
             } else if (location.pathname.includes('/talent-dashboard/opportunities/')) {
               navigate('/talent-dashboard/opportunities');
-            } else if (location.pathname.includes('/talent-dashboard/marketplace')) {
-              navigate('/talent-dashboard/marketplace');
+            } else if (location.pathname.includes('/talent-dashboard/marketplace') || location.pathname.includes('/talent-dashboard/explore')) {
+              navigate('/talent-dashboard/explore');
             } else {
               navigate(-1);
             }

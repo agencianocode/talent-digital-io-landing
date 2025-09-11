@@ -5,7 +5,7 @@ import LoadingSkeleton from '@/components/LoadingSkeleton';
 // Lazy load heavy components
 export const LazyTalentMarketplace = lazy(() => import('@/pages/TalentMarketplace'));
 export const LazyBusinessDashboard = lazy(() => import('@/pages/BusinessDashboard'));
-export const LazyTalentDashboard = lazy(() => import('@/pages/TalentDashboard'));
+// TalentDashboard removed - use TalentDashboardHome instead
 export const LazyMessagesPage = lazy(() => import('@/pages/MessagesPage'));
 export const LazyOpportunityDetail = lazy(() => import('@/pages/OpportunityDetail'));
 
@@ -21,6 +21,6 @@ export const withSuspense = (Component: React.ComponentType<any>, fallback?: Rea
 // Pre-wrapped components
 export const SuspenseTalentMarketplace = withSuspense(LazyTalentMarketplace);
 export const SuspenseBusinessDashboard = withSuspense(LazyBusinessDashboard);
-export const SuspenseTalentDashboard = withSuspense(LazyTalentDashboard);
+// SuspenseTalentDashboard removed - use TalentDashboardHome directly
 export const SuspenseMessagesPage = withSuspense(LazyMessagesPage);
 export const SuspenseOpportunityDetail = withSuspense(LazyOpportunityDetail);

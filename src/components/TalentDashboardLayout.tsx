@@ -18,10 +18,10 @@ const TalentDashboardLayout = () => {
   };
 
   const navigationItems = [
-    { to: "/talent-dashboard", icon: Home, label: "Dashboard" },
+    { to: "/talent-dashboard", icon: Home, label: "Inicio" },
+    { to: "/talent-dashboard/explore", icon: Search, label: "Explorar" },
     { to: "/talent-dashboard/opportunities", icon: Briefcase, label: "Mis Aplicaciones" },
-    { to: "/talent-dashboard/marketplace", icon: Search, label: "Buscar Oportunidades" },
-    { to: "/talent-dashboard/saved", icon: Heart, label: "Oportunidades Guardadas" },
+    { to: "/talent-dashboard/saved", icon: Heart, label: "Guardadas" },
     { to: "/messages", icon: MessageSquare, label: "Mensajes" },
   ];
 

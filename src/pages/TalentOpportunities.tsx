@@ -167,7 +167,7 @@ const TalentOpportunities = () => {
             }
           </p>
           {applications.length === 0 && (
-            <Button onClick={() => window.location.href = '/talent-dashboard/marketplace'}>
+            <Button onClick={() => window.location.href = '/talent-dashboard/explore'}>
               Explorar Oportunidades
             </Button>
           )}

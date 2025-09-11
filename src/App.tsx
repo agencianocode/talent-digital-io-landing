@@ -96,6 +96,10 @@ function App() {
                           <RegisterTalent />
                         </Suspense>
                       } />
+                      
+                      {/* Redirects for legacy/duplicate routes */}
+                      <Route path="/talent-register" element={<RegisterTalent />} />
+                      <Route path="/registro-talento" element={<RegisterTalent />} />
 
                       {/* Landing Pages Específicas */}
                       <Route path="/oportunidades-laborales" element={
@@ -114,30 +118,36 @@ function App() {
                         </Suspense>
                       } />
 
-                      {/* Talent Dashboard Routes */}
-                       <Route path="/talent-dashboard" element={<TalentDashboardLayout />}>
-                         <Route index element={<TalentDashboardHome />} />
-                        <Route path="opportunities" element={
-                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                            <TalentOpportunities />
-                          </Suspense>
-                        } />
-                        <Route path="marketplace" element={
-                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                            <TalentMarketplace />
-                          </Suspense>
-                        } />
-                        <Route path="saved" element={
-                          <Suspense fallback={<LoadingSkeleton type="list" />}>
-                            <SavedOpportunities />
-                          </Suspense>
-                        } />
-                        <Route path="opportunities/:id" element={
-                          <Suspense fallback={<LoadingSkeleton type="card" />}>
-                            <OpportunityDetail />
-                          </Suspense>
-                        } />
-                      </Route>
+                       {/* Talent Dashboard Routes */}
+                        <Route path="/talent-dashboard" element={<TalentDashboardLayout />}>
+                          <Route index element={<TalentDashboardHome />} />
+                          <Route path="home" element={<TalentDashboardHome />} />
+                          <Route path="explore" element={
+                            <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                              <TalentOpportunities />
+                            </Suspense>
+                          } />
+                          <Route path="opportunities" element={
+                            <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                              <TalentOpportunities />
+                            </Suspense>
+                          } />
+                          <Route path="marketplace" element={
+                            <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                              <TalentMarketplace />
+                            </Suspense>
+                          } />
+                          <Route path="saved" element={
+                            <Suspense fallback={<LoadingSkeleton type="list" />}>
+                              <SavedOpportunities />
+                            </Suspense>
+                          } />
+                          <Route path="opportunities/:id" element={
+                            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                              <OpportunityDetail />
+                            </Suspense>
+                          } />
+                        </Route>
 
                       {/* Business Dashboard Routes */}
                       <Route path="/business-dashboard" element={<DashboardLayout />}>
