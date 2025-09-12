@@ -10,6 +10,7 @@ import { useSupabaseAuth, isBusinessRole, isAdminRole } from '@/contexts/Supabas
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import AuthDebugInfo from '@/components/AuthDebugInfo';
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ const Auth = () => {
   
   // Check if we're in password reset mode
   const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [isVerifyingRecovery, setIsVerifyingRecovery] = useState(false);
+  const [isSessionReady, setIsSessionReady] = useState(false);
   
   // Check if coming from password reset link
   useEffect(() => {
@@ -30,10 +33,44 @@ const Auth = () => {
     }
   }, [searchParams]);
 
+  // Detect Supabase recovery links in URL hash and wait for session
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=recovery')) {
+      setIsPasswordReset(true);
+      setIsVerifyingRecovery(true);
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setIsSessionReady(!!session);
+      }).finally(() => {
+        setIsVerifyingRecovery(false);
+        try {
+          if (window.location.hash.includes('type=recovery')) {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          }
+        } catch {}
+      });
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordReset(true);
+        setIsSessionReady(!!session);
+      }
+      if (event === 'SIGNED_IN' && (hash?.includes('type=recovery') || window.location.hash.includes('type=recovery'))) {
+        setIsPasswordReset(true);
+        setIsSessionReady(!!session);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   // Redirect if already authenticated - with race condition protection
   useEffect(() => {
     // Only redirect if we have both auth status and role, and haven't redirected yet, and not in password reset mode
-    if (isAuthenticated && userRole && !hasRedirected && !isLoading && !isPasswordReset) {
+    if (isAuthenticated && userRole && !hasRedirected && !isLoading && !isPasswordReset && !isVerifyingRecovery) {
       console.log('Auth.tsx: Redirecting user with role:', userRole);
       setHasRedirected(true);
       
@@ -175,20 +212,23 @@ const Auth = () => {
     const { error } = await updatePassword(newPassword);
     
     if (error) {
-      setError('Error al actualizar la contraseña. Intenta nuevamente.');
-    } else {
-      // Redirect after successful password update
-      if (userRole) {
-        if (isAdminRole(userRole)) {
-          navigate('/admin', { replace: true });
-        } else if (isBusinessRole(userRole)) {
-          navigate('/business-dashboard', { replace: true });
-        } else {
-          navigate('/talent-dashboard', { replace: true });
-        }
+      console.error('Auth.tsx: Update password error:', error);
+      setError(error.message || 'Error al actualizar la contraseña. Intenta nuevamente.');
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Redirect after successful password update
+    if (userRole) {
+      if (isAdminRole(userRole)) {
+        navigate('/admin', { replace: true });
+      } else if (isBusinessRole(userRole)) {
+        navigate('/business-dashboard', { replace: true });
       } else {
         navigate('/talent-dashboard', { replace: true });
       }
+    } else {
+      navigate('/talent-dashboard', { replace: true });
     }
     
     setIsSubmitting(false);
@@ -198,6 +238,17 @@ const Auth = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (isPasswordReset && isVerifyingRecovery) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground">Validando enlace de recuperación...</p>
+        </div>
       </div>
     );
   }
@@ -280,7 +331,7 @@ const Auth = () => {
                 <Button 
                   type="submit" 
                   className="w-full"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !isSessionReady}
                 >
                   {isSubmitting ? (
                     <>
