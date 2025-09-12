@@ -51,9 +51,9 @@ const TalentMarketplace = () => {
   } = useSavedOpportunities();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [subcategoryFilter, setSubcategoryFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [applying, setApplying] = useState<string | null>(null);
@@ -64,9 +64,9 @@ const TalentMarketplace = () => {
     if (savedFilters) {
       const filters = JSON.parse(savedFilters);
       setSearchTerm(filters.searchTerm || '');
-      setCategoryFilter(filters.categoryFilter || '');
+      setCategoryFilter(filters.categoryFilter || 'all');
       setSubcategoryFilter(filters.subcategoryFilter || '');
-      setTypeFilter(filters.typeFilter || '');
+      setTypeFilter(filters.typeFilter || 'all');
       setLocationFilter(filters.locationFilter || '');
       setSortBy(filters.sortBy || 'date');
     }
@@ -169,7 +169,7 @@ const TalentMarketplace = () => {
       }
 
       // Category filter
-      if (categoryFilter && opportunity.category !== categoryFilter) {
+      if (categoryFilter && categoryFilter !== 'all' && opportunity.category !== categoryFilter) {
         return false;
       }
 
@@ -179,7 +179,7 @@ const TalentMarketplace = () => {
       }
 
       // Type filter
-      if (typeFilter && opportunity.type !== typeFilter) {
+      if (typeFilter && typeFilter !== 'all' && opportunity.type !== typeFilter) {
         return false;
       }
 
@@ -311,7 +311,7 @@ const TalentMarketplace = () => {
             <SelectValue placeholder="Categoría" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas las categorías</SelectItem>
+            <SelectItem value="all">Todas las categorías</SelectItem>
             {Object.keys(jobCategories).map((category) => (
               <SelectItem key={category} value={category}>
                 {category}
@@ -325,7 +325,7 @@ const TalentMarketplace = () => {
             <SelectValue placeholder="Tipo de contrato" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos los tipos</SelectItem>
+            <SelectItem value="all">Todos los tipos</SelectItem>
             {jobTypes.map((type) => (
               <SelectItem key={type.value} value={type.value}>
                 {type.label}
@@ -343,15 +343,15 @@ const TalentMarketplace = () => {
       </div>
 
       {/* Clear Filters */}
-      {(searchTerm || categoryFilter || typeFilter || locationFilter) && (
+      {(searchTerm || (categoryFilter && categoryFilter !== 'all') || (typeFilter && typeFilter !== 'all') || locationFilter) && (
         <div className="mb-6">
           <Button
             variant="outline"
             onClick={() => {
               setSearchTerm('');
-              setCategoryFilter('');
+              setCategoryFilter('all');
               setSubcategoryFilter('');
-              setTypeFilter('');
+              setTypeFilter('all');
               setLocationFilter('');
               setSortBy('date');
             }}
