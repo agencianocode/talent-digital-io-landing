@@ -122,19 +122,10 @@ const DashboardHome = () => {
           <p className="text-muted-foreground mb-6">
             Para acceder a tu dashboard, primero necesitas crear o seleccionar una empresa.
           </p>
-          <Button onClick={() => setShowCreateDialog(true)}>
-            Crear Nueva Empresa
+          <Button onClick={() => navigate('/settings/profile')}>
+            Configurar Empresa
           </Button>
         </div>
-        
-        <CreateCompanyDialog
-          open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
-          onCompanyCreated={() => {
-            // The company context will automatically refresh
-            // and the user will see the dashboard
-          }}
-        />
       </div>
     );
   }
@@ -177,6 +168,7 @@ const DashboardHome = () => {
         <BusinessMetrics
           totalOpportunities={metrics.totalOpportunities}
           totalApplications={metrics.totalApplications}
+          applicationsInActiveOpportunities={metrics.applicationsInActiveOpportunities}
           activeOpportunities={metrics.activeOpportunities}
           pendingApplications={metrics.pendingApplications}
           unreviewedApplications={metrics.unreviewedApplications}

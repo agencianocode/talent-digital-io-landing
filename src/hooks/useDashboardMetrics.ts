@@ -43,9 +43,15 @@ export const useDashboardMetrics = () => {
 
       const totalOpportunities = opportunities.length;
       const activeOpportunities = opportunities.filter(opp => opp.status === 'active').length;
-      const totalApplications = applications.length;
-      const pendingApplications = applications.filter(app => app.status === 'pending').length;
-      const unreviewedApplications = applications.filter(app => app.status === 'pending').length;
+      
+      // Filter applications to only those from active opportunities
+      const activeOpportunityIds = opportunities.filter(opp => opp.status === 'active').map(opp => opp.id);
+      const applicationsInActive = applications.filter(app => activeOpportunityIds.includes(app.opportunity_id));
+      
+      const totalApplications = applications.length; // Keep total for overall metrics
+      const applicationsInActiveOpportunities = applicationsInActive.length;
+      const pendingApplications = applicationsInActive.filter(app => app.status === 'pending').length;
+      const unreviewedApplications = applicationsInActive.filter(app => app.status === 'pending').length;
 
       // Enhanced metrics by contract type
       const contractTypeMetrics = opportunities.reduce((acc, opp) => {
@@ -143,6 +149,7 @@ export const useDashboardMetrics = () => {
         totalOpportunities,
         activeOpportunities,
         totalApplications,
+        applicationsInActiveOpportunities,
         pendingApplications,
         unreviewedApplications,
         applicationsThisMonth,

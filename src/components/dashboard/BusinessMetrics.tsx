@@ -19,6 +19,7 @@ import {
 interface BusinessMetricsProps {
   totalOpportunities: number;
   totalApplications: number;
+  applicationsInActiveOpportunities: number;
   activeOpportunities: number;
   pendingApplications: number;
   unreviewedApplications: number;
@@ -45,6 +46,7 @@ interface BusinessMetricsProps {
 const BusinessMetrics: React.FC<BusinessMetricsProps> = ({
   totalOpportunities,
   totalApplications,
+  applicationsInActiveOpportunities,
   activeOpportunities,
   pendingApplications,
   unreviewedApplications,
@@ -69,32 +71,27 @@ const BusinessMetrics: React.FC<BusinessMetricsProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Oportunidades</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Oportunidades Activas</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalOpportunities}</div>
+            <div className="text-2xl font-bold">{activeOpportunities}</div>
             <p className="text-xs text-muted-foreground">
-              {activeOpportunities} activas
+              {totalOpportunities} publicadas en total
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Aplicaciones</CardTitle>
+            <CardTitle className="text-sm font-medium">Postulaciones Recibidas</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalApplications}</div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              {isGrowthPositive ? (
-                <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
-              ) : (
-                <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
-              )}
-              {growthPercentage}% vs mes anterior
-            </div>
+            <div className="text-2xl font-bold">{applicationsInActiveOpportunities}</div>
+            <p className="text-xs text-muted-foreground">
+              {unreviewedApplications} sin revisar
+            </p>
           </CardContent>
         </Card>
 
@@ -158,7 +155,7 @@ const BusinessMetrics: React.FC<BusinessMetricsProps> = ({
             <div className="space-y-3">
               <div className="flex justify-between items-center py-2 border-b">
                 <span className="text-sm font-medium">Postulaciones en oportunidades activas</span>
-                <span className="font-bold">{totalApplications}</span>
+                <span className="font-bold">{applicationsInActiveOpportunities}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b">
                 <span className="text-sm font-medium">Oportunidades activas</span>
