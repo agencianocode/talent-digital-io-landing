@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useNavigationFlow } from '@/components/NavigationFlowProvider';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { 
   Sparkles, 
   Target, 
@@ -26,7 +26,14 @@ const WelcomePage: React.FC = () => {
     navigateToDashboard,
     canAccessDashboard 
   } = useNavigationFlow();
-  const { profile } = useSupabaseAuth();
+  const { profile, userRole } = useSupabaseAuth();
+
+  // Redirect business users to business dashboard
+  useEffect(() => {
+    if (userRole && isBusinessRole(userRole)) {
+      navigateToDashboard();
+    }
+  }, [userRole, navigateToDashboard]);
 
   const userName = profile?.full_name || 'Talento';
 
@@ -150,7 +157,7 @@ const WelcomePage: React.FC = () => {
             <Button 
               size="lg" 
               className="text-lg px-8 py-6 h-auto"
-              onClick={navigateToOnboarding}
+              onClick={userRole && isBusinessRole(userRole) ? navigateToDashboard : navigateToOnboarding}
             >
               <Sparkles className="mr-2 h-5 w-5" />
               Comenzar configuración

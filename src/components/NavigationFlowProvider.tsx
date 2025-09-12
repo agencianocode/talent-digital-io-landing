@@ -132,11 +132,15 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
   const navigateToDashboard = useCallback(() => {
     setIsTransitioning(true);
     setTimeout(() => {
-      navigate('/talent-dashboard');
+      // Navigate to appropriate dashboard based on user role
+      const dashboardRoute = userRole && ['freemium_business', 'premium_business'].includes(userRole) 
+        ? '/business-dashboard' 
+        : '/talent-dashboard';
+      navigate(dashboardRoute);
       setLastNavigationTime(new Date());
       setIsTransitioning(false);
     }, 200);
-  }, [navigate]);
+  }, [navigate, userRole]);
 
   const navigateToWelcome = useCallback(() => {
     setIsTransitioning(true);
