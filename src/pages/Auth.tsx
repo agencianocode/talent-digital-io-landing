@@ -20,19 +20,24 @@ const Auth = () => {
   // Track if redirect has happened to prevent multiple redirects
   const [hasRedirected, setHasRedirected] = useState(false);
   
+  // Derive initial reset state synchronously to avoid race conditions
+  const initialResetRoute = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reset') === 'true';
+  const initialHash = typeof window !== 'undefined' ? window.location.hash : '';
+  const initialRecoveryIntent = initialResetRoute || (initialHash && (initialHash.includes('type=recovery') || initialHash.includes('error=') || initialHash.includes('error_code=')));
+  
   // Check if we're in password reset mode
-  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [isPasswordReset, setIsPasswordReset] = useState(initialRecoveryIntent);
   const [isVerifyingRecovery, setIsVerifyingRecovery] = useState(false);
   const [isSessionReady, setIsSessionReady] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
-  const [isResetRoute, setIsResetRoute] = useState(false);
+  const [isResetRoute, setIsResetRoute] = useState(initialResetRoute);
   
-  // Check if coming from password reset link
+  // Keep reset flags in sync if query params change
   useEffect(() => {
-    const resetParam = searchParams.get('reset');
-    if (resetParam === 'true') {
+    const isReset = searchParams.get('reset') === 'true';
+    setIsResetRoute(isReset);
+    if (isReset) {
       setIsPasswordReset(true);
-      setIsResetRoute(true);
     }
   }, [searchParams]);
 
@@ -104,12 +109,24 @@ const Auth = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth.tsx: Auth state change:', event, !!session);
-      if (event === 'PASSWORD_RECOVERY') {
+      const inResetFlow = (typeof window !== 'undefined') && (
+        isResetRoute ||
+        window.location.search.includes('reset=true') ||
+        window.location.hash.includes('type=recovery')
+      );
+      if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && inResetFlow) {
         setIsPasswordReset(true);
         setIsSessionReady(!!session);
         setRecoveryError(null);
       }
     });
+
+    // If we land here with ?reset=true and a valid session, enable the form
+    if ((typeof window !== 'undefined') && (isResetRoute || window.location.search.includes('reset=true'))) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setIsSessionReady(!!session);
+      }).catch(() => {});
+    }
 
     return () => {
       subscription.unsubscribe();
@@ -118,9 +135,10 @@ const Auth = () => {
 
   // Redirect if already authenticated - with race condition protection
   useEffect(() => {
-    // Only redirect if we have both auth status and role, and haven't redirected yet, and not in password reset mode
-    // Also prevent redirect if we're on a reset route or have recovery errors
-    if (isAuthenticated && userRole && !hasRedirected && !isLoading && !isPasswordReset && !isVerifyingRecovery && !isResetRoute && !recoveryError) {
+    // Block redirect entirely when handling password recovery
+    const urlHasReset = (typeof window !== 'undefined') && (window.location.search.includes('reset=true') || window.location.hash.includes('type=recovery'));
+    const shouldBlockRedirect = isPasswordReset || isVerifyingRecovery || isResetRoute || !!recoveryError || urlHasReset;
+    if (isAuthenticated && userRole && !hasRedirected && !isLoading && !shouldBlockRedirect) {
       console.log('Auth.tsx: Redirecting user with role:', userRole);
       setHasRedirected(true);
       
@@ -141,7 +159,7 @@ const Auth = () => {
         navigate(redirectPath, { replace: true });
       }, 100);
     }
-  }, [isAuthenticated, userRole, hasRedirected, isLoading, navigate, isPasswordReset]);
+  }, [isAuthenticated, userRole, hasRedirected, isLoading, navigate, isPasswordReset, isVerifyingRecovery, isResetRoute, recoveryError]);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -339,6 +357,7 @@ const Auth = () => {
                       setRecoveryError(null);
                       setIsPasswordReset(false);
                       setIsResetRoute(false);
+                      setShowForgotPassword(true);
                     }}
                     className="w-full"
                   >
