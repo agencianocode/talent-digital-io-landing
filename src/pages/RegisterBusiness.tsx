@@ -8,11 +8,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { Loader2, Eye, EyeOff, Building2, ArrowLeft, GraduationCap } from 'lucide-react';
 
 const RegisterBusiness = () => {
   const navigate = useNavigate();
   const { signUp, createCompany, isLoading, userRole, isAuthenticated } = useSupabaseAuth();
+  const { refreshCompanies } = useCompany();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -109,6 +111,12 @@ const RegisterBusiness = () => {
         setMessage('¡Cuenta creada exitosamente! Verifica tu email para acceder a tu dashboard empresarial. Podrás configurar tu empresa desde allí.');
         setRegistrationComplete(true);
       } else {
+        // Refresh companies context after successful creation
+        try {
+          await refreshCompanies();
+        } catch (refreshError) {
+          console.error('Error refreshing companies:', refreshError);
+        }
         setMessage('¡Cuenta y empresa creadas exitosamente! Verifica tu email para continuar.');
         setRegistrationComplete(true);
       }

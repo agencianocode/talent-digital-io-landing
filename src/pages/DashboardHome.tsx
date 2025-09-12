@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
+import CreateCompanyDialog from "@/components/CreateCompanyDialog";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import BusinessMetrics from "@/components/dashboard/BusinessMetrics";
 import RecommendedProfiles from "@/components/dashboard/RecommendedProfiles";
@@ -20,6 +21,7 @@ const DashboardHome = () => {
   const { getBusinessMetrics } = useDashboardMetrics();
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfiguration>({
     layout: 'grid',
     theme: 'auto',
@@ -120,10 +122,19 @@ const DashboardHome = () => {
           <p className="text-muted-foreground mb-6">
             Para acceder a tu dashboard, primero necesitas crear o seleccionar una empresa.
           </p>
-          <Button onClick={() => navigate('/register-business')}>
+          <Button onClick={() => setShowCreateDialog(true)}>
             Crear Nueva Empresa
           </Button>
         </div>
+        
+        <CreateCompanyDialog
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+          onCompanyCreated={() => {
+            // The company context will automatically refresh
+            // and the user will see the dashboard
+          }}
+        />
       </div>
     );
   }

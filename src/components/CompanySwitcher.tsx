@@ -76,6 +76,17 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
         <div className="text-sm text-muted-foreground">
           No hay empresas disponibles
         </div>
+        {showCreateButton && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/register-business')}
+            className="flex items-center gap-1"
+          >
+            <Plus className="h-3 w-3" />
+            Crear Empresa
+          </Button>
+        )}
       </div>
     );
   }
