@@ -134,7 +134,7 @@ function App() {
                           <Route path="home" element={<TalentDashboardHome />} />
                           <Route path="explore" element={
                             <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                              <TalentOpportunities />
+                              <TalentMarketplace />
                             </Suspense>
                           } />
                           <Route path="opportunities" element={
