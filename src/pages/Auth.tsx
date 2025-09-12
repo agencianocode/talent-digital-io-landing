@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,15 +13,27 @@ import AuthDebugInfo from '@/components/AuthDebugInfo';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { signIn, signUp, signInWithGoogle, resetPassword, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+  const [searchParams] = useSearchParams();
+  const { signIn, signUp, signInWithGoogle, resetPassword, updatePassword, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
   
   // Track if redirect has happened to prevent multiple redirects
   const [hasRedirected, setHasRedirected] = useState(false);
   
+  // Check if we're in password reset mode
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  
+  // Check if coming from password reset link
+  useEffect(() => {
+    const resetParam = searchParams.get('reset');
+    if (resetParam === 'true') {
+      setIsPasswordReset(true);
+    }
+  }, [searchParams]);
+
   // Redirect if already authenticated - with race condition protection
   useEffect(() => {
-    // Only redirect if we have both auth status and role, and haven't redirected yet
-    if (isAuthenticated && userRole && !hasRedirected && !isLoading) {
+    // Only redirect if we have both auth status and role, and haven't redirected yet, and not in password reset mode
+    if (isAuthenticated && userRole && !hasRedirected && !isLoading && !isPasswordReset) {
       console.log('Auth.tsx: Redirecting user with role:', userRole);
       setHasRedirected(true);
       
@@ -42,14 +54,18 @@ const Auth = () => {
         navigate(redirectPath, { replace: true });
       }, 100);
     }
-  }, [isAuthenticated, userRole, hasRedirected, isLoading, navigate]);
+  }, [isAuthenticated, userRole, hasRedirected, isLoading, navigate, isPasswordReset]);
   
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
@@ -139,10 +155,156 @@ const Auth = () => {
     setIsSubmitting(false);
   };
 
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+
+    if (newPassword !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      setIsSubmitting(false);
+      return;
+    }
+
+    const { error } = await updatePassword(newPassword);
+    
+    if (error) {
+      setError('Error al actualizar la contraseña. Intenta nuevamente.');
+    } else {
+      // Redirect after successful password update
+      if (userRole) {
+        if (isAdminRole(userRole)) {
+          navigate('/admin', { replace: true });
+        } else if (isBusinessRole(userRole)) {
+          navigate('/business-dashboard', { replace: true });
+        } else {
+          navigate('/talent-dashboard', { replace: true });
+        }
+      } else {
+        navigate('/talent-dashboard', { replace: true });
+      }
+    }
+    
+    setIsSubmitting(false);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // If in password reset mode, show password reset form
+  if (isPasswordReset) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Talento Digital
+            </h1>
+            <p className="text-muted-foreground">
+              Establece tu nueva contraseña
+            </p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Nueva Contraseña</CardTitle>
+              <CardDescription>
+                Introduce tu nueva contraseña para completar el proceso
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">Nueva contraseña</Label>
+                  <div className="relative">
+                    <Input
+                      id="newPassword"
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Introduce tu nueva contraseña"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirma tu nueva contraseña"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Actualizando contraseña...
+                    </>
+                  ) : (
+                    'Actualizar contraseña'
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <div className="text-center mt-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/auth')}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Volver al inicio de sesión
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
