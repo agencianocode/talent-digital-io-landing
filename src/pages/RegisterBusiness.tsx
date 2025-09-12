@@ -75,34 +75,49 @@ const RegisterBusiness = () => {
       return;
     }
 
-    const { error } = await signUp(formData.email, formData.password, {
+    const signUpResult = await signUp(formData.email, formData.password, {
       full_name: formData.fullName,
       user_type: 'business'
     });
     
-    if (error) {
-      setError(error.message === 'User already registered' 
+    if (signUpResult.error) {
+      setError(signUpResult.error.message === 'User already registered' 
         ? 'Este email ya está registrado. Intenta iniciar sesión.' 
         : 'Error al crear la cuenta. Intenta nuevamente.');
       setIsSubmitting(false);
-    } else {
-      setMessage('¡Cuenta creada exitosamente! Configurando tu empresa...');
-      
-      // Create company after successful signup
-      const companyError = await createCompany({
+      return;
+    }
+
+    // Account created successfully
+    setMessage('¡Cuenta creada exitosamente! Configurando tu empresa...');
+    
+    // Wait for auth state to stabilize before creating company
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    try {
+      const companyResult = await createCompany({
         name: formData.companyName,
-        business_type: formData.isAcademy ? 'academy' : 'company'
+        business_type: formData.isAcademy ? 'academy' : 'company',
+        description: formData.isAcademy 
+          ? `Academia especializada en ${formData.programType}` 
+          : 'Empresa registrada en TalentDigital'
       });
       
-      if (companyError.error) {
-        setError('Cuenta creada pero error al configurar empresa. Puedes completar esto desde tu dashboard.');
+      if (companyResult.error) {
+        console.error('Company creation error:', companyResult.error);
+        setError('Cuenta creada exitosamente. Configuración de empresa pendiente. Puedes completar esto desde tu dashboard.');
+        setMessage('Usuario creado exitosamente. Verifica tu email para continuar.');
       } else {
-        setMessage('¡Cuenta y empresa creadas exitosamente! Redirigiendo...');
+        setMessage('¡Cuenta y empresa creadas exitosamente! Verifica tu email para continuar.');
+        setRegistrationComplete(true);
       }
-      
-      setRegistrationComplete(true);
-      setIsSubmitting(false);
+    } catch (companyError) {
+      console.error('Unexpected error during company creation:', companyError);
+      setError('Cuenta creada exitosamente. Configuración de empresa pendiente. Puedes completar esto desde tu dashboard.');
+      setMessage('Usuario creado exitosamente. Verifica tu email para continuar.');
     }
+    
+    setIsSubmitting(false);
   };
 
   if (isLoading) {

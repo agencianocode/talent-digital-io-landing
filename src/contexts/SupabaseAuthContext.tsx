@@ -102,19 +102,33 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     isLoading: true
   });
 
-  // Fetch user profile and role
-  const fetchUserData = async (userId: string, userType?: string) => {
+  // Fetch user profile and role with retry mechanism
+  const fetchUserData = async (userId: string, userType?: string, retryCount = 0) => {
     try {
       // Fetch profile
       let { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      // If profile doesn't exist, create it
-      if (profileError && profileError.code === 'PGRST116') {
-        logger.debug('Profile not found, creating new profile for user:', userId);
+      // Fetch role
+      let { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      // If profile or role is missing and this is a recent signup, try to recover
+      if ((!profile || !roleData) && retryCount < 3) {
+        console.log(`Missing data detected for user ${userId}, attempting recovery (attempt ${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
+        return fetchUserData(userId, userType, retryCount + 1);
+      }
+
+      // If profile doesn't exist after retries, create it
+      if (!profile) {
+        logger.debug('Profile not found after retries, creating new profile for user:', userId);
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert({ user_id: userId })
@@ -128,16 +142,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
       }
 
-      // Fetch role
-      let { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .single();
-
-      // If role doesn't exist, create it
-      if (roleError && roleError.code === 'PGRST116') {
-        logger.debug('Role not found, creating role for user:', userId, 'with type:', userType);
+      // If role doesn't exist after retries, create it
+      if (!roleData) {
+        logger.debug('Role not found after retries, creating role for user:', userId, 'with type:', userType);
         // Use the provided userType or default to 'freemium_talent'
         const defaultRole: UserRole = userType === 'business' ? 'freemium_business' : 'freemium_talent';
         const { data: newRole, error: createRoleError } = await supabase
@@ -292,24 +299,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     });
 
-    // If signup was successful and user was created, wait a bit for the trigger to execute
-    if (!error && data.user) {
-      // Small delay to allow database trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Try to fetch the user data to ensure it was created properly
-      try {
-        const userData = await fetchUserData(data.user.id, metadata?.user_type);
-        setAuthState(prev => ({
-          ...prev,
-          profile: userData.profile,
-          userRole: userData.role,
-          company: userData.company
-        }));
-      } catch (fetchError) {
-        console.error('Error fetching user data after signup:', fetchError);
-      }
-    }
+    // Don't fetch user data immediately after signup
+    // The onAuthStateChange handler will handle this when the user is properly authenticated
+    // and the trigger will handle profile/role creation
 
     return { error };
   };
@@ -436,8 +428,30 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return { error };
   };
 
-  const createCompany = async (data: Omit<Company, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const createCompany = async (data: Omit<Company, 'id' | 'user_id' | 'created_at' | 'updated_at'>, retryCount = 0) => {
     if (!authState.user) return { error: new Error('User not authenticated') };
+
+    // Ensure user has a profile and role before creating company
+    if (!authState.profile || !authState.userRole) {
+      if (retryCount < 3) {
+        console.log(`Profile/role missing, retrying company creation (attempt ${retryCount + 1})`);
+        try {
+          const userData = await fetchUserData(authState.user.id, undefined, 0);
+          setAuthState(prev => ({
+            ...prev,
+            profile: userData.profile,
+            userRole: userData.role,
+            company: userData.company
+          }));
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return createCompany(data, retryCount + 1);
+        } catch (error) {
+          console.error('Error fetching user data during company creation retry:', error);
+        }
+      } else {
+        return { error: new Error('Profile configuration incomplete. Please refresh and try again.') };
+      }
+    }
 
     const { data: company, error } = await supabase
       .from('companies')
