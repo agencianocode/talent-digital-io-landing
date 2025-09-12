@@ -32,6 +32,9 @@ const Auth = () => {
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [isResetRoute, setIsResetRoute] = useState(initialResetRoute);
   
+  // Allow submission if session is ready OR user is authenticated (token-based sign-in)
+  const canSubmitReset = isAuthenticated || isSessionReady;
+  
   // Keep reset flags in sync if query params change
   useEffect(() => {
     const isReset = searchParams.get('reset') === 'true';
@@ -74,9 +77,11 @@ const Auth = () => {
           setRecoveryError('Hubo un problema con el enlace de recuperación. Solicita un nuevo enlace.');
         }
         
-        // Clear the hash
+        // Clear the hash but persist ?reset=true to block auto-redirects
         try {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          const url = new URL(window.location.href);
+          url.searchParams.set('reset', 'true');
+          window.history.replaceState(null, '', url.pathname + '?' + url.searchParams.toString());
         } catch {}
         return;
       }
@@ -99,9 +104,11 @@ const Auth = () => {
           setRecoveryError('Error al validar la sesión. Solicita un nuevo enlace.');
         }).finally(() => {
           setIsVerifyingRecovery(false);
-          // Clear the hash after processing
+          // Clear the hash after processing but persist ?reset=true to block auto-redirects
           try {
-            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            const url = new URL(window.location.href);
+            url.searchParams.set('reset', 'true');
+            window.history.replaceState(null, '', url.pathname + '?' + url.searchParams.toString());
           } catch {}
         });
       }
@@ -160,6 +167,13 @@ const Auth = () => {
       }, 100);
     }
   }, [isAuthenticated, userRole, hasRedirected, isLoading, navigate, isPasswordReset, isVerifyingRecovery, isResetRoute, recoveryError]);
+  
+  // Ensure the reset form is usable if the user is already authenticated via the recovery token
+  useEffect(() => {
+    if (isPasswordReset && isAuthenticated && !isSessionReady) {
+      setIsSessionReady(true);
+    }
+  }, [isAuthenticated, isPasswordReset, isSessionReady]);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -372,7 +386,7 @@ const Auth = () => {
                     </Alert>
                   )}
                   
-                  {!isSessionReady && (
+                  {!canSubmitReset && (
                     <Alert>
                       <AlertDescription>
                         Validando sesión de recuperación...
@@ -390,7 +404,7 @@ const Auth = () => {
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Introduce tu nueva contraseña"
                         required
-                        disabled={!isSessionReady}
+                        disabled={!canSubmitReset}
                       />
                       <Button
                         type="button"
@@ -398,7 +412,7 @@ const Auth = () => {
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowNewPassword(!showNewPassword)}
-                        disabled={!isSessionReady}
+                         disabled={!canSubmitReset}
                       >
                         {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
@@ -415,7 +429,7 @@ const Auth = () => {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirma tu nueva contraseña"
                         required
-                        disabled={!isSessionReady}
+                         disabled={!canSubmitReset}
                       />
                       <Button
                         type="button"
@@ -423,7 +437,7 @@ const Auth = () => {
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        disabled={!isSessionReady}
+                        disabled={!canSubmitReset}
                       >
                         {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
@@ -433,7 +447,7 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className="w-full"
-                    disabled={isSubmitting || !isSessionReady}
+                    disabled={isSubmitting || !canSubmitReset}
                   >
                     {isSubmitting ? (
                       <>

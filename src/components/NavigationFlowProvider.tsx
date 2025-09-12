@@ -156,6 +156,23 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
   useEffect(() => {
     if (!user || !userRole || isTransitioning) return;
 
+    // Block auto-navigation during password recovery/reset flows so the user can update their password
+    const isRecoveryFlow = (() => {
+      if (typeof window === 'undefined') return false;
+      const search = window.location.search;
+      const hash = window.location.hash;
+      return (
+        search.includes('reset=true') ||
+        hash.includes('type=recovery') ||
+        hash.includes('error=') ||
+        hash.includes('error_code=')
+      );
+    })();
+
+    if (isRecoveryFlow && location.pathname === '/auth') {
+      return; // Do not auto-redirect away from the Auth page during recovery
+    }
+
     const currentPath = location.pathname;
     const idealRoute = getRouteForUserState(
       userRole,
