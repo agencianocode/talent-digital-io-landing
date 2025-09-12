@@ -7,6 +7,8 @@ import BusinessMetrics from "@/components/dashboard/BusinessMetrics";
 import RecommendedProfiles from "@/components/dashboard/RecommendedProfiles";
 import DashboardSettings, { DashboardSettings as DashboardSettingsType } from "@/components/dashboard/DashboardSettings";
 import DynamicBanners from "@/components/dashboard/DynamicBanners";
+import DashboardCustomization, { DashboardConfiguration } from "@/components/dashboard/DashboardCustomization";
+import EnhancedMetrics from "@/components/dashboard/EnhancedMetrics";
 import { DashboardLoading } from "@/components/ui/enhanced-loading";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 
@@ -16,19 +18,70 @@ const DashboardHome = () => {
   const { getBusinessMetrics } = useDashboardMetrics();
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [dashboardSettings, setDashboardSettings] = useState<DashboardSettingsType>({
+  const [dashboardConfig, setDashboardConfig] = useState<DashboardConfiguration>({
     layout: 'grid',
-    theme: 'system',
-    showTrends: true,
-    showIcons: true,
+    theme: 'auto',
+    density: 'comfortable',
+    autoRefresh: false,
     refreshInterval: 0,
+    companySize: 'small',
     widgets: {
-      'total-opportunities': { enabled: true, position: 0 },
-      'total-applications': { enabled: true, position: 1 },
-      'applications-this-month': { enabled: true, position: 2 },
-      'conversion-rate': { enabled: true, position: 3 },
-      'top-opportunities': { enabled: true, position: 4 },
-      'recent-applications': { enabled: true, position: 5 },
+      'total-opportunities': { 
+        id: 'total-opportunities', 
+        title: 'Total de Oportunidades', 
+        enabled: true, 
+        position: 0, 
+        size: 'small', 
+        category: 'metrics', 
+        icon: 'Briefcase',
+        description: 'Número total de oportunidades publicadas'
+      },
+      'total-applications': { 
+        id: 'total-applications', 
+        title: 'Total de Aplicaciones', 
+        enabled: true, 
+        position: 1, 
+        size: 'small', 
+        category: 'metrics', 
+        icon: 'Users',
+        description: 'Aplicaciones recibidas en total'
+      },
+      'active-opportunities': { 
+        id: 'active-opportunities', 
+        title: 'Oportunidades Activas', 
+        enabled: true, 
+        position: 2, 
+        size: 'small', 
+        category: 'metrics', 
+        icon: 'Target',
+        description: 'Oportunidades actualmente publicadas'
+      },
+      'applications-this-month': { 
+        id: 'applications-this-month', 
+        title: 'Aplicaciones Este Mes', 
+        enabled: true, 
+        position: 3, 
+        size: 'small', 
+        category: 'metrics', 
+        icon: 'TrendingUp',
+        description: 'Aplicaciones recibidas este mes'
+      },
+      'enhanced-metrics': { 
+        id: 'enhanced-metrics', 
+        title: 'Métricas Avanzadas', 
+        enabled: true, 
+        position: 4, 
+        size: 'large', 
+        category: 'analytics', 
+        icon: 'BarChart3',
+        description: 'Análisis detallado por tipo de contrato y skills'
+      }
+    },
+    customizations: {
+      showWelcomeMessage: true,
+      showTips: true,
+      showBanners: true,
+      primaryMetric: 'total-applications'
     }
   });
   
@@ -62,16 +115,19 @@ const DashboardHome = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className={`p-4 sm:p-6 lg:p-8 ${dashboardConfig.density === 'compact' ? 'space-y-4' : dashboardConfig.density === 'spacious' ? 'space-y-8' : 'space-y-6'}`}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-          ¡Bienvenido, {company?.name || profile?.full_name || 'Usuario'}!
-        </h1>
+        {dashboardConfig.customizations.showWelcomeMessage && (
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            ¡Bienvenido, {company?.name || profile?.full_name || 'Usuario'}!
+          </h1>
+        )}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <DashboardSettings 
-            onSave={setDashboardSettings}
-            currentSettings={dashboardSettings}
+          <DashboardCustomization 
+            currentConfig={dashboardConfig}
+            onConfigChange={setDashboardConfig}
+            metrics={metrics}
           />
           <Button 
             onClick={() => navigate('/business-dashboard/opportunities/new')}
@@ -83,12 +139,12 @@ const DashboardHome = () => {
       </div>
 
       {/* Dynamic CTA Banners */}
-      {metrics && (
+      {metrics && dashboardConfig.customizations.showBanners && (
         <DynamicBanners metrics={metrics} />
       )}
 
       {/* Enhanced Business Metrics */}
-      {metrics && (
+      {metrics && dashboardConfig.widgets['total-opportunities']?.enabled && (
         <BusinessMetrics
           totalOpportunities={metrics.totalOpportunities}
           totalApplications={metrics.totalApplications}
@@ -103,6 +159,19 @@ const DashboardHome = () => {
           topOpportunities={metrics.topOpportunities}
           recentApplications={metrics.recentApplications}
         />
+      )}
+
+      {/* Enhanced Analytics */}
+      {metrics && dashboardConfig.widgets['enhanced-metrics']?.enabled && (
+        <div className="mt-8">
+          <EnhancedMetrics
+            contractTypeMetrics={metrics.contractTypeMetrics || {}}
+            skillsDemand={metrics.skillsDemand || []}
+            experienceLevelDemand={metrics.experienceLevelDemand || []}
+            salaryRanges={metrics.salaryRanges || []}
+            averageSalary={metrics.averageSalary || 0}
+          />
+        </div>
       )}
 
       {/* Recommended Profiles Section */}

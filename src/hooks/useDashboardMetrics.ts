@@ -10,10 +10,10 @@ export const useDashboardMetrics = () => {
     if (!user?.id || !company?.id) return null;
 
     try {
-      // Get opportunities data for this company
+      // Get enhanced opportunities data with new fields
       const { data: opportunitiesData, error: opportunitiesError } = await supabase
         .from('opportunities')
-        .select('id, title, status, created_at')
+        .select('id, title, status, created_at, contract_type, skills, experience_levels, salary_min, salary_max, currency')
         .eq('company_id', company.id);
 
       if (opportunitiesError) {
@@ -44,6 +44,33 @@ export const useDashboardMetrics = () => {
       const totalApplications = applications.length;
       const pendingApplications = applications.filter(app => app.status === 'pending').length;
       const unreviewedApplications = applications.filter(app => app.status === 'pending').length;
+
+      // Enhanced metrics by contract type
+      const contractTypeMetrics = opportunities.reduce((acc, opp) => {
+        const contractType = opp.contract_type || 'other';
+        const applicationsCount = applications.filter(app => app.opportunity_id === opp.id).length;
+        
+        if (!acc[contractType]) {
+          acc[contractType] = { opportunities: 0, applications: 0 };
+        }
+        acc[contractType].opportunities += 1;
+        acc[contractType].applications += applicationsCount;
+        return acc;
+      }, {} as Record<string, { opportunities: number; applications: number }>);
+
+      // Salary range analytics
+      const salaryRanges = opportunities
+        .filter(opp => opp.salary_min && opp.salary_max && typeof opp.salary_min === 'number' && typeof opp.salary_max === 'number')
+        .map(opp => ({
+          min: opp.salary_min as number,
+          max: opp.salary_max as number,
+          currency: opp.currency || 'USD',
+          applications: applications.filter(app => app.opportunity_id === opp.id).length
+        }));
+
+      const averageSalary = salaryRanges.length > 0 
+        ? salaryRanges.reduce((sum, range) => sum + ((range.min + range.max) / 2), 0) / salaryRanges.length
+        : 0;
 
       // Calculate applications this month and last month
       const now = new Date();
@@ -122,7 +149,13 @@ export const useDashboardMetrics = () => {
         candidatesContacted,
         candidatesInEvaluation,
         topOpportunities: opportunityApplicationCounts,
-        recentApplications
+        recentApplications,
+        // Enhanced metrics
+        contractTypeMetrics,
+        salaryRanges,
+        averageSalary,
+        skillsDemand: getSkillsDemand(opportunities, applications),
+        experienceLevelDemand: getExperienceLevelDemand(opportunities, applications)
       };
     } catch (error) {
       console.error('Error in getBusinessMetrics:', error);
@@ -138,10 +171,51 @@ export const useDashboardMetrics = () => {
         candidatesContacted: 0,
         candidatesInEvaluation: 0,
         topOpportunities: [],
-        recentApplications: []
+        recentApplications: [],
+        // Enhanced metrics defaults
+        contractTypeMetrics: {},
+        salaryRanges: [],
+        averageSalary: 0,
+        skillsDemand: [],
+        experienceLevelDemand: []
       };
     }
   }, [user, company]);
+
+  // Helper functions for enhanced metrics
+  const getSkillsDemand = (opportunities: any[], applications: any[]) => {
+    const skillsCount = opportunities.reduce((acc, opp) => {
+      if (opp.skills) {
+        opp.skills.forEach((skill: string) => {
+          const applicationsCount = applications.filter(app => app.opportunity_id === opp.id).length;
+          if (!acc[skill]) acc[skill] = 0;
+          acc[skill] += applicationsCount;
+        });
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(skillsCount)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
+      .slice(0, 10)
+      .map(([skill, count]) => ({ skill, applications: count as number }));
+  };
+
+  const getExperienceLevelDemand = (opportunities: any[], applications: any[]) => {
+    const experienceCount = opportunities.reduce((acc, opp) => {
+      if (opp.experience_levels) {
+        opp.experience_levels.forEach((level: string) => {
+          const applicationsCount = applications.filter(app => app.opportunity_id === opp.id).length;
+          if (!acc[level]) acc[level] = 0;
+          acc[level] += applicationsCount;
+        });
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(experienceCount)
+      .map(([level, count]) => ({ level, applications: count as number }));
+  };
 
   // Talent Metrics - Real data from Supabase
   const getTalentMetrics = useCallback(async () => {

@@ -31,16 +31,18 @@ const RecommendedProfiles: React.FC = () => {
       try {
         setLoading(true);
         
-        // First, get active opportunities for this company to find relevant skills
+        // First, get active opportunities for this company to find relevant skills and requirements
         const { data: activeOpportunities } = await supabase
           .from('opportunities')
-          .select('skills, category')
+          .select('skills, category, experience_levels, contract_type')
           .eq('company_id', company.id)
           .eq('status', 'active');
 
-        // Extract skills and categories from active opportunities
+        // Extract skills, categories, and experience levels from active opportunities
         const relevantSkills = new Set<string>();
         const relevantCategories = new Set<string>();
+        const relevantExperienceLevels = new Set<string>();
+        const relevantContractTypes = new Set<string>();
         
         (activeOpportunities || []).forEach(opp => {
           if (opp.skills) {
@@ -49,9 +51,15 @@ const RecommendedProfiles: React.FC = () => {
           if (opp.category) {
             relevantCategories.add(opp.category);
           }
+          if (opp.experience_levels) {
+            opp.experience_levels.forEach((level: string) => relevantExperienceLevels.add(level));
+          }
+          if (opp.contract_type) {
+            relevantContractTypes.add(opp.contract_type);
+          }
         });
 
-        // Get talent profiles - lowered threshold and improved matching
+        // Get talent profiles with enhanced matching
         const { data: talentProfiles, error } = await supabase
           .from('talent_profiles')
           .select(`
@@ -61,51 +69,72 @@ const RecommendedProfiles: React.FC = () => {
             skills,
             experience_level,
             user_id,
-            primary_category_id
+            primary_category_id,
+            availability
           `)
-          .limit(20); // Get more profiles to filter better
+          .limit(30); // Get more profiles for better matching
 
         if (error) {
           console.error('Error fetching talent profiles:', error);
           return;
         }
 
-        // Get profiles data with lower completeness threshold
+        // Get profiles data with lower completeness threshold and broader search
         const userIds = (talentProfiles || []).map(tp => tp.user_id);
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('user_id, full_name, avatar_url, city, country, profile_completeness')
           .in('user_id', userIds)
-          .gte('profile_completeness', 50); // Lowered from 60 to 50
+          .gte('profile_completeness', 40); // Further lowered threshold for better recommendations
 
         if (profilesError) {
           console.error('Error fetching profiles data:', profilesError);
           return;
         }
 
-        // Combine and score profiles based on relevance
+        // Enhanced scoring algorithm based on multiple factors
         const scoredProfiles = (talentProfiles || [])
           .map(profile => {
             const profileData = (profilesData || []).find(p => p.user_id === profile.user_id);
             if (!profileData) return null;
             
-            // Calculate relevance score
+            // Calculate comprehensive relevance score
             let relevanceScore = 0;
             
-            // Score based on matching skills
+            // Skills matching (40% weight)
             if (profile.skills && relevantSkills.size > 0) {
               const matchingSkills = profile.skills.filter((skill: string) => 
                 relevantSkills.has(skill.toLowerCase())
               );
-              relevanceScore += matchingSkills.length * 10;
+              relevanceScore += matchingSkills.length * 15;
+              
+              // Bonus for high skill match percentage
+              const skillMatchPercentage = matchingSkills.length / profile.skills.length;
+              if (skillMatchPercentage > 0.5) relevanceScore += 10;
             }
             
-            // Score based on profile completeness
-            relevanceScore += (profileData.profile_completeness || 0) / 10;
+            // Experience level matching (25% weight)
+            if (profile.experience_level && relevantExperienceLevels.has(profile.experience_level)) {
+              relevanceScore += 20;
+            }
             
-            // Bonus for having a title and bio
-            if (profile.title) relevanceScore += 5;
-            if (profile.bio && profile.bio.length > 50) relevanceScore += 5;
+            // Profile completeness (20% weight)
+            relevanceScore += (profileData.profile_completeness || 0) / 5;
+            
+            // Content quality bonuses (15% weight)
+            if (profile.title && profile.title.length > 10) relevanceScore += 8;
+            if (profile.bio && profile.bio.length > 100) relevanceScore += 7;
+            if (profile.skills && profile.skills.length >= 5) relevanceScore += 5;
+            
+            // Availability bonus
+            if (profile.availability && profile.availability !== 'not_available') {
+              relevanceScore += 5;
+            }
+            
+            // Location preference (if user has location)
+            if (profileData.city && profileData.country) {
+              relevanceScore += 3;
+            }
             
             return {
               id: profile.id,
