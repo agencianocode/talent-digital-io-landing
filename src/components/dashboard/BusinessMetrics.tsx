@@ -20,6 +20,9 @@ interface BusinessMetricsProps {
   pendingApplications: number;
   applicationsThisMonth: number;
   applicationsLastMonth: number;
+  averageResponseTime: string;
+  candidatesContacted: number;
+  candidatesInEvaluation: number;
   topOpportunities: Array<{
     id: string;
     title: string;
@@ -42,6 +45,9 @@ const BusinessMetrics: React.FC<BusinessMetricsProps> = ({
   pendingApplications,
   applicationsThisMonth,
   applicationsLastMonth,
+  averageResponseTime,
+  candidatesContacted,
+  candidatesInEvaluation,
   topOpportunities,
   recentApplications
 }) => {
@@ -115,6 +121,49 @@ const BusinessMetrics: React.FC<BusinessMetricsProps> = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* Resumen detallado */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Resumen de Actividad</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-sm font-medium">Postulaciones en oportunidades activas</span>
+                <span className="font-bold">{totalApplications}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-sm font-medium">Oportunidades activas</span>
+                <span className="font-bold">{activeOpportunities}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-sm font-medium">Promedio de tiempo para responder</span>
+                <span className="font-bold">{averageResponseTime}</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm font-medium">Candidatos contactados</span>
+                <span className="font-bold">{candidatesContacted}</span>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary mb-1">{candidatesInEvaluation}</div>
+                  <div className="text-sm text-muted-foreground">Candidatos en evaluación</div>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground mb-2">Conversión actual</div>
+                <div className="text-lg font-semibold">
+                  {totalOpportunities > 0 ? ((totalApplications / totalOpportunities) * 100).toFixed(1) : 0}%
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Top oportunidades y aplicaciones recientes */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">

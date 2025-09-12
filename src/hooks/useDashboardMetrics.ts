@@ -82,6 +82,15 @@ export const useDashboardMetrics = () => {
           createdAt: app.created_at
         }));
 
+      // Calculate average response time (mock for now)
+      const averageResponseTime = '16h'; // This would be calculated from actual response data
+      
+      // Calculate candidates contacted (mock for now)
+      const candidatesContacted = applications.filter(app => app.status !== 'pending').length;
+      
+      // Calculate candidates in evaluation (pending applications)
+      const candidatesInEvaluation = pendingApplications;
+
       return {
         totalOpportunities,
         activeOpportunities,
@@ -89,6 +98,9 @@ export const useDashboardMetrics = () => {
         pendingApplications,
         applicationsThisMonth,
         applicationsLastMonth,
+        averageResponseTime,
+        candidatesContacted,
+        candidatesInEvaluation,
         topOpportunities: opportunityApplicationCounts,
         recentApplications
       };
@@ -101,6 +113,9 @@ export const useDashboardMetrics = () => {
         pendingApplications: 0,
         applicationsThisMonth: 0,
         applicationsLastMonth: 0,
+        averageResponseTime: '0h',
+        candidatesContacted: 0,
+        candidatesInEvaluation: 0,
         topOpportunities: [],
         recentApplications: []
       };

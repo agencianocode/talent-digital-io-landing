@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import BusinessMetrics from "@/components/dashboard/BusinessMetrics";
+import RecommendedProfiles from "@/components/dashboard/RecommendedProfiles";
 import DashboardSettings, { DashboardSettings as DashboardSettingsType } from "@/components/dashboard/DashboardSettings";
 
 const DashboardHome = () => {
@@ -87,10 +88,36 @@ const DashboardHome = () => {
           pendingApplications={metrics.pendingApplications}
           applicationsThisMonth={metrics.applicationsThisMonth}
           applicationsLastMonth={metrics.applicationsLastMonth}
+          averageResponseTime={metrics.averageResponseTime}
+          candidatesContacted={metrics.candidatesContacted}
+          candidatesInEvaluation={metrics.candidatesInEvaluation}
           topOpportunities={metrics.topOpportunities}
           recentApplications={metrics.recentApplications}
         />
       )}
+
+      {/* Recommended Profiles Section */}
+      <div className="mt-8">
+        <RecommendedProfiles />
+      </div>
+
+      {/* CTA Section */}
+      <div className="mt-8 p-6 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold mb-2">¿Necesitas ayuda para encontrar el talento perfecto?</h3>
+          <p className="text-muted-foreground mb-4">
+            Nuestro equipo puede ayudarte a optimizar tus búsquedas y atraer a los mejores candidatos.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button variant="outline" onClick={() => window.open('mailto:support@talent-digital.io', '_blank')}>
+              Contactar Soporte
+            </Button>
+            <Button onClick={() => navigate('/business-dashboard/opportunities/new')}>
+              Publicar Nueva Oportunidad
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
