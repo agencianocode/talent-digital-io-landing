@@ -70,12 +70,21 @@ const ApplicationsPage = () => {
   });
 
   useEffect(() => {
-    if (isBusinessRole(userRole) && activeCompany) {
-      fetchApplications();
+    if (isBusinessRole(userRole)) {
+      if (activeCompany) {
+        fetchApplications();
+      } else {
+        setIsLoading(false);
+      }
     }
   }, [userRole, activeCompany]);
 
   const fetchApplications = async () => {
+    if (!activeCompany) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       
@@ -91,7 +100,7 @@ const ApplicationsPage = () => {
       const { data: opportunitiesData } = await supabase
         .from('opportunities')
         .select('id, title, company_id')
-        .eq('company_id', activeCompany?.id);
+        .eq('company_id', activeCompany.id);
 
       // Filter applications for this company's opportunities
       const companyOpportunityIds = (opportunitiesData || []).map(opp => opp.id);
@@ -181,6 +190,20 @@ const ApplicationsPage = () => {
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Acceso Denegado</h1>
         <p>Solo los usuarios de empresa pueden acceder a esta página.</p>
+      </div>
+    );
+  }
+
+  if (!activeCompany) {
+    return (
+      <div className="p-8 text-center">
+        <div className="text-muted-foreground mb-4">
+          <h1 className="text-2xl font-bold mb-4">Configura tu Empresa</h1>
+          <p>Necesitas configurar una empresa para ver las aplicaciones.</p>
+        </div>
+        <Button onClick={() => navigate('/register-business')}>
+          Crear Empresa
+        </Button>
       </div>
     );
   }

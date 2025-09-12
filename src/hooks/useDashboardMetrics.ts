@@ -1,20 +1,22 @@
 import { useCallback } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useDashboardMetrics = () => {
-  const { user, company } = useSupabaseAuth();
+  const { user } = useSupabaseAuth();
+  const { activeCompany } = useCompany();
 
   // Business Metrics - Real data from Supabase
   const getBusinessMetrics = useCallback(async () => {
-    if (!user?.id || !company?.id) return null;
+    if (!user?.id || !activeCompany?.id) return null;
 
     try {
       // Get enhanced opportunities data with new fields
       const { data: opportunitiesData, error: opportunitiesError } = await supabase
         .from('opportunities')
         .select('id, title, status, created_at, contract_type, skills, experience_levels, salary_min, salary_max, currency')
-        .eq('company_id', company.id);
+        .eq('company_id', activeCompany.id);
 
       if (opportunitiesError) {
         console.error('Error fetching opportunities:', opportunitiesError);
@@ -30,7 +32,7 @@ export const useDashboardMetrics = () => {
           opportunity_id,
           opportunities!inner(title, company_id)
         `)
-        .eq('opportunities.company_id', company.id);
+        .eq('opportunities.company_id', activeCompany.id);
 
       if (applicationsError) {
         console.error('Error fetching applications:', applicationsError);
@@ -180,7 +182,7 @@ export const useDashboardMetrics = () => {
         experienceLevelDemand: []
       };
     }
-  }, [user, company]);
+  }, [user, activeCompany]);
 
   // Helper functions for enhanced metrics
   const getSkillsDemand = (opportunities: any[], applications: any[]) => {

@@ -71,12 +71,11 @@ function App() {
       enableSystem
       disableTransitionOnChange
     >
-      <SupabaseAuthProvider>
-        <ProfileManagerProvider>
-          <NotificationsProvider>
-            <OpportunitiesProvider>
-              <MessagingProvider>
-                <ToastProvider>
+      <ProfileManagerProvider>
+        <NotificationsProvider>
+          <OpportunitiesProvider>
+            <MessagingProvider>
+              <ToastProvider>
                   <BrowserRouter>
                     <NavigationFlowProvider>
                       <AccessibilityWrapper>
@@ -276,7 +275,6 @@ function App() {
             </OpportunitiesProvider>
         </NotificationsProvider>
         </ProfileManagerProvider>
-      </SupabaseAuthProvider>
     </ThemeProvider>
   );
 }

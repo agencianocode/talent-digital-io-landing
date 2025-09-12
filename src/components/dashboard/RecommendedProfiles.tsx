@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { Users, Star, MapPin, Clock } from 'lucide-react';
 
 interface RecommendedProfile {
@@ -20,13 +20,55 @@ interface RecommendedProfile {
 }
 
 const RecommendedProfiles: React.FC = () => {
-  const { company } = useSupabaseAuth();
+  const { activeCompany } = useCompany();
   const [profiles, setProfiles] = useState<RecommendedProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadRecommendedProfiles = async () => {
-      if (!company?.id) return;
+      if (!activeCompany?.id) {
+        // If no active company, show top general profiles
+        try {
+          const { data: talentProfiles } = await supabase
+            .from('talent_profiles')
+            .select('user_id, title, bio, skills, experience_level')
+            .limit(6);
+
+          const userIds = (talentProfiles || []).map(tp => tp.user_id);
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('user_id, full_name, avatar_url, city, profile_completeness')
+            .in('user_id', userIds)
+            .gte('profile_completeness', 40)
+            .order('profile_completeness', { ascending: false });
+
+          const formattedProfiles = (talentProfiles || [])
+            .map(tp => {
+              const profileData = (profilesData || []).find(p => p.user_id === tp.user_id);
+              if (!profileData) return null;
+              
+              return {
+                id: tp.user_id,
+                full_name: profileData.full_name || 'Usuario',
+                avatar_url: profileData.avatar_url || '',
+                title: tp.title || 'Profesional',
+                bio: tp.bio || '',
+                skills: tp.skills || [],
+                experience_level: tp.experience_level || 'intermedio',
+                location: profileData.city || '',
+                profile_completeness: profileData.profile_completeness || 0
+              };
+            })
+            .filter(Boolean) as RecommendedProfile[];
+
+          setProfiles(formattedProfiles);
+        } catch (error) {
+          console.error('Error loading general profiles:', error);
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
 
       try {
         setLoading(true);
@@ -35,7 +77,7 @@ const RecommendedProfiles: React.FC = () => {
         const { data: activeOpportunities } = await supabase
           .from('opportunities')
           .select('skills, category, experience_levels, contract_type')
-          .eq('company_id', company.id)
+          .eq('company_id', activeCompany.id)
           .eq('status', 'active');
 
         // Extract skills, categories, and experience levels from active opportunities
@@ -195,7 +237,7 @@ const RecommendedProfiles: React.FC = () => {
     };
 
     loadRecommendedProfiles();
-  }, [company]);
+  }, [activeCompany]);
 
   if (loading) {
     return (
@@ -285,7 +327,7 @@ const RecommendedProfiles: React.FC = () => {
               <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No hay perfiles recomendados disponibles</p>
               <p className="text-xs">
-                {!company?.id 
+                {!activeCompany?.id 
                   ? 'Configura tu empresa para ver recomendaciones'
                   : 'Los candidatos aparecerán aquí cuando completen sus perfiles'
                 }

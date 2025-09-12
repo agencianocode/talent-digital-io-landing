@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useCompany } from "@/contexts/CompanyContext";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import BusinessMetrics from "@/components/dashboard/BusinessMetrics";
 import RecommendedProfiles from "@/components/dashboard/RecommendedProfiles";
@@ -14,7 +15,8 @@ import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 
 const DashboardHome = () => {
   const navigate = useNavigate();
-  const { user, company, profile } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
+  const { activeCompany } = useCompany();
   const { getBusinessMetrics } = useDashboardMetrics();
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,6 +112,22 @@ const DashboardHome = () => {
     loadMetrics();
   }, [getBusinessMetrics]);
 
+  if (!activeCompany) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="text-center py-12">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4">¡Configura tu Empresa!</h1>
+          <p className="text-muted-foreground mb-6">
+            Para acceder a tu dashboard, primero necesitas crear o seleccionar una empresa.
+          </p>
+          <Button onClick={() => navigate('/register-business')}>
+            Crear Nueva Empresa
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return <DashboardLoading />;
   }
@@ -120,7 +138,7 @@ const DashboardHome = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         {dashboardConfig.customizations.showWelcomeMessage && (
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            ¡Bienvenido, {company?.name || profile?.full_name || 'Usuario'}!
+            ¡Bienvenido, {activeCompany?.name || profile?.full_name || 'Usuario'}!
           </h1>
         )}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">

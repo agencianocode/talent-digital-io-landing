@@ -74,7 +74,7 @@ const OpportunitiesPage = () => {
 
   // Filter opportunities by company (business users only see their own)
   const companyOpportunities = opportunities.filter(opp => 
-    !activeCompany || opp.company_id === activeCompany.id
+    activeCompany && opp.company_id === activeCompany.id
   );
 
   // Apply search and filters
@@ -174,6 +174,21 @@ const OpportunitiesPage = () => {
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Acceso Denegado</h1>
         <p>Solo los usuarios de empresa pueden acceder a esta página.</p>
+      </div>
+    );
+  }
+
+  if (!activeCompany) {
+    return (
+      <div className="p-8 text-center">
+        <Briefcase className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+        <h1 className="text-2xl font-bold mb-4">Configura tu Empresa</h1>
+        <p className="text-muted-foreground mb-6">
+          Necesitas configurar una empresa para empezar a publicar oportunidades.
+        </p>
+        <Button onClick={() => navigate('/register-business')}>
+          Crear Empresa
+        </Button>
       </div>
     );
   }
