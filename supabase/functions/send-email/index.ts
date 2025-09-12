@@ -6,8 +6,21 @@ import { MagicLinkEmail } from './_templates/magic-link.tsx'
 import { ConfirmSignupEmail } from './_templates/confirm-signup.tsx'
 import { ResetPasswordEmail } from './_templates/reset-password.tsx'
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string)
-const hookSecret = Deno.env.get('SEND_EMAIL_HOOK_SECRET') as string
+// Initialize with better error handling
+const resendApiKey = Deno.env.get('RESEND_API_KEY')
+const hookSecret = Deno.env.get('SEND_EMAIL_HOOK_SECRET')
+
+if (!resendApiKey) {
+  console.error('RESEND_API_KEY is not configured')
+  throw new Error('RESEND_API_KEY is not configured')
+}
+
+if (!hookSecret) {
+  console.error('SEND_EMAIL_HOOK_SECRET is not configured')
+  throw new Error('SEND_EMAIL_HOOK_SECRET is not configured')
+}
+
+const resend = new Resend(resendApiKey)
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +28,8 @@ const corsHeaders = {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('Email function started')
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -25,11 +40,13 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('Processing email request...')
+    
     const payload = await req.text()
     const headers = Object.fromEntries(req.headers)
     const wh = new Webhook(hookSecret)
     
-    console.log('Received webhook payload for email sending')
+    console.log('Verifying webhook payload...')
     
     const {
       user,
@@ -49,81 +66,96 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Processing ${email_action_type} email for ${user.email}`)
 
-    let html: string
-    let subject: string
-
-    // Generate appropriate email based on type
-    switch (email_action_type) {
-      case 'signup':
-        html = await renderAsync(
-          React.createElement(ConfirmSignupEmail, {
-            supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
-            token,
-            token_hash,
-            redirect_to,
-            email_action_type,
-            userEmail: user.email
-          })
-        )
-        subject = '¡Bienvenido a TalentFlow! Confirma tu cuenta'
-        break
-
-      case 'magiclink':
-        html = await renderAsync(
-          React.createElement(MagicLinkEmail, {
-            supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
-            token,
-            token_hash,
-            redirect_to,
-            email_action_type,
-            userEmail: user.email
-          })
-        )
-        subject = 'Accede a TalentFlow con tu enlace mágico'
-        break
-
-      case 'recovery':
-        html = await renderAsync(
-          React.createElement(ResetPasswordEmail, {
-            supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
-            token,
-            token_hash,
-            redirect_to,
-            email_action_type,
-            userEmail: user.email
-          })
-        )
-        subject = 'Restablece tu contraseña en TalentFlow'
-        break
-
-      default:
-        // Fallback to magic link for unknown types
-        html = await renderAsync(
-          React.createElement(MagicLinkEmail, {
-            supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
-            token,
-            token_hash,
-            redirect_to,
-            email_action_type,
-            userEmail: user.email
-          })
-        )
-        subject = 'Acceso a TalentFlow'
-    }
-
-    const { error } = await resend.emails.send({
-      from: 'TalentFlow <onboarding@resend.dev>',
-      to: [user.email],
-      subject,
-      html,
+    // Add timeout protection
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Email processing timeout')), 3000)
     })
 
-    if (error) {
-      console.error('Resend error:', error)
-      throw error
+    // Generate and send email with race condition for timeout
+    const emailProcess = async () => {
+      let html: string
+      let subject: string
+
+      console.log('Generating email template...')
+
+      // Generate appropriate email based on type
+      switch (email_action_type) {
+        case 'signup':
+          html = await renderAsync(
+            React.createElement(ConfirmSignupEmail, {
+              supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
+              token,
+              token_hash,
+              redirect_to,
+              email_action_type,
+              userEmail: user.email
+            })
+          )
+          subject = '¡Bienvenido a TalentFlow! Confirma tu cuenta'
+          break
+
+        case 'magiclink':
+          html = await renderAsync(
+            React.createElement(MagicLinkEmail, {
+              supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
+              token,
+              token_hash,
+              redirect_to,
+              email_action_type,
+              userEmail: user.email
+            })
+          )
+          subject = 'Accede a TalentFlow con tu enlace mágico'
+          break
+
+        case 'recovery':
+          html = await renderAsync(
+            React.createElement(ResetPasswordEmail, {
+              supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
+              token,
+              token_hash,
+              redirect_to,
+              email_action_type,
+              userEmail: user.email
+            })
+          )
+          subject = 'Restablece tu contraseña en TalentFlow'
+          break
+
+        default:
+          html = await renderAsync(
+            React.createElement(MagicLinkEmail, {
+              supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
+              token,
+              token_hash,
+              redirect_to,
+              email_action_type,
+              userEmail: user.email
+            })
+          )
+          subject = 'Acceso a TalentFlow'
+      }
+
+      console.log('Sending email via Resend...')
+
+      const { error } = await resend.emails.send({
+        from: 'TalentFlow <onboarding@resend.dev>',
+        to: [user.email],
+        subject,
+        html,
+      })
+
+      if (error) {
+        console.error('Resend error:', error)
+        throw error
+      }
+
+      console.log(`${email_action_type} email sent successfully to ${user.email}`)
+      return { success: true }
     }
 
-    console.log(`${email_action_type} email sent successfully to ${user.email}`)
+    // Race between email process and timeout
+    await Promise.race([emailProcess(), timeoutPromise])
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

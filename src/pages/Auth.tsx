@@ -117,14 +117,23 @@ const Auth = () => {
       return;
     }
 
-    const { error } = await resetPassword(resetEmail);
-    
-    if (error) {
-      setError('Error al enviar el email de recuperación. Intenta nuevamente.');
-    } else {
+    // Add timeout protection (30 seconds)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('La solicitud tardó demasiado tiempo. Por favor intenta de nuevo.')), 30000)
+    });
+
+    try {
+      await Promise.race([
+        resetPassword(resetEmail),
+        timeoutPromise
+      ]);
+      
       setMessage('Se ha enviado un email con las instrucciones para restablecer tu contraseña.');
       setShowForgotPassword(false);
       setResetEmail('');
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      setError(err.message || 'Error al enviar el email de recuperación. Intenta nuevamente.');
     }
     
     setIsSubmitting(false);
