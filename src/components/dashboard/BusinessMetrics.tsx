@@ -18,6 +18,7 @@ interface BusinessMetricsProps {
   totalApplications: number;
   activeOpportunities: number;
   pendingApplications: number;
+  unreviewedApplications: number;
   applicationsThisMonth: number;
   applicationsLastMonth: number;
   averageResponseTime: string;
@@ -43,6 +44,7 @@ const BusinessMetrics: React.FC<BusinessMetricsProps> = ({
   totalApplications,
   activeOpportunities,
   pendingApplications,
+  unreviewedApplications,
   applicationsThisMonth,
   applicationsLastMonth,
   averageResponseTime,
@@ -101,7 +103,7 @@ const BusinessMetrics: React.FC<BusinessMetricsProps> = ({
           <CardContent>
             <div className="text-2xl font-bold">{applicationsThisMonth}</div>
             <p className="text-xs text-muted-foreground">
-              {pendingApplications} pendientes
+              {unreviewedApplications} sin revisar
             </p>
           </CardContent>
         </Card>

@@ -86,6 +86,7 @@ const DashboardHome = () => {
           totalApplications={metrics.totalApplications}
           activeOpportunities={metrics.activeOpportunities}
           pendingApplications={metrics.pendingApplications}
+          unreviewedApplications={metrics.unreviewedApplications}
           applicationsThisMonth={metrics.applicationsThisMonth}
           applicationsLastMonth={metrics.applicationsLastMonth}
           averageResponseTime={metrics.averageResponseTime}

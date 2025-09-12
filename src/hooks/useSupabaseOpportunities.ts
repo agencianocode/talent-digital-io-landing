@@ -13,7 +13,7 @@ interface SupabaseOpportunity {
   salary_min: number;
   salary_max: number;
   currency: string;
-  is_active: boolean;
+  status: 'draft' | 'active' | 'paused' | 'closed';
   created_at: string;
   updated_at: string;
   company_id: string;
@@ -54,7 +54,7 @@ export const useSupabaseOpportunities = () => {
             logo_url
           )
         `)
-        .eq('is_active', true)
+        .eq('status', 'active')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -223,7 +223,7 @@ export const useSupabaseOpportunities = () => {
     try {
       const { error } = await supabase
         .from('opportunities')
-        .update({ is_active: !currentStatus })
+        .update({ status: currentStatus ? 'paused' : 'active' })
         .eq('id', opportunityId);
 
       if (error) throw error;

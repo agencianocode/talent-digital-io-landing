@@ -13,7 +13,7 @@ export const useDashboardMetrics = () => {
       // Get opportunities data for this company
       const { data: opportunitiesData, error: opportunitiesError } = await supabase
         .from('opportunities')
-        .select('id, title, is_active, created_at')
+        .select('id, title, status, created_at')
         .eq('company_id', company.id);
 
       if (opportunitiesError) {
@@ -40,9 +40,10 @@ export const useDashboardMetrics = () => {
       const applications = applicationsData || [];
 
       const totalOpportunities = opportunities.length;
-      const activeOpportunities = opportunities.filter(opp => opp.is_active).length;
+      const activeOpportunities = opportunities.filter(opp => opp.status === 'active').length;
       const totalApplications = applications.length;
       const pendingApplications = applications.filter(app => app.status === 'pending').length;
+      const unreviewedApplications = applications.filter(app => app.status === 'pending').length;
 
       // Calculate applications this month and last month
       const now = new Date();
@@ -96,6 +97,7 @@ export const useDashboardMetrics = () => {
         activeOpportunities,
         totalApplications,
         pendingApplications,
+        unreviewedApplications,
         applicationsThisMonth,
         applicationsLastMonth,
         averageResponseTime,
@@ -111,6 +113,7 @@ export const useDashboardMetrics = () => {
         activeOpportunities: 0,
         totalApplications: 0,
         pendingApplications: 0,
+        unreviewedApplications: 0,
         applicationsThisMonth: 0,
         applicationsLastMonth: 0,
         averageResponseTime: '0h',
@@ -193,7 +196,7 @@ export const useDashboardMetrics = () => {
           salary_max,
           currency
         `)
-        .eq('is_active', true)
+        .eq('status', 'active')
         .limit(5);
 
       const recommendedOpportunities = (opportunitiesData || []).map(opp => ({

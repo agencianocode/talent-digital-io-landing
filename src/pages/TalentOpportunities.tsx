@@ -59,7 +59,7 @@ const TalentOpportunities = () => {
             salary_min,
             salary_max,
             currency,
-            is_active,
+            status,
             companies (
               id,
               name,

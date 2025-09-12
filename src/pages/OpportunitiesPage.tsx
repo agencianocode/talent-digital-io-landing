@@ -288,9 +288,9 @@ const OpportunitiesPage = () => {
                     </h3>
                     <Badge 
                       variant="secondary" 
-                      className={getStatusBadgeClass(opportunity.is_active)}
+                      className={getStatusBadgeClass(opportunity.status === 'active')}
                     >
-                      {opportunity.is_active ? 'ACTIVA' : 'INACTIVA'}
+                      {opportunity.status === 'active' ? 'ACTIVA' : 'PAUSADA'}
                     </Badge>
                     <Badge variant="outline">
                       {opportunity.category}
@@ -386,9 +386,9 @@ const OpportunitiesPage = () => {
                             <Copy className="h-4 w-4 mr-2" />
                             Duplicar
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleToggleStatus(opportunity.id, opportunity.is_active)}>
+                          <DropdownMenuItem onClick={() => handleToggleStatus(opportunity.id, opportunity.status === 'active')}>
                             <Archive className="h-4 w-4 mr-2" />
-                            {opportunity.is_active ? 'Desactivar' : 'Activar'}
+                            {opportunity.status === 'active' ? 'Pausar' : 'Activar'}
                           </DropdownMenuItem>
                         </>
                       )}

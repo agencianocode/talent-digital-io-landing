@@ -171,8 +171,8 @@ const OpportunityDetail = () => {
                   {applicationStatus || 'Aplicado'}
                 </Badge>
               )}
-              <Badge variant={opportunity.is_active ? "default" : "secondary"}>
-                {opportunity.is_active ? 'ACTIVA' : 'INACTIVA'}
+              <Badge variant={opportunity.status === 'active' ? "default" : "secondary"}>
+                {opportunity.status === 'active' ? 'ACTIVA' : 'PAUSADA'}
               </Badge>
             </div>
           </div>
@@ -208,7 +208,7 @@ const OpportunityDetail = () => {
               <Heart className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
             </Button>
             
-            {!applied && opportunity.is_active && (
+            {!applied && opportunity.status === 'active' && (
               <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
                 <DialogTrigger asChild>
                   <Button className="gap-2">

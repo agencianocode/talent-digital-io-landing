@@ -31,7 +31,27 @@ const RecommendedProfiles: React.FC = () => {
       try {
         setLoading(true);
         
-        // Get talent profiles with high completeness scores
+        // First, get active opportunities for this company to find relevant skills
+        const { data: activeOpportunities } = await supabase
+          .from('opportunities')
+          .select('skills, category')
+          .eq('company_id', company.id)
+          .eq('status', 'active');
+
+        // Extract skills and categories from active opportunities
+        const relevantSkills = new Set<string>();
+        const relevantCategories = new Set<string>();
+        
+        (activeOpportunities || []).forEach(opp => {
+          if (opp.skills) {
+            opp.skills.forEach((skill: string) => relevantSkills.add(skill.toLowerCase()));
+          }
+          if (opp.category) {
+            relevantCategories.add(opp.category);
+          }
+        });
+
+        // Get talent profiles - lowered threshold and improved matching
         const { data: talentProfiles, error } = await supabase
           .from('talent_profiles')
           .select(`
@@ -40,33 +60,52 @@ const RecommendedProfiles: React.FC = () => {
             bio,
             skills,
             experience_level,
-            user_id
+            user_id,
+            primary_category_id
           `)
-          .limit(6);
+          .limit(20); // Get more profiles to filter better
 
         if (error) {
           console.error('Error fetching talent profiles:', error);
           return;
         }
 
-        // Get profiles data separately
+        // Get profiles data with lower completeness threshold
         const userIds = (talentProfiles || []).map(tp => tp.user_id);
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('user_id, full_name, avatar_url, city, country, profile_completeness')
           .in('user_id', userIds)
-          .gte('profile_completeness', 60);
+          .gte('profile_completeness', 50); // Lowered from 60 to 50
 
         if (profilesError) {
           console.error('Error fetching profiles data:', profilesError);
           return;
         }
 
-        // Combine the data
-        const formattedProfiles = (talentProfiles || [])
+        // Combine and score profiles based on relevance
+        const scoredProfiles = (talentProfiles || [])
           .map(profile => {
             const profileData = (profilesData || []).find(p => p.user_id === profile.user_id);
             if (!profileData) return null;
+            
+            // Calculate relevance score
+            let relevanceScore = 0;
+            
+            // Score based on matching skills
+            if (profile.skills && relevantSkills.size > 0) {
+              const matchingSkills = profile.skills.filter((skill: string) => 
+                relevantSkills.has(skill.toLowerCase())
+              );
+              relevanceScore += matchingSkills.length * 10;
+            }
+            
+            // Score based on profile completeness
+            relevanceScore += (profileData.profile_completeness || 0) / 10;
+            
+            // Bonus for having a title and bio
+            if (profile.title) relevanceScore += 5;
+            if (profile.bio && profile.bio.length > 50) relevanceScore += 5;
             
             return {
               id: profile.id,
@@ -79,10 +118,44 @@ const RecommendedProfiles: React.FC = () => {
               location: profileData.city && profileData.country 
                 ? `${profileData.city}, ${profileData.country}`
                 : 'Ubicación no especificada',
-              profile_completeness: profileData.profile_completeness || 0
+              profile_completeness: profileData.profile_completeness || 0,
+              relevanceScore
             };
           })
-          .filter(Boolean) as RecommendedProfile[];
+          .filter(Boolean)
+          .sort((a, b) => (b?.relevanceScore || 0) - (a?.relevanceScore || 0))
+          .slice(0, 6) as (RecommendedProfile & { relevanceScore: number })[];
+
+        // If we have fewer than 3 profiles, get some random ones as fallback
+        if (scoredProfiles.length < 3) {
+          const fallbackProfiles = (talentProfiles || [])
+            .filter(tp => !scoredProfiles.find(sp => sp.id === tp.id))
+            .map(profile => {
+              const profileData = (profilesData || []).find(p => p.user_id === profile.user_id);
+              if (!profileData) return null;
+              
+              return {
+                id: profile.id,
+                full_name: profileData.full_name || 'Candidato',
+                avatar_url: profileData.avatar_url || '',
+                title: profile.title || 'Profesional',
+                bio: profile.bio || 'Sin descripción disponible',
+                skills: profile.skills || [],
+                experience_level: profile.experience_level || 'No especificado',
+                location: profileData.city && profileData.country 
+                  ? `${profileData.city}, ${profileData.country}`
+                  : 'Ubicación no especificada',
+                profile_completeness: profileData.profile_completeness || 0,
+                relevanceScore: 0
+              };
+            })
+            .filter(Boolean)
+            .slice(0, 6 - scoredProfiles.length) as (RecommendedProfile & { relevanceScore: number })[];
+            
+          scoredProfiles.push(...fallbackProfiles);
+        }
+        
+        const formattedProfiles = scoredProfiles.map(({ relevanceScore, ...profile }) => profile);
 
         setProfiles(formattedProfiles);
       } catch (error) {
@@ -182,7 +255,12 @@ const RecommendedProfiles: React.FC = () => {
             <div className="text-center py-8 text-muted-foreground">
               <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No hay perfiles recomendados disponibles</p>
-              <p className="text-xs">Publica más oportunidades para obtener recomendaciones</p>
+              <p className="text-xs">
+                {!company?.id 
+                  ? 'Configura tu empresa para ver recomendaciones'
+                  : 'Los candidatos aparecerán aquí cuando completen sus perfiles'
+                }
+              </p>
             </div>
           )}
         </div>
