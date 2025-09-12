@@ -25,11 +25,11 @@ interface Application {
   profiles: {
     full_name: string;
     avatar_url?: string;
-  };
+  } | null;
   opportunities: {
     title: string;
     company_id: string;
-  };
+  } | null;
 }
 
 const ApplicationsPage = () => {
@@ -42,9 +42,43 @@ const ApplicationsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  // Handle URL filters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const statusParam = urlParams.get('status');
+    const opportunityParam = urlParams.get('opportunity');
+    const applicationParam = urlParams.get('application');
+    
+    if (statusParam) {
+      setStatusFilter(statusParam);
+    }
+  }, []);
+
   useEffect(() => {
     if (isBusinessRole(userRole) && activeCompany) {
       fetchApplications();
+      
+      // Set up real-time subscription for new applications
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'applications'
+          },
+          (payload) => {
+            console.log('New application received:', payload);
+            // Refresh applications when a new one is inserted
+            fetchApplications();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [userRole, activeCompany]);
 
@@ -52,7 +86,7 @@ const ApplicationsPage = () => {
     try {
       setIsLoading(true);
       
-      // First get applications for the company's opportunities
+      // Get applications and related data separately to avoid join issues
       const { data: applicationsData, error: applicationsError } = await supabase
         .from('applications')
         .select('*')
@@ -60,34 +94,35 @@ const ApplicationsPage = () => {
 
       if (applicationsError) throw applicationsError;
 
-      // Filter applications for this company's opportunities
-      const companyApplications = applicationsData?.filter(app => {
-        // We'll need to fetch opportunity details to filter by company
-        return true; // For now, show all applications
-      }) || [];
+      // Get opportunities for this company
+      const { data: opportunitiesData } = await supabase
+        .from('opportunities')
+        .select('id, title, company_id')
+        .eq('company_id', activeCompany?.id);
 
-      // Fetch related data for each application
+      // Filter applications for this company's opportunities
+      const companyOpportunityIds = (opportunitiesData || []).map(opp => opp.id);
+      const companyApplications = (applicationsData || []).filter(app => 
+        companyOpportunityIds.includes(app.opportunity_id)
+      );
+
+      // Enrich with profile and opportunity data
       const enrichedApplications = await Promise.all(
         companyApplications.map(async (app) => {
-          const [profileData, opportunityData] = await Promise.all([
+          const [profileResult, opportunityResult] = await Promise.all([
             supabase.from('profiles').select('full_name, avatar_url').eq('user_id', app.user_id).single(),
             supabase.from('opportunities').select('title, company_id').eq('id', app.opportunity_id).single()
           ]);
 
           return {
             ...app,
-            profiles: profileData.data || { full_name: 'Usuario', avatar_url: null },
-            opportunities: opportunityData.data || { title: 'Oportunidad', company_id: '' }
+            profiles: profileResult.data || null,
+            opportunities: opportunityResult.data || null
           };
         })
       );
 
-      // Filter by company
-      const filteredApplications = enrichedApplications.filter(app => 
-        app.opportunities.company_id === activeCompany?.id
-      );
-
-      setApplications(filteredApplications);
+      setApplications(enrichedApplications as Application[]);
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast.error('Error al cargar las aplicaciones');
@@ -176,10 +211,15 @@ const ApplicationsPage = () => {
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             Aplicaciones Recibidas
+            {filteredApplications.filter(app => app.status === 'pending').length > 0 && (
+              <Badge variant="destructive" className="animate-pulse">
+                {filteredApplications.filter(app => app.status === 'pending').length} nuevas
+              </Badge>
+            )}
           </h1>
           <p className="text-muted-foreground mt-2">
             Gestiona las aplicaciones de talento a tus oportunidades
