@@ -24,41 +24,90 @@ const Auth = () => {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [isVerifyingRecovery, setIsVerifyingRecovery] = useState(false);
   const [isSessionReady, setIsSessionReady] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const [isResetRoute, setIsResetRoute] = useState(false);
   
   // Check if coming from password reset link
   useEffect(() => {
     const resetParam = searchParams.get('reset');
     if (resetParam === 'true') {
       setIsPasswordReset(true);
+      setIsResetRoute(true);
     }
   }, [searchParams]);
 
-  // Detect Supabase recovery links in URL hash and wait for session
+  // Detect Supabase recovery links in URL hash and handle errors
   useEffect(() => {
     const hash = window.location.hash;
-    if (hash && hash.includes('type=recovery')) {
-      setIsPasswordReset(true);
-      setIsVerifyingRecovery(true);
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setIsSessionReady(!!session);
-      }).finally(() => {
+    
+    // Parse hash parameters for errors
+    const parseHashParams = (hash: string) => {
+      const params = new URLSearchParams(hash.substring(1));
+      return {
+        errorCode: params.get('error_code'),
+        error: params.get('error'),
+        errorDescription: params.get('error_description'),
+        type: params.get('type')
+      };
+    };
+
+    if (hash) {
+      const hashParams = parseHashParams(hash);
+      
+      // Check for errors first
+      if (hashParams.error || hashParams.errorCode) {
+        console.log('Auth.tsx: Hash error detected:', hashParams);
+        setIsPasswordReset(true);
         setIsVerifyingRecovery(false);
+        setIsSessionReady(false);
+        
+        if (hashParams.errorCode === 'otp_expired') {
+          setRecoveryError('El enlace de recuperación ha expirado. Solicita un nuevo enlace.');
+        } else if (hashParams.error === 'access_denied') {
+          setRecoveryError('El enlace de recuperación es inválido o ha expirado. Solicita un nuevo enlace.');
+        } else {
+          setRecoveryError('Hubo un problema con el enlace de recuperación. Solicita un nuevo enlace.');
+        }
+        
+        // Clear the hash
         try {
-          if (window.location.hash.includes('type=recovery')) {
-            window.history.replaceState(null, '', window.location.pathname + window.location.search);
-          }
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
         } catch {}
-      });
+        return;
+      }
+      
+      // Check for valid recovery type
+      if (hashParams.type === 'recovery') {
+        console.log('Auth.tsx: Valid recovery link detected');
+        setIsPasswordReset(true);
+        setIsVerifyingRecovery(true);
+        setRecoveryError(null);
+        
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          console.log('Auth.tsx: Recovery session check:', !!session);
+          setIsSessionReady(!!session);
+          if (!session) {
+            setRecoveryError('No se pudo validar la sesión de recuperación. Solicita un nuevo enlace.');
+          }
+        }).catch((error) => {
+          console.error('Auth.tsx: Session check error:', error);
+          setRecoveryError('Error al validar la sesión. Solicita un nuevo enlace.');
+        }).finally(() => {
+          setIsVerifyingRecovery(false);
+          // Clear the hash after processing
+          try {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          } catch {}
+        });
+      }
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth.tsx: Auth state change:', event, !!session);
       if (event === 'PASSWORD_RECOVERY') {
         setIsPasswordReset(true);
         setIsSessionReady(!!session);
-      }
-      if (event === 'SIGNED_IN' && (hash?.includes('type=recovery') || window.location.hash.includes('type=recovery'))) {
-        setIsPasswordReset(true);
-        setIsSessionReady(!!session);
+        setRecoveryError(null);
       }
     });
 
@@ -70,7 +119,8 @@ const Auth = () => {
   // Redirect if already authenticated - with race condition protection
   useEffect(() => {
     // Only redirect if we have both auth status and role, and haven't redirected yet, and not in password reset mode
-    if (isAuthenticated && userRole && !hasRedirected && !isLoading && !isPasswordReset && !isVerifyingRecovery) {
+    // Also prevent redirect if we're on a reset route or have recovery errors
+    if (isAuthenticated && userRole && !hasRedirected && !isLoading && !isPasswordReset && !isVerifyingRecovery && !isResetRoute && !recoveryError) {
       console.log('Auth.tsx: Redirecting user with role:', userRole);
       setHasRedirected(true);
       
@@ -263,86 +313,120 @@ const Auth = () => {
               Talento Digital
             </h1>
             <p className="text-muted-foreground">
-              Establece tu nueva contraseña
+              {recoveryError ? 'Enlace de recuperación' : 'Establece tu nueva contraseña'}
             </p>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Nueva Contraseña</CardTitle>
+              <CardTitle>{recoveryError ? 'Error de Recuperación' : 'Nueva Contraseña'}</CardTitle>
               <CardDescription>
-                Introduce tu nueva contraseña para completar el proceso
+                {recoveryError 
+                  ? 'Hubo un problema con el enlace de recuperación'
+                  : 'Introduce tu nueva contraseña para completar el proceso'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleUpdatePassword} className="space-y-4">
-                {error && (
+              {recoveryError ? (
+                <div className="space-y-4">
                   <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>{recoveryError}</AlertDescription>
                   </Alert>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Nueva contraseña</Label>
-                  <div className="relative">
-                    <Input
-                      id="newPassword"
-                      type={showNewPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Introduce tu nueva contraseña"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
+                  
+                  <Button 
+                    onClick={() => {
+                      setRecoveryError(null);
+                      setIsPasswordReset(false);
+                      setIsResetRoute(false);
+                    }}
+                    className="w-full"
+                  >
+                    Solicitar nuevo enlace
+                  </Button>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirma tu nueva contraseña"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={isSubmitting || !isSessionReady}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Actualizando contraseña...
-                    </>
-                  ) : (
-                    'Actualizar contraseña'
+              ) : (
+                <form onSubmit={handleUpdatePassword} className="space-y-4">
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
                   )}
-                </Button>
-              </form>
+                  
+                  {!isSessionReady && (
+                    <Alert>
+                      <AlertDescription>
+                        Validando sesión de recuperación...
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">Nueva contraseña</Label>
+                    <div className="relative">
+                      <Input
+                        id="newPassword"
+                        type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Introduce tu nueva contraseña"
+                        required
+                        disabled={!isSessionReady}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        disabled={!isSessionReady}
+                      >
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirma tu nueva contraseña"
+                        required
+                        disabled={!isSessionReady}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={!isSessionReady}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={isSubmitting || !isSessionReady}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Actualizando contraseña...
+                      </>
+                    ) : (
+                      'Actualizar contraseña'
+                    )}
+                  </Button>
+                </form>
+              )}
             </CardContent>
           </Card>
 
