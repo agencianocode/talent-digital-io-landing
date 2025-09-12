@@ -3,15 +3,15 @@ import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 
-export type UserRole = 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'admin';
+export type UserRole = 'talent' | 'business' | 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'admin';
 
 // Utility functions to check user types
 export const isTalentRole = (role: UserRole | null): boolean => {
-  return role === 'freemium_talent' || role === 'premium_talent';
+  return role === 'talent' || role === 'freemium_talent' || role === 'premium_talent';
 };
 
 export const isBusinessRole = (role: UserRole | null): boolean => {
-  return role === 'freemium_business' || role === 'premium_business';
+  return role === 'business' || role === 'freemium_business' || role === 'premium_business';
 };
 
 export const isPremiumRole = (role: UserRole | null): boolean => {
@@ -182,9 +182,22 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } : null;
       }
 
+      // Normalize roles from database to app roles
+      let normalizedRole: UserRole = 'freemium_talent';
+      if (roleData?.role) {
+        const dbRole = roleData.role as string;
+        if (dbRole === 'business') {
+          normalizedRole = 'freemium_business';
+        } else if (dbRole === 'talent') {
+          normalizedRole = 'freemium_talent';
+        } else {
+          normalizedRole = dbRole as UserRole;
+        }
+      }
+
       return {
         profile: profile || null,
-        role: (roleData?.role as UserRole) || 'freemium_talent',
+        role: normalizedRole,
         company
       };
     } catch (error) {

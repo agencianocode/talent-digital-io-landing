@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { 
   ProfileState, 
@@ -133,7 +133,7 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
     setIsTransitioning(true);
     setTimeout(() => {
       // Navigate to appropriate dashboard based on user role
-      const dashboardRoute = userRole && ['freemium_business', 'premium_business'].includes(userRole) 
+      const dashboardRoute = userRole && isBusinessRole(userRole) 
         ? '/business-dashboard' 
         : '/talent-dashboard';
       navigate(dashboardRoute);

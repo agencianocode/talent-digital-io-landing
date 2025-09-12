@@ -114,8 +114,8 @@ const RegisterBusiness = () => {
       }
     } catch (companyError) {
       console.error('Unexpected error during company creation:', companyError);
-      setError('Cuenta creada exitosamente. Configuración de empresa pendiente. Puedes completar esto desde tu dashboard.');
-      setMessage('Usuario creado exitosamente. Verifica tu email para continuar.');
+      setMessage('¡Cuenta creada exitosamente! Verifica tu email para acceder a tu dashboard empresarial. Podrás configurar tu empresa desde allí.');
+      setRegistrationComplete(true);
     }
     
     setIsSubmitting(false);
