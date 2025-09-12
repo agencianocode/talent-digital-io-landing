@@ -6,6 +6,9 @@ import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import BusinessMetrics from "@/components/dashboard/BusinessMetrics";
 import RecommendedProfiles from "@/components/dashboard/RecommendedProfiles";
 import DashboardSettings, { DashboardSettings as DashboardSettingsType } from "@/components/dashboard/DashboardSettings";
+import DynamicBanners from "@/components/dashboard/DynamicBanners";
+import { DashboardLoading } from "@/components/ui/enhanced-loading";
+import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 
 const DashboardHome = () => {
   const navigate = useNavigate();
@@ -29,33 +32,33 @@ const DashboardHome = () => {
     }
   });
   
+  // Setup real-time notifications
+  useRealTimeNotifications({
+    onNewApplication: () => {
+      // Refresh metrics when new application is received
+      loadMetrics();
+    },
+    enableSound: true
+  });
+  
+  const loadMetrics = async () => {
+    try {
+      setIsLoading(true);
+      const businessMetrics = await getBusinessMetrics();
+      setMetrics(businessMetrics);
+    } catch (error) {
+      console.error('Error loading metrics:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    const loadMetrics = async () => {
-      try {
-        setIsLoading(true);
-        const businessMetrics = await getBusinessMetrics();
-        setMetrics(businessMetrics);
-      } catch (error) {
-        console.error('Error loading metrics:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     loadMetrics();
   }, [getBusinessMetrics]);
 
   if (isLoading) {
-    return (
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Cargando métricas...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <DashboardLoading />;
   }
 
   return (
@@ -78,6 +81,11 @@ const DashboardHome = () => {
           </Button>
         </div>
       </div>
+
+      {/* Dynamic CTA Banners */}
+      {metrics && (
+        <DynamicBanners metrics={metrics} />
+      )}
 
       {/* Enhanced Business Metrics */}
       {metrics && (

@@ -14,6 +14,8 @@ import { Search, Filter, Eye, MessageSquare, Calendar, MapPin } from "lucide-rea
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { ApplicationsLoading } from "@/components/ui/enhanced-loading";
+import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 
 interface Application {
   id: string;
@@ -54,31 +56,22 @@ const ApplicationsPage = () => {
     }
   }, []);
 
+  // Setup real-time notifications and updates
+  useRealTimeNotifications({
+    onNewApplication: (newApplication) => {
+      // Refresh applications list when new one arrives
+      fetchApplications();
+    },
+    onApplicationUpdate: () => {
+      // Refresh when applications are updated
+      fetchApplications();
+    },
+    enableSound: true
+  });
+
   useEffect(() => {
     if (isBusinessRole(userRole) && activeCompany) {
       fetchApplications();
-      
-      // Set up real-time subscription for new applications
-      const channel = supabase
-        .channel('schema-db-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'applications'
-          },
-          (payload) => {
-            console.log('New application received:', payload);
-            // Refresh applications when a new one is inserted
-            fetchApplications();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     }
   }, [userRole, activeCompany]);
 
@@ -193,19 +186,7 @@ const ApplicationsPage = () => {
   }
 
   if (isLoading) {
-    return (
-      <div className="p-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <ApplicationsLoading />;
   }
 
   return (
