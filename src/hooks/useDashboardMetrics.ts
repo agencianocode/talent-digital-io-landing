@@ -3,47 +3,109 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useDashboardMetrics = () => {
-  const { user } = useSupabaseAuth();
+  const { user, company } = useSupabaseAuth();
 
-  // Business Metrics - Simplified with mock data
+  // Business Metrics - Real data from Supabase
   const getBusinessMetrics = useCallback(async () => {
-    if (!user?.id) return null;
+    if (!user?.id || !company?.id) return null;
 
-    // Simplified business metrics with mock data
-    const result = {
-      totalOpportunities: 15,
-      activeOpportunities: 12,
-      totalApplications: 45,
-      pendingApplications: 12,
-      applicationsThisMonth: 18,
-      applicationsLastMonth: 22,
-      topOpportunities: [
-        {
-          id: '1',
-          title: 'Sales Development Representative',
-          applications: 8,
-          views: 45
-        },
-        {
-          id: '2', 
-          title: 'Digital Marketing Specialist',
-          applications: 6,
-          views: 32
-        }
-      ],
-      recentApplications: [
-        {
-          id: '1',
-          opportunityTitle: 'Sales Representative',
-          applicantName: 'Juan Pérez',
-          status: 'pending',
-          createdAt: new Date().toISOString()
-        }
-      ]
-    };
+    try {
+      // Get opportunities data for this company
+      const { data: opportunitiesData, error: opportunitiesError } = await supabase
+        .from('opportunities')
+        .select('id, title, is_active, created_at')
+        .eq('company_id', company.id);
 
-    return result;
-  }, [user]);
+      if (opportunitiesError) {
+        console.error('Error fetching opportunities:', opportunitiesError);
+      }
+
+      // Get applications data for this company's opportunities
+      const { data: applicationsData, error: applicationsError } = await supabase
+        .from('applications')
+        .select(`
+          id,
+          status,
+          created_at,
+          opportunity_id,
+          opportunities!inner(title, company_id)
+        `)
+        .eq('opportunities.company_id', company.id);
+
+      if (applicationsError) {
+        console.error('Error fetching applications:', applicationsError);
+      }
+
+      const opportunities = opportunitiesData || [];
+      const applications = applicationsData || [];
+
+      const totalOpportunities = opportunities.length;
+      const activeOpportunities = opportunities.filter(opp => opp.is_active).length;
+      const totalApplications = applications.length;
+      const pendingApplications = applications.filter(app => app.status === 'pending').length;
+
+      // Calculate applications this month and last month
+      const now = new Date();
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+      const applicationsThisMonth = applications.filter(app => 
+        new Date(app.created_at) >= thisMonthStart
+      ).length;
+
+      const applicationsLastMonth = applications.filter(app => {
+        const appDate = new Date(app.created_at);
+        return appDate >= lastMonthStart && appDate <= lastMonthEnd;
+      }).length;
+
+      // Calculate top opportunities (by application count)
+      const opportunityApplicationCounts = opportunities.map(opp => {
+        const appCount = applications.filter(app => app.opportunity_id === opp.id).length;
+        return {
+          id: opp.id,
+          title: opp.title,
+          applications: appCount,
+          views: 0 // We don't track views yet
+        };
+      }).sort((a, b) => b.applications - a.applications).slice(0, 5);
+
+      // Get recent applications with profiles data
+      const recentApplications = applications
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5)
+        .map(app => ({
+          id: app.id,
+          opportunityTitle: app.opportunities?.title || 'Oportunidad eliminada',
+          applicantName: 'Candidato', // We don't expose user names for privacy
+          status: app.status,
+          createdAt: app.created_at
+        }));
+
+      return {
+        totalOpportunities,
+        activeOpportunities,
+        totalApplications,
+        pendingApplications,
+        applicationsThisMonth,
+        applicationsLastMonth,
+        topOpportunities: opportunityApplicationCounts,
+        recentApplications
+      };
+    } catch (error) {
+      console.error('Error in getBusinessMetrics:', error);
+      return {
+        totalOpportunities: 0,
+        activeOpportunities: 0,
+        totalApplications: 0,
+        pendingApplications: 0,
+        applicationsThisMonth: 0,
+        applicationsLastMonth: 0,
+        topOpportunities: [],
+        recentApplications: []
+      };
+    }
+  }, [user, company]);
 
   // Talent Metrics - Real data from Supabase
   const getTalentMetrics = useCallback(async () => {

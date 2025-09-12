@@ -68,18 +68,14 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
     );
   }
 
-  if (userCompanies.length === 0) {
+  // Don't show create button if we have no companies but are still loading
+  // This prevents flashing the button during initial load after registration
+  if (userCompanies.length === 0 && !isLoading) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate('/register-business')}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Crear Empresa
-        </Button>
+        <div className="text-sm text-muted-foreground">
+          No hay empresas disponibles
+        </div>
       </div>
     );
   }
