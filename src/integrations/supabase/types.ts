@@ -108,34 +108,46 @@ export type Database = {
       }
       applications: {
         Row: {
+          contact_status: string | null
+          contacted_at: string | null
           cover_letter: string | null
           created_at: string
           id: string
+          internal_rating: number | null
           opportunity_id: string
           resume_url: string | null
           status: string
           updated_at: string
           user_id: string
+          viewed_at: string | null
         }
         Insert: {
+          contact_status?: string | null
+          contacted_at?: string | null
           cover_letter?: string | null
           created_at?: string
           id?: string
+          internal_rating?: number | null
           opportunity_id: string
           resume_url?: string | null
           status?: string
           updated_at?: string
           user_id: string
+          viewed_at?: string | null
         }
         Update: {
+          contact_status?: string | null
+          contacted_at?: string | null
           cover_letter?: string | null
           created_at?: string
           id?: string
+          internal_rating?: number | null
           opportunity_id?: string
           resume_url?: string | null
           status?: string
           updated_at?: string
           user_id?: string
+          viewed_at?: string | null
         }
         Relationships: [
           {
@@ -407,49 +419,91 @@ export type Database = {
       }
       opportunities: {
         Row: {
+          auto_saved_at: string | null
           category: string
+          commission_percentage: number | null
           company_id: string
+          contract_type: string | null
           created_at: string
           currency: string | null
+          deadline_date: string | null
           description: string
+          duration_type: string | null
+          duration_unit: string | null
+          duration_value: number | null
+          experience_levels: string[] | null
           id: string
+          is_academy_exclusive: boolean | null
           is_active: boolean | null
           location: string | null
+          payment_type: string | null
           requirements: string | null
+          salary_is_public: boolean | null
           salary_max: number | null
           salary_min: number | null
+          skills: string[] | null
+          status: Database["public"]["Enums"]["opportunity_status"] | null
+          timezone_preference: string | null
           title: string
           type: string
           updated_at: string
         }
         Insert: {
+          auto_saved_at?: string | null
           category: string
+          commission_percentage?: number | null
           company_id: string
+          contract_type?: string | null
           created_at?: string
           currency?: string | null
+          deadline_date?: string | null
           description: string
+          duration_type?: string | null
+          duration_unit?: string | null
+          duration_value?: number | null
+          experience_levels?: string[] | null
           id?: string
+          is_academy_exclusive?: boolean | null
           is_active?: boolean | null
           location?: string | null
+          payment_type?: string | null
           requirements?: string | null
+          salary_is_public?: boolean | null
           salary_max?: number | null
           salary_min?: number | null
+          skills?: string[] | null
+          status?: Database["public"]["Enums"]["opportunity_status"] | null
+          timezone_preference?: string | null
           title: string
           type: string
           updated_at?: string
         }
         Update: {
+          auto_saved_at?: string | null
           category?: string
+          commission_percentage?: number | null
           company_id?: string
+          contract_type?: string | null
           created_at?: string
           currency?: string | null
+          deadline_date?: string | null
           description?: string
+          duration_type?: string | null
+          duration_unit?: string | null
+          duration_value?: number | null
+          experience_levels?: string[] | null
           id?: string
+          is_academy_exclusive?: boolean | null
           is_active?: boolean | null
           location?: string | null
+          payment_type?: string | null
           requirements?: string | null
+          salary_is_public?: boolean | null
           salary_max?: number | null
           salary_min?: number | null
+          skills?: string[] | null
+          status?: Database["public"]["Enums"]["opportunity_status"] | null
+          timezone_preference?: string | null
           title?: string
           type?: string
           updated_at?: string
@@ -1064,6 +1118,7 @@ export type Database = {
     }
     Enums: {
       company_role: "owner" | "admin" | "viewer"
+      opportunity_status: "draft" | "active" | "paused" | "closed"
       user_role:
         | "admin"
         | "business"
@@ -1201,6 +1256,7 @@ export const Constants = {
   public: {
     Enums: {
       company_role: ["owner", "admin", "viewer"],
+      opportunity_status: ["draft", "active", "paused", "closed"],
       user_role: [
         "admin",
         "business",
