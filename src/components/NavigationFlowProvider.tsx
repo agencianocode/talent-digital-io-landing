@@ -191,7 +191,8 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
         (currentPath === '/' && idealRoute !== '/') ||
         (currentPath === '/auth' && idealRoute !== '/auth') ||
         (currentPath.includes('/register') && user) || // Redirect if authenticated and on registration
-        (currentPath.includes('/onboarding') && !shouldShowOnboarding)
+        (currentPath.includes('/onboarding') && !shouldShowOnboarding) ||
+        (currentPath.includes('/onboarding') && userRole && ['business', 'freemium_business'].includes(userRole)) // Redirect business users away from onboarding
       )
     );
 

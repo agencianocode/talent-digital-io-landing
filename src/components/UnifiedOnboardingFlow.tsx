@@ -11,20 +11,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const OnboardingContent: React.FC = () => {
   const { state, actions, userRole, profile, completeness, loading } = useOnboardingController();
 
-  // Redirect if not talent role
+  // Redirect business users to their dashboard
   if (!isTalentRole(userRole)) {
+    React.useEffect(() => {
+      window.location.href = '/business-dashboard';
+    }, []);
+    
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="max-w-md">
           <CardContent className="p-6 text-center">
             <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Acceso Restringido</h2>
-            <p className="text-muted-foreground mb-4">
-              El onboarding está disponible solo para perfiles de talento.
+            <h2 className="text-xl font-semibold mb-2">Redirigiendo...</h2>
+            <p className="text-muted-foreground">
+              Te estamos llevando a tu dashboard empresarial.
             </p>
-            <Button onClick={actions.navigateToDashboard}>
-              Ir al Dashboard
-            </Button>
           </CardContent>
         </Card>
       </div>

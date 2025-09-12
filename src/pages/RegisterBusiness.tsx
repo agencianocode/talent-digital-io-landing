@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff, Building2, ArrowLeft, GraduationCap } from 'lucide-react';
@@ -287,13 +288,19 @@ const RegisterBusiness = () => {
 
               {error && (
                 <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error en el registro</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
               {message && (
                 <Alert>
-                  <AlertDescription>{message}</AlertDescription>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertTitle>¡Cuenta creada exitosamente!</AlertTitle>
+                  <AlertDescription>
+                    Verifica tu email para acceder a tu dashboard empresarial y comenzar a publicar oportunidades.
+                  </AlertDescription>
                 </Alert>
               )}
 
