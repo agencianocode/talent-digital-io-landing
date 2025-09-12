@@ -17,6 +17,7 @@ import { MediaGallery } from '@/components/MediaGallery';
 import { TeamManagement } from '@/components/TeamManagement';
 import { useProfessionalData } from '@/hooks/useProfessionalData';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Upload, 
   Building, 
@@ -72,7 +73,7 @@ const revenueOptions = [
 ];
 
 export const CompanyProfileWizard: React.FC = () => {
-  const { company, updateCompany, createCompany } = useSupabaseAuth();
+  const { company, updateCompany, createCompany, user } = useSupabaseAuth();
   const { industries } = useProfessionalData();
   const { refreshCompanies } = useCompany();
   const [isLoading, setIsLoading] = useState(false);
@@ -193,10 +194,46 @@ export const CompanyProfileWizard: React.FC = () => {
     }
   };
 
-  const handleLogoCropComplete = (croppedImageUrl: string) => {
-    form.setValue('logo_url', croppedImageUrl);
-    setIsCropperOpen(false);
-    setLogoFile(null);
+  const handleLogoCropComplete = async (croppedImageUrl: string) => {
+    setIsLoading(true);
+    try {
+      // Convert blob URL to actual file
+      const response = await fetch(croppedImageUrl);
+      const blob = await response.blob();
+      
+      // Create file from blob
+      const file = new File([blob], 'company-logo.jpg', { type: 'image/jpeg' });
+      
+      // Upload to Supabase storage
+      const fileExt = 'jpg';
+      const timestamp = Date.now();
+      const filePath = `company-logos/${user?.id}_${timestamp}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+      
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Get public URL
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+      
+      // Set the permanent URL in the form
+      form.setValue('logo_url', data.publicUrl);
+      toast.success('Logo subido correctamente');
+      
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast.error('Error al subir el logo');
+    } finally {
+      setIsLoading(false);
+      setIsCropperOpen(false);
+      setLogoFile(null);
+    }
   };
 
   const handleAddMediaItem = (item: Omit<MediaItem, 'id'>) => {
