@@ -307,13 +307,15 @@ const RegisterBusiness = () => {
               <Button 
                 type="submit" 
                 className="w-full"
-                disabled={isSubmitting}
+                disabled={isSubmitting || registrationComplete}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creando cuenta...
                   </>
+                ) : registrationComplete ? (
+                  'Verificar Correo Electrónico'
                 ) : (
                   'Crear cuenta empresarial'
                 )}

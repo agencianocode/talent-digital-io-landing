@@ -8,7 +8,7 @@ import DashboardSettings, { DashboardSettings as DashboardSettingsType } from "@
 
 const DashboardHome = () => {
   const navigate = useNavigate();
-  const { user } = useSupabaseAuth();
+  const { user, company, profile } = useSupabaseAuth();
   const { getBusinessMetrics } = useDashboardMetrics();
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +62,7 @@ const DashboardHome = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-          ¡Bienvenido, {user?.email || 'Usuario'}!
+          ¡Bienvenido, {company?.name || profile?.full_name || 'Usuario'}!
         </h1>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <DashboardSettings 
