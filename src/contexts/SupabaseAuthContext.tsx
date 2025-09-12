@@ -429,10 +429,12 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const updateCompany = async (data: Partial<Company>) => {
     if (!authState.user) return { error: new Error('User not authenticated') };
 
-    const { error } = await supabase
-      .from('companies')
-      .update(data)
-      .eq('user_id', authState.user.id);
+    // Use company ID if available, otherwise use user_id
+    const updateQuery = authState.company?.id 
+      ? supabase.from('companies').update(data).eq('id', authState.company.id)
+      : supabase.from('companies').update(data).eq('user_id', authState.user.id);
+
+    const { error } = await updateQuery;
 
     if (!error && authState.company) {
       setAuthState(prev => ({

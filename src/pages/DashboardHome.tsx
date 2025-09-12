@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
 import CreateCompanyDialog from "@/components/CreateCompanyDialog";
+import { Building } from "lucide-react";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import BusinessMetrics from "@/components/dashboard/BusinessMetrics";
 import RecommendedProfiles from "@/components/dashboard/RecommendedProfiles";
@@ -21,7 +23,7 @@ const DashboardHome = () => {
   const { getBusinessMetrics } = useDashboardMetrics();
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfiguration>({
     layout: 'grid',
     theme: 'auto',
@@ -114,18 +116,40 @@ const DashboardHome = () => {
     loadMetrics();
   }, [getBusinessMetrics]);
 
+  const handleCompanyCreated = () => {
+    setIsCreateDialogOpen(false);
+    loadMetrics();
+  };
+
   if (!activeCompany) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="text-center py-12">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-4">¡Configura tu Empresa!</h1>
-          <p className="text-muted-foreground mb-6">
-            Para acceder a tu dashboard, primero necesitas crear o seleccionar una empresa.
-          </p>
-          <Button onClick={() => navigate('/settings/profile')}>
-            Configurar Empresa
-          </Button>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <Card className="max-w-md mx-auto text-center">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Building className="h-6 w-6" />
+              Crear tu Empresa
+            </CardTitle>
+            <CardDescription>
+              Para comenzar a usar el dashboard, necesitas crear tu empresa primero.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="w-full"
+            >
+              <Building className="h-4 w-4 mr-2" />
+              Crear Empresa
+            </Button>
+          </CardContent>
+        </Card>
+
+        <CreateCompanyDialog
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+          onCompanyCreated={handleCompanyCreated}
+        />
       </div>
     );
   }

@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { ImageCropper } from '@/components/ImageCropper';
 import { MediaGallery } from '@/components/MediaGallery';
 import { TeamManagement } from '@/components/TeamManagement';
@@ -71,8 +72,9 @@ const revenueOptions = [
 ];
 
 export const CompanyProfileWizard: React.FC = () => {
-  const { company, updateCompany } = useSupabaseAuth();
+  const { company, updateCompany, createCompany } = useSupabaseAuth();
   const { industries } = useProfessionalData();
+  const { refreshCompanies } = useCompany();
   const [isLoading, setIsLoading] = useState(false);
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
@@ -131,15 +133,42 @@ export const CompanyProfileWizard: React.FC = () => {
       // Convert media items to gallery URLs format
       const gallery_urls = mediaItems;
 
-      await updateCompany({
+      const companyData = {
         ...data,
         gallery_urls,
-      });
-      toast.success('Perfil corporativo actualizado');
+      };
+
+      if (company?.id) {
+        // Update existing company
+        await updateCompany(companyData);
+        toast.success('Perfil corporativo actualizado');
+      } else {
+        // Create new company - ensure name is provided
+        const result = await createCompany({
+          name: data.name,
+          description: data.description,
+          location: data.location,
+          logo_url: data.logo_url,
+          industry: data.industry,
+          size: data.size,
+          annual_revenue_range: data.annual_revenue_range,
+          website: data.website,
+          social_links: data.social_links,
+          gallery_urls,
+        });
+        if (result.error) {
+          throw result.error;
+        }
+        
+        // Refresh company context to load the new company
+        await refreshCompanies();
+        toast.success('Empresa creada exitosamente');
+      }
+      
       form.reset(data);
     } catch (error) {
-      console.error('Error updating company:', error);
-      toast.error('Error al actualizar el perfil');
+      console.error('Error saving company:', error);
+      toast.error(company?.id ? 'Error al actualizar el perfil' : 'Error al crear la empresa');
     } finally {
       setIsLoading(false);
     }
