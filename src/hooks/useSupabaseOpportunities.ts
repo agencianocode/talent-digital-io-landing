@@ -11,16 +11,16 @@ interface SupabaseOpportunity {
   location: string | null;
   type: string;
   category: string;
-  salary_min: number;
-  salary_max: number;
-  currency: string;
-  status: 'draft' | 'active' | 'paused' | 'closed';
+  salary_min: number | null;
+  salary_max: number | null;
+  currency: string | null;
+  status: 'draft' | 'active' | 'paused' | 'closed' | null;
   created_at: string;
   updated_at: string;
   company_id: string;
   companies?: {
     name: string;
-    logo_url?: string;
+    logo_url?: string | null;
   };
 }
 
@@ -142,7 +142,7 @@ export const useSupabaseOpportunities = () => {
       opp.title.toLowerCase().includes(lowerQuery) ||
       opp.companies?.name.toLowerCase().includes(lowerQuery) ||
       opp.description.toLowerCase().includes(lowerQuery) ||
-      opp.location.toLowerCase().includes(lowerQuery) ||
+      (opp.location && opp.location.toLowerCase().includes(lowerQuery)) ||
       opp.category.toLowerCase().includes(lowerQuery) ||
       (opp.requirements && opp.requirements.toLowerCase().includes(lowerQuery))
     );
@@ -247,10 +247,10 @@ export const useSupabaseOpportunities = () => {
   }) => {
     return opportunities.filter(opp => {
       if (filters.category && opp.category !== filters.category) return false;
-      if (filters.location && !opp.location.toLowerCase().includes(filters.location.toLowerCase())) return false;
+      if (filters.location && opp.location && !opp.location.toLowerCase().includes(filters.location.toLowerCase())) return false;
       if (filters.type && opp.type !== filters.type) return false;
-      if (filters.salaryMin && opp.salary_max < filters.salaryMin) return false;
-      if (filters.salaryMax && opp.salary_min > filters.salaryMax) return false;
+      if (filters.salaryMin && opp.salary_max && opp.salary_max < filters.salaryMin) return false;
+      if (filters.salaryMax && opp.salary_min && opp.salary_min > filters.salaryMax) return false;
       return true;
     });
   }, [opportunities]);

@@ -30,12 +30,12 @@ export const isAcademy = (company: Company | null): boolean => {
 interface UserProfile {
   id: string;
   user_id: string;
-  full_name?: string;
-  avatar_url?: string;
-  phone?: string;
-  profile_completeness?: number;
-  country?: string;
-  city?: string;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  phone?: string | null;
+  profile_completeness?: number | null;
+  country?: string | null;
+  city?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -44,15 +44,15 @@ interface Company {
   id: string;
   user_id: string;
   name: string;
-  description?: string;
-  website?: string;
-  industry?: string;
-  size?: string;
-  location?: string;
-  logo_url?: string;
-  business_type?: 'company' | 'academy';
-  employee_count_range?: string;
-  annual_revenue_range?: string;
+  description?: string | null;
+  website?: string | null;
+  industry?: string | null;
+  size?: string | null;
+  location?: string | null;
+  logo_url?: string | null;
+  business_type?: 'company' | 'academy' | null;
+  employee_count_range?: string | null;
+  annual_revenue_range?: string | null;
   social_links?: Record<string, string>;
   gallery_urls?: Array<{
     id: string;
@@ -106,14 +106,14 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const fetchUserData = async (userId: string, userType?: string, retryCount = 0) => {
     try {
       // Fetch profile
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile, error: _profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
       // Fetch role
-      const { data: roleData, error: roleError } = await supabase
+      const { data: roleData, error: _roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
@@ -129,7 +129,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // If profile doesn't exist after retries, create it
       if (!profile) {
         logger.debug('Profile not found after retries, creating new profile for user:', userId);
-        const { data: newProfile, error: createError } = await supabase
+        const { data: _newProfile, error: createError } = await supabase
           .from('profiles')
           .insert({ user_id: userId })
           .select()
@@ -147,7 +147,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         logger.debug('Role not found after retries, creating role for user:', userId, 'with type:', userType);
         // Use the provided userType or default to 'freemium_talent'
         const defaultRole: UserRole = userType === 'business' ? 'freemium_business' : 'freemium_talent';
-        const { data: newRole, error: createRoleError } = await supabase
+        const { data: _newRole, error: createRoleError } = await supabase
           .from('user_roles')
           .insert({ user_id: userId, role: defaultRole })
           .select()
@@ -251,9 +251,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             
             setAuthState(prev => ({
               ...prev,
-              profile: userData.profile,
+              profile: userData.profile as UserProfile | null,
               userRole: userData.role,
-              company: userData.company,
+              company: userData.company as Company | null,
               isLoading: false
             }));
           } catch (error) {
@@ -306,7 +306,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       ? `${window.location.origin}/business-dashboard`
       : `${window.location.origin}/welcome`;
     
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -406,9 +406,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const userData = await fetchUserData(authState.user.id);
         setAuthState(prev => ({
           ...prev,
-          profile: userData.profile,
+          profile: userData.profile as UserProfile | null,
           userRole: userData.role,
-          company: userData.company
+          company: userData.company as Company | null
         }));
         console.log('Perfil actualizado y recargado:', userData.profile);
       } catch (fetchError) {
@@ -457,9 +457,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           const userData = await fetchUserData(authState.user.id, undefined, 0);
           setAuthState(prev => ({
             ...prev,
-            profile: userData.profile,
+            profile: userData.profile as UserProfile | null,
             userRole: userData.role,
-            company: userData.company
+            company: userData.company as Company | null
           }));
           await new Promise(resolve => setTimeout(resolve, 1000));
           return createCompany(data, retryCount + 1);
