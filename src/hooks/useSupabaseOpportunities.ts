@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
+import { logger } from '@/lib/logger';
 
 interface SupabaseOpportunity {
   id: string;
@@ -60,7 +61,7 @@ export const useSupabaseOpportunities = () => {
       if (error) throw error;
       setOpportunities(data || []);
     } catch (err) {
-      console.error('Error fetching opportunities:', err);
+      logger.error('Error fetching opportunities:', err);
       setError(err instanceof Error ? err.message : 'Error fetching opportunities');
     } finally {
       setIsLoading(false);
@@ -90,7 +91,7 @@ export const useSupabaseOpportunities = () => {
       if (error) throw error;
       setApplications(data || []);
     } catch (err) {
-      console.error('Error fetching applications:', err);
+      logger.error('Error fetching applications:', err);
       setError(err instanceof Error ? err.message : 'Error fetching applications');
     }
   }, [user, userRole]);
@@ -116,7 +117,7 @@ export const useSupabaseOpportunities = () => {
       // Refresh applications
       await fetchUserApplications();
     } catch (err) {
-      console.error('Error applying to opportunity:', err);
+      logger.error('Error applying to opportunity:', err);
       throw err;
     }
   }, [user, userRole, fetchUserApplications]);
@@ -159,7 +160,7 @@ export const useSupabaseOpportunities = () => {
       
       return data || [];
     } catch (err) {
-      console.error('Error fetching applications for opportunity:', err);
+      logger.error('Error fetching applications for opportunity:', err);
       return [];
     }
   }, []);
@@ -177,7 +178,7 @@ export const useSupabaseOpportunities = () => {
       // Refresh applications if needed
       await fetchUserApplications();
     } catch (err) {
-      console.error('Error updating application status:', err);
+      logger.error('Error updating application status:', err);
       throw err;
     }
   }, [fetchUserApplications]);
@@ -195,7 +196,7 @@ export const useSupabaseOpportunities = () => {
       // Refresh opportunities
       await fetchOpportunities();
     } catch (err) {
-      console.error('Error updating opportunity:', err);
+      logger.error('Error updating opportunity:', err);
       throw err;
     }
   }, [fetchOpportunities]);
@@ -213,7 +214,7 @@ export const useSupabaseOpportunities = () => {
       // Refresh opportunities
       await fetchOpportunities();
     } catch (err) {
-      console.error('Error deleting opportunity:', err);
+      logger.error('Error deleting opportunity:', err);
       throw err;
     }
   }, [fetchOpportunities]);
@@ -231,7 +232,7 @@ export const useSupabaseOpportunities = () => {
       // Refresh opportunities
       await fetchOpportunities();
     } catch (err) {
-      console.error('Error toggling opportunity status:', err);
+      logger.error('Error toggling opportunity status:', err);
       throw err;
     }
   }, [fetchOpportunities]);

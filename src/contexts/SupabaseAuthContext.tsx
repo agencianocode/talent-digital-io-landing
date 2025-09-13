@@ -201,7 +201,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         company
       };
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      logger.error('Error fetching user data:', error);
       return {
         profile: null,
         role: 'freemium_talent' as UserRole,
@@ -220,7 +220,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       isProcessingAuth = true;
 
       try {
-        console.log('SupabaseAuth: Processing auth state', { 
+        logger.debug('SupabaseAuth: Processing auth state', { 
           hasSession: !!session, 
           hasUser: !!session?.user,
           isInitial 
@@ -236,14 +236,14 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }));
         
         if (session?.user) {
-          console.log('SupabaseAuth: Fetching user data for:', session.user.id);
+          logger.debug('SupabaseAuth: Fetching user data for:', session.user.id);
           
           try {
             const userData = await fetchUserData(session.user.id);
             
             if (!isMounted) return;
             
-            console.log('SupabaseAuth: User data fetched:', {
+            logger.debug('SupabaseAuth: User data fetched:', {
               profile: !!userData.profile,
               role: userData.role,
               company: !!userData.company
