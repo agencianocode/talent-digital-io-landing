@@ -12,6 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Briefcase, DollarSign, MapPin, Clock, Target, Star } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const preferencesSchema = z.object({
   availability_status: z.enum(['actively_looking', 'open_to_offers', 'not_available']),
@@ -54,6 +56,8 @@ const companySizeOptions = [
 ];
 
 const ProfessionalPreferences = () => {
+  const { user } = useSupabaseAuth();
+  
   const form = useForm<PreferencesFormData>({
     resolver: zodResolver(preferencesSchema),
     defaultValues: {
@@ -77,11 +81,27 @@ const ProfessionalPreferences = () => {
   };
 
   const onSubmit = async (data: PreferencesFormData) => {
+    if (!user) {
+      toast.error('Debes estar autenticado para actualizar las preferencias');
+      return;
+    }
+
     try {
-      // TODO: Implement professional preferences update
-      console.log('Professional preferences:', data);
+      const { error } = await supabase
+        .from('professional_preferences')
+        .upsert({
+          user_id: user.id,
+          ...data,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        throw error;
+      }
+
       toast.success('Preferencias profesionales actualizadas');
     } catch (error) {
+      console.error('Error updating professional preferences:', error);
       toast.error('Error al actualizar las preferencias');
     }
   };

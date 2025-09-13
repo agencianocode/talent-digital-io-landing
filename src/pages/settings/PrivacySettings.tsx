@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Shield, Eye, MapPin, Mail, Phone } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const privacySchema = z.object({
   profile_visibility: z.enum(['public', 'companies_only', 'private']),
@@ -24,6 +26,8 @@ const privacySchema = z.object({
 type PrivacyFormData = z.infer<typeof privacySchema>;
 
 const PrivacySettings = () => {
+  const { user } = useSupabaseAuth();
+  
   const form = useForm<PrivacyFormData>({
     resolver: zodResolver(privacySchema),
     defaultValues: {
@@ -39,11 +43,27 @@ const PrivacySettings = () => {
   });
 
   const onSubmit = async (data: PrivacyFormData) => {
+    if (!user) {
+      toast.error('Debes estar autenticado para actualizar la configuración');
+      return;
+    }
+
     try {
-      // TODO: Implement privacy settings update
-      console.log('Privacy settings:', data);
+      const { error } = await supabase
+        .from('privacy_settings')
+        .upsert({
+          user_id: user.id,
+          ...data,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        throw error;
+      }
+
       toast.success('Configuración de privacidad actualizada');
     } catch (error) {
+      console.error('Error updating privacy settings:', error);
       toast.error('Error al actualizar la configuración');
     }
   };

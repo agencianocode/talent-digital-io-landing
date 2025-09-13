@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Bell, Mail, MessageSquare, Briefcase, Users, Settings } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const notificationSchema = z.object({
   // Email Notifications
@@ -40,6 +42,8 @@ const notificationSchema = z.object({
 type NotificationFormData = z.infer<typeof notificationSchema>;
 
 const NotificationSettings = () => {
+  const { user } = useSupabaseAuth();
+  
   const form = useForm<NotificationFormData>({
     resolver: zodResolver(notificationSchema),
     defaultValues: {
@@ -71,11 +75,27 @@ const NotificationSettings = () => {
   });
 
   const onSubmit = async (data: NotificationFormData) => {
+    if (!user) {
+      toast.error('Debes estar autenticado para actualizar las configuraciones');
+      return;
+    }
+
     try {
-      // TODO: Implement notification settings update
-      console.log('Notification settings:', data);
+      const { error } = await supabase
+        .from('notification_settings')
+        .upsert({
+          user_id: user.id,
+          ...data,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        throw error;
+      }
+
       toast.success('Configuración de notificaciones actualizada');
     } catch (error) {
+      console.error('Error updating notification settings:', error);
       toast.error('Error al actualizar las notificaciones');
     }
   };
