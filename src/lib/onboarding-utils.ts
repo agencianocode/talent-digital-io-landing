@@ -1,5 +1,21 @@
 // Utility functions for onboarding flow
-export const validateProfileCompleteness = (profile: any, talentProfile: any) => {
+interface Profile {
+  full_name?: string;
+  avatar_url?: string;
+  phone?: string;
+}
+
+interface TalentProfile {
+  primary_category_id?: string;
+  title?: string;
+}
+
+interface OnboardingStep {
+  id: string;
+  completed: boolean;
+}
+
+export const validateProfileCompleteness = (profile: Profile | null, talentProfile: TalentProfile | null) => {
   const errors: string[] = [];
   const warnings: string[] = [];
   
@@ -28,11 +44,11 @@ export const validateProfileCompleteness = (profile: any, talentProfile: any) =>
   return { errors, warnings, isValid: errors.length === 0 };
 };
 
-export const getNextIncompleteStep = (steps: any[]) => {
+export const getNextIncompleteStep = (steps: OnboardingStep[]) => {
   return steps.findIndex(step => !step.completed && step.id !== 'welcome');
 };
 
-export const calculateStepProgress = (steps: any[]) => {
+export const calculateStepProgress = (steps: OnboardingStep[]) => {
   const completedSteps = steps.filter(step => step.completed).length;
   return (completedSteps / steps.length) * 100;
 };

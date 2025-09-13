@@ -4,7 +4,7 @@ export interface ValidationRule {
   minLength?: number;
   maxLength?: number;
   pattern?: RegExp;
-  custom?: (value: any) => string | null;
+  custom?: (value: unknown) => string | null;
 }
 
 export interface ValidationRules {
@@ -17,15 +17,15 @@ export interface ValidationErrors {
 
 export const validationPatterns = {
   email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  phone: /^[\+]?[1-9][\d]{0,15}$/,
-  url: /^https?:\/\/(?:[-\w.])+(?:\:[0-9]+)?(?:\/(?:[\w\/_.])*(?:\?(?:[\w&=%.])*)?(?:\#(?:[\w.])*)?)?$/,
-  linkedin: /^https:\/\/(?:www\.)?linkedin\.com\/in\/[\w\-]+\/?$/,
+  phone: /^[+]?[1-9][\d]{0,15}$/,
+  url: /^https?:\/\/(?:[-\w.])+(?::[0-9]+)?(?:\/(?:[\w/_.])*(?:\?(?:[\w&=%.])*)?(?:#(?:[\w.])*)?)?$/,
+  linkedin: /^https:\/\/(?:www\.)?linkedin\.com\/in\/[\w-]+\/?$/,
   noSpaces: /^\S*$/,
   alphanumeric: /^[a-zA-Z0-9]+$/,
   name: /^[a-zA-ZÀ-ÿ\s]+$/
 };
 
-export const validateField = (value: any, rule: ValidationRule): string | null => {
+export const validateField = (value: unknown, rule: ValidationRule): string | null => {
   if (rule.required && (!value || value.toString().trim() === '')) {
     return 'Este campo es requerido';
   }
@@ -62,7 +62,7 @@ export const validateField = (value: any, rule: ValidationRule): string | null =
   return null;
 };
 
-export const validateForm = (data: any, rules: ValidationRules): ValidationErrors => {
+export const validateForm = (data: Record<string, unknown>, rules: ValidationRules): ValidationErrors => {
   const errors: ValidationErrors = {};
 
   Object.keys(rules).forEach(field => {

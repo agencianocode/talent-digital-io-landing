@@ -2,7 +2,7 @@
 import { useCallback, useMemo } from 'react';
 
 // Debounce hook for search and form inputs
-export const useDebounce = <T extends (...args: any[]) => any>(
+export const useDebounce = <T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T => {
@@ -36,7 +36,7 @@ export const useSearchFilter = <T>(
 };
 
 // Performance monitoring (development only)
-export const withPerformanceMonitoring = <T extends (...args: any[]) => any>(
+export const withPerformanceMonitoring = <T extends (...args: unknown[]) => unknown>(
   fn: T,
   name: string
 ): T => {

@@ -9,14 +9,14 @@ interface UseFormValidationOptions {
 }
 
 export const useFormValidation = (
-  initialData: any = {},
+  initialData: Record<string, unknown> = {},
   options: UseFormValidationOptions
 ) => {
   const [data, setData] = useState(initialData);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const validateSingleField = useCallback((field: string, value: any) => {
+  const validateSingleField = useCallback((field: string, value: unknown) => {
     if (!options.rules[field]) return null;
     return validateField(value, options.rules[field]);
   }, [options.rules]);
@@ -27,7 +27,7 @@ export const useFormValidation = (
     return Object.keys(newErrors).length === 0;
   }, [data, options.rules]);
 
-  const setValue = useCallback((field: string, value: any) => {
+  const setValue = useCallback((field: string, value: unknown) => {
     setData(prev => ({ ...prev, [field]: value }));
 
     if (options.validateOnChange) {
