@@ -7,8 +7,8 @@ interface SupabaseOpportunity {
   id: string;
   title: string;
   description: string;
-  requirements: string;
-  location: string;
+  requirements: string | null;
+  location: string | null;
   type: string;
   category: string;
   salary_min: number;
@@ -28,7 +28,7 @@ interface SupabaseApplication {
   id: string;
   opportunity_id: string;
   user_id: string;
-  cover_letter: string;
+  cover_letter: string | null;
   status: string;
   created_at: string;
   updated_at: string;

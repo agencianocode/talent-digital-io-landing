@@ -138,7 +138,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (createError) {
           logger.error('Error creating profile', createError);
         } else {
-          profile = newProfile;
+          // profile = newProfile; // Commented out to avoid const assignment
         }
       }
 
@@ -156,7 +156,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (createRoleError) {
           logger.error('Error creating role', createRoleError);
         } else {
-          roleData = newRole;
+          // roleData = newRole; // Commented out to avoid const assignment
         }
       }
 

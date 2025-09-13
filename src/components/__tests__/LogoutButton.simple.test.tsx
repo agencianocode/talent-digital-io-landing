@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // Test simple sin renderizado para verificar que el componente existe
 describe('LogoutButton', () => {

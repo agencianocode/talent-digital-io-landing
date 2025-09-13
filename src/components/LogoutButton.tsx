@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button"; // No utilizado directamente
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,12 +13,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LogOut } from "lucide-react";
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom'; // No utilizado
 import { logger } from '@/lib/logger';
 
 const LogoutButton = () => {
   const { signOut } = useSupabaseAuth();
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // No utilizado
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = async () => {

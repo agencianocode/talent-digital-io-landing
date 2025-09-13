@@ -66,9 +66,12 @@ export const validateForm = (data: Record<string, unknown>, rules: ValidationRul
   const errors: ValidationErrors = {};
 
   Object.keys(rules).forEach(field => {
-    const error = validateField(data[field], rules[field]);
-    if (error) {
-      errors[field] = error;
+    const rule = rules[field];
+    if (rule) {
+      const error = validateField(data[field], rule);
+      if (error) {
+        errors[field] = error;
+      }
     }
   });
 

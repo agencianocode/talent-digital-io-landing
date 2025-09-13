@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react'; // No utilizado
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Shield, Eye, MapPin, Mail, Phone } from 'lucide-react';
+import { Shield, Eye, MapPin, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
@@ -50,12 +50,12 @@ const PrivacySettings = () => {
 
     try {
       const { error } = await supabase
-        .from('privacy_settings')
-        .upsert({
-          user_id: user.id,
-          ...data,
+        .from('profiles')
+        .update({
+          privacy_settings: data,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('user_id', user.id);
 
       if (error) {
         throw error;

@@ -57,7 +57,7 @@ export const shouldShowAdvancedView = (completeness: number) => {
   return completeness >= 50;
 };
 
-export const getStepRecommendation = (currentStep: number, completeness: number) => {
+export const getStepRecommendation = (_currentStep: number, completeness: number) => {
   if (completeness < 30) {
     return 'Completa la información básica para comenzar';
   }

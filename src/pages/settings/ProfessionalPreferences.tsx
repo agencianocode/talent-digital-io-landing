@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react'; // No utilizado
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -88,12 +88,12 @@ const ProfessionalPreferences = () => {
 
     try {
       const { error } = await supabase
-        .from('professional_preferences')
-        .upsert({
-          user_id: user.id,
-          ...data,
+        .from('profiles')
+        .update({
+          professional_preferences: data,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('user_id', user.id);
 
       if (error) {
         throw error;
