@@ -3,8 +3,8 @@
 ## Project info
 
 **URL**: https://lovable.dev/projects/899b083e-2899-4a3a-b80a-8eda4ce47f6b
-**Demo Local**: http://localhost:3002/
-**Demo Red**: http://192.168.1.7:3002/
+**Demo Local**: http://localhost:8080/
+**Demo Red**: http://192.168.1.7:8080/
 
 ## Descripción del Proyecto
 
@@ -22,6 +22,9 @@ TalentoDigital.io es una plataforma completa para conectar empresas con talento 
 - **Perfiles Complejos**: Para talentos y empresas
 - **Sistema de Mensajería**: Comunicación entre usuarios
 - **Configuraciones Avanzadas**: Personalización de dashboards
+- **Sistema de Configuraciones**: Notificaciones, preferencias profesionales y privacidad
+- **TypeScript Estricto**: Configuración robusta para mejor mantenibilidad
+- **Logging Optimizado**: Sistema de logs centralizado y eficiente
 
 ## How can I edit this code?
 
@@ -73,11 +76,38 @@ npm run dev
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Vite** - Build tool y dev server
+- **TypeScript** - Tipado estático con configuración estricta
+- **React 18** - Framework de UI con hooks modernos
+- **shadcn/ui** - Componentes UI accesibles
+- **Tailwind CSS** - Framework de estilos utilitarios
+- **Supabase** - Backend as a Service (PostgreSQL + Auth + Real-time)
+- **React Query** - Gestión de estado del servidor
+- **Zod** - Validación de esquemas
+- **React Hook Form** - Manejo de formularios
+
+## 🚀 Mejoras Técnicas Implementadas
+
+### ✅ TypeScript Estricto
+- Configuración estricta habilitada (`strict: true`)
+- Eliminación de tipos `any` en favor de tipos específicos
+- Mejora de type safety en toda la aplicación
+
+### ✅ Sistema de Configuraciones Completo
+- **Notificaciones**: Email, push e in-app notifications
+- **Preferencias Profesionales**: Modalidad de trabajo, salarios, disponibilidad
+- **Privacidad**: Control de visibilidad y datos personales
+
+### ✅ Logging Optimizado
+- Sistema de logging centralizado con `logger`
+- Logs de debug solo en desarrollo
+- Mejor manejo de errores en producción
+
+### ✅ Arquitectura Robusta
+- Error boundaries para manejo de errores
+- Lazy loading de componentes
+- Optimizaciones de rendimiento
+- Sistema de caché inteligente
 
 ## How can I deploy this project?
 
