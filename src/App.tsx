@@ -1,8 +1,7 @@
 
-import React, { Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/components/ui/theme-provider';
-import { SupabaseAuthProvider } from '@/contexts/SupabaseAuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { OpportunitiesProvider } from '@/contexts/OpportunitiesContext';
@@ -44,6 +43,7 @@ const UserManagement = lazy(() => import('./pages/settings/UserManagement'));
 const UserTypeSelector = lazy(() => import('./pages/UserTypeSelector'));
 const RegisterBusiness = lazy(() => import('./pages/RegisterBusiness'));
 const RegisterTalent = lazy(() => import('./pages/RegisterTalent'));
+const CompanyOnboarding = lazy(() => import('./pages/CompanyOnboarding'));
 
 // Lazy load páginas de configuración
 import ProfileSettings from './pages/settings/ProfileSettings';
@@ -103,6 +103,11 @@ function App() {
                       <Route path="/register-talent" element={
                         <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
                           <RegisterTalent />
+                        </Suspense>
+                      } />
+                      <Route path="/company-onboarding" element={
+                        <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
+                          <CompanyOnboarding />
                         </Suspense>
                       } />
                       
