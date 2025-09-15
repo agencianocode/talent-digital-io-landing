@@ -6,10 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
-import { Loader2, Eye, EyeOff, Building2, ArrowLeft, GraduationCap } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Building2, ArrowLeft } from 'lucide-react';
 
 const RegisterBusiness = () => {
   const navigate = useNavigate();
@@ -20,11 +19,7 @@ const RegisterBusiness = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    fullName: '',
-    companyName: '',
-    isAcademy: false,
-    programType: '',
-    studentsCount: ''
+    fullName: ''
   });
   
   const [showPassword, setShowPassword] = useState(false);
@@ -183,62 +178,7 @@ const RegisterBusiness = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="companyName">
-                  {formData.isAcademy ? 'Nombre de la institución *' : 'Nombre de la empresa *'}
-                </Label>
-                <Input
-                  id="companyName"
-                  name="companyName"
-                  type="text"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  placeholder={formData.isAcademy ? "Nombre de tu institución educativa" : "Nombre de tu empresa"}
-                  required
-                />
-              </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isAcademy"
-                  checked={formData.isAcademy}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ ...prev, isAcademy: !!checked }))
-                  }
-                />
-                <Label htmlFor="isAcademy" className="text-sm font-normal">
-                  <GraduationCap className="w-4 h-4 inline mr-1" />
-                  Soy una academia o institución educativa
-                </Label>
-              </div>
-
-              {formData.isAcademy && (
-                <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
-                  <div className="space-y-2">
-                    <Label htmlFor="programType">Tipo de programa *</Label>
-                    <Input
-                      id="programType"
-                      name="programType"
-                      type="text"
-                      value={formData.programType}
-                      onChange={handleChange}
-                      placeholder="Ej: Bootcamp, Curso universitario, Certificación"
-                      required={formData.isAcademy}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="studentsCount">Número aproximado de estudiantes</Label>
-                    <Input
-                      id="studentsCount"
-                      name="studentsCount"
-                      type="number"
-                      value={formData.studentsCount}
-                      onChange={handleChange}
-                      placeholder="Número de estudiantes activos"
-                    />
-                  </div>
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email corporativo *</Label>

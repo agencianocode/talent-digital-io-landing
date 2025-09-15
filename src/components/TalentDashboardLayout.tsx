@@ -1,11 +1,18 @@
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
-import { Home, LogOut, Briefcase, Search, Heart, MessageSquare, User, Settings, Menu, X } from "lucide-react";
+import { Home, LogOut, Briefcase, Search, Heart, MessageSquare, User, Settings, Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const TalentDashboardLayout = () => {
   const { user, signOut, profile } = useSupabaseAuth();
@@ -135,12 +142,12 @@ const TalentDashboardLayout = () => {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-64 border-r bg-card">
+      <aside className="hidden lg:block w-64 border-r bg-card flex flex-col">
         <div className="p-4 border-b">
           <h2 className="text-lg font-semibold">Talento Digital</h2>
         </div>
         
-        <nav className="p-4">
+        <nav className="p-4 flex-1">
           <ul className="space-y-2">
             {navigationItems.map((item) => (
               <li key={item.to}>
@@ -163,47 +170,38 @@ const TalentDashboardLayout = () => {
           </ul>
         </nav>
 
-        <div className="p-4 border-t mt-auto">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium shadow-sm">
-              {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{profile?.full_name || 'Usuario'}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-            </div>
-          </div>
-          
-          <div className="space-y-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="w-full justify-start hover:bg-muted/50 transition-colors" 
-              onClick={() => navigate('/settings/profile')}
-            >
-              <User className="h-4 w-4 mr-3" />
-              Mi Perfil
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="w-full justify-start hover:bg-muted/50 transition-colors" 
-              onClick={() => navigate('/settings/talent-profile')}
-            >
-              <Settings className="h-4 w-4 mr-3" />
-              Configuración
-            </Button>
-            <div className="border-t my-2"></div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors" 
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4 mr-3" />
-              Cerrar Sesión
-            </Button>
-          </div>
+        {/* User Profile Section - Bottom */}
+        <div className="p-4 border-t">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+                    {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium">{profile?.full_name || 'Usuario'}</p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => navigate('/settings/profile')}>
+                <User className="h-4 w-4 mr-2" />
+                Mi Perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/settings/talent-profile')}>
+                <Settings className="h-4 w-4 mr-2" />
+                Configuración
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                <LogOut className="h-4 w-4 mr-2" />
+                Cerrar Sesión
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
 
