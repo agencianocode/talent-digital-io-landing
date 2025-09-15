@@ -57,6 +57,7 @@ const BusinessMetrics: React.FC<BusinessMetricsProps> = ({
 }) => {
   // mark props as used to satisfy TS
   void pendingApplications;
+  void applicationsLastMonth;
 
   return (
     <div className="space-y-6">

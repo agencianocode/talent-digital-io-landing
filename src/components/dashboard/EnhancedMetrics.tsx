@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { BarChart3, Users, TrendingUp, DollarSign, Award, Briefcase } from 'lucide-react';
+
+import { TrendingUp, DollarSign, Award, Briefcase } from 'lucide-react';
 
 interface EnhancedMetricsProps {
   contractTypeMetrics: Record<string, { opportunities: number; applications: number }>;
@@ -158,7 +158,7 @@ const EnhancedMetrics: React.FC<EnhancedMetricsProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {experienceLevelDemand.map((exp, index) => (
+            {experienceLevelDemand.map((exp) => (
               <div key={exp.level} className="space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">

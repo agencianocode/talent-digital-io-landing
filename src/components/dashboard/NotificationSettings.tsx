@@ -14,7 +14,7 @@ import {
   Monitor,
   Settings 
 } from 'lucide-react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+
 import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from 'sonner';
 
@@ -51,7 +51,7 @@ const defaultPreferences: NotificationPreferences = {
 };
 
 const NotificationSettings: React.FC = () => {
-  const { user } = useSupabaseAuth();
+  
   const { activeCompany } = useCompany();
   const [preferences, setPreferences] = useState<NotificationPreferences>(defaultPreferences);
   const [isLoading, setIsLoading] = useState(false);

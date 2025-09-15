@@ -176,7 +176,7 @@ const companyTemplates: Record<string, Partial<DashboardConfiguration>> = {
       ...defaultWidgets,
       'salary-analytics': { ...defaultWidgets['salary-analytics'], enabled: false },
       'contract-type-metrics': { ...defaultWidgets['contract-type-metrics'], enabled: false }
-    },
+    } as Record<string, DashboardWidget>,
     customizations: {
       showWelcomeMessage: true,
       showTips: true,
@@ -221,7 +221,7 @@ const companyTemplates: Record<string, Partial<DashboardConfiguration>> = {
       ...defaultWidgets,
       'salary-analytics': { ...defaultWidgets['salary-analytics'], enabled: true },
       'contract-type-metrics': { ...defaultWidgets['contract-type-metrics'], enabled: true }
-    },
+    } as Record<string, DashboardWidget>,
     customizations: {
       showWelcomeMessage: false,
       showTips: false,
@@ -254,23 +254,27 @@ const DashboardCustomization: React.FC<DashboardCustomizationProps> = ({
       companySize: companySize as DashboardConfiguration['companySize'],
       widgets: {
         ...currentConfig.widgets,
-        ...template.widgets
+        ...(template?.widgets ?? {})
       }
     };
     setTempConfig(newConfig);
   };
 
   const handleWidgetToggle = (widgetId: string) => {
-    setTempConfig(prev => ({
-      ...prev,
-      widgets: {
-        ...prev.widgets,
-        [widgetId]: {
-          ...prev.widgets[widgetId],
-          enabled: !prev.widgets[widgetId].enabled
+    setTempConfig(prev => {
+      const base = prev.widgets[widgetId] ?? defaultWidgets[widgetId];
+      if (!base) return prev;
+      return {
+        ...prev,
+        widgets: {
+          ...prev.widgets,
+          [widgetId]: {
+            ...base,
+            enabled: !base.enabled
+          }
         }
-      }
-    }));
+      };
+    });
   };
 
   const handleSaveConfiguration = () => {

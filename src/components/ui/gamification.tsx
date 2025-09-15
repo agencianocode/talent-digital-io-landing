@@ -3,13 +3,11 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
-  Trophy, 
   Star, 
   Award, 
   Target, 
   Zap, 
   CheckCircle2,
-  Medal,
   Crown,
   Flame
 } from 'lucide-react';
@@ -67,6 +65,7 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
       const timer = setTimeout(() => setIsAnimating(false), 1000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [badge.earned]);
 
   const progress = badge.progress && badge.maxProgress 
