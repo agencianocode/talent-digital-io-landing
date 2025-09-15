@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useApplications } from '@/hooks/useCustomHooks';
 import { useToast } from '@/hooks/use-toast';
@@ -115,7 +114,7 @@ const ApplicantsList: React.FC<ApplicantsListProps> = ({ opportunityId }) => {
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${application.user_id}`} />
                   <AvatarFallback>
-                    {(application.profiles?.full_name || 'U').split(' ').map(n => n[0]).join('').toUpperCase()}
+                    {(application.profiles?.full_name || 'U').split(' ').map((word: string) => word[0]).join('').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
 

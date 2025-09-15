@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Star, MapPin, Clock, User, Mail, Phone } from "lucide-react";
+import { Star, MapPin, Clock, User, Mail } from "lucide-react";
 
 interface ApplicationCardProps {
   application: {
