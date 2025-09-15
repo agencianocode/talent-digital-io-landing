@@ -15,7 +15,6 @@ import {
 import { 
   Settings, 
   Layout, 
-  Palette, 
   Eye,
   EyeOff,
   Save,

@@ -42,7 +42,6 @@ export const ProfileCompletenessDashboard: React.FC = () => {
     completeness, 
     breakdown, 
     loading, 
-    refreshCompleteness, 
     getCompletenessColor, 
     getCompletenessLabel 
   } = useProfileCompleteness();

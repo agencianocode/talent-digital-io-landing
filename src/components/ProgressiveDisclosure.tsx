@@ -26,7 +26,7 @@ export const ProgressiveDisclosure: React.FC<ProgressiveDisclosureProps> = ({
   level = 'basic',
   className = ''
 }) => {
-  const { disclosureConfig, profileState, profileStateInfo } = useNavigationFlow();
+  const { disclosureConfig } = useNavigationFlow();
 
   // Determine if content should be shown based on profile state and disclosure config
   const shouldShow = (() => {
@@ -95,7 +95,7 @@ interface ContextualSuggestionsProps {
 export const ContextualSuggestions: React.FC<ContextualSuggestionsProps> = ({ 
   maxSuggestions = 3 
 }) => {
-  const { disclosureConfig, profileStateInfo, navigateToOnboarding } = useNavigationFlow();
+  const { disclosureConfig, navigateToOnboarding } = useNavigationFlow();
 
   const suggestions = disclosureConfig.recommendedActions.slice(0, maxSuggestions);
 
@@ -140,8 +140,7 @@ interface AdaptiveNavigationProps {
 export const AdaptiveNavigation: React.FC<AdaptiveNavigationProps> = ({ className = '' }) => {
   const { 
     disclosureConfig, 
-    profileState, 
-    profileStateInfo,
+    profileState,
     navigateToOnboarding,
     navigateToDashboard 
   } = useNavigationFlow();
@@ -247,7 +246,7 @@ interface ProgressIndicatorProps {
 }
 
 export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ showDetails = false }) => {
-  const { profileState, profileStateInfo } = useNavigationFlow();
+  const { profileStateInfo } = useNavigationFlow();
   
   const currentRange = profileStateInfo.completionRange;
   const progress = Math.max(currentRange[0], Math.min(currentRange[1], 

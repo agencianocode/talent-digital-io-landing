@@ -1,12 +1,10 @@
-
-import React from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import { Building2, User, Users, Shield, Bell, CreditCard, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const SettingsLayout = () => {
-  const location = useLocation();
+  
   const { user } = useSupabaseAuth();
 
   const companySettings = [

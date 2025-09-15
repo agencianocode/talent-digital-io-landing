@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -21,7 +21,6 @@ import {
   DollarSign,
   Award
 } from 'lucide-react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from 'sonner';
 
@@ -243,7 +242,6 @@ const DashboardCustomization: React.FC<DashboardCustomizationProps> = ({
   onConfigChange,
   metrics
 }) => {
-  const { user } = useSupabaseAuth();
   const { activeCompany } = useCompany();
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [tempConfig, setTempConfig] = useState<DashboardConfiguration>(currentConfig);

@@ -12,8 +12,6 @@ import {
   Crown, 
   Shield, 
   Eye, 
-  Mail, 
-  MoreVertical,
   Trash2,
   Send,
   Clock,
@@ -134,11 +132,11 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
           members.push({
             id: role.id,
             user_id: role.user_id,
-            invited_email: role.invited_email,
+            invited_email: role.invited_email || undefined,
             role: role.role,
             status: role.status as 'accepted' | 'pending' | 'declined',
-            invited_by: role.invited_by,
-            accepted_at: role.accepted_at,
+            invited_by: role.invited_by || undefined,
+            accepted_at: role.accepted_at || undefined,
             created_at: role.created_at,
             user_profile: profile ? {
               full_name: profile.full_name || 'Unknown User',
@@ -359,7 +357,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
             >
               <div className="flex items-center space-x-4">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={member.user_profile?.avatar_url} />
+                  <AvatarImage src={member.user_profile?.avatar_url || undefined} />
                   <AvatarFallback>
                     {member.user_profile?.full_name 
                       ? member.user_profile.full_name.slice(0, 2).toUpperCase()
