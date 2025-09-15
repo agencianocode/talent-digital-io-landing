@@ -100,7 +100,11 @@ export const OptimizedLoadingSkeleton: React.FC<OptimizedLoadingSkeletonProps> =
       </Card>
       
       {/* Sections */}
-      {Array.from({ length: count }).map((_, i) => renderCardSkeleton())}
+      {Array.from({ length: count }).map((_, index) => (
+        <React.Fragment key={index}>
+          {renderCardSkeleton()}
+        </React.Fragment>
+      ))}
     </div>
   );
 

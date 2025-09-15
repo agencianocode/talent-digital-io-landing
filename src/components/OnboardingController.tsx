@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { useProfileSync } from '@/hooks/useProfileSync';
 import { useNavigate } from 'react-router-dom';
