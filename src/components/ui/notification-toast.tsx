@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Bell, Users, Eye, MessageSquare } from 'lucide-react';
