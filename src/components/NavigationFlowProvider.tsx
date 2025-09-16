@@ -53,8 +53,8 @@ interface NavigationFlowProviderProps {
 }
 
 export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ children }) => {
-  const { user, userRole, profile } = useSupabaseAuth();
-  const { completeness, breakdown } = useProfileCompleteness();
+  const { user, userRole } = useSupabaseAuth();
+  const { completeness } = useProfileCompleteness();
   const navigate = useNavigate();
   const location = useLocation();
   

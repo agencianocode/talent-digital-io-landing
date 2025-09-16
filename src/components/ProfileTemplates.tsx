@@ -14,7 +14,6 @@ import {
   MapPin, 
   Star,
   Copy,
-  ExternalLink,
   Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -62,10 +61,11 @@ export const ProfileTemplates: React.FC<ProfileTemplatesProps> = ({
         if (error) throw error;
         setTemplates((data || []).map(template => ({
           ...template,
+          description: template.description || '',
           example_data: typeof template.example_data === 'string' 
             ? JSON.parse(template.example_data) 
             : template.example_data
-        })));
+        })) as ProfileTemplate[]);
       } catch (error) {
         console.error('Error loading templates:', error);
       } finally {
@@ -163,7 +163,7 @@ export const ProfileTemplates: React.FC<ProfileTemplatesProps> = ({
 
               {/* Skills preview */}
               <div className="flex flex-wrap gap-1">
-                {template.example_data.skills.slice(0, 3).map((skill, index) => (
+                {template.example_data.skills.slice(0, 3).map((skill: any, index: number) => (
                   <Badge key={index} variant="outline" className="text-xs px-2 py-0">
                     {skill}
                   </Badge>
@@ -251,7 +251,7 @@ export const ProfileTemplates: React.FC<ProfileTemplatesProps> = ({
               <div>
                 <h4 className="font-semibold text-sm mb-2">Habilidades</h4>
                 <div className="flex flex-wrap gap-2">
-                  {selectedTemplate.example_data.skills.map((skill, index) => (
+                  {selectedTemplate.example_data.skills.map((skill: any, index: number) => (
                     <Badge key={index} variant="secondary">
                       {skill}
                     </Badge>

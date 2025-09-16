@@ -10,8 +10,7 @@ import {
   Play, 
   Image as ImageIcon, 
   FileText,
-  ExternalLink,
-  Plus
+  ExternalLink
 } from 'lucide-react';
 import { ImageCropper } from './ImageCropper';
 
@@ -36,7 +35,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   items,
   onAddItem,
   onRemoveItem,
-  onUpdateItem,
   maxItems = 12
 }) => {
   const [isAddingLink, setIsAddingLink] = useState(false);

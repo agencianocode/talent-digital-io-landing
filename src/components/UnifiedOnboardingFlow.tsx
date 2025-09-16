@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { User, Sparkles, ArrowLeft, Settings, BarChart3 } from 'lucide-react';
 import { TalentProfileWizard } from '@/components/wizard/TalentProfileWizard';
 import { ProfileCompletenessDashboard } from '@/components/ProfileCompletenessDashboard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const OnboardingContent: React.FC = () => {
-  const { state, actions, userRole, profile, completeness, loading } = useOnboardingController();
+  const { state, actions, userRole, completeness, loading } = useOnboardingController();
 
   // Redirect business users to their dashboard
   if (!isTalentRole(userRole)) {

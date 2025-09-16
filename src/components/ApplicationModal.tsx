@@ -86,13 +86,12 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
                 <Avatar className="h-16 w-16">
                   <AvatarImage src="" />
                   <AvatarFallback>
-                    {user.email.substring(0, 2).toUpperCase()}
+                    {(user?.email || 'U').substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-lg">{user.email}</h3>
+                  <h3 className="font-semibold text-lg">{user?.email || 'Usuario'}</h3>
                   <p className="text-muted-foreground">Profesional</p>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
                 </div>
               </div>
             </CardContent>

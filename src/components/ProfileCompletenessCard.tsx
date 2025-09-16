@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { Lightbulb, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export const ProfileCompletenessCard: React.FC = () => {
   const { 
@@ -18,8 +18,6 @@ export const ProfileCompletenessCard: React.FC = () => {
   } = useProfileCompleteness();
   
   const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
 
   const getTargetTab = () => {
     // Check breakdown scores to determine which area needs more attention

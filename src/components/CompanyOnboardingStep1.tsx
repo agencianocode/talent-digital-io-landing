@@ -41,20 +41,20 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData }: CompanyOnboardingSt
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Step Indicator */}
-      <div className="text-sm text-muted-foreground">
+      <div className="text-sm text-slate-500 dark:text-slate-400 font-medium">
         Paso 1/2
       </div>
 
       {/* Main Question */}
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold text-foreground">
+      <div className="space-y-6">
+        <h1 className="text-4xl font-bold text-slate-900 dark:text-white leading-tight">
           ¿Cuál es el nombre de tu empresa?
         </h1>
         
         {/* Input Field */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="company-name" className="sr-only">
               Nombre de la empresa
@@ -65,7 +65,7 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData }: CompanyOnboardingSt
               placeholder="Empresa"
               value={companyName}
               onChange={(e) => handleCompanyNameChange(e.target.value)}
-              className="text-lg h-12"
+              className="text-lg h-14 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/30 dark:border-slate-600/30 rounded-xl"
               autoFocus
             />
           </div>
@@ -73,27 +73,28 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData }: CompanyOnboardingSt
           {/* Create Company Suggestion */}
           {companyName.trim() && (
             <div className="flex items-center gap-3">
-              <div className="flex-1 bg-primary/10 text-primary px-4 py-2 rounded-lg">
+              <div className="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-3 rounded-xl font-medium">
                 Crear '{companyName.trim()}'
               </div>
               <Button
                 size="icon"
                 onClick={handleCreateCompany}
-                className="h-10 w-10 rounded-full"
+                className="h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5" />
               </Button>
             </div>
           )}
 
           {/* Individual Checkbox */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3 pt-2">
             <Checkbox
               id="individual"
               checked={isIndividual}
               onCheckedChange={(checked) => setIsIndividual(checked as boolean)}
+              className="rounded-md"
             />
-            <Label htmlFor="individual" className="text-sm">
+            <Label htmlFor="individual" className="text-slate-700 dark:text-slate-300 font-medium">
               Estoy contratando como individuo
             </Label>
           </div>
@@ -101,21 +102,14 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData }: CompanyOnboardingSt
       </div>
 
       {/* Continue Button */}
-      <div className="pt-4">
+      <div className="pt-6">
         <Button
           onClick={handleContinue}
           disabled={!isValid}
-          className="w-full h-12 text-lg"
+          className="w-full h-14 text-lg font-semibold bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 rounded-xl"
         >
           Continuar
         </Button>
-      </div>
-
-      {/* Help Text */}
-      <div className="text-sm text-muted-foreground">
-        <p>
-          Este nombre aparecerá en tus publicaciones de trabajo y en tu perfil empresarial.
-        </p>
       </div>
     </div>
   );

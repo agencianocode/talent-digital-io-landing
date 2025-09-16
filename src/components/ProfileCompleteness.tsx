@@ -30,9 +30,7 @@ const motivationalMessages = [
 ];
 
 export const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
-  userType,
-  profileData,
-  onSectionComplete
+  userType
 }) => {
   const navigate = useNavigate();
   const [completedSections, setCompletedSections] = useState<string[]>([]);
@@ -141,7 +139,6 @@ export const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
     }
   };
 
-  const requiredXPForNextLevel = currentLevel * 100;
   const xpInCurrentLevel = currentXP % 100;
 
   return (

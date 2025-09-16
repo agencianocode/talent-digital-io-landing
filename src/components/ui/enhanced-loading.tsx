@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2, TrendingUp, Users, Briefcase, Calendar } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface EnhancedLoadingProps {
   type?: 'dashboard' | 'applications' | 'opportunities' | 'profile' | 'generic';

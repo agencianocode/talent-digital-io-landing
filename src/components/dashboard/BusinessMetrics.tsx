@@ -7,11 +7,8 @@ import {
   TrendingUp, 
   Eye, 
   Calendar,
-  Briefcase,
   Target,
   BarChart3,
-  ArrowUpRight,
-  ArrowDownRight,
   Bell,
   AlertCircle
 } from 'lucide-react';
@@ -58,12 +55,9 @@ const BusinessMetrics: React.FC<BusinessMetricsProps> = ({
   topOpportunities,
   recentApplications
 }) => {
-  const applicationGrowth = applicationsThisMonth - applicationsLastMonth;
-  const growthPercentage = applicationsLastMonth > 0 
-    ? ((applicationGrowth / applicationsLastMonth) * 100).toFixed(1)
-    : 0;
-
-  const isGrowthPositive = applicationGrowth >= 0;
+  // mark props as used to satisfy TS
+  void pendingApplications;
+  void applicationsLastMonth;
 
   return (
     <div className="space-y-6">

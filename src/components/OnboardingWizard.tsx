@@ -34,10 +34,10 @@ interface OnboardingWizardProps {
   isFirstTimeUser?: boolean;
 }
 
-export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isFirstTimeUser = false }) => {
+export const OnboardingWizard: React.FC<OnboardingWizardProps> = () => {
   // ALL HOOKS MUST BE CALLED FIRST - NO CONDITIONAL LOGIC BEFORE THIS
   const { profile, user } = useSupabaseAuth();
-  const { completeness, breakdown, loading } = useProfileCompleteness();
+  const { completeness, loading } = useProfileCompleteness();
   const { syncProfile } = useProfileSync();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);

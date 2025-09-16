@@ -15,7 +15,6 @@ import {
 import { 
   Settings, 
   Layout, 
-  Palette, 
   Eye,
   EyeOff,
   Save,
@@ -62,10 +61,9 @@ const DashboardSettings: React.FC<DashboardSettingsProps> = ({
       ...prev,
       widgets: {
         ...prev.widgets,
-        [widgetId]: {
-          ...prev.widgets[widgetId],
-          enabled
-        }
+        [widgetId]: prev.widgets[widgetId]
+          ? { ...prev.widgets[widgetId], enabled }
+          : { enabled, position: Object.keys(prev.widgets).length }
       }
     }));
   };

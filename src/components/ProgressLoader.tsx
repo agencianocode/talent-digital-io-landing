@@ -39,6 +39,8 @@ const ProgressLoader: React.FC<ProgressLoaderProps> = ({
 
       return () => clearInterval(interval);
     }
+    
+    return undefined;
   }, [isLoading, controlledProgress, autoProgress]);
 
   if (!isLoading) return null;

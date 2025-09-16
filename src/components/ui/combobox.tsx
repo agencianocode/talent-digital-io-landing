@@ -46,7 +46,6 @@ export function Combobox({
   createNewText = "Crear nuevo",
   className,
   disabled = false,
-  loading = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");

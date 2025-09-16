@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +42,6 @@ export const ProfileCompletenessDashboard: React.FC = () => {
     completeness, 
     breakdown, 
     loading, 
-    refreshCompleteness, 
     getCompletenessColor, 
     getCompletenessLabel 
   } = useProfileCompleteness();
@@ -50,22 +49,6 @@ export const ProfileCompletenessDashboard: React.FC = () => {
   const { profile } = useSupabaseAuth();
   const navigate = useNavigate();
   const [showTemplates, setShowTemplates] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-
-  // Handle manual refresh
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await refreshCompleteness();
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Error refreshing:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   const sections: DashboardSection[] = [
     {
@@ -204,7 +187,7 @@ export const ProfileCompletenessDashboard: React.FC = () => {
               </p>
             </div>
             <Avatar className="h-16 w-16">
-              <AvatarImage src={profile?.avatar_url} />
+              <AvatarImage src={profile?.avatar_url || undefined} />
               <AvatarFallback className="text-lg">
                 {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
               </AvatarFallback>

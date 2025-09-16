@@ -162,7 +162,7 @@ export const AccessibleSelect: React.FC<AccessibleSelectProps> = ({
       case 'Enter':
       case ' ':
         event.preventDefault();
-        if (isOpen && focusedIndex >= 0) {
+        if (isOpen && focusedIndex >= 0 && focusedIndex < options.length) {
           onChange?.(options[focusedIndex].value);
           setIsOpen(false);
         } else {

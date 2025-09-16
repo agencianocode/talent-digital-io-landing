@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useProfessionalData, Industry } from '@/hooks/useProfessionalData';
+import { useProfessionalData } from '@/hooks/useProfessionalData';
 import { Loader2, Building } from 'lucide-react';
 
 const createCompanySchema = z.object({

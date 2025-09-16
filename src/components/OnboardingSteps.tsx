@@ -21,6 +21,7 @@ interface OnboardingStepsProps {
 
 export const OnboardingSteps: React.FC<OnboardingStepsProps> = ({ steps, currentStep }) => {
   const getStepStatus = (index: number) => {
+    if (!steps[index]) return 'upcoming';
     if (steps[index].completed) return 'completed';
     if (index === currentStep) return 'current';
     if (index < currentStep) return 'completed';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -21,7 +21,6 @@ import {
   DollarSign,
   Award
 } from 'lucide-react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from 'sonner';
 
@@ -177,7 +176,7 @@ const companyTemplates: Record<string, Partial<DashboardConfiguration>> = {
       ...defaultWidgets,
       'salary-analytics': { ...defaultWidgets['salary-analytics'], enabled: false },
       'contract-type-metrics': { ...defaultWidgets['contract-type-metrics'], enabled: false }
-    },
+    } as Record<string, DashboardWidget>,
     customizations: {
       showWelcomeMessage: true,
       showTips: true,
@@ -222,7 +221,7 @@ const companyTemplates: Record<string, Partial<DashboardConfiguration>> = {
       ...defaultWidgets,
       'salary-analytics': { ...defaultWidgets['salary-analytics'], enabled: true },
       'contract-type-metrics': { ...defaultWidgets['contract-type-metrics'], enabled: true }
-    },
+    } as Record<string, DashboardWidget>,
     customizations: {
       showWelcomeMessage: false,
       showTips: false,
@@ -243,7 +242,6 @@ const DashboardCustomization: React.FC<DashboardCustomizationProps> = ({
   onConfigChange,
   metrics
 }) => {
-  const { user } = useSupabaseAuth();
   const { activeCompany } = useCompany();
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [tempConfig, setTempConfig] = useState<DashboardConfiguration>(currentConfig);
@@ -256,23 +254,27 @@ const DashboardCustomization: React.FC<DashboardCustomizationProps> = ({
       companySize: companySize as DashboardConfiguration['companySize'],
       widgets: {
         ...currentConfig.widgets,
-        ...template.widgets
+        ...(template?.widgets ?? {})
       }
     };
     setTempConfig(newConfig);
   };
 
   const handleWidgetToggle = (widgetId: string) => {
-    setTempConfig(prev => ({
-      ...prev,
-      widgets: {
-        ...prev.widgets,
-        [widgetId]: {
-          ...prev.widgets[widgetId],
-          enabled: !prev.widgets[widgetId].enabled
+    setTempConfig(prev => {
+      const base = prev.widgets[widgetId] ?? defaultWidgets[widgetId];
+      if (!base) return prev;
+      return {
+        ...prev,
+        widgets: {
+          ...prev.widgets,
+          [widgetId]: {
+            ...base,
+            enabled: !base.enabled
+          }
         }
-      }
-    }));
+      };
+    });
   };
 
   const handleSaveConfiguration = () => {
