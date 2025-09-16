@@ -18,6 +18,7 @@ interface ProfileData {
   professionalTitle: string;
   linkedinUrl: string;
   phoneNumber: string;
+  location: string;
   profilePhoto?: File;
 }
 
@@ -32,7 +33,8 @@ const CompanyOnboarding = () => {
   const [profileData, setProfileData] = useState<ProfileData>({
     professionalTitle: '',
     linkedinUrl: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    location: ''
   });
 
   const handleStep1Complete = (data: CompanyData) => {
