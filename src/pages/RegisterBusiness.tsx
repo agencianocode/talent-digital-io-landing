@@ -7,13 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
-import { useCompany } from '@/contexts/CompanyContext';
 import { Loader2, Eye, EyeOff, Building2, ArrowLeft } from 'lucide-react';
 
 const RegisterBusiness = () => {
   const navigate = useNavigate();
-  const { signUp, createCompany, isLoading, userRole, isAuthenticated } = useSupabaseAuth();
-  const { refreshCompanies } = useCompany();
+  const { signUp, isLoading, userRole, isAuthenticated } = useSupabaseAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -49,17 +47,12 @@ const RegisterBusiness = () => {
     setError('');
     setMessage('');
 
-    if (!formData.email || !formData.password || !formData.fullName || !formData.companyName) {
+    if (!formData.email || !formData.password || !formData.fullName) {
       setError('Por favor completa todos los campos');
       setIsSubmitting(false);
       return;
     }
 
-    if (formData.isAcademy && !formData.programType) {
-      setError('Por favor especifica el tipo de programa');
-      setIsSubmitting(false);
-      return;
-    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
@@ -87,39 +80,8 @@ const RegisterBusiness = () => {
     }
 
     // Account created successfully
-    setMessage('¡Cuenta creada exitosamente! Configurando tu empresa...');
-    
-    // Wait for auth state to stabilize before creating company
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    try {
-      const companyResult = await createCompany({
-        name: formData.companyName,
-        business_type: formData.isAcademy ? 'academy' : 'company',
-        description: formData.isAcademy 
-          ? `Academia especializada en ${formData.programType}` 
-          : 'Empresa registrada en TalentDigital'
-      });
-      
-      if (companyResult.error) {
-        console.error('Company creation error:', companyResult.error);
-        setMessage('¡Cuenta creada exitosamente! Verifica tu email para acceder a tu dashboard empresarial. Podrás configurar tu empresa desde allí.');
-        setRegistrationComplete(true);
-      } else {
-        // Refresh companies context after successful creation
-        try {
-          await refreshCompanies();
-        } catch (refreshError) {
-          console.error('Error refreshing companies:', refreshError);
-        }
-        setMessage('¡Cuenta y empresa creadas exitosamente! Verifica tu email para continuar.');
-        setRegistrationComplete(true);
-      }
-    } catch (companyError) {
-      console.error('Unexpected error during company creation:', companyError);
-      setMessage('¡Cuenta creada exitosamente! Verifica tu email para acceder a tu dashboard empresarial. Podrás configurar tu empresa desde allí.');
-      setRegistrationComplete(true);
-    }
+    setMessage('¡Cuenta creada exitosamente! Verifica tu email para continuar con la configuración de tu empresa.');
+    setRegistrationComplete(true);
     
     setIsSubmitting(false);
   };
