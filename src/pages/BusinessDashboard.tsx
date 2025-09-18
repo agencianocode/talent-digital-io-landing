@@ -99,7 +99,7 @@ const BusinessDashboard = () => {
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base border-slate-300 hover:bg-white"
+                  className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base border-slate-300 hover:bg-black hover:text-white"
                   onClick={() => navigate('/business-dashboard/talent')}
                 >
                   Buscar Talento
