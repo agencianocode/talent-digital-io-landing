@@ -134,9 +134,9 @@ const BusinessDashboard = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+        <div className={`grid grid-cols-1 gap-3 sm:gap-4 lg:gap-6 ${getCompletionPercentage() < 100 ? 'lg:grid-cols-3' : 'lg:grid-cols-1'}`}>
           {/* Left Column - Profile Progress */}
-          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+          <div className={`space-y-3 sm:space-y-4 ${getCompletionPercentage() < 100 ? 'lg:col-span-2' : ''}`}>
             {/* Profile Completion */}
             <Card>
               <CardContent className="p-3 sm:p-4 lg:p-6">
@@ -217,29 +217,31 @@ const BusinessDashboard = () => {
             </Card>
           </div>
 
-          {/* Right Column - Onboarding Call */}
-          <div>
-            <Card>
-              <CardContent className="p-3 sm:p-4 lg:p-6">
-                <h3 className="text-base sm:text-lg font-semibold mb-2">Agenda tu llamada de onboarding 😊</h3>
-                <p className="text-xs sm:text-sm text-slate-600 mb-2 sm:mb-3">
-                  Con una llamada gratuita nuestro equipo te ayuda en pocos minutos a:
-                </p>
-                <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-slate-600 mb-3">
-                  <li>• Aprender a publicar oportunidades</li>
-                  <li>• Optimizar tu perfil de empresa</li>
-                  <li>• Sacarte el mayor provecho a la plataforma</li>
-                  <li>• Resolver dudas</li>
-                </ul>
-                <Button 
-                  className="w-full bg-black hover:bg-gray-800 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
-                  onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}
-                >
-                  Agendar Llamada
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Right Column - Onboarding Call (Only show if profile is not 100% complete) */}
+          {getCompletionPercentage() < 100 && (
+            <div>
+              <Card>
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <h3 className="text-base sm:text-lg font-semibold mb-2">Agenda tu llamada de onboarding 😊</h3>
+                  <p className="text-xs sm:text-sm text-slate-600 mb-2 sm:mb-3">
+                    Con una llamada gratuita nuestro equipo te ayuda en pocos minutos a:
+                  </p>
+                  <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-slate-600 mb-3">
+                    <li>• Aprender a publicar oportunidades</li>
+                    <li>• Optimizar tu perfil de empresa</li>
+                    <li>• Sacarte el mayor provecho a la plataforma</li>
+                    <li>• Resolver dudas</li>
+                  </ul>
+                  <Button 
+                    className="w-full bg-black hover:bg-gray-800 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
+                    onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}
+                  >
+                    Agendar Llamada
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
 
       </div>
