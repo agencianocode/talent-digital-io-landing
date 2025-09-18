@@ -186,7 +186,8 @@ export const getRouteForUserState = (
   isEmailConfirmed: boolean,
   profileState: ProfileState,
   _currentPath: string = '/',
-  hasCompletedOnboarding?: boolean
+  hasCompletedOnboarding?: boolean,
+  hasCompletedTalentOnboarding?: boolean
 ): string => {
   // Not authenticated
   if (!userRole) {
@@ -215,9 +216,14 @@ export const getRouteForUserState = (
       return '/email-verification';
     }
     
-    // New users need onboarding
-    if (profileState === ProfileState.NEW) {
-      return '/onboarding';
+    // Check if talent onboarding is completed
+    if (hasCompletedTalentOnboarding === false) {
+      return '/talent-onboarding';
+    }
+    
+    // If we don't have onboarding status yet, check profile state
+    if (hasCompletedTalentOnboarding === undefined && profileState === ProfileState.NEW) {
+      return '/talent-onboarding';
     }
     
     // Others go to dashboard

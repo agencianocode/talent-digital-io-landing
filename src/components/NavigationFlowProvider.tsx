@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isBusinessRole, isTalentRole } from '@/contexts/SupabaseAuthContext';
 import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { 
   ProfileState, 
@@ -53,7 +53,7 @@ interface NavigationFlowProviderProps {
 }
 
 export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ children }) => {
-  const { user, userRole, hasCompletedBusinessOnboarding } = useSupabaseAuth();
+  const { user, userRole, hasCompletedBusinessOnboarding, hasCompletedTalentOnboarding } = useSupabaseAuth();
   const { completeness } = useProfileCompleteness();
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,6 +62,7 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [lastNavigationTime, setLastNavigationTime] = useState<Date | null>(null);
   const [businessOnboardingComplete, setBusinessOnboardingComplete] = useState<boolean | null>(null);
+  const [talentOnboardingComplete, setTalentOnboardingComplete] = useState<boolean | null>(null);
 
   // Calculate profile state
   const profileState = getProfileState(
@@ -91,6 +92,20 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
 
     checkBusinessOnboarding();
   }, [user, userRole, hasCompletedBusinessOnboarding]);
+
+  // Check talent onboarding completion for talent users
+  useEffect(() => {
+    const checkTalentOnboarding = async () => {
+      if (user && userRole && isTalentRole(userRole)) {
+        const isComplete = await hasCompletedTalentOnboarding(user.id);
+        setTalentOnboardingComplete(isComplete);
+      } else {
+        setTalentOnboardingComplete(null);
+      }
+    };
+
+    checkTalentOnboarding();
+  }, [user, userRole, hasCompletedTalentOnboarding]);
 
   // Determine current navigation state based on location
   useEffect(() => {
@@ -199,7 +214,8 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
       Boolean(user.email_confirmed_at),
       profileState,
       currentPath,
-      businessOnboardingComplete ?? undefined
+      businessOnboardingComplete ?? undefined,
+      talentOnboardingComplete ?? undefined
     );
 
     // Only auto-navigate if user is on a route that doesn't match their state
