@@ -1,37 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip';
 import { CheckCircle, Circle, Building } from 'lucide-react';
+import { useProfileProgress } from '@/hooks/useProfileProgress';
 
-interface CompanyData {
-  id: string;
-  name: string;
-  description: string | null;
-  website: string | null;
-  location: string | null;
-  logo_url: string | null;
-  business_type: string | null;
-}
-
-interface UserProfile {
-  professional_title: string | null;
-  linkedin_url: string | null;
-  phone: string | null;
-  country_code: string | null;
-  avatar_url: string | null;
-  full_name: string | null;
-}
 
 const BusinessDashboard = () => {
   const navigate = useNavigate();
   const { user, hasCompletedBusinessOnboarding } = useSupabaseAuth();
-  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const { 
+    companyData, 
+    userProfile, 
+    loading, 
+    getTasksStatus, 
+    getCompletionPercentage 
+  } = useProfileProgress();
 
   // Verificar onboarding antes de mostrar dashboard
   useEffect(() => {
@@ -60,43 +47,6 @@ const BusinessDashboard = () => {
     checkOnboardingStatus();
   }, [user, hasCompletedBusinessOnboarding, navigate]);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!user || checkingOnboarding) return;
-
-      try {
-        // Obtener datos de la empresa
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (companyError && companyError.code !== 'PGRST116') {
-          console.error('Error fetching company:', companyError);
-        } else if (company) {
-          setCompanyData(company);
-        }
-
-        // Obtener datos del perfil desde user_metadata
-        setUserProfile({
-          professional_title: user.user_metadata?.professional_title || null,
-          linkedin_url: user.user_metadata?.linkedin_url || null,
-          phone: user.user_metadata?.phone || null,
-          country_code: user.user_metadata?.country_code || null,
-          avatar_url: user.user_metadata?.avatar_url || null,
-          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || null
-        });
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [user, checkingOnboarding]);
 
   if (loading || checkingOnboarding) {
     return (
@@ -183,36 +133,39 @@ const BusinessDashboard = () => {
             {/* Profile Completion */}
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-lg font-semibold mb-4">Tu perfil de empresa está al 70%</h2>
+                <h2 className="text-lg font-semibold mb-4">Tu perfil de empresa está al {getCompletionPercentage()}%</h2>
                 <p className="text-sm text-slate-600 mb-4">Completalo para atraer más talento y generar confianza.</p>
                 
                 {/* Progress Bar */}
                 <div className="w-full bg-slate-200 rounded-full h-2 mb-6">
-                  <div className="bg-green-500 h-2 rounded-full" style={{width: '70%'}}></div>
+                  <div className="bg-green-500 h-2 rounded-full" style={{width: `${getCompletionPercentage()}%`}}></div>
                 </div>
                 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-slate-700">Onboarding Completado</span>
-                  </div>
-                  <div className="flex items-center gap-3 justify-between">
-                    <div className="flex items-center gap-3">
-                      <Circle className="h-5 w-5 text-slate-300" />
-                      <span className="text-slate-700">Perfil de Empresa Completo</span>
+                  {getTasksStatus().map((task) => (
+                    <div key={task.id} className="flex items-center gap-3 justify-between">
+                      <Tooltip 
+                        content={task.nextStepDescription || 'Completado ✓'} 
+                        disabled={task.completed}
+                        position="right"
+                      >
+                        <div className="flex items-center gap-3 cursor-pointer">
+                          {task.completed ? (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          ) : (
+                            <Circle className="h-5 w-5 text-slate-300" />
+                          )}
+                          <span className="text-slate-700">{task.title}</span>
+                        </div>
+                      </Tooltip>
+                      
+                      {task.id === 'profile' && !task.completed && (
+                        <Button variant="link" className="text-blue-600 p-0 h-auto">
+                          Completar Perfil ahora
+                        </Button>
+                      )}
                     </div>
-                    <Button variant="link" className="text-blue-600 p-0 h-auto">
-                      Completar Perfil ahora
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Circle className="h-5 w-5 text-slate-300" />
-                    <span className="text-slate-700">Publicar primera oportunidad</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Circle className="h-5 w-5 text-slate-300" />
-                    <span className="text-slate-700">Invitar colegas</span>
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

@@ -1,28 +1,54 @@
-import * as React from "react"
-import * as TooltipPrimitive from "@radix-ui/react-tooltip"
+import React, { useState } from 'react';
 
-import { cn } from "@/lib/utils"
+interface TooltipProps {
+  content: string;
+  children: React.ReactNode;
+  position?: 'top' | 'bottom' | 'left' | 'right';
+  disabled?: boolean;
+}
 
-const TooltipProvider = TooltipPrimitive.Provider
+export const Tooltip: React.FC<TooltipProps> = ({ 
+  content, 
+  children, 
+  position = 'top',
+  disabled = false 
+}) => {
+  const [isVisible, setIsVisible] = useState(false);
 
-const Tooltip = TooltipPrimitive.Root
+  if (disabled) {
+    return <>{children}</>;
+  }
 
-const TooltipTrigger = TooltipPrimitive.Trigger
+  const positionClasses = {
+    top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
+    bottom: 'top-full left-1/2 transform -translate-x-1/2 mt-2',
+    left: 'right-full top-1/2 transform -translate-y-1/2 mr-2',
+    right: 'left-full top-1/2 transform -translate-y-1/2 ml-2'
+  };
 
-const TooltipContent = React.forwardRef<
-  React.ElementRef<typeof TooltipPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => (
-  <TooltipPrimitive.Content
-    ref={ref}
-    sideOffset={sideOffset}
-    className={cn(
-      "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-      className
-    )}
-    {...props}
-  />
-))
-TooltipContent.displayName = TooltipPrimitive.Content.displayName
+  const arrowClasses = {
+    top: 'top-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-800',
+    bottom: 'bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-800',
+    left: 'left-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-800',
+    right: 'right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-800'
+  };
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+  return (
+    <div 
+      className="relative inline-block"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      {children}
+      
+      {isVisible && (
+        <div className={`absolute z-50 ${positionClasses[position]}`}>
+          <div className="bg-gray-800 text-white text-sm px-4 py-3 rounded-lg shadow-2xl border border-gray-600 max-w-sm whitespace-normal backdrop-blur-sm">
+            {content}
+          </div>
+          <div className={`absolute w-0 h-0 border-4 ${arrowClasses[position]}`}></div>
+        </div>
+      )}
+    </div>
+  );
+};
