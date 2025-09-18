@@ -15,8 +15,7 @@ const RegisterTalent = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: '',
-    fullName: ''
+    confirmPassword: ''
   });
   
   const [showPassword, setShowPassword] = useState(false);
@@ -38,7 +37,7 @@ const RegisterTalent = () => {
     setError('');
     setMessage('');
 
-    if (!formData.email || !formData.password || !formData.fullName) {
+    if (!formData.email || !formData.password) {
       setError('Por favor completa todos los campos');
       setIsSubmitting(false);
       return;
@@ -58,7 +57,6 @@ const RegisterTalent = () => {
 
     try {
       const { error } = await signUp(formData.email, formData.password, {
-        full_name: formData.fullName,
         user_type: 'talent'
       });
       
@@ -122,19 +120,6 @@ const RegisterTalent = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nombre completo *</Label>
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Tu nombre completo"
-                  required
-                />
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
                 <Input
