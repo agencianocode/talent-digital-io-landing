@@ -308,6 +308,10 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       ? `${window.location.origin}/company-onboarding`
       : `${window.location.origin}/talent-onboarding`;
     
+    console.log('SignUp - User type:', metadata?.user_type);
+    console.log('SignUp - Redirect URL:', redirectUrl);
+    console.log('SignUp - Window origin:', window.location.origin);
+    
     const { error } = await supabase.auth.signUp({
       email,
       password,

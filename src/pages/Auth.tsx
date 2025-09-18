@@ -158,7 +158,9 @@ const Auth = () => {
         redirectPath = '/business-dashboard';
         console.log('Auth.tsx: Redirecting business to:', redirectPath);
       } else {
-        console.log('Auth.tsx: Redirecting talent to:', redirectPath);
+        // For talent users, check if they need onboarding first
+        redirectPath = '/talent-onboarding';
+        console.log('Auth.tsx: Redirecting talent to onboarding first:', redirectPath);
       }
       
       // Add a small delay to ensure the auth context is fully loaded

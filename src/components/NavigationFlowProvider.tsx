@@ -154,11 +154,15 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
   const navigateToOnboarding = useCallback(() => {
     setIsTransitioning(true);
     setTimeout(() => {
-      navigate('/onboarding');
+      // Navigate to appropriate onboarding based on user role
+      const onboardingRoute = userRole && isBusinessRole(userRole) 
+        ? '/company-onboarding' 
+        : '/talent-onboarding';
+      navigate(onboardingRoute);
       setLastNavigationTime(new Date());
       setIsTransitioning(false);
     }, 200);
-  }, [navigate]);
+  }, [navigate, userRole]);
 
   const navigateToDashboard = useCallback(() => {
     setIsTransitioning(true);

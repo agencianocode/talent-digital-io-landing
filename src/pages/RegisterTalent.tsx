@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Loader2, Eye, EyeOff, Users, ArrowLeft } from 'lucide-react';
 
 const RegisterTalent = () => {
   const navigate = useNavigate();
-  const { signUp, isLoading } = useSupabaseAuth();
+  const { signUp, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -22,6 +22,14 @@ const RegisterTalent = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+
+  // If user is already authenticated and is talent, redirect to onboarding
+  React.useEffect(() => {
+    if (isAuthenticated && userRole === 'talent') {
+      console.log('RegisterTalent: User is authenticated talent, redirecting to onboarding');
+      navigate('/talent-onboarding', { replace: true });
+    }
+  }, [isAuthenticated, userRole, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
