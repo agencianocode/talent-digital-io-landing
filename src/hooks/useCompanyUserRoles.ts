@@ -9,7 +9,7 @@ export interface CompanyUserRole {
   user_id: string;
   role: 'owner' | 'admin' | 'viewer';
   invited_by?: string;
-  invited_at: string;
+  invited_email?: string;
   accepted_at?: string;
   status: 'pending' | 'accepted' | 'declined';
   created_at: string;
@@ -62,46 +62,46 @@ export const useCompanyUserRoles = (companyId?: string) => {
     if (!user) return;
 
     try {
-      // Create invitation record (using any until types are regenerated)
+      // Create invitation record with proper fields
+      // Generate a real UUID for pending invitations
+      const tempUserId = crypto.randomUUID();
+      
       const { data, error } = await (supabase as any)
         .from('company_user_roles')
         .insert({
           company_id: inviteData.company_id,
-          user_id: null, // Will be set when user accepts
+          user_id: tempUserId, // Temporary UUID for pending invitations
+          invited_email: inviteData.email,
           role: inviteData.role,
           invited_by: user.id,
-          status: 'pending',
-          invited_at: new Date().toISOString(),
-          // Store email temporarily in metadata (we'll need to extend table or use another approach)
+          status: 'pending'
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
-      // Send invitation email
-      const { error: emailError } = await supabase.functions.invoke('send-invitation', {
-        body: {
-          email: inviteData.email,
-          role: inviteData.role,
-          company_id: inviteData.company_id,
-          invited_by: user.email,
-          invitation_id: data.id
-        }
-      });
+      console.log('Invitation created successfully:', data);
 
-      if (emailError) {
-        console.error('Error sending email:', emailError);
-        toast.error('Invitación creada pero error al enviar email');
-      } else {
-        toast.success(`Invitación enviada a ${inviteData.email}`);
+      // Generate invitation link
+      const invitationLink = `${window.location.origin}/accept-invitation?id=${data.id}`;
+      
+      // Copy link to clipboard
+      try {
+        await navigator.clipboard.writeText(invitationLink);
+        toast.success(`Invitación creada para ${inviteData.email}. Link copiado al portapapeles.`);
+      } catch (clipboardError) {
+        toast.success(`Invitación creada para ${inviteData.email}. Link: ${invitationLink}`);
       }
 
       // Reload user roles
       await loadUserRoles();
     } catch (error) {
       console.error('Error inviting user:', error);
-      toast.error('Error al enviar invitación');
+      toast.error(`Error al enviar invitación: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   }, [user, loadUserRoles]);
 

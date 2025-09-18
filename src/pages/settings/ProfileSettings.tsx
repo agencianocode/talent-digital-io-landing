@@ -53,6 +53,9 @@ const ProfileSettings = () => {
     return tabParam || 'personal';
   });
 
+  // Check if user comes from business dashboard
+  const isFromBusinessDashboard = searchParams.get('from') === 'business-dashboard';
+
   // Listen for URL changes
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -346,21 +349,24 @@ const ProfileSettings = () => {
         if (newTab !== activeTab) {
           setActiveTab(newTab);
           // Update URL when tab changes, but use replace to avoid history entries
-          navigate(`/settings/profile?tab=${newTab}`, { replace: true });
+          const fromParam = isFromBusinessDashboard ? '&from=business-dashboard' : '';
+          navigate(`/settings/profile?tab=${newTab}${fromParam}`, { replace: true });
         }
       }} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className={`grid w-full ${
+          isFromBusinessDashboard ? 'grid-cols-1' : 'grid-cols-2'
+        }`}>
           <TabsTrigger value="personal" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Información Personal
           </TabsTrigger>
-          {isTalentRole(userRole) && (
+          {isTalentRole(userRole) && !isFromBusinessDashboard && (
             <TabsTrigger value="professional" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
               Perfil Profesional
             </TabsTrigger>
           )}
-          {isBusinessRole(userRole) && (
+          {isBusinessRole(userRole) && !isFromBusinessDashboard && (
             <TabsTrigger value="corporate" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
               Perfil Corporativo

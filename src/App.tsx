@@ -40,6 +40,9 @@ const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage'));
 const TalentSearchPage = lazy(() => import('./pages/TalentSearchPage'));
 const TalentProfilePage = lazy(() => import('./pages/TalentProfilePage'));
 const UserManagement = lazy(() => import('./pages/settings/UserManagement'));
+const CompanyDetails = lazy(() => import('./pages/CompanyDetails'));
+const BusinessProfile = lazy(() => import('./pages/BusinessProfile'));
+const AcceptInvitation = lazy(() => import('./pages/AcceptInvitation'));
 
 // Lazy load páginas de registro
 const UserTypeSelector = lazy(() => import('./pages/UserTypeSelector'));
@@ -121,6 +124,11 @@ function App() {
                       <Route path="/email-verification-pending" element={
                         <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
                           <EmailVerificationPending />
+                        </Suspense>
+                      } />
+                      <Route path="/accept-invitation" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <AcceptInvitation />
                         </Suspense>
                       } />
                       
@@ -233,6 +241,16 @@ function App() {
                         <Route path="users" element={
                           <Suspense fallback={<LoadingSkeleton type="table" />}>
                             <UserManagement />
+                          </Suspense>
+                        } />
+                        <Route path="company-details" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <CompanyDetails />
+                          </Suspense>
+                        } />
+                        <Route path="profile" element={
+                          <Suspense fallback={<LoadingSkeleton type="profile" />}>
+                            <BusinessProfile />
                           </Suspense>
                         } />
                       </Route>

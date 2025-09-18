@@ -14,7 +14,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { ImageCropper } from '@/components/ImageCropper';
 import { MediaGallery } from '@/components/MediaGallery';
-import { TeamManagement } from '@/components/TeamManagement';
+import { TeamOverview } from '@/components/TeamOverview';
 import { useProfessionalData } from '@/hooks/useProfessionalData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,8 +28,7 @@ import {
   Factory, 
   Globe, 
   Link2,
-  Image,
-  UserPlus
+  Image
 } from 'lucide-react';
 
 const companySchema = z.object({
@@ -268,7 +267,7 @@ export const CompanyProfileWizard: React.FC = () => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="general" className="flex items-center gap-2">
                 <Building className="h-4 w-4" />
                 General
@@ -284,6 +283,10 @@ export const CompanyProfileWizard: React.FC = () => {
               <TabsTrigger value="gallery" className="flex items-center gap-2">
                 <Image className="h-4 w-4" />
                 Galería
+              </TabsTrigger>
+              <TabsTrigger value="team" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Equipo
               </TabsTrigger>
             </TabsList>
 
@@ -581,6 +584,22 @@ export const CompanyProfileWizard: React.FC = () => {
               />
             </TabsContent>
 
+            {/* Team Tab */}
+            <TabsContent value="team" className="mt-6">
+              {company?.id ? (
+                <TeamOverview companyId={company.id} />
+              ) : (
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center text-muted-foreground">
+                      <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Guarda la información de la empresa primero para gestionar el equipo.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
             {/* Submit Button - Fixed at bottom */}
             <div className="flex justify-end gap-4 mt-8 p-4 bg-background border-t sticky bottom-0">
               <Button 
@@ -609,20 +628,6 @@ export const CompanyProfileWizard: React.FC = () => {
         </form>
       </Form>
 
-      {/* Team Management Section */}
-      {company?.id && (
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              Gestión de Equipo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TeamManagement companyId={company.id} />
-          </CardContent>
-        </Card>
-      )}
 
       {/* Image Cropper */}
       {logoFile && (

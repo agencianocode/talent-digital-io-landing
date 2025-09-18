@@ -108,7 +108,7 @@ const DashboardLayout = () => {
               </div>
               
               <div className="space-y-2">
-                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => { navigate('/settings/profile'); closeMobileMenu(); }}>
+                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => { navigate('/business-dashboard/profile'); closeMobileMenu(); }}>
                   <User className="h-4 w-4 mr-2" />
                   Mi Perfil
                 </Button>
@@ -238,7 +238,7 @@ const DashboardLayout = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => navigate('/settings/profile')}>
+              <DropdownMenuItem onClick={() => navigate('/business-dashboard/profile')}>
                 <User className="h-4 w-4 mr-2" />
                 Mi Perfil
               </DropdownMenuItem>
