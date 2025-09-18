@@ -1,4 +1,12 @@
 project_id = "wyrieetebfzmgffxecpz"
 
+[auth]
+site_url = "http://localhost:8080"
+additional_redirect_urls = [
+  "http://localhost:8080/talent-onboarding",
+  "http://localhost:8080/company-onboarding",
+  "http://localhost:8080/auth"
+]
+
 [functions.send-email]
 verify_jwt = false

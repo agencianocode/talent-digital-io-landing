@@ -1,35 +1,37 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff, Users, ArrowLeft } from 'lucide-react';
 
 const RegisterTalent = () => {
   const navigate = useNavigate();
-  const { signUp, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+  const { signUp, isLoading, userRole, isAuthenticated } = useSupabaseAuth();
   
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    fullName: ''
   });
   
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [registrationComplete, setRegistrationComplete] = useState(false);
 
-  // If user is already authenticated and is talent, redirect to onboarding
-  React.useEffect(() => {
-    if (isAuthenticated && userRole === 'talent') {
-      console.log('RegisterTalent: User is authenticated talent, redirecting to onboarding');
-      navigate('/talent-onboarding', { replace: true });
+  // Effect to handle redirection after successful registration
+  useEffect(() => {
+    if (registrationComplete && isAuthenticated && isTalentRole(userRole)) {
+      navigate('/talent-onboarding');
     }
-  }, [isAuthenticated, userRole, navigate]);
+  }, [registrationComplete, isAuthenticated, userRole, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -45,7 +47,7 @@ const RegisterTalent = () => {
     setError('');
     setMessage('');
 
-    if (!formData.email || !formData.password) {
+    if (!formData.email || !formData.password || !formData.fullName) {
       setError('Por favor completa todos los campos');
       setIsSubmitting(false);
       return;
@@ -63,22 +65,22 @@ const RegisterTalent = () => {
       return;
     }
 
-    try {
-      const { error } = await signUp(formData.email, formData.password, {
-        user_type: 'talent'
-      });
-      
-      if (error) {
-        setError(error.message === 'User already registered' 
-          ? 'Este email ya está registrado. Intenta iniciar sesión.' 
-          : 'Error al crear la cuenta. Intenta nuevamente.');
-      } else {
-        setMessage('¡Registro exitoso! Te hemos enviado un email de verificación. Revisa tu bandeja de entrada y haz clic en el enlace para continuar con la configuración de tu perfil.');
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      setError('Error inesperado. Intenta nuevamente.');
+    const signUpResult = await signUp(formData.email, formData.password, {
+      full_name: formData.fullName,
+      user_type: 'talent'
+    });
+    
+    if (signUpResult.error) {
+      setError(signUpResult.error.message === 'User already registered' 
+        ? 'Este email ya está registrado. Intenta iniciar sesión.' 
+        : 'Error al crear la cuenta. Intenta nuevamente.');
+      setIsSubmitting(false);
+      return;
     }
+
+    // Account created successfully
+    setMessage('¡Cuenta creada exitosamente! Verifica tu email para continuar con la configuración de tu perfil.');
+    setRegistrationComplete(true);
     
     setIsSubmitting(false);
   };
@@ -124,6 +126,19 @@ const RegisterTalent = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Nombre completo *</Label>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  placeholder="Tu nombre completo"
+                  required
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
                 <Input
