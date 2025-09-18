@@ -65,11 +65,7 @@ const RegisterTalent = () => {
           ? 'Este email ya está registrado. Intenta iniciar sesión.' 
           : 'Error al crear la cuenta. Intenta nuevamente.');
       } else {
-        setMessage('¡Cuenta creada exitosamente! Redirigiendo...');
-        // Redirect to welcome page after successful registration
-        setTimeout(() => {
-          navigate('/welcome');
-        }, 1500);
+        setMessage('¡Registro exitoso! Te hemos enviado un email de verificación. Revisa tu bandeja de entrada y haz clic en el enlace para continuar con la configuración de tu perfil.');
       }
     } catch (error) {
       console.error('Registration error:', error);
