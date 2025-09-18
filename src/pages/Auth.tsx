@@ -4,18 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSupabaseAuth, isBusinessRole, isAdminRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
-import { Separator } from "@/components/ui/separator";
 import AuthDebugInfo from '@/components/AuthDebugInfo';
 import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn, signUp, signInWithGoogle, resetPassword, updatePassword, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+  const { signIn, signInWithGoogle, resetPassword, updatePassword, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
   
   // Track if redirect has happened to prevent multiple redirects
   const [hasRedirected, setHasRedirected] = useState(false);

@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff, Users, ArrowLeft } from 'lucide-react';
 
@@ -24,7 +23,7 @@ const RegisterTalent = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
-  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [registrationComplete] = useState(false);
 
   // Effect to handle redirection after successful registration
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { UnifiedOnboardingFlow } from '@/components/UnifiedOnboardingFlow';
 import { useLocation } from 'react-router-dom';
 

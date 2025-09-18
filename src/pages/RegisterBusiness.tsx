@@ -25,7 +25,7 @@ const RegisterBusiness = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
-  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [registrationComplete] = useState(false);
 
   // Effect to handle redirection after successful registration
   useEffect(() => {
