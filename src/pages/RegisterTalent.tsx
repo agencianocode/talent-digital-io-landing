@@ -16,11 +16,11 @@ const RegisterTalent = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: '',
-    fullName: ''
+    confirmPassword: ''
   });
   
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
@@ -47,7 +47,7 @@ const RegisterTalent = () => {
     setError('');
     setMessage('');
 
-    if (!formData.email || !formData.password || !formData.fullName) {
+    if (!formData.email || !formData.password) {
       setError('Por favor completa todos los campos');
       setIsSubmitting(false);
       return;
@@ -66,7 +66,6 @@ const RegisterTalent = () => {
     }
 
     const signUpResult = await signUp(formData.email, formData.password, {
-      full_name: formData.fullName,
       user_type: 'talent'
     });
     
@@ -78,9 +77,9 @@ const RegisterTalent = () => {
       return;
     }
 
-    // Account created successfully
-    setMessage('¡Cuenta creada exitosamente! Verifica tu email para continuar con la configuración de tu perfil.');
-    setRegistrationComplete(true);
+    // Account created successfully - redirect to verification page
+    navigate(`/email-verification-pending?type=talent&email=${encodeURIComponent(formData.email)}`);
+    return;
     
     setIsSubmitting(false);
   };
@@ -127,19 +126,6 @@ const RegisterTalent = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Nombre completo *</Label>
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Tu nombre completo"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
@@ -182,15 +168,30 @@ const RegisterTalent = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmar contraseña *</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirma tu contraseña"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Confirma tu contraseña"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {error && (

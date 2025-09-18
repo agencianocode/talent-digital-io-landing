@@ -97,7 +97,7 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
   };
 
   return (
-    <div className="w-full mx-auto px-8 py-8 space-y-8 font-['Inter']">
+    <div className="w-full h-full flex flex-col justify-center mx-auto px-16 py-16 space-y-12 font-['Inter']">
       {/* Step Indicator */}
       <div className="text-center">
         <p className="text-sm text-gray-500 font-['Inter']">Paso 1/2</p>
@@ -105,13 +105,13 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
 
       {/* Title */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold text-gray-900 font-['Inter']">
+        <h1 className="text-3xl font-bold text-gray-900 font-['Inter']">
           Crea tu perfil
         </h1>
       </div>
 
       {/* Form */}
-      <div className="space-y-6">
+      <div className="space-y-8 flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
         {/* Profile Photo */}
         <div className="flex justify-center">
           <div className="relative">
@@ -193,11 +193,11 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
       </div>
 
       {/* Continue Button */}
-      <div className="pt-6">
+      <div className="pt-8">
         <Button 
           onClick={handleContinue}
           disabled={!isFormValid}
-          className={`w-full h-12 rounded-lg font-medium text-base font-['Inter'] transition-all ${
+          className={`w-full h-14 rounded-lg font-medium text-lg font-['Inter'] transition-all ${
             isFormValid 
               ? 'bg-black hover:bg-gray-800 text-white' 
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'

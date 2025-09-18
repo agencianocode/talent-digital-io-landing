@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus } from 'lucide-react';
+import { Plus, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CompanyData {
@@ -23,7 +23,7 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
   const [isIndividual, setIsIndividual] = useState(initialData.isIndividual);
   const [isValid, setIsValid] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<Array<{name: string, logo_url?: string | null, id?: string}>>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const searchCompanies = async (query: string) => {
@@ -36,7 +36,7 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
     try {
       const { data: companies, error } = await supabase
         .from('companies')
-        .select('name')
+        .select('id, name, logo_url')
         .ilike('name', `%${query}%`)
         .limit(5);
 
@@ -44,19 +44,25 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
         console.error('Error searching companies:', error);
         setSuggestions([]);
       } else {
-        const companyNames = companies?.map(c => c.name) || [];
+        const companyList = companies?.map(c => ({
+          id: c.id,
+          name: c.name,
+          logo_url: c.logo_url
+        })) || [];
         
-        // Agregar opción de crear si no existe exactamente
-        const exactMatch = companyNames.find(name => 
-          name.toLowerCase() === query.toLowerCase()
-        );
+        console.log('Company search results:', companyList);
+        companyList.forEach(company => {
+          console.log(`Company: ${company.name}, Logo URL: ${company.logo_url}, ID: ${company.id}`);
+        });
         
-        if (!exactMatch && query.trim()) {
-          companyNames.push(`Crear "${query}"`);
-        }
+        // Siempre agregar la opción de crear nueva empresa
+        const finalSuggestions = [
+          ...companyList,
+          { name: `Crear "${query}"`, logo_url: null, id: 'create-new' }
+        ];
         
-        setSuggestions(companyNames);
-        setShowSuggestions(companyNames.length > 0);
+        setSuggestions(finalSuggestions);
+        setShowSuggestions(finalSuggestions.length > 0);
       }
     } catch (error) {
       console.error('Error searching companies:', error);
@@ -74,15 +80,15 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
     }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
+  const handleSuggestionClick = (suggestion: {name: string, logo_url?: string | null, id?: string}) => {
     let finalCompanyName = '';
     
-    if (suggestion.startsWith('Crear "')) {
+    if (suggestion.id === 'create-new') {
       // Extraer el nombre de la empresa del texto "Crear 'Nombre'"
-      finalCompanyName = suggestion.match(/Crear "(.+)"/)?.[1] || '';
+      finalCompanyName = suggestion.name.match(/Crear "(.+)"/)?.[1] || '';
     } else {
       // Empresa existente
-      finalCompanyName = suggestion;
+      finalCompanyName = suggestion.name;
     }
     
     setCompanyName(finalCompanyName);
@@ -183,22 +189,50 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 sm:max-h-60 overflow-y-auto">
                 {suggestions.map((suggestion, index) => (
                   <button
-                    key={index}
+                    key={suggestion.id || index}
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleSuggestionClick(suggestion);
                     }}
-                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer flex items-center gap-2 font-['Inter']"
+                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer flex items-center gap-3 font-['Inter']"
                   >
-                    {suggestion.startsWith('Crear "') ? (
+                    {suggestion.id === 'create-new' ? (
                       <>
-                        <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
-                        <span className="text-blue-600 font-medium font-['Inter'] text-xs sm:text-sm">{suggestion}</span>
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Plus className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <span className="text-blue-600 font-medium font-['Inter'] text-sm">{suggestion.name}</span>
                       </>
                     ) : (
-                      <span className="text-gray-900 font-['Inter'] text-xs sm:text-sm">{suggestion}</span>
+                      <>
+                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {suggestion.logo_url ? (
+                            <>
+                              <img 
+                                src={suggestion.logo_url} 
+                                alt={`Logo de ${suggestion.name}`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  console.log('Logo failed to load:', suggestion.logo_url);
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const fallback = target.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                                onLoad={() => {
+                                  console.log('Logo loaded successfully:', suggestion.logo_url);
+                                }}
+                              />
+                              <Building2 className="h-4 w-4 text-gray-500" style={{display: 'none'}} />
+                            </>
+                          ) : (
+                            <Building2 className="h-4 w-4 text-gray-500" />
+                          )}
+                        </div>
+                        <span className="text-gray-900 font-['Inter'] text-sm">{suggestion.name}</span>
+                      </>
                     )}
                   </button>
                 ))}

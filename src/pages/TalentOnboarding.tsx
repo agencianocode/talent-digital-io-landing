@@ -123,8 +123,8 @@ const TalentOnboarding = () => {
 
       {/* Main Content */}
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+        <div className="w-full max-w-6xl mx-auto">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[calc(100vh-120px)]">
             {currentStep === 1 && (
               <TalentOnboardingStep1
                 onComplete={handleStep1Complete}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Building2, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import CompanyOnboardingStep1 from '@/components/CompanyOnboardingStep1';
@@ -473,6 +473,56 @@ const CompanyOnboarding = () => {
                 <span className="sm:hidden font-['Inter']" style={{fontSize: '13px'}}>{currentStep === 1 ? 'Cambiar' : 'Atrás'}</span>
               </Button>
               <span className="font-medium text-slate-900 font-['Inter']" style={{fontSize: '14px'}}>Configuración de cuenta de contratación</span>
+            </div>
+          </div>
+
+          {/* Stepper */}
+          <div className="px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-center space-x-8">
+                {/* Perfil Empresa */}
+                <div className="flex items-center space-x-4">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                    currentStep <= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-sm font-medium ${
+                      currentStep <= 2 ? 'text-blue-600' : 'text-gray-500'
+                    }`}>
+                      Perfil Empresa
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Pasos {currentStep <= 2 ? currentStep : '✓'}/2
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Línea conectora */}
+                <div className={`h-0.5 w-16 ${
+                  currentStep > 2 ? 'bg-blue-600' : 'bg-gray-300'
+                }`}></div>
+                
+                {/* Perfil Usuario */}
+                <div className="flex items-center space-x-4">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                    currentStep > 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-sm font-medium ${
+                      currentStep > 2 ? 'text-blue-600' : 'text-gray-500'
+                    }`}>
+                      Perfil Usuario
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Pasos {currentStep > 2 ? (currentStep - 2) : '1'}/2
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

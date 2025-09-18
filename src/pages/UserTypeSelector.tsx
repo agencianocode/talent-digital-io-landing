@@ -19,8 +19,15 @@ const UserTypeSelector = () => {
         <div className="grid md:grid-cols-2 gap-6">
           {/* Business Card */}
           <div 
-            className="bg-secondary p-8 rounded-2xl cursor-pointer transition-all hover:bg-card-hover group border border-border hover:border-primary/20"
+            className="p-8 rounded-2xl cursor-pointer transition-all group border border-gray-200 shadow-md hover:shadow-lg"
             onClick={() => navigate('/register-business')}
+            style={{ backgroundColor: '#ffffff' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f3f4f6';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+            }}
           >
             <div className="text-center space-y-4">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -39,8 +46,15 @@ const UserTypeSelector = () => {
 
           {/* Talent Card */}
           <div 
-            className="bg-secondary p-8 rounded-2xl cursor-pointer transition-all hover:bg-card-hover group border border-border hover:border-primary/20"
+            className="p-8 rounded-2xl cursor-pointer transition-all group border border-gray-200 shadow-md hover:shadow-lg"
             onClick={() => navigate('/register-talent')}
+            style={{ backgroundColor: '#ffffff' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f3f4f6';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+            }}
           >
             <div className="text-center space-y-4">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">

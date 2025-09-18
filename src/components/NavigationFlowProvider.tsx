@@ -221,6 +221,18 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
       businessOnboardingComplete ?? undefined,
       talentOnboardingComplete ?? undefined
     );
+    
+    // Debug logging
+    if (currentPath === '/') {
+      console.log('NavigationFlowProvider - Home page check:', {
+        userRole,
+        isEmailConfirmed: Boolean(user?.email_confirmed_at),
+        profileState,
+        currentPath,
+        idealRoute,
+        user: !!user
+      });
+    }
 
     // Only auto-navigate if user is on a route that doesn't match their state
     // and they're not already on the correct route

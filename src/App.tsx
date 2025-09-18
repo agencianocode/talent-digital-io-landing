@@ -52,6 +52,7 @@ import ProfileSettings from './pages/settings/ProfileSettings';
 const TalentProfileSettings = lazy(() => import('./pages/settings/TalentProfileSettings'));
 const CompanySettings = lazy(() => import('./pages/settings/CompanySettings'));
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
+const EmailVerificationPending = lazy(() => import('./pages/EmailVerificationPending'));
 
 // Lazy load páginas de landing específicas
 const OpportunitiesLanding = lazy(() => import('./pages/OpportunitiesLanding'));
@@ -115,6 +116,11 @@ function App() {
                       <Route path="/talent-onboarding" element={
                         <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
                           <TalentOnboarding />
+                        </Suspense>
+                      } />
+                      <Route path="/email-verification-pending" element={
+                        <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
+                          <EmailVerificationPending />
                         </Suspense>
                       } />
                       
