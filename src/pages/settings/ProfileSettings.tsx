@@ -13,7 +13,6 @@ import { useSupabaseAuth, isTalentRole, isBusinessRole } from '@/contexts/Supaba
 import { TalentProfileWizard } from '@/components/wizard/TalentProfileWizard';
 import { CompanyProfileWizard } from '@/components/wizard/CompanyProfileWizard';
 import { ProfileCompletenessCard } from '@/components/ProfileCompletenessCard';
-import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { useProfileSync } from '@/hooks/useProfileSync';
 import { toast } from 'sonner';
 import { Upload, Eye, EyeOff, Loader2, ArrowLeft, User, Briefcase } from 'lucide-react';
@@ -45,7 +44,6 @@ const ProfileSettings = () => {
     updateProfile,
     userRole
   } = useSupabaseAuth();
-  const { refreshCompleteness } = useProfileCompleteness();
   const { handleProfileUpdate } = useProfileSync();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
@@ -166,7 +164,7 @@ const ProfileSettings = () => {
       setIsLoading(false);
     }
   };
-  const onPasswordSubmit = async (data: PasswordFormData) => {
+  const onPasswordSubmit = async (_data: PasswordFormData) => {
     setIsLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -181,7 +179,7 @@ const ProfileSettings = () => {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
-    if (!user) return;
+    if (!user || !file) return;
     const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
       toast.error('El archivo es demasiado grande. Máximo 2MB.');
@@ -202,7 +200,7 @@ const ProfileSettings = () => {
         toast.error('No estás autenticado');
         return;
       }
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file?.name.split('.').pop() || 'jpg';
       const timestamp = Date.now();
       const filePath = `${user.id}/${user.id}_${timestamp}.${fileExt}`;
 
@@ -220,7 +218,7 @@ const ProfileSettings = () => {
       }
       const {
         error: uploadError
-      } = await supabase.storage.from('avatars').upload(filePath, file, {
+      } = await supabase.storage.from('avatars').upload(filePath, file!, {
         upsert: true
       });
       let publicUrl: string;
@@ -230,7 +228,7 @@ const ProfileSettings = () => {
           const alternativePath = `public/${user.id}.${fileExt}`;
           const {
             error: altUploadError
-          } = await supabase.storage.from('avatars').upload(alternativePath, file, {
+          } = await supabase.storage.from('avatars').upload(alternativePath, file!, {
             upsert: true
           });
           if (altUploadError) {
@@ -357,7 +355,7 @@ const ProfileSettings = () => {
                   {/* Photo Upload */}
                   <div className="flex items-center gap-4">
                     <Avatar className="w-20 h-20">
-                      <AvatarImage src={profileForm.watch('photo') || profile?.avatar_url} alt="Foto de perfil" />
+                      <AvatarImage src={profileForm.watch('photo') || profile?.avatar_url || ''} alt="Foto de perfil" />
                       <AvatarFallback className="text-lg">
                         {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
                       </AvatarFallback>
