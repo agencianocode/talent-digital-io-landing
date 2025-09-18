@@ -23,6 +23,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 
 // Importar TalentDashboardHome directamente para evitar problemas de lazy loading
 import TalentDashboardHome from './pages/TalentDashboardHome';
+import BusinessDashboard from './pages/BusinessDashboard';
 
 // Lazy load páginas de talent dashboard
 const TalentOpportunities = lazy(() => import('./pages/TalentOpportunities'));
@@ -31,7 +32,6 @@ const SavedOpportunities = lazy(() => import('./pages/SavedOpportunities'));
 const OpportunityDetail = lazy(() => import('./pages/OpportunityDetail'));
 
 // Lazy load páginas de business dashboard
-const DashboardHome = lazy(() => import('./pages/DashboardHome'));
 const OpportunitiesPage = lazy(() => import('./pages/OpportunitiesPage'));
 const NewOpportunity = lazy(() => import('./pages/NewOpportunity'));
 const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage'));
@@ -174,7 +174,7 @@ function App() {
                       <Route path="/business-dashboard" element={<DashboardLayout />}>
                         <Route index element={
                           <Suspense fallback={<LoadingSkeleton type="card" />}>
-                            <DashboardHome />
+                            <BusinessDashboard />
                           </Suspense>
                         } />
                         <Route path="opportunities" element={

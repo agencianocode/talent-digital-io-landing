@@ -86,6 +86,7 @@ interface AuthContextType extends AuthState {
   createCompany: (data: Omit<Company, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<{ error: Error | null }>;
   switchUserType: (newRole: UserRole) => Promise<{ error: Error | null }>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  hasCompletedBusinessOnboarding: (userId: string) => Promise<boolean>;
   updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
 }
 
@@ -303,7 +304,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
     // Set different redirect URLs based on user type
     const redirectUrl = metadata?.user_type === 'business' 
-      ? `${window.location.origin}/business-dashboard`
+      ? `${window.location.origin}/company-onboarding`
       : `${window.location.origin}/welcome`;
     
     const { error } = await supabase.auth.signUp({
@@ -535,6 +536,38 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return { error };
   };
 
+  const hasCompletedBusinessOnboarding = async (userId: string) => {
+    try {
+      // Verificar si existe una empresa para el usuario
+      const { data: company, error } = await supabase
+        .from('companies')
+        .select('id, name, description')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking company:', error);
+        return false;
+      }
+
+      // Si no hay empresa, onboarding no está completo
+      if (!company) {
+        return false;
+      }
+
+      // Si hay empresa pero no tiene nombre, onboarding no está completo
+      if (!company.name || company.name.trim() === '') {
+        return false;
+      }
+
+      // Onboarding está completo si hay empresa con nombre
+      return true;
+    } catch (error) {
+      console.error('Error checking business onboarding:', error);
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       ...authState,
@@ -547,6 +580,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       createCompany,
       switchUserType,
       resetPassword,
+      hasCompletedBusinessOnboarding,
       updatePassword
     }}>
       {children}

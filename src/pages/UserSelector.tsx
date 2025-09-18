@@ -9,16 +9,22 @@ const UserSelector = () => {
     if (isAuthenticated) {
       // If user is logged in, switch their role
       await switchUserType('freemium_business');
+      navigate('/business-dashboard');
+    } else {
+      // If not authenticated, go to business registration
+      navigate('/register-business');
     }
-    navigate('/business-dashboard');
   };
 
   const handleSelectTalentType = async () => {
     if (isAuthenticated) {
       // If user is logged in, switch their role
       await switchUserType('freemium_talent');
+      navigate('/talent-dashboard');
+    } else {
+      // If not authenticated, go to talent registration
+      navigate('/register-talent');
     }
-    navigate('/talent-dashboard');
   };
 
   return (

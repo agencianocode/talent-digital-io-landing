@@ -53,7 +53,7 @@ interface NavigationFlowProviderProps {
 }
 
 export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ children }) => {
-  const { user, userRole } = useSupabaseAuth();
+  const { user, userRole, hasCompletedBusinessOnboarding } = useSupabaseAuth();
   const { completeness } = useProfileCompleteness();
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,6 +61,7 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
   const [navigationState, setNavigationState] = useState<NavigationFlowState>(NavigationFlowState.REGISTRATION);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [lastNavigationTime, setLastNavigationTime] = useState<Date | null>(null);
+  const [businessOnboardingComplete, setBusinessOnboardingComplete] = useState<boolean | null>(null);
 
   // Calculate profile state
   const profileState = getProfileState(
@@ -76,6 +77,20 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
 
   // Get progressive disclosure configuration
   const disclosureConfig = getProgressiveDisclosure(profileState);
+
+  // Check business onboarding completion for business users
+  useEffect(() => {
+    const checkBusinessOnboarding = async () => {
+      if (user && userRole && isBusinessRole(userRole)) {
+        const isComplete = await hasCompletedBusinessOnboarding(user.id);
+        setBusinessOnboardingComplete(isComplete);
+      } else {
+        setBusinessOnboardingComplete(null);
+      }
+    };
+
+    checkBusinessOnboarding();
+  }, [user, userRole, hasCompletedBusinessOnboarding]);
 
   // Determine current navigation state based on location
   useEffect(() => {
@@ -108,7 +123,8 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
       userRole,
       Boolean(user?.email_confirmed_at),
       profileState,
-      location.pathname
+      location.pathname,
+      businessOnboardingComplete ?? undefined
     );
 
     console.log('🧭 Navigating to next step:', { nextStep, route, profileState });
@@ -182,7 +198,8 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
       userRole,
       Boolean(user.email_confirmed_at),
       profileState,
-      currentPath
+      currentPath,
+      businessOnboardingComplete ?? undefined
     );
 
     // Only auto-navigate if user is on a route that doesn't match their state

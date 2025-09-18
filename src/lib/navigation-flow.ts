@@ -148,9 +148,9 @@ export enum NavigationFlowState {
  */
 export const getNextNavigationStep = (
   currentState: NavigationFlowState,
-  userRole: UserRole | null,
+  _userRole: UserRole | null,
   isEmailConfirmed: boolean,
-  profileState: ProfileState
+  _profileState: ProfileState
 ): NavigationFlowState => {
   switch (currentState) {
     case NavigationFlowState.REGISTRATION:
@@ -164,12 +164,12 @@ export const getNextNavigationStep = (
         : NavigationFlowState.EMAIL_VERIFICATION;
         
     case NavigationFlowState.WELCOME:
-      return profileState === ProfileState.NEW 
+      return _profileState === ProfileState.NEW 
         ? NavigationFlowState.ONBOARDING 
         : NavigationFlowState.DASHBOARD;
         
     case NavigationFlowState.ONBOARDING:
-      return profileState === ProfileState.COMPLETE || profileState === ProfileState.PROFESSIONAL
+      return _profileState === ProfileState.COMPLETE || _profileState === ProfileState.PROFESSIONAL
         ? NavigationFlowState.DASHBOARD 
         : NavigationFlowState.ONBOARDING;
         
@@ -185,7 +185,8 @@ export const getRouteForUserState = (
   userRole: UserRole | null,
   isEmailConfirmed: boolean,
   profileState: ProfileState,
-  currentPath: string = '/'
+  _currentPath: string = '/',
+  hasCompletedOnboarding?: boolean
 ): string => {
   // Not authenticated
   if (!userRole) {
@@ -197,8 +198,13 @@ export const getRouteForUserState = (
     return '/admin';
   }
   
-  // Business users go to business dashboard
+  // Business users flow
   if (isBusinessRole(userRole)) {
+    // If business user hasn't completed onboarding, redirect to onboarding
+    if (hasCompletedOnboarding === false) {
+      return '/company-onboarding';
+    }
+    // Otherwise go to business dashboard
     return '/business-dashboard';
   }
   

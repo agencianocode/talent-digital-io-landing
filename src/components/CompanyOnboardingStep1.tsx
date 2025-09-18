@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CompanyData {
   name: string;
@@ -13,16 +14,113 @@ interface CompanyData {
 interface CompanyOnboardingStep1Props {
   onComplete: (data: CompanyData) => void;
   initialData: CompanyData;
+  onCompanyNameChange: (name: string) => void;
+  onIndividualChange?: (isIndividual: boolean) => void;
 }
 
-const CompanyOnboardingStep1 = ({ onComplete, initialData }: CompanyOnboardingStep1Props) => {
+const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, onIndividualChange }: CompanyOnboardingStep1Props) => {
   const [companyName, setCompanyName] = useState(initialData.name);
   const [isIndividual, setIsIndividual] = useState(initialData.isIndividual);
   const [isValid, setIsValid] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const searchCompanies = async (query: string) => {
+    if (query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const { data: companies, error } = await supabase
+        .from('companies')
+        .select('name')
+        .ilike('name', `%${query}%`)
+        .limit(5);
+
+      if (error) {
+        console.error('Error searching companies:', error);
+        setSuggestions([]);
+      } else {
+        const companyNames = companies?.map(c => c.name) || [];
+        
+        // Agregar opción de crear si no existe exactamente
+        const exactMatch = companyNames.find(name => 
+          name.toLowerCase() === query.toLowerCase()
+        );
+        
+        if (!exactMatch && query.trim()) {
+          companyNames.push(`Crear "${query}"`);
+        }
+        
+        setSuggestions(companyNames);
+        setShowSuggestions(companyNames.length > 0);
+      }
+    } catch (error) {
+      console.error('Error searching companies:', error);
+      setSuggestions([]);
+    }
+  };
 
   const handleCompanyNameChange = (value: string) => {
     setCompanyName(value);
     setIsValid(value.trim().length > 0);
+    onCompanyNameChange(value);
+    
+    if (!isIndividual) {
+      searchCompanies(value);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    let finalCompanyName = '';
+    
+    if (suggestion.startsWith('Crear "')) {
+      // Extraer el nombre de la empresa del texto "Crear 'Nombre'"
+      finalCompanyName = suggestion.match(/Crear "(.+)"/)?.[1] || '';
+    } else {
+      // Empresa existente
+      finalCompanyName = suggestion;
+    }
+    
+    setCompanyName(finalCompanyName);
+    onCompanyNameChange(finalCompanyName);
+    setIsValid(finalCompanyName.length > 0);
+    setShowSuggestions(false);
+
+    // Pasar automáticamente al siguiente paso
+    setTimeout(() => {
+      onComplete({
+        name: finalCompanyName.trim(),
+        isIndividual: isIndividual,
+      });
+    }, 100); // Pequeño delay para que el usuario vea la selección
+  };
+
+  const handleIndividualChange = (checked: boolean) => {
+    setIsIndividual(checked);
+    if (onIndividualChange) {
+      onIndividualChange(checked);
+    }
+    
+    // Si es individual, activar automáticamente el botón y pasar al siguiente paso
+    if (checked) {
+      setIsValid(true);
+      setShowSuggestions(false);
+      
+      // Pasar automáticamente al siguiente paso
+      setTimeout(() => {
+        onComplete({
+          name: companyName.trim() || 'Individuo', // Usar 'Individuo' si no hay nombre
+          isIndividual: checked,
+        });
+      }, 100); // Pequeño delay
+    } else {
+      // Si no es individual, validar que haya nombre de empresa
+      setIsValid(companyName.length > 0);
+    }
   };
 
   const handleContinue = () => {
@@ -34,82 +132,109 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData }: CompanyOnboardingSt
     }
   };
 
-  const handleCreateCompany = () => {
-    if (companyName.trim()) {
-      handleContinue();
-    }
-  };
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
-    <div className="space-y-8">
-      {/* Step Indicator */}
-      <div className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-        Paso 1/2
+    <div className="w-full mx-auto px-6 py-8 sm:px-12 sm:py-16 lg:px-16 lg:py-20 space-y-8 sm:space-y-10 lg:space-y-12 font-['Inter']">
+      {/* Title and Description - RESPONSIVE */}
+      <div className="text-left space-y-4 sm:space-y-5 lg:space-y-6">
+        <h1 className="font-bold text-gray-900 font-['Inter']" style={{fontSize: 'clamp(20px, 4vw, 24px)'}}>
+          Empecemos creando tu empresa
+        </h1>
+        <p className="text-gray-600 leading-relaxed font-['Inter']" style={{fontSize: 'clamp(12px, 3vw, 14px)'}}>
+          Para comenzar a publicar oportunidades y gestionar tu equipo, necesitamos los datos básicos de tu empresa.
+        </p>
       </div>
 
-      {/* Main Question */}
-      <div className="space-y-6">
-        <h1 className="text-4xl font-bold text-slate-900 dark:text-white leading-tight">
-          ¿Cuál es el nombre de tu empresa?
-        </h1>
-        
-        {/* Input Field */}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="company-name" className="sr-only">
-              Nombre de la empresa
-            </Label>
+      {/* Form - RESPONSIVE */}
+      <div className="space-y-6 sm:space-y-7 lg:space-y-8">
+        {/* Question */}
+        <div>
+          <h2 className="font-medium text-gray-900 mb-4 sm:mb-5 lg:mb-6 font-['Inter']" style={{fontSize: 'clamp(14px, 3.5vw, 16px)'}}>
+            ¿Cómo se llama tu empresa?
+          </h2>
+          
+          {/* Company Name Input - RESPONSIVE */}
+          <div className="relative" ref={dropdownRef}>
             <Input
-              id="company-name"
               type="text"
-              placeholder="Empresa"
+              placeholder={isIndividual ? "Nombre personal" : "Nombre de empresa"}
               value={companyName}
               onChange={(e) => handleCompanyNameChange(e.target.value)}
-              className="text-lg h-14 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/30 dark:border-slate-600/30 rounded-xl"
+              disabled={isIndividual}
+              className="h-10 sm:h-12 text-sm sm:text-base border border-gray-300 rounded-lg px-3 sm:px-4 focus:border-gray-400 focus:ring-0 font-['Inter']"
               autoFocus
             />
-          </div>
-
-          {/* Create Company Suggestion */}
-          {companyName.trim() && (
-            <div className="flex items-center gap-3">
-              <div className="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-3 rounded-xl font-medium">
-                Crear '{companyName.trim()}'
+            
+            {/* Dropdown de sugerencias - RESPONSIVE */}
+            {showSuggestions && suggestions.length > 0 && !isIndividual && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 sm:max-h-60 overflow-y-auto">
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSuggestionClick(suggestion);
+                    }}
+                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer flex items-center gap-2 font-['Inter']"
+                  >
+                    {suggestion.startsWith('Crear "') ? (
+                      <>
+                        <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+                        <span className="text-blue-600 font-medium font-['Inter'] text-xs sm:text-sm">{suggestion}</span>
+                      </>
+                    ) : (
+                      <span className="text-gray-900 font-['Inter'] text-xs sm:text-sm">{suggestion}</span>
+                    )}
+                  </button>
+                ))}
               </div>
-              <Button
-                size="icon"
-                onClick={handleCreateCompany}
-                className="h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="h-5 w-5" />
-              </Button>
-            </div>
-          )}
-
-          {/* Individual Checkbox */}
-          <div className="flex items-center space-x-3 pt-2">
-            <Checkbox
-              id="individual"
-              checked={isIndividual}
-              onCheckedChange={(checked) => setIsIndividual(checked as boolean)}
-              className="rounded-md"
-            />
-            <Label htmlFor="individual" className="text-slate-700 dark:text-slate-300 font-medium">
-              Estoy contratando como individuo
-            </Label>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Continue Button */}
-      <div className="pt-6">
-        <Button
-          onClick={handleContinue}
-          disabled={!isValid}
-          className="w-full h-14 text-lg font-semibold bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 rounded-xl"
-        >
-          Continuar
-        </Button>
+        {/* Individual Checkbox - RESPONSIVE */}
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <Checkbox
+            id="individual"
+            checked={isIndividual}
+            onCheckedChange={(checked) => handleIndividualChange(checked as boolean)}
+            className="rounded w-4 h-4 sm:w-5 sm:h-5"
+          />
+          <Label htmlFor="individual" className="text-gray-700 font-['Inter']" style={{fontSize: 'clamp(11px, 2.5vw, 12px)'}}>
+            Estoy contratando de manera personal
+          </Label>
+        </div>
+
+        {/* Continue Button - RESPONSIVE */}
+        <div className="pt-8 sm:pt-10 lg:pt-12 pb-8 sm:pb-12 lg:pb-16">
+          <Button
+            onClick={handleContinue}
+            disabled={!isValid}
+            className={`w-full h-10 sm:h-12 font-medium rounded-lg transition-colors font-['Inter'] ${
+              isValid 
+                ? 'bg-black hover:bg-gray-800 text-white' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+            style={{fontSize: 'clamp(12px, 3vw, 14px)'}}
+          >
+            Continuar
+          </Button>
+        </div>
       </div>
     </div>
   );

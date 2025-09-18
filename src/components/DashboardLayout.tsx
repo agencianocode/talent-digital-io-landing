@@ -3,7 +3,7 @@ import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
 import { Button } from "@/components/ui/button";
-import { Home, LogOut, Briefcase, Users, MessageSquare, User, Settings, Building, Menu, X, ChevronDown } from "lucide-react";
+import { Home, LogOut, Briefcase, MessageSquare, User, Settings, Building, Menu, X, ChevronDown, Search, HelpCircle, GraduationCap, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import CompanySwitcher from "@/components/CompanySwitcher";
@@ -29,9 +29,9 @@ const DashboardLayout = () => {
   const navigationItems = [
     { to: "/business-dashboard", icon: Home, label: "Dashboard" },
     { to: "/business-dashboard/opportunities", icon: Briefcase, label: "Mis Oportunidades" },
-    { to: "/business-dashboard/talent", icon: Users, label: "Buscar Talento" },
-    { to: "/business-dashboard/marketplace", icon: Building, label: "Marketplace de Servicios" },
-    { to: "/messages", icon: MessageSquare, label: "Mensajes" },
+    { to: "/business-dashboard/talent", icon: Search, label: "Buscar Talento" },
+    { to: "/business-dashboard/marketplace", icon: Building, label: "Marketplace" },
+    { to: "/business-dashboard/academy", icon: GraduationCap, label: "Mi Academia" },
   ];
 
   const closeMobileMenu = () => {
@@ -129,9 +129,9 @@ const DashboardLayout = () => {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-64 border-r bg-card flex flex-col">
+      <aside className="hidden lg:flex w-64 border-r bg-card flex-col min-h-screen">
         {/* Header with Logo and Company */}
-        <div className="p-4 border-b">
+        <div className="p-4 border-b flex-shrink-0">
           <div className="flex items-center gap-2 mb-4">
             <h2 className="text-lg font-semibold">TalentoDigital.io</h2>
             <Button variant="ghost" size="sm" className="p-1">
@@ -143,9 +143,10 @@ const DashboardLayout = () => {
           <CompanySwitcher showCreateButton />
         </div>
         
-        {/* Navigation */}
+        {/* Navigation - Flexible space */}
         <nav className="p-4 flex-1">
-          <ul className="space-y-2">
+          {/* Main Navigation - Recuadro rojo superior */}
+          <ul className="space-y-1">
             {navigationItems.map((item) => (
               <li key={item.to}>
                 <NavLink
@@ -154,21 +155,76 @@ const DashboardLayout = () => {
                     cn(
                       "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
                       isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        ? "bg-purple-100 text-purple-700"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                     )
                   }
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.label}
+                  <span>{item.label}</span>
                 </NavLink>
               </li>
             ))}
           </ul>
         </nav>
 
-        {/* User Profile Section - Bottom */}
-        <div className="p-4 border-t">
+        {/* User Profile Section - Bottom - Pegado al fondo */}
+        <div className="p-4 border-t flex-shrink-0">
+          {/* Bottom Navigation - Recuadro rojo inferior (junto con el perfil) */}
+          <div className="space-y-1 mb-4">
+            <NavLink
+              to="/messages"
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                  isActive
+                    ? "bg-purple-100 text-purple-700"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                )
+              }
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>Mensajes</span>
+              <span className="ml-auto bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
+                1
+              </span>
+            </NavLink>
+
+            <NavLink
+              to="/notifications"
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                  isActive
+                    ? "bg-purple-100 text-purple-700"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                )
+              }
+            >
+              <Bell className="h-4 w-4" />
+              <span>Notificaciones</span>
+              <span className="ml-auto bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
+                3
+              </span>
+            </NavLink>
+
+            <NavLink
+              to="/help"
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                  isActive
+                    ? "bg-purple-100 text-purple-700"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                )
+              }
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span>Ayuda / Feedback</span>
+            </NavLink>
+          </div>
+          
+          {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start p-2 h-auto">
