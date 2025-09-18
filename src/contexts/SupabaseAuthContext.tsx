@@ -305,7 +305,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Set different redirect URLs based on user type
     const redirectUrl = metadata?.user_type === 'business' 
       ? `${window.location.origin}/company-onboarding`
-      : `${window.location.origin}/welcome`;
+      : `${window.location.origin}/talent-onboarding`;
     
     const { error } = await supabase.auth.signUp({
       email,

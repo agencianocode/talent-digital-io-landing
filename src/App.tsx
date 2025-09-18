@@ -25,6 +25,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import TalentDashboardHome from './pages/TalentDashboardHome';
 import BusinessDashboard from './pages/BusinessDashboard';
 import BusinessTalentProfile from './pages/BusinessTalentProfile';
+import TalentOnboarding from './pages/TalentOnboarding';
 
 // Lazy load páginas de talent dashboard
 const TalentOpportunities = lazy(() => import('./pages/TalentOpportunities'));
@@ -109,6 +110,11 @@ function App() {
                       <Route path="/company-onboarding" element={
                         <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
                           <CompanyOnboarding />
+                        </Suspense>
+                      } />
+                      <Route path="/talent-onboarding" element={
+                        <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
+                          <TalentOnboarding />
                         </Suspense>
                       } />
                       
