@@ -24,6 +24,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 // Importar TalentDashboardHome directamente para evitar problemas de lazy loading
 import TalentDashboardHome from './pages/TalentDashboardHome';
 import BusinessDashboard from './pages/BusinessDashboard';
+import BusinessTalentProfile from './pages/BusinessTalentProfile';
 
 // Lazy load páginas de talent dashboard
 const TalentOpportunities = lazy(() => import('./pages/TalentOpportunities'));
@@ -180,6 +181,11 @@ function App() {
                         <Route path="opportunities" element={
                           <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
                             <OpportunitiesPage />
+                          </Suspense>
+                        } />
+                        <Route path="talent-profile/:id" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <BusinessTalentProfile />
                           </Suspense>
                         } />
                         <Route path="opportunities/new" element={
