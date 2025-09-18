@@ -8,6 +8,15 @@ const OnboardingPage: React.FC = () => {
   const location = useLocation();
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
+  // Redirect talent users to the new talent onboarding flow
+  useEffect(() => {
+    if (userRole === 'talent') {
+      console.log('OnboardingPage: Redirecting talent user to /talent-onboarding');
+      window.location.href = '/talent-onboarding';
+      return;
+    }
+  }, [userRole]);
+
   // Check if this is a first-time user (coming from registration)
   useEffect(() => {
     // Check if user came from registration or has very low profile completeness
