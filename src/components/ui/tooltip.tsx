@@ -16,8 +16,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const [isVisible, setIsVisible] = useState(false);
 
   if (disabled) {
+    console.log('🚫 Tooltip disabled for content:', content);
     return <>{children}</>;
   }
+
+  console.log('🎯 Tooltip enabled for content:', content);
 
   const positionClasses = {
     top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
@@ -36,8 +39,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
   return (
     <div 
       className="relative inline-block"
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
+      onMouseEnter={() => {
+        console.log('🖱️ Mouse entered tooltip for:', content);
+        setIsVisible(true);
+      }}
+      onMouseLeave={() => {
+        console.log('🖱️ Mouse left tooltip for:', content);
+        setIsVisible(false);
+      }}
     >
       {children}
       
