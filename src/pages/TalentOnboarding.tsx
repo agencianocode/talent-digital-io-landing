@@ -25,12 +25,18 @@ const TalentOnboarding = () => {
     profilePhoto: null
   });
 
-  // Verificar autenticación
+  // Verificar autenticación - dar tiempo para que se procese
   useEffect(() => {
-    if (!user) {
-      navigate('/register-talent');
-      return;
-    }
+    // Dar tiempo para que Supabase procese la autenticación del email
+    const timer = setTimeout(() => {
+      if (!user) {
+        console.log('TalentOnboarding: No authenticated user found, redirecting to register');
+        navigate('/register-talent');
+        return;
+      }
+    }, 2000); // Esperar 2 segundos
+
+    return () => clearTimeout(timer);
   }, [user, navigate]);
 
   const handleStep1Complete = async (data: TalentProfile) => {
