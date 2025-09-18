@@ -8,6 +8,7 @@ interface UserProfile {
   professionalTitle: string;
   profilePhoto?: File | null;
   country: string;
+  city: string;
   phoneNumber: string;
   countryCode: string;
   linkedinUrl: string;
@@ -30,6 +31,7 @@ const CompanyOnboardingStep4 = ({
   const [profilePhoto, setProfilePhoto] = useState<File | null>(initialData.profilePhoto || null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
   const [country, setCountry] = useState(initialData.country || '');
+  const [city, setCity] = useState(initialData.city || '');
   const [phoneNumber, setPhoneNumber] = useState(initialData.phoneNumber || '');
   const [countryCode, setCountryCode] = useState(initialData.countryCode || '+57');
   const [linkedinUrl, setLinkedinUrl] = useState(initialData.linkedinUrl || '');
@@ -78,12 +80,13 @@ const CompanyOnboardingStep4 = ({
       professionalTitle,
       profilePhoto,
       country,
+      city,
       phoneNumber,
       countryCode,
       linkedinUrl
     };
     onProfileChange(profile);
-  }, [professionalTitle, profilePhoto, country, phoneNumber, countryCode, linkedinUrl, onProfileChange]);
+  }, [professionalTitle, profilePhoto, country, city, phoneNumber, countryCode, linkedinUrl, onProfileChange]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -99,6 +102,10 @@ const CompanyOnboardingStep4 = ({
 
   const handleCountryChange = (value: string) => {
     setCountry(value);
+  };
+
+  const handleCityChange = (value: string) => {
+    setCity(value);
   };
 
   const handlePhoneChange = (value: string) => {
@@ -123,6 +130,7 @@ const CompanyOnboardingStep4 = ({
       professionalTitle,
       profilePhoto,
       country,
+      city,
       phoneNumber,
       countryCode,
       linkedinUrl
@@ -227,6 +235,20 @@ const CompanyOnboardingStep4 = ({
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* City */}
+        <div>
+          <h2 className="font-medium text-gray-900 mb-3 font-['Inter']" style={{fontSize: '16px'}}>
+            Ciudad
+          </h2>
+          <Input
+            type="text"
+            value={city}
+            onChange={(e) => handleCityChange(e.target.value)}
+            placeholder="Ej: Bogotá, Ciudad de México, Lima..."
+            className="h-12 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter']"
+          />
         </div>
 
         {/* Phone */}

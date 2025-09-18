@@ -28,6 +28,7 @@ interface UserProfile {
   linkedinUrl: string;
   phoneNumber: string;
   country: string;
+  city: string;
   countryCode: string;
   profilePhoto?: File | null;
 }
@@ -52,6 +53,7 @@ const CompanyOnboarding = () => {
     linkedinUrl: '',
     phoneNumber: '',
     country: '',
+    city: '',
     countryCode: '+57',
     profilePhoto: null
   });
@@ -372,6 +374,10 @@ const CompanyOnboarding = () => {
       
       if (data.country) {
         metadataUpdates.country = data.country;
+      }
+      
+      if (data.city) {
+        metadataUpdates.city = data.city;
       }
       
       if (data.countryCode) {
