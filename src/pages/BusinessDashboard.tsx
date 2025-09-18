@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tooltip } from '@/components/ui/tooltip';
 import { CheckCircle, Circle, Building } from 'lucide-react';
 import { useProfileProgress } from '@/hooks/useProfileProgress';
 
@@ -17,7 +16,8 @@ const BusinessDashboard = () => {
     userProfile, 
     loading, 
     getTasksStatus, 
-    getCompletionPercentage 
+    getCompletionPercentage,
+    getNextIncompleteTask
   } = useProfileProgress();
 
   // Verificar onboarding antes de mostrar dashboard
@@ -142,30 +142,51 @@ const BusinessDashboard = () => {
                 </div>
                 
                 <div className="space-y-3">
-                  {getTasksStatus().map((task) => (
-                    <div key={task.id} className="flex items-center gap-3 justify-between">
-                      <Tooltip 
-                        content={task.nextStepDescription || 'Completado ✓'} 
-                        disabled={task.completed}
-                        position="right"
+                  {getTasksStatus().map((task) => {
+                    // Determinar si este es el paso actual (primer incompleto)
+                    const nextIncompleteTask = getNextIncompleteTask();
+                    const isCurrentStep = !task.completed && nextIncompleteTask?.id === task.id;
+                    
+                    return (
+                      <div 
+                        key={task.id} 
+                        className={`flex items-center gap-3 justify-between p-4 rounded-lg transition-all duration-200 ${
+                          isCurrentStep 
+                            ? 'bg-gray-100 shadow-lg border-l-4 border-blue-500 border border-gray-200' 
+                            : 'hover:bg-gray-50'
+                        }`}
                       >
-                        <div className="flex items-center gap-3 cursor-pointer">
+                        <div className="flex items-center gap-3 flex-1">
                           {task.completed ? (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
+                            <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
                           ) : (
-                            <Circle className="h-5 w-5 text-slate-300" />
+                            <Circle className={`h-5 w-5 flex-shrink-0 ${isCurrentStep ? 'text-blue-500' : 'text-slate-300'}`} />
                           )}
-                          <span className="text-slate-700">{task.title}</span>
+                          <div className="flex items-center gap-2 flex-1">
+                            <span className={`${isCurrentStep ? 'font-semibold text-slate-900' : 'text-slate-700'}`}>
+                              {task.title}
+                            </span>
+                            {isCurrentStep && (
+                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                                Paso actual
+                              </span>
+                            )}
+                          </div>
+                          {isCurrentStep && task.nextStepDescription && (
+                            <div className="text-xs text-gray-600 bg-white px-3 py-2 rounded-md border ml-2 max-w-xs">
+                              {task.nextStepDescription}
+                            </div>
+                          )}
                         </div>
-                      </Tooltip>
-                      
-                      {task.id === 'profile' && !task.completed && (
-                        <Button variant="link" className="text-blue-600 p-0 h-auto">
-                          Completar Perfil ahora
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                        
+                        {task.id === 'profile' && !task.completed && (
+                          <Button variant="link" className="text-blue-600 p-0 h-auto ml-3">
+                            Completar Perfil ahora
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
