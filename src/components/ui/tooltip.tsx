@@ -16,11 +16,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const [isVisible, setIsVisible] = useState(false);
 
   if (disabled) {
-    console.log('🚫 Tooltip disabled for content:', content);
     return <>{children}</>;
   }
-
-  console.log('🎯 Tooltip enabled for content:', content);
 
   const positionClasses = {
     top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
@@ -30,32 +27,26 @@ export const Tooltip: React.FC<TooltipProps> = ({
   };
 
   const arrowClasses = {
-    top: 'top-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-700',
-    bottom: 'bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-700',
-    left: 'left-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-700',
-    right: 'right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-700'
+    top: 'top-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-800',
+    bottom: 'bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-800',
+    left: 'left-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-800',
+    right: 'right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-800'
   };
 
   return (
     <div 
       className="relative inline-block"
-      onMouseEnter={() => {
-        console.log('🖱️ Mouse entered tooltip for:', content);
-        setIsVisible(true);
-      }}
-      onMouseLeave={() => {
-        console.log('🖱️ Mouse left tooltip for:', content);
-        setIsVisible(false);
-      }}
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
     >
       {children}
       
       {isVisible && (
         <div className={`absolute z-[9999] ${positionClasses[position]}`}>
-          <div className="bg-gray-700 text-white text-sm px-3 py-2 rounded-md shadow-lg max-w-xs whitespace-normal">
+          <div className="bg-gray-800 text-white text-sm px-4 py-3 rounded-lg shadow-2xl border border-gray-600 max-w-sm whitespace-normal font-medium backdrop-blur-sm">
             {content}
           </div>
-          <div className={`absolute w-0 h-0 border-4 ${arrowClasses[position]}`}></div>
+          <div className={`absolute w-0 h-0 border-[6px] ${arrowClasses[position]}`}></div>
         </div>
       )}
     </div>

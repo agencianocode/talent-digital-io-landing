@@ -53,7 +53,6 @@ export const useProfileProgress = () => {
         if (companyError && companyError.code !== 'PGRST116') {
           console.error('Error fetching company:', companyError);
         } else if (company) {
-          console.log('🔍 Company data loaded:', company);
           setCompanyData(company);
         }
 
@@ -161,66 +160,23 @@ export const useProfileProgress = () => {
   };
 
   const getCompletionPercentage = (): number => {
-    if (!companyData) {
-      console.log('🚫 No company data for percentage calculation');
-      return 0;
-    }
+    if (!companyData) return 0;
     
     // Calculate based on individual field completion for more granular percentage
     let completedFields = 0;
     let totalFields = 9; // Total important fields for a complete profile
     
-    console.log('📊 Calculating completion percentage with data:', {
-      name: companyData.name,
-      description: companyData.description,
-      location: companyData.location,
-      logo_url: companyData.logo_url,
-      website: companyData.website,
-      industry: companyData.industry,
-      size: companyData.size
-    });
+    if (companyData.name) completedFields++;
+    if (companyData.description && companyData.description.length >= 10) completedFields++;
+    if (companyData.location) completedFields++;
+    if (companyData.logo_url) completedFields++;
+    if (companyData.website) completedFields++;
+    if (companyData.industry) completedFields++;
+    if (companyData.size) completedFields++;
+    if (companyData.annual_revenue_range) completedFields++;
+    if (companyData.social_links && Object.keys(companyData.social_links).length > 0) completedFields++;
     
-    if (companyData.name) {
-      completedFields++;
-      console.log('✅ Name complete');
-    }
-    if (companyData.description && companyData.description.length >= 10) {
-      completedFields++;
-      console.log('✅ Description complete');
-    }
-    if (companyData.location) {
-      completedFields++;
-      console.log('✅ Location complete');
-    }
-    if (companyData.logo_url) {
-      completedFields++;
-      console.log('✅ Logo complete');
-    }
-    if (companyData.website) {
-      completedFields++;
-      console.log('✅ Website complete');
-    }
-    if (companyData.industry) {
-      completedFields++;
-      console.log('✅ Industry complete');
-    }
-    if (companyData.size) {
-      completedFields++;
-      console.log('✅ Size complete');
-    }
-    if (companyData.annual_revenue_range) {
-      completedFields++;
-      console.log('✅ Revenue range complete');
-    }
-    if (companyData.social_links && Object.keys(companyData.social_links).length > 0) {
-      completedFields++;
-      console.log('✅ Social links complete');
-    }
-    
-    const percentage = Math.round((completedFields / totalFields) * 100);
-    console.log(`📈 Completion: ${completedFields}/${totalFields} = ${percentage}%`);
-    
-    return percentage;
+    return Math.round((completedFields / totalFields) * 100);
   };
 
   const getNextIncompleteTask = (): TaskStatus | null => {
