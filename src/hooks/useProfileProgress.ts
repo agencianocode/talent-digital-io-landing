@@ -128,7 +128,7 @@ export const useProfileProgress = () => {
       },
       {
         id: 'profile',
-        title: 'Perfil de Empresa Completo',
+        title: profileComplete ? 'Perfil de Empresa Completo' : 'Perfil de Empresa Incompleto',
         completed: profileComplete,
         nextStepDescription: profileComplete ? undefined : (() => {
           const missing = [];
