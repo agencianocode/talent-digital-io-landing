@@ -10,6 +10,10 @@ interface CompanyData {
   location: string | null;
   logo_url: string | null;
   business_type: string | null;
+  industry: string | null;
+  size: string | null;
+  annual_revenue_range: string | null;
+  social_links: any;
 }
 
 interface UserProfile {
@@ -78,14 +82,31 @@ export const useProfileProgress = () => {
     }
 
     const onboardingComplete = !!(companyData.name);
-    const profileComplete = !!(
-      companyData.description && 
-      companyData.website && 
-      companyData.location && 
-      companyData.logo_url &&
-      userProfile.professional_title &&
-      userProfile.phone
-    );
+    
+    // Check required fields based on CompanyProfileWizard schema
+    const requiredCompanyFields = {
+      name: !!companyData.name,
+      description: !!(companyData.description && companyData.description.length >= 10),
+      location: !!companyData.location,
+      // Optional but recommended fields
+      logo_url: !!companyData.logo_url,
+      website: !!companyData.website,
+      industry: !!companyData.industry,
+      size: !!companyData.size,
+    };
+
+    // Calculate profile completion based on required + recommended fields
+    const requiredFieldsComplete = requiredCompanyFields.name && 
+                                 requiredCompanyFields.description && 
+                                 requiredCompanyFields.location;
+    
+    const recommendedFieldsComplete = requiredFieldsComplete &&
+                                    requiredCompanyFields.logo_url &&
+                                    requiredCompanyFields.website &&
+                                    requiredCompanyFields.industry &&
+                                    requiredCompanyFields.size;
+
+    const profileComplete = recommendedFieldsComplete;
 
     // Check if user has published any opportunities
     const hasPublishedOpportunity = false; // TODO: Implement this check when opportunities table is available
@@ -104,7 +125,17 @@ export const useProfileProgress = () => {
         id: 'profile',
         title: 'Perfil de Empresa Completo',
         completed: profileComplete,
-        nextStepDescription: profileComplete ? undefined : 'Agrega descripción de empresa, sitio web, ubicación, logo y completa tu información personal'
+        nextStepDescription: profileComplete ? undefined : (() => {
+          const missing = [];
+          if (!requiredCompanyFields.description) missing.push('descripción (mín. 10 caracteres)');
+          if (!requiredCompanyFields.location) missing.push('ubicación');
+          if (!requiredCompanyFields.logo_url) missing.push('logo');
+          if (!requiredCompanyFields.website) missing.push('sitio web');
+          if (!requiredCompanyFields.industry) missing.push('industria');
+          if (!requiredCompanyFields.size) missing.push('tamaño de empresa');
+          
+          return `Completa en /profile?tab=corporate: ${missing.join(', ')}`;
+        })()
       },
       {
         id: 'opportunity',
@@ -122,11 +153,21 @@ export const useProfileProgress = () => {
   };
 
   const getCompletionPercentage = (): number => {
-    const tasks = getTasksStatus();
-    if (tasks.length === 0) return 0;
+    if (!companyData) return 0;
     
-    const completedTasks = tasks.filter(task => task.completed).length;
-    return Math.round((completedTasks / tasks.length) * 100);
+    // Calculate based on individual field completion for more granular percentage
+    let completedFields = 0;
+    let totalFields = 7; // Total important fields for a complete profile
+    
+    if (companyData.name) completedFields++;
+    if (companyData.description && companyData.description.length >= 10) completedFields++;
+    if (companyData.location) completedFields++;
+    if (companyData.logo_url) completedFields++;
+    if (companyData.website) completedFields++;
+    if (companyData.industry) completedFields++;
+    if (companyData.size) completedFields++;
+    
+    return Math.round((completedFields / totalFields) * 100);
   };
 
   const getNextIncompleteTask = (): TaskStatus | null => {
