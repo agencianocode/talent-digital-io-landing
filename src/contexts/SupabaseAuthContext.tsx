@@ -396,13 +396,38 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (!authState.user) return { error: new Error('User not authenticated') };
 
-    const { error } = await supabase
-      .from('profiles')
-      .update(data)
-      .eq('user_id', authState.user.id);
+    try {
+      // 1. Actualizar tabla profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update(data)
+        .eq('user_id', authState.user.id);
 
-    if (!error) {
-      // Recargar los datos del perfil desde la base de datos
+      if (profileError) {
+        throw profileError;
+      }
+
+      // 2. También actualizar user_metadata para mantener sincronización
+      const metadataUpdates: any = {
+        ...authState.user.user_metadata
+      };
+
+      if (data.full_name) metadataUpdates.full_name = data.full_name;
+      if (data.phone) metadataUpdates.phone = data.phone;
+      if (data.country) metadataUpdates.country = data.country;
+      if (data.city) metadataUpdates.city = data.city;
+      if (data.avatar_url) metadataUpdates.avatar_url = data.avatar_url;
+
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: metadataUpdates
+      });
+
+      if (metadataError) {
+        console.warn('Error updating user_metadata:', metadataError);
+        // No lanzar error, el profile ya se actualizó
+      }
+
+      // 3. Recargar los datos del perfil desde la base de datos
       try {
         const userData = await fetchUserData(authState.user.id);
         setAuthState(prev => ({
@@ -422,9 +447,12 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }));
         }
       }
-    }
 
-    return { error };
+      return { error: null };
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      return { error: error as Error };
+    }
   };
 
   const updateCompany = async (data: Partial<Company>) => {

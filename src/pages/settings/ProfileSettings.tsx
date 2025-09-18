@@ -71,12 +71,12 @@ const ProfileSettings = () => {
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: profile?.full_name || '',
+      name: profile?.full_name || user?.user_metadata?.full_name || '',
       email: user?.email || '',
-      phone: profile?.phone || '',
-      country: profile?.country || '',
-      city: profile?.city || '',
-      photo: profile?.avatar_url || ''
+      phone: profile?.phone || user?.user_metadata?.phone || '',
+      country: profile?.country || user?.user_metadata?.country || '',
+      city: profile?.city || user?.user_metadata?.city || '',
+      photo: profile?.avatar_url || user?.user_metadata?.avatar_url || ''
     }
   });
   const passwordForm = useForm<PasswordFormData>({
@@ -88,23 +88,26 @@ const ProfileSettings = () => {
     }
   });
 
-  // Update form when profile changes
+  // Update form when profile or user_metadata changes
   useEffect(() => {
-    if (profile) {
+    if (profile || user?.user_metadata) {
       const formData = {
-        name: profile.full_name || '',
+        name: profile?.full_name || user?.user_metadata?.full_name || '',
         email: user?.email || '',
-        phone: profile.phone || '',
-        country: profile.country || '',
-        city: profile.city || '',
-        photo: profile.avatar_url || ''
+        phone: profile?.phone || user?.user_metadata?.phone || '',
+        country: profile?.country || user?.user_metadata?.country || '',
+        city: profile?.city || user?.user_metadata?.city || '',
+        photo: profile?.avatar_url || user?.user_metadata?.avatar_url || ''
       };
+      
+      console.log('ProfileSettings: Updating form with data:', formData);
+      console.log('ProfileSettings: user_metadata:', user?.user_metadata);
       profileForm.reset(formData);
       setTimeout(() => {
         profileForm.trigger();
       }, 100);
     }
-  }, [profile, user?.email, profileForm]);
+  }, [profile, user?.email, user?.user_metadata, profileForm]);
 
   // Force update when photo is uploaded
   useEffect(() => {
