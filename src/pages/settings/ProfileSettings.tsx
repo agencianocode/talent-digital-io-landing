@@ -42,6 +42,7 @@ const ProfileSettings = () => {
     user,
     profile,
     updateProfile,
+    updatePassword,
     userRole
   } = useSupabaseAuth();
   const { handleProfileUpdate } = useProfileSync();
@@ -164,13 +165,37 @@ const ProfileSettings = () => {
       setIsLoading(false);
     }
   };
-  const onPasswordSubmit = async (_data: PasswordFormData) => {
+  const onPasswordSubmit = async (data: PasswordFormData) => {
+    if (!user) {
+      toast.error('Debes estar autenticado para cambiar la contraseña');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Contraseña actualizada correctamente');
-      passwordForm.reset();
+      // Verificar contraseña actual primero (intentando hacer login)
+      const { error: currentPasswordError } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password: data.currentPassword
+      });
+
+      if (currentPasswordError) {
+        toast.error('La contraseña actual es incorrecta');
+        return;
+      }
+
+      // Si la verificación es exitosa, cambiar la contraseña
+      const { error } = await updatePassword(data.newPassword);
+      
+      if (error) {
+        console.error('Error updating password:', error);
+        toast.error('Error al cambiar la contraseña: ' + error.message);
+      } else {
+        toast.success('Contraseña actualizada correctamente');
+        passwordForm.reset();
+      }
     } catch (error) {
+      console.error('Error in password change:', error);
       toast.error('Error al cambiar la contraseña');
     } finally {
       setIsLoading(false);

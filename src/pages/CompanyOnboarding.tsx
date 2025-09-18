@@ -393,6 +393,7 @@ const CompanyOnboarding = () => {
       }
       
       // 3. Subir foto de perfil si existe
+      let profilePhotoUrl = null;
       if (data.profilePhoto) {
         const fileExt = data.profilePhoto.name.split('.').pop();
         const fileName = `${user.id}-profile.${fileExt}`;
@@ -405,6 +406,7 @@ const CompanyOnboarding = () => {
           const { data: { publicUrl } } = supabase.storage
             .from('avatars')
             .getPublicUrl(fileName);
+          profilePhotoUrl = publicUrl;
           
           // Actualizar avatar_url en user_metadata
           await supabase.auth.updateUser({
@@ -414,6 +416,32 @@ const CompanyOnboarding = () => {
             }
           });
         }
+      }
+
+      // 4. Actualizar o crear perfil en la tabla profiles
+      const profileUpdates: any = {
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+        phone: data.phoneNumber || null,
+        country: data.country || null,
+        city: data.city || null,
+        updated_at: new Date().toISOString()
+      };
+
+      if (profilePhotoUrl) {
+        profileUpdates.avatar_url = profilePhotoUrl;
+      }
+
+      // Intentar actualizar primero, si no existe crear
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          ...profileUpdates
+        });
+
+      if (profileUpdateError) {
+        console.warn('Warning updating profiles table:', profileUpdateError);
+        // No lanzar error, el user_metadata ya se actualizó
       }
       
       toast.success('¡Onboarding completado exitosamente!');
