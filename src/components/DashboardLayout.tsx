@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
-import { useCompany } from "@/contexts/CompanyContext";
 import { Button } from "@/components/ui/button";
 import { Home, LogOut, Briefcase, MessageSquare, User, Settings, Building, Menu, X, ChevronDown, Search, HelpCircle, GraduationCap, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,7 +16,6 @@ import {
 
 const DashboardLayout = () => {
   const { user, signOut, profile } = useSupabaseAuth();
-  const { activeCompany } = useCompany();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -129,7 +127,7 @@ const DashboardLayout = () => {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 border-r bg-card flex-col min-h-screen">
+      <aside className="hidden lg:flex w-64 border-r bg-card flex-col h-screen sticky top-0">
         {/* Header with Logo and Company */}
         <div className="p-4 border-b flex-shrink-0">
           <div className="flex items-center gap-2 mb-4">
@@ -146,14 +144,14 @@ const DashboardLayout = () => {
         {/* Navigation - Flexible space */}
         <nav className="p-4 flex-1">
           {/* Main Navigation - Recuadro rojo superior */}
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {navigationItems.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
                       isActive
                         ? "bg-purple-100 text-purple-700"
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
@@ -161,7 +159,7 @@ const DashboardLayout = () => {
                   }
                 >
                   <item.icon className="h-4 w-4" />
-                  <span>{item.label}</span>
+                  <span style={{fontSize: '16px'}}>{item.label}</span>
                 </NavLink>
               </li>
             ))}
@@ -171,12 +169,12 @@ const DashboardLayout = () => {
         {/* User Profile Section - Bottom - Pegado al fondo */}
         <div className="p-4 border-t flex-shrink-0">
           {/* Bottom Navigation - Recuadro rojo inferior (junto con el perfil) */}
-          <div className="space-y-1 mb-4">
+          <div className="space-y-2 mb-4">
             <NavLink
               to="/messages"
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                  "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-sm",
                   isActive
                     ? "bg-purple-100 text-purple-700"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
@@ -184,7 +182,7 @@ const DashboardLayout = () => {
               }
             >
               <MessageSquare className="h-4 w-4" />
-              <span>Mensajes</span>
+              <span style={{fontSize: '16px'}}>Mensajes</span>
               <span className="ml-auto bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
                 1
               </span>
@@ -194,7 +192,7 @@ const DashboardLayout = () => {
               to="/notifications"
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                  "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-sm",
                   isActive
                     ? "bg-purple-100 text-purple-700"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
@@ -202,7 +200,7 @@ const DashboardLayout = () => {
               }
             >
               <Bell className="h-4 w-4" />
-              <span>Notificaciones</span>
+              <span style={{fontSize: '16px'}}>Notificaciones</span>
               <span className="ml-auto bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
                 3
               </span>
@@ -212,7 +210,7 @@ const DashboardLayout = () => {
               to="/help"
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                  "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-sm",
                   isActive
                     ? "bg-purple-100 text-purple-700"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
@@ -220,20 +218,20 @@ const DashboardLayout = () => {
               }
             >
               <HelpCircle className="h-4 w-4" />
-              <span>Ayuda / Feedback</span>
+              <span style={{fontSize: '16px'}}>Ayuda / Feedback</span>
             </NavLink>
           </div>
           
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+              <Button variant="ghost" className="w-full justify-start p-2.5 h-auto">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
                     {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">{profile?.full_name || 'Usuario'}</p>
+                    <p className="font-medium" style={{fontSize: '16px'}}>{profile?.full_name || 'Usuario'}</p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </div>
@@ -260,28 +258,10 @@ const DashboardLayout = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Desktop Header */}
-        <header className="hidden lg:flex border-b p-4">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
-                <Home className="h-4 w-4 mr-2" />
-                Volver al Sitio
-              </Button>
-              {activeCompany && (
-                <span className="text-sm text-muted-foreground">
-                  Empresa actual: <span className="font-medium">{activeCompany.name}</span>
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-            </div>
+        <main className="flex-1 h-screen overflow-y-auto">
+          <div className="p-4 lg:p-6">
+            <Outlet />
           </div>
-        </header>
-        
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">
-          <Outlet />
         </main>
       </div>
     </div>

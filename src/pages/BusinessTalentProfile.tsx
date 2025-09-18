@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, Play, ExternalLink, Share2 } from 'lucide-react';
+import { ArrowLeft, MapPin, ExternalLink, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TalentData {
@@ -51,8 +50,8 @@ const BusinessTalentProfile = () => {
         skills: ['Ventas Consultivas', 'B2B', 'Negocios Digitales'],
         experience_level: 'Senior (+4 años)',
         linkedin_url: null,
-        portfolio_url: null,
-        video_presentation_url: null,
+        portfolio_url: 'https://portfolio-example.com', // Simular que tiene portfolio
+        video_presentation_url: null, // Simular que NO tiene video
         work_experience: [],
         education: [],
         services: []
@@ -113,195 +112,168 @@ const BusinessTalentProfile = () => {
     );
   }
 
+  const hasVideo = !!talentData.video_presentation_url;
+  const hasPortfolio = !!talentData.portfolio_url;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <Button 
-            variant="ghost" 
-            onClick={handleBack}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver a búsqueda
-          </Button>
-        </div>
+      <div className="max-w-6xl mx-auto px-4 py-2">
+        <Button 
+          variant="ghost" 
+          onClick={handleBack}
+          className="text-gray-600 hover:text-gray-900 text-sm"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Volver a búsqueda
+        </Button>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Main Profile */}
-          <div className="lg:col-span-2 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 pb-4">
+        <div className={`grid grid-cols-1 gap-4 ${hasVideo ? 'lg:grid-cols-3' : 'lg:grid-cols-1'}`}>
+          {/* Left Column - Profile + Portfolio */}
+          <div className={`space-y-4 ${hasVideo ? 'lg:col-span-2' : ''}`}>
             {/* Profile Header Card */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-6">
-                  {/* Profile Photo */}
-                  <div className="flex-shrink-0">
-                    <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200">
-                      {talentData.avatar_url ? (
-                        <img 
-                          src={talentData.avatar_url} 
-                          alt={talentData.full_name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                          <span className="text-gray-600 text-xl font-bold">
-                            {talentData.full_name.charAt(0)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="flex items-start gap-4">
+                {/* Profile Photo */}
+                <div className="flex-shrink-0">
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200">
+                    {talentData.avatar_url ? (
+                      <img 
+                        src={talentData.avatar_url} 
+                        alt={talentData.full_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                        <span className="text-gray-600 text-lg font-bold">
+                          {talentData.full_name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Profile Info */}
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <h1 className="text-lg font-bold text-gray-900">{talentData.full_name}</h1>
+                    <Button 
+                      className="bg-black hover:bg-gray-800 text-white px-3 py-1 text-sm"
+                      onClick={handleSendMessage}
+                    >
+                      Enviar Mensaje
+                    </Button>
+                  </div>
+                  
+                  <p className="text-sm text-gray-700 mb-1">{talentData.title}</p>
+                  <p className="text-xs text-gray-600 mb-2">{talentData.experience_level}</p>
+                  
+                  <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
+                    <MapPin className="h-3 w-3" />
+                    <span>{talentData.location}</span>
                   </div>
 
-                  {/* Profile Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h1 className="text-2xl font-bold text-gray-900">{talentData.full_name}</h1>
-                      <Button 
-                        className="bg-black hover:bg-gray-800 text-white"
-                        onClick={handleSendMessage}
-                      >
-                        Enviar Mensaje
-                      </Button>
-                    </div>
-                    
-                    <p className="text-lg text-gray-700 mb-2">{talentData.title}</p>
-                    <p className="text-sm text-gray-600 mb-3">{talentData.experience_level}</p>
-                    
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>{talentData.location}</span>
-                      </div>
-                    </div>
+                  {/* Skills */}
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {talentData.skills.map((skill, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs bg-gray-100 text-gray-700 px-2 py-0">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
 
-                    {/* Skills */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {talentData.skills.map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {skill}
-                        </Badge>
-                      ))}
+                  {/* Bio */}
+                  <p className="text-gray-700 leading-relaxed text-xs mb-3">
+                    {talentData.bio}
+                  </p>
+
+                  {/* Social Links */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-black rounded flex items-center justify-center cursor-pointer hover:bg-gray-800">
+                      <span className="text-white text-xs">▶</span>
                     </div>
-
-                    {/* Bio */}
-                    <p className="text-gray-700 leading-relaxed">
-                      {talentData.bio}
-                    </p>
-
-                    {/* Social Links */}
-                    <div className="flex items-center gap-4 mt-4">
-                      <div className="w-8 h-8 bg-gray-800 rounded flex items-center justify-center">
-                        <span className="text-white text-xs">▶</span>
-                      </div>
-                      <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                        <span className="text-white text-xs">f</span>
-                      </div>
-                      <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center">
-                        <span className="text-white text-xs">W</span>
-                      </div>
+                    <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center cursor-pointer hover:bg-blue-700">
+                      <span className="text-white text-xs font-bold">f</span>
+                    </div>
+                    <div className="w-7 h-7 bg-green-500 rounded flex items-center justify-center cursor-pointer hover:bg-green-600">
+                      <span className="text-white text-xs font-bold">W</span>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Experience Section */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-4">Experiencia</h3>
-                <div className="space-y-4">
-                  {/* Experience items would go here */}
-                  <p className="text-gray-600">Información de experiencia laboral próximamente.</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Education Section */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-4">Educación</h3>
-                <div className="space-y-4">
-                  {/* Education items would go here */}
-                  <p className="text-gray-600">Información educativa próximamente.</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Services Section */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-4">Servicios Publicados</h3>
-                <div className="space-y-4">
-                  {/* Services would go here */}
-                  <p className="text-gray-600">Servicios publicados próximamente.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column - Video and Portfolio */}
-          <div className="space-y-6">
-            {/* Video Section */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Video de Presentación</h3>
-                <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center mb-4">
-                  {talentData.video_presentation_url ? (
-                    <iframe 
-                      src={talentData.video_presentation_url}
-                      className="w-full h-full rounded-lg"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <div className="text-center">
-                      <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-600 text-sm">Video no disponible</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Portfolio Section */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Portfolio</h3>
-                <p className="text-sm text-gray-600 mb-4">Ve el portfolio de trabajos</p>
+            {/* Portfolio Card - Only show if portfolio exists */}
+            {hasPortfolio && (
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 className="text-base font-semibold mb-2 text-gray-900">Portfolio</h3>
+                <p className="text-xs text-gray-600 mb-3">Ve el portfolio de trabajos</p>
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="justify-start"
                   onClick={handleViewPortfolio}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Ver Portfolio
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            )}
 
-            {/* Share Profile Section */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Compartir este perfil</h3>
-                <p className="text-sm text-gray-600 mb-4">Copia el link para compartir el perfil público</p>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast.success('Link copiado al portapapeles');
-                  }}
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Link
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Share Profile Card */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <h3 className="text-base font-semibold mb-2 text-gray-900">Compartir este perfil</h3>
+              <p className="text-xs text-gray-600 mb-3">Copia el link para compartir el perfil público</p>
+              <Button 
+                variant="outline" 
+                className="justify-start"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success('Link copiado al portapapeles');
+                }}
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Link
+              </Button>
+            </div>
           </div>
+
+          {/* Right Column - Video, Experience, Education, Services */}
+          {hasVideo && (
+            <div className="space-y-4">
+              {/* Video Section */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 className="text-base font-semibold mb-3 text-gray-900">Video de Presentación</h3>
+                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+                  <iframe 
+                    src={talentData.video_presentation_url || ''}
+                    className="w-full h-full rounded-lg"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+
+              {/* Experience Section */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 className="text-base font-semibold mb-2 text-gray-900">Experiencia</h3>
+                <p className="text-xs text-gray-600">Información de experiencia laboral próximamente.</p>
+              </div>
+
+              {/* Education Section */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 className="text-base font-semibold mb-2 text-gray-900">Educación</h3>
+                <p className="text-xs text-gray-600">Información educativa próximamente.</p>
+              </div>
+
+              {/* Services Section */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 className="text-base font-semibold mb-2 text-gray-900">Servicios Publicados</h3>
+                <p className="text-xs text-gray-600">Servicios publicados próximamente.</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
