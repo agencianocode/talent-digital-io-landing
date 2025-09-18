@@ -94,6 +94,9 @@ export const useProfileProgress = () => {
       website: !!companyData.website,
       industry: !!companyData.industry,
       size: !!companyData.size,
+      // Additional fields for complete profile
+      annual_revenue_range: !!companyData.annual_revenue_range,
+      social_links: !!(companyData.social_links && Object.keys(companyData.social_links).length > 0),
     };
 
     // Calculate profile completion based on required + recommended fields
@@ -105,7 +108,9 @@ export const useProfileProgress = () => {
                                     requiredCompanyFields.logo_url &&
                                     requiredCompanyFields.website &&
                                     requiredCompanyFields.industry &&
-                                    requiredCompanyFields.size;
+                                    requiredCompanyFields.size &&
+                                    requiredCompanyFields.annual_revenue_range &&
+                                    requiredCompanyFields.social_links;
 
     const profileComplete = recommendedFieldsComplete;
 
@@ -134,6 +139,8 @@ export const useProfileProgress = () => {
           if (!requiredCompanyFields.website) missing.push('sitio web');
           if (!requiredCompanyFields.industry) missing.push('industria');
           if (!requiredCompanyFields.size) missing.push('tamaño de empresa');
+          if (!requiredCompanyFields.annual_revenue_range) missing.push('rango de ingresos');
+          if (!requiredCompanyFields.social_links) missing.push('redes sociales');
           
           return `Completa en /profile?tab=corporate: ${missing.join(', ')}`;
         })()
@@ -161,7 +168,7 @@ export const useProfileProgress = () => {
     
     // Calculate based on individual field completion for more granular percentage
     let completedFields = 0;
-    let totalFields = 7; // Total important fields for a complete profile
+    let totalFields = 9; // Total important fields for a complete profile
     
     console.log('📊 Calculating completion percentage with data:', {
       name: companyData.name,
@@ -200,6 +207,14 @@ export const useProfileProgress = () => {
     if (companyData.size) {
       completedFields++;
       console.log('✅ Size complete');
+    }
+    if (companyData.annual_revenue_range) {
+      completedFields++;
+      console.log('✅ Revenue range complete');
+    }
+    if (companyData.social_links && Object.keys(companyData.social_links).length > 0) {
+      completedFields++;
+      console.log('✅ Social links complete');
     }
     
     const percentage = Math.round((completedFields / totalFields) * 100);
