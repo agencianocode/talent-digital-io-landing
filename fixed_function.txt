@@ -1,0 +1,54 @@
+  const hasCompletedTalentOnboarding = async (userId: string): Promise<boolean> => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error || !user || user.id !== userId) {
+        console.error('Error getting user for talent onboarding check:', error);
+        return false;
+      }
+
+      // Check if user has completed basic onboarding (has first_name and last_name)
+      const hasBasicInfoInMetadata = !!(
+        user.user_metadata?.first_name && 
+        user.user_metadata?.last_name
+      );
+
+      console.log('Talent onboarding check - user_metadata:', {
+        userId,
+        first_name: user.user_metadata?.first_name,
+        last_name: user.user_metadata?.last_name,
+        hasBasicInfoInMetadata,
+        full_user_metadata: user.user_metadata
+      });
+
+      // If user_metadata has the info, return true
+      if (hasBasicInfoInMetadata) {
+        return true;
+      }
+
+      // Fallback: check talent_profiles table (only created when onboarding is complete)
+      const { data: talentProfile, error: talentProfileError } = await supabase
+        .from('talent_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (talentProfileError) {
+        console.error('Error checking talent_profiles table:', talentProfileError);
+        return false;
+      }
+
+      const hasCompletedOnboarding = !!talentProfile?.id;
+
+      console.log('Talent onboarding check - talent_profiles table:', {
+        userId,
+        talentProfile,
+        hasCompletedOnboarding
+      });
+
+      return hasCompletedOnboarding;
+    } catch (error) {
+      console.error('Error in hasCompletedTalentOnboarding:', error);
+      return false;
+    }
+  };
