@@ -153,7 +153,7 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
     <div className="w-full h-full flex flex-col justify-center mx-auto px-6 py-6 space-y-6 font-['Inter']">
       {/* Title */}
       <div className="text-center space-y-1">
-        <h1 className="text-xl font-bold text-gray-900 font-['Inter']">
+        <h1 className="text-xl font-bold text-black font-['Inter']">
           Información Profesional
         </h1>
         <p className="text-gray-600 font-['Inter'] text-xs">
@@ -319,21 +319,21 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
             <span className="text-xs text-gray-400 font-['Inter']">{skills.length}/3</span>
           </div>
         </div>
-      </div>
 
-      {/* Continue Button */}
-      <div className="pt-2">
-        <Button
-          onClick={handleContinue}
-          disabled={!isFormValid}
-          className={`w-full h-11 rounded-lg font-medium text-sm font-['Inter'] transition-all ${
-            isFormValid
-              ? 'bg-black hover:bg-gray-800 text-white'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          Completar perfil
-        </Button>
+        {/* Continue Button */}
+        <div className="pt-2">
+          <Button
+            onClick={handleContinue}
+            disabled={!isFormValid}
+            className={`w-full h-11 rounded-lg font-medium text-sm font-['Inter'] transition-all ${
+              isFormValid
+                ? 'bg-black hover:bg-gray-800 text-white'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            Completar perfil
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -18,11 +18,11 @@ import LandingPage from './pages/LandingPage';
 import Auth from './pages/Auth';
 
 // Importar layouts de dashboard
-import TalentDashboardLayout from '@/components/TalentDashboardLayout';
 import DashboardLayout from '@/components/DashboardLayout';
 
-// Importar TalentDashboardHome directamente para evitar problemas de lazy loading
-import TalentDashboardHome from './pages/TalentDashboardHome';
+// Importar componentes directamente para evitar problemas de lazy loading
+import TalentDashboard from './pages/TalentDashboard';
+import TalentMyProfile from './pages/TalentMyProfile';
 import BusinessDashboard from './pages/BusinessDashboard';
 import BusinessTalentProfile from './pages/BusinessTalentProfile';
 import TalentOnboarding from './pages/TalentOnboarding';
@@ -153,36 +153,40 @@ function App() {
                         </Suspense>
                       } />
 
-                       {/* Talent Dashboard Routes */}
-                        <Route path="/talent-dashboard" element={<TalentDashboardLayout />}>
-                          <Route index element={<TalentDashboardHome />} />
-                          <Route path="home" element={<TalentDashboardHome />} />
-                          <Route path="explore" element={
-                            <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                              <TalentMarketplace />
-                            </Suspense>
-                          } />
-                          <Route path="opportunities" element={
-                            <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                              <TalentOpportunities />
-                            </Suspense>
-                          } />
-                          <Route path="marketplace" element={
-                            <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                              <TalentMarketplace />
-                            </Suspense>
-                          } />
-                          <Route path="saved" element={
-                            <Suspense fallback={<LoadingSkeleton type="list" />}>
-                              <SavedOpportunities />
-                            </Suspense>
-                          } />
-                          <Route path="opportunities/:id" element={
-                            <Suspense fallback={<LoadingSkeleton type="card" />}>
-                              <OpportunityDetail />
-                            </Suspense>
-                          } />
-                      </Route>
+                       {/* Talent Dashboard Routes - Modern Layout */}
+                        <Route path="/talent-dashboard" element={<TalentDashboard />} />
+                        <Route path="/talent-dashboard/home" element={<TalentDashboard />} />
+                        <Route path="/talent-dashboard/profile" element={<TalentMyProfile />} />
+                        <Route path="/talent-dashboard/explore" element={
+                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                            <TalentMarketplace />
+                          </Suspense>
+                        } />
+                        <Route path="/talent-dashboard/opportunities" element={
+                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                            <TalentOpportunities />
+                          </Suspense>
+                        } />
+                        <Route path="/talent-dashboard/marketplace" element={
+                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                            <TalentMarketplace />
+                          </Suspense>
+                        } />
+                        <Route path="/talent-dashboard/saved" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <SavedOpportunities />
+                          </Suspense>
+                        } />
+                        <Route path="/talent-dashboard/opportunities/:id" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <OpportunityDetail />
+                          </Suspense>
+                        } />
+                        <Route path="/talent-dashboard/settings" element={
+                          <Suspense fallback={<LoadingSkeleton type="profile" />}>
+                            <TalentProfileSettings />
+                          </Suspense>
+                        } />
 
                       {/* Welcome Page */}
                       <Route path="/welcome" element={

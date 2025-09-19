@@ -10,22 +10,41 @@ interface ProfilePhotoEditModalProps {
 }
 
 const ProfilePhotoEditModal = ({ isOpen, onClose, onSave, imageFile }: ProfilePhotoEditModalProps) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [scale, setScale] = useState(1);
-
-  useEffect(() => {
-    if (imageFile) {
-      const url = URL.createObjectURL(imageFile);
-      setImageUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-  }, [imageFile]);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize with imageFile if provided
+  useEffect(() => {
+    if (imageFile) {
+      setSelectedFile(imageFile);
+      const url = URL.createObjectURL(imageFile);
+      setImageUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setSelectedFile(null);
+      setImageUrl('');
+      return undefined;
+    }
+  }, [imageFile]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setImageUrl(url);
+      setScale(1);
+      setPosition({ x: 0, y: 0 });
+    }
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -59,200 +78,175 @@ const ProfilePhotoEditModal = ({ isOpen, onClose, onSave, imageFile }: ProfilePh
     setIsDragging(false);
   };
 
-  const handleSave = () => {
-    if (canvasRef.current && imageRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      const img = imageRef.current;
-      
-      if (ctx && img.complete) {
-        // Limpiar canvas con fondo transparente
-        ctx.clearRect(0, 0, 300, 300);
-        
-        // Crear máscara circular
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(150, 150, 150, 0, 2 * Math.PI);
-        ctx.clip();
-        
-        // Calcular el tamaño para que la imagen llene completamente el círculo
-        const canvasSize = 300; // Tamaño del canvas
-        const imgAspect = img.naturalWidth / img.naturalHeight;
-        let drawWidth, drawHeight;
-        
-        // Usar el lado más largo de la imagen para llenar el círculo
-        if (imgAspect > 1) {
-          // Imagen más ancha que alta - usar ancho como referencia
-          drawWidth = canvasSize * scale;
-          drawHeight = drawWidth / imgAspect;
-        } else {
-          // Imagen más alta que ancha - usar altura como referencia
-          drawHeight = canvasSize * scale;
-          drawWidth = drawHeight * imgAspect;
-        }
-        
-        // Calcular posición centrada
-        const centerX = 150 - (drawWidth / 2) + position.x;
-        const centerY = 150 - (drawHeight / 2) + position.y;
-        
-        // Dibujar imagen
-        ctx.drawImage(img, centerX, centerY, drawWidth, drawHeight);
-        ctx.restore();
-        
-        // Convertir a base64
-        const croppedImage = canvas.toDataURL('image/png');
-        onSave(croppedImage);
-        onClose();
-      } else {
-        // Si la imagen no está cargada, usar la imagen original
-        onSave(imageUrl);
-        onClose();
-      }
-    }
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const newScale = Math.max(0.5, Math.min(3, scale + (e.deltaY > 0 ? -0.1 : 0.1)));
+    setScale(newScale);
   };
 
-  const handleImageLoad = () => {
-    // Centrar la imagen inicialmente
-    setPosition({
-      x: 0,
-      y: 0
+  const cropImage = (): Promise<Blob | null> => {
+    if (!imageRef.current || !canvasRef.current) return Promise.resolve(null);
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return Promise.resolve(null);
+
+    const size = 200;
+    canvas.width = size;
+    canvas.height = size;
+
+    // Crear un círculo
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, 2 * Math.PI);
+    ctx.clip();
+
+    // Dibujar la imagen escalada y posicionada
+    ctx.save();
+    ctx.translate(size / 2, size / 2);
+    ctx.scale(scale, scale);
+    ctx.translate(position.x, position.y);
+    ctx.drawImage(imageRef.current, -size / 2, -size / 2, size, size);
+    ctx.restore();
+
+    return new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.9);
     });
   };
 
-  // Resetear estado cuando se abre el modal
-  useEffect(() => {
-    if (isOpen) {
-      setScale(1);
-      setPosition({ x: 0, y: 0 });
+  const handleSave = async () => {
+    if (!selectedFile) return;
+    
+    const blob = await cropImage();
+    if (blob) {
+      onSave(blob);
     }
-  }, [isOpen]);
+  };
+
+  const handleOpenFileDialog = () => {
+    fileInputRef.current?.click();
+  };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <style>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #374151;
-          cursor: pointer;
-          border: 2px solid #ffffff;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #374151;
-          cursor: pointer;
-          border: 2px solid #ffffff;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-      `}</style>
-      <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-slate-900 font-['Inter']">Editar foto de perfil</h2>
-          <button
+      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold font-['Inter']">Editar foto de perfil</h3>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
+            className="p-2"
           >
-            <X className="h-5 w-5" />
-          </button>
+            <X className="w-4 h-4" />
+          </Button>
         </div>
 
-        {/* Instructions */}
-        <p className="text-sm text-slate-600 mb-6 font-['Inter']">
-          Ajusta tu foto de perfil. Puedes hacer zoom y mover la imagen para obtener el mejor encuadre.
-        </p>
-
-        {/* Image Preview Area */}
-        <div className="relative mb-6">
-          <div 
-            ref={containerRef}
-            className="w-full h-[300px] bg-slate-800 rounded-xl overflow-hidden relative flex items-center justify-center"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-          >
-            {/* Image */}
-            <img
-              ref={imageRef}
-              src={imageUrl}
-              alt="Profile preview"
-              className="max-w-[280px] max-h-[280px] object-contain pointer-events-none rounded-full"
-              style={{
-                transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                transformOrigin: 'center'
-              }}
-              onLoad={handleImageLoad}
-              draggable={false}
-            />
-            
-            {/* Circular crop indicator */}
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="w-[280px] h-[280px] border-2 border-white border-dashed rounded-full opacity-50"></div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Hidden canvas for cropping */}
-          <canvas
-            ref={canvasRef}
-            width={300}
-            height={300}
+        <div className="space-y-4">
+          {/* File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
             className="hidden"
           />
-        </div>
 
-        {/* Controls */}
-        <div className="flex items-center justify-center gap-4 mb-6">
-          {/* Icono de imagen pequeña */}
-          <div className="w-6 h-6 bg-slate-300 rounded-full flex items-center justify-center">
-            <div className="w-3 h-3 bg-slate-500 rounded-full"></div>
-          </div>
-          
-          {/* Slider de zoom */}
-          <div className="flex-1 max-w-40">
-            <input
-              type="range"
-              min="0.5"
-              max="2"
-              step="0.1"
-              value={scale}
-              onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
-            />
-          </div>
-          
-          {/* Icono de imagen grande */}
-          <div className="w-6 h-6 bg-slate-300 rounded-full flex items-center justify-center">
-            <div className="w-4 h-4 bg-slate-500 rounded-full"></div>
-          </div>
-        </div>
+          {/* Select File Button */}
+          {!selectedFile && (
+            <div className="text-center py-8">
+              <Button
+                onClick={handleOpenFileDialog}
+                variant="outline"
+                className="w-full font-['Inter']"
+              >
+                Seleccionar imagen
+              </Button>
+            </div>
+          )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1 font-['Inter']"
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isLoading}
-            className="flex-1 bg-slate-900 hover:bg-slate-800 font-['Inter'] disabled:opacity-50"
-          >
-            {isLoading ? 'Guardando...' : 'Guardar'}
-          </Button>
+          {/* Image Editor */}
+          {selectedFile && imageUrl && (
+            <>
+              <div className="text-center">
+                <div
+                  ref={containerRef}
+                  className="relative w-48 h-48 mx-auto border-2 border-gray-300 rounded-full overflow-hidden cursor-move"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onWheel={handleWheel}
+                >
+                  <img
+                    ref={imageRef}
+                    src={imageUrl}
+                    alt="Preview"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{
+                      transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                      transformOrigin: 'center center'
+                    }}
+                    draggable={false}
+                  />
+                  
+                  {/* Circular overlay */}
+                  <div className="absolute inset-0 rounded-full border-4 border-white shadow-lg pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Controls */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-['Inter']">
+                    Zoom: {Math.round(scale * 100)}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="3"
+                    step="0.1"
+                    value={scale}
+                    onChange={(e) => setScale(parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleOpenFileDialog}
+                  variant="outline"
+                  className="w-full font-['Inter']"
+                >
+                  Cambiar imagen
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* Canvas for cropping (hidden) */}
+          <canvas
+            ref={canvasRef}
+            className="hidden"
+          />
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="flex-1 font-['Inter']"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!selectedFile}
+              className="flex-1 bg-slate-900 hover:bg-slate-800 font-['Inter'] disabled:opacity-50"
+            >
+              Guardar
+            </Button>
+          </div>
         </div>
       </div>
     </div>

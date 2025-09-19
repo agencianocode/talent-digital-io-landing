@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +22,7 @@ interface ProfessionalInfo {
   category: string;
   category2?: string;
   title: string;
-  experienceLevel: string;
+  experience: string;
   bio: string;
   skills: string[];
 }
@@ -44,7 +44,7 @@ const TalentOnboarding = () => {
     category: '',
     category2: '',
     title: '',
-    experienceLevel: '',
+    experience: '',
     bio: '',
     skills: []
   });
@@ -52,17 +52,15 @@ const TalentOnboarding = () => {
   // Check if user is authenticated
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Acceso Requerido</h1>
-          <p className="text-muted-foreground mb-6">
-            Debes confirmar tu email para acceder al onboarding de talento.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Button onClick={() => navigate('/auth')} variant="default">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-green-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md text-center">
+          <h2 className="text-xl font-semibold mb-4">Acceso Requerido</h2>
+          <p className="text-gray-600 mb-4">Debes confirmar tu email para acceder al onboarding de talento.</p>
+          <div className="space-y-3">
+            <Button onClick={() => navigate('/auth')}>
               Iniciar Sesión
             </Button>
-            <Button onClick={() => navigate('/register-talent')} variant="outline">
+            <Button variant="outline" onClick={() => navigate('/register-talent')}>
               Registrarse
             </Button>
           </div>
@@ -87,34 +85,23 @@ const TalentOnboarding = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // Save to talent_profiles table
+        // Save to talent_profiles table (only user_id to mark completion)
         const { error: talentProfileError } = await supabase
           .from('talent_profiles')
           .upsert({
             user_id: session.user.id,
-            first_name: talentProfile.firstName,
-            last_name: talentProfile.lastName,
-            full_name: `${talentProfile.firstName} ${talentProfile.lastName}`.trim(),
-            country: talentProfile.country,
-            phone: talentProfile.phone,
-            phone_country_code: talentProfile.phoneCountryCode,
-            avatar_url: talentProfile.profilePhotoUrl,
-            category: data.category,
-            category2: data.category2,
-            title: data.title,
-            experience_level: data.experienceLevel,
-            bio: data.bio,
-            skills: data.skills
+            updated_at: new Date().toISOString()
           });
 
         if (talentProfileError) {
-          console.error('Error saving talent profile:', talentProfileError);
-        } else {
-          console.log('✅ Talent profile saved successfully');
+          console.error('❌ Error saving talent profile:', talentProfileError);
+          throw talentProfileError;
         }
 
-        // Also save basic info to user_metadata for compatibility
-        const { error: updateError } = await supabase.auth.updateUser({
+        console.log('✅ Talent profile saved successfully');
+
+        // Save comprehensive user metadata
+        const { error: metadataError } = await supabase.auth.updateUser({
           data: {
             first_name: talentProfile.firstName,
             last_name: talentProfile.lastName,
@@ -122,96 +109,150 @@ const TalentOnboarding = () => {
             country: talentProfile.country,
             phone: talentProfile.phone,
             phone_country_code: talentProfile.phoneCountryCode,
-            avatar_url: talentProfile.profilePhotoUrl
+            profile_photo_url: talentProfile.profilePhotoUrl,
+            category: data.category,
+            category2: data.category2 || null,
+            title: data.title,
+            experience_level: data.experience,
+            bio: data.bio,
+            skills: data.skills,
+            updated_at: new Date().toISOString()
           }
         });
-        
-        if (updateError) {
-          console.error('Error updating user metadata:', updateError);
+
+        if (metadataError) {
+          console.error('❌ Error updating user metadata:', metadataError);
         } else {
           console.log('✅ User metadata updated successfully');
         }
+
+        // Upload profile photo if exists
+        if (talentProfile.profilePhoto) {
+          const fileExt = talentProfile.profilePhoto.name.split('.').pop();
+          const fileName = `${session.user.id}-profile.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, talentProfile.profilePhoto, { upsert: true });
+
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(fileName);
+            
+            // Update profiles table with comprehensive data
+            await supabase
+              .from('profiles')
+              .upsert({
+                user_id: session.user.id,
+                full_name: `${talentProfile.firstName} ${talentProfile.lastName}`.trim(),
+                profile_photo_url: publicUrl,
+                phone: talentProfile.phone,
+                country: talentProfile.country,
+                updated_at: new Date().toISOString()
+              });
+
+            console.log('✅ Profile photo uploaded and saved');
+          }
+        } else {
+          // Update profiles table even without photo
+          await supabase
+            .from('profiles')
+            .upsert({
+              user_id: session.user.id,
+              full_name: `${talentProfile.firstName} ${talentProfile.lastName}`.trim(),
+              phone: talentProfile.phone,
+              country: talentProfile.country,
+              updated_at: new Date().toISOString()
+            });
+        }
+
+        toast.success('¡Onboarding completado exitosamente!');
+        navigate('/talent-dashboard');
+      } else {
+        console.error('❌ No user session found');
+        throw new Error('No user session found');
       }
-      
-      console.log('🚀 SUCCESS! Navigating to dashboard...');
-      toast.success('¡Perfil completado exitosamente!');
-      
-      // Navigate immediately to dashboard
-      console.log('🚀 Attempting navigation to /talent-dashboard...');
-      navigate('/talent-dashboard');
-      console.log('🚀 Navigation called!');
-      
-    } catch (error) {
-      console.error('🚀 ERROR in process:', error);
-      toast.error('Error al completar el perfil. Intenta nuevamente.');
+    } catch (error: any) {
+      console.error('❌ Error in handleStep2Complete:', error);
+      toast.error(`Error al completar el onboarding: ${error.message || 'Error desconocido'}`);
     }
   };
 
   const handleBack = () => {
-    if (currentStep === 2) {
-      setCurrentStep(1);
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
     } else {
       navigate('/user-selector');
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={handleBack}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Cambiar el tipo de cuenta
-            </Button>
-            <h1 className="text-xl font-semibold text-foreground">
-              Configuración de cuenta de Talento
-            </h1>
-            <div className="w-32" /> {/* Spacer */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-green-50 font-['Inter']">
+      {/* Single Card Container - RESPONSIVE */}
+      <div className="min-h-screen px-2 py-2 sm:px-4 sm:py-4 lg:px-8 lg:py-6">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 min-h-[calc(100vh-16px)] sm:min-h-[calc(100vh-32px)] lg:min-h-[calc(100vh-48px)]">
+          {/* Header Section - RESPONSIVE */}
+          <div className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6">
+            <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBack}
+                className="flex items-center gap-2 text-slate-600 hover:text-slate-900 bg-[#f5f6fa] hover:bg-[#e8eaf0] rounded-lg px-3 py-2 sm:px-4 sm:py-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline font-['Inter']" style={{fontSize: '13px'}}>{currentStep === 1 ? 'Cambiar el tipo de cuenta' : 'Atrás'}</span>
+                <span className="sm:hidden font-['Inter']" style={{fontSize: '13px'}}>{currentStep === 1 ? 'Cambiar' : 'Atrás'}</span>
+              </Button>
+              <span className="font-medium text-slate-900 font-['Inter']" style={{fontSize: '14px'}}>Configuración de cuenta de Talento</span>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-2xl shadow-lg border border-border">
-          {/* Steppers */}
-          <div className="border-b border-border px-8 py-6">
-            <div className="flex items-center justify-center space-x-8">
-              {/* Step 1 */}
-              <div className="flex items-center space-x-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  currentStep >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                }`}>
-                  <User className="h-5 w-5" />
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-medium text-foreground">Perfil Personal</div>
-                  <div className="text-xs text-muted-foreground">Paso {currentStep}/2</div>
+          {/* Stepper */}
+          <div className="px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-center space-x-8">
+                {/* Perfil Personal */}
+                <div className="flex items-center space-x-4">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                    currentStep === 1 ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'
+                  }`}>
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-sm font-medium ${
+                      currentStep === 1 ? 'text-blue-600' : 'text-blue-600'
+                    }`}>
+                      Perfil Personal
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Paso {currentStep}/2
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Content */}
-          <div className="px-8 py-8">
-            {currentStep === 1 && (
-              <TalentOnboardingStep1
-                onComplete={handleStep1Complete}
-                initialData={talentProfile}
-              />
-            )}
-            {currentStep === 2 && (
-              <TalentOnboardingStep2
-                onComplete={handleStep2Complete}
-                initialData={professionalInfo}
-              />
-            )}
+          {/* Main Content - CENTERED */}
+          <div className="px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+            <div className="flex justify-center">
+              <div className="w-full max-w-md sm:max-w-lg lg:max-w-xl xl:max-w-2xl">
+                {currentStep === 1 && (
+                  <TalentOnboardingStep1
+                    onComplete={handleStep1Complete}
+                    initialData={talentProfile}
+                  />
+                )}
+                {currentStep === 2 && (
+                  <TalentOnboardingStep2
+                    onComplete={handleStep2Complete}
+                    initialData={professionalInfo}
+                  />
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

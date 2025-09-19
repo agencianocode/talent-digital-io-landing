@@ -681,27 +681,28 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const hasCompletedTalentOnboarding = async (userId: string): Promise<boolean> => {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error || !user || user.id !== userId) {
-        console.error('Error getting user for talent onboarding check:', error);
+      // Check if user has a record in talent_profiles table (marks onboarding completion)
+      const { data, error } = await supabase
+        .from('talent_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error checking talent onboarding:', error);
         return false;
       }
 
-      // Check if user has completed basic onboarding (has first_name and last_name)
-      const hasBasicInfo = !!(
-        user.user_metadata?.first_name && 
-        user.user_metadata?.last_name
-      );
-
+      // If we found a record, onboarding is complete
+      const isComplete = !!data;
+      
       console.log('Talent onboarding check:', {
         userId,
-        first_name: user.user_metadata?.first_name,
-        last_name: user.user_metadata?.last_name,
-        hasBasicInfo
+        hasRecord: !!data,
+        isComplete
       });
 
-      return hasBasicInfo;
+      return isComplete;
     } catch (error) {
       console.error('Error in hasCompletedTalentOnboarding:', error);
       return false;

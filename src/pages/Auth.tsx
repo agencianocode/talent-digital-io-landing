@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn, signInWithGoogle, resetPassword, updatePassword, isLoading, isAuthenticated, userRole } = useSupabaseAuth();
+  const { signIn, signInWithGoogle, resetPassword, updatePassword, isLoading, isAuthenticated, userRole, user, hasCompletedTalentOnboarding } = useSupabaseAuth();
   
   // Track if redirect has happened to prevent multiple redirects
   const [hasRedirected, setHasRedirected] = useState(false);
@@ -157,8 +157,22 @@ const Auth = () => {
         console.log('Auth.tsx: Redirecting business to:', redirectPath);
       } else {
         // For talent users, check if they need onboarding first
-        redirectPath = '/talent-onboarding';
-        console.log('Auth.tsx: Redirecting talent to onboarding first:', redirectPath);
+        const checkTalentOnboarding = async () => {
+          if (user?.id) {
+            const isOnboardingComplete = await hasCompletedTalentOnboarding(user.id);
+            console.log('Auth.tsx: Talent onboarding complete?', isOnboardingComplete);
+            if (isOnboardingComplete) {
+              redirectPath = '/talent-dashboard';
+              console.log('Auth.tsx: Redirecting talent to dashboard:', redirectPath);
+            } else {
+              redirectPath = '/talent-onboarding';
+              console.log('Auth.tsx: Redirecting talent to onboarding:', redirectPath);
+            }
+            navigate(redirectPath, { replace: true });
+          }
+        };
+        checkTalentOnboarding();
+        return; // Exit early to avoid the setTimeout below
       }
       
       // Add a small delay to ensure the auth context is fully loaded
@@ -166,7 +180,7 @@ const Auth = () => {
         navigate(redirectPath, { replace: true });
       }, 100);
     }
-  }, [isAuthenticated, userRole, hasRedirected, isLoading, navigate, isPasswordReset, isVerifyingRecovery, isResetRoute, recoveryError]);
+  }, [isAuthenticated, userRole, hasRedirected, isLoading, navigate, isPasswordReset, isVerifyingRecovery, isResetRoute, recoveryError, user, hasCompletedTalentOnboarding]);
   
   // Ensure the reset form is usable if the user is already authenticated via the recovery token
   useEffect(() => {

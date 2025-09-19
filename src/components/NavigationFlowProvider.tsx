@@ -194,6 +194,12 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
   // Auto-navigation for authenticated users (optional, can be disabled)
   useEffect(() => {
     if (!user || !userRole || isTransitioning) return;
+    
+    // Don't auto-navigate if we're still checking onboarding status for talent users
+    if (isTalentRole(userRole) && talentOnboardingComplete === null) {
+      console.log('NavigationFlowProvider - Still checking talent onboarding status, skipping auto-navigation');
+      return;
+    }
 
     // Block auto-navigation during password recovery/reset flows so the user can update their password
     const isRecoveryFlow = (() => {
@@ -221,6 +227,19 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
       businessOnboardingComplete ?? undefined,
       talentOnboardingComplete ?? undefined
     );
+    
+    // Debug logging for talent users
+    if (isTalentRole(userRole)) {
+      console.log('NavigationFlowProvider - Talent user check:', {
+        userRole,
+        isEmailConfirmed: Boolean(user?.email_confirmed_at),
+        profileState,
+        currentPath,
+        idealRoute,
+        talentOnboardingComplete,
+        businessOnboardingComplete
+      });
+    }
     
     // Debug logging
     if (currentPath === '/') {
