@@ -80,6 +80,7 @@ interface AuthContextType extends AuthState {
   signUp: (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
+  signUpWithGoogle: (userType: 'business' | 'talent') => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
   updateCompany: (data: Partial<Company>) => Promise<{ error: Error | null }>;
@@ -241,7 +242,28 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           logger.debug('SupabaseAuth: Fetching user data for:', session.user.id);
           
           try {
-            const userData = await fetchUserData(session.user.id);
+            // Check if this is a Google OAuth signup
+            const pendingUserType = localStorage.getItem('pending_user_type');
+            
+            let userData = await fetchUserData(session.user.id, pendingUserType || undefined);
+            
+            // If this is a Google OAuth user and role doesn't match expected type, fix it
+            if (pendingUserType && userData.role) {
+              const isBusinessType = pendingUserType === 'business';
+              const hasBusinessRole = isBusinessRole(userData.role as UserRole);
+              
+              if (isBusinessType && !hasBusinessRole) {
+                console.log('Fixing Google OAuth user role from talent to business');
+                await fixUserRoleForGoogleAuth(session.user.id, 'business');
+                // Refetch user data with corrected role
+                userData = await fetchUserData(session.user.id, 'business');
+              }
+            }
+            
+            // Clear the pending user type after use
+            if (pendingUserType) {
+              localStorage.removeItem('pending_user_type');
+            }
             
             if (!isMounted) return;
             
@@ -343,6 +365,62 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     });
     
     return { error };
+  };
+
+  const signUpWithGoogle = async (userType: 'business' | 'talent') => {
+    // Store the user type in localStorage temporarily for after OAuth redirect
+    localStorage.setItem('pending_user_type', userType);
+    
+    // For Google OAuth, redirect directly to onboarding since Google verifies email automatically
+    const redirectUrl = userType === 'business' 
+      ? `${window.location.origin}/company-onboarding`
+      : `${window.location.origin}/talent-onboarding`;
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl
+      }
+    });
+    
+    return { error };
+  };
+
+  // Fix user role for Google OAuth users
+  const fixUserRoleForGoogleAuth = async (userId: string, targetUserType: string) => {
+    try {
+      const targetRole: UserRole = targetUserType === 'business' ? 'freemium_business' : 'freemium_talent';
+      
+      // Update user role in database
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert({ 
+          user_id: userId, 
+          role: targetRole 
+        });
+
+      if (error) {
+        console.error('Error fixing user role:', error);
+        return { error };
+      }
+
+      // Update user metadata
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: {
+          user_type: targetUserType
+        }
+      });
+
+      if (metadataError) {
+        console.warn('Warning updating metadata:', metadataError);
+      }
+
+      console.log(`User role fixed: ${userId} -> ${targetRole}`);
+      return { error: null };
+    } catch (error) {
+      console.error('Error in fixUserRoleForGoogleAuth:', error);
+      return { error: error as Error };
+    }
   };
 
   const signOut = async () => {
@@ -636,6 +714,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       signUp,
       signIn,
       signInWithGoogle,
+      signUpWithGoogle,
       signOut,
       updateProfile,
       updateCompany,

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCompanyUserRoles } from '@/hooks/useCompanyUserRoles';
 import { CheckCircle, Crown, Shield, Eye, Building, Loader2 } from 'lucide-react';
 
 interface InvitationData {
@@ -27,6 +28,9 @@ const AcceptInvitation = () => {
   const [error, setError] = useState<string | null>(null);
 
   const invitationId = searchParams.get('id');
+  
+  // Use the hook for accepting invitations
+  const { acceptInvitation } = useCompanyUserRoles();
 
   // Load invitation data
   useEffect(() => {
@@ -76,31 +80,27 @@ const AcceptInvitation = () => {
     loadInvitation();
   }, [invitationId]);
 
-  // Accept invitation
+  // Accept invitation using the hook
   const handleAcceptInvitation = async () => {
-    if (!invitation || !user) return;
+    if (!invitation || !invitationId) return;
 
     setIsProcessing(true);
     try {
-      // Update invitation with real user_id and accepted status
-      const { error } = await supabase
-        .from('company_user_roles')
-        .update({
-          user_id: user.id,
-          status: 'accepted',
-          accepted_at: new Date().toISOString()
-        })
-        .eq('id', invitation.id);
-
-      if (error) throw error;
-
+      console.log('Accepting invitation:', invitationId, 'for user:', user?.id);
+      
+      await acceptInvitation(invitationId);
+      
       toast.success(`¡Te has unido exitosamente a ${invitation.company_name}!`);
       
-      // Redirect to business dashboard
-      navigate('/business-dashboard');
-    } catch (error) {
+      // Small delay to ensure the update is processed
+      setTimeout(() => {
+        navigate('/business-dashboard');
+      }, 1000);
+      
+    } catch (error: any) {
       console.error('Error accepting invitation:', error);
-      toast.error('Error al aceptar la invitación');
+      // The hook already shows error toasts, but we can add specific handling here
+      setError('Error al aceptar la invitación. Por favor intenta de nuevo.');
     } finally {
       setIsProcessing(false);
     }

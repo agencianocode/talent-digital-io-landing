@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, MessageSquare, MapPin, Star, Briefcase, DollarSign, Grid3X3, List, CheckCircle, Clock } from "lucide-react";
+import { Eye, MessageSquare, MapPin, Star, Briefcase, DollarSign, Grid3X3, List, Clock } from "lucide-react";
 import { toast } from "sonner";
 import FilterBar from "@/components/FilterBar";
 import { useProfessionalData } from "@/hooks/useProfessionalData";
@@ -15,19 +15,19 @@ import LoadingSkeleton from "@/components/LoadingSkeleton";
 interface TalentProfile {
   id: string;
   user_id: string;
-  title: string;
-  specialty: string;
-  bio: string;
-  skills: string[];
-  years_experience: number;
-  availability: string;
-  linkedin_url: string;
-  portfolio_url: string;
-  hourly_rate_min: number;
-  hourly_rate_max: number;
-  currency: string;
-  primary_category_id: string;
-  experience_level: string;
+  title: string | null;
+  specialty: string | null;
+  bio: string | null;
+  skills: string[] | null;
+  years_experience: number | null;
+  availability: string | null;
+  linkedin_url: string | null;
+  portfolio_url: string | null;
+  hourly_rate_min: number | null;
+  hourly_rate_max: number | null;
+  currency: string | null;
+  primary_category_id: string | null;
+  experience_level: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -35,14 +35,14 @@ interface TalentProfile {
 interface UserProfile {
   id: string;
   user_id: string;
-  full_name: string;
-  avatar_url: string;
-  phone: string;
-  position?: string;
-  linkedin?: string;
-  country?: string;
-  city?: string;
-  profile_completeness?: number;
+  full_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  position?: string | null;
+  linkedin?: string | null;
+  country?: string | null;
+  city?: string | null;
+  profile_completeness?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -56,12 +56,42 @@ interface TalentWithProfile {
 
 const TalentSearchPage = () => {
   const navigate = useNavigate();
-  const { userRole } = useSupabaseAuth();
+  const { userRole, user } = useSupabaseAuth();
   const { categories, loading: categoriesLoading } = useProfessionalData();
   const [talents, setTalents] = useState<TalentWithProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<Record<string, any>>({});
+
+  // Función para corregir el rol del usuario
+  const handleFixUserRole = async () => {
+    try {
+      // Use direct SQL instead of RPC to avoid function ambiguity
+      if (!user?.id) {
+        toast.error('Usuario no autenticado');
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: user.id,
+          role: 'freemium_business'
+        });
+
+      if (error) {
+        toast.error('Error al cambiar el rol: ' + error.message);
+      } else {
+        toast.success('Rol actualizado correctamente. Recargando página...');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Error fixing user role:', error);
+      toast.error('Error inesperado al cambiar el rol');
+    }
+  };
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('featured');
 
@@ -89,7 +119,7 @@ const TalentSearchPage = () => {
       console.log('fetchTalents: Categories loaded:', categories.length);
       const talentWithProfiles: TalentWithProfile[] = await Promise.all(
         (talentData || []).map(async (talent) => {
-          const { data: profileData, error: profileError } = await supabase
+          const { data: profileData } = await supabase
             .from('profiles')
             .select('*')
             .eq('user_id', talent.user_id)
@@ -227,7 +257,27 @@ const TalentSearchPage = () => {
     return (
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Acceso Denegado</h1>
-        <p>Solo los usuarios de empresa pueden acceder a esta página.</p>
+        <p className="mb-4">Solo los usuarios de empresa pueden acceder a esta página.</p>
+        <div className="bg-gray-100 p-4 rounded-lg text-left max-w-md mx-auto">
+          <h3 className="font-semibold mb-2">Información de diagnóstico:</h3>
+          <p><strong>Usuario ID:</strong> {user?.id || 'No disponible'}</p>
+          <p><strong>Rol actual:</strong> {userRole || 'No asignado'}</p>
+          <p><strong>Roles válidos para empresa:</strong> business, freemium_business, premium_business</p>
+        </div>
+        <div className="flex gap-4 justify-center mt-4">
+          <Button 
+            onClick={handleFixUserRole}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Corregir Rol de Usuario
+          </Button>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+          >
+            Recargar página
+          </Button>
+        </div>
       </div>
     );
   }
@@ -353,7 +403,7 @@ const TalentSearchPage = () => {
                   <CardHeader>
                     <div className="flex items-start space-x-4">
                       <Avatar className="h-16 w-16">
-                        <AvatarImage src={talentWithProfile.profile.avatar_url} />
+                        <AvatarImage src={talentWithProfile.profile.avatar_url || undefined} />
                         <AvatarFallback className="text-lg">
                           {talentWithProfile.profile.full_name?.charAt(0) || 'T'}
                         </AvatarFallback>
@@ -362,8 +412,8 @@ const TalentSearchPage = () => {
                         <CardTitle className="text-lg">{talentWithProfile.profile.full_name}</CardTitle>
                         <p className="text-muted-foreground text-sm">{talentWithProfile.talent.title}</p>
                         <div className="flex items-center space-x-2 mt-2">
-                          <Badge className={getExperienceBadgeClass(talentWithProfile.talent.experience_level, talentWithProfile.talent.years_experience)}>
-                            {getExperienceLevel(talentWithProfile.talent.experience_level, talentWithProfile.talent.years_experience)}
+                          <Badge className={getExperienceBadgeClass(talentWithProfile.talent.experience_level || '', talentWithProfile.talent.years_experience || 0)}>
+                            {getExperienceLevel(talentWithProfile.talent.experience_level || '', talentWithProfile.talent.years_experience || 0)}
                           </Badge>
                           {talentWithProfile.categoryName && (
                             <Badge variant="outline">{talentWithProfile.categoryName}</Badge>
@@ -448,7 +498,7 @@ const TalentSearchPage = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-6">
                     <Avatar className="h-16 w-16">
-                      <AvatarImage src={talentWithProfile.profile.avatar_url} />
+                      <AvatarImage src={talentWithProfile.profile.avatar_url || undefined} />
                       <AvatarFallback className="text-lg">
                         {talentWithProfile.profile.full_name?.charAt(0) || 'T'}
                       </AvatarFallback>
@@ -460,8 +510,8 @@ const TalentSearchPage = () => {
                           <h3 className="text-lg font-semibold">{talentWithProfile.profile.full_name}</h3>
                           <p className="text-muted-foreground">{talentWithProfile.talent.title}</p>
                           <div className="flex items-center gap-2 mt-2">
-                            <Badge className={getExperienceBadgeClass(talentWithProfile.talent.experience_level, talentWithProfile.talent.years_experience)}>
-                              {getExperienceLevel(talentWithProfile.talent.experience_level, talentWithProfile.talent.years_experience)}
+                            <Badge className={getExperienceBadgeClass(talentWithProfile.talent.experience_level || '', talentWithProfile.talent.years_experience || 0)}>
+                              {getExperienceLevel(talentWithProfile.talent.experience_level || '', talentWithProfile.talent.years_experience || 0)}
                             </Badge>
                             {talentWithProfile.categoryName && (
                               <Badge variant="outline">{talentWithProfile.categoryName}</Badge>

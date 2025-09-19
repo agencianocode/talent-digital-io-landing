@@ -8,13 +8,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
-import { Search, Filter, Eye, Edit, Link, MoreHorizontal, Briefcase, Users, Copy, Trash2, Archive, Share2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Search, Eye, Edit, MoreHorizontal, Briefcase, Users, Copy, Trash2, Archive } from "lucide-react";
 import { toast } from "sonner";
 import StaticShareButton from '@/components/StaticShareButton';
 
 const OpportunitiesPage = () => {
   const navigate = useNavigate();
-  const { userRole } = useSupabaseAuth();
+  const { userRole, user } = useSupabaseAuth();
   const { activeCompany, canCreateOpportunities, hasPermission } = useCompany();
   const { 
     opportunities, 
@@ -27,6 +28,36 @@ const OpportunitiesPage = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [applicationCounts, setApplicationCounts] = useState<Record<string, number>>({});
+
+  // Función para corregir el rol del usuario
+  const handleFixUserRole = async () => {
+    try {
+      // Use direct SQL instead of RPC to avoid function ambiguity
+      if (!user?.id) {
+        toast.error('Usuario no autenticado');
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: user.id,
+          role: 'freemium_business'
+        });
+
+      if (error) {
+        toast.error('Error al cambiar el rol: ' + error.message);
+      } else {
+        toast.success('Rol actualizado correctamente. Recargando página...');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Error fixing user role:', error);
+      toast.error('Error inesperado al cambiar el rol');
+    }
+  };
 
   // Job categories with subcategories
   const jobCategories = {
@@ -128,24 +159,9 @@ const OpportunitiesPage = () => {
     navigate(`/business-dashboard/opportunities/${opportunityId}/edit`);
   };
 
-  const handleShareOpportunity = (opportunityId: string) => {
-    // This will be handled by the ShareOpportunity component
-    console.log('Share opportunity:', opportunityId);
-  };
-
-  const handleCopyOpportunity = (opportunityId: string) => {
+  const handleCopyOpportunity = () => {
     // Aquí podrías implementar la lógica para duplicar una oportunidad
     toast.success('Funcionalidad de duplicar próximamente');
-  };
-
-  const handleArchiveOpportunity = async (opportunityId: string) => {
-    try {
-      // Por ahora, archivar es lo mismo que desactivar
-      await toggleOpportunityStatus(opportunityId, true);
-      toast.success('Oportunidad archivada');
-    } catch (error) {
-      toast.error('Error al archivar la oportunidad');
-    }
   };
 
   const handleDeleteOpportunity = async (opportunityId: string) => {
@@ -173,7 +189,27 @@ const OpportunitiesPage = () => {
     return (
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Acceso Denegado</h1>
-        <p>Solo los usuarios de empresa pueden acceder a esta página.</p>
+        <p className="mb-4">Solo los usuarios de empresa pueden acceder a esta página.</p>
+        <div className="bg-gray-100 p-4 rounded-lg text-left max-w-md mx-auto">
+          <h3 className="font-semibold mb-2">Información de diagnóstico:</h3>
+          <p><strong>Usuario ID:</strong> {user?.id || 'No disponible'}</p>
+          <p><strong>Rol actual:</strong> {userRole || 'No asignado'}</p>
+          <p><strong>Roles válidos para empresa:</strong> business, freemium_business, premium_business</p>
+        </div>
+        <div className="flex gap-4 justify-center mt-4">
+          <Button 
+            onClick={handleFixUserRole}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Corregir Rol de Usuario
+          </Button>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+          >
+            Recargar página
+          </Button>
+        </div>
       </div>
     );
   }
@@ -332,32 +368,44 @@ const OpportunitiesPage = () => {
                     )}
                     <div className="flex items-center space-x-1">
                       <Users className="h-4 w-4" />
-                      <span className={applicationCounts[opportunity.id] > 0 ? "font-semibold text-green-600" : ""}>
-                        {applicationCounts[opportunity.id] || 0} postulantes
-                      </span>
-                      {applicationCounts[opportunity.id] > 0 && (
-                        <Badge variant="secondary" className="ml-1 bg-green-100 text-green-800 text-xs">
-                          Nuevas
-                        </Badge>
-                      )}
+                      {(() => {
+                        const appCount = opportunity.id ? applicationCounts[opportunity.id] || 0 : 0;
+                        return (
+                          <>
+                            <span className={appCount > 0 ? "font-semibold text-green-600" : ""}>
+                              {appCount} postulantes
+                            </span>
+                            {appCount > 0 && (
+                              <Badge variant="secondary" className="ml-1 bg-green-100 text-green-800 text-xs">
+                                Nuevas
+                              </Badge>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                   
                   {/* Application count with link */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
-                    <Button
-                      variant={applicationCounts[opportunity.id] > 0 ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => navigate(`/business-dashboard/applications?opportunity=${opportunity.id}`)}
-                      className={`text-xs w-full sm:w-auto ${applicationCounts[opportunity.id] > 0 ? "bg-green-600 hover:bg-green-700" : ""}`}
-                    >
-                      Ver Aplicaciones ({applicationCounts[opportunity.id] || 0})
-                      {applicationCounts[opportunity.id] > 0 && (
-                        <Badge variant="secondary" className="ml-1 bg-white text-green-600 text-xs">
-                          {applicationCounts[opportunity.id]}
-                        </Badge>
-                      )}
-                    </Button>
+                    {(() => {
+                      const appCount = opportunity.id ? applicationCounts[opportunity.id] || 0 : 0;
+                      return (
+                        <Button
+                          variant={appCount > 0 ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => opportunity.id && navigate(`/business-dashboard/applications?opportunity=${opportunity.id}`)}
+                          className={`text-xs w-full sm:w-auto ${appCount > 0 ? "bg-green-600 hover:bg-green-700" : ""}`}
+                        >
+                          Ver Aplicaciones ({appCount})
+                          {appCount > 0 && (
+                            <Badge variant="secondary" className="ml-1 bg-white text-green-600 text-xs">
+                              {appCount}
+                            </Badge>
+                          )}
+                        </Button>
+                      );
+                    })()}
                   </div>
                 </div>
                 
@@ -365,7 +413,7 @@ const OpportunitiesPage = () => {
                   <Button 
                     variant="outline" 
                     size="icon"
-                    onClick={() => handleViewOpportunity(opportunity.id)}
+                    onClick={() => opportunity.id && handleViewOpportunity(opportunity.id)}
                     title="Ver detalles"
                   >
                     <Eye className="h-4 w-4" />
@@ -374,7 +422,7 @@ const OpportunitiesPage = () => {
                     <Button 
                       variant="outline" 
                       size="icon"
-                      onClick={() => handleEditOpportunity(opportunity.id)}
+                      onClick={() => opportunity.id && handleEditOpportunity(opportunity.id)}
                       title="Editar"
                     >
                       <Edit className="h-4 w-4" />
@@ -397,7 +445,7 @@ const OpportunitiesPage = () => {
                     <DropdownMenuContent align="end">
                       {hasPermission('admin') && (
                         <>
-                          <DropdownMenuItem onClick={() => handleCopyOpportunity(opportunity.id)}>
+                          <DropdownMenuItem onClick={handleCopyOpportunity}>
                             <Copy className="h-4 w-4 mr-2" />
                             Duplicar
                           </DropdownMenuItem>
@@ -409,7 +457,7 @@ const OpportunitiesPage = () => {
                       )}
                       {hasPermission('owner') && (
                         <DropdownMenuItem 
-                          onClick={() => handleDeleteOpportunity(opportunity.id)}
+                          onClick={() => opportunity.id && handleDeleteOpportunity(opportunity.id)}
                           className="text-red-600 focus:text-red-600"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />

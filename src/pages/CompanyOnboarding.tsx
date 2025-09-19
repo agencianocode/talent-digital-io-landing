@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building2, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,7 +36,14 @@ interface UserProfile {
 
 const CompanyOnboarding = () => {
   const navigate = useNavigate();
-  const { user } = useSupabaseAuth();
+  const { user, createCompany } = useSupabaseAuth();
+  const { refreshCompanies } = useCompany();
+
+  // Fix Google OAuth user role if needed - Temporarily disabled
+  // const fixUserRoleIfNeeded = async () => {
+  //   // Function disabled to prevent infinite reloads
+  //   // This can be re-enabled once the role switching logic is fixed
+  // };
   const [currentStep, setCurrentStep] = useState(1);
   const [companyData, setCompanyData] = useState<CompanyData>({
     name: '',
@@ -57,6 +65,53 @@ const CompanyOnboarding = () => {
     countryCode: '+57',
     profilePhoto: null
   });
+
+  // Check and fix user role on component mount for Google OAuth users
+  useEffect(() => {
+    const fixGoogleUserRole = async () => {
+      if (!user) return;
+      
+      try {
+        // Check if user has wrong role (talent role but in business onboarding)
+        const { data: currentRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+
+        console.log('CompanyOnboarding - Current user role:', currentRole?.role);
+
+        // If user has talent role but is in company onboarding, fix it automatically
+        if (currentRole?.role && currentRole.role.includes('talent')) {
+          console.log('CompanyOnboarding - Fixing Google OAuth user role from talent to business...');
+          
+          const { error } = await supabase
+            .from('user_roles')
+            .upsert({
+              user_id: user.id,
+              role: 'freemium_business'
+            });
+
+          if (error) {
+            console.error('Error fixing Google OAuth user role:', error);
+            // Don't show error to user, just log it
+          } else {
+            console.log('CompanyOnboarding - Google OAuth user role fixed successfully');
+            // Reload page to refresh auth context
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking/fixing user role:', error);
+      }
+    };
+
+    if (user) {
+      fixGoogleUserRole();
+    }
+  }, [user]);
 
   const handleCompanyNameChange = (name: string) => {
     setCompanyData(prev => ({ ...prev, name }));
@@ -106,6 +161,8 @@ const CompanyOnboarding = () => {
     }
     
     try {
+      console.log('Starting company creation process for user:', user.id);
+      
       // 1. Verificar si la empresa ya existe, si no, crearla o actualizarla
       const { data: existingCompany, error: checkError } = await supabase
         .from('companies')
@@ -114,8 +171,11 @@ const CompanyOnboarding = () => {
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing company:', checkError);
         throw checkError;
       }
+
+      console.log('Existing company check result:', existingCompany);
 
       if (existingCompany) {
         // Actualizar empresa existente
@@ -221,8 +281,23 @@ const CompanyOnboarding = () => {
       
       toast.success('¡Información de empresa guardada exitosamente!');
       
-      // Redirigir al dashboard de empresa
-      navigate('/business-dashboard');
+      // Refrescar el contexto de empresas para sincronizar los datos
+      try {
+        await refreshCompanies();
+        console.log('Company context refreshed successfully');
+      } catch (refreshError) {
+        console.error('Error refreshing company context:', refreshError);
+        // Continuar aunque falle el refresh
+      }
+      
+      // Redirigir al dashboard de empresa con manejo de errores
+      try {
+        navigate('/business-dashboard');
+      } catch (navError) {
+        console.error('Navigation error:', navError);
+        // Fallback: recargar la página para ir al dashboard
+        window.location.href = '/business-dashboard';
+      }
     } catch (error: any) {
       console.error('Error saving company data:', error);
       console.error('Error details:', {
@@ -306,26 +381,14 @@ const CompanyOnboarding = () => {
           throw updateError;
         }
       } else {
-        // Crear nueva empresa
-        const companyInsert: any = {
-          user_id: user.id,
+        // Crear nueva empresa usando la función del contexto (con permisos especiales)
+        const newCompanyData: any = {
           name: companyData.name,
           business_type: companyData.isIndividual ? null : 'company',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          description: companyDetails.description || '',
+          website: companyDetails.url || '',
+          location: companyDetails.location || ''
         };
-
-        if (companyDetails.description) {
-          companyInsert.description = companyDetails.description;
-        }
-        
-        if (companyDetails.url) {
-          companyInsert.website = companyDetails.url;
-        }
-        
-        if (companyDetails.location) {
-          companyInsert.location = companyDetails.location;
-        }
 
         // Subir logo si existe
         if (companyDetails.logo) {
@@ -340,16 +403,14 @@ const CompanyOnboarding = () => {
             const { data: { publicUrl } } = supabase.storage
               .from('avatars')
               .getPublicUrl(fileName);
-            companyInsert.logo_url = publicUrl;
+            newCompanyData.logo_url = publicUrl;
           }
         }
 
-        const { error: insertError } = await supabase
-          .from('companies')
-          .insert(companyInsert);
+        const { error: createError } = await createCompany(newCompanyData);
 
-        if (insertError) {
-          throw insertError;
+        if (createError) {
+          throw createError;
         }
       }
       
@@ -446,11 +507,35 @@ const CompanyOnboarding = () => {
       
       toast.success('¡Onboarding completado exitosamente!');
       
-      // Redirigir al dashboard de empresa
-      navigate('/business-dashboard');
-    } catch (error) {
+      // Refrescar el contexto de empresas para sincronizar los datos
+      try {
+        await refreshCompanies();
+        console.log('Company context refreshed successfully');
+      } catch (refreshError) {
+        console.error('Error refreshing company context:', refreshError);
+        // Continuar aunque falle el refresh
+      }
+      
+      // Redirigir al dashboard de empresa con manejo de errores
+      try {
+        navigate('/business-dashboard');
+      } catch (navError) {
+        console.error('Navigation error:', navError);
+        // Fallback: recargar la página para ir al dashboard
+        window.location.href = '/business-dashboard';
+      }
+    } catch (error: any) {
       console.error('Error saving onboarding data:', error);
-      toast.error('Error al guardar los datos. Inténtalo de nuevo.');
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        user_id: user?.id,
+        user_email: user?.email,
+        user_metadata: user?.user_metadata
+      });
+      toast.error(`Error al guardar los datos: ${error.message || 'Error desconocido'}. Inténtalo de nuevo.`);
     }
   };
 

@@ -14,6 +14,10 @@ export interface CompanyUserRole {
   status: 'pending' | 'accepted' | 'declined';
   created_at: string;
   updated_at: string;
+  // Enriched fields for display
+  user_name?: string;
+  user_avatar?: string | null;
+  user_email?: string;
 }
 
 export interface InviteUserData {
@@ -34,7 +38,7 @@ export const useCompanyUserRoles = (companyId?: string) => {
 
     setIsLoading(true);
     try {
-      // Fetch all user roles for the company (using any until types are regenerated)
+      // Fetch all user roles for the company (without join to avoid relationship issues)
       const { data: roles, error } = await (supabase as any)
         .from('company_user_roles')
         .select('*')
@@ -42,10 +46,41 @@ export const useCompanyUserRoles = (companyId?: string) => {
 
       if (error) throw error;
 
-      setUserRoles(roles || []);
+      // Get unique user IDs to fetch profiles separately
+      const userIds = (roles || [])
+        .map((role: any) => role.user_id)
+        .filter((id: string) => id && !id.startsWith('pending-') && id.length === 36);
+
+      // Fetch profiles for real users
+      let profiles: any[] = [];
+      if (userIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', userIds);
+        
+        if (profilesError) {
+          console.warn('Error fetching profiles:', profilesError);
+        } else {
+          profiles = profilesData || [];
+        }
+      }
+
+      // Enrich roles with user data
+      const enrichedRoles = (roles || []).map((role: any) => {
+        const userProfile = profiles.find(p => p.user_id === role.user_id);
+        return {
+          ...role,
+          user_name: userProfile?.full_name || role.invited_email?.split('@')[0] || 'Usuario',
+          user_avatar: userProfile?.avatar_url || null,
+          user_email: role.invited_email || 'Sin email'
+        };
+      });
+
+      setUserRoles(enrichedRoles);
 
       // Find current user's role
-      const currentRole = roles?.find((role: any) => role.user_id === user.id);
+      const currentRole = enrichedRoles?.find((role: any) => role.user_id === user.id);
       setCurrentUserRole(currentRole || null);
     } catch (error) {
       console.error('Error loading user roles:', error);

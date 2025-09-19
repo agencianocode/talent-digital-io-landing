@@ -72,9 +72,10 @@ const revenueOptions = [
 ];
 
 export const CompanyProfileWizard: React.FC = () => {
-  const { company, updateCompany, createCompany, user } = useSupabaseAuth();
+  const { user } = useSupabaseAuth();
+  const { activeCompany: company, refreshCompanies } = useCompany();
+  const { updateCompany, createCompany } = useSupabaseAuth();
   const { industries } = useProfessionalData();
-  const { refreshCompanies } = useCompany();
   const [isLoading, setIsLoading] = useState(false);
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
@@ -99,6 +100,13 @@ export const CompanyProfileWizard: React.FC = () => {
       },
     }
   });
+
+  // Refresh company data on component mount
+  useEffect(() => {
+    if (user && !company) {
+      refreshCompanies();
+    }
+  }, [user, company, refreshCompanies]);
 
   // Update form when company data changes
   useEffect(() => {

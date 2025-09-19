@@ -72,6 +72,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
       setIsLoading(true);
       console.log('TeamOverview - Loading members for company:', companyId);
       
+      
       // Get company user roles (simple query)
       const { data: roles, error } = await supabase
         .from('company_user_roles')
@@ -104,7 +105,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
       }
 
       // Get real profiles for all users
-      let profiles = [];
+      let profiles: Array<{user_id: string, full_name: string | null, avatar_url: string | null}> = [];
       if (userIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
@@ -136,6 +137,12 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
       if (roles && roles.length > 0) {
         roles.forEach(role => {
           const userProfile = profiles.find(p => p.user_id === role.user_id);
+          
+          // Skip the owner role if it's already added as owner
+          if (role.role === 'owner' && company && role.user_id === company.user_id) {
+            return; // Skip duplicate owner
+          }
+          
           members.push({
             id: role.id,
             user_id: role.user_id,
@@ -170,13 +177,24 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
     }
   }, [companyId]);
 
+  // Auto-refresh every 30 seconds to check for invitation updates
+  useEffect(() => {
+    if (!companyId) return;
+
+    const interval = setInterval(() => {
+      loadTeamMembers();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [companyId]);
+
   // Quick invite user
   const onInvite = async (data: InviteFormData) => {
     try {
       // Generate a real UUID for pending invitations
       const tempUserId = crypto.randomUUID();
       
-      const { error } = await (supabase as any)
+      const { data: insertResult, error } = await (supabase as any)
         .from('company_user_roles')
         .insert({
           company_id: companyId,
@@ -185,15 +203,17 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
           role: data.role,
           status: 'pending',
           invited_by: user?.id
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Database error:', error);
         throw error;
       }
 
-      // Generate invitation link
-      const invitationLink = `${window.location.origin}/accept-invitation?id=${tempUserId}`;
+      // Generate invitation link using the actual record ID
+      const invitationLink = `${window.location.origin}/accept-invitation?id=${insertResult.id}`;
       
       // Copy link to clipboard
       try {
@@ -211,6 +231,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
       toast.error(`Error al enviar invitación: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
+
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -367,6 +388,13 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
                   </Form>
                 </DialogContent>
               </Dialog>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={loadTeamMembers}
+              >
+                🔄 Actualizar
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm"

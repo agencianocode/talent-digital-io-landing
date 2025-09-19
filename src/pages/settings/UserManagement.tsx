@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -28,10 +28,8 @@ import { useCompanyUserRoles, CompanyUserRole } from '@/hooks/useCompanyUserRole
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import PermissionDenied from '@/components/PermissionDenied';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
-  Plus, 
   MoreHorizontal, 
   Crown, 
   Shield, 
@@ -61,7 +59,6 @@ const UserManagement = () => {
 
   const {
     userRoles,
-    currentUserRole,
     isLoading,
     inviteUser,
     updateUserRole,
@@ -105,10 +102,12 @@ const UserManagement = () => {
   };
 
   const handleRemoveUser = async (userRole: CompanyUserRole) => {
-    if (confirm(`¿Estás seguro de que quieres remover a ${userRole.user_id} de la empresa?`)) {
+    const userName = userRole.user_name || userRole.user_email || 'este usuario';
+    if (confirm(`¿Estás seguro de que quieres remover a ${userName} de la empresa?`)) {
       await removeUser(userRole.id);
     }
   };
+
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -277,31 +276,18 @@ const UserManagement = () => {
               <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No hay usuarios</h3>
               <p className="text-muted-foreground mb-4">
-                Invita a usuarios para comenzar a colaborar en tu empresa.
+                No se encontraron usuarios para esta empresa.
               </p>
-              <Button onClick={() => setIsInviteDialogOpen(true)}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Invitar Primer Usuario
-              </Button>
               
-              {/* Temporary: Show example data */}
-              <div className="mt-8 p-4 border border-dashed border-gray-300 rounded-lg">
-                <h4 className="font-medium text-gray-700 mb-2">Ejemplo de usuarios (después de ejecutar SQL):</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <Crown className="h-4 w-4 text-yellow-500" />
-                    <span>👑 Owner - Propietario de la empresa</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-blue-500" />
-                    <span>⚙️ Admin - Puede crear oportunidades y gestionar aplicaciones</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-gray-500" />
-                    <span>👁️ Viewer - Solo puede ver aplicaciones y reportes</span>
-                  </div>
+              
+              {canManageUsers() && (
+                <div className="mt-4">
+                  <Button onClick={() => setIsInviteDialogOpen(true)}>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Invitar Primer Usuario
+                  </Button>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -312,14 +298,19 @@ const UserManagement = () => {
                 >
                   <div className="flex items-center gap-4">
                     <Avatar>
-                      <AvatarImage src={userRole.user_id} />
+                      <AvatarImage src={userRole.user_avatar || undefined} />
                       <AvatarFallback>
-                        {userRole.user_id.substring(0, 2).toUpperCase()}
+                        {userRole.user_name 
+                          ? userRole.user_name.substring(0, 2).toUpperCase()
+                          : userRole.user_email?.substring(0, 2).toUpperCase() || 'U'
+                        }
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{userRole.user_id}</h4>
+                        <h4 className="font-medium">
+                          {userRole.user_name || userRole.user_email || 'Usuario'}
+                        </h4>
                         <Badge variant={getRoleBadgeVariant(userRole.role)}>
                           <div className="flex items-center gap-1">
                             {getRoleIcon(userRole.role)}
@@ -329,7 +320,13 @@ const UserManagement = () => {
                         {getStatusIcon(userRole.status)}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Invitado el {new Date(userRole.invited_at).toLocaleDateString()}
+                        {userRole.user_email}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {userRole.accepted_at 
+                          ? `Aceptado el ${new Date(userRole.accepted_at).toLocaleDateString()}`
+                          : `Creado el ${new Date(userRole.created_at).toLocaleDateString()}`
+                        }
                       </p>
                     </div>
                   </div>
@@ -384,7 +381,7 @@ const UserManagement = () => {
           <DialogHeader>
             <DialogTitle>Cambiar Rol de Usuario</DialogTitle>
             <DialogDescription>
-              Selecciona el nuevo rol para {selectedUser?.user_id}
+              Selecciona el nuevo rol para {selectedUser?.user_name || selectedUser?.user_email || 'este usuario'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
