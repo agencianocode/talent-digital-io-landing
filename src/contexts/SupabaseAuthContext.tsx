@@ -5,6 +5,20 @@ import { logger } from '@/lib/logger';
 
 export type UserRole = 'talent' | 'business' | 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'admin';
 
+// Function to map database roles to frontend roles
+const mapDatabaseRoleToUserRole = (dbRole: string): UserRole => {
+  switch (dbRole) {
+    case 'business':
+      return 'freemium_business';
+    case 'talent':
+      return 'freemium_talent';
+    case 'admin':
+      return 'admin';
+    default:
+      return dbRole as UserRole;
+  }
+};
+
 // Utility functions to check user types
 export const isTalentRole = (role: UserRole | null): boolean => {
   return role === 'talent' || role === 'freemium_talent' || role === 'premium_talent';
@@ -165,7 +179,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       // Fetch company if user is business
       let company = null;
-      if (roleData?.role && isBusinessRole(roleData.role as UserRole)) {
+      const mappedRole = roleData?.role ? mapDatabaseRoleToUserRole(roleData.role as string) : 'freemium_talent';
+      if (isBusinessRole(mappedRole)) {
         const { data: companyData } = await supabase
           .from('companies')
           .select('*')
@@ -185,18 +200,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } : null;
       }
 
-      // Normalize roles from database to app roles
-      let normalizedRole: UserRole = 'freemium_talent';
-      if (roleData?.role) {
-        const dbRole = roleData.role as string;
-        if (dbRole === 'business') {
-          normalizedRole = 'freemium_business';
-        } else if (dbRole === 'talent') {
-          normalizedRole = 'freemium_talent';
-        } else {
-          normalizedRole = dbRole as UserRole;
-        }
-      }
+      // Use the already mapped role
+      const normalizedRole: UserRole = mappedRole;
 
       return {
         profile: profile || null,
@@ -254,11 +259,13 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
               const isBusinessType = pendingUserType === 'business';
               const hasBusinessRole = isBusinessRole(userData.role as UserRole);
               
-              console.log('Role check:', { 
+              console.log('Google OAuth role check:', { 
                 pendingUserType, 
                 isBusinessType, 
                 currentRole: userData.role, 
-                hasBusinessRole 
+                hasBusinessRole,
+                shouldFixToBusiness: isBusinessType && !hasBusinessRole,
+                shouldFixToTalent: !isBusinessType && hasBusinessRole
               });
               
               if (isBusinessType && !hasBusinessRole) {
@@ -419,7 +426,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Fix user role for Google OAuth users
   const fixUserRoleForGoogleAuth = async (userId: string, targetUserType: string) => {
     try {
-      const targetRole: UserRole = targetUserType === 'business' ? 'freemium_business' : 'freemium_talent';
+      // Use database role values, not frontend mapped values
+      const targetRole = targetUserType === 'business' ? 'business' : 'talent';
       
       console.log(`Fixing Google OAuth user role: ${userId} -> ${targetRole}`);
       
