@@ -19,28 +19,28 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
       {/* Position Title */}
       <div className="space-y-2">
         <Label htmlFor="title" className="text-sm font-medium text-gray-900">
-          Position Title <span className="text-red-500">*</span>
+          Título del Puesto <span className="text-red-500">*</span>
         </Label>
         <Input
           id="title"
-          placeholder="e.g., DM Setter for SaaS Company"
+          placeholder="ej., DM Setter para Empresa SaaS"
           value={data.title}
           onChange={(e) => onChange({ title: e.target.value })}
           className="h-12"
         />
         <p className="text-sm text-gray-500">
-          Enter the title of the position you're hiring for
+          Ingresa el título del puesto para el que estás contratando
         </p>
       </div>
 
       {/* Company Name */}
       <div className="space-y-2">
         <Label htmlFor="companyName" className="text-sm font-medium text-gray-900">
-          Company Name <span className="text-red-500">*</span>
+          Nombre de la Empresa <span className="text-red-500">*</span>
         </Label>
         <Input
           id="companyName"
-          placeholder="Your company name"
+          placeholder="Nombre de tu empresa"
           value={data.companyName}
           onChange={(e) => onChange({ companyName: e.target.value })}
           className="h-12"
@@ -50,11 +50,11 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
       {/* Company Description */}
       <div className="space-y-2">
         <Label htmlFor="companyDescription" className="text-sm font-medium text-gray-900">
-          Company Description <span className="text-red-500">*</span>
+          Descripción de la Empresa <span className="text-red-500">*</span>
         </Label>
         <Textarea
           id="companyDescription"
-          placeholder="Brief description of your company"
+          placeholder="Descripción breve de tu empresa"
           value={data.companyDescription}
           onChange={(e) => onChange({ companyDescription: e.target.value })}
           className="min-h-[120px] resize-none"

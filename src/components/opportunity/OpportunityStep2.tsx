@@ -74,23 +74,23 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
       <div className="space-y-4">
         <div>
           <Label className="text-sm font-medium text-gray-900">
-            Price Points <span className="text-red-500">*</span>
+            Puntos de Precio <span className="text-red-500">*</span>
           </Label>
           <p className="text-sm text-gray-500 mt-1">
-            Add pricing details for each program or service you offer
+            Agrega detalles de precios para cada programa o servicio que ofreces
           </p>
         </div>
 
         {/* Add New Price Point */}
         <div className="flex gap-3">
           <Input
-            placeholder="Program Name"
+            placeholder="Nombre del Programa"
             value={newPricePoint.programName}
             onChange={(e) => setNewPricePoint(prev => ({ ...prev, programName: e.target.value }))}
             className="flex-1"
           />
           <Input
-            placeholder="Price"
+            placeholder="Precio"
             value={newPricePoint.price}
             onChange={(e) => setNewPricePoint(prev => ({ ...prev, price: e.target.value }))}
             className="w-32"
@@ -105,7 +105,7 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
         </div>
 
         <p className="text-sm text-gray-500">
-          Click the + button after entering each price point to save it
+          Haz clic en el botón + después de ingresar cada punto de precio para guardarlo
         </p>
 
         {/* Price Points List */}
@@ -122,7 +122,7 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
                 onClick={() => removePricePoint(point.id)}
                 className="text-gray-500 hover:text-red-600"
               >
-                Remove
+                Eliminar
               </Button>
             </div>
           ))}
@@ -133,17 +133,17 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
       <div className="space-y-4">
         <div>
           <Label className="text-sm font-medium text-gray-900">
-            Company Online Presence <span className="text-red-500">*</span>
+            Presencia Online de la Empresa <span className="text-red-500">*</span>
           </Label>
           <p className="text-sm text-gray-500 mt-1">
-            Add a link to your website or most active social media profile (e.g., Instagram, YouTube, LinkedIn)
+            Agrega un enlace a tu sitio web o perfil de redes sociales más activo (ej., Instagram, YouTube, LinkedIn)
           </p>
         </div>
 
         {/* Add New Social Link */}
         <div className="flex gap-3">
           <Input
-            placeholder="Enter your website or social media URL (e.g., https://instagram.com/yourcompany)"
+            placeholder="Ingresa tu sitio web o URL de redes sociales (ej., https://instagram.com/tuempresa)"
             value={newSocialLink}
             onChange={(e) => setNewSocialLink(e.target.value)}
             className="flex-1"
@@ -153,7 +153,7 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
             onClick={addSocialLink}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            Add
+            Agregar
           </Button>
         </div>
 
@@ -169,7 +169,7 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
                 onClick={() => removeSocialLink(link.id)}
                 className="text-gray-500 hover:text-red-600"
               >
-                Remove
+                Eliminar
               </Button>
             </div>
           ))}

@@ -25,16 +25,16 @@ interface OpportunityStep3Props {
 }
 
 const roleTypes = [
-  'Direct Message Setter',
-  'Sales Representative',
-  'Customer Success Manager',
-  'Marketing Specialist',
-  'Content Creator',
-  'Virtual Assistant',
-  'Project Manager',
-  'Graphic Designer',
-  'Developer',
-  'Consultant'
+  'Setter de Mensajes Directos',
+  'Representante de Ventas',
+  'Gerente de Éxito del Cliente',
+  'Especialista en Marketing',
+  'Creador de Contenido',
+  'Asistente Virtual',
+  'Gerente de Proyecto',
+  'Diseñador Gráfico',
+  'Desarrollador',
+  'Consultor'
 ];
 
 const timezones = [
@@ -88,11 +88,11 @@ const OpportunityStep3 = ({ data, onChange }: OpportunityStep3Props) => {
       {/* Role Type */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-900">
-          Role Type <span className="text-red-500">*</span>
+          Tipo de Rol <span className="text-red-500">*</span>
         </Label>
         <Select value={data.roleType} onValueChange={(value) => onChange({ roleType: value })}>
           <SelectTrigger className="h-12">
-            <SelectValue placeholder="Select role type" />
+            <SelectValue placeholder="Selecciona el tipo de rol" />
           </SelectTrigger>
           <SelectContent>
             {roleTypes.map((type) => (
@@ -108,7 +108,7 @@ const OpportunityStep3 = ({ data, onChange }: OpportunityStep3Props) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-900">
-            Minimum OTE (Annual) <span className="text-red-500">*</span>
+            OTE Mínimo (Anual) <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
@@ -123,7 +123,7 @@ const OpportunityStep3 = ({ data, onChange }: OpportunityStep3Props) => {
         </div>
         <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-900">
-            Maximum OTE (Annual) <span className="text-red-500">*</span>
+            OTE Máximo (Anual) <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
@@ -138,17 +138,17 @@ const OpportunityStep3 = ({ data, onChange }: OpportunityStep3Props) => {
         </div>
       </div>
       <p className="text-sm text-gray-500">
-        Enter annual salary amounts. You can enter abbreviated values (e.g., 84 for $84,000) or full values (e.g., 84000).
+        Ingresa los montos de salario anual. Puedes ingresar valores abreviados (ej., 84 para $84,000) o valores completos (ej., 84000).
       </p>
 
       {/* Timezone */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-900">
-          Timezone <span className="text-red-500">*</span>
+          Zona Horaria <span className="text-red-500">*</span>
         </Label>
         <Select value={data.timezone} onValueChange={(value) => onChange({ timezone: value })}>
           <SelectTrigger className="h-12">
-            <SelectValue placeholder="Select timezone" />
+            <SelectValue placeholder="Selecciona la zona horaria" />
           </SelectTrigger>
           <SelectContent>
             {timezones.map((tz) => (
@@ -159,7 +159,7 @@ const OpportunityStep3 = ({ data, onChange }: OpportunityStep3Props) => {
           </SelectContent>
         </Select>
         <p className="text-sm text-gray-500">
-          Choose the primary timezone for this position
+          Elige la zona horaria principal para este puesto
         </p>
       </div>
 
@@ -172,18 +172,18 @@ const OpportunityStep3 = ({ data, onChange }: OpportunityStep3Props) => {
             onCheckedChange={(checked) => onChange({ workingHoursTBD: !!checked })}
           />
           <Label htmlFor="workingHoursTBD" className="text-sm font-medium text-gray-900">
-            Working Hours To Be Determined
+            Horarios de Trabajo por Determinar
           </Label>
         </div>
         <p className="text-sm text-gray-500">
-          Toggle this if working hours will be determined later
+          Activa esto si los horarios de trabajo se determinarán más tarde
         </p>
 
         {!data.workingHoursTBD && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-900">
-                Start Time <span className="text-red-500">*</span>
+                Hora de Inicio <span className="text-red-500">*</span>
               </Label>
               <Input
                 type="time"
@@ -194,7 +194,7 @@ const OpportunityStep3 = ({ data, onChange }: OpportunityStep3Props) => {
             </div>
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-900">
-                End Time <span className="text-red-500">*</span>
+                Hora de Fin <span className="text-red-500">*</span>
               </Label>
               <Input
                 type="time"
@@ -211,16 +211,16 @@ const OpportunityStep3 = ({ data, onChange }: OpportunityStep3Props) => {
       <div className="space-y-4">
         <div>
           <Label className="text-sm font-medium text-gray-900">
-            Requirements <span className="text-red-500">*</span>
+            Requisitos <span className="text-red-500">*</span>
           </Label>
           <p className="text-sm text-gray-500 mt-1">
-            Add key requirements for the role (e.g., "Must be fluent in English," "Must have 2+ years of experience")
+            Agrega requisitos clave para el rol (ej., "Debe ser fluido en inglés," "Debe tener 2+ años de experiencia")
           </p>
         </div>
 
         <div className="flex gap-3">
           <Input
-            placeholder="Add a requirement (press Enter or click +)"
+            placeholder="Agregar un requisito (presiona Enter o haz clic en +)"
             value={newRequirement}
             onChange={(e) => setNewRequirement(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
@@ -246,12 +246,12 @@ const OpportunityStep3 = ({ data, onChange }: OpportunityStep3Props) => {
                 onClick={() => removeRequirement(index)}
                 className="text-gray-500 hover:text-red-600"
               >
-                Remove
+                Eliminar
               </Button>
             </div>
           ))}
           {data.requirements.length === 0 && (
-            <p className="text-sm text-gray-400 italic">No requirements added yet.</p>
+            <p className="text-sm text-gray-400 italic">Aún no se han agregado requisitos.</p>
           )}
         </div>
       </div>
@@ -259,17 +259,17 @@ const OpportunityStep3 = ({ data, onChange }: OpportunityStep3Props) => {
       {/* Application Instructions */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-900">
-          Application Instructions <span className="text-red-500">*</span>
+          Instrucciones de Aplicación <span className="text-red-500">*</span>
         </Label>
         <Textarea
-          placeholder="Provide application instructions (e.g., interview scheduler, phone number, specific website)"
+          placeholder="Proporciona instrucciones de aplicación (ej., programador de entrevistas, número de teléfono, sitio web específico)"
           value={data.applicationInstructions}
           onChange={(e) => onChange({ applicationInstructions: e.target.value })}
           className="min-h-[100px] resize-none"
         />
         <p className="text-sm text-gray-500">
-          Share how applicants should apply (interview link, phone number, website, etc.). Note: Our platform has 
-          a built-in messaging system where applicants will also be able to message you directly after applying.
+          Comparte cómo deben aplicar los candidatos (enlace de entrevista, número de teléfono, sitio web, etc.). Nota: Nuestra plataforma tiene 
+          un sistema de mensajería integrado donde los candidatos también podrán enviarte mensajes directamente después de aplicar.
         </p>
       </div>
     </div>

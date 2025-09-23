@@ -38,23 +38,23 @@ interface MultiStepOpportunityFormProps {
 const steps = [
   {
     id: 1,
-    title: 'Company Details',
-    subtitle: 'Detalles de la Empresa'
+    title: 'Detalles de la Empresa',
+    subtitle: 'Company Details'
   },
   {
     id: 2,
-    title: 'Pricing & Links',
-    subtitle: 'Precios y Enlaces'
+    title: 'Precios y Enlaces',
+    subtitle: 'Pricing & Links'
   },
   {
     id: 3,
-    title: 'Role Requirements',
-    subtitle: 'Requisitos del Rol'
+    title: 'Requisitos del Rol',
+    subtitle: 'Role Requirements'
   },
   {
     id: 4,
-    title: 'Review & Submit',
-    subtitle: 'Revisar y Enviar'
+    title: 'Revisar y Enviar',
+    subtitle: 'Review & Submit'
   }
 ];
 
@@ -235,15 +235,15 @@ const MultiStepOpportunityForm = ({
             className="text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+            Volver al Dashboard
           </Button>
         </div>
         
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Create a New Job Posting
+          Crear Nueva Oportunidad de Trabajo
         </h1>
         <p className="text-gray-600">
-          Fill in the details below to create your job posting
+          Completa los detalles a continuación para crear tu publicación de trabajo
         </p>
       </div>
 
@@ -305,7 +305,7 @@ const MultiStepOpportunityForm = ({
           onClick={handleBack}
           className="px-6"
         >
-          {currentStep === 1 ? 'Back' : 'Back'}
+          {currentStep === 1 ? 'Atrás' : 'Atrás'}
         </Button>
         
         <Button
@@ -314,10 +314,10 @@ const MultiStepOpportunityForm = ({
           className="bg-blue-600 hover:bg-blue-700 px-6"
         >
           {isLoading 
-            ? 'Publishing...' 
+            ? 'Publicando...' 
             : currentStep === 4 
-            ? 'Post Job' 
-            : `Continue to ${steps[currentStep]?.title || 'Next Step'}`
+            ? 'Publicar Trabajo' 
+            : `Continuar a ${steps[currentStep]?.title || 'Siguiente Paso'}`
           }
         </Button>
       </div>
