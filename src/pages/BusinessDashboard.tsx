@@ -351,7 +351,13 @@ const BusinessDashboard = () => {
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Perfiles recomendados</h3>
-                  <Button variant="link" className="text-blue-600">Buscar Talento</Button>
+                  <Button 
+                    variant="link" 
+                    className="text-blue-600"
+                    onClick={() => navigate('/business-dashboard/talent-discovery')}
+                  >
+                    Buscar Talento
+                  </Button>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">

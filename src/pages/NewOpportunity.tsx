@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
@@ -12,9 +12,19 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon, X, ArrowLeft } from 'lucide-react';
+import { CalendarIcon, X, ArrowLeft, Clock, Save } from 'lucide-react';
 import { OpportunityTemplates, JobTemplate } from '@/components/OpportunityTemplates';
 import { toast } from 'sonner';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { 
+  categoryTemplates, 
+  contractTypes, 
+  durationUnits, 
+  locationTypes, 
+  salaryPeriods, 
+  experienceLevelOptions,
+  timezones 
+} from '@/lib/opportunityTemplates';
 
 interface OpportunityData {
   title: string;
@@ -32,12 +42,15 @@ interface OpportunityData {
   duration_unit: string;
   skills: string[];
   experience_levels: string[];
+  location_type: string; // NUEVO: remote, onsite, hybrid
   timezone_preference: string;
   deadline_date: Date | null;
   payment_type: string;
   commission_percentage: string;
+  salary_period: string; // NUEVO: hourly, weekly, monthly
   salary_is_public: boolean;
   is_academy_exclusive: boolean;
+  auto_save_data?: any; // NUEVO: para datos de autoguardado
 }
 
 const NewOpportunity = () => {
@@ -62,10 +75,12 @@ const NewOpportunity = () => {
     duration_unit: 'months',
     skills: [],
     experience_levels: [],
+    location_type: 'remote', // NUEVO: default remoto
     timezone_preference: '',
     deadline_date: null,
     payment_type: 'fixed',
     commission_percentage: '',
+    salary_period: 'monthly', // NUEVO: default mensual
     salary_is_public: true,
     is_academy_exclusive: false,
   });
@@ -74,6 +89,67 @@ const NewOpportunity = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [skillInput, setSkillInput] = useState('');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Auto-save functionality
+  const autoSaveToDatabase = useCallback(async (data: OpportunityData) => {
+    if (!user || !isBusinessRole(userRole) || !activeCompany) return;
+    
+    try {
+      const opportunityData = {
+        title: data.title,
+        description: data.description,
+        requirements: data.requirements,
+        category: data.category,
+        type: data.type,
+        location: data.location,
+        salary_min: data.salary_min ? parseInt(data.salary_min) : null,
+        salary_max: data.salary_max ? parseInt(data.salary_max) : null,
+        contract_type: data.contract_type,
+        duration_type: data.duration_type,
+        duration_value: data.duration_value ? parseInt(data.duration_value) : null,
+        duration_unit: data.duration_unit,
+        skills: data.skills,
+        experience_levels: data.experience_levels,
+        location_type: data.location_type || 'remote',
+        timezone_preference: data.timezone_preference,
+        deadline_date: data.deadline_date?.toISOString(),
+        payment_type: data.payment_type,
+        commission_percentage: data.commission_percentage ? parseFloat(data.commission_percentage) : null,
+        salary_period: data.salary_period || 'monthly',
+        salary_is_public: data.salary_is_public,
+        is_academy_exclusive: data.is_academy_exclusive,
+        status: 'draft' as 'draft' | 'active' | 'paused' | 'closed', // Auto-save siempre como borrador
+        auto_save_data: data
+      };
+
+      if (isEditing && id) {
+        await supabase
+          .from('opportunities')
+          .update(opportunityData)
+          .eq('id', id);
+      } else {
+        await supabase
+          .from('opportunities')
+          .insert({
+            ...opportunityData,
+            company_id: activeCompany.id,
+          });
+      }
+      
+      setLastSaved(new Date());
+    } catch (error) {
+      console.error('Auto-save error:', error);
+      throw error;
+    }
+  }, [user, userRole, activeCompany, isEditing, id]);
+
+  const { saveNow, isAutoSaveEnabled } = useAutoSave({
+    data: formData,
+    onSave: autoSaveToDatabase,
+    interval: 30000, // 30 segundos
+    enabled: true,
+    storageKey: `opportunity-draft-${id || 'new'}`
+  });
 
   // Load opportunity data if editing
   useEffect(() => {
@@ -106,10 +182,12 @@ const NewOpportunity = () => {
           duration_unit: data.duration_unit || 'months',
           skills: data.skills || [],
           experience_levels: data.experience_levels || [],
+          location_type: (data as any).location_type || 'remote',
           timezone_preference: data.timezone_preference || '',
           deadline_date: data.deadline_date ? new Date(data.deadline_date) : null,
           payment_type: data.payment_type || 'fixed',
           commission_percentage: data.commission_percentage?.toString() || '',
+          salary_period: (data as any).salary_period || 'monthly',
           salary_is_public: data.salary_is_public !== false,
           is_academy_exclusive: data.is_academy_exclusive || false,
         });
@@ -134,51 +212,6 @@ const NewOpportunity = () => {
     }));
   };
 
-  // Auto-save functionality
-  const autoSave = useCallback(async () => {
-    if (!activeCompany?.id || !user?.id) return;
-    
-    try {
-      const opportunityData = {
-        ...formData,
-        company_id: activeCompany.id,
-        deadline_date: formData.deadline_date?.toISOString().split('T')[0] || null,
-        auto_saved_at: new Date().toISOString(),
-        salary_min: formData.salary_min ? parseInt(formData.salary_min) : null,
-        salary_max: formData.salary_max ? parseInt(formData.salary_max) : null,
-        duration_value: formData.duration_value ? parseInt(formData.duration_value) : null,
-        commission_percentage: formData.commission_percentage ? parseInt(formData.commission_percentage) : null,
-        status: formData.status as 'draft' | 'active' | 'paused' | 'closed',
-      };
-
-      if (id) {
-        await supabase
-          .from('opportunities')
-          .update(opportunityData)
-          .eq('id', id);
-      } else if (formData.title.trim()) {
-        const { data } = await supabase
-          .from('opportunities')
-          .insert([opportunityData])
-          .select()
-          .single();
-        
-        if (data) {
-          navigate(`/business-dashboard/opportunities/${data.id}/edit`, { replace: true });
-        }
-      }
-      
-      setLastSaved(new Date());
-    } catch (error) {
-      console.error('Auto-save error:', error);
-    }
-  }, [formData, activeCompany?.id, user?.id, id, navigate]);
-
-  // Auto-save every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(autoSave, 30000);
-    return () => clearInterval(interval);
-  }, [autoSave]);
 
   const handleTemplateSelect = (template: JobTemplate) => {
     setFormData(prev => ({
@@ -207,6 +240,24 @@ const NewOpportunity = () => {
       handleInputChange('experience_levels', [...formData.experience_levels, level]);
     } else {
       handleInputChange('experience_levels', formData.experience_levels.filter(l => l !== level));
+    }
+  };
+
+  // Función para manejar el cambio de categoría y aplicar plantillas
+  const handleCategoryChange = (category: string) => {
+    handleInputChange('category', category);
+    
+    // Aplicar plantilla automáticamente si existe
+    const template = categoryTemplates[category];
+    if (template) {
+      setFormData(prev => ({
+        ...prev,
+        category: category,
+        skills: template.defaultSkills, // Aplicar skills por defecto
+        experience_levels: template.experienceLevels.slice(0, 2), // Aplicar primeros 2 niveles de experiencia
+        requirements: template.suggestedRequirements.join('\n• '), // Convertir a lista
+      }));
+      toast.success(`Plantilla aplicada para la categoría "${category}"`);
     }
   };
 
@@ -239,10 +290,12 @@ const NewOpportunity = () => {
         duration_unit: formData.duration_unit,
         skills: formData.skills,
         experience_levels: formData.experience_levels,
+        location_type: formData.location_type,
         timezone_preference: formData.timezone_preference,
         deadline_date: formData.deadline_date?.toISOString().split('T')[0] || null,
         payment_type: formData.payment_type,
-        commission_percentage: formData.commission_percentage ? parseInt(formData.commission_percentage) : null,
+        commission_percentage: formData.commission_percentage ? parseFloat(formData.commission_percentage) : null,
+        salary_period: formData.salary_period,
         salary_is_public: formData.salary_is_public,
         is_academy_exclusive: formData.is_academy_exclusive,
       };
@@ -279,15 +332,7 @@ const NewOpportunity = () => {
     }
   };
 
-  const jobCategories = [
-    'Ventas',
-    'Marketing', 
-    'Atención al cliente',
-    'Operaciones',
-    'Creativo',
-    'Tecnología y Automatizaciones',
-    'Soporte Profesional',
-  ];
+  const jobCategories = Object.keys(categoryTemplates);
 
   const jobTypes = [
     'Tiempo Completo',
@@ -297,27 +342,6 @@ const NewOpportunity = () => {
     'Prácticas',
   ];
 
-  const contractTypes = [
-    'Full Time',
-    'Part Time', 
-    'Freelance',
-    'Por proyecto',
-    'Por Comisión',
-    'Fijo + Comisión',
-  ];
-
-  const experienceLevels = [
-    { value: 'principiante', label: 'Principiante: 0-1 año' },
-    { value: 'intermedio', label: 'Intermedio: 1-3 años' },
-    { value: 'avanzado', label: 'Avanzado: 3-6 años' },
-    { value: 'experto', label: 'Experto: +6 años' },
-  ];
-
-  const durationUnits = [
-    { value: 'days', label: 'Días' },
-    { value: 'weeks', label: 'Semanas' },
-    { value: 'months', label: 'Meses' },
-  ];
 
   return (
     <div className="p-8">
@@ -334,11 +358,24 @@ const NewOpportunity = () => {
           <h1 className="text-3xl font-bold text-foreground">
             {isEditing ? 'Editar Oportunidad' : 'Crear Nueva Oportunidad'}
           </h1>
-          {lastSaved && (
-            <div className="text-sm text-muted-foreground">
-              Guardado automáticamente: {format(lastSaved, 'HH:mm')}
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {lastSaved && (
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Guardado automáticamente: {format(lastSaved, 'HH:mm')}
+              </div>
+            )}
+            {isAutoSaveEnabled && (
+              <div className="text-sm text-green-600 flex items-center gap-2">
+                <Save className="h-4 w-4" />
+                Auto-guardado activo
+              </div>
+            )}
+            <Button onClick={saveNow} variant="outline" size="sm">
+              <Save className="h-4 w-4 mr-2" />
+              Guardar ahora
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -353,13 +390,13 @@ const NewOpportunity = () => {
                   <label className="block text-sm font-medium mb-2">
                     Categoría *
                   </label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                  <Select value={formData.category} onValueChange={handleCategoryChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona una categoría" />
                     </SelectTrigger>
                     <SelectContent>
                       {jobCategories.map((category) => (
-                        <SelectItem key={category} value={category.toLowerCase()}>
+                        <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>
                       ))}
@@ -397,8 +434,26 @@ const NewOpportunity = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {contractTypes.map((type) => (
-                        <SelectItem key={type} value={type.toLowerCase().replace(/ /g, '_')}>
+                        <SelectItem key={type} value={type}>
                           {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Modalidad de trabajo *
+                  </label>
+                  <Select value={formData.location_type} onValueChange={(value) => handleInputChange('location_type', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona modalidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locationTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -490,14 +545,20 @@ const NewOpportunity = () => {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Zona horaria (opcional)
+                    Zona horaria preferida (opcional)
                   </label>
-                  <Input
-                    type="text"
-                    value={formData.timezone_preference}
-                    onChange={(e) => handleInputChange('timezone_preference', e.target.value)}
-                    placeholder="Ej: GMT-3, UTC-5"
-                  />
+                  <Select value={formData.timezone_preference} onValueChange={(value) => handleInputChange('timezone_preference', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar zona horaria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timezones.map((timezone) => (
+                        <SelectItem key={timezone} value={timezone}>
+                          {timezone}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -590,7 +651,7 @@ const NewOpportunity = () => {
                     Nivel de experiencia (puede seleccionar múltiples)
                   </label>
                   <div className="space-y-2">
-                    {experienceLevels.map((level) => (
+                      {experienceLevelOptions.map((level) => (
                       <div key={level.value} className="flex items-center space-x-2">
                         <Checkbox
                           id={level.value}
@@ -661,30 +722,50 @@ const NewOpportunity = () => {
                 </div>
 
                 {(formData.payment_type === 'fixed' || formData.payment_type === 'fixed_plus_commission') && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Salario mínimo (USD)
+                        </label>
+                        <Input
+                          type="number"
+                          value={formData.salary_min}
+                          onChange={(e) => handleInputChange('salary_min', e.target.value)}
+                          placeholder="2000"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Salario máximo (USD)
+                        </label>
+                        <Input
+                          type="number"
+                          value={formData.salary_max}
+                          onChange={(e) => handleInputChange('salary_max', e.target.value)}
+                          placeholder="5000"
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium mb-2">
-                        Salario mínimo (USD)
+                        Período de pago *
                       </label>
-                      <Input
-                        type="number"
-                        value={formData.salary_min}
-                        onChange={(e) => handleInputChange('salary_min', e.target.value)}
-                        placeholder="2000"
-                      />
+                      <Select value={formData.salary_period} onValueChange={(value) => handleInputChange('salary_period', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona período" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {salaryPeriods.map((period) => (
+                            <SelectItem key={period.value} value={period.value}>
+                              {period.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Salario máximo (USD)
-                      </label>
-                      <Input
-                        type="number"
-                        value={formData.salary_max}
-                        onChange={(e) => handleInputChange('salary_max', e.target.value)}
-                        placeholder="5000"
-                      />
-                    </div>
-                  </div>
+                  </>
                 )}
 
                 {(formData.payment_type === 'commission' || formData.payment_type === 'fixed_plus_commission') && (

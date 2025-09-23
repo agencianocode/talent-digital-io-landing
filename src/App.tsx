@@ -39,6 +39,10 @@ const NewOpportunity = lazy(() => import('./pages/NewOpportunity'));
 const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage'));
 const TalentSearchPage = lazy(() => import('./pages/TalentSearchPage'));
 const TalentProfilePage = lazy(() => import('./pages/TalentProfilePage'));
+const OpportunityApplicants = lazy(() => import('./pages/OpportunityApplicants'));
+const ApplicationDetail = lazy(() => import('./pages/ApplicationDetail'));
+const TalentDiscovery = lazy(() => import('./pages/TalentDiscovery'));
+const PublicTalentProfile = lazy(() => import('./pages/PublicTalentProfile'));
 const UserManagement = lazy(() => import('./pages/settings/UserManagement'));
 const CompanyDetails = lazy(() => import('./pages/CompanyDetails'));
 const BusinessProfile = lazy(() => import('./pages/BusinessProfile'));
@@ -227,6 +231,16 @@ function App() {
                             <NewOpportunity />
                           </Suspense>
                         } />
+                        <Route path="opportunities/:opportunityId/applicants" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <OpportunityApplicants />
+                          </Suspense>
+                        } />
+                        <Route path="applications/:applicationId" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <ApplicationDetail />
+                          </Suspense>
+                        } />
                         <Route path="applications" element={
                           <Suspense fallback={<LoadingSkeleton type="list" />}>
                             <ApplicationsPage />
@@ -235,6 +249,16 @@ function App() {
                         <Route path="talent" element={
                           <Suspense fallback={<LoadingSkeleton type="list" />}>
                             <TalentSearchPage />
+                          </Suspense>
+                        } />
+                        <Route path="talent-discovery" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <TalentDiscovery />
+                          </Suspense>
+                        } />
+                        <Route path="talent-profile/:talentId" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <PublicTalentProfile />
                           </Suspense>
                         } />
                         <Route path="talent-profile/:id" element={
