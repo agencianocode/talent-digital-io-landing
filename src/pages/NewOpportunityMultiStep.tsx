@@ -10,7 +10,7 @@ interface MultiStepFormData {
   // Step 1
   title: string;
   description: string;
-  skills: string;
+  skills: string[];
   tools: string;
   contractorsCount: number;
   usOnlyApplicants: boolean;
@@ -102,11 +102,13 @@ const NewOpportunityMultiStep = () => {
         }
       }
 
+      const selectedCategory: string = (formData.skills && formData.skills.length > 0) ? (formData.skills[0] ?? 'General') : 'General';
+      
       const opportunityData = {
         title: formData.title,
         description: formData.description,
-        requirements: `Habilidades: ${formData.skills}\nHerramientas: ${formData.tools}\nContratistas requeridos: ${formData.contractorsCount}`,
-        category: formData.skills || 'General',
+        requirements: `Habilidades: ${(formData.skills || []).join(', ')}\nHerramientas: ${formData.tools}\nContratistas requeridos: ${formData.contractorsCount}`,
+        category: selectedCategory,
         type: formData.projectType === 'ongoing' ? 'Trabajo Continuo' : 'Proyecto Una Vez',
         location: formData.preferredTimezone || 'Remoto',
         salary_min: salaryMin,
@@ -115,7 +117,7 @@ const NewOpportunityMultiStep = () => {
         duration_type: formData.projectType === 'ongoing' ? 'indefinite' : 'fixed',
         duration_value: null,
         duration_unit: 'months',
-        skills: formData.skills ? [formData.skills] : [],
+        skills: formData.skills,
         experience_levels: ['mid'],
         location_type: 'remote',
         timezone_preference: formData.preferredTimezone,

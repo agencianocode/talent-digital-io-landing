@@ -10,7 +10,7 @@ interface FormData {
   // Step 1
   title: string;
   description: string;
-  skills: string;
+  skills: string[];
   tools: string;
   contractorsCount: number;
   usOnlyApplicants: boolean;
@@ -61,7 +61,7 @@ const MultiStepOpportunityForm = ({
     // Step 1 defaults
     title: '',
     description: '',
-    skills: '',
+    skills: [],
     tools: '',
     contractorsCount: 1,
     usOnlyApplicants: false,
