@@ -36,6 +36,7 @@ const OpportunityDetail = lazy(() => import('./pages/OpportunityDetail'));
 // Lazy load páginas de business dashboard
 const OpportunitiesPage = lazy(() => import('./pages/OpportunitiesPage'));
 const NewOpportunity = lazy(() => import('./pages/NewOpportunity'));
+const NewOpportunityMultiStep = lazy(() => import('./pages/NewOpportunityMultiStep'));
 const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage'));
 const TalentSearchPage = lazy(() => import('./pages/TalentSearchPage'));
 const TalentProfilePage = lazy(() => import('./pages/TalentProfilePage'));
@@ -218,7 +219,7 @@ function App() {
                         } />
                         <Route path="opportunities/new" element={
                           <Suspense fallback={<LoadingSkeleton type="card" />}>
-                            <NewOpportunity />
+                            <NewOpportunityMultiStep />
                           </Suspense>
                         } />
                         <Route path="opportunities/:id" element={
