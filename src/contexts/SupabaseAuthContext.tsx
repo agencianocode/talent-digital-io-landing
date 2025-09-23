@@ -135,6 +135,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
+      
+      console.log('🔍 RAW ROLE FROM DB:', { roleData, error: _roleError, userId });
 
       // If profile or role is missing and this is a recent signup, try to recover
       if ((!profile || !roleData) && retryCount < 3) {
@@ -180,6 +182,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Fetch company if user is business
       let company = null;
       const mappedRole = roleData?.role ? mapDatabaseRoleToUserRole(roleData.role as string) : 'freemium_talent';
+      console.log('🔄 ROLE MAPPING:', { 
+        originalRole: roleData?.role, 
+        mappedRole, 
+        isBusinessRole: isBusinessRole(mappedRole) 
+      });
       if (isBusinessRole(mappedRole)) {
         const { data: companyData } = await supabase
           .from('companies')
@@ -444,13 +451,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       console.log('Existing role data:', existingRole);
 
-      // Update user role in database
+      // Update user role in database (use UPDATE not UPSERT since record exists)
       const { error } = await supabase
         .from('user_roles')
-        .upsert({ 
-          user_id: userId, 
-          role: targetRole 
-        });
+        .update({ role: targetRole })
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Error fixing user role:', error);
