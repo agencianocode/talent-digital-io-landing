@@ -110,8 +110,8 @@ const CompanyDetails = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header Section */}
-        <div className="bg-white rounded-lg shadow-sm border mb-6">
-          <div className="p-6">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 mb-8">
+          <div className="p-8">
             {/* Company Header */}
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Left Side - Company Info */}
@@ -196,20 +196,20 @@ const CompanyDetails = () => {
               </div>
               
               {/* Right Side - Action Buttons */}
-              <div className="flex flex-col gap-3 min-w-[200px]">
+              <div className="flex flex-col gap-3 min-w-[220px]">
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium"
                   onClick={() => navigate('/business-dashboard/profile')}
                 >
                   <Edit className="w-4 h-4 mr-2" />
                   Editar Perfil
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium">
                   <Camera className="w-4 h-4 mr-2" />
                   Carga fotos
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium">
                   <VideoIcon className="w-4 h-4 mr-2" />
                   Link a video de Youtube
                 </Button>
@@ -219,41 +219,41 @@ const CompanyDetails = () => {
         </div>
 
         {/* Tabs Section */}
-        <div className="bg-white rounded-lg shadow-sm border">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0">
+            <TabsList className="w-full justify-start rounded-t-xl border-b bg-gray-50 h-auto p-0">
               <TabsTrigger 
                 value="business-data" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent px-6 py-3"
+                className="rounded-tl-xl border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-4 font-medium"
               >
                 Datos del negocio
               </TabsTrigger>
               <TabsTrigger 
                 value="opportunities" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent px-6 py-3"
+                className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-4 font-medium"
               >
                 Oportunidades
               </TabsTrigger>
               <TabsTrigger 
                 value="services" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent px-6 py-3"
+                className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-4 font-medium"
               >
                 Servicios
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="business-data" className="mt-0">
-              <div className="p-6">
-                <Card>
-                  <CardContent className="p-6">
+              <div className="p-8">
+                <Card className="shadow-md border border-gray-200">
+                  <CardContent className="p-8">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Business Type */}
-                      <div className="lg:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="lg:col-span-2 mb-6">
+                        <label className="block text-sm font-semibold text-gray-800 mb-3">
                           Tipo de Negocio
                         </label>
                         <Select value={businessType} onValueChange={setBusinessType}>
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full h-12 border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             <SelectValue placeholder="Selecciona el tipo de negocio" />
                           </SelectTrigger>
                           <SelectContent>
@@ -268,34 +268,36 @@ const CompanyDetails = () => {
                       
                       {/* Form Fields */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-800 mb-3">
                           Dato 1
                         </label>
                         <Input
                           placeholder="Dato"
                           value={formData.dato1}
                           onChange={(e) => setFormData(prev => ({ ...prev, dato1: e.target.value }))}
+                          className="h-12 border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         />
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-800 mb-3">
                           Dato 1
                         </label>
                         <Input
                           placeholder="Escribe"
                           value={formData.dato2}
                           onChange={(e) => setFormData(prev => ({ ...prev, dato2: e.target.value }))}
+                          className="h-12 border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         />
                       </div>
                     </div>
                     
                     {/* Save Button */}
-                    <div className="flex justify-end mt-6">
+                    <div className="flex justify-end mt-8 pt-6 border-t border-gray-200">
                       <Button 
                         onClick={handleSave}
                         disabled={isLoading}
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-blue-600 hover:bg-blue-700 shadow-md px-8 py-3 text-base font-medium"
                       >
                         {isLoading ? 'Guardando...' : 'Guardar Cambios'}
                       </Button>
@@ -306,9 +308,9 @@ const CompanyDetails = () => {
             </TabsContent>
             
             <TabsContent value="opportunities" className="mt-0">
-              <div className="p-6">
-                <Card>
-                  <CardContent className="p-6">
+              <div className="p-8">
+                <Card className="shadow-md border border-gray-200">
+                  <CardContent className="p-8">
                     <div className="text-center py-8">
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
                         Gestión de Oportunidades
@@ -329,9 +331,9 @@ const CompanyDetails = () => {
             </TabsContent>
             
             <TabsContent value="services" className="mt-0">
-              <div className="p-6">
-                <Card>
-                  <CardContent className="p-6">
+              <div className="p-8">
+                <Card className="shadow-md border border-gray-200">
+                  <CardContent className="p-8">
                     <div className="text-center py-8">
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
                         Servicios Empresariales
