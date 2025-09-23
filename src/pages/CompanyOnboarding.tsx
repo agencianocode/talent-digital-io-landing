@@ -290,14 +290,9 @@ const CompanyOnboarding = () => {
         // Continuar aunque falle el refresh
       }
       
-      // Redirigir al dashboard de empresa con manejo de errores
-      try {
-        navigate('/business-dashboard');
-      } catch (navError) {
-        console.error('Navigation error:', navError);
-        // Fallback: recargar la página para ir al dashboard
-        window.location.href = '/business-dashboard';
-      }
+      // Continuar al paso 4 (Perfil Usuario) en lugar de ir al dashboard
+      console.log('Completing step 3, moving to step 4 (User Profile)');
+      setCurrentStep(4);
     } catch (error: any) {
       console.error('Error saving company data:', error);
       console.error('Error details:', {

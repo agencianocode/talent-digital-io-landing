@@ -244,25 +244,52 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           try {
             // Check if this is a Google OAuth signup
             const pendingUserType = localStorage.getItem('pending_user_type');
+            console.log('Auth state change - pendingUserType:', pendingUserType);
             
             let userData = await fetchUserData(session.user.id, pendingUserType || undefined);
+            console.log('Initial userData fetched:', { role: userData.role, profile: !!userData.profile });
             
             // If this is a Google OAuth user and role doesn't match expected type, fix it
             if (pendingUserType && userData.role) {
               const isBusinessType = pendingUserType === 'business';
               const hasBusinessRole = isBusinessRole(userData.role as UserRole);
               
+              console.log('Role check:', { 
+                pendingUserType, 
+                isBusinessType, 
+                currentRole: userData.role, 
+                hasBusinessRole 
+              });
+              
               if (isBusinessType && !hasBusinessRole) {
-                console.log('Fixing Google OAuth user role from talent to business');
-                await fixUserRoleForGoogleAuth(session.user.id, 'business');
-                // Refetch user data with corrected role
-                userData = await fetchUserData(session.user.id, 'business');
+                console.log('Role mismatch detected - fixing Google OAuth user role from talent to business');
+                const fixResult = await fixUserRoleForGoogleAuth(session.user.id, 'business');
+                if (!fixResult.error) {
+                  console.log('Role fixed successfully, refetching user data');
+                  // Refetch user data with corrected role
+                  userData = await fetchUserData(session.user.id, 'business');
+                  console.log('Refetched userData:', { role: userData.role, profile: !!userData.profile });
+                } else {
+                  console.error('Failed to fix role:', fixResult.error);
+                }
+              } else if (!isBusinessType && hasBusinessRole) {
+                console.log('Role mismatch detected - fixing Google OAuth user role from business to talent');
+                const fixResult = await fixUserRoleForGoogleAuth(session.user.id, 'talent');
+                if (!fixResult.error) {
+                  console.log('Role fixed successfully, refetching user data');
+                  // Refetch user data with corrected role
+                  userData = await fetchUserData(session.user.id, 'talent');
+                  console.log('Refetched userData:', { role: userData.role, profile: !!userData.profile });
+                } else {
+                  console.error('Failed to fix role:', fixResult.error);
+                }
               }
             }
             
             // Clear the pending user type after use
             if (pendingUserType) {
               localStorage.removeItem('pending_user_type');
+              console.log('Cleared pending_user_type from localStorage');
             }
             
             if (!isMounted) return;
@@ -370,11 +397,14 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const signUpWithGoogle = async (userType: 'business' | 'talent') => {
     // Store the user type in localStorage temporarily for after OAuth redirect
     localStorage.setItem('pending_user_type', userType);
+    console.log('Google OAuth: Stored pending_user_type as:', userType);
     
     // For Google OAuth, redirect directly to onboarding since Google verifies email automatically
     const redirectUrl = userType === 'business' 
       ? `${window.location.origin}/company-onboarding`
       : `${window.location.origin}/talent-onboarding`;
+    
+    console.log('Google OAuth: Redirect URL set to:', redirectUrl);
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -391,6 +421,21 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       const targetRole: UserRole = targetUserType === 'business' ? 'freemium_business' : 'freemium_talent';
       
+      console.log(`Fixing Google OAuth user role: ${userId} -> ${targetRole}`);
+      
+      // First, check if user_roles record exists
+      const { data: existingRole, error: checkError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing role:', checkError);
+      }
+
+      console.log('Existing role data:', existingRole);
+
       // Update user role in database
       const { error } = await supabase
         .from('user_roles')
@@ -404,6 +449,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return { error };
       }
 
+      console.log('User role updated successfully in database');
+
       // Update user metadata
       const { error: metadataError } = await supabase.auth.updateUser({
         data: {
@@ -413,9 +460,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (metadataError) {
         console.warn('Warning updating metadata:', metadataError);
+      } else {
+        console.log('User metadata updated successfully');
       }
 
-      console.log(`User role fixed: ${userId} -> ${targetRole}`);
+      console.log(`User role fixed successfully: ${userId} -> ${targetRole}`);
       return { error: null };
     } catch (error) {
       console.error('Error in fixUserRoleForGoogleAuth:', error);
