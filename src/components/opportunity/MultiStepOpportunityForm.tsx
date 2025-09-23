@@ -5,28 +5,30 @@ import { ArrowLeft, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OpportunityStep1 from './OpportunityStep1';
 import OpportunityStep2 from './OpportunityStep2';
-import OpportunityStep3 from './OpportunityStep3';
 
 interface FormData {
   // Step 1
   title: string;
-  companyName: string;
-  companyDescription: string;
+  description: string;
+  skills: string;
+  tools: string;
+  contractorsCount: number;
+  usOnlyApplicants: boolean;
+  preferredTimezone: string;
+  preferredLanguages: string[];
   
   // Step 2
-  pricePoints: Array<{ id: string; programName: string; price: string }>;
-  socialLinks: Array<{ id: string; url: string }>;
-  
-  // Step 3
-  roleType: string;
-  minimumOTE: string;
-  maximumOTE: string;
-  timezone: string;
-  workingHoursTBD: boolean;
-  startTime: string;
-  endTime: string;
-  requirements: string[];
-  applicationInstructions: string;
+  projectType: 'ongoing' | 'one-time';
+  paymentMethod: 'hourly' | 'weekly' | 'monthly';
+  hourlyMinRate: string;
+  hourlyMaxRate: string;
+  weeklyMinBudget: string;
+  weeklyMaxBudget: string;
+  monthlyMinBudget: string;
+  monthlyMaxBudget: string;
+  maxHoursPerWeek: number;
+  maxHoursPerMonth: number;
+  isMaxHoursOptional: boolean;
 }
 
 interface MultiStepOpportunityFormProps {
@@ -38,23 +40,13 @@ interface MultiStepOpportunityFormProps {
 const steps = [
   {
     id: 1,
-    title: 'Detalles de la Empresa',
-    subtitle: 'Company Details'
+    title: 'Detalles del trabajo',
+    subtitle: 'Job Details'
   },
   {
     id: 2,
-    title: 'Precios y Enlaces',
-    subtitle: 'Pricing & Links'
-  },
-  {
-    id: 3,
-    title: 'Requisitos del Rol',
-    subtitle: 'Role Requirements'
-  },
-  {
-    id: 4,
-    title: 'Revisar y Enviar',
-    subtitle: 'Review & Submit'
+    title: 'Presupuesto y duración',
+    subtitle: 'Budget & Duration'
   }
 ];
 
@@ -68,23 +60,26 @@ const MultiStepOpportunityForm = ({
   const [formData, setFormData] = useState<FormData>({
     // Step 1 defaults
     title: '',
-    companyName: '',
-    companyDescription: '',
+    description: '',
+    skills: '',
+    tools: '',
+    contractorsCount: 1,
+    usOnlyApplicants: false,
+    preferredTimezone: '',
+    preferredLanguages: [],
     
     // Step 2 defaults
-    pricePoints: [],
-    socialLinks: [],
-    
-    // Step 3 defaults
-    roleType: '',
-    minimumOTE: '',
-    maximumOTE: '',
-    timezone: '',
-    workingHoursTBD: false,
-    startTime: '09:00',
-    endTime: '17:00',
-    requirements: [],
-    applicationInstructions: '',
+    projectType: 'ongoing',
+    paymentMethod: 'hourly',
+    hourlyMinRate: '',
+    hourlyMaxRate: '',
+    weeklyMinBudget: '',
+    weeklyMaxBudget: '',
+    monthlyMinBudget: '',
+    monthlyMaxBudget: '',
+    maxHoursPerWeek: 20,
+    maxHoursPerMonth: 0,
+    isMaxHoursOptional: true,
     
     // Override with initial data
     ...initialData
@@ -97,15 +92,22 @@ const MultiStepOpportunityForm = ({
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return !!(formData.title && formData.companyName && formData.companyDescription);
+        return !!(formData.title && formData.description);
       case 2:
-        return formData.pricePoints.length > 0 && formData.socialLinks.length > 0;
-      case 3:
-        const requiredFields = formData.roleType && formData.minimumOTE && formData.maximumOTE && 
-                              formData.timezone && formData.requirements.length > 0 && 
-                              formData.applicationInstructions;
-        const timeValidation = formData.workingHoursTBD || (formData.startTime && formData.endTime);
-        return !!(requiredFields && timeValidation);
+        if (formData.projectType === 'one-time') {
+          return !!(formData.monthlyMinBudget && formData.monthlyMaxBudget);
+        } else {
+          switch (formData.paymentMethod) {
+            case 'hourly':
+              return !!(formData.hourlyMinRate && formData.hourlyMaxRate);
+            case 'weekly':
+              return !!(formData.weeklyMinBudget && formData.weeklyMaxBudget);
+            case 'monthly':
+              return !!(formData.monthlyMinBudget && formData.monthlyMaxBudget);
+            default:
+              return false;
+          }
+        }
       default:
         return true;
     }
@@ -113,7 +115,7 @@ const MultiStepOpportunityForm = ({
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      if (currentStep < 4) {
+      if (currentStep < 2) {
         setCurrentStep(currentStep + 1);
       } else {
         // Submit form
@@ -148,8 +150,13 @@ const MultiStepOpportunityForm = ({
           <OpportunityStep1
             data={{
               title: formData.title,
-              companyName: formData.companyName,
-              companyDescription: formData.companyDescription
+              description: formData.description,
+              skills: formData.skills,
+              tools: formData.tools,
+              contractorsCount: formData.contractorsCount,
+              usOnlyApplicants: formData.usOnlyApplicants,
+              preferredTimezone: formData.preferredTimezone,
+              preferredLanguages: formData.preferredLanguages
             }}
             onChange={updateFormData}
           />
@@ -158,66 +165,20 @@ const MultiStepOpportunityForm = ({
         return (
           <OpportunityStep2
             data={{
-              pricePoints: formData.pricePoints,
-              socialLinks: formData.socialLinks
+              projectType: formData.projectType,
+              paymentMethod: formData.paymentMethod,
+              hourlyMinRate: formData.hourlyMinRate,
+              hourlyMaxRate: formData.hourlyMaxRate,
+              weeklyMinBudget: formData.weeklyMinBudget,
+              weeklyMaxBudget: formData.weeklyMaxBudget,
+              monthlyMinBudget: formData.monthlyMinBudget,
+              monthlyMaxBudget: formData.monthlyMaxBudget,
+              maxHoursPerWeek: formData.maxHoursPerWeek,
+              maxHoursPerMonth: formData.maxHoursPerMonth,
+              isMaxHoursOptional: formData.isMaxHoursOptional
             }}
             onChange={updateFormData}
           />
-        );
-      case 3:
-        return (
-          <OpportunityStep3
-            data={{
-              roleType: formData.roleType,
-              minimumOTE: formData.minimumOTE,
-              maximumOTE: formData.maximumOTE,
-              timezone: formData.timezone,
-              workingHoursTBD: formData.workingHoursTBD,
-              startTime: formData.startTime,
-              endTime: formData.endTime,
-              requirements: formData.requirements,
-              applicationInstructions: formData.applicationInstructions
-            }}
-            onChange={updateFormData}
-          />
-        );
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Revisar y Enviar
-              </h3>
-              <p className="text-gray-600">
-                Revisa la información antes de publicar tu oportunidad
-              </p>
-            </div>
-            
-            {/* Summary content would go here */}
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h4 className="font-medium text-gray-900 mb-4">Resumen de la Oportunidad</h4>
-              <dl className="space-y-3">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Título del Puesto</dt>
-                  <dd className="text-sm text-gray-900">{formData.title}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Empresa</dt>
-                  <dd className="text-sm text-gray-900">{formData.companyName}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Tipo de Rol</dt>
-                  <dd className="text-sm text-gray-900">{formData.roleType}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Salario</dt>
-                  <dd className="text-sm text-gray-900">
-                    ${formData.minimumOTE} - ${formData.maximumOTE} anuales
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          </div>
         );
       default:
         return null;
@@ -315,9 +276,9 @@ const MultiStepOpportunityForm = ({
         >
           {isLoading 
             ? 'Publicando...' 
-            : currentStep === 4 
-            ? 'Publicar Trabajo' 
-            : `Continuar a ${steps[currentStep]?.title || 'Siguiente Paso'}`
+            : currentStep === 2 
+            ? 'Ahorrar' 
+            : 'Próximo'
           }
         </Button>
       </div>

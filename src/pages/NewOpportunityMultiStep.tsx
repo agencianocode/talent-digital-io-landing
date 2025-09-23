@@ -9,23 +9,26 @@ import MultiStepOpportunityForm from '@/components/opportunity/MultiStepOpportun
 interface MultiStepFormData {
   // Step 1
   title: string;
-  companyName: string;
-  companyDescription: string;
+  description: string;
+  skills: string;
+  tools: string;
+  contractorsCount: number;
+  usOnlyApplicants: boolean;
+  preferredTimezone: string;
+  preferredLanguages: string[];
   
   // Step 2
-  pricePoints: Array<{ id: string; programName: string; price: string }>;
-  socialLinks: Array<{ id: string; url: string }>;
-  
-  // Step 3
-  roleType: string;
-  minimumOTE: string;
-  maximumOTE: string;
-  timezone: string;
-  workingHoursTBD: boolean;
-  startTime: string;
-  endTime: string;
-  requirements: string[];
-  applicationInstructions: string;
+  projectType: 'ongoing' | 'one-time';
+  paymentMethod: 'hourly' | 'weekly' | 'monthly';
+  hourlyMinRate: string;
+  hourlyMaxRate: string;
+  weeklyMinBudget: string;
+  weeklyMaxBudget: string;
+  monthlyMinBudget: string;
+  monthlyMaxBudget: string;
+  maxHoursPerWeek: number;
+  maxHoursPerMonth: number;
+  isMaxHoursOptional: boolean;
 }
 
 const NewOpportunityMultiStep = () => {
@@ -73,27 +76,53 @@ const NewOpportunityMultiStep = () => {
     
     try {
       // Convertir los datos del formulario multi-paso al formato de base de datos
+      let salaryMin, salaryMax, salaryPeriod;
+      
+      if (formData.projectType === 'one-time') {
+        salaryMin = formData.monthlyMinBudget ? parseInt(formData.monthlyMinBudget) : null;
+        salaryMax = formData.monthlyMaxBudget ? parseInt(formData.monthlyMaxBudget) : null;
+        salaryPeriod = 'project';
+      } else {
+        switch (formData.paymentMethod) {
+          case 'hourly':
+            salaryMin = formData.hourlyMinRate ? parseInt(formData.hourlyMinRate) : null;
+            salaryMax = formData.hourlyMaxRate ? parseInt(formData.hourlyMaxRate) : null;
+            salaryPeriod = 'hourly';
+            break;
+          case 'weekly':
+            salaryMin = formData.weeklyMinBudget ? parseInt(formData.weeklyMinBudget) : null;
+            salaryMax = formData.weeklyMaxBudget ? parseInt(formData.weeklyMaxBudget) : null;
+            salaryPeriod = 'weekly';
+            break;
+          case 'monthly':
+            salaryMin = formData.monthlyMinBudget ? parseInt(formData.monthlyMinBudget) : null;
+            salaryMax = formData.monthlyMaxBudget ? parseInt(formData.monthlyMaxBudget) : null;
+            salaryPeriod = 'monthly';
+            break;
+        }
+      }
+
       const opportunityData = {
         title: formData.title,
-        description: `**Descripción de la empresa:**\n${formData.companyDescription}\n\n**Instrucciones de aplicación:**\n${formData.applicationInstructions}`,
-        requirements: formData.requirements.join('\n• '),
-        category: formData.roleType,
-        type: 'Trabajo Remoto',
-        location: formData.timezone,
-        salary_min: formData.minimumOTE ? parseInt(formData.minimumOTE) : null,
-        salary_max: formData.maximumOTE ? parseInt(formData.maximumOTE) : null,
-        contract_type: 'full_time',
-        duration_type: 'indefinite',
+        description: formData.description,
+        requirements: `Habilidades: ${formData.skills}\nHerramientas: ${formData.tools}\nContratistas requeridos: ${formData.contractorsCount}`,
+        category: formData.skills || 'General',
+        type: formData.projectType === 'ongoing' ? 'Trabajo Continuo' : 'Proyecto Una Vez',
+        location: formData.preferredTimezone || 'Remoto',
+        salary_min: salaryMin,
+        salary_max: salaryMax,
+        contract_type: formData.projectType === 'ongoing' ? 'ongoing' : 'project',
+        duration_type: formData.projectType === 'ongoing' ? 'indefinite' : 'fixed',
         duration_value: null,
         duration_unit: 'months',
-        skills: [],
+        skills: formData.skills ? [formData.skills] : [],
         experience_levels: ['mid'],
         location_type: 'remote',
-        timezone_preference: formData.timezone,
+        timezone_preference: formData.preferredTimezone,
         deadline_date: null,
-        payment_type: 'fixed',
+        payment_type: formData.paymentMethod === 'hourly' ? 'hourly' : 'fixed',
         commission_percentage: null,
-        salary_period: 'annual',
+        salary_period: salaryPeriod,
         salary_is_public: true,
         is_academy_exclusive: false,
         company_id: activeCompany.id,
@@ -121,8 +150,8 @@ const NewOpportunityMultiStep = () => {
   };
 
   const initialData = {
-    companyName: activeCompany.name,
-    companyDescription: activeCompany.description || '',
+    title: '',
+    description: activeCompany.description || '',
   };
 
   return (
