@@ -6,6 +6,7 @@ import { Home, LogOut, Briefcase, MessageSquare, User, Settings, Building, Menu,
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import CompanySwitcher from "@/components/CompanySwitcher";
+import HelpFeedbackModal from "@/components/HelpFeedbackModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,7 @@ const DashboardLayout = () => {
   const { user, signOut, profile } = useSupabaseAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -206,20 +208,13 @@ const DashboardLayout = () => {
               </span>
             </NavLink>
 
-            <NavLink
-              to="/help"
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-sm",
-                  isActive
-                    ? "bg-purple-100 text-purple-700"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                )
-              }
+            <button
+              onClick={() => setIsHelpModalOpen(true)}
+              className="flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-sm w-full text-left text-slate-600 hover:text-slate-900 hover:bg-slate-50"
             >
               <HelpCircle className="h-4 w-4" />
               <span style={{fontSize: '16px'}}>Ayuda / Feedback</span>
-            </NavLink>
+            </button>
           </div>
           
           {/* User Profile Dropdown */}
@@ -264,6 +259,12 @@ const DashboardLayout = () => {
           </div>
         </main>
       </div>
+
+      {/* Help & Feedback Modal */}
+      <HelpFeedbackModal 
+        isOpen={isHelpModalOpen} 
+        onClose={() => setIsHelpModalOpen(false)} 
+      />
     </div>
   );
 };
