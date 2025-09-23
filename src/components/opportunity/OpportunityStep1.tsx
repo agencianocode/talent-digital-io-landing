@@ -510,23 +510,52 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
         <Label className="text-sm font-medium text-gray-900">
           Habilidades
         </Label>
-        <div className="p-3 border border-gray-300 rounded-lg min-h-[120px] max-h-[200px] overflow-y-auto">
-          <div className="flex flex-wrap gap-2">
-            {skillsOptions.map((skill) => (
-              <Button
-                key={skill}
-                type="button"
-                variant={data.skills?.includes(skill) ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleSkillToggle(skill)}
-                disabled={!data.skills?.includes(skill) && (data.skills?.length || 0) >= 3}
-                className="text-xs h-8"
-              >
-                {skill}
-              </Button>
-            ))}
-          </div>
-        </div>
+        <Select 
+          value="" 
+          onValueChange={(value) => handleSkillToggle(value)}
+        >
+          <SelectTrigger className="h-12">
+            <SelectValue placeholder="e.g. UX Design, Web Development, or Copywriting">
+              {data.skills && data.skills.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {data.skills.map((skill, index) => (
+                    <span 
+                      key={skill}
+                      className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
+                    >
+                      {skill}
+                      {index < data.skills.length - 1 && ", "}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                "e.g. UX Design, Web Development, or Copywriting"
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px]">
+            {skillsOptions.map((skill) => {
+              const isSelected = data.skills?.includes(skill);
+              const isDisabled = !isSelected && (data.skills?.length || 0) >= 3;
+              
+              return (
+                <SelectItem 
+                  key={skill} 
+                  value={skill}
+                  disabled={isDisabled}
+                  className={isSelected ? "bg-blue-50 text-blue-900" : ""}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span>{skill}</span>
+                    {isSelected && (
+                      <span className="ml-2 text-blue-600">✓</span>
+                    )}
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
         <div className="text-xs text-gray-500 text-right">
           {data.skills?.length || 0} / 3
         </div>
