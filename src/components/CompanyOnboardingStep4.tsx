@@ -40,7 +40,7 @@ const CompanyOnboardingStep4 = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const locationRef = useRef<HTMLDivElement>(null);
 
-  // Países de LATAM con códigos y banderas
+  // Países de LATAM, USA y España con códigos y banderas
   const latinAmericaCountries = [
     { code: '+57', country: 'Colombia', flag: '🇨🇴' },
     { code: '+52', country: 'México', flag: '🇲🇽' },
@@ -60,7 +60,9 @@ const CompanyOnboardingStep4 = ({
     { code: '+505', country: 'Nicaragua', flag: '🇳🇮' },
     { code: '+1-809', country: 'República Dominicana', flag: '🇩🇴' },
     { code: '+53', country: 'Cuba', flag: '🇨🇺' },
-    { code: '+1-787', country: 'Puerto Rico', flag: '🇵🇷' }
+    { code: '+1-787', country: 'Puerto Rico', flag: '🇵🇷' },
+    { code: '+1', country: 'Estados Unidos', flag: '🇺🇸' },
+    { code: '+34', country: 'España', flag: '🇪🇸' }
   ];
 
   // Lista solo de países para el selector de país
@@ -188,7 +190,93 @@ const CompanyOnboardingStep4 = ({
     // Puerto Rico
     'San Juan, San Juan, Puerto Rico',
     'Bayamón, Bayamón, Puerto Rico',
-    'Carolina, Carolina, Puerto Rico'
+    'Carolina, Carolina, Puerto Rico',
+    
+    // Estados Unidos
+    'Nueva York, Nueva York, Estados Unidos',
+    'Los Ángeles, California, Estados Unidos',
+    'Chicago, Illinois, Estados Unidos',
+    'Houston, Texas, Estados Unidos',
+    'Phoenix, Arizona, Estados Unidos',
+    'Philadelphia, Pennsylvania, Estados Unidos',
+    'San Antonio, Texas, Estados Unidos',
+    'San Diego, California, Estados Unidos',
+    'Dallas, Texas, Estados Unidos',
+    'San José, California, Estados Unidos',
+    'Austin, Texas, Estados Unidos',
+    'Jacksonville, Florida, Estados Unidos',
+    'Fort Worth, Texas, Estados Unidos',
+    'Columbus, Ohio, Estados Unidos',
+    'Charlotte, North Carolina, Estados Unidos',
+    'San Francisco, California, Estados Unidos',
+    'Indianapolis, Indiana, Estados Unidos',
+    'Seattle, Washington, Estados Unidos',
+    'Denver, Colorado, Estados Unidos',
+    'Boston, Massachusetts, Estados Unidos',
+    'El Paso, Texas, Estados Unidos',
+    'Detroit, Michigan, Estados Unidos',
+    'Nashville, Tennessee, Estados Unidos',
+    'Portland, Oregon, Estados Unidos',
+    'Memphis, Tennessee, Estados Unidos',
+    'Oklahoma City, Oklahoma, Estados Unidos',
+    'Las Vegas, Nevada, Estados Unidos',
+    'Louisville, Kentucky, Estados Unidos',
+    'Baltimore, Maryland, Estados Unidos',
+    'Milwaukee, Wisconsin, Estados Unidos',
+    'Albuquerque, New Mexico, Estados Unidos',
+    'Tucson, Arizona, Estados Unidos',
+    'Fresno, California, Estados Unidos',
+    'Sacramento, California, Estados Unidos',
+    'Mesa, Arizona, Estados Unidos',
+    'Kansas City, Missouri, Estados Unidos',
+    'Atlanta, Georgia, Estados Unidos',
+    'Long Beach, California, Estados Unidos',
+    'Colorado Springs, Colorado, Estados Unidos',
+    'Raleigh, North Carolina, Estados Unidos',
+    'Miami, Florida, Estados Unidos',
+    'Virginia Beach, Virginia, Estados Unidos',
+    'Omaha, Nebraska, Estados Unidos',
+    'Oakland, California, Estados Unidos',
+    'Minneapolis, Minnesota, Estados Unidos',
+    'Tulsa, Oklahoma, Estados Unidos',
+    'Arlington, Texas, Estados Unidos',
+    'New Orleans, Louisiana, Estados Unidos',
+    'Wichita, Kansas, Estados Unidos',
+    
+    // España
+    'Madrid, Comunidad de Madrid, España',
+    'Barcelona, Cataluña, España',
+    'Valencia, Comunidad Valenciana, España',
+    'Sevilla, Andalucía, España',
+    'Zaragoza, Aragón, España',
+    'Málaga, Andalucía, España',
+    'Murcia, Región de Murcia, España',
+    'Palma, Islas Baleares, España',
+    'Las Palmas de Gran Canaria, Canarias, España',
+    'Bilbao, País Vasco, España',
+    'Alicante, Comunidad Valenciana, España',
+    'Córdoba, Andalucía, España',
+    'Valladolid, Castilla y León, España',
+    'Vigo, Galicia, España',
+    'Gijón, Asturias, España',
+    'L\'Hospitalet de Llobregat, Cataluña, España',
+    'Granada, Andalucía, España',
+    'Vitoria-Gasteiz, País Vasco, España',
+    'A Coruña, Galicia, España',
+    'Elche, Comunidad Valenciana, España',
+    'Oviedo, Asturias, España',
+    'Santa Cruz de Tenerife, Canarias, España',
+    'Badalona, Cataluña, España',
+    'Cartagena, Región de Murcia, España',
+    'Terrassa, Cataluña, España',
+    'Jerez de la Frontera, Andalucía, España',
+    'Sabadell, Cataluña, España',
+    'Móstoles, Comunidad de Madrid, España',
+    'Alcalá de Henares, Comunidad de Madrid, España',
+    'Pamplona, Navarra, España',
+    'Fuenlabrada, Comunidad de Madrid, España',
+    'Almería, Andalucía, España',
+    'Leganés, Comunidad de Madrid, España'
   ];
 
   useEffect(() => {
@@ -244,6 +332,12 @@ const CompanyOnboardingStep4 = ({
 
   const handleCountryChange = (value: string) => {
     setCountry(value);
+    
+    // Buscar el código de país correspondiente y actualizarlo automáticamente
+    const countryData = latinAmericaCountries.find(item => item.country === value);
+    if (countryData) {
+      setCountryCode(countryData.code);
+    }
   };
 
   // Función para buscar ciudades
