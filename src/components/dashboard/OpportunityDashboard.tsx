@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, TrendingUp, Users, Briefcase, Star, TestTube } from 'lucide-react';
+import { Plus, TrendingUp, Users, Briefcase, Star, TestTube, Bug } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { OpportunityMetrics } from './OpportunityMetrics';
 import { OpportunityList } from './OpportunityList';
 
@@ -21,13 +22,33 @@ export const OpportunityDashboard = () => {
     navigate('/business-dashboard/opportunities/new');
   };
 
+  const handleDebugOpportunities = async () => {
+    console.log('🔍 Debug: Checking opportunities...');
+    try {
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('❌ Error:', error);
+        return;
+      }
+      
+      console.log('📊 Total opportunities:', data?.length || 0);
+      console.log('📋 Opportunities:', data);
+    } catch (err) {
+      console.error('❌ Unexpected error:', err);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Panel de Oportunidades
+            Oportunidades Publicadas
           </h1>
           <p className="text-gray-600 mt-1">
             Gestiona y monitorea todas tus oportunidades de trabajo
@@ -43,9 +64,18 @@ export const OpportunityDashboard = () => {
             <TestTube className="h-4 w-4 mr-2" />
             {useMockData ? 'Datos de Prueba' : 'Datos Reales'}
           </Button>
-          <Button onClick={handleCreateOpportunity} className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            onClick={handleDebugOpportunities}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            <Bug className="w-3 h-3 mr-1" />
+            Debug
+          </Button>
+          <Button onClick={handleCreateOpportunity} className="bg-black hover:bg-gray-800 text-white">
             <Plus className="h-4 w-4 mr-2" />
-            Publicar Nueva Oportunidad
+            Publicar Oportunidad
           </Button>
         </div>
       </div>

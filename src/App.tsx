@@ -48,6 +48,7 @@ const PublicTalentProfile = lazy(() => import('./pages/PublicTalentProfile'));
 const UserManagement = lazy(() => import('./pages/settings/UserManagement'));
 const CompanyDetails = lazy(() => import('./pages/CompanyDetails'));
 const BusinessProfile = lazy(() => import('./pages/BusinessProfile'));
+const BusinessMarketplace = lazy(() => import('./pages/BusinessMarketplace'));
 const BusinessMessagesPage = lazy(() => import('./pages/BusinessMessagesPage'));
 const BusinessNotificationsPage = lazy(() => import('./pages/BusinessNotificationsPage'));
 const AcceptInvitation = lazy(() => import('./pages/AcceptInvitation'));
@@ -295,6 +296,11 @@ function App() {
                         <Route path="company-details" element={
                           <Suspense fallback={<LoadingSkeleton type="card" />}>
                             <CompanyDetails />
+                          </Suspense>
+                        } />
+                        <Route path="marketplace" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <BusinessMarketplace />
                           </Suspense>
                         } />
                         <Route path="profile" element={

@@ -84,7 +84,9 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
             experience_levels: (opp as any).experience_levels || ['Mid-level'],
             deadline_date: (opp as any).deadline_date || null,
             is_academy_exclusive: (opp as any).is_academy_exclusive || false,
-            commission_percentage: (opp as any).commission_percentage || null
+            commission_percentage: (opp as any).commission_percentage || null,
+            // Agregar información de la empresa
+            company_name: (opp as any).companies?.name || 'Mi Empresa'
           }));
 
           setOpportunitiesWithExtras(extendedOpps as OpportunityWithExtras[]);

@@ -1,344 +1,255 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { marketplaceService } from '@/services/marketplaceService';
+// import { SERVICE_CATEGORIES } from '@/lib/marketplace-categories';
+import { 
+  TalentService, 
+  ServiceRequest, 
+  ServiceFormData,
+  // ServiceRequestFormData
+} from '@/integrations/supabase/marketplace-types';
 
-export interface TalentService {
-  id: string;
-  talent_profile_id: string;
-  title: string;
-  description: string;
-  category: string;
-  price_min: number;
-  price_max: number;
-  currency: string;
-  delivery_time: string;
-  is_available: boolean;
-  skills_required?: string[];
-  portfolio_url?: string;
-  created_at: string;
-  updated_at: string;
+// Re-export types for backward compatibility
+export type { TalentService, ServiceRequest, ServiceFormData } from '@/integrations/supabase/marketplace-types';
+
+export interface UseTalentServicesReturn {
+  // Data
+  services: TalentService[];
+  serviceRequests: ServiceRequest[];
+  
+  // Loading states
+  isLoading: boolean;
+  isRequestsLoading: boolean;
+  error: string | null;
+  
+  // Actions
+  createService: (serviceData: ServiceFormData) => Promise<TalentService>;
+  updateService: (serviceId: string, serviceData: Partial<ServiceFormData>) => Promise<TalentService>;
+  deleteService: (serviceId: string) => Promise<void>;
+  duplicateService: (serviceId: string) => Promise<TalentService>;
+  toggleServiceAvailability: (serviceId: string, isAvailable: boolean) => Promise<void>;
+  
+  // Service requests
+  loadServiceRequests: () => Promise<void>;
+  updateRequestStatus: (requestId: string, status: 'pending' | 'accepted' | 'declined' | 'completed') => Promise<void>;
+  
+  // Refresh
+  refreshServices: () => Promise<void>;
+  refreshRequests: () => Promise<void>;
 }
 
-export interface CreateServiceData {
-  talent_profile_id: string;
-  title: string;
-  description: string;
-  category: string;
-  price_min: number;
-  price_max: number;
-  currency: string;
-  delivery_time: string;
-  is_available: boolean;
-  skills_required?: string[];
-  portfolio_url?: string;
-}
+export const useTalentServices = (): UseTalentServicesReturn => {
+  const [services, setServices] = useState<TalentService[]>([]);
+  const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRequestsLoading, setIsRequestsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export const useTalentServices = () => {
-  const { user } = useSupabaseAuth();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Fetch services for a specific talent profile
-  const fetchTalentServices = useCallback(async (talentProfileId: string): Promise<TalentService[]> => {
+  // Load user services
+  const loadServices = useCallback(async () => {
     try {
       setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .from('talent_services' as any)
-        .select('*')
-        .eq('talent_profile_id', talentProfileId)
-        .order('created_at', { ascending: false });
+      setError(null);
 
-      if (error) throw error;
-      
-      return (data as any[]) || [];
-    } catch (error) {
-      console.error('Error fetching talent services:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los servicios",
-        variant: "destructive",
-      });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  // Fetch services by user ID
-  const fetchServicesByUserId = useCallback(async (userId: string): Promise<TalentService[]> => {
-    try {
-      setIsLoading(true);
-      
-      // First get the talent profile for this user
-      const { data: talentProfile, error: profileError } = await supabase
-        .from('talent_profiles')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
-
-      if (profileError) {
-        console.warn('No talent profile found for user:', profileError);
-        return [];
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuario no autenticado');
       }
 
-      // Then get the services for this talent profile
-      const { data, error } = await supabase
-        .from('talent_services' as any)
-        .select('*')
-        .eq('talent_profile_id', talentProfile.id)
-        .order('created_at', { ascending: false });
+      const userServices = await marketplaceService.getUserServices(user.id);
+      setServices(userServices);
 
-      if (error) throw error;
-      
-      return (data as any[]) || [];
-    } catch (error) {
-      console.error('Error fetching services by user ID:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los servicios",
-        variant: "destructive",
-      });
-      return [];
+    } catch (err) {
+      console.error('Error loading services:', err);
+      setError(err instanceof Error ? err.message : 'Error al cargar los servicios');
+      setServices([]);
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, []);
 
-  // Create a new service
-  const createService = useCallback(async (serviceData: CreateServiceData): Promise<TalentService | null> => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "Debes estar autenticado para crear servicios",
-        variant: "destructive",
-      });
-      return null;
-    }
-
+  // Load service requests
+  const loadServiceRequests = useCallback(async () => {
     try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .from('talent_services' as any)
-        .insert(serviceData)
-        .select('*')
-        .single();
+      setIsRequestsLoading(true);
+      setError(null);
 
-      if (error) throw error;
-      
-      toast({
-        title: "Éxito",
-        description: "Servicio creado correctamente",
-      });
-      
-      return data as any;
-    } catch (error) {
-      console.error('Error creating service:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear el servicio",
-        variant: "destructive",
-      });
-      return null;
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      const requests = await marketplaceService.getServiceRequests(user.id);
+      setServiceRequests(requests);
+
+    } catch (err) {
+      console.error('Error loading service requests:', err);
+      setError(err instanceof Error ? err.message : 'Error al cargar las solicitudes');
+      setServiceRequests([]);
     } finally {
-      setIsLoading(false);
+      setIsRequestsLoading(false);
     }
-  }, [user, toast]);
+  }, []);
 
-  // Update an existing service
-  const updateService = useCallback(async (serviceId: string, serviceData: Partial<CreateServiceData>): Promise<TalentService | null> => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "Debes estar autenticado para actualizar servicios",
-        variant: "destructive",
-      });
-      return null;
-    }
+  // Load services on mount
+  useEffect(() => {
+    loadServices();
+  }, [loadServices]);
 
+  // Create service
+  const createService = useCallback(async (serviceData: ServiceFormData): Promise<TalentService> => {
     try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .from('talent_services' as any)
-        .update({
-          ...serviceData,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', serviceId)
-        .select('*')
-        .single();
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuario no autenticado');
+      }
 
-      if (error) throw error;
-      
-      toast({
-        title: "Éxito",
-        description: "Servicio actualizado correctamente",
-      });
-      
-      return data as any;
-    } catch (error) {
-      console.error('Error updating service:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el servicio",
-        variant: "destructive",
-      });
-      return null;
-    } finally {
-      setIsLoading(false);
+      const newService = await marketplaceService.createService(user.id, serviceData);
+      setServices(prev => [newService, ...prev]);
+      return newService;
+
+    } catch (err) {
+      console.error('Error creating service:', err);
+      throw err;
     }
-  }, [user, toast]);
+  }, []);
 
-  // Delete a service
-  const deleteService = useCallback(async (serviceId: string): Promise<boolean> => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "Debes estar autenticado para eliminar servicios",
-        variant: "destructive",
-      });
-      return false;
-    }
-
+  // Update service
+  const updateService = useCallback(async (serviceId: string, serviceData: Partial<ServiceFormData>): Promise<TalentService> => {
     try {
-      setIsLoading(true);
-      
-      const { error } = await supabase
-        .from('talent_services' as any)
-        .delete()
-        .eq('id', serviceId);
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuario no autenticado');
+      }
 
-      if (error) throw error;
-      
-      toast({
-        title: "Éxito",
-        description: "Servicio eliminado correctamente",
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting service:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el servicio",
-        variant: "destructive",
-      });
-      return false;
-    } finally {
-      setIsLoading(false);
+      const updatedService = await marketplaceService.updateService(serviceId, user.id, serviceData);
+      setServices(prev => prev.map(service => 
+        service.id === serviceId ? updatedService : service
+      ));
+      return updatedService;
+
+    } catch (err) {
+      console.error('Error updating service:', err);
+      throw err;
     }
-  }, [user, toast]);
+  }, []);
+
+  // Delete service
+  const deleteService = useCallback(async (serviceId: string): Promise<void> => {
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      await marketplaceService.deleteService(serviceId, user.id);
+      setServices(prev => prev.filter(service => service.id !== serviceId));
+
+    } catch (err) {
+      console.error('Error deleting service:', err);
+      throw err;
+    }
+  }, []);
+
+  // Duplicate service
+  const duplicateService = useCallback(async (serviceId: string): Promise<TalentService> => {
+    try {
+      const originalService = services.find(s => s.id === serviceId);
+      if (!originalService) {
+        throw new Error('Servicio no encontrado');
+      }
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      const duplicateData: ServiceFormData = {
+        title: `${originalService.title} (Copia)`,
+        description: originalService.description,
+        category: originalService.category,
+        price: originalService.price,
+        currency: originalService.currency,
+        delivery_time: originalService.delivery_time,
+        location: originalService.location,
+        is_available: false, // Start as unavailable
+        portfolio_url: originalService.portfolio_url,
+        demo_url: originalService.demo_url,
+        tags: originalService.tags
+      };
+
+      const newService = await marketplaceService.createService(user.id, duplicateData);
+      setServices(prev => [newService, ...prev]);
+      return newService;
+
+    } catch (err) {
+      console.error('Error duplicating service:', err);
+      throw err;
+    }
+  }, [services]);
 
   // Toggle service availability
-  const toggleServiceAvailability = useCallback(async (serviceId: string, isAvailable: boolean): Promise<boolean> => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "Debes estar autenticado para cambiar la disponibilidad",
-        variant: "destructive",
-      });
-      return false;
-    }
-
+  const toggleServiceAvailability = useCallback(async (serviceId: string, isAvailable: boolean): Promise<void> => {
     try {
-      setIsLoading(true);
-      
-      const { error } = await supabase
-        .from('talent_services' as any)
-        .update({
-          is_available: isAvailable,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', serviceId);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Éxito",
-        description: `Servicio ${isAvailable ? 'disponible' : 'no disponible'}`,
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('Error toggling service availability:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo cambiar la disponibilidad del servicio",
-        variant: "destructive",
-      });
-      return false;
-    } finally {
-      setIsLoading(false);
+      await updateService(serviceId, { is_available: isAvailable });
+    } catch (err) {
+      console.error('Error toggling service availability:', err);
+      throw err;
     }
-  }, [user, toast]);
+  }, [updateService]);
 
-  // Get available services by category
-  const getServicesByCategory = useCallback(async (category: string): Promise<TalentService[]> => {
+  // Update request status
+  const updateRequestStatus = useCallback(async (requestId: string, status: 'pending' | 'accepted' | 'declined' | 'completed'): Promise<void> => {
     try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .from('talent_services' as any)
-        .select('*')
-        .eq('category', category)
-        .eq('is_available', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      return (data as any[]) || [];
-    } catch (error) {
-      console.error('Error fetching services by category:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los servicios",
-        variant: "destructive",
-      });
-      return [];
-    } finally {
-      setIsLoading(false);
+      await marketplaceService.updateRequestStatus(requestId, status);
+      setServiceRequests(prev => prev.map(request => 
+        request.id === requestId ? { ...request, status } : request
+      ));
+    } catch (err) {
+      console.error('Error updating request status:', err);
+      throw err;
     }
-  }, [toast]);
+  }, []);
 
-  // Get all available services
-  const getAllAvailableServices = useCallback(async (): Promise<TalentService[]> => {
-    try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .from('talent_services' as any)
-        .select('*')
-        .eq('is_available', true)
-        .order('created_at', { ascending: false });
+  // Refresh services
+  const refreshServices = useCallback(async () => {
+    await loadServices();
+  }, [loadServices]);
 
-      if (error) throw error;
-      
-      return (data as any[]) || [];
-    } catch (error) {
-      console.error('Error fetching all available services:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los servicios",
-        variant: "destructive",
-      });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+  // Refresh requests
+  const refreshRequests = useCallback(async () => {
+    await loadServiceRequests();
+  }, [loadServiceRequests]);
 
   return {
+    // Data
+    services,
+    serviceRequests,
+    
+    // Loading states
     isLoading,
-    fetchTalentServices,
-    fetchServicesByUserId,
+    isRequestsLoading,
+    error,
+    
+    // Actions
     createService,
     updateService,
     deleteService,
+    duplicateService,
     toggleServiceAvailability,
-    getServicesByCategory,
-    getAllAvailableServices,
+    
+    // Service requests
+    loadServiceRequests,
+    updateRequestStatus,
+    
+    // Refresh
+    refreshServices,
+    refreshRequests
   };
 };

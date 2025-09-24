@@ -40,7 +40,7 @@ interface SupabaseApplication {
 }
 
 export const useSupabaseOpportunities = () => {
-  const { user, userRole, isAuthenticated, profile } = useSupabaseAuth();
+  const { user, userRole, isAuthenticated, profile, company } = useSupabaseAuth();
   const [opportunities, setOpportunities] = useState<SupabaseOpportunity[]>([]);
   const [applications, setApplications] = useState<SupabaseApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,27 +62,56 @@ export const useSupabaseOpportunities = () => {
   const fetchOpportunities = useCallback(async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select(`
-          *,
-          companies (
-            name,
-            logo_url
-          )
-        `)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
+      console.log('🔍 Fetching opportunities for:', { userRole, companyId: company?.id, isAuthenticated });
+      
+      if (isTalentRole(userRole)) {
+        // Para talentos: solo oportunidades activas
+        const { data, error } = await supabase
+          .from('opportunities')
+          .select(`
+            *,
+            companies (
+              name,
+              logo_url
+            )
+          `)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setOpportunities(data || []);
+        if (error) throw error;
+        console.log('📊 Talent opportunities loaded:', data?.length || 0);
+        setOpportunities(data || []);
+      } else {
+        // Para empresas: todas las oportunidades de la empresa
+        if (!company?.id) {
+          console.log('❌ No company ID found for business user');
+          setOpportunities([]);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('opportunities')
+          .select(`
+            *,
+            companies (
+              name,
+              logo_url
+            )
+          `)
+          .eq('company_id', company.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        console.log('🏢 Business opportunities loaded:', data?.length || 0, 'for company:', company.id);
+        setOpportunities(data || []);
+      }
     } catch (err) {
       logger.error('Error fetching opportunities:', err);
       setError(err instanceof Error ? err.message : 'Error fetching opportunities');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [userRole, company?.id]);
 
   // Fetch user applications
   const fetchUserApplications = useCallback(async () => {

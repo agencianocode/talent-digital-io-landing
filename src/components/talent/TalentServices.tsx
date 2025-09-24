@@ -14,7 +14,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTalentServices, TalentService } from '@/hooks/useTalentServices';
+import { TalentService } from '@/hooks/useTalentServices';
+import { marketplaceService } from '@/services/marketplaceService';
 
 // TalentService interface is now imported from the hook
 
@@ -32,7 +33,7 @@ export const TalentServices = ({
   onContact 
 }: TalentServicesProps) => {
   const [services, setServices] = useState<TalentService[]>([]);
-  const { fetchServicesByUserId, isLoading } = useTalentServices();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchServices();
@@ -40,11 +41,14 @@ export const TalentServices = ({
 
   const fetchServices = async () => {
     try {
-      const fetchedServices = await fetchServicesByUserId(userId);
+      setIsLoading(true);
+      const fetchedServices = await marketplaceService.getUserServices(userId);
       setServices(fetchedServices);
     } catch (error) {
       console.error('Error fetching services:', error);
       toast.error('Error al cargar los servicios');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -159,7 +163,7 @@ export const TalentServices = ({
                 <div className="flex items-center gap-2 text-sm">
                   <DollarSign className="h-4 w-4 text-green-600" />
                   <span className="font-medium">
-                    ${service.price_min.toLocaleString()} - ${service.price_max.toLocaleString()} {service.currency}
+                    ${service.price.toLocaleString()} {service.currency}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">

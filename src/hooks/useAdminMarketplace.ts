@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+
 
 interface MarketplaceFilters {
   searchQuery: string;
@@ -192,8 +192,8 @@ export const useAdminMarketplace = () => {
     // Price range filter
     if (filters.priceRange !== 'all') {
       const [minStr, maxStr] = filters.priceRange.split('-');
-      const min = parseFloat(minStr);
-      const max = maxStr === '5000+' ? Infinity : parseFloat(maxStr);
+      const min = parseFloat(minStr || '0');
+      const max = maxStr === '5000+' ? Infinity : parseFloat(maxStr || '0');
       filtered = filtered.filter(service => {
         if (max === Infinity) {
           return service.price >= min;

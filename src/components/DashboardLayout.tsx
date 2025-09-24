@@ -4,7 +4,7 @@ import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Home, LogOut, Briefcase, MessageSquare, User, Settings, Building, Menu, X, ChevronDown, Search, HelpCircle, GraduationCap, Bell } from "lucide-react";
+import { Home, LogOut, Briefcase, MessageSquare, User, Settings, Menu, X, ChevronDown, Search, HelpCircle, GraduationCap, Bell, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import CompanySwitcher from "@/components/CompanySwitcher";
@@ -50,7 +50,7 @@ const DashboardLayout = () => {
     { to: "/business-dashboard/opportunities", icon: Briefcase, label: "Mis Oportunidades" },
     { to: "/business-dashboard/talent", icon: Search, label: "Buscar Talento" },
     { to: "/business-dashboard/messages", icon: MessageSquare, label: "Mensajes", hasBadge: true },
-    { to: "/business-dashboard/marketplace", icon: Building, label: "Marketplace" },
+    { to: "/business-dashboard/marketplace", icon: Store, label: "Marketplace" },
     { to: "/business-dashboard/academy", icon: GraduationCap, label: "Mi Academia" },
   ];
 

@@ -104,7 +104,7 @@ export const useAdminOpportunities = () => {
           skills: opportunity.skills || [],
           experience_levels: opportunity.experience_levels || [],
           is_active: opportunity.is_active || false,
-          status: opportunity.status,
+          status: opportunity.status || 'draft',
           created_at: opportunity.created_at,
           updated_at: opportunity.updated_at,
           company_id: opportunity.company_id,
