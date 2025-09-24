@@ -1,7 +1,30 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const resendApiKey = Deno.env.get("RESEND_API_KEY");
+
+// Use fetch for email sending instead of Resend SDK
+const sendEmail = async (to: string, subject: string, html: string) => {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${resendApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'TalentFlow <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Email sending failed: ${error}`);
+  }
+
+  return response.json();
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,11 +54,10 @@ const handler = async (req: Request): Promise<Response> => {
     const acceptUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/accept-invitation?id=${invitation_id}`;
     const declineUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/decline-invitation?id=${invitation_id}`;
 
-    const emailResponse = await resend.emails.send({
-      from: "TalentFlow <onboarding@resend.dev>",
-      to: [email],
-      subject: `Invitación para unirte a la empresa como ${role}`,
-      html: `
+    const emailResponse = await sendEmail(
+      email,
+      `Invitación para unirte a la empresa como ${role}`,
+      `
         <!DOCTYPE html>
         <html>
         <head>
@@ -88,8 +110,8 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         </body>
         </html>
-      `,
-    });
+      `
+    );
 
     console.log("Email sent successfully:", emailResponse);
 
