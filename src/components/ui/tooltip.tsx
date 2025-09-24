@@ -7,6 +7,23 @@ interface TooltipProps {
   disabled?: boolean;
 }
 
+interface TooltipProviderProps {
+  children: React.ReactNode;
+  delayDuration?: number;
+}
+
+interface TooltipTriggerProps {
+  children: React.ReactNode;
+  asChild?: boolean;
+}
+
+interface TooltipContentProps {
+  children: React.ReactNode;
+  side?: string;
+  align?: string;
+  hidden?: boolean;
+}
+
 export const Tooltip: React.FC<TooltipProps> = ({ 
   content, 
   children, 
@@ -51,4 +68,17 @@ export const Tooltip: React.FC<TooltipProps> = ({
       )}
     </div>
   );
+};
+
+// Export additional components for compatibility with existing code
+export const TooltipProvider: React.FC<TooltipProviderProps> = ({ children }) => {
+  return <>{children}</>;
+};
+
+export const TooltipTrigger: React.FC<TooltipTriggerProps> = ({ children }) => {
+  return <>{children}</>;
+};
+
+export const TooltipContent: React.FC<TooltipContentProps> = ({ children }) => {
+  return <>{children}</>;
 };
