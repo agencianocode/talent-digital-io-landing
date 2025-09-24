@@ -15,6 +15,7 @@ export const OpportunityDashboard = () => {
   const [useMockData, setUseMockData] = useState(false);
 
   const handleApplicationsView = (opportunityId: string) => {
+    console.log('🔍 Navigating to applicants for opportunity:', opportunityId);
     navigate(`/business-dashboard/opportunities/${opportunityId}/applicants`);
   };
 
