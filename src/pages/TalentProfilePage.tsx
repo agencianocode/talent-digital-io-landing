@@ -4,27 +4,32 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Mail, Phone, Linkedin, Globe, Calendar, Briefcase, Star, GraduationCap, Clock } from "lucide-react";
+import { ArrowLeft, Phone, Linkedin, Globe, Calendar, Briefcase, Star, GraduationCap, Clock, MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { TalentServices } from "@/components/talent/TalentServices";
+import { useMessages } from "@/hooks/useMessages";
 
 interface TalentProfile {
   id: string;
   user_id: string;
-  title: string;
-  specialty: string;
-  bio: string;
-  skills: string[];
-  years_experience: number;
-  availability: string;
-  linkedin_url: string;
-  portfolio_url: string;
-  hourly_rate_min: number;
-  hourly_rate_max: number;
-  currency: string;
+  title: string | null;
+  specialty: string | null;
+  bio: string | null;
+  skills: string[] | null;
+  years_experience: number | null;
+  availability: string | null;
+  linkedin_url: string | null;
+  portfolio_url: string | null;
+  hourly_rate_min: number | null;
+  hourly_rate_max: number | null;
+  currency: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -32,11 +37,11 @@ interface TalentProfile {
 interface UserProfile {
   id: string;
   user_id: string;
-  full_name: string;
-  avatar_url: string;
-  phone: string;
-  position?: string;
-  linkedin?: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  position?: string | null;
+  linkedin?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -50,6 +55,12 @@ const TalentProfilePage = () => {
   const [education, setEducation] = useState<any[]>([]);
   const [workExperience, setWorkExperience] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  
+  // Use the real messaging hook
+  const { sendMessage, getOrCreateConversation } = useMessages();
 
   useEffect(() => {
     if (id) {
@@ -66,7 +77,7 @@ const TalentProfilePage = () => {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', id)
+        .eq('user_id', id || '')
         .single();
 
       if (profileError) throw profileError;
@@ -76,7 +87,7 @@ const TalentProfilePage = () => {
       const { data: talentData, error: talentError } = await supabase
         .from('talent_profiles')
         .select('*')
-        .eq('user_id', id)
+        .eq('user_id', id || '')
         .single();
 
       if (talentError && talentError.code !== 'PGRST116') {
@@ -124,8 +135,44 @@ const TalentProfilePage = () => {
   };
 
   const handleContact = () => {
-    // TODO: Implement contact functionality
-    toast.info('Funcionalidad de contacto próximamente');
+    setShowContactModal(true);
+  };
+
+  const handleSendMessage = async () => {
+    if (!contactMessage.trim()) {
+      toast.error('Por favor escribe un mensaje');
+      return;
+    }
+
+    if (!id) {
+      toast.error('Error: ID de usuario no disponible');
+      return;
+    }
+
+    setIsSendingMessage(true);
+    try {
+      // Get or create conversation
+      const conversationId = await getOrCreateConversation(id);
+      
+      // Send message
+      const result = await sendMessage({
+        conversation_id: conversationId,
+        recipient_id: id,
+        message_type: 'text',
+        content: contactMessage.trim(),
+      });
+      
+      if (result) {
+        toast.success('Mensaje enviado exitosamente');
+        setShowContactModal(false);
+        setContactMessage("");
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Error al enviar el mensaje');
+    } finally {
+      setIsSendingMessage(false);
+    }
   };
 
   const handleBack = () => {
@@ -201,12 +248,12 @@ const TalentProfilePage = () => {
           <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
-                  <AvatarImage src={userProfile.avatar_url} />
-                  <AvatarFallback className="text-lg">
-                    {userProfile.full_name?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                  <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
+                    <AvatarImage src={userProfile.avatar_url || undefined} />
+                    <AvatarFallback className="text-lg">
+                      {userProfile.full_name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
                 <div>
                   <CardTitle className="text-xl sm:text-2xl">{userProfile.full_name}</CardTitle>
                   <p className="text-muted-foreground">
@@ -300,7 +347,7 @@ const TalentProfilePage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {workExperience.map((work, index) => (
+                  {workExperience.map((work) => (
                     <div key={work.id} className="border-l-2 border-primary pl-4">
                       <div className="flex justify-between items-start">
                         <div>
@@ -338,7 +385,7 @@ const TalentProfilePage = () => {
             <CardContent>
               {education.length > 0 ? (
                 <div className="space-y-4">
-                  {education.map((edu, index) => (
+                  {education.map((edu) => (
                     <div key={edu.id} className="border-l-2 border-primary pl-4">
                       <div className="flex justify-between items-start">
                         <div>
@@ -390,6 +437,16 @@ const TalentProfilePage = () => {
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Services Section */}
+          {isBusinessRole(userRole) && (
+            <TalentServices 
+              userId={id || ''}
+              talentName={userProfile?.full_name || 'Talento'}
+              talentAvatar={userProfile?.avatar_url || undefined}
+              onContact={handleContact}
+            />
           )}
         </div>
 
@@ -448,6 +505,57 @@ const TalentProfilePage = () => {
           )}
         </div>
       </div>
+
+      {/* Contact Modal */}
+      <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Contactar a {userProfile?.full_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="contact-message">Mensaje</Label>
+              <Textarea
+                id="contact-message"
+                placeholder="Escribe tu mensaje aquí..."
+                value={contactMessage}
+                onChange={(e) => setContactMessage(e.target.value)}
+                rows={4}
+                className="mt-1"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleSendMessage}
+                disabled={isSendingMessage || !contactMessage.trim()}
+                className="flex-1"
+              >
+                {isSendingMessage ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Enviar Mensaje
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowContactModal(false)}
+                disabled={isSendingMessage}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

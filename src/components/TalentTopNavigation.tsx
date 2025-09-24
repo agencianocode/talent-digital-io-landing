@@ -24,22 +24,22 @@ const TalentTopNavigation = () => {
 
   const navigationItems = [
     {
-      id: 'search',
-      label: 'Búsqueda',
+      id: 'opportunities',
+      label: '🔍 Oportunidades',
       icon: Search,
-      path: '/talent-dashboard/explore',
-      isActive: location.pathname === '/talent-dashboard/explore'
+      path: '/talent-dashboard/opportunities',
+      isActive: location.pathname === '/talent-dashboard/opportunities'
     },
     {
       id: 'applications',
-      label: 'Mis Postulaciones',
+      label: '📄 Mis Postulaciones',
       icon: CheckSquare,
       path: '/talent-dashboard/applications',
       isActive: location.pathname === '/talent-dashboard/applications'
     },
     {
       id: 'marketplace',
-      label: 'Marketplace',
+      label: '🛍 Marketplace de Servicios',
       icon: Store,
       path: '/talent-dashboard/marketplace',
       isActive: location.pathname === '/talent-dashboard/marketplace'

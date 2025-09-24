@@ -1,12 +1,16 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Home, LogOut, Briefcase, MessageSquare, User, Settings, Building, Menu, X, ChevronDown, Search, HelpCircle, GraduationCap, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import CompanySwitcher from "@/components/CompanySwitcher";
 import HelpFeedbackModal from "@/components/HelpFeedbackModal";
+import NotificationCenter from "@/components/NotificationCenter";
+import { useMessages } from "@/hooks/useMessages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +24,21 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const { getUnreadCount } = useMessages();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Cargar contador de mensajes no leídos
+  React.useEffect(() => {
+    const loadUnreadCount = async () => {
+      try {
+        const count = await getUnreadCount();
+        setUnreadCount(count);
+      } catch (error) {
+        console.error('Error loading unread count:', error);
+      }
+    };
+    loadUnreadCount();
+  }, [getUnreadCount]);
 
   const handleLogout = async () => {
     await signOut();
@@ -30,6 +49,7 @@ const DashboardLayout = () => {
     { to: "/business-dashboard", icon: Home, label: "Dashboard" },
     { to: "/business-dashboard/opportunities", icon: Briefcase, label: "Mis Oportunidades" },
     { to: "/business-dashboard/talent", icon: Search, label: "Buscar Talento" },
+    { to: "/business-dashboard/messages", icon: MessageSquare, label: "Mensajes", hasBadge: true },
     { to: "/business-dashboard/marketplace", icon: Building, label: "Marketplace" },
     { to: "/business-dashboard/academy", icon: GraduationCap, label: "Mi Academia" },
   ];
@@ -162,6 +182,11 @@ const DashboardLayout = () => {
                 >
                   <item.icon className="h-4 w-4" />
                   <span style={{fontSize: '16px'}}>{item.label}</span>
+                  {item.hasBadge && unreadCount > 0 && (
+                    <Badge variant="destructive" className="ml-auto text-xs">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </Badge>
+                  )}
                 </NavLink>
               </li>
             ))}
@@ -173,7 +198,7 @@ const DashboardLayout = () => {
           {/* Bottom Navigation - Recuadro rojo inferior (junto con el perfil) */}
           <div className="space-y-2 mb-4">
             <NavLink
-              to="/messages"
+              to="/business-dashboard/messages"
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-sm",
@@ -185,13 +210,15 @@ const DashboardLayout = () => {
             >
               <MessageSquare className="h-4 w-4" />
               <span style={{fontSize: '16px'}}>Mensajes</span>
-              <span className="ml-auto bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
-                1
-              </span>
+              {unreadCount > 0 && (
+                <Badge variant="destructive" className="ml-auto text-xs">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
             </NavLink>
 
             <NavLink
-              to="/notifications"
+              to="/business-dashboard/notifications"
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-sm",
@@ -203,9 +230,7 @@ const DashboardLayout = () => {
             >
               <Bell className="h-4 w-4" />
               <span style={{fontSize: '16px'}}>Notificaciones</span>
-              <span className="ml-auto bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
-                3
-              </span>
+              <NotificationCenter />
             </NavLink>
 
             <button
@@ -248,6 +273,30 @@ const DashboardLayout = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
+          {/* Feedback Card */}
+          <div className="mt-4">
+            <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-sm text-gray-900">¿Cómo podemos mejorar?</h4>
+                    <p className="text-xs text-gray-600">Tu feedback nos ayuda a crecer</p>
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="w-full mt-3 bg-purple-600 hover:bg-purple-700"
+                  onClick={() => setIsHelpModalOpen(true)}
+                >
+                  Enviar feedback
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </aside>
 

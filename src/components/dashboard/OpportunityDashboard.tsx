@@ -11,7 +11,7 @@ import { OpportunityList } from './OpportunityList';
 export const OpportunityDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [useMockData, setUseMockData] = useState(true);
+  const [useMockData, setUseMockData] = useState(false);
 
   const handleApplicationsView = (opportunityId: string) => {
     navigate(`/business-dashboard/opportunities/${opportunityId}/applicants`);

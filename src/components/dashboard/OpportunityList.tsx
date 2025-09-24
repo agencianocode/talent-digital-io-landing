@@ -19,19 +19,21 @@ import {
   MapPin,
   Calendar,
   DollarSign,
-  Clock
+  Clock,
+  Link
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useOpportunityDashboard } from '@/hooks/useOpportunityDashboard';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OpportunityListProps {
   onApplicationsView?: (opportunityId: string) => void;
   useMockData?: boolean;
 }
 
-export const OpportunityList = ({ onApplicationsView, useMockData = true }: OpportunityListProps) => {
+export const OpportunityList = ({ onApplicationsView, useMockData = false }: OpportunityListProps) => {
   const navigate = useNavigate();
   const { 
     opportunities, 
@@ -84,6 +86,30 @@ export const OpportunityList = ({ onApplicationsView, useMockData = true }: Oppo
       toast.success('Oportunidad duplicada como borrador');
     } catch (error) {
       toast.error('Error al duplicar la oportunidad');
+    }
+  };
+
+  const handleCopyInvitationLink = async (opportunity: any) => {
+    try {
+      // Generar enlace de invitación si no existe
+      let invitationLink = (opportunity as any).invitation_link;
+      
+      if (!invitationLink) {
+        invitationLink = `${window.location.origin}/opportunity/invite/${opportunity.id}`;
+        
+        // Actualizar la oportunidad con el enlace generado
+        await supabase
+          .from('opportunities')
+          .update({ invitation_link: invitationLink } as any)
+          .eq('id', opportunity.id);
+      }
+      
+      // Copiar al portapapeles
+      await navigator.clipboard.writeText(invitationLink);
+      toast.success('¡Enlace de invitación copiado al portapapeles!');
+    } catch (error) {
+      console.error('Error copying invitation link:', error);
+      toast.error('Error al copiar el enlace de invitación');
     }
   };
 
@@ -231,7 +257,7 @@ export const OpportunityList = ({ onApplicationsView, useMockData = true }: Oppo
                               onClick={() => navigate(`/business-dashboard/opportunities/${opportunity.id}`)}
                             >
                               <Eye className="h-4 w-4 mr-2" />
-                              Ver
+                              Ver Detalles Completos
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => onApplicationsView?.(opportunity.id)}
@@ -260,6 +286,13 @@ export const OpportunityList = ({ onApplicationsView, useMockData = true }: Oppo
                                 </>
                               )}
                             </DropdownMenuItem>
+                            {/* Mostrar enlace de invitación solo para oportunidades draft/private */}
+                            {opportunity.status === 'draft' && (
+                              <DropdownMenuItem onClick={() => handleCopyInvitationLink(opportunity)}>
+                                <Link className="h-4 w-4 mr-2" />
+                                Copiar enlace de invitación
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => handleDuplicate(opportunity)}>
                               <Copy className="h-4 w-4 mr-2" />
                               Duplicar

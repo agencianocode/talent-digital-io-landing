@@ -5,17 +5,19 @@ import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext'
 import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from 'sonner';
 import MultiStepOpportunityForm from '@/components/opportunity/MultiStepOpportunityForm';
+import { InvitationLinkModal } from '@/components/opportunity/PublishJobModal';
 
 interface MultiStepFormData {
   // Step 1
   title: string;
   description: string;
   skills: string[];
-  tools: string;
+  tools: string[];
   contractorsCount: number;
   usOnlyApplicants: boolean;
   preferredTimezone: string;
   preferredLanguages: string[];
+  extendedSchedule: string;
   
   // Step 2
   projectType: 'ongoing' | 'one-time';
@@ -29,6 +31,11 @@ interface MultiStepFormData {
   maxHoursPerWeek: number;
   maxHoursPerMonth: number;
   isMaxHoursOptional: boolean;
+  jobDuration: number;
+  jobDurationUnit: 'month' | 'week';
+  noEndDate: boolean;
+  // Publicación
+  publishToFeed?: boolean;
 }
 
 const NewOpportunityMultiStep = () => {
@@ -36,6 +43,14 @@ const NewOpportunityMultiStep = () => {
   const { user, userRole } = useSupabaseAuth();
   const { activeCompany, canCreateOpportunities } = useCompany();
   const [loading, setLoading] = useState(false);
+  const [showInvitationModal, setShowInvitationModal] = useState(false);
+  const [invitationLink, setInvitationLink] = useState('');
+  const [opportunityTitle, setOpportunityTitle] = useState('');
+
+  // Función para generar un enlace único de invitación
+  const generateInvitationLink = (opportunityId: string) => {
+    return `${window.location.origin}/opportunity/invite/${opportunityId}`;
+  };
 
   // Verificar permisos
   if (!user || !isBusinessRole(userRole)) {
@@ -76,72 +91,122 @@ const NewOpportunityMultiStep = () => {
     
     try {
       // Convertir los datos del formulario multi-paso al formato de base de datos
-      let salaryMin, salaryMax, salaryPeriod;
+      let salaryMin, salaryMax;
       
       if (formData.projectType === 'one-time') {
         salaryMin = formData.monthlyMinBudget ? parseInt(formData.monthlyMinBudget) : null;
         salaryMax = formData.monthlyMaxBudget ? parseInt(formData.monthlyMaxBudget) : null;
-        salaryPeriod = 'project';
+        // salaryPeriod = 'project'; // Se usará cuando se agregue el campo a la DB
       } else {
         switch (formData.paymentMethod) {
           case 'hourly':
             salaryMin = formData.hourlyMinRate ? parseInt(formData.hourlyMinRate) : null;
             salaryMax = formData.hourlyMaxRate ? parseInt(formData.hourlyMaxRate) : null;
-            salaryPeriod = 'hourly';
+            // salaryPeriod = 'hourly'; // Se usará cuando se agregue el campo a la DB
             break;
           case 'weekly':
             salaryMin = formData.weeklyMinBudget ? parseInt(formData.weeklyMinBudget) : null;
             salaryMax = formData.weeklyMaxBudget ? parseInt(formData.weeklyMaxBudget) : null;
-            salaryPeriod = 'weekly';
+            // salaryPeriod = 'weekly'; // Se usará cuando se agregue el campo a la DB
             break;
           case 'monthly':
             salaryMin = formData.monthlyMinBudget ? parseInt(formData.monthlyMinBudget) : null;
             salaryMax = formData.monthlyMaxBudget ? parseInt(formData.monthlyMaxBudget) : null;
-            salaryPeriod = 'monthly';
+            // salaryPeriod = 'monthly'; // Se usará cuando se agregue el campo a la DB
             break;
         }
       }
 
       const selectedCategory: string = (formData.skills && formData.skills.length > 0) ? (formData.skills[0] ?? 'General') : 'General';
       
+      // Extraer el país de la empresa para la restricción
+      const companyCountry = activeCompany.location ? 
+        activeCompany.location.split(',').map(part => part.trim()).pop() : null;
+
+      // Construir descripción de requisitos más detallada
+      let requirements = '';
+      if (formData.skills?.length > 0) {
+        requirements += `Habilidades: ${formData.skills.join(', ')}\n`;
+      }
+      if (formData.tools?.length > 0) {
+        requirements += `Herramientas: ${formData.tools.join(', ')}\n`;
+      }
+      requirements += `Contratistas requeridos: ${formData.contractorsCount}\n`;
+      if (formData.preferredTimezone) {
+        requirements += `Zona horaria preferida: ${formData.preferredTimezone}\n`;
+      }
+      if (formData.extendedSchedule) {
+        requirements += `Horario extendido: ${formData.extendedSchedule}\n`;
+      }
+      if (formData.preferredLanguages?.length > 0) {
+        requirements += `Idiomas preferidos: ${formData.preferredLanguages.join(', ')}\n`;
+      }
+      if (formData.usOnlyApplicants && companyCountry) {
+        requirements += `Restricción de país: Solo ${companyCountry}\n`;
+      }
+
       const opportunityData = {
         title: formData.title,
         description: formData.description,
-        requirements: `Habilidades: ${(formData.skills || []).join(', ')}\nHerramientas: ${formData.tools}\nContratistas requeridos: ${formData.contractorsCount}`,
+        requirements: requirements.trim(),
         category: selectedCategory,
         type: formData.projectType === 'ongoing' ? 'Trabajo Continuo' : 'Proyecto Una Vez',
         location: formData.preferredTimezone || 'Remoto',
         salary_min: salaryMin,
         salary_max: salaryMax,
-        contract_type: formData.projectType === 'ongoing' ? 'ongoing' : 'project',
-        duration_type: formData.projectType === 'ongoing' ? 'indefinite' : 'fixed',
-        duration_value: null,
-        duration_unit: 'months',
+        // Campos existentes en el esquema actual
         skills: formData.skills,
-        experience_levels: ['mid'],
-        location_type: 'remote',
-        timezone_preference: formData.preferredTimezone,
-        deadline_date: null,
-        payment_type: formData.paymentMethod === 'hourly' ? 'hourly' : 'fixed',
-        commission_percentage: null,
-        salary_period: salaryPeriod,
-        salary_is_public: true,
-        is_academy_exclusive: false,
+        // Campos que se agregarán con las migraciones:
+        // contract_type: formData.projectType === 'ongoing' ? 'ongoing' : 'project',
+        // duration_type: formData.noEndDate ? 'indefinite' : 'fixed',
+        // duration_value: formData.noEndDate ? null : formData.jobDuration,
+        // duration_unit: formData.jobDurationUnit || 'months',
+        // experience_levels: ['mid'],
+        // timezone_preference: formData.preferredTimezone,
+        // deadline_date: null,
+        // payment_type: formData.paymentMethod === 'hourly' ? 'hourly' : 'fixed',
+        // commission_percentage: null,
+        // salary_is_public: true,
+        // is_academy_exclusive: false,
         company_id: activeCompany.id,
-        status: 'active' as 'active'
+        status: formData.publishToFeed ? 'active' as 'active' : 'draft' as 'active'
+        // Campos de restricción de país se agregarán cuando se ejecute la migración
+        // country_restriction_enabled: formData.usOnlyApplicants,
+        // allowed_country: formData.usOnlyApplicants ? companyCountry : null
       };
 
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('opportunities')
-        .insert([opportunityData]);
+        .insert([opportunityData])
+        .select()
+        .single();
 
       if (error) {
         console.error('Error creating opportunity:', error);
         throw error;
       }
 
-      toast.success('¡Oportunidad publicada exitosamente!');
-      navigate('/business-dashboard/opportunities');
+      if (formData.publishToFeed) {
+        toast.success('¡Oportunidad publicada exitosamente en el feed!');
+        navigate('/business-dashboard/opportunities');
+      } else {
+        // Generar enlace de invitación para oportunidades privadas
+        if (insertedData) {
+          const inviteLink = generateInvitationLink(insertedData.id);
+          
+          // Actualizar la oportunidad con el enlace de invitación
+          await supabase
+            .from('opportunities')
+            .update({ invitation_link: inviteLink } as any)
+            .eq('id', insertedData.id);
+          
+          // Mostrar modal con enlace de invitación
+          setInvitationLink(inviteLink);
+          setOpportunityTitle(formData.title);
+          setShowInvitationModal(true);
+          toast.success('¡Oportunidad guardada como invitación privada!');
+        }
+      }
       
     } catch (error: any) {
       console.error('Error saving opportunity:', error);
@@ -156,16 +221,32 @@ const NewOpportunityMultiStep = () => {
     description: activeCompany.description || '',
   };
 
+  const handleInvitationModalClose = () => {
+    setShowInvitationModal(false);
+    navigate('/business-dashboard/opportunities');
+  };
+
   return (
-    <div className="min-h-screen py-8" style={{ backgroundColor: '#eff6ff' }}>
-      <div className="max-w-4xl mx-auto px-6">
-        <MultiStepOpportunityForm
+    <>
+      <div className="min-h-screen py-8" style={{ backgroundColor: '#eff6ff' }}>
+        <div className="max-w-4xl mx-auto px-6">
+        <MultiStepOpportunityForm 
           initialData={initialData}
           onSubmit={handleSubmit}
           isLoading={loading}
+          company={activeCompany}
         />
+        </div>
       </div>
-    </div>
+      
+      {/* Modal de enlace de invitación */}
+      <InvitationLinkModal
+        isOpen={showInvitationModal}
+        onClose={handleInvitationModalClose}
+        invitationLink={invitationLink}
+        opportunityTitle={opportunityTitle}
+      />
+    </>
   );
 };
 

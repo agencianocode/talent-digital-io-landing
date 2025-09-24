@@ -5,17 +5,20 @@ import { ArrowLeft, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OpportunityStep1 from './OpportunityStep1';
 import OpportunityStep2 from './OpportunityStep2';
+import PublishJobModal from './PublishJobModal';
+import { type Company } from '@/contexts/CompanyContext';
 
 interface FormData {
   // Step 1
   title: string;
   description: string;
   skills: string[];
-  tools: string;
+  tools: string[];
   contractorsCount: number;
   usOnlyApplicants: boolean;
   preferredTimezone: string;
   preferredLanguages: string[];
+  extendedSchedule: string;
   
   // Step 2
   projectType: 'ongoing' | 'one-time';
@@ -29,12 +32,19 @@ interface FormData {
   maxHoursPerWeek: number;
   maxHoursPerMonth: number;
   isMaxHoursOptional: boolean;
+  // Duración del trabajo
+  jobDuration: number;
+  jobDurationUnit: 'month' | 'week';
+  noEndDate: boolean;
+  // Publicación
+  publishToFeed?: boolean;
 }
 
 interface MultiStepOpportunityFormProps {
   initialData?: Partial<FormData>;
   onSubmit: (data: FormData) => void;
   isLoading?: boolean;
+  company?: Company | null;
 }
 
 const steps = [
@@ -53,20 +63,23 @@ const steps = [
 const MultiStepOpportunityForm = ({ 
   initialData = {}, 
   onSubmit, 
-  isLoading = false 
+  isLoading = false,
+  company
 }: MultiStepOpportunityFormProps) => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [showPublishModal, setShowPublishModal] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     // Step 1 defaults
     title: '',
     description: '',
     skills: [],
-    tools: '',
+    tools: [],
     contractorsCount: 1,
     usOnlyApplicants: false,
     preferredTimezone: '',
     preferredLanguages: [],
+    extendedSchedule: '',
     
     // Step 2 defaults
     projectType: 'ongoing',
@@ -80,6 +93,9 @@ const MultiStepOpportunityForm = ({
     maxHoursPerWeek: 20,
     maxHoursPerMonth: 0,
     isMaxHoursOptional: true,
+    jobDuration: 1,
+    jobDurationUnit: 'month',
+    noEndDate: false,
     
     // Override with initial data
     ...initialData
@@ -92,7 +108,15 @@ const MultiStepOpportunityForm = ({
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return !!(formData.title && formData.description);
+        return !!(
+          formData.title && 
+          formData.description && 
+          formData.skills && 
+          formData.skills.length > 0 &&
+          formData.tools && 
+          formData.tools.length > 0 &&
+          formData.contractorsCount > 0
+        );
       case 2:
         if (formData.projectType === 'one-time') {
           return !!(formData.monthlyMinBudget && formData.monthlyMaxBudget);
@@ -118,10 +142,22 @@ const MultiStepOpportunityForm = ({
       if (currentStep < 2) {
         setCurrentStep(currentStep + 1);
       } else {
-        // Submit form
-        onSubmit(formData);
+        // Show publish modal instead of submitting directly
+        setShowPublishModal(true);
       }
     }
+  };
+
+  const handlePublishToFeed = () => {
+    setShowPublishModal(false);
+    // Submit form with publish flag
+    onSubmit({ ...formData, publishToFeed: true });
+  };
+
+  const handleKeepPrivate = () => {
+    setShowPublishModal(false);
+    // Submit form without publish flag
+    onSubmit({ ...formData, publishToFeed: false });
   };
 
   const handleBack = () => {
@@ -156,9 +192,11 @@ const MultiStepOpportunityForm = ({
               contractorsCount: formData.contractorsCount,
               usOnlyApplicants: formData.usOnlyApplicants,
               preferredTimezone: formData.preferredTimezone,
-              preferredLanguages: formData.preferredLanguages
+              preferredLanguages: formData.preferredLanguages,
+              extendedSchedule: formData.extendedSchedule
             }}
             onChange={updateFormData}
+            company={company}
           />
         );
       case 2:
@@ -175,7 +213,10 @@ const MultiStepOpportunityForm = ({
               monthlyMaxBudget: formData.monthlyMaxBudget,
               maxHoursPerWeek: formData.maxHoursPerWeek,
               maxHoursPerMonth: formData.maxHoursPerMonth,
-              isMaxHoursOptional: formData.isMaxHoursOptional
+              isMaxHoursOptional: formData.isMaxHoursOptional,
+              jobDuration: formData.jobDuration,
+              jobDurationUnit: formData.jobDurationUnit,
+              noEndDate: formData.noEndDate
             }}
             onChange={updateFormData}
           />
@@ -209,7 +250,7 @@ const MultiStepOpportunityForm = ({
       </div>
 
       {/* Step Indicator */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-center mb-8">
         {steps.map((step, index) => (
           <div key={step.id} className="flex items-center">
             <div className="flex flex-col items-center">
@@ -245,7 +286,7 @@ const MultiStepOpportunityForm = ({
             {index < steps.length - 1 && (
               <div
                 className={cn(
-                  "w-16 h-0.5 mx-4 transition-colors",
+                  "w-32 h-0.5 mx-6 transition-colors",
                   isStepComplete(step.id) ? "bg-green-600" : "bg-gray-300"
                 )}
               />
@@ -258,6 +299,59 @@ const MultiStepOpportunityForm = ({
       <div className="mb-8">
         {renderStepContent()}
       </div>
+
+      {/* Company Info Section */}
+      {company && (
+        <div className="bg-gray-50 rounded-lg p-6 mb-8 border border-gray-200">
+          <div className="flex items-center gap-4">
+            {/* Company Logo */}
+            <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+              {company.logo_url ? (
+                <img 
+                  src={company.logo_url} 
+                  alt={company.name}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                company.name?.charAt(0)?.toUpperCase() || 'A'
+              )}
+            </div>
+            
+            {/* Company Details */}
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                Acerca de {company.name}
+              </h3>
+              {company.description && (
+                <p className="text-gray-600 text-sm mb-2">
+                  {company.description}
+                </p>
+              )}
+              {company.location && (
+                <p className="text-gray-500 text-sm">
+                  Tiene su sede en {company.location}.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Validation Message for Step 1 */}
+      {currentStep === 1 && !validateStep(1) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+          <h4 className="text-sm font-medium text-amber-800 mb-2">
+            Completa los siguientes campos obligatorios:
+          </h4>
+          <ul className="text-sm text-amber-700 space-y-1">
+            {!formData.title && <li>• Título profesional</li>}
+            {!formData.description && <li>• Descripción del trabajo</li>}
+            {(!formData.skills || formData.skills.length === 0) && <li>• Al menos 1 habilidad</li>}
+            {(!formData.tools || formData.tools.length === 0) && <li>• Al menos 1 herramienta</li>}
+            {formData.contractorsCount <= 0 && <li>• Número de contratistas (mínimo 1)</li>}
+          </ul>
+        </div>
+      )}
 
       {/* Navigation Buttons */}
       <div className="flex justify-between border-t border-gray-200 pt-6">
@@ -277,11 +371,19 @@ const MultiStepOpportunityForm = ({
           {isLoading 
             ? 'Publicando...' 
             : currentStep === 2 
-            ? 'Ahorrar' 
+            ? 'Guardar' 
             : 'Próximo'
           }
         </Button>
       </div>
+
+      {/* Publish Job Modal */}
+      <PublishJobModal
+        isOpen={showPublishModal}
+        onClose={() => setShowPublishModal(false)}
+        onPublishToFeed={handlePublishToFeed}
+        onKeepPrivate={handleKeepPrivate}
+      />
     </div>
   );
 };

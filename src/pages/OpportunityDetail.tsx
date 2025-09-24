@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MoreHorizontal, MapPin, DollarSign, Briefcase, Clock, Heart, Send } from "lucide-react";
+import { ArrowLeft, MapPin, DollarSign, Briefcase, Clock, Heart, Send, Mail } from "lucide-react";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import { useSupabaseAuth, isTalentRole } from "@/contexts/SupabaseAuthContext";
@@ -20,6 +20,9 @@ const OpportunityDetail = () => {
   const { userRole } = useSupabaseAuth();
   const { applyToOpportunity, hasApplied, getApplicationStatus } = useSupabaseOpportunities();
   const { isOpportunitySaved, saveOpportunity, unsaveOpportunity } = useSavedOpportunities();
+  
+  // Detectar si es una página de invitación
+  const isInvitationPage = location.pathname.includes('/opportunity/invite/');
   
   const [opportunity, setOpportunity] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
@@ -136,27 +139,46 @@ const OpportunityDetail = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
+      {/* Banner de invitación */}
+      {isInvitationPage && (
+        <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <Mail className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-blue-900">Invitación Exclusiva</h3>
+              <p className="text-sm text-blue-700">
+                Has sido invitado/a directamente a aplicar para esta oportunidad. ¡No te la pierdas!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Breadcrumb */}
-      <div className="mb-4 sm:mb-6">
-        <button 
-          onClick={() => {
-            // Navegación inteligente basada en la ruta
-            if (location.pathname.includes('/business-dashboard/opportunities/')) {
-              navigate('/business-dashboard/opportunities');
-            } else if (location.pathname.includes('/talent-dashboard/opportunities/')) {
-              navigate('/talent-dashboard/opportunities');
-            } else if (location.pathname.includes('/talent-dashboard/marketplace') || location.pathname.includes('/talent-dashboard/explore')) {
-              navigate('/talent-dashboard/explore');
-            } else {
-              navigate(-1);
-            }
-          }}
-          className="flex items-center text-foreground hover:text-muted-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver
-        </button>
-      </div>
+      {!isInvitationPage && (
+        <div className="mb-4 sm:mb-6">
+          <button 
+            onClick={() => {
+              // Navegación inteligente basada en la ruta
+              if (location.pathname.includes('/business-dashboard/opportunities/')) {
+                navigate('/business-dashboard/opportunities');
+              } else if (location.pathname.includes('/talent-dashboard/opportunities/')) {
+                navigate('/talent-dashboard/opportunities');
+              } else if (location.pathname.includes('/talent-dashboard/marketplace') || location.pathname.includes('/talent-dashboard/explore')) {
+                navigate('/talent-dashboard/explore');
+              } else {
+                navigate(-1);
+              }
+            }}
+            className="flex items-center text-foreground hover:text-muted-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </button>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">

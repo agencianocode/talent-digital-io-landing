@@ -1,6 +1,8 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Minus } from 'lucide-react';
 
 interface OpportunityStep2Data {
@@ -15,6 +17,10 @@ interface OpportunityStep2Data {
   maxHoursPerWeek: number;
   maxHoursPerMonth: number;
   isMaxHoursOptional: boolean;
+  // Campos para duración del trabajo
+  jobDuration: number;
+  jobDurationUnit: 'month' | 'week';
+  noEndDate: boolean;
 }
 
 interface OpportunityStep2Props {
@@ -315,6 +321,64 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
       {data.projectType === 'ongoing' && data.paymentMethod && (
         <div className="space-y-4">
           {renderPaymentFields()}
+        </div>
+      )}
+
+      {/* Duración del trabajo - para TODOS los tipos de proyecto */}
+      {((data.projectType === 'ongoing' && data.paymentMethod) || data.projectType === 'one-time') && (
+        <div className="space-y-3 border-t pt-4">
+          <Label className="text-sm font-medium text-gray-900">
+            ¿Cuál es la duración de este trabajo?
+          </Label>
+          <div className="flex items-center space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onChange({ jobDuration: Math.max(1, (data.jobDuration || 1) - 1) })}
+              disabled={(data.jobDuration || 1) <= 1}
+            >
+              <Minus className="w-4 h-4" />
+            </Button>
+            <Input
+              type="number"
+              value={data.jobDuration || 1}
+              onChange={(e) => onChange({ jobDuration: parseInt(e.target.value) || 1 })}
+              className="w-20 text-center h-10"
+              min="1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onChange({ jobDuration: (data.jobDuration || 1) + 1 })}
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+            <Select 
+              value={data.jobDurationUnit || 'month'} 
+              onValueChange={(value: 'month' | 'week') => onChange({ jobDurationUnit: value })}
+            >
+              <SelectTrigger className="w-32 h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">Semana</SelectItem>
+                <SelectItem value="month">Month</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="no-end-date"
+              checked={data.noEndDate || false}
+              onCheckedChange={(checked) => onChange({ noEndDate: !!checked })}
+            />
+            <Label htmlFor="no-end-date" className="text-sm text-gray-700">
+              Sin fecha de finalización
+            </Label>
+          </div>
         </div>
       )}
     </div>

@@ -29,6 +29,8 @@ import TalentOnboarding from './pages/TalentOnboarding';
 
 // Lazy load páginas de talent dashboard
 const TalentOpportunities = lazy(() => import('./pages/TalentOpportunities'));
+const TalentOpportunitiesSearch = lazy(() => import('./pages/TalentOpportunitiesSearch'));
+const ApplicationDetail = lazy(() => import('./pages/ApplicationDetail'));
 const TalentMarketplace = lazy(() => import('./pages/TalentMarketplace'));
 const SavedOpportunities = lazy(() => import('./pages/SavedOpportunities'));
 const OpportunityDetail = lazy(() => import('./pages/OpportunityDetail'));
@@ -41,12 +43,13 @@ const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage'));
 const TalentSearchPage = lazy(() => import('./pages/TalentSearchPage'));
 const TalentProfilePage = lazy(() => import('./pages/TalentProfilePage'));
 const OpportunityApplicants = lazy(() => import('./pages/OpportunityApplicants'));
-const ApplicationDetail = lazy(() => import('./pages/ApplicationDetail'));
 const TalentDiscovery = lazy(() => import('./pages/TalentDiscovery'));
 const PublicTalentProfile = lazy(() => import('./pages/PublicTalentProfile'));
 const UserManagement = lazy(() => import('./pages/settings/UserManagement'));
 const CompanyDetails = lazy(() => import('./pages/CompanyDetails'));
 const BusinessProfile = lazy(() => import('./pages/BusinessProfile'));
+const BusinessMessagesPage = lazy(() => import('./pages/BusinessMessagesPage'));
+const BusinessNotificationsPage = lazy(() => import('./pages/BusinessNotificationsPage'));
 const AcceptInvitation = lazy(() => import('./pages/AcceptInvitation'));
 
 // Lazy load páginas de registro
@@ -103,6 +106,13 @@ function App() {
                       <Route path="/user-selector" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <UserTypeSelector />
+                        </Suspense>
+                      } />
+                      
+                      {/* Ruta pública para invitaciones a oportunidades */}
+                      <Route path="/opportunity/invite/:id" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <OpportunityDetail />
                         </Suspense>
                       } />
 
@@ -169,7 +179,17 @@ function App() {
                         } />
                         <Route path="/talent-dashboard/opportunities" element={
                           <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                            <TalentOpportunitiesSearch />
+                          </Suspense>
+                        } />
+                        <Route path="/talent-dashboard/applications" element={
+                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
                             <TalentOpportunities />
+                          </Suspense>
+                        } />
+                        <Route path="/talent-dashboard/applications/:id" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <ApplicationDetail />
                           </Suspense>
                         } />
                         <Route path="/talent-dashboard/marketplace" element={
@@ -280,6 +300,21 @@ function App() {
                         <Route path="profile" element={
                           <Suspense fallback={<LoadingSkeleton type="profile" />}>
                             <BusinessProfile />
+                          </Suspense>
+                        } />
+                        <Route path="messages" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <BusinessMessagesPage />
+                          </Suspense>
+                        } />
+                        <Route path="messages/:conversationId" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <BusinessMessagesPage />
+                          </Suspense>
+                        } />
+                        <Route path="notifications" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <BusinessNotificationsPage />
                           </Suspense>
                         } />
                       </Route>

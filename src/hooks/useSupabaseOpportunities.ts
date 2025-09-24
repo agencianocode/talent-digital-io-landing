@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
 import { logger } from '@/lib/logger';
+import { filterOpportunitiesForTalent } from '@/lib/country-restrictions';
 
 interface SupabaseOpportunity {
   id: string;
@@ -18,6 +19,9 @@ interface SupabaseOpportunity {
   created_at: string;
   updated_at: string;
   company_id: string;
+  // Campos para restricción de país
+  country_restriction_enabled?: boolean | null;
+  allowed_country?: string | null;
   companies?: {
     name: string;
     logo_url?: string | null;
@@ -36,11 +40,23 @@ interface SupabaseApplication {
 }
 
 export const useSupabaseOpportunities = () => {
-  const { user, userRole, isAuthenticated } = useSupabaseAuth();
+  const { user, userRole, isAuthenticated, profile } = useSupabaseAuth();
   const [opportunities, setOpportunities] = useState<SupabaseOpportunity[]>([]);
   const [applications, setApplications] = useState<SupabaseApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Obtener la ubicación del talento para filtrado
+  const talentLocation = useMemo(() => {
+    if (!isTalentRole(userRole) || !profile) {
+      return null;
+    }
+    // Obtener ubicación del perfil del talento (combinar ciudad y país si están disponibles)
+    if (profile.country && profile.city) {
+      return `${profile.city}, ${profile.country}`;
+    }
+    return profile.country || null;
+  }, [userRole, profile]);
 
   // Fetch opportunities
   const fetchOpportunities = useCallback(async () => {
@@ -133,12 +149,23 @@ export const useSupabaseOpportunities = () => {
     return application?.status || null;
   }, [applications]);
 
-  // Search opportunities
+  // Filtrar oportunidades para talentos basándose en restricciones de país
+  const filteredOpportunities = useMemo(() => {
+    if (!isTalentRole(userRole)) {
+      // Para usuarios no-talento, mostrar todas las oportunidades
+      return opportunities;
+    }
+    
+    // Para talentos, filtrar basándose en restricciones de país
+    return filterOpportunitiesForTalent(opportunities, talentLocation);
+  }, [opportunities, userRole, talentLocation]);
+
+  // Search opportunities (usa las oportunidades ya filtradas)
   const searchOpportunities = useCallback((query: string) => {
-    if (!query.trim()) return opportunities;
+    if (!query.trim()) return filteredOpportunities;
     
     const lowerQuery = query.toLowerCase();
-    return opportunities.filter(opp =>
+    return filteredOpportunities.filter(opp =>
       opp.title.toLowerCase().includes(lowerQuery) ||
       opp.companies?.name.toLowerCase().includes(lowerQuery) ||
       opp.description.toLowerCase().includes(lowerQuery) ||
@@ -146,7 +173,7 @@ export const useSupabaseOpportunities = () => {
       opp.category.toLowerCase().includes(lowerQuery) ||
       (opp.requirements && opp.requirements.toLowerCase().includes(lowerQuery))
     );
-  }, [opportunities]);
+  }, [filteredOpportunities]);
 
   // Get applications by opportunity (for business users)
   const getApplicationsByOpportunity = useCallback(async (opportunityId: string) => {
@@ -237,7 +264,7 @@ export const useSupabaseOpportunities = () => {
     }
   }, [fetchOpportunities]);
 
-  // Filter opportunities
+  // Filter opportunities (usa las oportunidades ya filtradas)
   const filterOpportunities = useCallback((filters: {
     category?: string;
     location?: string;
@@ -245,7 +272,7 @@ export const useSupabaseOpportunities = () => {
     salaryMin?: number;
     salaryMax?: number;
   }) => {
-    return opportunities.filter(opp => {
+    return filteredOpportunities.filter(opp => {
       if (filters.category && opp.category !== filters.category) return false;
       if (filters.location && opp.location && !opp.location.toLowerCase().includes(filters.location.toLowerCase())) return false;
       if (filters.type && opp.type !== filters.type) return false;
@@ -253,7 +280,7 @@ export const useSupabaseOpportunities = () => {
       if (filters.salaryMax && opp.salary_min && opp.salary_min > filters.salaryMax) return false;
       return true;
     });
-  }, [opportunities]);
+  }, [filteredOpportunities]);
 
   // Load data on mount and when user changes
   useEffect(() => {
@@ -267,10 +294,12 @@ export const useSupabaseOpportunities = () => {
   }, [isAuthenticated, user, userRole, fetchUserApplications]);
 
   return {
-    opportunities,
+    opportunities: filteredOpportunities, // Devolver oportunidades filtradas
+    allOpportunities: opportunities, // Mantener acceso a todas las oportunidades si es necesario
     applications,
     isLoading,
     error,
+    talentLocation, // Exponer la ubicación del talento
     applyToOpportunity,
     hasApplied,
     getApplicationStatus,

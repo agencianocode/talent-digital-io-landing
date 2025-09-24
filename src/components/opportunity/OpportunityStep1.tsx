@@ -1,25 +1,31 @@
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, X } from 'lucide-react';
+import { professionalTools, type ProfessionalTool } from '@/lib/tools';
+import { getApplicantRestrictionText } from '@/lib/country-nationalities';
+import { type Company } from '@/contexts/CompanyContext';
 
 interface OpportunityStep1Data {
   title: string;
   description: string;
   skills: string[];
-  tools: string;
+  tools: string[];
   contractorsCount: number;
   usOnlyApplicants: boolean;
   preferredTimezone: string;
   preferredLanguages: string[];
+  extendedSchedule: string;
 }
 
 interface OpportunityStep1Props {
   data: OpportunityStep1Data;
   onChange: (data: Partial<OpportunityStep1Data>) => void;
+  company?: Company | null;
 }
 
 const skillsOptions = [
@@ -419,16 +425,10 @@ const skillsOptions = [
   'Vocalista'
 ];
 
-const toolsOptions = [
-  'Figma',
-  'Canva',
-  'Webflow',
-  'Photoshop',
-  'React',
-  'WordPress',
-  'Google Analytics',
-  'Slack'
-];
+// Extraer solo los nombres de las herramientas y ordenarlos alfabéticamente
+const toolsOptions = professionalTools
+  .map((tool: ProfessionalTool) => tool.name)
+  .sort((a: string, b: string) => a.localeCompare(b));
 
 const timezoneOptions = [
   'UTC-8 (PST)',
@@ -449,7 +449,16 @@ const languageOptions = [
   'Alemán'
 ];
 
-const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
+const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) => {
+  // State for expanding sections
+  const [showTimezoneSection, setShowTimezoneSection] = useState(false);
+  const [showLanguagesSection, setShowLanguagesSection] = useState(false);
+
+  const getToolIcon = (toolName: string): string => {
+    const toolData = professionalTools.find((tool: ProfessionalTool) => tool.name === toolName);
+    return toolData?.icon || 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/gear.svg';
+  };
+
   const handleLanguageToggle = (language: string) => {
     const currentLanguages = data.preferredLanguages || [];
     const isSelected = currentLanguages.includes(language);
@@ -461,6 +470,22 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
     }
   };
 
+  const handleTimezoneSelect = (timezone: string) => {
+    onChange({ preferredTimezone: timezone });
+  };
+
+  const handleExtendedScheduleSelect = (schedule: string) => {
+    onChange({ extendedSchedule: schedule });
+  };
+
+  const removeTimezone = () => {
+    onChange({ preferredTimezone: '' });
+  };
+
+  const removeExtendedSchedule = () => {
+    onChange({ extendedSchedule: '' });
+  };
+
   const handleSkillToggle = (skill: string) => {
     const currentSkills = data.skills || [];
     const isSelected = currentSkills.includes(skill);
@@ -470,6 +495,27 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
     } else if (currentSkills.length < 3) {
       onChange({ skills: [...currentSkills, skill] });
     }
+  };
+
+  const handleToolToggle = (tool: string) => {
+    const currentTools = data.tools || [];
+    const isSelected = currentTools.includes(tool);
+    
+    if (isSelected) {
+      onChange({ tools: currentTools.filter(t => t !== tool) });
+    } else if (currentTools.length < 5) {
+      onChange({ tools: [...currentTools, tool] });
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    const currentSkills = data.skills || [];
+    onChange({ skills: currentSkills.filter(skill => skill !== skillToRemove) });
+  };
+
+  const removeTool = (toolToRemove: string) => {
+    const currentTools = data.tools || [];
+    onChange({ tools: currentTools.filter(tool => tool !== toolToRemove) });
   };
 
   return (
@@ -510,52 +556,60 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
         <Label className="text-sm font-medium text-gray-900">
           Habilidades
         </Label>
-        <Select 
-          value="" 
-          onValueChange={(value) => handleSkillToggle(value)}
-        >
-          <SelectTrigger className="h-12">
-            <SelectValue placeholder="e.g. UX Design, Web Development, or Copywriting">
-              {data.skills && data.skills.length > 0 ? (
-                <div className="flex flex-wrap gap-1">
-                  {data.skills.map((skill, index) => (
-                    <span 
-                      key={skill}
-                      className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
-                    >
-                      {skill}
-                      {index < data.skills.length - 1 && ", "}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                "e.g. UX Design, Web Development, or Copywriting"
-              )}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px]">
-            {skillsOptions.map((skill) => {
-              const isSelected = data.skills?.includes(skill);
-              const isDisabled = !isSelected && (data.skills?.length || 0) >= 3;
-              
-              return (
-                <SelectItem 
-                  key={skill} 
-                  value={skill}
-                  disabled={isDisabled}
-                  className={isSelected ? "bg-blue-50 text-blue-900" : ""}
+        <div className="space-y-2">
+          {/* Display selected skills as chips */}
+          {data.skills && data.skills.length > 0 && (
+            <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg min-h-[48px]">
+              {data.skills.map((skill) => (
+                <div
+                  key={skill}
+                  className="inline-flex items-center gap-1 bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-medium border border-gray-200 shadow-sm"
                 >
-                  <div className="flex items-center justify-between w-full">
-                    <span>{skill}</span>
-                    {isSelected && (
-                      <span className="ml-2 text-blue-600">✓</span>
-                    )}
-                  </div>
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+                  <span>{skill}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeSkill(skill)}
+                    className="inline-flex items-center justify-center w-4 h-4 ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Dropdown to add skills */}
+          <Select 
+            value="" 
+            onValueChange={(value) => handleSkillToggle(value)}
+          >
+            <SelectTrigger className="h-12">
+              <SelectValue placeholder="Seleccionar habilidades (máximo 3)" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px]">
+              {skillsOptions.map((skill) => {
+                const isSelected = data.skills?.includes(skill);
+                const isDisabled = !isSelected && (data.skills?.length || 0) >= 3;
+                
+                return (
+                  <SelectItem 
+                    key={skill} 
+                    value={skill}
+                    disabled={isDisabled}
+                    className={isSelected ? "bg-blue-50 text-blue-900" : ""}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span>{skill}</span>
+                      {isSelected && (
+                        <span className="ml-2 text-blue-600">✓</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="text-xs text-gray-500 text-right">
           {data.skills?.length || 0} / 3
         </div>
@@ -566,23 +620,76 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
         <Label className="text-sm font-medium text-gray-900">
           Herramientas
         </Label>
-        <Select 
-          value={data.tools} 
-          onValueChange={(value) => onChange({ tools: value })}
-        >
-          <SelectTrigger className="h-12">
-            <SelectValue placeholder="Por ejemplo, Figma, Canva o Webflow" />
-          </SelectTrigger>
-          <SelectContent>
-            {toolsOptions.map((tool) => (
-              <SelectItem key={tool} value={tool}>
-                {tool}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="space-y-2">
+          {/* Display selected tools as chips */}
+          {data.tools && data.tools.length > 0 && (
+            <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg min-h-[48px]">
+              {data.tools.map((tool) => (
+                <div
+                  key={tool}
+                  className="inline-flex items-center gap-2 bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-medium border border-gray-200 shadow-sm"
+                >
+                  <img 
+                    src={getToolIcon(tool)} 
+                    alt={tool} 
+                    className="w-4 h-4" 
+                    style={{ filter: 'invert(0.2)' }}
+                  />
+                  <span>{tool}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeTool(tool)}
+                    className="inline-flex items-center justify-center w-4 h-4 ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Dropdown to add tools */}
+          <Select 
+            value="" 
+            onValueChange={(value) => handleToolToggle(value)}
+          >
+            <SelectTrigger className="h-12">
+              <SelectValue placeholder="Seleccionar herramientas (máximo 5)" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px]">
+              {toolsOptions.map((tool: string) => {
+                const isSelected = data.tools?.includes(tool);
+                const isDisabled = !isSelected && (data.tools?.length || 0) >= 5;
+                
+                return (
+                  <SelectItem 
+                    key={tool} 
+                    value={tool}
+                    disabled={isDisabled}
+                    className={isSelected ? "bg-blue-50 text-blue-900" : ""}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={getToolIcon(tool)} 
+                          alt={tool} 
+                          className="w-4 h-4" 
+                          style={{ filter: 'invert(0.2)' }}
+                        />
+                        <span>{tool}</span>
+                      </div>
+                      {isSelected && (
+                        <span className="ml-2 text-blue-600">✓</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="text-xs text-gray-500 text-right">
-          {data.tools ? 1 : 0} / 5
+          {data.tools?.length || 0} / 5
         </div>
       </div>
 
@@ -619,93 +726,144 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
         </div>
       </div>
 
-      {/* US Only Applicants */}
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="usOnly"
-          checked={data.usOnlyApplicants}
-          onCheckedChange={(checked) => onChange({ usOnlyApplicants: !!checked })}
-        />
-        <Label htmlFor="usOnly" className="text-sm font-medium text-gray-900">
-          Solo se aceptan solicitantes estadounidenses
-        </Label>
-      </div>
+      {/* US Only Applicants with Preferences */}
+      <div className="space-y-3">
+        {/* Checkbox and preferences in same row */}
+        <div className="flex items-center space-x-6">
+          {/* Checkbox section */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="usOnly"
+              checked={data.usOnlyApplicants}
+              onCheckedChange={(checked) => onChange({ usOnlyApplicants: !!checked })}
+            />
+            <Label htmlFor="usOnly" className="text-sm font-medium text-gray-900">
+              {getApplicantRestrictionText(company?.location)}
+            </Label>
+          </div>
 
-      {/* Additional Preferences */}
-      <div className="space-y-4">
-        {/* Preferred Timezone */}
-        <div className="space-y-2">
-          <Button
-            type="button"
-            variant="ghost"
-            className="p-0 h-auto text-blue-600 hover:text-blue-700 text-sm font-medium"
-            onClick={() => {/* Toggle timezone section */}}
-          >
-            + Zona horaria preferida
-          </Button>
-          {data.preferredTimezone && (
-            <Select 
-              value={data.preferredTimezone} 
-              onValueChange={(value) => onChange({ preferredTimezone: value })}
+          {/* Preferences buttons */}
+          <div className="flex items-center space-x-4">
+            {/* Zona horaria preferida button */}
+            <Button
+              type="button"
+              className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700 rounded-full text-sm font-medium border-0"
+              onClick={() => setShowTimezoneSection(!showTimezoneSection)}
             >
-              <SelectTrigger className="h-12">
-                <SelectValue placeholder="Seleccionar zona horaria" />
-              </SelectTrigger>
-              <SelectContent>
-                {timezoneOptions.map((timezone) => (
-                  <SelectItem key={timezone} value={timezone}>
-                    {timezone}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+              + Zona horaria preferida
+            </Button>
+
+            {/* Idiomas preferidos button */}
+            <Button
+              type="button"
+              className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700 rounded-full text-sm font-medium border-0"
+              onClick={() => setShowLanguagesSection(!showLanguagesSection)}
+            >
+              + Idiomas preferidos
+            </Button>
+          </div>
         </div>
 
-        {/* Preferred Languages */}
-        <div className="space-y-2">
-          <Button
-            type="button"
-            variant="ghost"
-            className="p-0 h-auto text-blue-600 hover:text-blue-700 text-sm font-medium"
-            onClick={() => {/* Toggle languages section */}}
-          >
-            + Idiomas preferidos
-          </Button>
-          {data.preferredLanguages && data.preferredLanguages.length > 0 && (
+        {/* Timezone selector (if expanded) */}
+        {showTimezoneSection && (
+          <div className="grid grid-cols-2 gap-4">
+            {/* Zona horaria preferida */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-900">
+                Zona horaria preferida
+              </Label>
+              <div className="flex items-center space-x-2">
+                <Select 
+                  value={data.preferredTimezone} 
+                  onValueChange={handleTimezoneSelect}
+                >
+                  <SelectTrigger className="h-12">
+                    <SelectValue placeholder="Seleccionar zona horaria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timezoneOptions.map((timezone) => (
+                      <SelectItem key={timezone} value={timezone}>
+                        {timezone}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {data.preferredTimezone && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={removeTimezone}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Horario extendido */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-900">
+                Horario extendido
+              </Label>
+              <div className="flex items-center space-x-2">
+                <Select 
+                  value={data.extendedSchedule} 
+                  onValueChange={handleExtendedScheduleSelect}
+                >
+                  <SelectTrigger className="h-12">
+                    <SelectValue placeholder="Seleccione horario extendido" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Horario estándar</SelectItem>
+                    <SelectItem value="extended">Horario extendido</SelectItem>
+                    <SelectItem value="flexible">Horario flexible</SelectItem>
+                    <SelectItem value="+3-hours">+3 Hours</SelectItem>
+                  </SelectContent>
+                </Select>
+                {data.extendedSchedule && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={removeExtendedSchedule}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Languages selector (if expanded) */}
+        {showLanguagesSection && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-900">
+              Idiomas preferidos
+            </Label>
             <div className="flex flex-wrap gap-2">
               {languageOptions.map((language) => (
                 <Button
                   key={language}
                   type="button"
-                  variant={data.preferredLanguages?.includes(language) ? "default" : "outline"}
-                  size="sm"
                   onClick={() => handleLanguageToggle(language)}
-                  className="text-sm"
+                  className={`px-3 py-1 rounded-full text-sm font-medium border-0 ${
+                    data.preferredLanguages?.includes(language) 
+                      ? "bg-gray-400 text-gray-700 hover:bg-gray-400 hover:text-gray-700" 
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700"
+                  }`}
                 >
                   {language}
                 </Button>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Company Info */}
-      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-        <div className="flex items-start space-x-3">
-          <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-sm font-bold">
-            A
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900">Acerca de Agencia de No Code</h4>
-            <p className="text-sm text-gray-600 mt-1">
-              Descripción de la Empresa<br />
-              Tiene su sede en Cali, Colombia.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
