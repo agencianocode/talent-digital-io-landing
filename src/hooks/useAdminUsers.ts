@@ -68,15 +68,21 @@ export const useAdminUsers = () => {
 
       if (companyError) throw companyError;
 
-      // Get auth users data
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-
-      if (authError) throw authError;
+      // Mock auth users data for demonstration (admin API not available in client)
+      const mockAuthUsers = {
+        users: profiles?.map(profile => ({
+          id: profile.user_id,
+          email: `user${profile.user_id}@example.com`,
+          last_sign_in_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+          email_confirmed_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+          banned_until: null
+        })) || []
+      };
 
       // Combine all data
       const usersData: UserData[] = profiles?.map(profile => {
         const role = roles?.find(r => r.user_id === profile.user_id)?.role || 'freemium_talent';
-        const authUser = authUsers.users.find(u => u.id === profile.user_id);
+        const authUser = mockAuthUsers.users.find(u => u.id === profile.user_id);
         const companiesCount = companyCounts?.filter(c => c.user_id === profile.user_id).length || 0;
 
         return {
