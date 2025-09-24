@@ -48,72 +48,73 @@ export const useAdminCompanies = () => {
       setIsLoading(true);
       setError(null);
 
-      // Mock data for demonstration (companies table might not exist or have different structure)
-      const mockCompaniesData = [
-        {
-          id: '1',
-          name: 'Tech Solutions Inc',
-          description: 'Empresa de tecnología especializada en desarrollo de software',
-          website: 'https://techsolutions.com',
-          industry: 'Tecnología',
-          size: '50-200 empleados',
-          location: 'Buenos Aires, Argentina',
-          logo_url: null,
-          created_at: '2024-01-15T10:00:00Z',
-          updated_at: '2024-01-15T10:00:00Z',
-          user_id: 'user1',
-          profiles: { full_name: 'Carlos López' }
-        },
-        {
-          id: '2',
-          name: 'Marketing Digital Pro',
-          description: 'Agencia de marketing digital y redes sociales',
-          website: 'https://marketingpro.com',
-          industry: 'Marketing',
-          size: '10-50 empleados',
-          location: 'México DF, México',
-          logo_url: null,
-          created_at: '2024-01-10T14:30:00Z',
-          updated_at: '2024-01-10T14:30:00Z',
-          user_id: 'user2',
-          profiles: { full_name: 'Ana Rodríguez' }
-        },
-        {
-          id: '3',
-          name: 'Design Studio',
-          description: 'Estudio de diseño gráfico y branding',
-          website: 'https://designstudio.com',
-          industry: 'Diseño',
-          size: '5-10 empleados',
-          location: 'Bogotá, Colombia',
-          logo_url: null,
-          created_at: '2024-01-05T09:15:00Z',
-          updated_at: '2024-01-05T09:15:00Z',
-          user_id: 'user3',
-          profiles: { full_name: 'María García' }
+      // Load companies with their owners
+      const { data: companiesData, error: companiesError } = await supabase
+        .from('companies')
+        .select(`
+          id,
+          name,
+          description,
+          website,
+          industry,
+          size,
+          location,
+          logo_url,
+          created_at,
+          updated_at,
+          user_id
+        `);
+
+      if (companiesError) {
+        console.error('Error loading companies:', companiesError);
+        // If companies table doesn't exist, use empty array
+        setCompanies([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Load company owners from profiles
+      const companyOwners = new Map();
+      if (companiesData && companiesData.length > 0) {
+        const userIds = companiesData.map(c => c.user_id).filter(Boolean);
+        if (userIds.length > 0) {
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('user_id, full_name')
+            .in('user_id', userIds);
+
+          if (!profilesError && profilesData) {
+            profilesData.forEach(profile => {
+              companyOwners.set(profile.user_id, profile.full_name);
+            });
+          }
         }
-      ];
+      }
 
-      const mockUsersData = [
-        { company_id: '1' },
-        { company_id: '1' },
-        { company_id: '1' },
-        { company_id: '2' },
-        { company_id: '2' },
-        { company_id: '3' }
-      ];
+      // Load users count for each company
+      const { data: usersData, error: usersError } = await supabase
+        .from('company_user_roles')
+        .select('company_id')
+        .eq('status', 'accepted');
 
-      const mockOpportunitiesData = [
-        { company_id: '1' },
-        { company_id: '1' },
-        { company_id: '2' },
-        { company_id: '3' }
-      ];
+      if (usersError) {
+        console.error('Error loading company users:', usersError);
+      }
+
+      // Load opportunities count for each company
+      const { data: opportunitiesData, error: oppError } = await supabase
+        .from('opportunities')
+        .select('company_id');
+
+      if (oppError) {
+        console.error('Error loading opportunities:', oppError);
+      }
 
       // Combine all data
-      const companiesWithStats: CompanyData[] = mockCompaniesData?.map(company => {
-        const usersCount = mockUsersData?.filter(u => u.company_id === company.id).length || 0;
-        const opportunitiesCount = mockOpportunitiesData?.filter(o => o.company_id === company.id).length || 0;
+      const companiesWithStats: CompanyData[] = companiesData?.map(company => {
+        const usersCount = usersData?.filter(u => u.company_id === company.id).length || 0;
+        const opportunitiesCount = opportunitiesData?.filter(o => o.company_id === company.id).length || 0;
+        const ownerName = companyOwners.get(company.user_id) || 'Sin nombre';
 
         return {
           id: company.id,
@@ -127,7 +128,7 @@ export const useAdminCompanies = () => {
           created_at: company.created_at,
           updated_at: company.updated_at,
           user_id: company.user_id,
-          owner_name: (company.profiles as any)?.full_name || 'Sin nombre',
+          owner_name: ownerName,
           users_count: usersCount,
           opportunities_count: opportunitiesCount,
           is_active: true // TODO: Determine based on company status

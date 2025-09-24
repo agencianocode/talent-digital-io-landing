@@ -84,50 +84,59 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
     
     setIsLoading(true);
     try {
-      // Mock data for demonstration
-      const mockCompanyData = {
-        id: companyId,
-        name: 'Tech Solutions Inc',
-        description: 'Empresa de tecnología especializada en desarrollo de software',
-        website: 'https://techsolutions.com',
-        industry: 'Tecnología',
-        size: '50-200 empleados',
-        location: 'Buenos Aires, Argentina',
-        logo_url: null,
-        created_at: '2024-01-15T10:00:00Z',
-        updated_at: '2024-01-15T10:00:00Z',
-        user_id: 'user1'
-      };
+      // Load company data
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('id', companyId)
+        .single();
 
-      const mockOwnerData = {
-        full_name: 'Carlos López',
-        user_id: 'user1'
-      };
+      if (companyError) {
+        console.error('Error loading company:', companyError);
+        toast.error('Error al cargar los detalles de la empresa');
+        setIsLoading(false);
+        return;
+      }
 
-      const mockUsersData = [
-        {
-          id: '1',
-          role: 'admin',
-          status: 'accepted',
-          created_at: '2024-01-15T10:00:00Z',
-          profiles: {
-            user_id: 'user1',
-            full_name: 'Carlos López'
-          }
-        },
-        {
-          id: '2',
-          role: 'viewer',
-          status: 'accepted',
-          created_at: '2024-01-16T14:30:00Z',
-          profiles: {
-            user_id: 'user4',
-            full_name: 'Laura Fernández'
-          }
-        }
-      ];
+      // Load company owner
+      const { data: ownerData, error: ownerError } = await supabase
+        .from('profiles')
+        .select('full_name, user_id')
+        .eq('user_id', companyData.user_id)
+        .single();
 
-      const opportunitiesCount = 2;
+      if (ownerError) {
+        console.error('Error loading owner:', ownerError);
+      }
+
+      // Load company users
+      const { data: usersData, error: usersError } = await supabase
+        .from('company_user_roles')
+        .select(`
+          id,
+          role,
+          status,
+          created_at,
+          profiles (
+            user_id,
+            full_name
+          )
+        `)
+        .eq('company_id', companyId);
+
+      if (usersError) {
+        console.error('Error loading company users:', usersError);
+      }
+
+      // Load opportunities count
+      const { count: opportunitiesCount, error: oppError } = await supabase
+        .from('opportunities')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyId);
+
+      if (oppError) {
+        console.error('Error loading opportunities count:', oppError);
+      }
 
       // Load services count (if talent_services table exists)
       let servicesCount = 0;
@@ -144,23 +153,23 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
       }
 
       const companyDetail: CompanyDetail = {
-        id: mockCompanyData.id,
-        name: mockCompanyData.name,
-        description: mockCompanyData.description || undefined,
-        website: mockCompanyData.website || undefined,
-        industry: mockCompanyData.industry || undefined,
-        size: mockCompanyData.size || undefined,
-        location: mockCompanyData.location || undefined,
-        logo_url: mockCompanyData.logo_url || undefined,
-        created_at: mockCompanyData.created_at,
-        updated_at: mockCompanyData.updated_at,
-        user_id: mockCompanyData.user_id,
-        owner_name: mockOwnerData.full_name || undefined,
-        owner_email: 'carlos@techsolutions.com', // Mock email
-        users: mockUsersData?.map(u => ({
+        id: companyData.id,
+        name: companyData.name,
+        description: companyData.description || undefined,
+        website: companyData.website || undefined,
+        industry: companyData.industry || undefined,
+        size: companyData.size || undefined,
+        location: companyData.location || undefined,
+        logo_url: companyData.logo_url || undefined,
+        created_at: companyData.created_at,
+        updated_at: companyData.updated_at,
+        user_id: companyData.user_id,
+        owner_name: ownerData?.full_name || undefined,
+        owner_email: '', // TODO: Get from auth.users
+        users: usersData?.map(u => ({
           id: (u.profiles as any)?.user_id || '',
           name: (u.profiles as any)?.full_name || 'Sin nombre',
-          email: `user${(u.profiles as any)?.user_id}@example.com`, // Mock email
+          email: '', // TODO: Get from auth.users
           role: u.role,
           joined_at: u.created_at,
           status: u.status
