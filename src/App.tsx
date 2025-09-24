@@ -42,7 +42,7 @@ const NewOpportunityMultiStep = lazy(() => import('./pages/NewOpportunityMultiSt
 const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage'));
 const TalentSearchPage = lazy(() => import('./pages/TalentSearchPage'));
 const TalentProfilePage = lazy(() => import('./pages/TalentProfilePage'));
-const OpportunityApplicants = lazy(() => import('./pages/OpportunityApplicants'));
+const OpportunityApplicants = lazy(() => import('./pages/OpportunityApplicantsNew'));
 const TalentDiscovery = lazy(() => import('./pages/TalentDiscovery'));
 const PublicTalentProfile = lazy(() => import('./pages/PublicTalentProfile'));
 const UserManagement = lazy(() => import('./pages/settings/UserManagement'));
