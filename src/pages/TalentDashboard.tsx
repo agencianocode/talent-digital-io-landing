@@ -15,10 +15,12 @@ import {
   Building
 } from 'lucide-react';
 import TalentTopNavigation from '@/components/TalentTopNavigation';
+import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
 
 const TalentDashboard = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const { opportunities, isLoading: opportunitiesLoading } = useSupabaseOpportunities();
 
   const handleSearch = () => {
     navigate('/talent-dashboard/explore');
@@ -126,133 +128,117 @@ const TalentDashboard = () => {
             Oportunidades Recientes
           </h2>
           
-          {/* Job Card 1 */}
-          <Card className="bg-white hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                {/* Company Logo Placeholder */}
-                <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <Building className="w-8 h-8 text-gray-400" />
-                </div>
-                
-                {/* Job Info */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-semibold text-gray-900 font-['Inter']">
-                          Closer de Ventas B2B para nicho Fitness
-                        </h3>
-                        <Badge className="bg-green-100 text-green-800 border-green-200">
-                          Activa
-                        </Badge>
-                      </div>
-                      
-                      <p className="text-gray-600 font-['Inter'] mb-2">
-                        SalesXcelerator
-                      </p>
-                      
-                      <div className="flex items-center gap-4 text-sm text-gray-500 font-['Inter']">
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4" />
-                          A Comisión
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          11 Postulantes
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          Hace 2 días
-                        </span>
+          {/* Oportunidades dinámicas desde Supabase */}
+          {opportunitiesLoading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 font-['Inter']">Cargando oportunidades...</p>
+            </div>
+          ) : opportunities && opportunities.length > 0 ? (
+            opportunities.slice(0, 3).map((opportunity, index) => (
+              <Card key={opportunity.id || index} className="bg-white hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    {/* Company Logo */}
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                      {opportunity.companies?.logo_url ? (
+                        <img 
+                          src={opportunity.companies.logo_url} 
+                          alt={`Logo de ${opportunity.companies.name}`}
+                          className="w-full h-full object-cover rounded-lg"
+                          onError={(e) => {
+                            // Fallback a icono si la imagen falla
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (fallback) {
+                              fallback.style.display = 'flex';
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center"
+                        style={{ display: opportunity.companies?.logo_url ? 'none' : 'flex' }}
+                      >
+                        <Building className="w-8 h-8 text-gray-400" />
                       </div>
                     </div>
                     
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        size="sm"
-                        className="bg-black hover:bg-gray-800 text-white font-['Inter']"
-                      >
-                        Aplicar
-                      </Button>
-                      <Button variant="ghost" size="sm" className="p-2">
-                        <div className="flex flex-col gap-0.5">
-                          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                    {/* Job Info */}
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-semibold text-gray-900 font-['Inter']">
+                              {opportunity.title || 'Título no disponible'}
+                            </h3>
+                            <Badge className="bg-green-100 text-green-800 border-green-200">
+                              {opportunity.status === 'active' ? 'Activa' : opportunity.status || 'Activa'}
+                            </Badge>
+                          </div>
+                          
+                          <p className="text-gray-600 font-['Inter'] mb-2">
+                            {opportunity.companies?.name || 'Empresa no especificada'}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 text-sm text-gray-500 font-['Inter']">
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="w-4 h-4" />
+                              {opportunity.salary_min && opportunity.salary_max
+                                ? `$${opportunity.salary_min}-${opportunity.salary_max} ${opportunity.currency || 'USD'}`
+                                : opportunity.salary_min
+                                ? `Desde $${opportunity.salary_min} ${opportunity.currency || 'USD'}`
+                                : 'A Convenir'
+                              }
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Users className="w-4 h-4" />
+                              Ver postulantes
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              {opportunity.created_at 
+                                ? `Hace ${Math.floor((new Date().getTime() - new Date(opportunity.created_at).getTime()) / (1000 * 60 * 60 * 24))} días`
+                                : 'Fecha no disponible'
+                              }
+                            </span>
+                          </div>
                         </div>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Job Card 2 */}
-          <Card className="bg-white hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                {/* Company Logo Placeholder */}
-                <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <Building className="w-8 h-8 text-gray-400" />
-                </div>
-                
-                {/* Job Info */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-semibold text-gray-900 font-['Inter']">
-                          Closer de Ventas B2B para nicho Fitness
-                        </h3>
-                        <Badge className="bg-green-100 text-green-800 border-green-200">
-                          Activa
-                        </Badge>
-                      </div>
-                      
-                      <p className="text-gray-600 font-['Inter'] mb-2">
-                        SalesXcelerator
-                      </p>
-                      
-                      <div className="flex items-center gap-4 text-sm text-gray-500 font-['Inter']">
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4" />
-                          A Comisión
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          11 Postulantes
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          Hace 2 días
-                        </span>
+                        
+                        {/* Actions */}
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            size="sm"
+                            className="bg-black hover:bg-gray-800 text-white font-['Inter']"
+                            onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
+                          >
+                            Ver Detalles
+                          </Button>
+                          <Button variant="ghost" size="sm" className="p-2">
+                            <div className="flex flex-col gap-0.5">
+                              <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                              <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                              <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                            </div>
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        size="sm"
-                        className="bg-black hover:bg-gray-800 text-white font-['Inter']"
-                      >
-                        Aplicar
-                      </Button>
-                      <Button variant="ghost" size="sm" className="p-2">
-                        <div className="flex flex-col gap-0.5">
-                          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                        </div>
-                      </Button>
-                    </div>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500 font-['Inter']">No hay oportunidades disponibles en este momento.</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => navigate('/talent-dashboard/opportunities')}
+              >
+                Explorar Oportunidades
+              </Button>
+            </div>
+          )}
         </div>
         </div>
       </main>

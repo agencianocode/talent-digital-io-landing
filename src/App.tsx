@@ -51,6 +51,7 @@ const BusinessProfile = lazy(() => import('./pages/BusinessProfile'));
 const BusinessMarketplace = lazy(() => import('./pages/BusinessMarketplace'));
 const BusinessMessagesPage = lazy(() => import('./pages/BusinessMessagesPage'));
 const BusinessNotificationsPage = lazy(() => import('./pages/BusinessNotificationsPage'));
+const AcademyDashboard = lazy(() => import('./pages/AcademyDashboard'));
 const AcceptInvitation = lazy(() => import('./pages/AcceptInvitation'));
 
 // Lazy load páginas de registro
@@ -321,6 +322,11 @@ function App() {
                         <Route path="notifications" element={
                           <Suspense fallback={<LoadingSkeleton type="list" />}>
                             <BusinessNotificationsPage />
+                          </Suspense>
+                        } />
+                        <Route path="academy" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <AcademyDashboard />
                           </Suspense>
                         } />
                       </Route>

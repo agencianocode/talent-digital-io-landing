@@ -21,6 +21,7 @@ import TalentServiceCard from '@/components/marketplace/TalentServiceCard';
 import ServiceRequestsList from '@/components/marketplace/ServiceRequestsList';
 import { TalentService, ServiceFormData } from '@/hooks/useTalentServices';
 import { useToast } from '@/hooks/use-toast';
+import TalentTopNavigation from '@/components/TalentTopNavigation';
 
 const TalentMarketplace: React.FC = () => {
   const { toast } = useToast();
@@ -166,7 +167,9 @@ const TalentMarketplace: React.FC = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gray-50">
+        <TalentTopNavigation />
+        <div className="container mx-auto px-4 py-8">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
@@ -179,12 +182,15 @@ const TalentMarketplace: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <TalentTopNavigation />
+      <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -416,6 +422,7 @@ const TalentMarketplace: React.FC = () => {
         isSubmitting={false}
         mode={editingService ? 'edit' : 'create'}
       />
+      </div>
     </div>
   );
 };

@@ -27,61 +27,27 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
   const [bio, setBio] = useState(initialData.bio || '');
   const [skills, setSkills] = useState<string[]>(initialData.skills || []);
   const [skillInput, setSkillInput] = useState('');
-  const [customCategory, setCustomCategory] = useState('');
-  const [customCategory2, setCustomCategory2] = useState('');
 
   // Categorías principales (áreas generales)
   const mainCategories = [
-    'Comercial',
-    'Tecnología',
+    'Ventas',
     'Marketing',
-    'Diseño',
+    'Creativo',
+    'Atención al Cliente',
     'Operaciones',
-    'Finanzas',
-    'Recursos Humanos',
-    'Legal',
-    'Consultoría',
-    'Otros'
+    'Tecnología y Automatizaciones',
+    'Soporte Profesional (Asistentes Administrativos, Contadores, Abogados, etc.)'
   ];
 
   // Categorías secundarias (especializaciones específicas)
   const secondaryCategories = [
-    'Closer de Ventas',
-    'Content Manager',
-    'Community Manager',
-    'Social Media Manager',
-    'SEO Specialist',
-    'PPC Specialist',
-    'Email Marketing',
-    'Brand Manager',
-    'Product Manager',
-    'Project Manager',
-    'Scrum Master',
-    'Business Analyst',
-    'Data Analyst',
-    'Frontend Developer',
-    'Backend Developer',
-    'Full Stack Developer',
-    'Mobile Developer',
-    'DevOps Engineer',
-    'UI/UX Designer',
-    'Graphic Designer',
-    'Motion Graphics',
-    'Video Editor',
-    'Photographer',
-    'Copywriter',
-    'Technical Writer',
-    'Account Manager',
-    'Customer Success',
-    'Operations Manager',
-    'Supply Chain',
-    'Financial Analyst',
-    'HR Specialist',
-    'Legal Advisor',
-    'Consultant',
-    'Trainer',
-    'Coach',
-    'Otros'
+    'Ventas',
+    'Marketing',
+    'Creativo',
+    'Atención al Cliente',
+    'Operaciones',
+    'Tecnología y Automatizaciones',
+    'Soporte Profesional (Asistentes Administrativos, Contadores, Abogados, etc.)'
   ];
 
   const experienceLevels = [
@@ -112,19 +78,13 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
     }
   };
 
-  // Funciones para manejar categorías personalizadas
+  // Funciones para manejar categorías
   const handleCategoryChange = (value: string) => {
     setCategory(value);
-    if (value !== 'Otros') {
-      setCustomCategory('');
-    }
   };
 
   const handleCategory2Change = (value: string) => {
-    setCategory2(value);
-    if (value !== 'Otros') {
-      setCustomCategory2('');
-    }
+    setCategory2(value === 'none' ? '' : value);
   };
 
 
@@ -135,14 +95,10 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
   const handleContinue = () => {
     if (!isFormValid) return;
     
-    // Usar categoría personalizada si se seleccionó "Otros"
-    const finalCategory = category === 'Otros' && customCategory ? customCategory : category;
-    const finalCategory2 = category2 === 'Otros' && customCategory2 ? customCategory2 : category2;
-    
     onComplete({
       title,
-      category: finalCategory,
-      category2: finalCategory2,
+      category,
+      category2,
       experience,
       bio,
       skills
@@ -164,11 +120,15 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
       {/* Form */}
       <div className="space-y-4 flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
         {/* Category Fields */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-4">
+          {/* Categoría Principal */}
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 font-['Inter']">
+              Categoría Principal *
+            </label>
             <Select value={category} onValueChange={handleCategoryChange}>
               <SelectTrigger className="h-11 text-sm border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white">
-                <SelectValue placeholder="Categoría" />
+                <SelectValue placeholder="Selecciona tu área principal" />
               </SelectTrigger>
               <SelectContent>
                 {mainCategories.map((cat) => (
@@ -178,22 +138,26 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
                 ))}
               </SelectContent>
             </Select>
-            {category === 'Otros' && (
-              <Input
-                type="text"
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                placeholder="Especifica tu categoría"
-                className="mt-2 h-11 text-sm border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white"
-              />
+            {category && (
+              <p className="mt-1 text-xs text-green-600 font-['Inter']">
+                ✓ Seleccionado: {category}
+              </p>
             )}
           </div>
+
+          {/* Categoría Secundaria */}
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 font-['Inter']">
+              Categoría Secundaria (Opcional)
+            </label>
             <Select value={category2} onValueChange={handleCategory2Change}>
               <SelectTrigger className="h-11 text-sm border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white">
-                <SelectValue placeholder="Categoría 2 (Opcional)" />
+                <SelectValue placeholder="Selecciona una segunda área (opcional)" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none" className="font-['Inter'] text-gray-500">
+                  Sin categoría secundaria
+                </SelectItem>
                 {secondaryCategories.map((cat) => (
                   <SelectItem key={cat} value={cat} className="font-['Inter']">
                     {cat}
@@ -201,14 +165,10 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
                 ))}
               </SelectContent>
             </Select>
-            {category2 === 'Otros' && (
-              <Input
-                type="text"
-                value={customCategory2}
-                onChange={(e) => setCustomCategory2(e.target.value)}
-                placeholder="Especifica tu especialización"
-                className="mt-2 h-11 text-sm border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white"
-              />
+            {category2 && category2 !== 'none' && (
+              <p className="mt-1 text-xs text-blue-600 font-['Inter']">
+                ✓ Seleccionado: {category2}
+              </p>
             )}
           </div>
         </div>

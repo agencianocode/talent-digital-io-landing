@@ -1,0 +1,226 @@
+import React, { useState, useEffect } from 'react';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  GraduationCap, 
+  Users, 
+  Mail, 
+  TrendingUp, 
+  Briefcase, 
+  Activity,
+  Share2,
+  Plus,
+  Settings
+} from 'lucide-react';
+import AcademyOverview from '../components/academy/AcademyOverview';
+import StudentDirectory from '../components/academy/StudentDirectory';
+import InvitationManager from '../components/academy/InvitationManager';
+import ActivityFeed from '../components/academy/ActivityFeed';
+import ExclusiveOpportunities from '../components/academy/ExclusiveOpportunities';
+import PublicDirectory from '../components/academy/PublicDirectory';
+
+const AcademyDashboard: React.FC = () => {
+  const { user, userRole } = useSupabaseAuth();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [academyId, setAcademyId] = useState<string | null>(null);
+
+  // Check if user has academy role - for now allow all business roles
+  const isAcademyRole = userRole === 'business' || userRole === 'premium_business' || userRole === 'freemium_business' || userRole === 'admin';
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (!isAcademyRole) {
+      navigate('/business-dashboard');
+      return;
+    }
+
+    // For now, we'll use a mock academy ID
+    // In production, this would come from the user's academy association
+    setAcademyId('mock-academy-id');
+  }, [user, userRole, navigate, isAcademyRole]);
+
+  if (!isAcademyRole) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <GraduationCap className="h-16 w-16 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Acceso Restringido</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              Solo las academias pueden acceder a esta sección.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Rol actual: {userRole || 'No definido'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!academyId) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando academia...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+              <GraduationCap className="h-8 w-8 text-blue-600" />
+              Mi Academia
+            </h1>
+            <p className="text-muted-foreground">
+              Gestiona tu academia, estudiantes y oportunidades exclusivas
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              <Share2 className="h-4 w-4 mr-2" />
+              Compartir
+            </Button>
+            <Button variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Configuración
+            </Button>
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Invitar Estudiantes
+            </Button>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Estudiantes</p>
+                  <p className="text-2xl font-bold">0</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <Mail className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Invitaciones</p>
+                  <p className="text-2xl font-bold">0</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Aplicaciones</p>
+                  <p className="text-2xl font-bold">0</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Briefcase className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Oportunidades</p>
+                  <p className="text-2xl font-bold">0</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="students" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Estudiantes
+          </TabsTrigger>
+          <TabsTrigger value="invitations" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Invitaciones
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Actividad
+          </TabsTrigger>
+          <TabsTrigger value="opportunities" className="flex items-center gap-2">
+            <Briefcase className="h-4 w-4" />
+            Oportunidades
+          </TabsTrigger>
+          <TabsTrigger value="directory" className="flex items-center gap-2">
+            <Share2 className="h-4 w-4" />
+            Directorio
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <AcademyOverview academyId={academyId} />
+        </TabsContent>
+
+        <TabsContent value="students">
+          <StudentDirectory academyId={academyId} />
+        </TabsContent>
+
+        <TabsContent value="invitations">
+          <InvitationManager academyId={academyId} />
+        </TabsContent>
+
+        <TabsContent value="activity">
+          <ActivityFeed academyId={academyId} />
+        </TabsContent>
+
+        <TabsContent value="opportunities">
+          <ExclusiveOpportunities academyId={academyId} />
+        </TabsContent>
+
+        <TabsContent value="directory">
+          <PublicDirectory academyId={academyId} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default AcademyDashboard;

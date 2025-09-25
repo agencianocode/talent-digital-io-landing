@@ -22,10 +22,11 @@ interface FilterBarProps {
 const OPPORTUNITY_CATEGORIES = [
   { value: 'ventas', label: 'Ventas' },
   { value: 'marketing', label: 'Marketing' },
+  { value: 'creativo', label: 'Creativo' },
+  { value: 'atencion-cliente', label: 'Atención al Cliente' },
   { value: 'operaciones', label: 'Operaciones' },
-  { value: 'fulfillment', label: 'Fulfillment' },
-  { value: 'tecnologia', label: 'Tecnología' },
-  { value: 'diseno', label: 'Diseño' }
+  { value: 'tecnologia-automatizaciones', label: 'Tecnología y Automatizaciones' },
+  { value: 'soporte-profesional', label: 'Soporte Profesional' }
 ];
 
 const SUBCATEGORIES = {
@@ -39,17 +40,48 @@ const SUBCATEGORIES = {
     { value: 'media-buyer', label: 'Media Buyer' },
     { value: 'content-creator', label: 'Content Creator' },
     { value: 'social-media', label: 'Social Media Manager' },
-    { value: 'seo-specialist', label: 'SEO Specialist' }
+    { value: 'seo-specialist', label: 'SEO Specialist' },
+    { value: 'email-marketing', label: 'Email Marketing' },
+    { value: 'brand-manager', label: 'Brand Manager' }
+  ],
+  creativo: [
+    { value: 'disenador-grafico', label: 'Diseñador Gráfico' },
+    { value: 'ui-ux-designer', label: 'UI/UX Designer' },
+    { value: 'video-editor', label: 'Video Editor' },
+    { value: 'fotografo', label: 'Fotógrafo' },
+    { value: 'ilustrador', label: 'Ilustrador' },
+    { value: 'copywriter', label: 'Copywriter' }
+  ],
+  'atencion-cliente': [
+    { value: 'customer-success', label: 'Customer Success' },
+    { value: 'support-agent', label: 'Support Agent' },
+    { value: 'community-manager', label: 'Community Manager' },
+    { value: 'customer-experience', label: 'Customer Experience' }
   ],
   operaciones: [
     { value: 'project-manager', label: 'Project Manager' },
     { value: 'operations-manager', label: 'Operations Manager' },
-    { value: 'data-analyst', label: 'Data Analyst' }
+    { value: 'data-analyst', label: 'Data Analyst' },
+    { value: 'process-improvement', label: 'Process Improvement' },
+    { value: 'supply-chain', label: 'Supply Chain' },
+    { value: 'quality-assurance', label: 'Quality Assurance' }
   ],
-  fulfillment: [
-    { value: 'logistics', label: 'Logistics' },
-    { value: 'warehouse', label: 'Warehouse Manager' },
-    { value: 'customer-service', label: 'Customer Service' }
+  'tecnologia-automatizaciones': [
+    { value: 'desarrollador-frontend', label: 'Desarrollador Frontend' },
+    { value: 'desarrollador-backend', label: 'Desarrollador Backend' },
+    { value: 'devops-engineer', label: 'DevOps Engineer' },
+    { value: 'data-engineer', label: 'Data Engineer' },
+    { value: 'automation-specialist', label: 'Automation Specialist' },
+    { value: 'system-administrator', label: 'System Administrator' },
+    { value: 'cybersecurity', label: 'Cybersecurity' }
+  ],
+  'soporte-profesional': [
+    { value: 'asistente-administrativo', label: 'Asistente Administrativo' },
+    { value: 'contador', label: 'Contador' },
+    { value: 'abogado', label: 'Abogado' },
+    { value: 'recursos-humanos', label: 'Recursos Humanos' },
+    { value: 'virtual-assistant', label: 'Virtual Assistant' },
+    { value: 'bookkeeper', label: 'Bookkeeper' }
   ]
 };
 

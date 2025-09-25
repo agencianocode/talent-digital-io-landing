@@ -56,14 +56,17 @@ const TalentTopNavigation = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900 font-['Inter']">
+            <button
+              onClick={() => navigate('/talent-dashboard')}
+              className="text-xl font-bold text-gray-900 font-['Inter'] hover:text-purple-600 transition-colors cursor-pointer"
+            >
               TalentoDigital.io
-            </h1>
+            </button>
           </div>
 
           {/* Desktop Navigation */}

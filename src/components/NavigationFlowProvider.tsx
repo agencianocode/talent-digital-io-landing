@@ -139,7 +139,8 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
       Boolean(user?.email_confirmed_at),
       profileState,
       location.pathname,
-      businessOnboardingComplete ?? undefined
+      businessOnboardingComplete ?? undefined,
+      talentOnboardingComplete ?? undefined
     );
 
     console.log('🧭 Navigating to next step:', { nextStep, route, profileState });
@@ -149,7 +150,7 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
       setLastNavigationTime(new Date());
       setIsTransitioning(false);
     }, 300);
-  }, [navigationState, userRole, user, profileState, location.pathname, navigate]);
+  }, [navigationState, userRole, user, profileState, location.pathname, navigate, businessOnboardingComplete, talentOnboardingComplete]);
 
   const navigateToOnboarding = useCallback(() => {
     setIsTransitioning(true);
@@ -230,14 +231,15 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
     
     // Debug logging for talent users
     if (isTalentRole(userRole)) {
-      console.log('NavigationFlowProvider - Talent user check:', {
+      console.log('🎯 NavigationFlowProvider - Talent user check:', {
         userRole,
         isEmailConfirmed: Boolean(user?.email_confirmed_at),
         profileState,
         currentPath,
         idealRoute,
         talentOnboardingComplete,
-        businessOnboardingComplete
+        businessOnboardingComplete,
+        shouldRedirect: currentPath !== idealRoute
       });
     }
     
@@ -264,7 +266,8 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
         (currentPath === '/auth' && idealRoute !== '/auth') ||
         (currentPath.includes('/register') && user) || // Redirect if authenticated and on registration
         (currentPath.includes('/onboarding') && !shouldShowOnboarding) ||
-        (currentPath.includes('/onboarding') && userRole && ['business', 'freemium_business'].includes(userRole)) // Redirect business users away from onboarding
+        (currentPath.includes('/onboarding') && userRole && ['business', 'freemium_business'].includes(userRole)) || // Redirect business users away from onboarding
+        (currentPath === '/' && user && userRole && idealRoute.includes('/talent-dashboard')) // Force redirect from home to talent dashboard for authenticated talent users
       )
     );
 

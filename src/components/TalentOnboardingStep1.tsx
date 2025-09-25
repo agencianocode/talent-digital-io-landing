@@ -9,6 +9,7 @@ interface TalentProfile {
   firstName: string;
   lastName: string;
   country: string;
+  city: string;
   phone: string;
   phoneCountryCode: string;
   profilePhoto?: File | null;
@@ -24,6 +25,7 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
   const [firstName, setFirstName] = useState(initialData.firstName || '');
   const [lastName, setLastName] = useState(initialData.lastName || '');
   const [country, setCountry] = useState(initialData.country || '');
+  const [city, setCity] = useState(initialData.city || '');
   const [phone, setPhone] = useState(initialData.phone || '');
   const [phoneCountryCode, setPhoneCountryCode] = useState(initialData.phoneCountryCode || '+57');
   const [profilePhoto, setProfilePhoto] = useState<File | null>(initialData.profilePhoto || null);
@@ -92,6 +94,7 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       country: country.trim(),
+      city: city.trim(),
       phone: phone.trim(),
       phoneCountryCode,
       profilePhoto,
@@ -100,7 +103,7 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
     onComplete(profileData);
   };
 
-  const isFormValid = firstName.trim().length > 0 && lastName.trim().length > 0 && country.trim().length > 0;
+  const isFormValid = firstName.trim().length > 0 && lastName.trim().length > 0 && country.trim().length > 0 && city.trim().length > 0;
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
@@ -173,6 +176,17 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* City Field */}
+        <div className="space-y-2">
+          <Input
+            type="text"
+            placeholder="Ciudad"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="h-12 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 bg-white font-['Inter']"
+          />
         </div>
 
         {/* Phone Field with Country Code Selector */}

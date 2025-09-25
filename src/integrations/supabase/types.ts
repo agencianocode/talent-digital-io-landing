@@ -730,6 +730,8 @@ export type Database = {
         Row: {
           availability: string | null
           bio: string | null
+          city: string | null
+          country: string | null
           created_at: string
           currency: string | null
           experience_level: string | null
@@ -738,6 +740,8 @@ export type Database = {
           id: string
           industries_of_interest: string[] | null
           linkedin_url: string | null
+          location: string | null
+          phone: string | null
           portfolio_url: string | null
           primary_category_id: string | null
           secondary_category_id: string | null
@@ -746,11 +750,14 @@ export type Database = {
           title: string | null
           updated_at: string
           user_id: string
+          video_presentation_url: string | null
           years_experience: number | null
         }
         Insert: {
           availability?: string | null
           bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           currency?: string | null
           experience_level?: string | null
@@ -759,6 +766,8 @@ export type Database = {
           id?: string
           industries_of_interest?: string[] | null
           linkedin_url?: string | null
+          location?: string | null
+          phone?: string | null
           portfolio_url?: string | null
           primary_category_id?: string | null
           secondary_category_id?: string | null
@@ -767,11 +776,14 @@ export type Database = {
           title?: string | null
           updated_at?: string
           user_id: string
+          video_presentation_url?: string | null
           years_experience?: number | null
         }
         Update: {
           availability?: string | null
           bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           currency?: string | null
           experience_level?: string | null
@@ -780,6 +792,8 @@ export type Database = {
           id?: string
           industries_of_interest?: string[] | null
           linkedin_url?: string | null
+          location?: string | null
+          phone?: string | null
           portfolio_url?: string | null
           primary_category_id?: string | null
           secondary_category_id?: string | null
@@ -788,6 +802,7 @@ export type Database = {
           title?: string | null
           updated_at?: string
           user_id?: string
+          video_presentation_url?: string | null
           years_experience?: number | null
         }
         Relationships: [

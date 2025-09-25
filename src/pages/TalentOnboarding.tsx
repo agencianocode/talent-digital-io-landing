@@ -12,6 +12,7 @@ interface TalentProfile {
   firstName: string;
   lastName: string;
   country: string;
+  city: string;
   phone: string;
   phoneCountryCode: string;
   profilePhoto?: File | null;
@@ -35,6 +36,7 @@ const TalentOnboarding = () => {
     firstName: '',
     lastName: '',
     country: '',
+    city: '',
     phone: '',
     phoneCountryCode: '+57',
     profilePhoto: null,
@@ -70,8 +72,11 @@ const TalentOnboarding = () => {
   }
 
   const handleStep1Complete = (data: TalentProfile) => {
+    console.log('🚀 STEP 1 COMPLETE - Data received:', data);
     setTalentProfile(data);
+    console.log('🚀 STEP 1 COMPLETE - Setting currentStep to 2');
     setCurrentStep(2);
+    console.log('🚀 STEP 1 COMPLETE - currentStep should now be 2');
   };
 
   const handleStep2Complete = async (data: ProfessionalInfo) => {
@@ -107,6 +112,7 @@ const TalentOnboarding = () => {
             last_name: talentProfile.lastName,
             full_name: `${talentProfile.firstName} ${talentProfile.lastName}`.trim(),
             country: talentProfile.country,
+            city: talentProfile.city,
             phone: talentProfile.phone,
             phone_country_code: talentProfile.phoneCountryCode,
             profile_photo_url: talentProfile.profilePhotoUrl,
@@ -149,6 +155,7 @@ const TalentOnboarding = () => {
                 profile_photo_url: publicUrl,
                 phone: talentProfile.phone,
                 country: talentProfile.country,
+                city: talentProfile.city,
                 updated_at: new Date().toISOString()
               });
 
@@ -163,6 +170,7 @@ const TalentOnboarding = () => {
               full_name: `${talentProfile.firstName} ${talentProfile.lastName}`.trim(),
               phone: talentProfile.phone,
               country: talentProfile.country,
+              city: talentProfile.city,
               updated_at: new Date().toISOString()
             });
         }
@@ -251,6 +259,10 @@ const TalentOnboarding = () => {
                     initialData={professionalInfo}
                   />
                 )}
+                {/* Debug info */}
+                <div className="fixed bottom-4 right-4 bg-black text-white p-2 rounded text-xs">
+                  Current Step: {currentStep}
+                </div>
               </div>
             </div>
           </div>
