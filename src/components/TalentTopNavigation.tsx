@@ -14,11 +14,13 @@ import {
   X
 } from 'lucide-react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useProfileData } from '@/hooks/useProfileData';
 
 const TalentTopNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, signOut } = useSupabaseAuth();
+  const { userProfile } = useProfileData();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -121,9 +123,15 @@ const TalentTopNavigation = () => {
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               >
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarImage 
+                      src={
+                        userProfile?.avatar_url && !userProfile.avatar_url.startsWith('blob:')
+                          ? userProfile.avatar_url
+                          : undefined
+                      } 
+                    />
                     <AvatarFallback className="text-sm">
-                      {profile?.full_name?.charAt(0) || 'T'}
+                      {userProfile?.full_name?.charAt(0) || profile?.full_name?.charAt(0) || 'T'}
                     </AvatarFallback>
                   </Avatar>
                 <ChevronDown className="w-4 h-4 text-gray-600" />
