@@ -1,27 +1,44 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OpportunityStep1 from './OpportunityStep1';
 import OpportunityStep2 from './OpportunityStep2';
 import PublishJobModal from './PublishJobModal';
 import { type Company } from '@/contexts/CompanyContext';
+// Los imports se utilizan en los componentes hijos
+// import { 
+//   categoryTemplates, 
+//   contractTypes, 
+//   locationTypes, 
+//   experienceLevelOptions
+// } from '@/lib/opportunityTemplates';
+import { useAutoSave } from '@/hooks/useAutoSave';
 
 interface FormData {
-  // Step 1
+  // Step 1 - Detalles del trabajo
+  category: string;
   title: string;
   description: string;
+  contractType: string;
   skills: string[];
   tools: string[];
+  experienceLevels: string[];
+  locationType: string;
+  location: string;
   contractorsCount: number;
   usOnlyApplicants: boolean;
   preferredTimezone: string;
   preferredLanguages: string[];
-  extendedSchedule: string;
+  deadlineDate: Date | null;
   
-  // Step 2
+  // Step 2 - Presupuesto y duración
   projectType: 'ongoing' | 'one-time';
+  durationType: 'indefinite' | 'fixed';
+  durationValue: number;
+  durationUnit: 'days' | 'weeks' | 'months';
+  paymentType: 'fixed' | 'commission' | 'fixed_plus_commission';
   paymentMethod: 'hourly' | 'weekly' | 'monthly';
   hourlyMinRate: string;
   hourlyMaxRate: string;
@@ -29,14 +46,13 @@ interface FormData {
   weeklyMaxBudget: string;
   monthlyMinBudget: string;
   monthlyMaxBudget: string;
+  commissionPercentage: string;
+  salaryIsPublic: boolean;
   maxHoursPerWeek: number;
   maxHoursPerMonth: number;
   isMaxHoursOptional: boolean;
-  // Duración del trabajo
-  jobDuration: number;
-  jobDurationUnit: 'month' | 'week';
-  noEndDate: boolean;
-  // Publicación
+  // Estado y publicación
+  status: 'draft' | 'published';
   publishToFeed?: boolean;
 }
 
@@ -69,33 +85,45 @@ const MultiStepOpportunityForm = ({
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     // Step 1 defaults
+    category: '',
     title: '',
     description: '',
+    contractType: '',
     skills: [],
     tools: [],
+    experienceLevels: [],
+    locationType: 'remote',
+    location: '',
     contractorsCount: 1,
     usOnlyApplicants: false,
     preferredTimezone: '',
     preferredLanguages: [],
-    extendedSchedule: '',
+    deadlineDate: null,
     
     // Step 2 defaults
     projectType: 'ongoing',
-    paymentMethod: 'hourly',
+    durationType: 'indefinite',
+    durationValue: 1,
+    durationUnit: 'months',
+    paymentType: 'fixed',
+    paymentMethod: 'monthly',
     hourlyMinRate: '',
     hourlyMaxRate: '',
     weeklyMinBudget: '',
     weeklyMaxBudget: '',
     monthlyMinBudget: '',
     monthlyMaxBudget: '',
+    commissionPercentage: '',
+    salaryIsPublic: true,
     maxHoursPerWeek: 20,
     maxHoursPerMonth: 0,
     isMaxHoursOptional: true,
-    jobDuration: 1,
-    jobDurationUnit: 'month',
-    noEndDate: false,
+    // Estado por defecto como borrador
+    status: 'draft',
     
     // Override with initial data
     ...initialData
@@ -105,33 +133,53 @@ const MultiStepOpportunityForm = ({
     setFormData(prev => ({ ...prev, ...stepData }));
   };
 
+  // Función para guardar como borrador
+  const saveDraft = async (data: FormData) => {
+    setIsSaving(true);
+    try {
+      // Guardar como borrador
+      const draftData = { ...data, status: 'draft' as const };
+      await onSubmit(draftData);
+      setLastSaved(new Date());
+    } catch (error) {
+      console.error('Error saving draft:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Autoguardado cada 30 segundos
+  const autoSaveData = useAutoSave({
+    data: formData,
+    onSave: saveDraft,
+    interval: 30000, // 30 segundos
+    enabled: true,
+    storageKey: 'opportunity-draft'
+  });
+
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
         return !!(
-          formData.title && 
-          formData.description && 
-          formData.skills && 
-          formData.skills.length > 0 &&
-          formData.tools && 
-          formData.tools.length > 0 &&
+          formData.category?.trim() &&
+          formData.title?.trim() &&
+          formData.description?.trim() &&
+          formData.contractType?.trim() &&
+          formData.locationType?.trim() &&
+          formData.skills?.length > 0 &&
+          formData.experienceLevels?.length > 0 &&
           formData.contractorsCount > 0
         );
       case 2:
-        if (formData.projectType === 'one-time') {
-          return !!(formData.monthlyMinBudget && formData.monthlyMaxBudget);
-        } else {
-          switch (formData.paymentMethod) {
-            case 'hourly':
-              return !!(formData.hourlyMinRate && formData.hourlyMaxRate);
-            case 'weekly':
-              return !!(formData.weeklyMinBudget && formData.weeklyMaxBudget);
-            case 'monthly':
-              return !!(formData.monthlyMinBudget && formData.monthlyMaxBudget);
-            default:
-              return false;
-          }
-        }
+        const hasDuration = formData.durationType === 'indefinite' || 
+          (formData.durationType === 'fixed' && formData.durationValue > 0);
+        const hasPayment = formData.paymentType && 
+          (formData.paymentType === 'commission' || 
+           (formData.paymentMethod && 
+            ((formData.paymentMethod === 'hourly' && formData.hourlyMinRate?.trim()) ||
+             (formData.paymentMethod === 'weekly' && formData.weeklyMinBudget?.trim()) ||
+             (formData.paymentMethod === 'monthly' && formData.monthlyMinBudget?.trim()))));
+        return !!(hasDuration && hasPayment);
       default:
         return true;
     }
@@ -185,15 +233,20 @@ const MultiStepOpportunityForm = ({
         return (
           <OpportunityStep1
             data={{
+              category: formData.category,
               title: formData.title,
               description: formData.description,
+              contractType: formData.contractType,
               skills: formData.skills,
               tools: formData.tools,
+              experienceLevels: formData.experienceLevels,
+              locationType: formData.locationType,
+              location: formData.location,
               contractorsCount: formData.contractorsCount,
               usOnlyApplicants: formData.usOnlyApplicants,
               preferredTimezone: formData.preferredTimezone,
               preferredLanguages: formData.preferredLanguages,
-              extendedSchedule: formData.extendedSchedule
+              deadlineDate: formData.deadlineDate
             }}
             onChange={updateFormData}
             company={company}
@@ -204,6 +257,10 @@ const MultiStepOpportunityForm = ({
           <OpportunityStep2
             data={{
               projectType: formData.projectType,
+              durationType: formData.durationType,
+              durationValue: formData.durationValue,
+              durationUnit: formData.durationUnit,
+              paymentType: formData.paymentType,
               paymentMethod: formData.paymentMethod,
               hourlyMinRate: formData.hourlyMinRate,
               hourlyMaxRate: formData.hourlyMaxRate,
@@ -211,12 +268,11 @@ const MultiStepOpportunityForm = ({
               weeklyMaxBudget: formData.weeklyMaxBudget,
               monthlyMinBudget: formData.monthlyMinBudget,
               monthlyMaxBudget: formData.monthlyMaxBudget,
+              commissionPercentage: formData.commissionPercentage,
+              salaryIsPublic: formData.salaryIsPublic,
               maxHoursPerWeek: formData.maxHoursPerWeek,
               maxHoursPerMonth: formData.maxHoursPerMonth,
-              isMaxHoursOptional: formData.isMaxHoursOptional,
-              jobDuration: formData.jobDuration,
-              jobDurationUnit: formData.jobDurationUnit,
-              noEndDate: formData.noEndDate
+              isMaxHoursOptional: formData.isMaxHoursOptional
             }}
             onChange={updateFormData}
           />
@@ -353,6 +409,51 @@ const MultiStepOpportunityForm = ({
         </div>
       )}
 
+      {/* Auto-save Status */}
+      <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+        <div className="flex items-center gap-2">
+          {isSaving && (
+            <>
+              <Save className="h-4 w-4 animate-pulse" />
+              <span>Guardando borrador...</span>
+            </>
+          )}
+          {autoSaveData.lastSaved && !isSaving && (
+            <>
+              <Save className="h-4 w-4 text-green-500" />
+              <span>
+                Guardado automático: {autoSaveData.lastSaved.toLocaleTimeString()}
+              </span>
+            </>
+          )}
+          {lastSaved && !autoSaveData.lastSaved && !isSaving && (
+            <span>
+              Último guardado manual: {lastSaved.toLocaleTimeString()}
+            </span>
+          )}
+          {formData.status === 'draft' && (
+            <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs">
+              Borrador
+            </span>
+          )}
+          {autoSaveData.isAutoSaveEnabled && (
+            <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+              Auto-guardado activo
+            </span>
+          )}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => saveDraft(formData)}
+          disabled={isSaving}
+          className="text-xs"
+        >
+          <Save className="h-3 w-3 mr-1" />
+          Guardar borrador
+        </Button>
+      </div>
+
       {/* Navigation Buttons */}
       <div className="flex justify-between border-t border-gray-200 pt-6">
         <Button
@@ -371,7 +472,7 @@ const MultiStepOpportunityForm = ({
           {isLoading 
             ? 'Publicando...' 
             : currentStep === 2 
-            ? 'Guardar' 
+            ? 'Publicar' 
             : 'Próximo'
           }
         </Button>

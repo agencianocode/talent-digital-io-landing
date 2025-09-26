@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Circle, Building } from 'lucide-react';
 import { useProfileProgress } from '@/hooks/useProfileProgress';
+import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
 
 
 const BusinessDashboard = () => {
@@ -19,6 +20,11 @@ const BusinessDashboard = () => {
     getCompletionPercentage,
     getNextIncompleteTask
   } = useProfileProgress();
+  
+  const { opportunities } = useSupabaseOpportunities();
+  
+  // Calcular solo las oportunidades activas para el dashboard
+  const activeOpportunitiesCount = opportunities.filter(opp => opp.status === 'active').length;
 
   // Verificar onboarding antes de mostrar dashboard
   useEffect(() => {
@@ -186,7 +192,7 @@ const BusinessDashboard = () => {
                             <Button 
                               variant="link" 
                               className="text-blue-600 p-0 h-auto ml-1 sm:ml-3 text-xs sm:text-sm"
-                              onClick={() => navigate('/settings/profile?tab=corporate')}
+                              onClick={() => navigate('/business-dashboard/company-details')}
                             >
                               <span className="hidden sm:inline">Completar Perfil ahora</span>
                               <span className="sm:hidden">Completar</span>
@@ -253,7 +259,7 @@ const BusinessDashboard = () => {
                     <div className="text-green-600 text-xl">📊</div>
                   </div>
                   <div className="text-sm text-slate-600">Oportunidades Activas</div>
-                  <div className="text-2xl font-bold text-slate-900">2</div>
+                  <div className="text-2xl font-bold text-slate-900">{activeOpportunitiesCount}</div>
                 </CardContent>
               </Card>
               
@@ -293,55 +299,59 @@ const BusinessDashboard = () => {
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Oportunidades Activas</h3>
-                  <Button variant="link" className="text-blue-600">Ver todas</Button>
+                  <Button 
+                    variant="link" 
+                    className="text-blue-600"
+                    onClick={() => navigate('/business-dashboard/opportunities')}
+                  >
+                    Ver todas
+                  </Button>
                 </div>
                 
                 <div className="space-y-4">
-                  {/* Opportunity 1 */}
-                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center">
-                        <span className="text-slate-600 font-bold">X</span>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-slate-900">Linkedin Growth Expert</h4>
-                        <div className="flex items-center gap-4 text-sm text-slate-600">
-                          <span>SalesXcelerator</span>
-                          <span>Hace 10 minutos</span>
-                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">Activa</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
-                          <span>👁️ 0 vistas</span>
-                          <span>👤 0 Postulantes</span>
-                        </div>
-                      </div>
+                  {activeOpportunitiesCount === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <p>No hay oportunidades activas</p>
+                      <Button 
+                        className="mt-2 bg-black hover:bg-gray-800 text-white"
+                        onClick={() => navigate('/business-dashboard/opportunities/new')}
+                      >
+                        Crear primera oportunidad
+                      </Button>
                     </div>
-                    <Button variant="outline" size="sm">Ver Postulantes</Button>
-                  </div>
-
-                  {/* Opportunity 2 */}
-                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center">
-                        <span className="text-slate-600 font-bold">X</span>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-slate-900">Closer de Ventas B2B para nicho Fitness</h4>
-                        <div className="flex items-center gap-4 text-sm text-slate-600">
-                          <span>SalesXcelerator</span>
-                          <span>Hace 2 días</span>
-                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">Activa</span>
+                  ) : (
+                    opportunities
+                      .filter(opp => opp.status === 'active')
+                      .slice(0, 3) // Mostrar máximo 3 en el dashboard
+                      .map((opportunity) => (
+                        <div key={opportunity.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center">
+                              <span className="text-slate-600 font-bold">{opportunity.title.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-slate-900">{opportunity.title}</h4>
+                              <div className="flex items-center gap-4 text-sm text-slate-600">
+                                <span>{opportunity.companies?.name || 'Tu empresa'}</span>
+                                <span>Hace {new Date(opportunity.created_at).toLocaleDateString()}</span>
+                                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">Activa</span>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
+                                <span>👁️ 0 vistas</span>
+                                <span>👤 0 Postulantes</span>
+                              </div>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => navigate(`/business-dashboard/opportunities/${opportunity.id}/applicants`)}
+                          >
+                            Ver Postulantes
+                          </Button>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
-                          <span>👁️ 123 vistas</span>
-                          <span>👤 11 Postulantes</span>
-                          <span>⚠️ 2 Postulaciones sin revisar</span>
-                          <span>💬 1 Mensaje sin leer</span>
-                        </div>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm">Ver Postulantes</Button>
-                  </div>
+                      ))
+                  )}
                 </div>
               </CardContent>
             </Card>

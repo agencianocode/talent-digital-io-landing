@@ -17,7 +17,6 @@ import {
   Clock,
   TrendingUp
 } from "lucide-react";
-import TalentTopNavigation from "@/components/TalentTopNavigation";
 import { EditProfileModal } from "@/components/EditProfileModal";
 import { ShareProfileModal } from "@/components/ShareProfileModal";
 import { PortfolioSection } from "@/components/PortfolioSection";
@@ -123,9 +122,7 @@ const TalentMyProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TalentTopNavigation />
-      
+    <div>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header con progreso */}
         <div className="flex items-center justify-between mb-8">

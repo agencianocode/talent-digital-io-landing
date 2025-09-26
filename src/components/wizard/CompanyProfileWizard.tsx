@@ -14,7 +14,6 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { ImageCropper } from '@/components/ImageCropper';
 import { MediaGallery } from '@/components/MediaGallery';
-import { TeamOverview } from '@/components/TeamOverview';
 import { useProfessionalData } from '@/hooks/useProfessionalData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,12 +22,19 @@ import {
   Building, 
   MapPin, 
   Loader2, 
-  Users, 
   DollarSign, 
   Factory, 
   Globe, 
   Link2,
-  Image
+  Image,
+  Linkedin,
+  Instagram,
+  Youtube,
+  Twitter,
+  ExternalLink,
+  Edit,
+  Plus,
+  Users2
 } from 'lucide-react';
 
 const companySchema = z.object({
@@ -74,12 +80,75 @@ const revenueOptions = [
 export const CompanyProfileWizard: React.FC = () => {
   const { user } = useSupabaseAuth();
   const { activeCompany: company, refreshCompanies } = useCompany();
-  const { updateCompany, createCompany } = useSupabaseAuth();
+  const { createCompany } = useSupabaseAuth();
   const { industries } = useProfessionalData();
   const [isLoading, setIsLoading] = useState(false);
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [editingSocialLink, setEditingSocialLink] = useState<string | null>(null);
+  const [tempSocialUrl, setTempSocialUrl] = useState('');
+  const [hasSocialLinksChanges, setHasSocialLinksChanges] = useState(false);
+  const [hasGalleryChanges, setHasGalleryChanges] = useState(false);
+
+  // Handle social link editing
+  const handleEditSocialLink = (platform: string, currentUrl: string) => {
+    setEditingSocialLink(platform);
+    setTempSocialUrl(currentUrl || '');
+  };
+
+  const handleSaveSocialLink = () => {
+    if (editingSocialLink) {
+      form.setValue(`social_links.${editingSocialLink}` as any, tempSocialUrl, { 
+        shouldDirty: true, 
+        shouldTouch: true, 
+        shouldValidate: true 
+      });
+      setHasSocialLinksChanges(true);
+      console.log(`Saving social link ${editingSocialLink}:`, tempSocialUrl);
+      console.log('Current form values:', form.getValues());
+      setEditingSocialLink(null);
+      setTempSocialUrl('');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSocialLink(null);
+    setTempSocialUrl('');
+  };
+
+  const handleRemoveSocialLink = (platform: string) => {
+    form.setValue(`social_links.${platform}` as any, '', { 
+      shouldDirty: true, 
+      shouldTouch: true, 
+      shouldValidate: true 
+    });
+    setHasSocialLinksChanges(true);
+  };
+
+  // Local function to update company directly
+  const updateCompanyDirectly = async (data: any) => {
+    if (!company?.id) {
+      throw new Error('No company ID available');
+    }
+
+    console.log('Updating company with ID:', company.id);
+    console.log('Data being sent to database:', data);
+    console.log('Social links in data:', data.social_links);
+
+    const { error } = await supabase
+      .from('companies')
+      .update(data)
+      .eq('id', company.id);
+
+    if (error) {
+      console.error('Error updating company:', error);
+      throw error;
+    }
+
+    console.log('Company updated successfully');
+    return { error: null };
+  };
 
   const form = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
@@ -132,6 +201,10 @@ export const CompanyProfileWizard: React.FC = () => {
       if (company.gallery_urls && company.gallery_urls.length > 0) {
         setMediaItems(company.gallery_urls);
       }
+      
+      // Reset social links changes state when company data loads
+      setHasSocialLinksChanges(false);
+      setHasGalleryChanges(false);
     }
   }, [company, form]);
 
@@ -146,9 +219,22 @@ export const CompanyProfileWizard: React.FC = () => {
         gallery_urls,
       };
 
+      console.log('Submitting company data:', companyData);
+      console.log('Social links data:', data.social_links);
+      console.log('Form is dirty:', form.formState.isDirty);
+      console.log('Has social links changes:', hasSocialLinksChanges);
+
       if (company?.id) {
-        // Update existing company
-        await updateCompany(companyData);
+        // Update existing company directly
+        const result = await updateCompanyDirectly(companyData);
+        if (result.error) {
+          console.error('Error updating company:', result.error);
+          throw result.error;
+        }
+        // Refresh company data to show updated information
+        await refreshCompanies();
+        setHasSocialLinksChanges(false);
+        setHasGalleryChanges(false);
         toast.success('Perfil corporativo actualizado');
       } else {
         // Create new company - ensure name is provided
@@ -249,16 +335,19 @@ export const CompanyProfileWizard: React.FC = () => {
       id: `media-${Date.now()}`,
     };
     setMediaItems(prev => [...prev, newItem]);
+    setHasGalleryChanges(true);
   };
 
   const handleRemoveMediaItem = (itemId: string) => {
     setMediaItems(prev => prev.filter(item => item.id !== itemId));
+    setHasGalleryChanges(true);
   };
 
   const handleUpdateMediaItem = (itemId: string, updates: Partial<MediaItem>) => {
     setMediaItems(prev => prev.map(item => 
       item.id === itemId ? { ...item, ...updates } : item
     ));
+    setHasGalleryChanges(true);
   };
 
   return (
@@ -275,7 +364,7 @@ export const CompanyProfileWizard: React.FC = () => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="general" className="flex items-center gap-2">
                 <Building className="h-4 w-4" />
                 General
@@ -291,10 +380,6 @@ export const CompanyProfileWizard: React.FC = () => {
               <TabsTrigger value="gallery" className="flex items-center gap-2">
                 <Image className="h-4 w-4" />
                 Galería
-              </TabsTrigger>
-              <TabsTrigger value="team" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Equipo
               </TabsTrigger>
             </TabsList>
 
@@ -435,7 +520,7 @@ export const CompanyProfileWizard: React.FC = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
-                          <Users className="h-4 w-4" />
+                          <Users2 className="h-4 w-4" />
                           Tamaño de la Empresa
                         </FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
@@ -521,61 +606,106 @@ export const CompanyProfileWizard: React.FC = () => {
                       Redes Sociales
                     </h3>
                     
-                    <FormField
-                      control={form.control}
-                      name="social_links.linkedin"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>LinkedIn</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://linkedin.com/company/miempresa" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="social_links.instagram"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Instagram</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://instagram.com/miempresa" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="social_links.youtube"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>YouTube</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://youtube.com/@miempresa" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="social_links.twitter"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Twitter (X)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://twitter.com/miempresa" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Social Media Icons Display */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {[
+                        { key: 'linkedin', label: 'LinkedIn', icon: Linkedin, color: 'text-blue-600', placeholder: 'https://linkedin.com/company/miempresa' },
+                        { key: 'instagram', label: 'Instagram', icon: Instagram, color: 'text-pink-600', placeholder: 'https://instagram.com/miempresa' },
+                        { key: 'youtube', label: 'YouTube', icon: Youtube, color: 'text-red-600', placeholder: 'https://youtube.com/@miempresa' },
+                        { key: 'twitter', label: 'Twitter (X)', icon: Twitter, color: 'text-gray-600', placeholder: 'https://twitter.com/miempresa' }
+                      ].map(({ key, label, icon: Icon, color, placeholder }) => {
+                        const currentUrl = form.watch(`social_links.${key}` as any) || '';
+                        const isEditing = editingSocialLink === key;
+                        
+                        return (
+                          <div key={key} className="border rounded-lg p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <Icon className={`h-6 w-6 ${color}`} />
+                                <span className="font-medium">{label}</span>
+                              </div>
+                              {currentUrl && !isEditing && (
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => window.open(currentUrl, '_blank')}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditSocialLink(key, currentUrl)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {isEditing ? (
+                              <div className="space-y-2">
+                                <Input
+                                  placeholder={placeholder}
+                                  value={tempSocialUrl}
+                                  onChange={(e) => setTempSocialUrl(e.target.value)}
+                                />
+                                <div className="flex gap-2">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={handleSaveSocialLink}
+                                    className="flex-1"
+                                  >
+                                    Guardar
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleCancelEdit}
+                                    className="flex-1"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : currentUrl ? (
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm text-gray-600 truncate flex-1 mr-2">
+                                  {currentUrl}
+                                </p>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveSocialLink(key)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  Eliminar
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditSocialLink(key, '')}
+                                className="w-full flex items-center gap-2"
+                              >
+                                <Plus className="h-4 w-4" />
+                                Agregar {label}
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -592,35 +722,32 @@ export const CompanyProfileWizard: React.FC = () => {
               />
             </TabsContent>
 
-            {/* Team Tab */}
-            <TabsContent value="team" className="mt-6">
-              {company?.id ? (
-                <TeamOverview companyId={company.id} />
-              ) : (
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="text-center text-muted-foreground">
-                      <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Guarda la información de la empresa primero para gestionar el equipo.</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
 
             {/* Submit Button - Fixed at bottom */}
             <div className="flex justify-end gap-4 mt-8 p-4 bg-background border-t sticky bottom-0">
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => form.reset()}
+                onClick={() => {
+                  form.reset();
+                  setHasSocialLinksChanges(false);
+                  setHasGalleryChanges(false);
+                }}
                 disabled={isLoading}
               >
                 Descartar Cambios
               </Button>
               <Button 
                 type="submit" 
-                disabled={isLoading || !form.formState.isDirty}
+                disabled={isLoading || (!form.formState.isDirty && !hasSocialLinksChanges && !hasGalleryChanges)}
+                onClick={() => {
+                  console.log('Submit button clicked');
+                  console.log('Form is dirty:', form.formState.isDirty);
+                  console.log('Has social links changes:', hasSocialLinksChanges);
+                  console.log('Has gallery changes:', hasGalleryChanges);
+                  console.log('Form values:', form.getValues());
+                  console.log('Media items:', mediaItems);
+                }}
               >
                 {isLoading ? (
                   <>
@@ -630,6 +757,21 @@ export const CompanyProfileWizard: React.FC = () => {
                 ) : (
                   'Guardar Cambios'
                 )}
+              </Button>
+              
+              {/* Botón de prueba temporal */}
+              <Button 
+                type="button" 
+                variant="secondary"
+                onClick={() => {
+                  console.log('Force submit clicked');
+                  const formData = form.getValues();
+                  console.log('Force submitting with data:', formData);
+                  onSubmit(formData);
+                }}
+                disabled={isLoading}
+              >
+                Forzar Guardar
               </Button>
             </div>
           </Tabs>

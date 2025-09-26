@@ -4,7 +4,7 @@ import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Home, LogOut, Briefcase, MessageSquare, User, Settings, Menu, X, ChevronDown, Search, HelpCircle, GraduationCap, Bell, Store } from "lucide-react";
+import { Home, LogOut, Briefcase, MessageSquare, User, Settings, Menu, X, ChevronDown, Search, GraduationCap, Bell, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import CompanySwitcher from "@/components/CompanySwitcher";
@@ -233,13 +233,6 @@ const DashboardLayout = () => {
               <NotificationCenter />
             </NavLink>
 
-            <button
-              onClick={() => setIsHelpModalOpen(true)}
-              className="flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-sm w-full text-left text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-            >
-              <HelpCircle className="h-4 w-4" />
-              <span style={{fontSize: '16px'}}>Ayuda / Feedback</span>
-            </button>
           </div>
           
           {/* User Profile Dropdown */}

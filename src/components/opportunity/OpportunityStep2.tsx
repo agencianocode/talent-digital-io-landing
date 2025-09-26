@@ -4,9 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Minus } from 'lucide-react';
+import { 
+  salaryPeriods,
+  durationUnits
+} from '@/lib/opportunityTemplates';
 
 interface OpportunityStep2Data {
   projectType: 'ongoing' | 'one-time';
+  durationType: 'indefinite' | 'fixed';
+  durationValue: number;
+  durationUnit: 'days' | 'weeks' | 'months';
+  paymentType: 'fixed' | 'commission' | 'fixed_plus_commission';
   paymentMethod: 'hourly' | 'weekly' | 'monthly';
   hourlyMinRate: string;
   hourlyMaxRate: string;
@@ -14,13 +22,11 @@ interface OpportunityStep2Data {
   weeklyMaxBudget: string;
   monthlyMinBudget: string;
   monthlyMaxBudget: string;
+  commissionPercentage: string;
+  salaryIsPublic: boolean;
   maxHoursPerWeek: number;
   maxHoursPerMonth: number;
   isMaxHoursOptional: boolean;
-  // Campos para duración del trabajo
-  jobDuration: number;
-  jobDurationUnit: 'month' | 'week';
-  noEndDate: boolean;
 }
 
 interface OpportunityStep2Props {
@@ -221,6 +227,147 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
 
   return (
     <div className="space-y-6">
+      {/* Duration Type */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-gray-900">
+          Duración del vínculo
+        </Label>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="indefinite"
+              checked={data.durationType === 'indefinite'}
+              onCheckedChange={(checked) => {
+                if (checked) onChange({ durationType: 'indefinite' });
+              }}
+            />
+            <Label htmlFor="indefinite" className="text-sm">Indefinido</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="fixed"
+              checked={data.durationType === 'fixed'}
+              onCheckedChange={(checked) => {
+                if (checked) onChange({ durationType: 'fixed' });
+              }}
+            />
+            <Label htmlFor="fixed" className="text-sm">Duración específica</Label>
+          </div>
+          {data.durationType === 'fixed' && (
+            <div className="flex gap-2 ml-6">
+              <Input
+                type="number"
+                value={data.durationValue}
+                onChange={(e) => onChange({ durationValue: parseInt(e.target.value) || 1 })}
+                placeholder="Cantidad"
+                className="w-24"
+              />
+              <Select value={data.durationUnit} onValueChange={(value: 'days' | 'weeks' | 'months') => onChange({ durationUnit: value })}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {durationUnits.map((unit) => (
+                    <SelectItem key={unit.value} value={unit.value}>
+                      {unit.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Payment Type */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-gray-900">
+          Tipo de pago
+        </Label>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="fixed_payment"
+              checked={data.paymentType === 'fixed'}
+              onCheckedChange={(checked) => {
+                if (checked) onChange({ paymentType: 'fixed' });
+              }}
+            />
+            <Label htmlFor="fixed_payment" className="text-sm">Fijo</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="commission_payment"
+              checked={data.paymentType === 'commission'}
+              onCheckedChange={(checked) => {
+                if (checked) onChange({ paymentType: 'commission' });
+              }}
+            />
+            <Label htmlFor="commission_payment" className="text-sm">Comisión</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="mixed_payment"
+              checked={data.paymentType === 'fixed_plus_commission'}
+              onCheckedChange={(checked) => {
+                if (checked) onChange({ paymentType: 'fixed_plus_commission' });
+              }}
+            />
+            <Label htmlFor="mixed_payment" className="text-sm">Fijo + Comisión</Label>
+          </div>
+        </div>
+      </div>
+
+      {/* Salary Period for Fixed Payments */}
+      {(data.paymentType === 'fixed' || data.paymentType === 'fixed_plus_commission') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            Período de pago *
+          </Label>
+          <Select value={data.paymentMethod} onValueChange={(value: 'hourly' | 'weekly' | 'monthly') => onChange({ paymentMethod: value })}>
+            <SelectTrigger className="h-12">
+              <SelectValue placeholder="Selecciona período" />
+            </SelectTrigger>
+            <SelectContent>
+              {salaryPeriods.map((period) => (
+                <SelectItem key={period.value} value={period.value}>
+                  {period.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Commission Percentage */}
+      {(data.paymentType === 'commission' || data.paymentType === 'fixed_plus_commission') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            Porcentaje de comisión (%)
+          </Label>
+          <Input
+            type="number"
+            value={data.commissionPercentage}
+            onChange={(e) => onChange({ commissionPercentage: e.target.value })}
+            placeholder="10"
+            max="100"
+            className="h-12"
+          />
+        </div>
+      )}
+
+      {/* Salary Visibility */}
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="salary_public"
+          checked={data.salaryIsPublic}
+          onCheckedChange={(checked) => onChange({ salaryIsPublic: !!checked })}
+        />
+        <Label htmlFor="salary_public" className="text-sm">
+          Mostrar información de salario públicamente
+        </Label>
+      </div>
+
       {/* Project Type */}
       <div className="space-y-3">
         <Label className="text-sm font-medium text-gray-900">
@@ -324,63 +471,6 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
         </div>
       )}
 
-      {/* Duración del trabajo - para TODOS los tipos de proyecto */}
-      {((data.projectType === 'ongoing' && data.paymentMethod) || data.projectType === 'one-time') && (
-        <div className="space-y-3 border-t pt-4">
-          <Label className="text-sm font-medium text-gray-900">
-            ¿Cuál es la duración de este trabajo?
-          </Label>
-          <div className="flex items-center space-x-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onChange({ jobDuration: Math.max(1, (data.jobDuration || 1) - 1) })}
-              disabled={(data.jobDuration || 1) <= 1}
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-            <Input
-              type="number"
-              value={data.jobDuration || 1}
-              onChange={(e) => onChange({ jobDuration: parseInt(e.target.value) || 1 })}
-              className="w-20 text-center h-10"
-              min="1"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onChange({ jobDuration: (data.jobDuration || 1) + 1 })}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-            <Select 
-              value={data.jobDurationUnit || 'month'} 
-              onValueChange={(value: 'month' | 'week') => onChange({ jobDurationUnit: value })}
-            >
-              <SelectTrigger className="w-32 h-10">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">Semana</SelectItem>
-                <SelectItem value="month">Month</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="no-end-date"
-              checked={data.noEndDate || false}
-              onCheckedChange={(checked) => onChange({ noEndDate: !!checked })}
-            />
-            <Label htmlFor="no-end-date" className="text-sm text-gray-700">
-              Sin fecha de finalización
-            </Label>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

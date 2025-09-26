@@ -10,9 +10,13 @@ import {
   Play, 
   Image as ImageIcon, 
   FileText,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 import { ImageCropper } from './ImageCropper';
+import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { toast } from 'sonner';
 
 export interface MediaItem {
   id: string;
@@ -37,40 +41,131 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   onRemoveItem,
   maxItems = 12
 }) => {
+  const { user } = useSupabaseAuth();
   const [isAddingLink, setIsAddingLink] = useState(false);
+  const [isAddingVideo, setIsAddingVideo] = useState(false);
   const [newLink, setNewLink] = useState({ url: '', title: '' });
+  const [newVideo, setNewVideo] = useState({ url: '', title: '' });
+  const [isUploading, setIsUploading] = useState(false);
   const [cropperState, setCropperState] = useState<{
     isOpen: boolean;
     src: string;
     type: 'image' | 'video' | 'document';
   }>({ isOpen: false, src: '', type: 'image' });
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'document') => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'document') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const url = URL.createObjectURL(file);
-    
+    // Validar tamaño del archivo (máximo 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('El archivo es demasiado grande. Máximo 10MB.');
+      return;
+    }
+
     if (type === 'image') {
+      const url = URL.createObjectURL(file);
       setCropperState({ isOpen: true, src: url, type });
     } else {
-      onAddItem({
-        type,
-        url,
-        title: file.name,
-        description: `${type === 'video' ? 'Video' : 'Documento'} subido: ${file.name}`
-      });
+      // Para documentos, subir directamente
+      await uploadFileToStorage(file, type);
     }
   };
 
-  const handleCropComplete = (croppedImageUrl: string) => {
-    onAddItem({
-      type: 'image',
-      url: croppedImageUrl,
-      title: 'Imagen corporativa',
-      description: 'Imagen añadida a la galería'
-    });
-    setCropperState({ isOpen: false, src: '', type: 'image' });
+  const uploadFileToStorage = async (file: File, type: 'image' | 'document') => {
+    if (!user?.id) {
+      toast.error('Usuario no autenticado');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Crear nombre único para el archivo
+      const timestamp = Date.now();
+      const fileExt = file.name.split('.').pop() || 'bin';
+      const fileName = `${type}-${timestamp}.${fileExt}`;
+      const filePath = `company-gallery/${user.id}/${fileName}`;
+
+      // Subir archivo a Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Obtener URL pública
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Agregar item a la galería
+      onAddItem({
+        type,
+        url: data.publicUrl,
+        title: file.name,
+        description: `Documento subido: ${file.name}`
+      });
+
+      toast.success('Documento subido correctamente');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Error al subir documento');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleCropComplete = async (croppedImageUrl: string) => {
+    if (!user?.id) {
+      toast.error('Usuario no autenticado');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Convertir blob URL a archivo
+      const response = await fetch(croppedImageUrl);
+      const blob = await response.blob();
+      
+      // Crear archivo desde blob
+      const file = new File([blob], 'company-image.jpg', { type: 'image/jpeg' });
+      
+      // Crear nombre único para el archivo
+      const timestamp = Date.now();
+      const filePath = `company-gallery/${user.id}/image-${timestamp}.jpg`;
+
+      // Subir archivo a Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Obtener URL pública
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Agregar item a la galería con URL permanente
+      onAddItem({
+        type: 'image',
+        url: data.publicUrl,
+        title: 'Imagen corporativa',
+        description: 'Imagen añadida a la galería'
+      });
+
+      toast.success('Imagen subida correctamente');
+    } catch (error) {
+      console.error('Error uploading cropped image:', error);
+      toast.error('Error al subir la imagen');
+    } finally {
+      setIsUploading(false);
+      setCropperState({ isOpen: false, src: '', type: 'image' });
+    }
   };
 
   const handleAddLink = () => {
@@ -83,6 +178,80 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
       });
       setNewLink({ url: '', title: '' });
       setIsAddingLink(false);
+    }
+  };
+
+  const getYouTubeThumbnail = (url: string): string | null => {
+    // Extraer video ID de diferentes formatos de YouTube
+    let videoId = '';
+    
+    if (url.includes('youtube.com/watch?v=')) {
+      videoId = url.split('v=')[1]?.split('&')[0] || '';
+    } else if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1]?.split('?')[0] || '';
+    } else if (url.includes('youtube.com/embed/')) {
+      videoId = url.split('embed/')[1]?.split('?')[0] || '';
+    }
+    
+    if (videoId) {
+      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    }
+    
+    return null;
+  };
+
+  const getVimeoThumbnail = (url: string): string | null => {
+    // Extraer video ID de Vimeo
+    const match = url.match(/vimeo\.com\/(\d+)/);
+    if (match && match[1]) {
+      // Para Vimeo necesitaríamos hacer una llamada a su API, por ahora retornamos null
+      // y usaremos el placeholder genérico
+      return null;
+    }
+    return null;
+  };
+
+  const getVideoThumbnail = (url: string): string | null => {
+    const lowerUrl = url.toLowerCase();
+    
+    if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+      return getYouTubeThumbnail(url);
+    } else if (lowerUrl.includes('vimeo.com')) {
+      return getVimeoThumbnail(url);
+    }
+    
+    return null;
+  };
+
+  const handleAddVideo = () => {
+    if (newVideo.url && newVideo.title) {
+      // Validar que sea una URL de video válida
+      const videoUrl = newVideo.url.toLowerCase();
+      const isValidVideoUrl = videoUrl.includes('youtube.com') || 
+                             videoUrl.includes('youtu.be') || 
+                             videoUrl.includes('loom.com') || 
+                             videoUrl.includes('vimeo.com') || 
+                             videoUrl.includes('dailymotion.com') ||
+                             videoUrl.includes('twitch.tv');
+
+      if (!isValidVideoUrl) {
+        toast.error('Por favor ingresa una URL válida de YouTube, Loom, Vimeo, Dailymotion o Twitch');
+        return;
+      }
+
+      // Obtener thumbnail si es posible
+      const thumbnail = getVideoThumbnail(newVideo.url);
+
+      onAddItem({
+        type: 'video',
+        url: newVideo.url,
+        title: newVideo.title,
+        description: 'Video de plataforma externa',
+        thumbnail: thumbnail || undefined
+      });
+      setNewVideo({ url: '', title: '' });
+      setIsAddingVideo(false);
+      toast.success('Video agregado correctamente');
     }
   };
 
@@ -132,24 +301,24 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                   onChange={(e) => handleFileUpload(e, 'image')}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
-                <Button variant="outline" size="sm">
-                  <ImageIcon className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" disabled={isUploading}>
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <ImageIcon className="h-4 w-4 mr-2" />
+                  )}
                   Subir Imagen
                 </Button>
               </div>
               
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) => handleFileUpload(e, 'video')}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <Button variant="outline" size="sm">
-                  <Play className="h-4 w-4 mr-2" />
-                  Subir Video
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsAddingVideo(true)}
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Agregar Video
+              </Button>
               
               <div className="relative">
                 <input
@@ -158,8 +327,12 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                   onChange={(e) => handleFileUpload(e, 'document')}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
-                <Button variant="outline" size="sm">
-                  <FileText className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" disabled={isUploading}>
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4 mr-2" />
+                  )}
                   Subir Documento
                 </Button>
               </div>
@@ -205,6 +378,38 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
           </DialogContent>
         </Dialog>
 
+        {/* Add Video Dialog */}
+        <Dialog open={isAddingVideo} onOpenChange={setIsAddingVideo}>
+          <DialogContent>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Agregar Video</h3>
+              <p className="text-sm text-muted-foreground">
+                Agrega enlaces de YouTube, Loom, Vimeo, Dailymotion o Twitch
+              </p>
+              <div className="space-y-3">
+                <Input
+                  placeholder="Título del video"
+                  value={newVideo.title}
+                  onChange={(e) => setNewVideo(prev => ({ ...prev, title: e.target.value }))}
+                />
+                <Input
+                  placeholder="https://youtube.com/watch?v=... o https://loom.com/share/..."
+                  value={newVideo.url}
+                  onChange={(e) => setNewVideo(prev => ({ ...prev, url: e.target.value }))}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsAddingVideo(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleAddVideo}>
+                  Agregar Video
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Gallery Grid */}
         {items.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -231,6 +436,50 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                             />
                           </DialogContent>
                         </Dialog>
+                      ) : item.type === 'video' ? (
+                        item.thumbnail ? (
+                          <div className="relative w-full h-full group">
+                            <img 
+                              src={item.thumbnail} 
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Si la miniatura falla, mostrar el placeholder
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                className="text-white bg-black bg-opacity-60 hover:bg-opacity-80"
+                                onClick={() => window.open(item.url, '_blank')}
+                              >
+                                <Play className="h-4 w-4 mr-2" />
+                                Ver Video
+                              </Button>
+                            </div>
+                            <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded hidden">
+                              {item.title}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-muted-foreground p-4">
+                            <Play className="h-8 w-8 mb-2" />
+                            <span className="text-xs text-center px-2 font-medium">
+                              {item.title}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="mt-2 text-xs"
+                              onClick={() => window.open(item.url, '_blank')}
+                            >
+                              Ver Video
+                            </Button>
+                          </div>
+                        )
                       ) : (
                         <div className="flex flex-col items-center justify-center text-muted-foreground">
                           {getMediaIcon(item.type)}

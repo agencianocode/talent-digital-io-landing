@@ -1,26 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, ExternalLink, Share2 } from 'lucide-react';
+import { ArrowLeft, MapPin, ExternalLink, Phone, Share2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface TalentData {
   id: string;
   user_id: string;
-  full_name: string;
+  full_name: string | null;
   avatar_url: string | null;
-  title: string;
-  bio: string;
-  location: string;
-  skills: string[];
-  experience_level: string;
-  linkedin_url: string | null;
-  portfolio_url: string | null;
+  position: string | null;
+  city: string | null;
+  country: string | null;
+  linkedin: string | null;
+  phone: string | null;
   video_presentation_url: string | null;
-  work_experience: any[];
-  education: any[];
-  services: any[];
+  profile_completeness: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const BusinessTalentProfile = () => {
@@ -37,25 +35,21 @@ const BusinessTalentProfile = () => {
 
   const fetchTalentProfile = async () => {
     try {
-      // For now, use mock data based on the image
-      // TODO: Replace with real data fetching when database structure is ready
-      setTalentData({
-        id: id || '',
-        user_id: '',
-        full_name: 'Nombre Apellido',
-        avatar_url: null,
-        title: 'Closer de ventas',
-        bio: 'Experiencia de +3 años en ventas de productos financieros, seguros, inversiones para clientes premium.',
-        location: 'Ubicación / País',
-        skills: ['Ventas Consultivas', 'B2B', 'Negocios Digitales'],
-        experience_level: 'Senior (+4 años)',
-        linkedin_url: null,
-        portfolio_url: 'https://portfolio-example.com', // Simular que tiene portfolio
-        video_presentation_url: null, // Simular que NO tiene video
-        work_experience: [],
-        education: [],
-        services: []
-      });
+      console.log('Fetching talent profile for user ID:', id);
+      
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', id || '')
+        .single();
+
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        throw profileError;
+      }
+
+      console.log('Profile data:', profileData);
+      setTalentData(profileData);
     } catch (error) {
       console.error('Error fetching talent profile:', error);
       toast.error('Error al cargar el perfil del talento');
@@ -73,11 +67,11 @@ const BusinessTalentProfile = () => {
     toast.info('Funcionalidad de mensajes próximamente');
   };
 
-  const handleViewPortfolio = () => {
-    if (talentData?.portfolio_url) {
-      window.open(talentData.portfolio_url, '_blank');
+  const handleViewLinkedIn = () => {
+    if (talentData?.linkedin) {
+      window.open(talentData.linkedin, '_blank');
     } else {
-      toast.info('Portfolio no disponible');
+      toast.info('LinkedIn no disponible');
     }
   };
 
@@ -113,7 +107,6 @@ const BusinessTalentProfile = () => {
   }
 
   const hasVideo = !!talentData.video_presentation_url;
-  const hasPortfolio = !!talentData.portfolio_url;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -143,13 +136,13 @@ const BusinessTalentProfile = () => {
                     {talentData.avatar_url ? (
                       <img 
                         src={talentData.avatar_url} 
-                        alt={talentData.full_name}
+                        alt={talentData.full_name || "Usuario"}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-300 flex items-center justify-center">
                         <span className="text-gray-600 text-lg font-bold">
-                          {talentData.full_name.charAt(0)}
+                          {talentData.full_name?.charAt(0) || "U"}
                         </span>
                       </div>
                     )}
@@ -159,7 +152,7 @@ const BusinessTalentProfile = () => {
                 {/* Profile Info */}
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <h1 className="text-lg font-bold text-gray-900">{talentData.full_name}</h1>
+                    <h1 className="text-lg font-bold text-gray-900">{talentData.full_name || "Usuario sin nombre"}</h1>
                     <Button 
                       className="bg-black hover:bg-gray-800 text-white px-3 py-1 text-sm"
                       onClick={handleSendMessage}
@@ -168,26 +161,44 @@ const BusinessTalentProfile = () => {
                     </Button>
                   </div>
                   
-                  <p className="text-sm text-gray-700 mb-1">{talentData.title}</p>
-                  <p className="text-xs text-gray-600 mb-2">{talentData.experience_level}</p>
+                  {talentData.position && (
+                    <p className="text-sm text-gray-700 mb-1">{talentData.position}</p>
+                  )}
+                  {talentData.profile_completeness && (
+                    <p className="text-xs text-gray-600 mb-2">Perfil {talentData.profile_completeness}% completo</p>
+                  )}
                   
-                  <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
-                    <MapPin className="h-3 w-3" />
-                    <span>{talentData.location}</span>
+                  {(talentData.city || talentData.country) && (
+                    <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
+                      <MapPin className="h-3 w-3" />
+                      <span>{[talentData.city, talentData.country].filter(Boolean).join(', ')}</span>
+                    </div>
+                  )}
+
+                  {/* Contact Info */}
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {talentData.phone && (
+                      <div className="flex items-center gap-1 text-xs text-gray-600">
+                        <Phone className="h-3 w-3" />
+                        <span>{talentData.phone}</span>
+                      </div>
+                    )}
+                    {talentData.linkedin && (
+                      <a 
+                        href={talentData.linkedin} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        <span>LinkedIn</span>
+                      </a>
+                    )}
                   </div>
 
-                  {/* Skills */}
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {talentData.skills.map((skill, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs bg-gray-100 text-gray-700 px-2 py-0">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  {/* Bio */}
+                  {/* Profile Description */}
                   <p className="text-gray-700 leading-relaxed text-xs mb-3">
-                    {talentData.bio}
+                    Información profesional del talento.
                   </p>
 
                   {/* Social Links */}
@@ -206,18 +217,18 @@ const BusinessTalentProfile = () => {
               </div>
             </div>
 
-            {/* Portfolio Card - Only show if portfolio exists */}
-            {hasPortfolio && (
+            {/* LinkedIn Card - Only show if LinkedIn exists */}
+            {talentData.linkedin && (
               <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h3 className="text-base font-semibold mb-2 text-gray-900">Portfolio</h3>
-                <p className="text-xs text-gray-600 mb-3">Ve el portfolio de trabajos</p>
+                <h3 className="text-base font-semibold mb-2 text-gray-900">LinkedIn</h3>
+                <p className="text-xs text-gray-600 mb-3">Ver perfil profesional</p>
                 <Button 
                   variant="outline" 
                   className="justify-start"
-                  onClick={handleViewPortfolio}
+                  onClick={handleViewLinkedIn}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Ver Portfolio
+                  Ver LinkedIn
                 </Button>
               </div>
             )}

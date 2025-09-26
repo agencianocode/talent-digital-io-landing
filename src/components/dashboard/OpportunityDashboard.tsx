@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, TrendingUp, Users, Briefcase, Star, TestTube, Bug } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Plus, TrendingUp, Users, Briefcase, Star, TestTube } from 'lucide-react';
 import { OpportunityMetrics } from './OpportunityMetrics';
 import { OpportunityList } from './OpportunityList';
 
@@ -23,25 +22,6 @@ export const OpportunityDashboard = () => {
     navigate('/business-dashboard/opportunities/new');
   };
 
-  const handleDebugOpportunities = async () => {
-    console.log('🔍 Debug: Checking opportunities...');
-    try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('❌ Error:', error);
-        return;
-      }
-      
-      console.log('📊 Total opportunities:', data?.length || 0);
-      console.log('📋 Opportunities:', data);
-    } catch (err) {
-      console.error('❌ Unexpected error:', err);
-    }
-  };
 
   return (
     <div className="space-y-8">
@@ -64,15 +44,6 @@ export const OpportunityDashboard = () => {
           >
             <TestTube className="h-4 w-4 mr-2" />
             {useMockData ? 'Datos de Prueba' : 'Datos Reales'}
-          </Button>
-          <Button 
-            onClick={handleDebugOpportunities}
-            variant="outline"
-            size="sm"
-            className="text-xs"
-          >
-            <Bug className="w-3 h-3 mr-1" />
-            Debug
           </Button>
           <Button onClick={handleCreateOpportunity} className="bg-black hover:bg-gray-800 text-white">
             <Plus className="h-4 w-4 mr-2" />
@@ -108,7 +79,12 @@ export const OpportunityDashboard = () => {
                 <div className="text-2xl font-bold text-blue-900">85%</div>
                 <div className="text-xs text-blue-600">Completitud</div>
               </div>
-              <Button variant="outline" size="sm" className="border-blue-300 text-blue-700">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-blue-300 text-blue-700"
+                onClick={() => navigate('/business-dashboard/company-profile')}
+              >
                 <Star className="h-4 w-4 mr-2" />
                 Optimizar Perfil
               </Button>

@@ -5,21 +5,37 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, X } from 'lucide-react';
+// import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Plus, Minus, X, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 import { professionalTools, type ProfessionalTool } from '@/lib/tools';
 import { getApplicantRestrictionText } from '@/lib/country-nationalities';
 import { type Company } from '@/contexts/CompanyContext';
+import { 
+  categoryTemplates, 
+  contractTypes, 
+  locationTypes, 
+  experienceLevelOptions
+} from '@/lib/opportunityTemplates';
+import { OpportunityTemplates, JobTemplate, JOB_TEMPLATES } from '@/components/OpportunityTemplates';
 
 interface OpportunityStep1Data {
+  category: string;
   title: string;
   description: string;
+  contractType: string;
   skills: string[];
   tools: string[];
+  experienceLevels: string[];
+  locationType: string;
+  location: string;
   contractorsCount: number;
   usOnlyApplicants: boolean;
   preferredTimezone: string;
   preferredLanguages: string[];
-  extendedSchedule: string;
+  deadlineDate: Date | null;
 }
 
 interface OpportunityStep1Props {
@@ -28,7 +44,9 @@ interface OpportunityStep1Props {
   company?: Company | null;
 }
 
-const skillsOptions = [
+// Skills now handled dynamically based on category templates and user input
+/* Old skills array - no longer used
+const oldSkillsOptions = [
   'Accesibilidad Digital',
   'Activista',
   'Actor',
@@ -423,21 +441,33 @@ const skillsOptions = [
   'Tester QA',
   'Videógrafo',
   'Vocalista'
-];
+]; // This array is no longer used, replaced by dynamic category-based suggestions
+*/
 
-// Extraer solo los nombres de las herramientas y ordenarlos alfabéticamente
+// Tools now handled dynamically based on category templates and user input
+/* Old tools array - no longer used
 const toolsOptions = professionalTools
   .map((tool: ProfessionalTool) => tool.name)
   .sort((a: string, b: string) => a.localeCompare(b));
+*/
 
 const timezoneOptions = [
-  'UTC-8 (PST)',
-  'UTC-5 (EST)',
-  'UTC+0 (GMT)',
-  'UTC+1 (CET)',
-  'UTC+3 (MSK)',
-  'UTC+8 (CST)',
-  'UTC+9 (JST)'
+  'UTC-8 (PST) - Estados Unidos (Costa Oeste)',
+  'UTC-7 (MST) - Estados Unidos (Montaña)',
+  'UTC-6 (CST) - Estados Unidos (Centro)',
+  'UTC-5 (EST) - Estados Unidos (Costa Este), Colombia',
+  'UTC-4 (AST) - Venezuela, Chile',
+  'UTC-3 (ART) - Argentina, Brasil, Uruguay',
+  'UTC+0 (GMT) - Reino Unido, Portugal',
+  'UTC+1 (CET) - España, Francia, Alemania, Italia',
+  'UTC+2 (EET) - Grecia, Turquía, Sudáfrica',
+  'UTC+3 (MSK) - Rusia (Moscú), Arabia Saudí',
+  'UTC+5:30 (IST) - India',
+  'UTC+7 (ICT) - Tailandia, Vietnam',
+  'UTC+8 (CST) - China, Singapur, Filipinas',
+  'UTC+9 (JST) - Japón, Corea del Sur',
+  'UTC+10 (AEST) - Australia (Este)',
+  'UTC+12 (NZST) - Nueva Zelanda'
 ];
 
 const languageOptions = [
@@ -453,9 +483,127 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
   // State for expanding sections
   const [showTimezoneSection, setShowTimezoneSection] = useState(false);
   const [showLanguagesSection, setShowLanguagesSection] = useState(false);
+  const [skillInput, setSkillInput] = useState('');
+  const [showSkillSuggestions, setShowSkillSuggestions] = useState(false);
+  const [toolInput, setToolInput] = useState('');
+  const [showToolSuggestions, setShowToolSuggestions] = useState(false);
 
   const getToolIcon = (toolName: string): string => {
-    const toolData = professionalTools.find((tool: ProfessionalTool) => tool.name === toolName);
+    // First try exact match
+    let toolData = professionalTools.find((tool: ProfessionalTool) => 
+      tool.name.toLowerCase() === toolName.toLowerCase()
+    );
+    
+    // If no exact match, try partial match
+    if (!toolData) {
+      toolData = professionalTools.find((tool: ProfessionalTool) => 
+        tool.name.toLowerCase().includes(toolName.toLowerCase()) ||
+        toolName.toLowerCase().includes(tool.name.toLowerCase())
+      );
+    }
+    
+    // If still no match, check for common variations
+    if (!toolData) {
+      const commonIcons: Record<string, string> = {
+        'hubspot': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/hubspot.svg',
+        'salesforce': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/salesforce.svg',
+        'pipedrive': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/pipedrive.svg',
+        'zoom': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/zoom.svg',
+        'gohighlevel': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/gear.svg',
+        'linkedin': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg',
+        'outreach': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/mailchimp.svg',
+        'calendly': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/calendly.svg',
+        'google ads': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/googleads.svg',
+        'facebook ads': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg',
+        'google analytics': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/googleanalytics.svg',
+        'semrush': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/semrush.svg',
+        'hootsuite': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/hootsuite.svg',
+        'mixpanel': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/mixpanel.svg',
+        'amplitude': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amplitude.svg',
+        'optimizely': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/optimizely.svg',
+        'klaviyo': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/mailchimp.svg',
+        'visual studio code': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/visualstudiocode.svg',
+        'git': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/git.svg',
+        'docker': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg',
+        'postgresql': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/postgresql.svg',
+        'figma': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/figma.svg',
+        'selenium': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/selenium.svg',
+        'jira': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/jira.svg',
+        'postman': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/postman.svg',
+        'cypress': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/cypress.svg',
+        'intercom': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/intercom.svg',
+        'zendesk': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/zendesk.svg',
+        'slack': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/slack.svg',
+        'freshdesk': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/freshworks.svg',
+        'teamviewer': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/teamviewer.svg',
+        'confluence': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/confluence.svg',
+        'livechat': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/livechat.svg',
+        'crisp': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/crisp.svg',
+        'drift': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/drift.svg',
+        'asana': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/asana.svg',
+        'trello': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/trello.svg',
+        'microsoft project': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/microsoftoffice.svg',
+        'microsoft excel': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/microsoftexcel.svg',
+        'power bi': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/powerbi.svg',
+        'tableau': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/tableau.svg',
+        'visio': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/microsoftvisio.svg',
+        'lucidchart': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/lucidchart.svg',
+        'sap': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/sap.svg',
+        'oracle': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/oracle.svg',
+        'adobe photoshop': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/adobephotoshop.svg',
+        'adobe illustrator': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/adobeillustrator.svg',
+        'adobe indesign': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/adobeindesign.svg',
+        'canva': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/canva.svg',
+        'grammarly': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/grammarly.svg',
+        'wordpress': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/wordpress.svg',
+        'notion': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/notion.svg',
+        'adobe premiere pro': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/adobepremierepro.svg',
+        'after effects': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/adobeaftereffects.svg',
+        'davinci resolve': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/davinciresolve.svg',
+        'final cut pro': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/apple.svg',
+        'adobe audition': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/adobeaudition.svg',
+        'sketch': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/sketch.svg',
+        'adobe xd': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/adobexd.svg',
+        'invision': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/invision.svg',
+        'miro': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/miro.svg',
+        'microsoft office': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/microsoftoffice.svg',
+        'google workspace': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/googleworkspace.svg',
+        'quickbooks': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/quickbooks.svg',
+        'sage': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/sage.svg',
+        'xero': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/xero.svg',
+        'lexisnexis': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/lexisnexis.svg',
+        'microsoft word': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/microsoftword.svg',
+        'docusign': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docusign.svg',
+        'adobe acrobat': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/adobeacrobatreader.svg',
+        'bamboohr': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/bamboo.svg',
+        'workday': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/workday.svg',
+        'linkedin recruiter': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg',
+        'indeed': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/indeed.svg',
+        'cold email tools': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/mail.svg',
+        'linkedin sales navigator': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg',
+        'hemingway editor': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/markdown.svg',
+        'google docs': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/googledocs.svg',
+        'jira service desk': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/jira.svg',
+        'zendesk chat': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/zendesk.svg',
+        'wms': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/shopify.svg',
+        'edi': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/exchangerate.svg',
+        'ats systems': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/greenhouse.svg',
+        'legal databases': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/databricks.svg'
+      };
+      
+      const iconKey = toolName.toLowerCase();
+      if (commonIcons[iconKey]) {
+        return commonIcons[iconKey];
+      }
+      
+      // Check for partial matches in common icons
+      for (const [key, icon] of Object.entries(commonIcons)) {
+        if (iconKey.includes(key) || key.includes(iconKey)) {
+          return icon;
+        }
+      }
+    }
+    
     return toolData?.icon || 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/gear.svg';
   };
 
@@ -474,43 +622,86 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
     onChange({ preferredTimezone: timezone });
   };
 
-  const handleExtendedScheduleSelect = (schedule: string) => {
-    onChange({ extendedSchedule: schedule });
-  };
-
   const removeTimezone = () => {
     onChange({ preferredTimezone: '' });
   };
 
-  const removeExtendedSchedule = () => {
-    onChange({ extendedSchedule: '' });
-  };
-
-  const handleSkillToggle = (skill: string) => {
-    const currentSkills = data.skills || [];
-    const isSelected = currentSkills.includes(skill);
-    
-    if (isSelected) {
-      onChange({ skills: currentSkills.filter(s => s !== skill) });
-    } else if (currentSkills.length < 3) {
-      onChange({ skills: [...currentSkills, skill] });
-    }
-  };
-
-  const handleToolToggle = (tool: string) => {
-    const currentTools = data.tools || [];
-    const isSelected = currentTools.includes(tool);
-    
-    if (isSelected) {
-      onChange({ tools: currentTools.filter(t => t !== tool) });
-    } else if (currentTools.length < 5) {
-      onChange({ tools: [...currentTools, tool] });
-    }
-  };
+  // handleSkillToggle removed - now using addSkill function with dynamic input
+  // handleToolToggle removed - now using addTool function with dynamic input
 
   const removeSkill = (skillToRemove: string) => {
     const currentSkills = data.skills || [];
     onChange({ skills: currentSkills.filter(skill => skill !== skillToRemove) });
+  };
+
+  const addSkill = () => {
+    if (skillInput.trim() && (data.skills?.length || 0) < 10) {
+      const currentSkills = data.skills || [];
+      if (!currentSkills.includes(skillInput.trim())) {
+        onChange({ skills: [...currentSkills, skillInput.trim()] });
+      }
+      setSkillInput('');
+      setShowSkillSuggestions(false);
+    }
+  };
+
+  const handleSkillInputKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addSkill();
+    }
+  };
+
+  const getSuggestedSkills = () => {
+    if (!data.category) return [];
+    const template = categoryTemplates[data.category];
+    return template?.skills || [];
+  };
+
+  const getFilteredSuggestions = () => {
+    const suggested = getSuggestedSkills();
+    const currentSkills = data.skills || [];
+    return suggested.filter(skill => 
+      !currentSkills.includes(skill) && 
+      skill.toLowerCase().includes(skillInput.toLowerCase())
+    ).slice(0, 8);
+  };
+
+  // Tool functions
+  const addTool = () => {
+    if (toolInput.trim() && (data.tools?.length || 0) < 10) {
+    const currentTools = data.tools || [];
+      if (!currentTools.includes(toolInput.trim())) {
+        onChange({ tools: [...currentTools, toolInput.trim()] });
+      }
+      setToolInput('');
+      setShowToolSuggestions(false);
+    }
+  };
+
+  const handleToolInputKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTool();
+    }
+  };
+
+  const getSuggestedTools = () => {
+    if (!data.category) return [];
+    // Get tools from job templates for this category
+    const templates = JOB_TEMPLATES[data.category] || [];
+    const allTools = templates.flatMap(template => template.tools || []);
+    // Remove duplicates
+    return [...new Set(allTools)];
+  };
+
+  const getFilteredToolSuggestions = () => {
+    const suggested = getSuggestedTools();
+    const currentTools = data.tools || [];
+    return suggested.filter(tool => 
+      !currentTools.includes(tool) && 
+      tool.toLowerCase().includes(toolInput.toLowerCase())
+    ).slice(0, 8);
   };
 
   const removeTool = (toolToRemove: string) => {
@@ -518,12 +709,97 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
     onChange({ tools: currentTools.filter(tool => tool !== toolToRemove) });
   };
 
+  const handleTemplateSelect = (template: JobTemplate) => {
+    onChange({
+      title: template.title,
+      description: template.description,
+      skills: template.skills,
+      tools: template.tools,
+    });
+  };
+
+  const handleCategoryChange = (category: string) => {
+    onChange({ category });
+    
+    // Aplicar plantilla automáticamente si existe
+    const template = categoryTemplates[category];
+    if (template) {
+      onChange({
+        category: category,
+        skills: template.defaultSkills,
+        experienceLevels: template.experienceLevels.slice(0, 2),
+      });
+    }
+  };
+
+  const handleExperienceLevelChange = (level: string, checked: boolean) => {
+    const currentLevels = data.experienceLevels || [];
+    if (checked) {
+      onChange({ experienceLevels: [...currentLevels, level] });
+    } else {
+      onChange({ experienceLevels: currentLevels.filter(l => l !== level) });
+    }
+  };
+
+  const categories = Object.keys(categoryTemplates);
+
   return (
     <div className="space-y-6">
+      {/* Category */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-gray-900">
+          Categoría *
+        </Label>
+        <Select value={data.category} onValueChange={handleCategoryChange}>
+          <SelectTrigger className="h-12">
+            <SelectValue placeholder="Selecciona una categoría" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Category Templates */}
+      {data.category && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            Plantillas disponibles
+          </Label>
+          <OpportunityTemplates 
+            category={data.category}
+            onSelectTemplate={handleTemplateSelect}
+          />
+        </div>
+      )}
+
+      {/* Contract Type */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-gray-900">
+          Tipo de contrato *
+        </Label>
+        <Select value={data.contractType} onValueChange={(value) => onChange({ contractType: value })}>
+          <SelectTrigger className="h-12">
+            <SelectValue placeholder="Selecciona tipo de contrato" />
+          </SelectTrigger>
+          <SelectContent>
+            {contractTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Professional Title */}
       <div className="space-y-2">
         <Label htmlFor="title" className="text-sm font-medium text-gray-900">
-          Título profesional
+          Título profesional *
         </Label>
         <Input
           id="title"
@@ -578,40 +854,93 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
             </div>
           )}
           
-          {/* Dropdown to add skills */}
-          <Select 
-            value="" 
-            onValueChange={(value) => handleSkillToggle(value)}
-          >
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Seleccionar habilidades (máximo 3)" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px]">
-              {skillsOptions.map((skill) => {
-                const isSelected = data.skills?.includes(skill);
-                const isDisabled = !isSelected && (data.skills?.length || 0) >= 3;
-                
-                return (
-                  <SelectItem 
+          {/* Input to add skills */}
+          <div className="relative">
+            <div className="flex gap-2 mb-2">
+              <Input
+                value={skillInput}
+                onChange={(e) => {
+                  setSkillInput(e.target.value);
+                  setShowSkillSuggestions(e.target.value.length > 0);
+                }}
+                onKeyPress={handleSkillInputKeyPress}
+                onFocus={() => setShowSkillSuggestions(skillInput.length > 0)}
+                onBlur={() => setTimeout(() => setShowSkillSuggestions(false), 150)}
+                placeholder="Agregar habilidad (ej: JavaScript, Excel, Comunicación...)"
+                className="h-12"
+                disabled={(data.skills?.length || 0) >= 10}
+              />
+              <Button
+                type="button"
+                onClick={addSkill}
+                disabled={!skillInput.trim() || (data.skills?.length || 0) >= 10}
+                className="h-12 px-4"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Suggestions dropdown */}
+            {showSkillSuggestions && getFilteredSuggestions().length > 0 && (
+              <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="p-2 border-b border-gray-100">
+                  <p className="text-xs font-medium text-gray-600">Sugerencias para {data.category}</p>
+                </div>
+                {getFilteredSuggestions().map((skill) => (
+                  <button
                     key={skill} 
-                    value={skill}
-                    disabled={isDisabled}
-                    className={isSelected ? "bg-blue-50 text-blue-900" : ""}
+                    type="button"
+                    onClick={() => {
+                      setSkillInput(skill);
+                      addSkill();
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm border-b border-gray-50 last:border-b-0"
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <span>{skill}</span>
-                      {isSelected && (
-                        <span className="ml-2 text-blue-600">✓</span>
+                    {skill}
+                  </button>
+                ))}
+              </div>
                       )}
                     </div>
-                  </SelectItem>
+
+          {/* Suggested skills as clickable chips */}
+          {data.category && getSuggestedSkills().length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-gray-600">Habilidades sugeridas para {data.category}:</p>
+              <div className="flex flex-wrap gap-2">
+                {getSuggestedSkills().slice(0, 6).map((skill) => {
+                  const isAlreadyAdded = data.skills?.includes(skill);
+                  const canAdd = (data.skills?.length || 0) < 10;
+                  
+                  return (
+                    <button
+                      key={skill}
+                      type="button"
+                      onClick={() => {
+                        if (!isAlreadyAdded && canAdd) {
+                          const currentSkills = data.skills || [];
+                          onChange({ skills: [...currentSkills, skill] });
+                        }
+                      }}
+                      disabled={isAlreadyAdded || !canAdd}
+                      className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                        isAlreadyAdded 
+                          ? 'bg-green-50 border-green-200 text-green-700 cursor-not-allowed' 
+                          : canAdd
+                          ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'
+                          : 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {skill} {isAlreadyAdded && '✓'}
+                    </button>
                 );
               })}
-            </SelectContent>
-          </Select>
+              </div>
+            </div>
+          )}
         </div>
         <div className="text-xs text-gray-500 text-right">
-          {data.skills?.length || 0} / 3
+          {data.skills?.length || 0} / 10 {(data.skills?.length || 0) >= 10 && '(máximo alcanzado)'}
         </div>
       </div>
 
@@ -648,48 +977,105 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
             </div>
           )}
           
-          {/* Dropdown to add tools */}
-          <Select 
-            value="" 
-            onValueChange={(value) => handleToolToggle(value)}
-          >
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Seleccionar herramientas (máximo 5)" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px]">
-              {toolsOptions.map((tool: string) => {
-                const isSelected = data.tools?.includes(tool);
-                const isDisabled = !isSelected && (data.tools?.length || 0) >= 5;
-                
-                return (
-                  <SelectItem 
+          {/* Input to add tools */}
+          <div className="relative">
+            <div className="flex gap-2 mb-2">
+              <Input
+                value={toolInput}
+                onChange={(e) => {
+                  setToolInput(e.target.value);
+                  setShowToolSuggestions(e.target.value.length > 0);
+                }}
+                onKeyPress={handleToolInputKeyPress}
+                onFocus={() => setShowToolSuggestions(toolInput.length > 0)}
+                onBlur={() => setTimeout(() => setShowToolSuggestions(false), 150)}
+                placeholder="Agregar herramienta (ej: Figma, Excel, Photoshop...)"
+                className="h-12"
+                disabled={(data.tools?.length || 0) >= 10}
+              />
+              <Button
+                type="button"
+                onClick={addTool}
+                disabled={!toolInput.trim() || (data.tools?.length || 0) >= 10}
+                className="h-12 px-4"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Suggestions dropdown */}
+            {showToolSuggestions && getFilteredToolSuggestions().length > 0 && (
+              <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="p-2 border-b border-gray-100">
+                  <p className="text-xs font-medium text-gray-600">Sugerencias para {data.category}</p>
+                </div>
+                {getFilteredToolSuggestions().map((tool) => (
+                  <button
                     key={tool} 
-                    value={tool}
-                    disabled={isDisabled}
-                    className={isSelected ? "bg-blue-50 text-blue-900" : ""}
+                    type="button"
+                    onClick={() => {
+                      setToolInput(tool);
+                      addTool();
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm border-b border-gray-50 last:border-b-0 flex items-center gap-2"
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2">
                         <img 
                           src={getToolIcon(tool)} 
                           alt={tool} 
                           className="w-4 h-4" 
                           style={{ filter: 'invert(0.2)' }}
                         />
-                        <span>{tool}</span>
+                    {tool}
+                  </button>
+                ))}
                       </div>
-                      {isSelected && (
-                        <span className="ml-2 text-blue-600">✓</span>
                       )}
                     </div>
-                  </SelectItem>
+
+          {/* Suggested tools as clickable chips */}
+          {data.category && getSuggestedTools().length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-gray-600">Herramientas sugeridas para {data.category}:</p>
+              <div className="flex flex-wrap gap-2">
+                {getSuggestedTools().slice(0, 6).map((tool) => {
+                  const isAlreadyAdded = data.tools?.includes(tool);
+                  const canAdd = (data.tools?.length || 0) < 10;
+                  
+                  return (
+                    <button
+                      key={tool}
+                      type="button"
+                      onClick={() => {
+                        if (!isAlreadyAdded && canAdd) {
+                          const currentTools = data.tools || [];
+                          onChange({ tools: [...currentTools, tool] });
+                        }
+                      }}
+                      disabled={isAlreadyAdded || !canAdd}
+                      className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs border transition-colors ${
+                        isAlreadyAdded 
+                          ? 'bg-green-50 border-green-200 text-green-700 cursor-not-allowed' 
+                          : canAdd
+                          ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'
+                          : 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      <img 
+                        src={getToolIcon(tool)} 
+                        alt={tool} 
+                        className="w-3 h-3" 
+                        style={{ filter: isAlreadyAdded ? 'none' : 'invert(0.3)' }}
+                      />
+                      {tool} {isAlreadyAdded && '✓'}
+                    </button>
                 );
               })}
-            </SelectContent>
-          </Select>
+              </div>
+            </div>
+          )}
         </div>
         <div className="text-xs text-gray-500 text-right">
-          {data.tools?.length || 0} / 5
+          {data.tools?.length || 0} / 10 {(data.tools?.length || 0) >= 10 && '(máximo alcanzado)'}
         </div>
       </div>
 
@@ -802,39 +1188,6 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
               </div>
             </div>
 
-            {/* Horario extendido */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-900">
-                Horario extendido
-              </Label>
-              <div className="flex items-center space-x-2">
-                <Select 
-                  value={data.extendedSchedule} 
-                  onValueChange={handleExtendedScheduleSelect}
-                >
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Seleccione horario extendido" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Horario estándar</SelectItem>
-                    <SelectItem value="extended">Horario extendido</SelectItem>
-                    <SelectItem value="flexible">Horario flexible</SelectItem>
-                    <SelectItem value="+3-hours">+3 Hours</SelectItem>
-                  </SelectContent>
-                </Select>
-                {data.extendedSchedule && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onClick={removeExtendedSchedule}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
           </div>
         )}
 
@@ -862,6 +1215,91 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
             </div>
           </div>
         )}
+      </div>
+
+      {/* Experience Levels */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-gray-900">
+          Nivel de experiencia (puede seleccionar múltiples)
+        </Label>
+        <div className="space-y-2">
+          {experienceLevelOptions.map((level) => (
+            <div key={level.value} className="flex items-center space-x-2">
+              <Checkbox
+                id={level.value}
+                checked={data.experienceLevels?.includes(level.value) || false}
+                onCheckedChange={(checked) => handleExperienceLevelChange(level.value, checked as boolean)}
+              />
+              <Label htmlFor={level.value} className="text-sm">
+                {level.label}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Work Modality */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-gray-900">
+          Modalidad de trabajo *
+        </Label>
+        <Select value={data.locationType} onValueChange={(value) => onChange({ locationType: value })}>
+          <SelectTrigger className="h-12">
+            <SelectValue placeholder="Selecciona modalidad" />
+          </SelectTrigger>
+          <SelectContent>
+            {locationTypes.map((type) => (
+              <SelectItem key={type.value} value={type.value}>
+                {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Location */}
+      {data.locationType !== 'remote' && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            Ubicación específica
+          </Label>
+          <Input
+            value={data.location}
+            onChange={(e) => onChange({ location: e.target.value })}
+            placeholder="Ej: Buenos Aires, Argentina"
+            className="h-12"
+          />
+        </div>
+      )}
+
+      {/* Deadline Date */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-gray-900">
+          Fecha límite (opcional)
+        </Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="h-12 w-full justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {data.deadlineDate ? format(data.deadlineDate, 'PPP') : 'Seleccionar fecha'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={data.deadlineDate || undefined}
+              onSelect={(date) => onChange({ deadlineDate: date })}
+              disabled={(date) => date < new Date() || date > new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000)}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+        <div className="text-xs text-gray-500">
+          Máximo 6 meses en adelante
+        </div>
       </div>
 
     </div>

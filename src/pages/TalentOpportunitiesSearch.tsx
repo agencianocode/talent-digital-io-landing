@@ -20,7 +20,6 @@ import {
 import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
 import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
-import TalentTopNavigation from '@/components/TalentTopNavigation';
 import ApplicationModal from '@/components/ApplicationModal';
 
 interface FilterState {
@@ -219,8 +218,6 @@ const TalentOpportunitiesSearch = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <TalentTopNavigation />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 rounded w-1/3"></div>
@@ -232,14 +229,10 @@ const TalentOpportunitiesSearch = () => {
             </div>
           </div>
         </div>
-      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TalentTopNavigation />
-      
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -547,7 +540,6 @@ const TalentOpportunitiesSearch = () => {
           onApplicationSent={handleApplicationSent}
         />
       </div>
-    </div>
   );
 };
 

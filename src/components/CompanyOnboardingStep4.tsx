@@ -379,8 +379,13 @@ const CompanyOnboardingStep4 = ({
     setLinkedinUrl(value);
   };
 
-  // Validar si el formulario está completo (solo título profesional es requerido)
-  const isFormValid = professionalTitle.trim().length > 0;
+  // Validar si el formulario está completo (todos los campos obligatorios excepto LinkedIn)
+  const isFormValid = 
+    professionalTitle.trim().length > 0 &&
+    country.trim().length > 0 &&
+    city.trim().length > 0 &&
+    phoneNumber.trim().length > 0 &&
+    countryCode.trim().length > 0;
 
   const handleContinue = () => {
     if (!isFormValid) return;
@@ -400,7 +405,7 @@ const CompanyOnboardingStep4 = ({
     <div className="w-full mx-auto px-6 py-4 sm:px-8 sm:py-6 lg:px-12 lg:py-8 space-y-6 sm:space-y-7 lg:space-y-8 font-['Inter']">
       {/* Step Indicator */}
       <div className="text-center">
-        <p className="text-sm text-gray-500 font-['Inter']">Paso 2/2</p>
+        <p className="text-sm text-gray-500 font-['Inter']">Perfil del Usuario (4/4)</p>
       </div>
 
       {/* Title and Description */}
@@ -411,6 +416,9 @@ const CompanyOnboardingStep4 = ({
         <p className="text-gray-600 font-['Inter']" style={{fontSize: '14px'}}>
           Tu puesto en la empresa
         </p>
+        <p className="text-sm text-gray-500 font-['Inter']">
+          Los campos marcados con <span className="text-red-500">*</span> son obligatorios
+        </p>
       </div>
 
       {/* Form */}
@@ -418,7 +426,7 @@ const CompanyOnboardingStep4 = ({
         {/* Professional Title */}
         <div>
           <h2 className="font-medium text-gray-900 mb-3 font-['Inter']" style={{fontSize: '16px'}}>
-            ¿Qué haces?
+            ¿Qué haces? <span className="text-red-500">*</span>
           </h2>
           <Input
             type="text"
@@ -480,7 +488,7 @@ const CompanyOnboardingStep4 = ({
         {/* Country */}
         <div>
           <h2 className="font-medium text-gray-900 mb-3 font-['Inter']" style={{fontSize: '16px'}}>
-            País
+            País <span className="text-red-500">*</span>
           </h2>
           <Select value={country} onValueChange={handleCountryChange}>
             <SelectTrigger className="h-12 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter']">
@@ -499,7 +507,7 @@ const CompanyOnboardingStep4 = ({
         {/* City */}
         <div ref={locationRef}>
           <h2 className="font-medium text-gray-900 mb-3 font-['Inter']" style={{fontSize: '16px'}}>
-            Ciudad
+            Ciudad <span className="text-red-500">*</span>
           </h2>
           <div className="relative">
             <div className="relative">
@@ -534,7 +542,7 @@ const CompanyOnboardingStep4 = ({
         {/* Phone */}
         <div>
           <h2 className="font-medium text-gray-900 mb-3 font-['Inter']" style={{fontSize: '16px'}}>
-            Teléfono
+            Teléfono <span className="text-red-500">*</span>
           </h2>
           <div className="flex gap-3">
             {/* Country Code Selector */}

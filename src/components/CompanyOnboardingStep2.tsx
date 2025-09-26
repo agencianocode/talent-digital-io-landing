@@ -70,7 +70,7 @@ const CompanyOnboardingStep2 = ({ onComplete, initialData, companyName, onDetail
     <div className="w-full mx-auto px-6 py-4 sm:px-8 sm:py-6 lg:px-12 lg:py-8 space-y-6 sm:space-y-7 lg:space-y-8 font-['Inter']">
       {/* Step Indicator */}
       <div className="text-center">
-        <p className="text-sm text-gray-500 font-['Inter']">Paso 1/2</p>
+        <p className="text-sm text-gray-500 font-['Inter']">Información de la Empresa (2/4)</p>
       </div>
 
       {/* Title */}

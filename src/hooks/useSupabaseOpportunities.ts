@@ -62,7 +62,13 @@ export const useSupabaseOpportunities = () => {
   const fetchOpportunities = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log('🔍 Fetching opportunities for:', { userRole, companyId: company?.id, isAuthenticated });
+      console.log('🔍 Fetching opportunities for:', { 
+        userRole, 
+        companyId: company?.id, 
+        isAuthenticated,
+        user: user?.id,
+        company: company
+      });
       
       if (isTalentRole(userRole)) {
         // Para talentos: solo oportunidades activas
@@ -83,13 +89,21 @@ export const useSupabaseOpportunities = () => {
         setOpportunities(data || []);
       } else {
         // Para empresas: todas las oportunidades de la empresa
+        console.log('🏢 Business user detected, checking company...');
+        console.log('Company object:', company);
+        console.log('Company ID:', company?.id);
+        
         if (!company?.id) {
           console.log('❌ No company ID found for business user');
+          console.log('Available company data:', company);
           setOpportunities([]);
           return;
         }
 
-        const { data, error } = await supabase
+        console.log('🔍 Querying opportunities for company_id:', company.id);
+        
+        // Fetch active opportunities
+        const { data: activeData, error: activeError } = await supabase
           .from('opportunities')
           .select(`
             *,
@@ -99,10 +113,48 @@ export const useSupabaseOpportunities = () => {
             )
           `)
           .eq('company_id', company.id)
+          .eq('status', 'active')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (activeError) {
+          console.error('❌ Error fetching active opportunities:', activeError);
+          throw activeError;
+        }
+
+        // Fetch last 2 draft opportunities
+        const { data: draftData, error: draftError } = await supabase
+          .from('opportunities')
+          .select(`
+            *,
+            companies (
+              name,
+              logo_url
+            )
+          `)
+          .eq('company_id', company.id)
+          .eq('status', 'draft')
+          .order('created_at', { ascending: false })
+          .limit(2);
+
+        if (draftError) {
+          console.error('❌ Error fetching draft opportunities:', draftError);
+          throw draftError;
+        }
+
+        // Combine and sort by creation date
+        const combinedData = [...(activeData || []), ...(draftData || [])];
+        const data = combinedData.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        console.log('📊 Query result:', { 
+          activeCount: activeData?.length || 0, 
+          draftCount: draftData?.length || 0,
+          totalCount: data?.length || 0 
+        });
+        
         console.log('🏢 Business opportunities loaded:', data?.length || 0, 'for company:', company.id);
+        console.log('📋 Opportunities data:', data);
         setOpportunities(data || []);
       }
     } catch (err) {

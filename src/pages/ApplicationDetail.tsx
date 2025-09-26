@@ -19,7 +19,6 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
-import TalentTopNavigation from '@/components/TalentTopNavigation';
 
 interface ApplicationDetail {
   id: string;
@@ -28,12 +27,12 @@ interface ApplicationDetail {
   created_at: string;
   updated_at: string;
   cover_letter?: string | null;
-  // Datos de encuesta de aplicación
-  experience_years?: number;
-  motivation?: string;
-  availability?: string;
-  expected_salary?: number;
-  portfolio_url?: string;
+  contact_status?: string | null;
+  contacted_at?: string | null;
+  resume_url?: string | null;
+  internal_rating?: number | null;
+  viewed_at?: string | null;
+  user_id: string;
   opportunities: {
     id: string;
     title: string;
@@ -66,10 +65,7 @@ const ApplicationDetail = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     cover_letter: '',
-    motivation: '',
-    availability: '',
-    expected_salary: 0,
-    portfolio_url: ''
+    resume_url: ''
   });
 
   useEffect(() => {
@@ -85,15 +81,16 @@ const ApplicationDetail = () => {
         .select(`
           id,
           opportunity_id,
+          user_id,
           status,
           created_at,
           updated_at,
           cover_letter,
-          experience_years,
-          motivation,
-          availability,
-          expected_salary,
-          portfolio_url,
+          contact_status,
+          contacted_at,
+          resume_url,
+          internal_rating,
+          viewed_at,
           opportunities (
             id,
             title,
@@ -128,10 +125,7 @@ const ApplicationDetail = () => {
       // Inicializar datos para edición
       setEditData({
         cover_letter: applicationData.cover_letter || '',
-        motivation: applicationData.motivation || '',
-        availability: applicationData.availability || '',
-        expected_salary: applicationData.expected_salary || 0,
-        portfolio_url: applicationData.portfolio_url || ''
+        resume_url: applicationData.resume_url || ''
       });
       
     } catch (error) {
@@ -169,10 +163,7 @@ const ApplicationDetail = () => {
         .from('applications')
         .update({
           cover_letter: editData.cover_letter,
-          motivation: editData.motivation,
-          availability: editData.availability,
-          expected_salary: editData.expected_salary || null,
-          portfolio_url: editData.portfolio_url,
+          resume_url: editData.resume_url,
           updated_at: new Date().toISOString()
         })
         .eq('id', id || '');
@@ -194,18 +185,13 @@ const ApplicationDetail = () => {
     if (application) {
       setEditData({
         cover_letter: application.cover_letter || '',
-        motivation: application.motivation || '',
-        availability: application.availability || '',
-        expected_salary: application.expected_salary || 0,
-        portfolio_url: application.portfolio_url || ''
+        resume_url: application.resume_url || ''
       });
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <TalentTopNavigation />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 rounded w-1/3"></div>
@@ -213,14 +199,11 @@ const ApplicationDetail = () => {
             <div className="h-32 bg-gray-200 rounded"></div>
           </div>
         </div>
-      </div>
     );
   }
 
   if (!application) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <TalentTopNavigation />
         <div className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="p-8 text-center">
@@ -236,14 +219,10 @@ const ApplicationDetail = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TalentTopNavigation />
-      
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -478,88 +457,28 @@ const ApplicationDetail = () => {
                   )}
                 </div>
 
-                {/* Motivación */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Motivación
-                  </label>
-                  {isEditing ? (
-                    <Textarea
-                      value={editData.motivation}
-                      onChange={(e) => setEditData(prev => ({ ...prev, motivation: e.target.value }))}
-                      placeholder="¿Por qué te interesa esta posición?"
-                      rows={3}
-                    />
-                  ) : (
-                    <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded whitespace-pre-wrap">
-                      {application.motivation || 'No proporcionada'}
-                    </p>
-                  )}
-                </div>
-
-                {/* Disponibilidad */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Disponibilidad
-                  </label>
-                  {isEditing ? (
-                    <Textarea
-                      value={editData.availability}
-                      onChange={(e) => setEditData(prev => ({ ...prev, availability: e.target.value }))}
-                      placeholder="¿Cuándo puedes empezar?"
-                      rows={2}
-                    />
-                  ) : (
-                    <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">
-                      {application.availability || 'No especificada'}
-                    </p>
-                  )}
-                </div>
-
-                {/* Expectativa salarial */}
-                {(application.expected_salary || isEditing) && (
+                {/* URL del CV/Resume */}
+                {(application.resume_url || isEditing) && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Expectativa salarial
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        value={editData.expected_salary}
-                        onChange={(e) => setEditData(prev => ({ ...prev, expected_salary: parseInt(e.target.value) || 0 }))}
-                        placeholder="Salario esperado"
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">
-                        ${application.expected_salary?.toLocaleString()} {application.opportunities?.currency || 'USD'}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Portfolio */}
-                {(application.portfolio_url || isEditing) && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Portfolio / Trabajos anteriores
+                      CV / Resume
                     </label>
                     {isEditing ? (
                       <input
                         type="url"
-                        value={editData.portfolio_url}
-                        onChange={(e) => setEditData(prev => ({ ...prev, portfolio_url: e.target.value }))}
-                        placeholder="https://mi-portfolio.com"
+                        value={editData.resume_url}
+                        onChange={(e) => setEditData(prev => ({ ...prev, resume_url: e.target.value }))}
+                        placeholder="https://mi-cv.com"
                         className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
-                    ) : application.portfolio_url ? (
+                    ) : application.resume_url ? (
                       <a 
-                        href={application.portfolio_url}
+                        href={application.resume_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 text-sm bg-gray-50 p-3 rounded block"
                       >
-                        {application.portfolio_url}
+                        {application.resume_url}
                       </a>
                     ) : (
                       <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">
@@ -568,12 +487,53 @@ const ApplicationDetail = () => {
                     )}
                   </div>
                 )}
+
+                {/* Estado de contacto */}
+                {application.contact_status && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Estado de contacto
+                    </label>
+                    <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">
+                      {application.contact_status}
+                    </p>
+                  </div>
+                )}
+
+                {/* Fecha de contacto */}
+                {application.contacted_at && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Contactado el
+                    </label>
+                    <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">
+                      {new Date(application.contacted_at).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                )}
+
+                {/* Calificación interna */}
+                {application.internal_rating && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Calificación interna
+                    </label>
+                    <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">
+                      {application.internal_rating}/5 ⭐
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

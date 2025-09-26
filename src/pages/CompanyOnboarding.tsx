@@ -45,6 +45,7 @@ const CompanyOnboarding = () => {
   //   // This can be re-enabled once the role switching logic is fixed
   // };
   const [currentStep, setCurrentStep] = useState(1);
+  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(false);
   const [companyData, setCompanyData] = useState<CompanyData>({
     name: '',
     isIndividual: false
@@ -500,6 +501,9 @@ const CompanyOnboarding = () => {
         // No lanzar error, el user_metadata ya se actualizó
       }
       
+      // Marcar el onboarding como completado
+      setIsOnboardingCompleted(true);
+      
       toast.success('¡Onboarding completado exitosamente!');
       
       // Refrescar el contexto de empresas para sincronizar los datos
@@ -590,43 +594,73 @@ const CompanyOnboarding = () => {
               <div className="flex items-center justify-center space-x-8">
                 {/* Perfil Empresa */}
                 <div className="flex items-center space-x-4">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                    currentStep <= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>
-                    <Building2 className="w-5 h-5" />
+                  <div className="relative flex items-center justify-center w-10 h-10 rounded-full bg-gray-200">
+                    {/* Fondo gris base */}
+                    <div className="absolute inset-0 rounded-full bg-gray-200"></div>
+                    
+                    {/* Llenado progresivo azul */}
+                    <div 
+                      className={`absolute inset-0 rounded-full transition-all duration-500 ${
+                        currentStep === 1 ? 'bg-gray-200' :
+                        currentStep === 2 ? 'bg-gradient-to-t from-blue-600 to-blue-600 bg-[length:100%_50%] bg-no-repeat bg-bottom' :
+                        'bg-blue-600'
+                      }`}
+                    ></div>
+                    
+                    {/* Icono */}
+                    <Building2 className={`w-5 h-5 relative z-10 ${
+                      currentStep > 2 ? 'text-white' : 'text-gray-600'
+                    }`} />
                   </div>
                   <div className="text-center">
                     <p className={`text-sm font-medium ${
-                      currentStep <= 2 ? 'text-blue-600' : 'text-gray-500'
+                      currentStep > 2 ? 'text-blue-600' : 'text-gray-500'
                     }`}>
                       Perfil Empresa
                     </p>
-                    <p className="text-xs text-gray-400">
-                      Pasos {currentStep <= 2 ? currentStep : '✓'}/2
+                    <p className={`text-xs ${
+                      currentStep > 2 ? 'text-blue-500' : 'text-gray-400'
+                    }`}>
+                      {currentStep > 2 ? 'Completado' : `Paso ${currentStep}/4`}
                     </p>
                   </div>
                 </div>
                 
                 {/* Línea conectora */}
                 <div className={`h-0.5 w-16 ${
-                  currentStep > 2 ? 'bg-blue-600' : 'bg-gray-300'
+                  isOnboardingCompleted ? 'bg-blue-600' : 'bg-gray-300'
                 }`}></div>
                 
                 {/* Perfil Usuario */}
                 <div className="flex items-center space-x-4">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                    currentStep > 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>
-                    <User className="w-5 h-5" />
+                  <div className="relative flex items-center justify-center w-10 h-10 rounded-full bg-gray-200">
+                    {/* Fondo gris base */}
+                    <div className="absolute inset-0 rounded-full bg-gray-200"></div>
+                    
+                    {/* Llenado progresivo azul */}
+                    <div 
+                      className={`absolute inset-0 rounded-full transition-all duration-500 ${
+                        currentStep <= 3 ? 'bg-gray-200' :
+                        currentStep === 4 && !isOnboardingCompleted ? 'bg-gradient-to-t from-blue-600 to-blue-600 bg-[length:100%_50%] bg-no-repeat bg-bottom' :
+                        isOnboardingCompleted ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
+                    ></div>
+                    
+                    {/* Icono */}
+                    <User className={`w-5 h-5 relative z-10 ${
+                      isOnboardingCompleted ? 'text-white' : 'text-gray-600'
+                    }`} />
                   </div>
                   <div className="text-center">
                     <p className={`text-sm font-medium ${
-                      currentStep > 2 ? 'text-blue-600' : 'text-gray-500'
+                      isOnboardingCompleted ? 'text-blue-600' : 'text-gray-500'
                     }`}>
                       Perfil Usuario
                     </p>
-                    <p className="text-xs text-gray-400">
-                      Pasos {currentStep > 2 ? (currentStep - 2) : '1'}/2
+                    <p className={`text-xs ${
+                      isOnboardingCompleted ? 'text-blue-500' : 'text-gray-400'
+                    }`}>
+                      {isOnboardingCompleted ? 'Completado' : currentStep > 2 ? `Paso ${currentStep}/4` : 'Pendiente'}
                     </p>
                   </div>
                 </div>

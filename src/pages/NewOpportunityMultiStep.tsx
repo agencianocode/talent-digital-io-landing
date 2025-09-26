@@ -17,7 +17,6 @@ interface MultiStepFormData {
   usOnlyApplicants: boolean;
   preferredTimezone: string;
   preferredLanguages: string[];
-  extendedSchedule: string;
   
   // Step 2
   projectType: 'ongoing' | 'one-time';
@@ -31,9 +30,6 @@ interface MultiStepFormData {
   maxHoursPerWeek: number;
   maxHoursPerMonth: number;
   isMaxHoursOptional: boolean;
-  jobDuration: number;
-  jobDurationUnit: 'month' | 'week';
-  noEndDate: boolean;
   // Publicación
   publishToFeed?: boolean;
 }
@@ -135,9 +131,6 @@ const NewOpportunityMultiStep = () => {
       if (formData.preferredTimezone) {
         requirements += `Zona horaria preferida: ${formData.preferredTimezone}\n`;
       }
-      if (formData.extendedSchedule) {
-        requirements += `Horario extendido: ${formData.extendedSchedule}\n`;
-      }
       if (formData.preferredLanguages?.length > 0) {
         requirements += `Idiomas preferidos: ${formData.preferredLanguages.join(', ')}\n`;
       }
@@ -169,7 +162,7 @@ const NewOpportunityMultiStep = () => {
         // salary_is_public: true,
         // is_academy_exclusive: false,
         company_id: activeCompany.id,
-        status: formData.publishToFeed ? 'active' as 'active' : 'draft' as 'active'
+        status: formData.publishToFeed ? 'active' : ((formData as any).status === 'draft' ? 'draft' : 'active') as 'active'
         // Campos de restricción de país se agregarán cuando se ejecute la migración
         // country_restriction_enabled: formData.usOnlyApplicants,
         // allowed_country: formData.usOnlyApplicants ? companyCountry : null
@@ -186,6 +179,15 @@ const NewOpportunityMultiStep = () => {
         throw error;
       }
 
+      // Check if this is a draft save (only when explicitly saving as draft, not when publishing)
+      const isDraft = (formData as any).status === 'draft' && !formData.publishToFeed;
+      
+      if (isDraft) {
+        toast.success('¡Borrador guardado exitosamente!');
+        // No redirect for drafts - let user continue editing
+        return;
+      }
+      
       if (formData.publishToFeed) {
         toast.success('¡Oportunidad publicada exitosamente en el feed!');
         navigate('/business-dashboard/opportunities');
