@@ -1,6 +1,6 @@
 import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
-import { OpportunityDashboard } from "@/components/dashboard/OpportunityDashboard";
+import { OpportunityListPage } from "@/components/dashboard/OpportunityListPage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, Users, CreditCard } from "lucide-react";
@@ -119,10 +119,10 @@ const OpportunitiesPage = () => {
     );
   }
 
-  // Renderizar el dashboard principal
+  // Renderizar la página de oportunidades simplificada
   return (
     <div className="p-8">
-      <OpportunityDashboard />
+      <OpportunityListPage />
     </div>
   );
 };

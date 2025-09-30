@@ -17,7 +17,7 @@ import {
   Eye,
   Edit3,
   Trash2,
-  MoreHorizontal
+  MoreVertical
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -183,9 +183,9 @@ const TalentOpportunities = () => {
   };
 
   // Manejar edición de aplicación
-  const handleEditApplication = (_applicationId: string) => {
-    // TODO: Implementar modal de edición
-    toast.info('Funcionalidad de edición próximamente disponible');
+  const handleEditApplication = (applicationId: string) => {
+    // Navegar a la página de detalles de la aplicación donde se puede editar
+    navigate(`/talent-dashboard/applications/${applicationId}`);
   };
 
   // Manejar retirar aplicación
@@ -440,7 +440,7 @@ const TalentOpportunities = () => {
                     </div>
 
                     {/* Acciones */}
-                    <div className="flex flex-col sm:flex-row gap-2 lg:flex-col">
+                    <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -454,7 +454,7 @@ const TalentOpportunities = () => {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="outline" size="sm" className="flex items-center gap-2">
-                            <MoreHorizontal className="h-4 w-4" />
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">

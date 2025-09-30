@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, DollarSign, Briefcase, Clock, Heart, Send, Mail } from "lucide-react";
+import { ArrowLeft, MapPin, DollarSign, Briefcase, Clock, Heart, Send, Mail, Linkedin, Instagram, Youtube, Twitter, ExternalLink } from "lucide-react";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import { useSupabaseAuth, isTalentRole } from "@/contexts/SupabaseAuthContext";
@@ -54,7 +54,8 @@ const OpportunityDetail = () => {
               description,
               website,
               location,
-              industry
+              industry,
+              social_links
             )
           `)
           .eq('id', id)
@@ -292,9 +293,19 @@ const OpportunityDetail = () => {
             <div className="bg-card p-6 rounded-lg border">
               <h2 className="text-xl font-semibold mb-4">Requisitos</h2>
               <div className="prose max-w-none">
-                <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-                  {opportunity.requirements}
-                </p>
+                <div 
+                  className="text-foreground leading-relaxed whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{
+                    __html: opportunity.requirements
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/(Habilidades:)/g, '<strong>$1</strong>')
+                      .replace(/(Herramientas:)/g, '<strong>$1</strong>')
+                      .replace(/(Contratistas requeridos:)/g, '<strong>$1</strong>')
+                      .replace(/(Zona horaria preferida:)/g, '<strong>$1</strong>')
+                      .replace(/(Idiomas preferidos:)/g, '<strong>$1</strong>')
+                      .replace(/\n/g, '<br/>')
+                  }}
+                />
               </div>
             </div>
           )}
@@ -339,24 +350,92 @@ const OpportunityDetail = () => {
           {company && (
             <div className="bg-card p-6 rounded-lg border">
               <h3 className="text-lg font-semibold mb-4">Acerca de la Empresa</h3>
-              <div className="space-y-3">
-                <h4 className="font-medium">{company.name}</h4>
+              <div className="space-y-4">
+                {/* Company Logo and Name */}
+                <div className="flex items-center gap-3">
+                  {company.logo_url ? (
+                    <img 
+                      src={company.logo_url} 
+                      alt={`Logo de ${company.name}`}
+                      className="w-12 h-12 rounded-lg object-cover border"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
+                      <Briefcase className="h-6 w-6 text-gray-500" />
+                    </div>
+                  )}
+                  <h4 className="font-medium text-lg">{company.name}</h4>
+                </div>
+
                 {company.description && (
                   <p className="text-sm text-muted-foreground">{company.description}</p>
                 )}
+
                 {company.industry && (
                   <div className="text-sm">
                     <span className="text-muted-foreground">Industria:</span> {company.industry}
                   </div>
                 )}
+
+                {/* Social Media Links */}
+                {company.social_links && (
+                  <div className="flex items-center gap-3">
+                    {company.social_links.linkedin && (
+                      <a 
+                        href={company.social_links.linkedin} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-700 transition-colors"
+                        title="LinkedIn"
+                      >
+                        <Linkedin className="h-5 w-5" />
+                      </a>
+                    )}
+                    {company.social_links.instagram && (
+                      <a 
+                        href={company.social_links.instagram} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-pink-600 hover:text-pink-700 transition-colors"
+                        title="Instagram"
+                      >
+                        <Instagram className="h-5 w-5" />
+                      </a>
+                    )}
+                    {company.social_links.youtube && (
+                      <a 
+                        href={company.social_links.youtube} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-red-600 hover:text-red-700 transition-colors"
+                        title="YouTube"
+                      >
+                        <Youtube className="h-5 w-5" />
+                      </a>
+                    )}
+                    {company.social_links.twitter && (
+                      <a 
+                        href={company.social_links.twitter} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-500 transition-colors"
+                        title="Twitter"
+                      >
+                        <Twitter className="h-5 w-5" />
+                      </a>
+                    )}
+                  </div>
+                )}
+
                 {company.website && (
                   <div className="text-sm">
                     <a 
                       href={company.website} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline"
+                      className="text-primary hover:underline flex items-center gap-1"
                     >
+                      <ExternalLink className="h-4 w-4" />
                       Sitio web de la empresa
                     </a>
                   </div>

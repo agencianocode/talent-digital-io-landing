@@ -59,7 +59,7 @@ const BusinessTalentProfile = () => {
   };
 
   const handleBack = () => {
-    navigate('/business-dashboard/talent');
+    navigate('/business-dashboard/talent-discovery');
   };
 
   const handleSendMessage = () => {

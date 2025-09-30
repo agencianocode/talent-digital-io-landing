@@ -1,307 +1,178 @@
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { 
+  Briefcase, 
   Users, 
   TrendingUp, 
-  Eye, 
-  Calendar,
-  Target,
-  BarChart3,
-  Bell,
-  AlertCircle
+  MessageCircle,
+  AlertCircle,
+  BarChart3
 } from 'lucide-react';
+import { useOpportunityDashboard } from '@/hooks/useOpportunityDashboard';
+import { useNavigate } from 'react-router-dom';
 
 interface BusinessMetricsProps {
-  totalOpportunities: number;
-  totalApplications: number;
-  applicationsInActiveOpportunities: number;
-  activeOpportunities: number;
-  pendingApplications: number;
-  unreviewedApplications: number;
-  applicationsThisMonth: number;
-  applicationsLastMonth: number;
-  averageResponseTime: string;
-  candidatesContacted: number;
-  candidatesInEvaluation: number;
-  topOpportunities: Array<{
-    id: string;
-    title: string;
-    applications: number;
-    views: number;
-  }>;
-  recentApplications: Array<{
-    id: string;
-    opportunityTitle: string;
-    applicantName: string;
-    status: string;
-    createdAt: string;
-  }>;
+  useMockData?: boolean;
 }
 
-const BusinessMetrics: React.FC<BusinessMetricsProps> = ({
-  totalOpportunities,
-  totalApplications,
-  applicationsInActiveOpportunities,
-  activeOpportunities,
-  pendingApplications,
-  unreviewedApplications,
-  applicationsThisMonth,
-  applicationsLastMonth,
-  averageResponseTime,
-  candidatesContacted,
-  candidatesInEvaluation,
-  topOpportunities,
-  recentApplications
-}) => {
-  // mark props as used to satisfy TS
-  void pendingApplications;
-  void applicationsLastMonth;
+export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) => {
+  const { metrics, isLoading } = useOpportunityDashboard(useMockData);
+  const navigate = useNavigate();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-4">
+                <div className="h-16 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Métricas principales */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Oportunidades Activas</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeOpportunities}</div>
-            <p className="text-xs text-muted-foreground">
-              {totalOpportunities} publicadas en total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Postulaciones Recibidas</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{applicationsInActiveOpportunities}</div>
-            <p className="text-xs text-muted-foreground">
-              {unreviewedApplications} sin revisar
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={unreviewedApplications > 0 ? "border-orange-200 bg-orange-50" : ""}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              Aplicaciones Este Mes
-              {unreviewedApplications > 0 && (
-                <Badge variant="destructive" className="text-xs px-2 py-1">
-                  <Bell className="h-3 w-3 mr-1" />
-                  {unreviewedApplications} nuevas
-                </Badge>
-              )}
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{applicationsThisMonth}</div>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                {unreviewedApplications} sin revisar
-              </p>
-              {unreviewedApplications > 0 && (
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="text-xs h-7"
-                  onClick={() => window.open('/business-dashboard/applications?status=pending', '_blank')}
-                >
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Revisar
-                </Button>
-              )}
+      {/* Main Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow duration-200 hover:bg-green-50/50"
+          onClick={() => navigate('/business-dashboard/opportunities')}
+        >
+          <CardContent className="p-4 text-center">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Briefcase className="h-6 w-6 text-green-600" />
             </div>
+            <div className="text-sm text-slate-600">Oportunidades Activas</div>
+            <div className="text-2xl font-bold text-slate-900">{metrics.activeOpportunities}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tasa de Conversión</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {totalOpportunities > 0 ? ((totalApplications / totalOpportunities) * 100).toFixed(1) : 0}%
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow duration-200 hover:bg-blue-50/50"
+          onClick={() => navigate('/business-dashboard/applications')}
+        >
+          <CardContent className="p-4 text-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Users className="h-6 w-6 text-blue-600" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Aplicaciones por oportunidad
-            </p>
+            <div className="text-sm text-slate-600">Postulantes Activos</div>
+            <div className="text-2xl font-bold text-slate-900">{metrics.totalApplications}</div>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow duration-200 hover:bg-orange-50/50"
+          onClick={() => navigate('/business-dashboard/applications?filter=pending')}
+        >
+          <CardContent className="p-4 text-center">
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+              <AlertCircle className="h-6 w-6 text-orange-600" />
+            </div>
+            <div className="text-sm text-slate-600">Sin Revisar</div>
+            <div className="text-2xl font-bold text-slate-900">{metrics.unreadApplications}</div>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow duration-200 hover:bg-red-50/50"
+          onClick={() => navigate('/business-dashboard/messages')}
+        >
+          <CardContent className="p-4 text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+              <MessageCircle className="h-6 w-6 text-red-600" />
+            </div>
+            <div className="text-sm text-slate-600">Mensajes Sin Leer</div>
+            <div className="text-2xl font-bold text-slate-900">{metrics.contactedCandidates}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Resumen detallado */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Resumen de Actividad</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-sm font-medium">Postulaciones en oportunidades activas</span>
-                <span className="font-bold">{applicationsInActiveOpportunities}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-sm font-medium">Oportunidades activas</span>
-                <span className="font-bold">{activeOpportunities}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-sm font-medium">Promedio de tiempo para responder</span>
-                <span className="font-bold">{averageResponseTime}</span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm font-medium">Candidatos contactados</span>
-                <span className="font-bold">{candidatesContacted}</span>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary mb-1">{candidatesInEvaluation}</div>
-                  <div className="text-sm text-muted-foreground">Candidatos en evaluación</div>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-xs text-muted-foreground mb-2">Conversión actual</div>
-                <div className="text-lg font-semibold">
-                  {totalOpportunities > 0 ? ((totalApplications / totalOpportunities) * 100).toFixed(1) : 0}%
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Top oportunidades y aplicaciones recientes */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-        {/* Top Oportunidades */}
+      {/* Performance Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <BarChart3 className="h-5 w-5" />
-              Oportunidades Más Populares
+              Rendimiento por Categoría
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {topOpportunities && topOpportunities.length > 0 ? (
-                topOpportunities.map((opportunity, index) => (
-                  <div key={opportunity.id} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
-                        <span className="text-sm font-medium text-primary">
-                          {index + 1}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{opportunity.title}</p>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <span className="flex items-center">
-                            <Users className="h-3 w-3 mr-1" />
-                            {opportunity.applications} aplicaciones
-                          </span>
-                          <span className="flex items-center">
-                            <Eye className="h-3 w-3 mr-1" />
-                            {opportunity.views} vistas
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => window.open(`/business-dashboard/applications?opportunity=${opportunity.id}`, '_blank')}
-                      >
-                        Ver Postulantes
-                      </Button>
-                    </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Tecnología</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No hay oportunidades con aplicaciones aún</p>
+                  <span className="text-sm font-medium">85%</span>
                 </div>
-              )}
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Marketing</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div className="bg-green-600 h-2 rounded-full" style={{ width: '72%' }}></div>
+                  </div>
+                  <span className="text-sm font-medium">72%</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Diseño</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div className="bg-purple-600 h-2 rounded-full" style={{ width: '68%' }}></div>
+                  </div>
+                  <span className="text-sm font-medium">68%</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Aplicaciones Recientes */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Aplicaciones Recientes
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <TrendingUp className="h-5 w-5" />
+              Tendencias de Aplicaciones
             </CardTitle>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => window.open('/business-dashboard/applications', '_blank')}
-            >
-              Ver Todas
-            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentApplications && recentApplications.length > 0 ? (
-                recentApplications.map((application) => (
-                  <div key={application.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{application.applicantName}</p>
-                      <p className="text-xs text-muted-foreground">{application.opportunityTitle}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(application.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge 
-                        variant={
-                          application.status === 'pending' ? 'secondary' :
-                          application.status === 'accepted' ? 'default' :
-                          application.status === 'rejected' ? 'destructive' : 'outline'
-                        }
-                        className={application.status === 'pending' ? 'bg-orange-100 text-orange-800' : ''}
-                      >
-                        {application.status === 'pending' ? 'Pendiente' :
-                         application.status === 'accepted' ? 'Aceptada' :
-                         application.status === 'rejected' ? 'Rechazada' : application.status}
-                      </Badge>
-                      {application.status === 'pending' && (
-                        <Button 
-                          size="sm"
-                          variant="outline"
-                          className="text-xs h-7"
-                          onClick={() => window.open(`/business-dashboard/applications?application=${application.id}`, '_blank')}
-                        >
-                          <Eye className="h-3 w-3 mr-1" />
-                          Ver
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No hay aplicaciones recientes</p>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Esta semana</span>
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <span className="text-sm font-medium text-green-600">+{metrics.thisWeekApplications}%</span>
+                </div>
               </div>
-            )}
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Mes anterior</span>
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm font-medium text-blue-600">+8%</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Promedio mensual</span>
+                <span className="text-sm font-medium">{Math.floor(metrics.totalApplications / 2)} aplicaciones</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Tasa de conversión</span>
+                <div className="flex items-center gap-2">
+                  <Progress value={metrics.conversionRate} className="h-2 w-16" />
+                  <span className="text-sm font-medium">{metrics.conversionRate}%</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
     </div>
   );
 };
-
-export default BusinessMetrics; 

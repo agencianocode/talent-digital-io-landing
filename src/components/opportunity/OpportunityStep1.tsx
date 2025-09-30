@@ -1121,49 +1121,55 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
             <Checkbox
               id="usOnly"
               checked={data.usOnlyApplicants}
-              onCheckedChange={(checked) => onChange({ usOnlyApplicants: !!checked })}
+              onCheckedChange={(checked) => {
+                const isChecked = !!checked;
+                onChange({ 
+                  usOnlyApplicants: isChecked,
+                  // Si se activa la restricción de país, solo desactivar zona horaria
+                  ...(isChecked && { 
+                    preferredTimezone: undefined
+                  })
+                });
+                // También cerrar la sección de zona horaria si estaba abierta
+                if (isChecked && showTimezoneSection) {
+                  setShowTimezoneSection(false);
+                }
+              }}
             />
             <Label htmlFor="usOnly" className="text-sm font-medium text-gray-900">
               {getApplicantRestrictionText(company?.location)}
             </Label>
           </div>
+        </div>
 
-          {/* Preferences buttons */}
+        {/* Preferences buttons */}
+        <div className="flex flex-col space-y-3">
+          {/* Zona horaria preferida button */}
           <div className="flex items-center space-x-4">
-            {/* Zona horaria preferida button */}
             <Button
               type="button"
-              className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700 rounded-full text-sm font-medium border-0"
-              onClick={() => setShowTimezoneSection(!showTimezoneSection)}
+              className={`px-4 py-2 rounded-full text-sm font-medium border-0 ${
+                data.usOnlyApplicants 
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700"
+              }`}
+              onClick={() => !data.usOnlyApplicants && setShowTimezoneSection(!showTimezoneSection)}
+              disabled={data.usOnlyApplicants}
             >
               + Zona horaria preferida
             </Button>
-
-            {/* Idiomas preferidos button */}
-            <Button
-              type="button"
-              className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700 rounded-full text-sm font-medium border-0"
-              onClick={() => setShowLanguagesSection(!showLanguagesSection)}
-            >
-              + Idiomas preferidos
-            </Button>
-          </div>
-        </div>
-
-        {/* Timezone selector (if expanded) */}
-        {showTimezoneSection && (
-          <div className="grid grid-cols-2 gap-4">
-            {/* Zona horaria preferida */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-900">
-                Zona horaria preferida
-              </Label>
+            
+            {/* Timezone selector (if expanded) - Horizontal layout */}
+            {showTimezoneSection && (
               <div className="flex items-center space-x-2">
+                <Label className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                  Zona horaria:
+                </Label>
                 <Select 
                   value={data.preferredTimezone} 
                   onValueChange={handleTimezoneSelect}
                 >
-                  <SelectTrigger className="h-12">
+                  <SelectTrigger className="h-8 w-48">
                     <SelectValue placeholder="Seleccionar zona horaria" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1180,41 +1186,52 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
                     size="sm"
                     variant="ghost"
                     onClick={removeTimezone}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0 h-8 w-8 p-0"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
-            </div>
-
+            )}
           </div>
-        )}
 
-        {/* Languages selector (if expanded) */}
-        {showLanguagesSection && (
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-900">
-              Idiomas preferidos
-            </Label>
-            <div className="flex flex-wrap gap-2">
-              {languageOptions.map((language) => (
-                <Button
-                  key={language}
-                  type="button"
-                  onClick={() => handleLanguageToggle(language)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium border-0 ${
-                    data.preferredLanguages?.includes(language) 
-                      ? "bg-gray-400 text-gray-700 hover:bg-gray-400 hover:text-gray-700" 
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700"
-                  }`}
-                >
-                  {language}
-                </Button>
-              ))}
-            </div>
+          {/* Idiomas preferidos button */}
+          <div className="flex items-center space-x-4">
+            <Button
+              type="button"
+              className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700 rounded-full text-sm font-medium border-0"
+              onClick={() => setShowLanguagesSection(!showLanguagesSection)}
+            >
+              + Idiomas preferidos
+            </Button>
+            
+            {/* Languages selector (if expanded) - Horizontal layout */}
+            {showLanguagesSection && (
+              <div className="flex items-center space-x-2">
+                <Label className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                  Idiomas:
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {languageOptions.map((language) => (
+                    <Button
+                      key={language}
+                      type="button"
+                      onClick={() => handleLanguageToggle(language)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium border-0 ${
+                        data.preferredLanguages?.includes(language) 
+                          ? "bg-gray-400 text-gray-700 hover:bg-gray-400 hover:text-gray-700" 
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700"
+                      }`}
+                    >
+                      {language}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
       </div>
 
       {/* Experience Levels */}

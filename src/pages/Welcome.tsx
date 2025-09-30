@@ -12,7 +12,7 @@ const Welcome = () => {
         navigate('/business-dashboard/opportunities/new');
         break;
       case 'explore':
-        navigate('/business-dashboard/talent');
+        navigate('/business-dashboard/talent-discovery');
         break;
       default:
         break;

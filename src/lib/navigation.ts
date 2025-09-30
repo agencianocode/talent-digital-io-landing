@@ -20,7 +20,7 @@ export const ROUTES = {
   BUSINESS_OPPORTUNITIES: '/business-dashboard/opportunities',
   BUSINESS_NEW_OPPORTUNITY: '/business-dashboard/opportunities/new',
   BUSINESS_APPLICATIONS: '/business-dashboard/applications',
-  BUSINESS_TALENT_SEARCH: '/business-dashboard/talent',
+  BUSINESS_TALENT_SEARCH: '/business-dashboard/talent-discovery',
   
   // Talent Dashboard
   TALENT_DASHBOARD: '/talent-dashboard',

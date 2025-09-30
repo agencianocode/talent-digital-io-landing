@@ -16,7 +16,12 @@ import {
   Calendar,
   ArrowLeft,
   ExternalLink,
-  Share2
+  Share2,
+  Linkedin,
+  Instagram,
+  Youtube,
+  Twitter,
+  Briefcase
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -202,9 +207,19 @@ const PublicOpportunity = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="prose max-w-none">
-                    <p className="text-gray-700 whitespace-pre-wrap">
-                      {opportunity.requirements}
-                    </p>
+                    <div 
+                      className="text-gray-700 whitespace-pre-wrap"
+                      dangerouslySetInnerHTML={{
+                        __html: opportunity.requirements
+                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          .replace(/(Habilidades:)/g, '<strong>$1</strong>')
+                          .replace(/(Herramientas:)/g, '<strong>$1</strong>')
+                          .replace(/(Contratistas requeridos:)/g, '<strong>$1</strong>')
+                          .replace(/(Zona horaria preferida:)/g, '<strong>$1</strong>')
+                          .replace(/(Idiomas preferidos:)/g, '<strong>$1</strong>')
+                          .replace(/\n/g, '<br/>')
+                      }}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -274,17 +289,71 @@ const PublicOpportunity = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
+                  <Avatar className="h-12 w-12">
                     <AvatarImage src={opportunity.company?.logo_url} />
                     <AvatarFallback>
-                      <Building2 className="h-5 w-5" />
+                      <Briefcase className="h-6 w-6" />
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h4 className="font-medium">{opportunity.company?.name}</h4>
+                    <h4 className="font-medium text-lg">{opportunity.company?.name}</h4>
                     <p className="text-sm text-gray-600">{opportunity.company?.industry}</p>
                   </div>
                 </div>
+
+                {opportunity.company?.description && (
+                  <p className="text-sm text-gray-600">{opportunity.company.description}</p>
+                )}
+
+                {/* Social Media Links */}
+                {opportunity.company?.social_links && (
+                  <div className="flex items-center gap-3">
+                    {opportunity.company.social_links.linkedin && (
+                      <a 
+                        href={opportunity.company.social_links.linkedin} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-700 transition-colors"
+                        title="LinkedIn"
+                      >
+                        <Linkedin className="h-5 w-5" />
+                      </a>
+                    )}
+                    {opportunity.company.social_links.instagram && (
+                      <a 
+                        href={opportunity.company.social_links.instagram} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-pink-600 hover:text-pink-700 transition-colors"
+                        title="Instagram"
+                      >
+                        <Instagram className="h-5 w-5" />
+                      </a>
+                    )}
+                    {opportunity.company.social_links.youtube && (
+                      <a 
+                        href={opportunity.company.social_links.youtube} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-red-600 hover:text-red-700 transition-colors"
+                        title="YouTube"
+                      >
+                        <Youtube className="h-5 w-5" />
+                      </a>
+                    )}
+                    {opportunity.company.social_links.twitter && (
+                      <a 
+                        href={opportunity.company.social_links.twitter} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-500 transition-colors"
+                        title="Twitter"
+                      >
+                        <Twitter className="h-5 w-5" />
+                      </a>
+                    )}
+                  </div>
+                )}
                 
                 {opportunity.company?.website && (
                   <Button 

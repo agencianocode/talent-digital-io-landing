@@ -14,7 +14,23 @@ import {
   Briefcase,
   Edit3,
   Save,
-  X
+  X,
+  CheckCircle,
+  Eye,
+  MessageCircle,
+  User,
+  AlertCircle,
+  FileText,
+  Download,
+  ExternalLink,
+  File,
+  Image,
+  Video,
+  Target,
+  TrendingUp,
+  CheckCircle2,
+  XCircle,
+  Percent
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -190,6 +206,338 @@ const ApplicationDetail = () => {
     }
   };
 
+  // Función para obtener el icono del tipo de archivo
+  const getFileIcon = (url: string) => {
+    const extension = url.split('.').pop()?.toLowerCase();
+    
+    switch (extension) {
+      case 'pdf':
+        return { icon: FileText, color: 'text-red-600', bgColor: 'bg-red-100' };
+      case 'doc':
+      case 'docx':
+        return { icon: FileText, color: 'text-blue-600', bgColor: 'bg-blue-100' };
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return { icon: Image, color: 'text-green-600', bgColor: 'bg-green-100' };
+      case 'mp4':
+      case 'avi':
+      case 'mov':
+        return { icon: Video, color: 'text-purple-600', bgColor: 'bg-purple-100' };
+      default:
+        return { icon: File, color: 'text-gray-600', bgColor: 'bg-gray-100' };
+    }
+  };
+
+  // Función para obtener el nombre del archivo desde la URL
+  const getFileName = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      const fileName = pathname.split('/').pop();
+      return fileName || 'Documento';
+    } catch {
+      return 'Documento';
+    }
+  };
+
+  // Función para calcular la puntuación de match
+  const calculateMatchScore = () => {
+    if (!application?.opportunities) return { score: 0, details: [] };
+
+    const opportunity = application.opportunities;
+    const requirements = opportunity.requirements || '';
+    const matchDetails = [];
+
+    // Extraer habilidades requeridas
+    const skillsMatch = requirements.match(/Habilidades:\s*([^\n]+)/i);
+    const requiredSkills = skillsMatch?.[1] ? skillsMatch[1].split(',').map(s => s.trim().toLowerCase()) : [];
+    
+    // Extraer herramientas requeridas
+    const toolsMatch = requirements.match(/Herramientas:\s*([^\n]+)/i);
+    const requiredTools = toolsMatch?.[1] ? toolsMatch[1].split(',').map(t => t.trim().toLowerCase()) : [];
+
+    // Extraer idiomas requeridos
+    const languagesMatch = requirements.match(/Idiomas preferidos:\s*([^\n]+)/i);
+    const requiredLanguages = languagesMatch?.[1] ? languagesMatch[1].split(',').map(l => l.trim().toLowerCase()) : [];
+
+    // Extraer zona horaria
+    const timezoneMatch = requirements.match(/Zona horaria preferida:\s*([^\n]+)/i);
+    const requiredTimezone = timezoneMatch?.[1] ? timezoneMatch[1].trim() : '';
+
+    // Simular perfil del usuario (en una implementación real, esto vendría de la base de datos)
+    const userProfile = {
+      skills: ['cierre de ventas', 'negociación', 'crm', 'prospección', 'cold calling'], // Ejemplo
+      tools: ['hubspot', 'salesforce', 'zoom', 'linkedin sales navigator'], // Ejemplo
+      languages: ['español', 'inglés'], // Ejemplo
+      timezone: 'UTC-5 (EST) - Estados Unidos (Costa Este), Colombia' // Ejemplo
+    };
+
+    let totalScore = 0;
+    let maxScore = 0;
+
+    // Calcular match de habilidades (40% del score)
+    if (requiredSkills.length > 0) {
+      maxScore += 40;
+      const matchedSkills = requiredSkills.filter(skill => 
+        userProfile.skills.some(userSkill => 
+          userSkill.toLowerCase().includes(skill) || skill.includes(userSkill.toLowerCase())
+        )
+      );
+      const skillsScore = (matchedSkills.length / requiredSkills.length) * 40;
+      totalScore += skillsScore;
+      
+      matchDetails.push({
+        category: 'Habilidades',
+        score: Math.round(skillsScore),
+        maxScore: 40,
+        matched: matchedSkills,
+        required: requiredSkills,
+        icon: Target,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-100'
+      });
+    }
+
+    // Calcular match de herramientas (30% del score)
+    if (requiredTools.length > 0) {
+      maxScore += 30;
+      const matchedTools = requiredTools.filter(tool => 
+        userProfile.tools.some(userTool => 
+          userTool.toLowerCase().includes(tool) || tool.includes(userTool.toLowerCase())
+        )
+      );
+      const toolsScore = (matchedTools.length / requiredTools.length) * 30;
+      totalScore += toolsScore;
+      
+      matchDetails.push({
+        category: 'Herramientas',
+        score: Math.round(toolsScore),
+        maxScore: 30,
+        matched: matchedTools,
+        required: requiredTools,
+        icon: TrendingUp,
+        color: 'text-green-600',
+        bgColor: 'bg-green-100'
+      });
+    }
+
+    // Calcular match de idiomas (20% del score)
+    if (requiredLanguages.length > 0) {
+      maxScore += 20;
+      const matchedLanguages = requiredLanguages.filter(lang => 
+        userProfile.languages.some(userLang => 
+          userLang.toLowerCase().includes(lang) || lang.includes(userLang.toLowerCase())
+        )
+      );
+      const languagesScore = (matchedLanguages.length / requiredLanguages.length) * 20;
+      totalScore += languagesScore;
+      
+      matchDetails.push({
+        category: 'Idiomas',
+        score: Math.round(languagesScore),
+        maxScore: 20,
+        matched: matchedLanguages,
+        required: requiredLanguages,
+        icon: CheckCircle2,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-100'
+      });
+    }
+
+    // Calcular match de zona horaria (10% del score)
+    if (requiredTimezone) {
+      maxScore += 10;
+      const timezoneMatch = userProfile.timezone.toLowerCase().includes(requiredTimezone.toLowerCase()) ||
+                           requiredTimezone.toLowerCase().includes(userProfile.timezone.toLowerCase());
+      const timezoneScore = timezoneMatch ? 10 : 0;
+      totalScore += timezoneScore;
+      
+      matchDetails.push({
+        category: 'Zona Horaria',
+        score: timezoneScore,
+        maxScore: 10,
+        matched: timezoneMatch ? [requiredTimezone] : [],
+        required: [requiredTimezone],
+        icon: XCircle,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-100'
+      });
+    }
+
+    const finalScore = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+
+    return {
+      score: finalScore,
+      details: matchDetails,
+      totalPossible: maxScore,
+      achieved: Math.round(totalScore)
+    };
+  };
+
+  // Generar timeline de la aplicación
+  const generateApplicationTimeline = () => {
+    if (!application) return [];
+
+    const timeline = [];
+
+    // 1. Aplicación enviada
+    timeline.push({
+      id: 'applied',
+      title: 'Aplicación enviada',
+      description: 'Tu aplicación fue enviada exitosamente',
+      date: application.created_at,
+      icon: CheckCircle,
+      status: 'completed',
+      color: 'text-green-600'
+    });
+
+    // 2. Aplicación vista (si tiene viewed_at)
+    if (application.viewed_at) {
+      timeline.push({
+        id: 'viewed',
+        title: 'Aplicación vista',
+        description: 'La empresa ha revisado tu aplicación',
+        date: application.viewed_at,
+        icon: Eye,
+        status: 'completed',
+        color: 'text-blue-600'
+      });
+    }
+
+    // 3. Contacto inicial (si tiene contacted_at)
+    if (application.contacted_at) {
+      timeline.push({
+        id: 'contacted',
+        title: 'Contacto inicial',
+        description: 'La empresa se ha puesto en contacto contigo',
+        date: application.contacted_at,
+        icon: MessageCircle,
+        status: 'completed',
+        color: 'text-purple-600'
+      });
+    }
+
+    // 4. Estado actual
+    const currentStatus = application.status;
+    let currentStep = null;
+
+    switch (currentStatus) {
+      case 'pending':
+        currentStep = {
+          id: 'review',
+          title: 'En revisión',
+          description: 'Tu aplicación está siendo evaluada por el equipo de recursos humanos',
+          date: application.updated_at,
+          icon: Clock,
+          status: 'current',
+          color: 'text-yellow-600'
+        };
+        break;
+      case 'reviewed':
+        currentStep = {
+          id: 'reviewed',
+          title: 'Aplicación revisada',
+          description: 'Tu perfil ha sido evaluado, esperando próximos pasos',
+          date: application.updated_at,
+          icon: CheckCircle,
+          status: 'current',
+          color: 'text-blue-600'
+        };
+        break;
+      case 'interview_scheduled':
+        currentStep = {
+          id: 'interview',
+          title: 'Entrevista programada',
+          description: 'Se ha programado una entrevista contigo',
+          date: application.updated_at,
+          icon: User,
+          status: 'current',
+          color: 'text-purple-600'
+        };
+        break;
+      case 'accepted':
+        currentStep = {
+          id: 'accepted',
+          title: '¡Aplicación aceptada!',
+          description: '¡Felicidades! Has sido seleccionado para esta posición',
+          date: application.updated_at,
+          icon: CheckCircle,
+          status: 'completed',
+          color: 'text-green-600'
+        };
+        break;
+      case 'rejected':
+        currentStep = {
+          id: 'rejected',
+          title: 'Aplicación no seleccionada',
+          description: 'Gracias por tu interés, pero no fuiste seleccionado para esta posición',
+          date: application.updated_at,
+          icon: AlertCircle,
+          status: 'completed',
+          color: 'text-red-600'
+        };
+        break;
+    }
+
+    if (currentStep) {
+      timeline.push(currentStep);
+    }
+
+    // 5. Próximos pasos (si no está completado)
+    if (currentStatus !== 'accepted' && currentStatus !== 'rejected') {
+      let nextStep = null;
+
+      switch (currentStatus) {
+        case 'pending':
+          nextStep = {
+            id: 'next_review',
+            title: 'Próximo: Revisión',
+            description: 'El equipo evaluará tu perfil y experiencia',
+            date: null,
+            icon: Eye,
+            status: 'upcoming',
+            color: 'text-gray-400'
+          };
+          break;
+        case 'reviewed':
+          nextStep = {
+            id: 'next_contact',
+            title: 'Próximo: Contacto',
+            description: 'Si eres seleccionado, la empresa se pondrá en contacto contigo',
+            date: null,
+            icon: MessageCircle,
+            status: 'upcoming',
+            color: 'text-gray-400'
+          };
+          break;
+        case 'interview_scheduled':
+          nextStep = {
+            id: 'next_decision',
+            title: 'Próximo: Decisión',
+            description: 'Después de la entrevista, recibirás una respuesta final',
+            date: null,
+            icon: CheckCircle,
+            status: 'upcoming',
+            color: 'text-gray-400'
+          };
+          break;
+      }
+
+      if (nextStep) {
+        timeline.push(nextStep);
+      }
+    }
+
+    return timeline.sort((a, b) => {
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+  };
+
   if (loading) {
     return (
         <div className="container mx-auto px-4 py-8">
@@ -269,57 +617,88 @@ const ApplicationDetail = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Información de la oportunidad */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Detalles de la oportunidad */}
-            <Card>
-              <CardHeader>
+        {/* Layout Principal - Grid Responsivo Mejorado */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          {/* Columna Principal - Información de la Oportunidad */}
+          <div className="xl:col-span-8 space-y-6">
+            {/* Card Principal - Header de la Oportunidad */}
+            <Card className="border-l-4 border-l-blue-500 shadow-sm">
+              <CardHeader className="pb-4">
                 <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center shadow-sm">
                     {application.opportunities?.companies?.logo_url ? (
                       <img 
                         src={application.opportunities.companies.logo_url} 
                         alt={application.opportunities?.companies?.name}
-                        className="w-12 h-12 object-contain"
+                        className="w-12 h-12 object-contain rounded-lg"
                       />
                     ) : (
-                      <Building className="h-8 w-8 text-gray-400" />
+                      <Building className="h-8 w-8 text-blue-600" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <CardTitle className="text-xl mb-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-2xl mb-2 text-gray-900">
                       {application.opportunities?.title}
                     </CardTitle>
-                    <p className="text-gray-600 text-lg">
+                        <p className="text-gray-600 text-lg font-medium">
                       {application.opportunities?.companies?.name}
                     </p>
                   </div>
-                  <Badge className={getStatusBadgeClass(application.status)}>
+                      <Badge className={`${getStatusBadgeClass(application.status)} text-sm px-3 py-1`}>
                     {getStatusText(application.status)}
                   </Badge>
+                    </div>
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                {/* Metadatos de la oportunidad */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            </Card>
+
+            {/* Grid de Metadatos - Información Clave */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {application.opportunities?.location && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <MapPin className="h-4 w-4" />
-                      {application.opportunities.location}
+                <Card className="hover:shadow-md transition-shadow duration-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <MapPin className="h-4 w-4 text-green-600" />
                     </div>
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Ubicación</p>
+                        <p className="text-sm font-medium text-gray-900">{application.opportunities.location}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
                   )}
                   
                   {application.opportunities?.type && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Briefcase className="h-4 w-4" />
-                      {application.opportunities.type}
+                <Card className="hover:shadow-md transition-shadow duration-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <Briefcase className="h-4 w-4 text-purple-600" />
                     </div>
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Tipo</p>
+                        <p className="text-sm font-medium text-gray-900">{application.opportunities.type}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
                   )}
 
                   {(application.opportunities?.salary_min || application.opportunities?.salary_max) && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <DollarSign className="h-4 w-4" />
+                <Card className="hover:shadow-md transition-shadow duration-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-yellow-100 rounded-lg">
+                        <DollarSign className="h-4 w-4 text-yellow-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Salario</p>
+                        <p className="text-sm font-medium text-gray-900">
                       {application.opportunities.salary_min && application.opportunities.salary_max
                         ? `$${application.opportunities.salary_min.toLocaleString()} - $${application.opportunities.salary_max.toLocaleString()}`
                         : application.opportunities.salary_min
@@ -327,50 +706,80 @@ const ApplicationDetail = () => {
                         : `Hasta $${application.opportunities.salary_max?.toLocaleString()}`
                       }
                       {application.opportunities.currency && ` ${application.opportunities.currency}`}
+                        </p>
                     </div>
-                  )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="h-4 w-4" />
+              <Card className="hover:shadow-md transition-shadow duration-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-100 rounded-lg">
+                      <Calendar className="h-4 w-4 text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Publicado</p>
+                      <p className="text-sm font-medium text-gray-900">
                     {new Date(application.opportunities?.created_at).toLocaleDateString('es-ES')}
+                      </p>
                   </div>
                 </div>
-
-                {/* Categoría */}
-                {application.opportunities?.category && (
-                  <div className="mb-4">
-                    <Badge variant="secondary">
-                      {application.opportunities.category}
-                    </Badge>
+                </CardContent>
+              </Card>
                   </div>
-                )}
 
+            {/* Descripción y Requisitos */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Descripción */}
                 {application.opportunities?.description && (
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-2">Descripción</h4>
-                    <p className="text-gray-600 whitespace-pre-wrap">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <div className="p-1.5 bg-blue-100 rounded-lg">
+                        <FileText className="h-4 w-4 text-blue-600" />
+                      </div>
+                      Descripción
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                       {application.opportunities.description}
                     </p>
-                  </div>
+                  </CardContent>
+                </Card>
                 )}
 
                 {/* Requisitos */}
                 {application.opportunities?.requirements && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Requisitos</h4>
-                    <p className="text-gray-600 whitespace-pre-wrap">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <div className="p-1.5 bg-orange-100 rounded-lg">
+                        <Target className="h-4 w-4 text-orange-600" />
+                      </div>
+                      Requisitos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                       {application.opportunities.requirements}
                     </p>
-                  </div>
-                )}
               </CardContent>
             </Card>
+              )}
+            </div>
 
             {/* Información de la empresa */}
             <Card>
               <CardHeader>
-                <CardTitle>Información de la Empresa</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="p-1.5 bg-gray-100 rounded-lg">
+                    <Building className="h-4 w-4 text-gray-600" />
+                  </div>
+                  Información de la Empresa
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -401,18 +810,98 @@ const ApplicationDetail = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Sidebar - Detalles de la aplicación */}
-          <div className="space-y-6">
-            {/* Estado y fechas */}
-            <Card>
+            {/* Timeline de la aplicación - Movido al área principal */}
+            <Card className="border-l-4 border-l-blue-500">
               <CardHeader>
-                <CardTitle>Estado de la Aplicación</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="p-1.5 bg-blue-100 rounded-lg">
+                    <Clock className="h-4 w-4 text-blue-600" />
+          </div>
+                  Progreso de la Aplicación
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div>
+                  {generateApplicationTimeline().map((step, index) => {
+                    const IconComponent = step.icon;
+                    const isLast = index === generateApplicationTimeline().length - 1;
+                    
+                    return (
+                      <div key={step.id} className="flex items-start gap-3">
+                        {/* Icono y línea conectora */}
+                        <div className="flex flex-col items-center">
+                          <div className={`p-2 rounded-full ${
+                            step.status === 'completed' ? 'bg-green-100' :
+                            step.status === 'current' ? 'bg-yellow-100' :
+                            'bg-gray-100'
+                          }`}>
+                            <IconComponent className={`h-4 w-4 ${
+                              step.status === 'completed' ? 'text-green-600' :
+                              step.status === 'current' ? 'text-yellow-600' :
+                              'text-gray-400'
+                            }`} />
+                          </div>
+                          {!isLast && (
+                            <div className={`w-0.5 h-8 mt-2 ${
+                              step.status === 'completed' ? 'bg-green-200' : 'bg-gray-200'
+                            }`} />
+                          )}
+                        </div>
+                        
+                        {/* Contenido del paso */}
+                        <div className="flex-1 pb-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className={`font-medium ${
+                              step.status === 'completed' ? 'text-green-800' :
+                              step.status === 'current' ? 'text-yellow-800' :
+                              'text-gray-500'
+                            }`}>
+                              {step.title}
+                            </h4>
+                            {step.status === 'current' && (
+                              <Badge variant="outline" className="text-xs">
+                                Actual
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mb-1">
+                            {step.description}
+                          </p>
+                          {step.date && (
+                            <p className="text-xs text-gray-500">
+                              {new Date(step.date).toLocaleDateString('es-ES', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar - Información de la Aplicación */}
+          <div className="xl:col-span-4 space-y-6">
+            {/* Estado y Match Score - Combinado */}
+            <div className="grid grid-cols-1 gap-4">
+              {/* Estado compacto */}
+              <Card className="border-l-4 border-l-green-500">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-green-100 rounded-lg">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      </div>
+                      <h3 className="font-medium text-gray-900">Estado</h3>
+                    </div>
                     <Badge className={getStatusBadgeClass(application.status)}>
                       {getStatusText(application.status)}
                     </Badge>
@@ -428,107 +917,271 @@ const ApplicationDetail = () => {
                       <span>Actualizado: {new Date(application.updated_at).toLocaleDateString('es-ES')}</span>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Match Score compacto */}
+              <Card className="border-l-4 border-l-indigo-500">
+                <CardContent className="p-4">
+                  {(() => {
+                    const matchData = calculateMatchScore();
+                    return (
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <div className="p-1.5 bg-indigo-100 rounded-lg">
+                            <Percent className="h-4 w-4 text-indigo-600" />
                 </div>
+                          <h3 className="font-medium text-gray-900">Compatibilidad</h3>
+                        </div>
+                        
+                        <div className="relative inline-flex items-center justify-center w-16 h-16 mb-3">
+                          <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 100 100">
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r="35"
+                              stroke="currentColor"
+                              strokeWidth="6"
+                              fill="none"
+                              className="text-gray-200"
+                            />
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r="35"
+                              stroke="currentColor"
+                              strokeWidth="6"
+                              fill="none"
+                              strokeDasharray={`${2 * Math.PI * 35}`}
+                              strokeDashoffset={`${2 * Math.PI * 35 * (1 - matchData.score / 100)}`}
+                              className={`${
+                                matchData.score >= 80 ? 'text-green-500' :
+                                matchData.score >= 60 ? 'text-yellow-500' :
+                                matchData.score >= 40 ? 'text-orange-500' :
+                                'text-red-500'
+                              }`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className={`text-lg font-bold ${
+                              matchData.score >= 80 ? 'text-green-600' :
+                              matchData.score >= 60 ? 'text-yellow-600' :
+                              matchData.score >= 40 ? 'text-orange-600' :
+                              'text-red-600'
+                            }`}>
+                              {matchData.score}%
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <p className={`text-sm font-medium ${
+                          matchData.score >= 80 ? 'text-green-700' :
+                          matchData.score >= 60 ? 'text-yellow-700' :
+                          matchData.score >= 40 ? 'text-orange-700' :
+                          'text-red-700'
+                        }`}>
+                          {matchData.score >= 80 ? 'Excelente Match' :
+                           matchData.score >= 60 ? 'Buen Match' :
+                           matchData.score >= 40 ? 'Match Regular' :
+                           'Match Bajo'}
+                        </p>
+                      </div>
+                    );
+                  })()}
               </CardContent>
             </Card>
+            </div>
 
-            {/* Datos de la aplicación */}
-            <Card>
+
+            {/* Documentos de la aplicación */}
+            <Card className="border-l-4 border-l-purple-500">
               <CardHeader>
-                <CardTitle>Mi Aplicación</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-1.5 bg-purple-100 rounded-lg">
+                      <FileText className="h-4 w-4 text-purple-600" />
+                    </div>
+                    Documentos de la Aplicación
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="flex items-center gap-2"
+                  >
+                    {isEditing ? <X className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
+                    {isEditing ? 'Cancelar' : 'Editar'}
+                  </Button>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 {/* Carta de presentación */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Carta de presentación
-                  </label>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <FileText className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <h3 className="font-medium text-gray-900">Carta de Presentación</h3>
+                    {application.cover_letter && (
+                      <Badge variant="outline" className="text-xs">
+                        Proporcionada
+                      </Badge>
+                    )}
+                  </div>
+                  
                   {isEditing ? (
                     <Textarea
                       value={editData.cover_letter}
                       onChange={(e) => setEditData(prev => ({ ...prev, cover_letter: e.target.value }))}
                       placeholder="Escribe tu carta de presentación..."
                       rows={4}
+                      className="w-full"
                     />
                   ) : (
-                    <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded whitespace-pre-wrap">
-                      {application.cover_letter || 'No proporcionada'}
-                    </p>
+                    <div className="bg-gray-50 p-4 rounded-lg border">
+                      {application.cover_letter ? (
+                        <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">
+                          {application.cover_letter}
+                        </p>
+                      ) : (
+                        <div className="text-center py-6">
+                          <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                          <p className="text-gray-500 text-sm">No se proporcionó carta de presentación</p>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                {/* URL del CV/Resume */}
-                {(application.resume_url || isEditing) && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CV / Resume
-                    </label>
+                {/* CV/Resume */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <File className="h-4 w-4 text-green-600" />
+                    </div>
+                    <h3 className="font-medium text-gray-900">CV / Resume</h3>
+                    {application.resume_url && (
+                      <Badge variant="outline" className="text-xs">
+                        Adjunto
+                      </Badge>
+                    )}
+                  </div>
+                  
                     {isEditing ? (
+                    <div className="space-y-2">
                       <input
                         type="url"
                         value={editData.resume_url}
                         onChange={(e) => setEditData(prev => ({ ...prev, resume_url: e.target.value }))}
-                        placeholder="https://mi-cv.com"
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="https://mi-cv.com o enlace a tu CV"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
-                    ) : application.resume_url ? (
-                      <a 
-                        href={application.resume_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm bg-gray-50 p-3 rounded block"
-                      >
-                        {application.resume_url}
-                      </a>
-                    ) : (
-                      <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">
-                        No proporcionado
+                      <p className="text-xs text-gray-500">
+                        Puedes subir tu CV a Google Drive, Dropbox, o cualquier servicio de almacenamiento
                       </p>
-                    )}
+                    </div>
+                    ) : application.resume_url ? (
+                    <div className="bg-gray-50 p-4 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        {(() => {
+                          const fileInfo = getFileIcon(application.resume_url);
+                          const IconComponent = fileInfo.icon;
+                          return (
+                            <div className={`p-2 rounded-lg ${fileInfo.bgColor}`}>
+                              <IconComponent className={`h-5 w-5 ${fileInfo.color}`} />
+                            </div>
+                          );
+                        })()}
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900 text-sm">
+                            {getFileName(application.resume_url)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                        {application.resume_url}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => application.resume_url && window.open(application.resume_url, '_blank')}
+                            className="flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            Ver
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (application.resume_url) {
+                                const link = document.createElement('a');
+                                link.href = application.resume_url;
+                                link.download = getFileName(application.resume_url);
+                                link.click();
+                              }
+                            }}
+                            className="flex items-center gap-1"
+                          >
+                            <Download className="h-3 w-3" />
+                            Descargar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 p-6 rounded-lg border text-center">
+                      <File className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">No se proporcionó CV/Resume</p>
                   </div>
                 )}
+                </div>
 
-                {/* Estado de contacto */}
-                {application.contact_status && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Estado de contacto
-                    </label>
-                    <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">
-                      {application.contact_status}
-                    </p>
+                {/* Información adicional de la aplicación */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <User className="h-4 w-4 text-purple-600" />
                   </div>
-                )}
-
-                {/* Fecha de contacto */}
+                    <h3 className="font-medium text-gray-900">Información de Contacto</h3>
+                  </div>
+                  
+                  <div className="bg-gray-50 p-4 rounded-lg border">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Estado de contacto:</span>
+                        <Badge variant="outline" className="text-xs">
+                          {application.contact_status === 'contacted' ? 'Contactado' : 'No contactado'}
+                        </Badge>
+                      </div>
                 {application.contacted_at && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Contactado el
-                    </label>
-                    <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">
-                      {new Date(application.contacted_at).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Último contacto:</span>
+                          <span className="text-gray-900">
+                            {new Date(application.contacted_at).toLocaleDateString('es-ES')}
+                          </span>
                   </div>
                 )}
-
-                {/* Calificación interna */}
                 {application.internal_rating && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Calificación interna
-                    </label>
-                    <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">
-                      {application.internal_rating}/5 ⭐
-                    </p>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Calificación interna:</span>
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <div
+                                key={i}
+                                className={`w-3 h-3 rounded-full ${
+                                  i < (application.internal_rating || 0) ? 'bg-yellow-400' : 'bg-gray-200'
+                                }`}
+                              />
+                            ))}
+                            <span className="text-gray-900 ml-1">({application.internal_rating}/5)</span>
+                          </div>
                   </div>
                 )}
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

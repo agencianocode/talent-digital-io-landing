@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSupabaseOpportunities } from './useSupabaseOpportunities';
+import { useRealApplications } from './useRealApplications';
 import { mockOpportunityData, getMockOpportunities, getMockMetrics } from '@/components/dashboard/MockOpportunityData';
 
 interface DashboardMetrics {
@@ -58,6 +59,12 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
     toggleOpportunityStatus
   } = useSupabaseOpportunities();
 
+  // Hook para aplicaciones reales
+  const { 
+    metrics: realApplicationMetrics, 
+    isLoading: applicationsLoading 
+  } = useRealApplications();
+
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -93,25 +100,21 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
           
           // Métricas calculadas desde datos reales
           const activeCount = extendedOpps.filter(opp => opp.status === 'active').length;
-          const totalApplications = Math.floor(Math.random() * 50) + 20; // Mock
           
+          // Usar métricas reales de aplicaciones
           setMetrics({
             activeOpportunities: activeCount,
-            totalApplications,
-            unreadApplications: Math.floor(totalApplications * 0.4),
-            candidatesInEvaluation: Math.floor(totalApplications * 0.25),
-            averageResponseTime: 2.3,
-            contactedCandidates: Math.floor(totalApplications * 0.3),
-            thisWeekApplications: Math.floor(Math.random() * 15) + 5,
-            conversionRate: Math.round((Math.floor(totalApplications * 0.3) / totalApplications) * 100 * 10) / 10
+            totalApplications: realApplicationMetrics.totalApplications,
+            unreadApplications: realApplicationMetrics.unreadApplications,
+            candidatesInEvaluation: Math.floor(realApplicationMetrics.totalApplications * 0.25),
+            averageResponseTime: 2.3, // Mantener como mock por ahora
+            contactedCandidates: realApplicationMetrics.contactedCandidates,
+            thisWeekApplications: realApplicationMetrics.thisWeekApplications,
+            conversionRate: realApplicationMetrics.conversionRate
           });
 
-          // Mock application counts para oportunidades reales
-          const mockCounts: Record<string, number> = {};
-          extendedOpps.forEach(opp => {
-            mockCounts[opp.id] = Math.floor(Math.random() * 20) + 1;
-          });
-          setApplicationCounts(mockCounts);
+          // Usar conteos reales de aplicaciones por oportunidad
+          setApplicationCounts(realApplicationMetrics.applicationsByOpportunity);
         }
       } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -120,13 +123,13 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
       }
     };
 
-    if (!useMockData && realLoading) {
+    if (!useMockData && (realLoading || applicationsLoading)) {
       // Esperar a que termine de cargar los datos reales
       return;
     }
 
     loadData();
-  }, [useMockData, realOpportunities, realLoading]);
+  }, [useMockData, realOpportunities, realLoading, realApplicationMetrics, applicationsLoading]);
 
   return {
     opportunities: opportunitiesWithExtras,

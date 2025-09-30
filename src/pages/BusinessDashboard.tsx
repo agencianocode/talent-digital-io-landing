@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, Circle, Building } from 'lucide-react';
 import { useProfileProgress } from '@/hooks/useProfileProgress';
 import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
+import { BusinessMetrics } from '@/components/dashboard/BusinessMetrics';
 
 
 const BusinessDashboard = () => {
@@ -106,7 +107,7 @@ const BusinessDashboard = () => {
                 <Button 
                   variant="outline" 
                   className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base border-slate-300 hover:bg-black hover:text-white"
-                  onClick={() => navigate('/business-dashboard/talent')}
+                  onClick={() => navigate('/business-dashboard/talent-discovery')}
                 >
                   Buscar Talento
                 </Button>
@@ -250,49 +251,9 @@ const BusinessDashboard = () => {
           </div>
         ) : (
           // Complete Profile View - Full Dashboard
-          <div className="space-y-4">
-            {/* Metrics Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <div className="text-green-600 text-xl">📊</div>
-                  </div>
-                  <div className="text-sm text-slate-600">Oportunidades Activas</div>
-                  <div className="text-2xl font-bold text-slate-900">{activeOpportunitiesCount}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <div className="text-blue-600 text-xl">👥</div>
-                  </div>
-                  <div className="text-sm text-slate-600">Postulantes Activos</div>
-                  <div className="text-2xl font-bold text-slate-900">16</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <div className="text-orange-600 text-xl">⏰</div>
-                  </div>
-                  <div className="text-sm text-slate-600">Postulaciones Sin Revisar</div>
-                  <div className="text-2xl font-bold text-slate-900">4</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <div className="text-red-600 text-xl">💬</div>
-                  </div>
-                  <div className="text-sm text-slate-600">Mensajes Sin Leer</div>
-                  <div className="text-2xl font-bold text-slate-900">1</div>
-                </CardContent>
-              </Card>
-            </div>
+          <div className="space-y-6">
+            {/* Enhanced Metrics */}
+            <BusinessMetrics />
 
             {/* Active Opportunities Section */}
             <Card>

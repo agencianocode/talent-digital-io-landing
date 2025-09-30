@@ -48,7 +48,7 @@ const DashboardLayout = () => {
   const navigationItems = [
     { to: "/business-dashboard", icon: Home, label: "Dashboard" },
     { to: "/business-dashboard/opportunities", icon: Briefcase, label: "Mis Oportunidades" },
-    { to: "/business-dashboard/talent", icon: Search, label: "Buscar Talento" },
+    { to: "/business-dashboard/talent-discovery", icon: Search, label: "Buscar Talento" },
     { to: "/business-dashboard/messages", icon: MessageSquare, label: "Mensajes", hasBadge: true },
     { to: "/business-dashboard/marketplace", icon: Store, label: "Marketplace" },
     { to: "/business-dashboard/academy", icon: GraduationCap, label: "Mi Academia" },
