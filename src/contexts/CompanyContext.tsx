@@ -138,6 +138,16 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
 
       setUserCompanies((companies || []).map(company => ({
         ...company,
+        description: company.description ?? undefined,
+        website: company.website ?? undefined,
+        size: company.size ?? undefined,
+        location: company.location ?? undefined,
+        annual_revenue_range: company.annual_revenue_range ?? undefined,
+        business_type: company.business_type ?? undefined,
+        employee_count_range: company.employee_count_range ?? undefined,
+        industry: company.industry ?? undefined,
+        industry_id: company.industry_id ?? undefined,
+        logo_url: company.logo_url ?? undefined,
         social_links: (company.social_links as Record<string, string>) || {},
         gallery_urls: ((company.gallery_urls as any[]) || []).map((item: any) => ({
           id: item?.id || Math.random().toString(),
@@ -178,7 +188,20 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
       }
 
       if (activeComp) {
-        setActiveCompanyState(activeComp);
+        const companyWithUndefined = {
+          ...activeComp,
+          description: activeComp.description ?? undefined,
+          website: activeComp.website ?? undefined,
+          size: activeComp.size ?? undefined,
+          location: activeComp.location ?? undefined,
+          logo_url: activeComp.logo_url ?? undefined,
+          annual_revenue_range: activeComp.annual_revenue_range ?? undefined,
+          business_type: activeComp.business_type ?? undefined,
+          employee_count_range: activeComp.employee_count_range ?? undefined,
+          industry: activeComp.industry ?? undefined,
+          industry_id: activeComp.industry_id ?? undefined,
+        };
+        setActiveCompanyState(companyWithUndefined);
         localStorage.setItem('activeCompanyId', activeComp.id);
         
         // Set current user role

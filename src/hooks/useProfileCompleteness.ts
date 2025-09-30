@@ -250,8 +250,9 @@ export const useProfileCompleteness = () => {
   useEffect(() => {
     if (profile && talentProfile) {
       // Use server score if available, otherwise calculate client-side
-      if (profile.profile_completeness > 0) {
-        setCompleteness(profile.profile_completeness);
+      const serverCompleteness = profile.profile_completeness;
+      if (serverCompleteness != null && serverCompleteness > 0) {
+        setCompleteness(serverCompleteness);
       }
       // Always calculate breakdown for detailed view
       calculateDetailedCompleteness();

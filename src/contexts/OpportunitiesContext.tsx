@@ -413,7 +413,9 @@ export const OpportunitiesProvider: React.FC<{ children: React.ReactNode }> = ({
       // Salary range filter
       if (filters.salaryRange && opp.salary) {
         const [minSalary, maxSalary] = filters.salaryRange;
-        if (opp.salary.max < minSalary || opp.salary.min > maxSalary) return false;
+        if (minSalary !== undefined && maxSalary !== undefined) {
+          if (opp.salary.max < minSalary || opp.salary.min > maxSalary) return false;
+        }
       }
       
       return true;
