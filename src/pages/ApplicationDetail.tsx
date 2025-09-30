@@ -618,9 +618,9 @@ const ApplicationDetail = () => {
         </div>
 
         {/* Layout Principal - Grid Responsivo Mejorado */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Sidebar - Información de la Aplicación */}
-          <div className="xl:col-span-4 space-y-6 order-2 xl:order-1">
+          <div className="lg:col-span-1 space-y-6 order-2 lg:order-1">
             {/* Estado y Match Score Card */}
             <Card className="border-t-4 border-t-primary shadow-lg animate-fade-in">
               <CardHeader className="pb-3">
@@ -813,7 +813,7 @@ const ApplicationDetail = () => {
           </div>
 
           {/* Columna Principal - Información de la Oportunidad */}
-          <div className="xl:col-span-8 space-y-6 order-1 xl:order-2">
+          <div className="lg:col-span-2 space-y-6 order-1 lg:order-2">
             {/* Card Principal - Header de la Oportunidad */}
             <Card className="border-l-4 border-l-primary shadow-lg animate-fade-in">
               <CardHeader className="pb-4">
