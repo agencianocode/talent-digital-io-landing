@@ -619,13 +619,206 @@ const ApplicationDetail = () => {
 
         {/* Layout Principal - Grid Responsivo Mejorado */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          {/* Sidebar - Información de la Aplicación */}
+          <div className="xl:col-span-4 space-y-6 order-2 xl:order-1">
+            {/* Estado y Match Score Card */}
+            <Card className="border-t-4 border-t-primary shadow-lg animate-fade-in">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-gradient-to-br from-primary/20 to-primary-glow/20 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-lg">Estado de tu Aplicación</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground">Estado actual</span>
+                  <Badge className={getStatusBadgeClass(application.status)} variant="secondary">
+                    {getStatusText(application.status)}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Calendar className="h-4 w-4 flex-shrink-0" />
+                    <span>Aplicado el {new Date(application.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                  </div>
+                  {application.viewed_at && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Eye className="h-4 w-4 flex-shrink-0" />
+                      <span>Vista el {new Date(application.viewed_at).toLocaleDateString('es-ES')}</span>
+                    </div>
+                  )}
+                  {application.contacted_at && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MessageCircle className="h-4 w-4 flex-shrink-0" />
+                      <span>Contactado el {new Date(application.contacted_at).toLocaleDateString('es-ES')}</span>
+                    </div>
+                  )}
+                </div>
+
+                {(() => {
+                  const matchData = calculateMatchScore();
+                  return (
+                    <div className="pt-4 border-t">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Compatibilidad</span>
+                        <span className="text-2xl font-bold text-primary">{matchData.score}%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-primary to-primary-glow rounded-full transition-all duration-500 animate-scale-in"
+                          style={{ width: `${matchData.score}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* Tu Carta de Presentación */}
+            {(application.cover_letter || isEditing) && (
+              <Card className="shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div className="p-2 bg-accent/20 rounded-lg">
+                      <FileText className="h-4 w-4 text-accent-foreground" />
+                    </div>
+                    Tu Carta de Presentación
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isEditing ? (
+                    <Textarea
+                      value={editData.cover_letter}
+                      onChange={(e) => setEditData({ ...editData, cover_letter: e.target.value })}
+                      placeholder="Escribe tu carta de presentación..."
+                      className="min-h-[200px] resize-none"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                      {application.cover_letter}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* CV Adjunto */}
+            {(application.resume_url || isEditing) && (
+              <Card className="shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div className="p-2 bg-secondary/20 rounded-lg">
+                      <Download className="h-4 w-4 text-secondary-foreground" />
+                    </div>
+                    CV Adjunto
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={editData.resume_url}
+                        onChange={(e) => setEditData({ ...editData, resume_url: e.target.value })}
+                        placeholder="URL del CV..."
+                        className="w-full px-3 py-2 border rounded-lg"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Ingresa la URL de tu CV o portafolio
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(() => {
+                        const fileInfo = getFileIcon(application.resume_url || '');
+                        const IconComponent = fileInfo.icon;
+                        return (
+                          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors group">
+                            <div className={`p-2 ${fileInfo.bgColor} rounded-lg group-hover:scale-110 transition-transform`}>
+                              <IconComponent className={`h-5 w-5 ${fileInfo.color}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{getFileName(application.resume_url || '')}</p>
+                              <p className="text-xs text-muted-foreground">Haz clic para abrir</p>
+                            </div>
+                            <a
+                              href={application.resume_url || '#'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-shrink-0"
+                            >
+                              <Button size="sm" variant="ghost">
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            </a>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Detalles de Compatibilidad */}
+            {(() => {
+              const matchData = calculateMatchScore();
+              return matchData.details.length > 0 && (
+                <Card className="shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <div className="p-2 bg-primary/20 rounded-lg">
+                        <Percent className="h-4 w-4 text-primary" />
+                      </div>
+                      Análisis de Compatibilidad
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {matchData.details.map((detail, index) => {
+                      const IconComponent = detail.icon;
+                      const percentage = (detail.score / detail.maxScore) * 100;
+                      return (
+                        <div key={index} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className={`p-1.5 ${detail.bgColor} rounded-lg`}>
+                                <IconComponent className={`h-3.5 w-3.5 ${detail.color}`} />
+                              </div>
+                              <span className="text-sm font-medium">{detail.category}</span>
+                            </div>
+                            <span className="text-sm font-semibold">{Math.round(percentage)}%</span>
+                          </div>
+                          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                            <div 
+                              className={`h-full ${detail.bgColor} rounded-full transition-all duration-500`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          {detail.matched.length > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Coincide: {detail.matched.join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              );
+            })()}
+          </div>
+
           {/* Columna Principal - Información de la Oportunidad */}
-          <div className="xl:col-span-8 space-y-6">
+          <div className="xl:col-span-8 space-y-6 order-1 xl:order-2">
             {/* Card Principal - Header de la Oportunidad */}
-            <Card className="border-l-4 border-l-blue-500 shadow-sm">
+            <Card className="border-l-4 border-l-primary shadow-lg animate-fade-in">
               <CardHeader className="pb-4">
                 <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center shadow-sm">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary-glow/10 rounded-xl flex items-center justify-center shadow-sm ring-2 ring-primary/20">
                     {application.opportunities?.companies?.logo_url ? (
                       <img 
                         src={application.opportunities.companies.logo_url} 
@@ -633,191 +826,144 @@ const ApplicationDetail = () => {
                         className="w-12 h-12 object-contain rounded-lg"
                       />
                     ) : (
-                      <Building className="h-8 w-8 text-blue-600" />
+                      <Building className="h-8 w-8 text-primary" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-2xl mb-2 text-gray-900">
+                    <CardTitle className="text-2xl mb-2">
                       {application.opportunities?.title}
                     </CardTitle>
-                        <p className="text-gray-600 text-lg font-medium">
+                    <p className="text-lg font-medium text-muted-foreground">
                       {application.opportunities?.companies?.name}
                     </p>
-                  </div>
-                      <Badge className={`${getStatusBadgeClass(application.status)} text-sm px-3 py-1`}>
-                    {getStatusText(application.status)}
-                  </Badge>
-                    </div>
                   </div>
                 </div>
               </CardHeader>
             </Card>
 
             {/* Grid de Metadatos - Información Clave */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {application.opportunities?.location && (
-                <Card className="hover:shadow-md transition-shadow duration-200">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {application.opportunities?.location && (
+                <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <MapPin className="h-4 w-4 text-green-600" />
-                    </div>
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl">
+                        <MapPin className="h-5 w-5 text-green-600" />
+                      </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Ubicación</p>
-                        <p className="text-sm font-medium text-gray-900">{application.opportunities.location}</p>
+                        <p className="text-xs text-muted-foreground font-medium mb-0.5">Ubicación</p>
+                        <p className="text-sm font-semibold">{application.opportunities.location}</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-                  )}
-                  
-                  {application.opportunities?.type && (
-                <Card className="hover:shadow-md transition-shadow duration-200">
+              )}
+              
+              {application.opportunities?.type && (
+                <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Briefcase className="h-4 w-4 text-purple-600" />
-                    </div>
-                      <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Tipo</p>
-                        <p className="text-sm font-medium text-gray-900">{application.opportunities.type}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                  )}
-
-                  {(application.opportunities?.salary_min || application.opportunities?.salary_max) && (
-                <Card className="hover:shadow-md transition-shadow duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-yellow-100 rounded-lg">
-                        <DollarSign className="h-4 w-4 text-yellow-600" />
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <div className="p-3 bg-gradient-to-br from-purple-100 to-violet-100 rounded-xl">
+                        <Briefcase className="h-5 w-5 text-purple-600" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Salario</p>
-                        <p className="text-sm font-medium text-gray-900">
-                      {application.opportunities.salary_min && application.opportunities.salary_max
-                        ? `$${application.opportunities.salary_min.toLocaleString()} - $${application.opportunities.salary_max.toLocaleString()}`
-                        : application.opportunities.salary_min
-                        ? `Desde $${application.opportunities.salary_min.toLocaleString()}`
-                        : `Hasta $${application.opportunities.salary_max?.toLocaleString()}`
-                      }
-                      {application.opportunities.currency && ` ${application.opportunities.currency}`}
-                        </p>
-                    </div>
+                        <p className="text-xs text-muted-foreground font-medium mb-0.5">Tipo</p>
+                        <p className="text-sm font-semibold">{application.opportunities.type}</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               )}
 
-              <Card className="hover:shadow-md transition-shadow duration-200">
+              {(application.opportunities?.salary_min || application.opportunities?.salary_max) && (
+                <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <div className="p-3 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-xl">
+                        <DollarSign className="h-5 w-5 text-yellow-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium mb-0.5">Salario</p>
+                        <p className="text-sm font-semibold">
+                          {application.opportunities.salary_min && application.opportunities.salary_max
+                            ? `$${application.opportunities.salary_min.toLocaleString()} - $${application.opportunities.salary_max.toLocaleString()}`
+                            : application.opportunities.salary_min
+                            ? `Desde $${application.opportunities.salary_min.toLocaleString()}`
+                            : `Hasta $${application.opportunities.salary_max?.toLocaleString()}`
+                          }
+                          {application.opportunities.currency && ` ${application.opportunities.currency}`}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-indigo-100 rounded-lg">
-                      <Calendar className="h-4 w-4 text-indigo-600" />
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <div className="p-3 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-xl">
+                      <Calendar className="h-5 w-5 text-indigo-600" />
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Publicado</p>
-                      <p className="text-sm font-medium text-gray-900">
-                    {new Date(application.opportunities?.created_at).toLocaleDateString('es-ES')}
+                      <p className="text-xs text-muted-foreground font-medium mb-0.5">Publicado</p>
+                      <p className="text-sm font-semibold">
+                        {new Date(application.opportunities?.created_at).toLocaleDateString('es-ES')}
                       </p>
+                    </div>
                   </div>
-                </div>
                 </CardContent>
               </Card>
-                  </div>
+            </div>
 
             {/* Descripción y Requisitos */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Descripción */}
-                {application.opportunities?.description && (
-                <Card>
+              {/* Descripción */}
+              {application.opportunities?.description && (
+                <Card className="shadow-md hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <div className="p-1.5 bg-blue-100 rounded-lg">
+                      <div className="p-2 bg-blue-100 rounded-lg">
                         <FileText className="h-4 w-4 text-blue-600" />
                       </div>
                       Descripción
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
                       {application.opportunities.description}
                     </p>
                   </CardContent>
                 </Card>
-                )}
+              )}
 
-                {/* Requisitos */}
-                {application.opportunities?.requirements && (
-                <Card>
+              {/* Requisitos */}
+              {application.opportunities?.requirements && (
+                <Card className="shadow-md hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <div className="p-1.5 bg-orange-100 rounded-lg">
+                      <div className="p-2 bg-orange-100 rounded-lg">
                         <Target className="h-4 w-4 text-orange-600" />
                       </div>
                       Requisitos
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
                       {application.opportunities.requirements}
                     </p>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
               )}
             </div>
 
-            {/* Información de la empresa */}
-            <Card>
+            {/* Timeline de la aplicación */}
+            <Card className="border-l-4 border-l-primary shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <div className="p-1.5 bg-gray-100 rounded-lg">
-                    <Building className="h-4 w-4 text-gray-600" />
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <Clock className="h-5 w-5 text-primary" />
                   </div>
-                  Información de la Empresa
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-1">
-                      {application.opportunities?.companies?.name}
-                    </h4>
-                    {application.opportunities?.companies?.website && (
-                      <a 
-                        href={application.opportunities.companies.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        {application.opportunities.companies.website}
-                      </a>
-                    )}
-                  </div>
-                  
-                  {application.opportunities?.companies?.description && (
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Descripción</h4>
-                      <p className="text-gray-600">
-                        {application.opportunities.companies.description}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Timeline de la aplicación - Movido al área principal */}
-            <Card className="border-l-4 border-l-blue-500">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="p-1.5 bg-blue-100 rounded-lg">
-                    <Clock className="h-4 w-4 text-blue-600" />
-          </div>
                   Progreso de la Aplicación
                 </CardTitle>
               </CardHeader>
@@ -828,23 +974,23 @@ const ApplicationDetail = () => {
                     const isLast = index === generateApplicationTimeline().length - 1;
                     
                     return (
-                      <div key={step.id} className="flex items-start gap-3">
+                      <div key={step.id} className="flex items-start gap-3 group">
                         {/* Icono y línea conectora */}
                         <div className="flex flex-col items-center">
-                          <div className={`p-2 rounded-full ${
-                            step.status === 'completed' ? 'bg-green-100' :
-                            step.status === 'current' ? 'bg-yellow-100' :
-                            'bg-gray-100'
+                          <div className={`p-2.5 rounded-xl shadow-sm group-hover:scale-110 transition-transform ${
+                            step.status === 'completed' ? 'bg-gradient-to-br from-green-100 to-emerald-100' :
+                            step.status === 'current' ? 'bg-gradient-to-br from-yellow-100 to-amber-100' :
+                            'bg-muted'
                           }`}>
-                            <IconComponent className={`h-4 w-4 ${
+                            <IconComponent className={`h-5 w-5 ${
                               step.status === 'completed' ? 'text-green-600' :
                               step.status === 'current' ? 'text-yellow-600' :
-                              'text-gray-400'
+                              'text-muted-foreground'
                             }`} />
                           </div>
                           {!isLast && (
-                            <div className={`w-0.5 h-8 mt-2 ${
-                              step.status === 'completed' ? 'bg-green-200' : 'bg-gray-200'
+                            <div className={`w-0.5 h-10 mt-2 ${
+                              step.status === 'completed' ? 'bg-green-200' : 'bg-border'
                             }`} />
                           )}
                         </div>
@@ -852,24 +998,24 @@ const ApplicationDetail = () => {
                         {/* Contenido del paso */}
                         <div className="flex-1 pb-4">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className={`font-medium ${
-                              step.status === 'completed' ? 'text-green-800' :
-                              step.status === 'current' ? 'text-yellow-800' :
-                              'text-gray-500'
+                            <h4 className={`font-semibold ${
+                              step.status === 'completed' ? 'text-green-700' :
+                              step.status === 'current' ? 'text-yellow-700' :
+                              'text-muted-foreground'
                             }`}>
                               {step.title}
                             </h4>
                             {step.status === 'current' && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="default" className="text-xs animate-pulse">
                                 Actual
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 mb-1">
+                          <p className="text-sm text-muted-foreground mb-1">
                             {step.description}
                           </p>
                           {step.date && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground/70">
                               {new Date(step.date).toLocaleDateString('es-ES', {
                                 year: 'numeric',
                                 month: 'long',
@@ -886,10 +1032,48 @@ const ApplicationDetail = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Sidebar - Información de la Aplicación */}
-          <div className="xl:col-span-4 space-y-6">
+            {/* Información de la empresa */}
+            <Card className="shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="p-2 bg-secondary/20 rounded-lg">
+                    <Building className="h-5 w-5 text-secondary-foreground" />
+                  </div>
+                  Información de la Empresa
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-lg mb-1">
+                      {application.opportunities?.companies?.name}
+                    </h4>
+                    {application.opportunities?.companies?.website && (
+                      <a 
+                        href={application.opportunities.companies.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary-glow text-sm inline-flex items-center gap-1 hover:underline"
+                      >
+                        {application.opportunities.companies.website}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                  
+                  {application.opportunities?.companies?.description && (
+                    <div>
+                      <h4 className="font-medium mb-2">Descripción</h4>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {application.opportunities.companies.description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
             {/* Estado y Match Score - Combinado */}
             <div className="grid grid-cols-1 gap-4">
               {/* Estado compacto */}
@@ -920,270 +1104,6 @@ const ApplicationDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Match Score compacto */}
-              <Card className="border-l-4 border-l-indigo-500">
-                <CardContent className="p-4">
-                  {(() => {
-                    const matchData = calculateMatchScore();
-                    return (
-                      <div className="text-center">
-                        <div className="flex items-center justify-center gap-2 mb-3">
-                          <div className="p-1.5 bg-indigo-100 rounded-lg">
-                            <Percent className="h-4 w-4 text-indigo-600" />
-                </div>
-                          <h3 className="font-medium text-gray-900">Compatibilidad</h3>
-                        </div>
-                        
-                        <div className="relative inline-flex items-center justify-center w-16 h-16 mb-3">
-                          <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 100 100">
-                            <circle
-                              cx="50"
-                              cy="50"
-                              r="35"
-                              stroke="currentColor"
-                              strokeWidth="6"
-                              fill="none"
-                              className="text-gray-200"
-                            />
-                            <circle
-                              cx="50"
-                              cy="50"
-                              r="35"
-                              stroke="currentColor"
-                              strokeWidth="6"
-                              fill="none"
-                              strokeDasharray={`${2 * Math.PI * 35}`}
-                              strokeDashoffset={`${2 * Math.PI * 35 * (1 - matchData.score / 100)}`}
-                              className={`${
-                                matchData.score >= 80 ? 'text-green-500' :
-                                matchData.score >= 60 ? 'text-yellow-500' :
-                                matchData.score >= 40 ? 'text-orange-500' :
-                                'text-red-500'
-                              }`}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className={`text-lg font-bold ${
-                              matchData.score >= 80 ? 'text-green-600' :
-                              matchData.score >= 60 ? 'text-yellow-600' :
-                              matchData.score >= 40 ? 'text-orange-600' :
-                              'text-red-600'
-                            }`}>
-                              {matchData.score}%
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <p className={`text-sm font-medium ${
-                          matchData.score >= 80 ? 'text-green-700' :
-                          matchData.score >= 60 ? 'text-yellow-700' :
-                          matchData.score >= 40 ? 'text-orange-700' :
-                          'text-red-700'
-                        }`}>
-                          {matchData.score >= 80 ? 'Excelente Match' :
-                           matchData.score >= 60 ? 'Buen Match' :
-                           matchData.score >= 40 ? 'Match Regular' :
-                           'Match Bajo'}
-                        </p>
-                      </div>
-                    );
-                  })()}
-              </CardContent>
-            </Card>
-            </div>
-
-
-            {/* Documentos de la aplicación */}
-            <Card className="border-l-4 border-l-purple-500">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="p-1.5 bg-purple-100 rounded-lg">
-                      <FileText className="h-4 w-4 text-purple-600" />
-                    </div>
-                    Documentos de la Aplicación
-                  </CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="flex items-center gap-2"
-                  >
-                    {isEditing ? <X className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
-                    {isEditing ? 'Cancelar' : 'Editar'}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Carta de presentación */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <FileText className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <h3 className="font-medium text-gray-900">Carta de Presentación</h3>
-                    {application.cover_letter && (
-                      <Badge variant="outline" className="text-xs">
-                        Proporcionada
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {isEditing ? (
-                    <Textarea
-                      value={editData.cover_letter}
-                      onChange={(e) => setEditData(prev => ({ ...prev, cover_letter: e.target.value }))}
-                      placeholder="Escribe tu carta de presentación..."
-                      rows={4}
-                      className="w-full"
-                    />
-                  ) : (
-                    <div className="bg-gray-50 p-4 rounded-lg border">
-                      {application.cover_letter ? (
-                        <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">
-                          {application.cover_letter}
-                        </p>
-                      ) : (
-                        <div className="text-center py-6">
-                          <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-gray-500 text-sm">No se proporcionó carta de presentación</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* CV/Resume */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <File className="h-4 w-4 text-green-600" />
-                    </div>
-                    <h3 className="font-medium text-gray-900">CV / Resume</h3>
-                    {application.resume_url && (
-                      <Badge variant="outline" className="text-xs">
-                        Adjunto
-                      </Badge>
-                    )}
-                  </div>
-                  
-                    {isEditing ? (
-                    <div className="space-y-2">
-                      <input
-                        type="url"
-                        value={editData.resume_url}
-                        onChange={(e) => setEditData(prev => ({ ...prev, resume_url: e.target.value }))}
-                        placeholder="https://mi-cv.com o enlace a tu CV"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <p className="text-xs text-gray-500">
-                        Puedes subir tu CV a Google Drive, Dropbox, o cualquier servicio de almacenamiento
-                      </p>
-                    </div>
-                    ) : application.resume_url ? (
-                    <div className="bg-gray-50 p-4 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        {(() => {
-                          const fileInfo = getFileIcon(application.resume_url);
-                          const IconComponent = fileInfo.icon;
-                          return (
-                            <div className={`p-2 rounded-lg ${fileInfo.bgColor}`}>
-                              <IconComponent className={`h-5 w-5 ${fileInfo.color}`} />
-                            </div>
-                          );
-                        })()}
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900 text-sm">
-                            {getFileName(application.resume_url)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                        {application.resume_url}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => application.resume_url && window.open(application.resume_url, '_blank')}
-                            className="flex items-center gap-1"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            Ver
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              if (application.resume_url) {
-                                const link = document.createElement('a');
-                                link.href = application.resume_url;
-                                link.download = getFileName(application.resume_url);
-                                link.click();
-                              }
-                            }}
-                            className="flex items-center gap-1"
-                          >
-                            <Download className="h-3 w-3" />
-                            Descargar
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-50 p-6 rounded-lg border text-center">
-                      <File className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">No se proporcionó CV/Resume</p>
-                  </div>
-                )}
-                </div>
-
-                {/* Información adicional de la aplicación */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <User className="h-4 w-4 text-purple-600" />
-                  </div>
-                    <h3 className="font-medium text-gray-900">Información de Contacto</h3>
-                  </div>
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg border">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Estado de contacto:</span>
-                        <Badge variant="outline" className="text-xs">
-                          {application.contact_status === 'contacted' ? 'Contactado' : 'No contactado'}
-                        </Badge>
-                      </div>
-                {application.contacted_at && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Último contacto:</span>
-                          <span className="text-gray-900">
-                            {new Date(application.contacted_at).toLocaleDateString('es-ES')}
-                          </span>
-                  </div>
-                )}
-                {application.internal_rating && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Calificación interna:</span>
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <div
-                                key={i}
-                                className={`w-3 h-3 rounded-full ${
-                                  i < (application.internal_rating || 0) ? 'bg-yellow-400' : 'bg-gray-200'
-                                }`}
-                              />
-                            ))}
-                            <span className="text-gray-900 ml-1">({application.internal_rating}/5)</span>
-                          </div>
-                  </div>
-                )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
