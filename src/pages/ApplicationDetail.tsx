@@ -814,32 +814,6 @@ const ApplicationDetail = () => {
 
           {/* Columna Principal - Información de la Oportunidad */}
           <div className="lg:col-span-2 space-y-6 order-1 lg:order-2">
-            {/* Card Principal - Header de la Oportunidad */}
-            <Card className="border-l-4 border-l-primary shadow-lg animate-fade-in">
-              <CardHeader className="pb-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary-glow/10 rounded-xl flex items-center justify-center shadow-sm ring-2 ring-primary/20">
-                    {application.opportunities?.companies?.logo_url ? (
-                      <img 
-                        src={application.opportunities.companies.logo_url} 
-                        alt={application.opportunities?.companies?.name}
-                        className="w-12 h-12 object-contain rounded-lg"
-                      />
-                    ) : (
-                      <Building className="h-8 w-8 text-primary" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-2xl mb-2">
-                      {application.opportunities?.title}
-                    </CardTitle>
-                    <p className="text-lg font-medium text-muted-foreground">
-                      {application.opportunities?.companies?.name}
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
 
             {/* Grid de Metadatos - Información Clave */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1033,7 +1007,7 @@ const ApplicationDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Información de la empresa */}
+            {/* Información de la Empresa y Oportunidad */}
             <Card className="shadow-md hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1044,27 +1018,49 @@ const ApplicationDetail = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-lg mb-1">
-                      {application.opportunities?.companies?.name}
-                    </h4>
-                    {application.opportunities?.companies?.website && (
+                <div className="space-y-6">
+                  {/* Header con Logo y Título de Oportunidad */}
+                  <div className="flex items-start gap-4 pb-4 border-b">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary-glow/10 rounded-xl flex items-center justify-center shadow-sm ring-2 ring-primary/20 flex-shrink-0">
+                      {application.opportunities?.companies?.logo_url ? (
+                        <img 
+                          src={application.opportunities.companies.logo_url} 
+                          alt={application.opportunities?.companies?.name}
+                          className="w-12 h-12 object-contain rounded-lg"
+                        />
+                      ) : (
+                        <Building className="h-8 w-8 text-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold mb-1">
+                        {application.opportunities?.title}
+                      </h3>
+                      <p className="text-lg font-medium text-muted-foreground">
+                        {application.opportunities?.companies?.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Website */}
+                  {application.opportunities?.companies?.website && (
+                    <div>
                       <a 
                         href={application.opportunities.companies.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:text-primary-glow text-sm inline-flex items-center gap-1 hover:underline"
+                        className="text-primary hover:text-primary-glow inline-flex items-center gap-1 hover:underline"
                       >
                         {application.opportunities.companies.website}
-                        <ExternalLink className="h-3 w-3" />
+                        <ExternalLink className="h-4 w-4" />
                       </a>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   
+                  {/* Descripción de la Empresa */}
                   {application.opportunities?.companies?.description && (
                     <div>
-                      <h4 className="font-medium mb-2">Descripción</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground mb-2">Descripción</h4>
                       <p className="text-muted-foreground leading-relaxed">
                         {application.opportunities.companies.description}
                       </p>
@@ -1073,37 +1069,6 @@ const ApplicationDetail = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-            {/* Estado y Match Score - Combinado */}
-            <div className="grid grid-cols-1 gap-4">
-              {/* Estado compacto */}
-              <Card className="border-l-4 border-l-green-500">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-green-100 rounded-lg">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      </div>
-                      <h3 className="font-medium text-gray-900">Estado</h3>
-                    </div>
-                    <Badge className={getStatusBadgeClass(application.status)}>
-                      {getStatusText(application.status)}
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>Aplicado: {new Date(application.created_at).toLocaleDateString('es-ES')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span>Actualizado: {new Date(application.updated_at).toLocaleDateString('es-ES')}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
           </div>
         </div>
       </div>
