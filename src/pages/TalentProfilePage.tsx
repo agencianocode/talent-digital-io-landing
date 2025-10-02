@@ -76,6 +76,7 @@ const TalentProfilePage = () => {
   const fetchTalentProfile = async () => {
     try {
       setIsLoading(true);
+      console.log('🔍 Fetching talent profile for ID:', id);
       
       // Fetch user profile
       const { data: profileData, error: profileError } = await supabase
@@ -84,7 +85,11 @@ const TalentProfilePage = () => {
         .eq('user_id', id || '')
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('❌ Error fetching profile:', profileError);
+        throw profileError;
+      }
+      console.log('✅ Profile data:', profileData);
       setUserProfile(profileData);
 
       // Fetch talent profile
@@ -96,8 +101,9 @@ const TalentProfilePage = () => {
 
       if (talentError && talentError.code !== 'PGRST116') {
         // PGRST116 is "not found" error, which is okay if user doesn't have a talent profile
-        console.warn('No talent profile found for user:', talentError);
+        console.warn('❌ No talent profile found for user:', talentError);
       } else if (talentData) {
+        console.log('✅ Talent profile data:', talentData);
         setTalentProfile(talentData);
 
         // Fetch education data
@@ -108,12 +114,12 @@ const TalentProfilePage = () => {
           .order('start_date', { ascending: false });
 
         if (educationError) {
-          console.warn('Error fetching education:', educationError);
+          console.warn('❌ Error fetching education:', educationError);
         } else if (educationData) {
-          console.log('Education data found:', educationData);
+          console.log('✅ Education data found:', educationData);
           setEducation(educationData);
         } else {
-          console.log('No education data found for user:', id);
+          console.log('⚠️ No education data found for user:', id);
         }
 
         // Fetch work experience data
@@ -124,9 +130,12 @@ const TalentProfilePage = () => {
           .order('start_date', { ascending: false });
 
         if (workError) {
-          console.warn('Error fetching work experience:', workError);
+          console.warn('❌ Error fetching work experience:', workError);
         } else if (workData) {
+          console.log('✅ Work experience data found:', workData);
           setWorkExperience(workData);
+        } else {
+          console.log('⚠️ No work experience data found for user:', id);
         }
 
         // Fetch portfolios data
@@ -137,9 +146,12 @@ const TalentProfilePage = () => {
           .order('created_at', { ascending: false });
 
         if (portfolioError) {
-          console.warn('Error fetching portfolios:', portfolioError);
+          console.warn('❌ Error fetching portfolios:', portfolioError);
         } else if (portfolioData) {
+          console.log('✅ Portfolio data found:', portfolioData);
           setPortfolios(portfolioData);
+        } else {
+          console.log('⚠️ No portfolio data found for user:', id);
         }
 
         // Fetch social links data
@@ -150,18 +162,26 @@ const TalentProfilePage = () => {
           .order('created_at', { ascending: false });
 
         if (socialError) {
-          console.warn('Error fetching social links:', socialError);
+          console.warn('❌ Error fetching social links:', socialError);
         } else if (socialData) {
+          console.log('✅ Social links data found:', socialData);
           setSocialLinks(socialData);
+        } else {
+          console.log('⚠️ No social links data found for user:', id);
         }
       }
 
     } catch (error) {
-      console.error('Error fetching talent profile:', error);
+      console.error('❌ Error fetching talent profile:', error);
       toast.error('Error al cargar el perfil del talento');
     } finally {
-      console.log('Final state - Education:', education.length, 'items');
-      console.log('Final state - Work Experience:', workExperience.length, 'items');
+      console.log('📊 Final state:');
+      console.log('  - Education:', education.length, 'items');
+      console.log('  - Work Experience:', workExperience.length, 'items');
+      console.log('  - Portfolios:', portfolios.length, 'items');
+      console.log('  - Social Links:', socialLinks.length, 'items');
+      console.log('  - User Profile:', userProfile ? '✅ Found' : '❌ Not found');
+      console.log('  - Talent Profile:', talentProfile ? '✅ Found' : '❌ Not found');
       setIsLoading(false);
     }
   };
