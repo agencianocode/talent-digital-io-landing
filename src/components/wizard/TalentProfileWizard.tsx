@@ -482,7 +482,7 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
 
   const canProceedToNext = () => {
     const step = steps[currentStep];
-    return step.isCompleted || step.isOptional;
+    return step ? (step.isCompleted || step.isOptional) : false;
   };
 
   const renderCurrentStep = () => {
@@ -496,7 +496,7 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
       hideNavigationButtons: true, // Hide step-level navigation buttons
     };
 
-    switch (steps[currentStep].id) {
+    switch (steps[currentStep]?.id) {
       case 'basic-info':
         return <BasicInfoStep {...stepProps} />;
       case 'professional-info':

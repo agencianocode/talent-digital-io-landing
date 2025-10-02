@@ -148,7 +148,7 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
         industry: company.industry ?? undefined,
         industry_id: company.industry_id ?? undefined,
         logo_url: company.logo_url ?? undefined,
-        social_links: (company.social_links as Record<string, string>) || {},
+        social_links: company.social_links ? (company.social_links as Record<string, string>) : undefined,
         gallery_urls: ((company.gallery_urls as any[]) || []).map((item: any) => ({
           id: item?.id || Math.random().toString(),
           type: item?.type || 'image',
@@ -188,7 +188,7 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
       }
 
       if (activeComp) {
-        const companyWithUndefined = {
+        const companyWithUndefined: Company = {
           ...activeComp,
           description: activeComp.description ?? undefined,
           website: activeComp.website ?? undefined,
@@ -200,6 +200,15 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
           employee_count_range: activeComp.employee_count_range ?? undefined,
           industry: activeComp.industry ?? undefined,
           industry_id: activeComp.industry_id ?? undefined,
+          social_links: activeComp.social_links ? (activeComp.social_links as Record<string, string>) : undefined,
+          gallery_urls: ((activeComp.gallery_urls as any[]) || []).map((item: any) => ({
+            id: item?.id || Math.random().toString(),
+            type: item?.type || 'image',
+            url: item?.url || '',
+            title: item?.title || 'Sin título',
+            description: item?.description,
+            thumbnail: item?.thumbnail
+          }))
         };
         setActiveCompanyState(companyWithUndefined);
         localStorage.setItem('activeCompanyId', activeComp.id);

@@ -21,7 +21,7 @@ export const useEducation = () => {
     try {
       // @ts-ignore - talent_education table exists but types not yet generated
       const { data, error } = await supabase
-        .from('talent_education')
+        .from('talent_education' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('current', { ascending: false })
@@ -29,7 +29,7 @@ export const useEducation = () => {
 
       if (error) throw error;
       console.log('📊 Fetched education:', data);
-      setEducation(data as any || []);
+      setEducation((data as TalentEducation[]) || []);
     } catch (err: any) {
       console.error('Error fetching education:', err);
       setError(err.message);
@@ -46,7 +46,7 @@ export const useEducation = () => {
     try {
       // @ts-ignore - talent_education table exists but types not yet generated
       const { data: insertedData, error } = await supabase
-        .from('talent_education')
+        .from('talent_education' as any)
         .insert({
           user_id: user.id,
           ...data
@@ -61,7 +61,7 @@ export const useEducation = () => {
       
       // Update state immediately with the new data
       setEducation(prev => {
-        const newEducation = [...prev, insertedData];
+        const newEducation = [...prev, insertedData as TalentEducation];
         console.log('🔄 Updated education state:', newEducation);
         
         // Dispatch custom event to trigger UI refresh
@@ -88,7 +88,7 @@ export const useEducation = () => {
     try {
       // @ts-ignore - talent_education table exists but types not yet generated
       const { data: updatedData, error } = await supabase
-        .from('talent_education')
+        .from('talent_education' as any)
         .update(data)
         .eq('id', id)
         .eq('user_id', user.id)
@@ -103,7 +103,7 @@ export const useEducation = () => {
       // Update state immediately with the updated data
       setEducation(prev => {
         const newEducation = prev.map(edu => 
-          edu.id === id ? { ...edu, ...updatedData } : edu
+          edu.id === id ? { ...edu, ...(updatedData as TalentEducation) } : edu
         );
         console.log('🔄 Updated education state:', newEducation);
         
@@ -131,7 +131,7 @@ export const useEducation = () => {
     try {
       // @ts-ignore - talent_education table exists but types not yet generated
       const { error } = await supabase
-        .from('talent_education')
+        .from('talent_education' as any)
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);

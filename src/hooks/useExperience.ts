@@ -21,7 +21,7 @@ export const useExperience = () => {
     try {
       // @ts-ignore - talent_experiences table exists but types not yet generated
       const { data, error } = await supabase
-        .from('talent_experiences')
+        .from('talent_experiences' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('current', { ascending: false })
@@ -29,7 +29,7 @@ export const useExperience = () => {
 
       if (error) throw error;
       console.log('📊 Fetched experiences:', data);
-      setExperiences(data as any || []);
+      setExperiences((data as TalentExperience[]) || []);
     } catch (err: any) {
       console.error('Error fetching experiences:', err);
       setError(err.message);
@@ -46,7 +46,7 @@ export const useExperience = () => {
     try {
       // @ts-ignore - talent_experiences table exists but types not yet generated
       const { data: insertedData, error } = await supabase
-        .from('talent_experiences')
+        .from('talent_experiences' as any)
         .insert({
           user_id: user.id,
           ...data
@@ -61,7 +61,7 @@ export const useExperience = () => {
       
       // Update state immediately with the new data
       setExperiences(prev => {
-        const newExperiences = [...prev, insertedData];
+        const newExperiences = [...prev, insertedData as TalentExperience];
         console.log('🔄 Updated experiences state:', newExperiences);
         
         // Dispatch custom event to trigger UI refresh
@@ -88,7 +88,7 @@ export const useExperience = () => {
     try {
       // @ts-ignore - talent_experiences table exists but types not yet generated
       const { data: updatedData, error } = await supabase
-        .from('talent_experiences')
+        .from('talent_experiences' as any)
         .update(data)
         .eq('id', id)
         .eq('user_id', user.id)
@@ -103,7 +103,7 @@ export const useExperience = () => {
       // Update state immediately with the updated data
       setExperiences(prev => {
         const newExperiences = prev.map(exp => 
-          exp.id === id ? { ...exp, ...updatedData } : exp
+          exp.id === id ? { ...exp, ...(updatedData as TalentExperience) } : exp
         );
         console.log('🔄 Updated experiences state:', newExperiences);
         
@@ -131,7 +131,7 @@ export const useExperience = () => {
     try {
       // @ts-ignore - talent_experiences table exists but types not yet generated
       const { error } = await supabase
-        .from('talent_experiences')
+        .from('talent_experiences' as any)
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);
