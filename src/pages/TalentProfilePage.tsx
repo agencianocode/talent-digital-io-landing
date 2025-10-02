@@ -102,10 +102,10 @@ const TalentProfilePage = () => {
 
         // Fetch education data
         const { data: educationData, error: educationError } = await supabase
-          .from('education')
+          .from('talent_education' as any)
           .select('*')
-          .eq('talent_profile_id', talentData.id)
-          .order('graduation_year', { ascending: false });
+          .eq('user_id', id || '')
+          .order('start_date', { ascending: false });
 
         if (educationError) {
           console.warn('Error fetching education:', educationError);
@@ -113,17 +113,19 @@ const TalentProfilePage = () => {
           console.log('Education data found:', educationData);
           setEducation(educationData);
         } else {
-          console.log('No education data found for talent profile:', talentData.id);
+          console.log('No education data found for user:', id);
         }
 
         // Fetch work experience data
-        const { data: workData } = await supabase
-          .from('work_experience')
+        const { data: workData, error: workError } = await supabase
+          .from('talent_experiences' as any)
           .select('*')
-          .eq('talent_profile_id', talentData.id)
+          .eq('user_id', id || '')
           .order('start_date', { ascending: false });
 
-        if (workData) {
+        if (workError) {
+          console.warn('Error fetching work experience:', workError);
+        } else if (workData) {
           setWorkExperience(workData);
         }
 
@@ -389,7 +391,7 @@ const TalentProfilePage = () => {
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {format(new Date(work.start_date), 'MMM yyyy', { locale: es })}
-                              {work.is_current ? ' - Presente' : work.end_date ? ` - ${format(new Date(work.end_date), 'MMM yyyy', { locale: es })}` : ''}
+                              {work.current ? ' - Presente' : work.end_date ? ` - ${format(new Date(work.end_date), 'MMM yyyy', { locale: es })}` : ''}
                             </div>
                           )}
                         </div>
@@ -421,15 +423,16 @@ const TalentProfilePage = () => {
                         <div>
                           <h4 className="font-semibold text-foreground">{edu.degree}</h4>
                           <p className="text-sm text-muted-foreground">{edu.institution}</p>
-                          {edu.field_of_study && (
-                            <p className="text-xs text-muted-foreground">{edu.field_of_study}</p>
+                          {edu.field && (
+                            <p className="text-xs text-muted-foreground">{edu.field}</p>
                           )}
                         </div>
                         <div className="text-right text-sm text-muted-foreground">
-                          {edu.graduation_year && (
+                          {edu.start_date && (
                             <div className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              Graduado en {edu.graduation_year}
+                              {format(new Date(edu.start_date), 'MMM yyyy', { locale: es })}
+                              {edu.current ? ' - Presente' : edu.end_date ? ` - ${format(new Date(edu.end_date), 'MMM yyyy', { locale: es })}` : ''}
                             </div>
                           )}
                         </div>
