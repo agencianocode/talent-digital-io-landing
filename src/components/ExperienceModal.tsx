@@ -237,7 +237,7 @@ export const ExperienceModal: React.FC<ExperienceModalProps> = ({
                 <Input
                   id="end_date"
                   type="date"
-                  value={formData.end_date}
+                  value={formData.end_date || ''}
                   onChange={(e) => handleInputChange('end_date', e.target.value)}
                   disabled={formData.current}
                   className={`pl-10 ${errors.end_date ? 'border-red-500' : ''}`}

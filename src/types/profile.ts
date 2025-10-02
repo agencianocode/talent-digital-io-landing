@@ -75,7 +75,7 @@ export interface ExperienceFormData {
   company: string;
   position: string;
   start_date: string;
-  end_date?: string;
+  end_date?: string | null;
   description?: string;
   current: boolean;
   location?: string;
@@ -101,7 +101,7 @@ export interface EducationFormData {
   degree: string;
   field?: string;
   start_date: string;
-  end_date?: string;
+  end_date?: string | null;
   description?: string;
   current: boolean;
 }

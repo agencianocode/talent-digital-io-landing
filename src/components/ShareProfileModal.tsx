@@ -8,7 +8,6 @@ import {
   Share2, 
   Copy, 
   ExternalLink, 
-  QrCode, 
   Facebook, 
   Twitter, 
   Linkedin, 
@@ -75,7 +74,6 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
 }) => {
   const { 
     shareData, 
-    loading, 
     generatePublicUrl, 
     copyToClipboard, 
     shareViaNative, 
@@ -148,7 +146,17 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
                 readOnly
                 className="flex-1"
               />
-              {isClipboardSupported && (
+              {typeof isClipboardSupported === 'function' ? isClipboardSupported() && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyUrl}
+                  className="px-3"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              ) : (
                 <Button
                   type="button"
                   variant="outline"
@@ -175,7 +183,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
           </div>
 
           {/* Compartir Nativo */}
-          {isNativeShareSupported && (
+          {(typeof isNativeShareSupported === 'function' ? isNativeShareSupported() : isNativeShareSupported) && (
             <div className="space-y-2">
               <Label>Compartir con Apps</Label>
               <Button
