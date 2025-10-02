@@ -1,38 +1,166 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   TalentExperience, 
   ExperienceFormData 
 } from '@/types/profile';
 import { toast } from 'sonner';
 
-// Temporary hook that works with current database structure
-// This will be replaced once the new tables are created
 export const useExperience = () => {
   const { user } = useSupabaseAuth();
   const [experiences, setExperiences] = useState<TalentExperience[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // For now, return empty experiences until new tables are created
   const fetchExperiences = useCallback(async () => {
-    setExperiences([]);
-  }, []);
+    if (!user) return;
+    
+    console.log('🔄 Fetching experiences for user:', user.id);
+    setLoading(true);
+    try {
+      // @ts-ignore - talent_experiences table exists but types not yet generated
+      const { data, error } = await supabase
+        .from('talent_experiences')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('current', { ascending: false })
+        .order('start_date', { ascending: false });
+
+      if (error) throw error;
+      console.log('📊 Fetched experiences:', data);
+      setExperiences(data as any || []);
+    } catch (err: any) {
+      console.error('Error fetching experiences:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   const addExperience = useCallback(async (data: ExperienceFormData): Promise<boolean> => {
-    toast.info('Funcionalidad de experiencia estará disponible pronto');
-    return false;
-  }, []);
+    if (!user) return false;
+    
+    console.log('➕ Adding experience:', data);
+    
+    try {
+      // @ts-ignore - talent_experiences table exists but types not yet generated
+      const { data: insertedData, error } = await supabase
+        .from('talent_experiences')
+        .insert({
+          user_id: user.id,
+          ...data
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Experience added successfully:', insertedData);
+      toast.success('Experiencia agregada exitosamente');
+      
+      // Update state immediately with the new data
+      setExperiences(prev => {
+        const newExperiences = [...prev, insertedData];
+        console.log('🔄 Updated experiences state:', newExperiences);
+        
+        // Dispatch custom event to trigger UI refresh
+        window.dispatchEvent(new CustomEvent('experienceUpdated', { 
+          detail: { count: newExperiences.length } 
+        }));
+        
+        return newExperiences;
+      });
+      
+      return true;
+    } catch (err: any) {
+      console.error('Error adding experience:', err);
+      toast.error('Error al agregar experiencia: ' + err.message);
+      return false;
+    }
+  }, [user]);
 
   const updateExperience = useCallback(async (id: string, data: Partial<ExperienceFormData>): Promise<boolean> => {
-    toast.info('Funcionalidad de experiencia estará disponible pronto');
-    return false;
-  }, []);
+    if (!user) return false;
+    
+    console.log('✏️ Updating experience:', id, data);
+    
+    try {
+      // @ts-ignore - talent_experiences table exists but types not yet generated
+      const { data: updatedData, error } = await supabase
+        .from('talent_experiences')
+        .update(data)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Experience updated successfully:', updatedData);
+      toast.success('Experiencia actualizada exitosamente');
+      
+      // Update state immediately with the updated data
+      setExperiences(prev => {
+        const newExperiences = prev.map(exp => 
+          exp.id === id ? { ...exp, ...updatedData } : exp
+        );
+        console.log('🔄 Updated experiences state:', newExperiences);
+        
+        // Dispatch custom event to trigger UI refresh
+        window.dispatchEvent(new CustomEvent('experienceUpdated', { 
+          detail: { count: newExperiences.length } 
+        }));
+        
+        return newExperiences;
+      });
+      
+      return true;
+    } catch (err: any) {
+      console.error('Error updating experience:', err);
+      toast.error('Error al actualizar experiencia: ' + err.message);
+      return false;
+    }
+  }, [user]);
 
   const deleteExperience = useCallback(async (id: string): Promise<boolean> => {
-    toast.info('Funcionalidad de experiencia estará disponible pronto');
-    return false;
-  }, []);
+    if (!user) return false;
+    
+    console.log('🗑️ Deleting experience:', id);
+    
+    try {
+      // @ts-ignore - talent_experiences table exists but types not yet generated
+      const { error } = await supabase
+        .from('talent_experiences')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      console.log('✅ Experience deleted successfully');
+      toast.success('Experiencia eliminada exitosamente');
+      
+      // Update state immediately by removing the deleted item
+      setExperiences(prev => {
+        const newExperiences = prev.filter(exp => exp.id !== id);
+        console.log('🔄 Updated experiences state:', newExperiences);
+        
+        // Dispatch custom event to trigger UI refresh
+        window.dispatchEvent(new CustomEvent('experienceUpdated', { 
+          detail: { count: newExperiences.length } 
+        }));
+        
+        return newExperiences;
+      });
+      
+      return true;
+    } catch (err: any) {
+      console.error('Error deleting experience:', err);
+      toast.error('Error al eliminar experiencia: ' + err.message);
+      return false;
+    }
+  }, [user]);
 
   const validateExperience = useCallback((data: ExperienceFormData): { isValid: boolean; errors: Record<string, string> } => {
     const errors: Record<string, string> = {};
@@ -49,11 +177,11 @@ export const useExperience = () => {
       errors.start_date = 'La fecha de inicio es requerida';
     }
 
-    if (!data.current && !data.end_date) {
+    if (!data.current && (!data.end_date || data.end_date.trim() === '')) {
       errors.end_date = 'La fecha de fin es requerida si no es trabajo actual';
     }
 
-    if (data.start_date && data.end_date && new Date(data.start_date) > new Date(data.end_date)) {
+    if (data.start_date && data.end_date && data.end_date.trim() !== '' && new Date(data.start_date) > new Date(data.end_date)) {
       errors.end_date = 'La fecha de fin debe ser posterior a la fecha de inicio';
     }
 
@@ -86,8 +214,10 @@ export const useExperience = () => {
   }, [experiences]);
 
   useEffect(() => {
-    fetchExperiences();
-  }, [fetchExperiences]);
+    if (user) {
+      fetchExperiences();
+    }
+  }, [user?.id]); // Solo depende del ID del usuario, no de la función
 
   return {
     experiences,

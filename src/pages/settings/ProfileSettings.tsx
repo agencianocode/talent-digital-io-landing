@@ -280,9 +280,13 @@ const ProfileSettings = () => {
       }
       const {
         error: directUpdateError
-      } = await supabase.from('profiles').update({
-        avatar_url: publicUrl
-      }).eq('user_id', user.id);
+      } = await supabase.from('profiles').upsert({
+        user_id: user.id,
+        avatar_url: publicUrl,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id'
+      });
       if (directUpdateError) {
         throw directUpdateError;
       }

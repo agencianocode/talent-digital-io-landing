@@ -101,7 +101,10 @@ export const SocialLinksModal: React.FC<SocialLinksModalProps> = ({
       }
 
       if (success) {
-        onClose();
+        // Small delay to ensure state updates before closing
+        setTimeout(() => {
+          onClose();
+        }, 100);
       }
     } catch (error) {
       console.error('Error saving social link:', error);

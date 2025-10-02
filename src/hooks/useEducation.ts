@@ -1,38 +1,166 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   TalentEducation, 
   EducationFormData 
 } from '@/types/profile';
 import { toast } from 'sonner';
 
-// Temporary hook that works with current database structure
-// This will be replaced once the new tables are created
 export const useEducation = () => {
   const { user } = useSupabaseAuth();
   const [education, setEducation] = useState<TalentEducation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // For now, return empty education until new tables are created
   const fetchEducation = useCallback(async () => {
-    setEducation([]);
-  }, []);
+    if (!user) return;
+    
+    console.log('🔄 Fetching education for user:', user.id);
+    setLoading(true);
+    try {
+      // @ts-ignore - talent_education table exists but types not yet generated
+      const { data, error } = await supabase
+        .from('talent_education')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('current', { ascending: false })
+        .order('start_date', { ascending: false });
+
+      if (error) throw error;
+      console.log('📊 Fetched education:', data);
+      setEducation(data as any || []);
+    } catch (err: any) {
+      console.error('Error fetching education:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   const addEducation = useCallback(async (data: EducationFormData): Promise<boolean> => {
-    toast.info('Funcionalidad de educación estará disponible pronto');
-    return false;
-  }, []);
+    if (!user) return false;
+    
+    console.log('➕ Adding education:', data);
+    
+    try {
+      // @ts-ignore - talent_education table exists but types not yet generated
+      const { data: insertedData, error } = await supabase
+        .from('talent_education')
+        .insert({
+          user_id: user.id,
+          ...data
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Education added successfully:', insertedData);
+      toast.success('Educación agregada exitosamente');
+      
+      // Update state immediately with the new data
+      setEducation(prev => {
+        const newEducation = [...prev, insertedData];
+        console.log('🔄 Updated education state:', newEducation);
+        
+        // Dispatch custom event to trigger UI refresh
+        window.dispatchEvent(new CustomEvent('educationUpdated', { 
+          detail: { count: newEducation.length } 
+        }));
+        
+        return newEducation;
+      });
+      
+      return true;
+    } catch (err: any) {
+      console.error('Error adding education:', err);
+      toast.error('Error al agregar educación: ' + err.message);
+      return false;
+    }
+  }, [user]);
 
   const updateEducation = useCallback(async (id: string, data: Partial<EducationFormData>): Promise<boolean> => {
-    toast.info('Funcionalidad de educación estará disponible pronto');
-    return false;
-  }, []);
+    if (!user) return false;
+    
+    console.log('✏️ Updating education:', id, data);
+    
+    try {
+      // @ts-ignore - talent_education table exists but types not yet generated
+      const { data: updatedData, error } = await supabase
+        .from('talent_education')
+        .update(data)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Education updated successfully:', updatedData);
+      toast.success('Educación actualizada exitosamente');
+      
+      // Update state immediately with the updated data
+      setEducation(prev => {
+        const newEducation = prev.map(edu => 
+          edu.id === id ? { ...edu, ...updatedData } : edu
+        );
+        console.log('🔄 Updated education state:', newEducation);
+        
+        // Dispatch custom event to trigger UI refresh
+        window.dispatchEvent(new CustomEvent('educationUpdated', { 
+          detail: { count: newEducation.length } 
+        }));
+        
+        return newEducation;
+      });
+      
+      return true;
+    } catch (err: any) {
+      console.error('Error updating education:', err);
+      toast.error('Error al actualizar educación: ' + err.message);
+      return false;
+    }
+  }, [user]);
 
   const deleteEducation = useCallback(async (id: string): Promise<boolean> => {
-    toast.info('Funcionalidad de educación estará disponible pronto');
-    return false;
-  }, []);
+    if (!user) return false;
+    
+    console.log('🗑️ Deleting education:', id);
+    
+    try {
+      // @ts-ignore - talent_education table exists but types not yet generated
+      const { error } = await supabase
+        .from('talent_education')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      console.log('✅ Education deleted successfully');
+      toast.success('Educación eliminada exitosamente');
+      
+      // Update state immediately by removing the deleted item
+      setEducation(prev => {
+        const newEducation = prev.filter(edu => edu.id !== id);
+        console.log('🔄 Updated education state:', newEducation);
+        
+        // Dispatch custom event to trigger UI refresh
+        window.dispatchEvent(new CustomEvent('educationUpdated', { 
+          detail: { count: newEducation.length } 
+        }));
+        
+        return newEducation;
+      });
+      
+      return true;
+    } catch (err: any) {
+      console.error('Error deleting education:', err);
+      toast.error('Error al eliminar educación: ' + err.message);
+      return false;
+    }
+  }, [user]);
 
   const validateEducation = useCallback((data: EducationFormData): { isValid: boolean; errors: Record<string, string> } => {
     const errors: Record<string, string> = {};
@@ -49,11 +177,11 @@ export const useEducation = () => {
       errors.start_date = 'La fecha de inicio es requerida';
     }
 
-    if (!data.current && !data.end_date) {
+    if (!data.current && (!data.end_date || data.end_date.trim() === '')) {
       errors.end_date = 'La fecha de fin es requerida si no es educación actual';
     }
 
-    if (data.start_date && data.end_date && new Date(data.start_date) > new Date(data.end_date)) {
+    if (data.start_date && data.end_date && data.end_date.trim() !== '' && new Date(data.start_date) > new Date(data.end_date)) {
       errors.end_date = 'La fecha de fin debe ser posterior a la fecha de inicio';
     }
 
@@ -92,8 +220,10 @@ export const useEducation = () => {
   }, [education]);
 
   useEffect(() => {
-    fetchEducation();
-  }, [fetchEducation]);
+    if (user) {
+      fetchEducation();
+    }
+  }, [user?.id]); // Solo depende del ID del usuario, no de la función
 
   return {
     education,

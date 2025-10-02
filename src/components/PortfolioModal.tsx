@@ -97,7 +97,10 @@ export const PortfolioModal: React.FC<PortfolioModalProps> = ({
       }
 
       if (success) {
-        onClose();
+        // Small delay to ensure state updates before closing
+        setTimeout(() => {
+          onClose();
+        }, 100);
       }
     } catch (error) {
       console.error('Error saving portfolio:', error);

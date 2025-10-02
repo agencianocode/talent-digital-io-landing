@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -44,6 +44,59 @@ const TalentMyProfile = () => {
   // Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  
+  // Force refresh state to trigger re-renders
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Force refresh when data changes
+  useEffect(() => {
+    console.log('🔄 TalentMyProfile - Data changed, forcing refresh', {
+      portfolios: portfolios.length,
+      experiences: experiences.length,
+      education: education.length,
+      socialLinks: socialLinks.length
+    });
+    setRefreshKey(prev => prev + 1);
+  }, [portfolios.length, experiences.length, education.length, socialLinks.length]);
+
+  // Listen for custom events from hooks
+  useEffect(() => {
+    const handleExperienceUpdate = (event: CustomEvent) => {
+      console.log('📡 TalentMyProfile - Received experienceUpdated event:', event.detail);
+      setRefreshKey(prev => prev + 1);
+    };
+
+    const handleEducationUpdate = (event: CustomEvent) => {
+      console.log('📡 TalentMyProfile - Received educationUpdated event:', event.detail);
+      setRefreshKey(prev => prev + 1);
+    };
+
+    const handlePortfolioUpdate = (event: CustomEvent) => {
+      console.log('📡 TalentMyProfile - Received portfolioUpdated event:', event.detail);
+      setRefreshKey(prev => prev + 1);
+    };
+
+    const handleSocialLinksUpdate = (event: CustomEvent) => {
+      console.log('📡 TalentMyProfile - Received socialLinksUpdated event:', event.detail);
+      setRefreshKey(prev => prev + 1);
+    };
+
+    // Add event listeners
+    window.addEventListener('experienceUpdated', handleExperienceUpdate as EventListener);
+    window.addEventListener('educationUpdated', handleEducationUpdate as EventListener);
+    window.addEventListener('portfolioUpdated', handlePortfolioUpdate as EventListener);
+    window.addEventListener('socialLinksUpdated', handleSocialLinksUpdate as EventListener);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('experienceUpdated', handleExperienceUpdate as EventListener);
+      window.removeEventListener('educationUpdated', handleEducationUpdate as EventListener);
+      window.removeEventListener('portfolioUpdated', handlePortfolioUpdate as EventListener);
+      window.removeEventListener('socialLinksUpdated', handleSocialLinksUpdate as EventListener);
+    };
+  }, []);
+
+  // Manual refresh function
 
   // Get profile data
   const fullName = userProfile?.full_name || user?.user_metadata?.full_name || 'Nombre Apellido';
@@ -98,27 +151,6 @@ const TalentMyProfile = () => {
     if (success) {
       // Toast will be shown by the hook
     }
-  };
-
-  // Handlers for section actions
-  const handleAddPortfolio = () => {
-    // This will be handled by the PortfolioSection component
-    console.log('Add portfolio clicked');
-  };
-
-  const handleAddExperience = () => {
-    // This will be handled by the ExperienceSection component
-    console.log('Add experience clicked');
-  };
-
-  const handleAddEducation = () => {
-    // This will be handled by the EducationSection component
-    console.log('Add education clicked');
-  };
-
-  const handleAddSocialLink = () => {
-    // This will be handled by the SocialLinksSection component
-    console.log('Add social link clicked');
   };
 
   return (
@@ -233,54 +265,30 @@ const TalentMyProfile = () => {
             </Card>
 
             {/* Sección de contenido profesional */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              {/* Portfolio */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-gray-900">Portfolios</h3>
-                  <Button size="sm" variant="outline" onClick={handleAddPortfolio}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar
-                  </Button>
-                </div>
-                <PortfolioSection />
+              {/* Experiencia - Arriba a la izquierda */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Experiencia</h3>
+                <ExperienceSection key={`experience-${refreshKey}`} />
               </div>
 
-              {/* Experiencia */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-gray-900">Experiencia</h3>
-                  <Button size="sm" variant="outline" onClick={handleAddExperience}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar
-                  </Button>
-                </div>
-                <ExperienceSection />
+              {/* Educación - Arriba a la derecha */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Educación</h3>
+                <EducationSection key={`education-${refreshKey}`} />
               </div>
 
-              {/* Educación */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-gray-900">Educación</h3>
-                  <Button size="sm" variant="outline" onClick={handleAddEducation}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar
-                  </Button>
-                </div>
-                <EducationSection />
+              {/* Portfolio - Abajo a la izquierda */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Portfolios</h3>
+                <PortfolioSection key={`portfolio-${refreshKey}`} />
               </div>
 
-              {/* Redes Sociales */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-gray-900">Redes Sociales</h3>
-                  <Button size="sm" variant="outline" onClick={handleAddSocialLink}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar
-                  </Button>
-                </div>
-                <SocialLinksSection />
+              {/* Redes Sociales - Abajo a la derecha */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Redes Sociales</h3>
+                <SocialLinksSection key={`social-${refreshKey}`} />
               </div>
             </div>
 
@@ -310,17 +318,20 @@ const TalentMyProfile = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="w-full h-64 bg-gray-100 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
-                    <Video className="h-16 w-16 text-gray-400 mb-4" />
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">
+                  <div className="w-full h-64 bg-gradient-to-br from-red-50/50 to-pink-50/50 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-red-200">
+                    <div className="p-4 bg-white rounded-full shadow-sm mb-4">
+                      <Video className="h-12 w-12 text-red-500" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">
                       Agrega un video de presentación
                     </h4>
-                    <p className="text-sm text-gray-600 text-center mb-4">
+                    <p className="text-sm text-gray-600 text-center mb-6 max-w-md px-4">
                       Un video personal te ayuda a destacar y conectar mejor con los clientes
                     </p>
                     <Button 
                       onClick={() => setIsEditModalOpen(true)}
                       variant="outline"
+                      className="border-red-200 text-red-700 hover:bg-red-50"
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Agregar Video
@@ -413,17 +424,21 @@ const TalentMyProfile = () => {
                 </div>
                 
                 <div className="text-center py-4">
-                  <TrendingUp className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-                  <h4 className="font-medium text-gray-900 mb-1 text-sm">
+                  <div className="p-3 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-full w-fit mx-auto mb-3">
+                    <TrendingUp className="h-8 w-8 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-1 text-sm">
                     Sin servicios
                   </h4>
-                  <p className="text-xs text-gray-600 mb-3">
+                  <p className="text-xs text-gray-600 mb-4">
                     Crea servicios para mostrar tus habilidades
                   </p>
                   <Button 
                     size="sm"
-                    className="bg-black hover:bg-gray-800 text-white text-sm"
+                    variant="outline"
+                    className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 text-sm"
                   >
+                    <Plus className="h-3 w-3 mr-1" />
                     Crear Servicio
                   </Button>
                 </div>

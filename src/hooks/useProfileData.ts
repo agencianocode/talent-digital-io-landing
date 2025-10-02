@@ -50,11 +50,14 @@ export const useProfileData = () => {
       // This will be updated once the new tables are created
       // Merge userData with user_metadata from onboarding
       if (userData || user?.user_metadata) {
-        // Filter out blob URLs to prevent temporary URL issues, but keep valid URLs
-        const rawAvatarUrl = user?.user_metadata?.avatar_url || userData?.avatar_url || user?.user_metadata?.profile_photo_url || (userData as any)?.profile_photo_url || null;
+        // Prioritize database avatar_url over user_metadata, filter out blob URLs
+        const rawAvatarUrl = userData?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.profile_photo_url || (userData as any)?.profile_photo_url || null;
         const filteredAvatarUrl = rawAvatarUrl && !rawAvatarUrl.startsWith('blob:') ? rawAvatarUrl : null;
         
         console.log('🔍 useProfileData - Avatar URL filtering:', {
+          userDataAvatarUrl: userData?.avatar_url,
+          userMetadataAvatarUrl: user?.user_metadata?.avatar_url,
+          userMetadataProfilePhotoUrl: user?.user_metadata?.profile_photo_url,
           rawAvatarUrl,
           filteredAvatarUrl,
           isBlobUrl: rawAvatarUrl?.startsWith('blob:')
@@ -199,41 +202,41 @@ export const useProfileData = () => {
 
       // Update profiles table
       const { error: profileError } = await supabase
-  .from('profiles')
-  .upsert({
-    user_id: user.id,
-    full_name: data.full_name,
-    phone: data.phone,
-    city: data.city,
-    country: data.country,
-    updated_at: new Date().toISOString()
-  }, {
-    onConflict: 'user_id'
-  });
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          full_name: data.full_name,
+          phone: data.phone,
+          city: data.city,
+          country: data.country,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (profileError) throw profileError;
 
       // Update talent_profiles table
       const { error: talentError } = await supabase
-  .from('talent_profiles')
-  .upsert({
-    user_id: user.id,
-    title: data.title,
-    bio: data.bio,
-    skills: data.skills,
-    location: data.location,
-    phone: data.phone,
-    country: data.country,
-    city: data.city,
-    video_presentation_url: data.video_presentation_url,
-    hourly_rate_min: data.hourly_rate_min,
-    hourly_rate_max: data.hourly_rate_max,
-    currency: data.currency,
-    availability: data.availability,
-    updated_at: new Date().toISOString()
-  }, {
-    onConflict: 'user_id'
-  });
+        .from('talent_profiles')
+        .upsert({
+          user_id: user.id,
+          title: data.title,
+          bio: data.bio,
+          skills: data.skills,
+          location: data.location,
+          phone: data.phone,
+          country: data.country,
+          city: data.city,
+          video_presentation_url: data.video_presentation_url,
+          hourly_rate_min: data.hourly_rate_min,
+          hourly_rate_max: data.hourly_rate_max,
+          currency: data.currency,
+          availability: data.availability,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (talentError) throw talentError;
 
@@ -260,16 +263,92 @@ export const useProfileData = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/avatar.${fileExt}`;
       
+      console.log('🔍 Uploading avatar:', {
+        fileName,
+        fileSize: file.size,
+        fileType: file.type,
+        userId: user.id
+      });
+      
+      // First, try to check if bucket exists and is accessible
+      const { data: bucketList, error: listError } = await supabase.storage
+        .from('avatars')
+        .list();
+      
+      if (listError) {
+        console.error('🔍 Bucket access error:', listError);
+        throw new Error(`Error accediendo al bucket avatars: ${listError.message}`);
+      }
+      
+      console.log('🔍 Bucket accessible, existing files:', bucketList);
+
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('🔍 Upload error details:', uploadError);
+        
+        // Try alternative path if folder-based upload fails
+        const alternativePath = `public/${user.id}_${Date.now()}.${fileExt}`;
+        console.log('🔍 Trying alternative path:', alternativePath);
+        
+        const { error: altUploadError } = await supabase.storage
+          .from('avatars')
+          .upload(alternativePath, file, { upsert: true });
+          
+        if (altUploadError) {
+          throw new Error(`Error de subida: ${uploadError.message}. Error alternativo: ${altUploadError.message}`);
+        }
+        
+        // Use alternative path
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(alternativePath);
+          
+        console.log('🔍 Alternative upload successful:', publicUrl);
+        
+        // Update user metadata
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: {
+            avatar_url: publicUrl,
+            updated_at: new Date().toISOString()
+          }
+        });
+
+        if (metadataError) {
+          console.error('🔍 Metadata update error:', metadataError);
+          throw new Error(`Error actualizando metadatos: ${metadataError.message}`);
+        }
+
+        // Update profiles table
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            user_id: user.id,
+            avatar_url: publicUrl,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (profileError) {
+          console.error('🔍 Profile update error:', profileError);
+          throw new Error(`Error actualizando perfil: ${profileError.message}`);
+        }
+
+        // Refresh profile data
+        await fetchProfile();
+        toast.success('Avatar actualizado correctamente');
+        return true;
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
+
+      console.log('🔍 Upload successful, public URL:', publicUrl);
 
       // Update user metadata
       const { error: metadataError } = await supabase.auth.updateUser({
@@ -279,7 +358,10 @@ export const useProfileData = () => {
         }
       });
 
-      if (metadataError) throw metadataError;
+      if (metadataError) {
+        console.error('🔍 Metadata update error:', metadataError);
+        throw new Error(`Error actualizando metadatos: ${metadataError.message}`);
+      }
 
       // Update profiles table
       const { error: profileError } = await supabase
@@ -288,18 +370,23 @@ export const useProfileData = () => {
           user_id: user.id,
           avatar_url: publicUrl,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
         });
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('🔍 Profile update error:', profileError);
+        throw new Error(`Error actualizando perfil: ${profileError.message}`);
+      }
 
       // Refresh profile data
       await fetchProfile();
       toast.success('Avatar actualizado correctamente');
       return true;
     } catch (err: any) {
-      console.error('Error updating avatar:', err);
+      console.error('🔍 Complete avatar update error:', err);
       setError(err.message || 'Error al actualizar el avatar');
-      toast.error('Error al actualizar el avatar');
+      toast.error(`Error al actualizar el avatar: ${err.message}`);
       return false;
     }
   }, [user?.id, fetchProfile]);

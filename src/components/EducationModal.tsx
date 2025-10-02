@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, GraduationCap, BookOpen, Clock } from 'lucide-react';
 import { useEducation } from '@/hooks/useEducation';
 import { EducationFormData } from '@/types/profile';
-import { toast } from 'sonner';
 
 interface EducationModalProps {
   isOpen: boolean;
@@ -94,8 +93,14 @@ export const EducationModal: React.FC<EducationModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Clean up form data before validation
+    const cleanedFormData = {
+      ...formData,
+      end_date: formData.current ? null : (formData.end_date || null)
+    };
+    
     // Validate form data
-    const validation = validateEducation(formData);
+    const validation = validateEducation(cleanedFormData);
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;
@@ -106,13 +111,16 @@ export const EducationModal: React.FC<EducationModalProps> = ({
       let success = false;
       
       if (isEditing && educationId) {
-        success = await updateEducation(educationId, formData);
+        success = await updateEducation(educationId, cleanedFormData);
       } else {
-        success = await addEducation(formData);
+        success = await addEducation(cleanedFormData);
       }
 
       if (success) {
-        onClose();
+        // Small delay to ensure state updates before closing
+        setTimeout(() => {
+          onClose();
+        }, 100);
       }
     } catch (error) {
       console.error('Error saving education:', error);

@@ -76,8 +76,16 @@ export const ExperienceModal: React.FC<ExperienceModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Clean up form data before validation
+    const cleanedFormData = {
+      ...formData,
+      end_date: formData.current ? null : (formData.end_date || null)
+    };
+    
+    console.log('🧹 ExperienceModal - Cleaned form data:', cleanedFormData);
+    
     // Validate form data
-    const validation = validateExperience(formData);
+    const validation = validateExperience(cleanedFormData);
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;
@@ -88,13 +96,16 @@ export const ExperienceModal: React.FC<ExperienceModalProps> = ({
       let success = false;
       
       if (isEditing && experienceId) {
-        success = await updateExperience(experienceId, formData);
+        success = await updateExperience(experienceId, cleanedFormData);
       } else {
-        success = await addExperience(formData);
+        success = await addExperience(cleanedFormData);
       }
 
       if (success) {
-        onClose();
+        // Small delay to ensure state updates before closing
+        setTimeout(() => {
+          onClose();
+        }, 100);
       }
     } catch (error) {
       console.error('Error saving experience:', error);
