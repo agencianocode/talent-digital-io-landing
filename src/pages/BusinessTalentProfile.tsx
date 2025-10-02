@@ -206,10 +206,10 @@ const BusinessTalentProfile = () => {
       toast.error('Error al cargar el perfil del talento');
     } finally {
       console.log('📊 Final state:');
-      console.log('  - Education:', education.length, 'items');
-      console.log('  - Work Experience:', workExperience.length, 'items');
-      console.log('  - Portfolios:', portfolios.length, 'items');
-      console.log('  - Social Links:', socialLinks.length, 'items');
+      console.log('  - Education:', education.length, 'items', education);
+      console.log('  - Work Experience:', workExperience.length, 'items', workExperience);
+      console.log('  - Portfolios:', portfolios.length, 'items', portfolios);
+      console.log('  - Social Links:', socialLinks.length, 'items', socialLinks);
       console.log('  - User Profile:', userProfile ? '✅ Found' : '❌ Not found');
       console.log('  - Talent Profile:', talentProfile ? '✅ Found' : '❌ Not found');
       setIsLoading(false);
@@ -315,8 +315,8 @@ const BusinessTalentProfile = () => {
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
             Perfil de Talento
           </h1>
-        </div>
-      </div>
+                  </div>
+                </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Left Column - Profile Info */}
@@ -346,8 +346,8 @@ const BusinessTalentProfile = () => {
                     </div>
                     {isBusinessRole(userRole) && (
                       <Button onClick={handleContact} className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto">
-                        Enviar Mensaje
-                      </Button>
+                      Enviar Mensaje
+                    </Button>
                     )}
                   </div>
                   
@@ -366,8 +366,8 @@ const BusinessTalentProfile = () => {
                       ))}
                     </div>
                   )}
-                </div>
-              </div>
+                      </div>
+                  </div>
             </CardHeader>
             <CardContent>
               {/* Bio/Summary */}
@@ -383,17 +383,17 @@ const BusinessTalentProfile = () => {
               )}
               
               {/* Social Media Links - Like in the image */}
-              <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                 <div className="w-7 h-7 bg-red-600 rounded flex items-center justify-center cursor-pointer hover:bg-red-700">
-                  <span className="text-white text-xs">▶</span>
-                </div>
-                <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center cursor-pointer hover:bg-blue-700">
-                  <span className="text-white text-xs font-bold">f</span>
-                </div>
-                <div className="w-7 h-7 bg-green-500 rounded flex items-center justify-center cursor-pointer hover:bg-green-600">
-                  <span className="text-white text-xs font-bold">W</span>
-                </div>
-              </div>
+                      <span className="text-white text-xs">▶</span>
+                    </div>
+                    <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center cursor-pointer hover:bg-blue-700">
+                      <span className="text-white text-xs font-bold">f</span>
+                    </div>
+                    <div className="w-7 h-7 bg-green-500 rounded flex items-center justify-center cursor-pointer hover:bg-green-600">
+                      <span className="text-white text-xs font-bold">W</span>
+                    </div>
+                  </div>
             </CardContent>
           </Card>
 
@@ -448,7 +448,7 @@ const BusinessTalentProfile = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+              </div>
 
         {/* Right Column - Professional Sections */}
         <div className="space-y-6">
@@ -472,8 +472,8 @@ const BusinessTalentProfile = () => {
                       <Video className="h-5 w-5" />
                       Reproducir Video
                     </Button>
-                  </div>
-                  
+              </div>
+
                   {/* Platform badge */}
                   <div className="absolute top-2 right-2">
                     <Badge variant="secondary" className="text-xs bg-black/70 text-white">
@@ -481,8 +481,8 @@ const BusinessTalentProfile = () => {
                        userProfile.video_presentation_url.includes('youtube.com') || userProfile.video_presentation_url.includes('youtu.be') ? 'YouTube' :
                        userProfile.video_presentation_url.includes('vimeo.com') ? 'Vimeo' : 'Video'}
                     </Badge>
-                  </div>
-                </div>
+              </div>
+            </div>
               </CardContent>
             </Card>
           )}
@@ -493,6 +493,7 @@ const BusinessTalentProfile = () => {
               <CardTitle>Experiencia</CardTitle>
             </CardHeader>
             <CardContent>
+              {console.log('🎯 Rendering Work Experience - Length:', workExperience.length, 'Data:', workExperience)}
               {workExperience.length > 0 ? (
                 <div className="space-y-4">
                   {workExperience.map((work) => (
@@ -533,6 +534,7 @@ const BusinessTalentProfile = () => {
               <CardTitle>Educación</CardTitle>
             </CardHeader>
             <CardContent>
+              {console.log('🎯 Rendering Education - Length:', education.length, 'Data:', education)}
               {education.length > 0 ? (
                 <div className="space-y-4">
                   {education.map((edu) => (
