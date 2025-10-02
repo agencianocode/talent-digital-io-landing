@@ -143,11 +143,98 @@ const BusinessTalentProfile = () => {
             
             // Let's check what education data exists for this user in any table
             console.log('🔍 Checking all education tables...');
-            const { data: allEducationData } = await supabase
+            
+            // Try separate queries to avoid the OR syntax issue
+            const { data: educationByProfileId } = await supabase
               .from('education' as any)
               .select('*')
-              .or(`talent_profile_id.eq.${talentData.id},user_id.eq.${id}`);
-            console.log('  - All education data found:', allEducationData?.length || 0, 'items', allEducationData);
+              .eq('talent_profile_id', talentData.id);
+            
+            const { data: educationByUserId } = await supabase
+              .from('education' as any)
+              .select('*')
+              .eq('user_id', id);
+            
+            const allEducationData = [...(educationByProfileId || []), ...(educationByUserId || [])];
+            console.log('  - Education by talent_profile_id:', educationByProfileId?.length || 0, 'items');
+            console.log('  - Education by user_id:', educationByUserId?.length || 0, 'items');
+            console.log('  - All education data found:', allEducationData.length, 'items', allEducationData);
+            
+            // Let's also check if there are any education records at all for this user
+            console.log('🔍 Checking if user has any education records in any table...');
+            const { data: anyEducationData } = await supabase
+              .from('education' as any)
+              .select('*')
+              .limit(5);
+            console.log('  - Sample education records (first 5):', anyEducationData?.length || 0, 'items');
+            
+            // Check if there are any talent_education records at all
+            const { data: anyTalentEducationData } = await supabase
+              .from('talent_education' as any)
+              .select('*')
+              .limit(5);
+            console.log('  - Sample talent_education records (first 5):', anyTalentEducationData?.length || 0, 'items');
+            
+            // Let's see what the actual education records look like
+            if (anyEducationData && anyEducationData.length > 0) {
+              console.log('  - First education record structure:', anyEducationData[0]);
+              console.log('  - Looking for records with talent_profile_id:', talentData.id);
+              console.log('  - Looking for records with user_id:', id);
+              
+              // Let's search for Fabian's records specifically
+console.log(' Searching for Fabian Segura education records...');
+
+// First, let's see ALL education records to find Fabian's talent_profile_id
+const { data: allEducationRecords } = await supabase
+  .from('education' as any)
+  .select('*');
+console.log('  - ALL education records:', allEducationRecords?.length || 0, 'items');
+
+if (allEducationRecords && allEducationRecords.length > 0) {
+  // Look for records that might belong to Fabian
+  const fabianRecords = allEducationRecords.filter(record => 
+    record.institution?.includes('No Code Hackers') ||
+    record.institution?.includes('Consul Business School') ||
+    record.institution?.includes('Product Hackers') ||
+    record.degree?.includes('No Code') ||
+    record.degree?.includes('Growth en Ecommerce') ||
+    record.degree?.includes('Especialista No Code') ||
+    record.degree?.includes('Certificaci�n Internacional Consultor de Negocios')
+  );
+  console.log('  - Potential Fabian records found:', fabianRecords.length, 'items', fabianRecords);
+  
+  if (fabianRecords.length > 0) {
+    const fabianTalentProfileId = fabianRecords[0].talent_profile_id;
+    console.log('  - Fabian\'s actual talent_profile_id:', fabianTalentProfileId);
+    
+    // Now let's fetch all education records for this talent_profile_id
+    const { data: fabianEducationData } = await supabase
+      .from('education' as any)
+      .select('*')
+      .eq('talent_profile_id', fabianTalentProfileId)
+      .order('graduation_year', { ascending: false });
+    console.log('  - Fabian education records found:', fabianEducationData?.length || 0, 'items', fabianEducationData);
+    
+    // Set the education data
+    if (fabianEducationData && fabianEducationData.length > 0) {
+      educationData = fabianEducationData;
+      console.log(' Education data found for Fabian:', educationData);
+    }
+    
+    // Also fetch work experience for the same talent_profile_id
+    const { data: fabianWorkData } = await supabase
+      .from('work_experience' as any)
+      .select('*')
+      .eq('talent_profile_id', fabianTalentProfileId)
+      .order('start_date', { ascending: false });
+    console.log('  - Fabian work experience records found:', fabianWorkData?.length || 0, 'items', fabianWorkData);
+    
+    if (fabianWorkData && fabianWorkData.length > 0) {
+      workData = fabianWorkData;
+      console.log(' Work experience data found for Fabian:', workData);
+    }
+  }
+}
           }
         }
         
@@ -190,11 +277,22 @@ const BusinessTalentProfile = () => {
             
             // Let's check what work experience data exists for this user in any table
             console.log('🔍 Checking all work experience tables...');
-            const { data: allWorkData } = await supabase
+            
+            // Try separate queries to avoid the OR syntax issue
+            const { data: workByProfileId } = await supabase
               .from('work_experience' as any)
               .select('*')
-              .or(`talent_profile_id.eq.${talentData.id},user_id.eq.${id}`);
-            console.log('  - All work experience data found:', allWorkData?.length || 0, 'items', allWorkData);
+              .eq('talent_profile_id', talentData.id);
+            
+            const { data: workByUserId } = await supabase
+              .from('work_experience' as any)
+              .select('*')
+              .eq('user_id', id);
+            
+            const allWorkData = [...(workByProfileId || []), ...(workByUserId || [])];
+            console.log('  - Work experience by talent_profile_id:', workByProfileId?.length || 0, 'items');
+            console.log('  - Work experience by user_id:', workByUserId?.length || 0, 'items');
+            console.log('  - All work experience data found:', allWorkData.length, 'items', allWorkData);
           }
         }
         
