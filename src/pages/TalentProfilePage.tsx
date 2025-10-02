@@ -93,6 +93,7 @@ const TalentProfilePage = () => {
       setUserProfile(profileData);
 
       // Fetch talent profile
+      console.log('🔍 Fetching talent profile for user_id:', id);
       const { data: talentData, error: talentError } = await supabase
         .from('talent_profiles')
         .select('*')
@@ -106,37 +107,67 @@ const TalentProfilePage = () => {
         console.log('✅ Talent profile data:', talentData);
         setTalentProfile(talentData);
 
-        // Fetch education data
-        const { data: educationData, error: educationError } = await supabase
+        // Fetch education data - try both systems
+        let educationData = null;
+        
+        // Try new system first (talent_education with user_id)
+        const { data: newEducationData, error: newEducationError } = await supabase
           .from('talent_education' as any)
           .select('*')
           .eq('user_id', id || '')
           .order('start_date', { ascending: false });
 
-        if (educationError) {
-          console.warn('❌ Error fetching education:', educationError);
-        } else if (educationData) {
-          console.log('✅ Education data found:', educationData);
-          setEducation(educationData);
+        if (newEducationData && newEducationData.length > 0) {
+          educationData = newEducationData;
+          console.log('✅ Education data found (new system):', educationData);
         } else {
-          console.log('⚠️ No education data found for user:', id);
-        }
+          // Try old system (education with talent_profile_id)
+          const { data: oldEducationData, error: oldEducationError } = await supabase
+            .from('education')
+            .select('*')
+            .eq('talent_profile_id', talentData.id)
+            .order('graduation_year', { ascending: false });
 
-        // Fetch work experience data
-        const { data: workData, error: workError } = await supabase
+          if (oldEducationData && oldEducationData.length > 0) {
+            educationData = oldEducationData;
+            console.log('✅ Education data found (old system):', educationData);
+          } else {
+            console.log('⚠️ No education data found for user:', id);
+          }
+        }
+        
+        setEducation(educationData || []);
+
+        // Fetch work experience data - try both systems
+        let workData = null;
+        
+        // Try new system first (talent_experiences with user_id)
+        const { data: newWorkData, error: newWorkError } = await supabase
           .from('talent_experiences' as any)
           .select('*')
           .eq('user_id', id || '')
           .order('start_date', { ascending: false });
 
-        if (workError) {
-          console.warn('❌ Error fetching work experience:', workError);
-        } else if (workData) {
-          console.log('✅ Work experience data found:', workData);
-          setWorkExperience(workData);
+        if (newWorkData && newWorkData.length > 0) {
+          workData = newWorkData;
+          console.log('✅ Work experience data found (new system):', workData);
         } else {
-          console.log('⚠️ No work experience data found for user:', id);
+          // Try old system (work_experience with talent_profile_id)
+          const { data: oldWorkData, error: oldWorkError } = await supabase
+            .from('work_experience')
+            .select('*')
+            .eq('talent_profile_id', talentData.id)
+            .order('start_date', { ascending: false });
+
+          if (oldWorkData && oldWorkData.length > 0) {
+            workData = oldWorkData;
+            console.log('✅ Work experience data found (old system):', workData);
+          } else {
+            console.log('⚠️ No work experience data found for user:', id);
+          }
         }
+        
+        setWorkExperience(workData || []);
 
         // Fetch portfolios data
         const { data: portfolioData, error: portfolioError } = await supabase
@@ -411,7 +442,7 @@ const TalentProfilePage = () => {
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {format(new Date(work.start_date), 'MMM yyyy', { locale: es })}
-                              {work.current ? ' - Presente' : work.end_date ? ` - ${format(new Date(work.end_date), 'MMM yyyy', { locale: es })}` : ''}
+                              {(work.current || work.is_current) ? ' - Presente' : work.end_date ? ` - ${format(new Date(work.end_date), 'MMM yyyy', { locale: es })}` : ''}
                             </div>
                           )}
                         </div>
@@ -443,16 +474,18 @@ const TalentProfilePage = () => {
                         <div>
                           <h4 className="font-semibold text-foreground">{edu.degree}</h4>
                           <p className="text-sm text-muted-foreground">{edu.institution}</p>
-                          {edu.field && (
-                            <p className="text-xs text-muted-foreground">{edu.field}</p>
+                          {(edu.field || edu.field_of_study) && (
+                            <p className="text-xs text-muted-foreground">{edu.field || edu.field_of_study}</p>
                           )}
                         </div>
                         <div className="text-right text-sm text-muted-foreground">
-                          {edu.start_date && (
+                          {(edu.start_date || edu.graduation_year) && (
                             <div className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              {format(new Date(edu.start_date), 'MMM yyyy', { locale: es })}
-                              {edu.current ? ' - Presente' : edu.end_date ? ` - ${format(new Date(edu.end_date), 'MMM yyyy', { locale: es })}` : ''}
+                              {edu.start_date ? 
+                                `${format(new Date(edu.start_date), 'MMM yyyy', { locale: es })}${edu.current ? ' - Presente' : edu.end_date ? ` - ${format(new Date(edu.end_date), 'MMM yyyy', { locale: es })}` : ''}` :
+                                `Graduado en ${edu.graduation_year}`
+                              }
                             </div>
                           )}
                         </div>
