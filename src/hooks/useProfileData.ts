@@ -209,6 +209,7 @@ export const useProfileData = () => {
           phone: data.phone,
           city: data.city,
           country: data.country,
+          video_presentation_url: data.video_presentation_url,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id'

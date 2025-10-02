@@ -1,0 +1,191 @@
+﻿import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { ArrowLeft, Calendar, Briefcase, GraduationCap, Clock, MessageSquare, Send, Video } from 'lucide-react';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { TalentServices } from '@/components/talent/TalentServices';
+import { useMessages } from '@/hooks/useMessages';
+import VideoThumbnail from '@/components/VideoThumbnail';
+
+interface TalentProfile {
+  id: string;
+  user_id: string;
+  title: string | null;
+  specialty: string | null;
+  bio: string | null;
+  skills: string[] | null;
+  years_experience: number | null;
+  availability: string | null;
+  linkedin_url: string | null;
+  portfolio_url: string | null;
+  hourly_rate_min: number | null;
+  hourly_rate_max: number | null;
+  currency: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface UserProfile {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  position?: string | null;
+  linkedin?: string | null;
+  video_presentation_url?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+const BusinessTalentProfile = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { userRole } = useSupabaseAuth();
+  const [talentProfile, setTalentProfile] = useState<TalentProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [education, setEducation] = useState<any[]>([]);
+  const [workExperience, setWorkExperience] = useState<any[]>([]);
+  const [portfolios, setPortfolios] = useState<any[]>([]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  
+  // Use the real messaging hook
+  const { sendMessage, getOrCreateConversation } = useMessages();
+
+  useEffect(() => {
+    if (id) {
+      fetchTalentProfile();
+    }
+  }, [id]);
+
+  const fetchTalentProfile = async () => {
+    try {
+      setIsLoading(true);
+      console.log('ðŸ” Fetching talent profile for ID:', id);
+      
+      // Fetch user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', id || '')
+        .single();
+
+      if (profileError) {
+        console.error('âŒ Error fetching profile:', profileError);
+        throw profileError;
+      }
+      console.log('âœ… Profile data:', profileData);
+      setUserProfile(profileData);
+
+      // Fetch talent profile
+      console.log('ðŸ” Fetching talent profile for user_id:', id);
+      const { data: talentData, error: talentError } = await supabase
+        .from('talent_profiles')
+        .select('*')
+        .eq('user_id', id || '')
+        .single();
+
+      if (talentError && talentError.code !== 'PGRST116') {
+        // PGRST116 is "not found" error, which is okay if user doesn't have a talent profile
+        console.warn('âŒ No talent profile found for user:', talentError);
+      } else if (talentData) {
+        console.log('âœ… Talent profile data:', talentData);
+        setTalentProfile(talentData);
+
+        // Fetch education data - try both systems
+        let educationData = null;
+        
+        console.log('ðŸ” Searching for education data...');
+        console.log('  - User ID:', id);
+        console.log('  - Talent Profile ID:', talentData.id);
+        
+        // Try new system first (talent_education with user_id)
+        console.log('ðŸ” Trying talent_education table with user_id:', id);
+        const { data: newEducationData, error: _newEducationError } = await supabase
+          .from('talent_education' as any)
+          .select('*')
+          .eq('user_id', id || '')
+          .order('start_date', { ascending: false });
+
+        console.log('  - talent_education result:', newEducationData?.length || 0, 'items');
+        if (newEducationData && newEducationData.length > 0) {
+          educationData = newEducationData;
+          console.log('âœ… Education data found (new system):', educationData);
+        } else {
+          // Try old system (education with talent_profile_id)
+          console.log('ðŸ” Trying education table with talent_profile_id:', talentData.id);
+          const { data: oldEducationData, error: _oldEducationError } = await supabase
+            .from('education')
+            .select('*')
+            .eq('talent_profile_id', talentData.id)
+            .order('graduation_year', { ascending: false });
+
+          console.log('  - education result:', oldEducationData?.length || 0, 'items');
+          if (oldEducationData && oldEducationData.length > 0) {
+            educationData = oldEducationData;
+            console.log('âœ… Education data found (old system):', educationData);
+          } else {
+            console.log('âš ï¸ No education data found for user:', id);
+            
+            // Let's check what education data exists for this user in any table
+            console.log('ðŸ” Checking all education tables...');
+            
+            // Try separate queries to avoid the OR syntax issue
+            const { data: educationByProfileId } = await supabase
+              .from('education' as any)
+              .select('*')
+              .eq('talent_profile_id', talentData.id);
+            
+            const { data: educationByUserId } = await supabase
+              .from('education' as any)
+              .select('*')
+              .eq('user_id', id);
+            
+            const allEducationData = [...(educationByProfileId || []), ...(educationByUserId || [])];
+            console.log('  - Education by talent_profile_id:', educationByProfileId?.length || 0, 'items');
+            console.log('  - Education by user_id:', educationByUserId?.length || 0, 'items');
+            console.log('  - All education data found:', allEducationData.length, 'items', allEducationData);
+            
+            // Let's also check if there are any education records at all for this user
+            console.log('ðŸ” Checking if user has any education records in any table...');
+            const { data: anyEducationData } = await supabase
+              .from('education' as any)
+              .select('*')
+              .limit(5);
+            console.log('  - Sample education records (first 5):', anyEducationData?.length || 0, 'items');
+            
+            // Check if there are any talent_education records at all
+            const { data: anyTalentEducationData } = await supabase
+              .from('talent_education' as any)
+              .select('*')
+              .limit(5);
+            console.log('  - Sample talent_education records (first 5):', anyTalentEducationData?.length || 0, 'items');
+            
+            // Let's see what the actual education records look like
+            if (anyEducationData && anyEducationData.length > 0) {
+              console.log('  - First education record structure:', anyEducationData[0]);
+              console.log('  - Looking for records with talent_profile_id:', talentData.id);
+              console.log('  - Looking for records with user_id:', id);
+              
+              // Let's search for Fabian's records specifically
+              console.log('ðŸ” Searching for Fabian Segura education records...');
+              const { data: fabianEducationData } = await supabase
+                .from('education' as any)
+                .select('*')
+                .ilike('institution', '%No Code Hackers%')
+                .or('institution.ilike.%Consul Business School%,institution.ilike.%Product Hackers%');
+              console.log('  - Fabian education records found:', fabianEducationData?.length || 0, 'items', fabianEducationData);
