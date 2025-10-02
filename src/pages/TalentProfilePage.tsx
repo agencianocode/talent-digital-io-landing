@@ -9,12 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Phone, Linkedin, Globe, Calendar, Briefcase, Star, GraduationCap, Clock, MessageSquare, Send } from "lucide-react";
+import { ArrowLeft, Phone, Linkedin, Globe, Calendar, Briefcase, Star, GraduationCap, Clock, MessageSquare, Send, Video, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { TalentServices } from "@/components/talent/TalentServices";
 import { useMessages } from "@/hooks/useMessages";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 interface TalentProfile {
   id: string;
@@ -42,6 +43,7 @@ interface UserProfile {
   phone: string | null;
   position?: string | null;
   linkedin?: string | null;
+  video_presentation_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -54,6 +56,8 @@ const TalentProfilePage = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [education, setEducation] = useState<any[]>([]);
   const [workExperience, setWorkExperience] = useState<any[]>([]);
+  const [portfolios, setPortfolios] = useState<any[]>([]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactMessage, setContactMessage] = useState("");
@@ -121,6 +125,32 @@ const TalentProfilePage = () => {
 
         if (workData) {
           setWorkExperience(workData);
+        }
+
+        // Fetch portfolios data
+        const { data: portfolioData, error: portfolioError } = await supabase
+          .from('talent_portfolios' as any)
+          .select('*')
+          .eq('user_id', id || '')
+          .order('created_at', { ascending: false });
+
+        if (portfolioError) {
+          console.warn('Error fetching portfolios:', portfolioError);
+        } else if (portfolioData) {
+          setPortfolios(portfolioData);
+        }
+
+        // Fetch social links data
+        const { data: socialData, error: socialError } = await supabase
+          .from('talent_social_links' as any)
+          .select('*')
+          .eq('user_id', id || '')
+          .order('created_at', { ascending: false });
+
+        if (socialError) {
+          console.warn('Error fetching social links:', socialError);
+        } else if (socialData) {
+          setSocialLinks(socialData);
         }
       }
 
@@ -418,6 +448,151 @@ const TalentProfilePage = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Video de Presentación */}
+          {userProfile?.video_presentation_url && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Video className="h-5 w-5" />
+                  Video de Presentación
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="w-full h-48 bg-muted rounded-lg relative group overflow-hidden">
+                  <VideoThumbnail url={userProfile.video_presentation_url} />
+                  
+                  {/* Hover overlay with play button */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button 
+                      onClick={() => window.open(userProfile.video_presentation_url!, '_blank')} 
+                      size="lg" 
+                      className="gap-2 bg-white text-black hover:bg-gray-100"
+                    >
+                      <Video className="h-5 w-5" />
+                      Reproducir Video
+                    </Button>
+                  </div>
+                  
+                  {/* Platform badge */}
+                  <div className="absolute top-2 right-2">
+                    <Badge variant="secondary" className="text-xs bg-black/70 text-white">
+                      {userProfile.video_presentation_url.includes('loom.com') ? 'Loom' : 
+                       userProfile.video_presentation_url.includes('youtube.com') || userProfile.video_presentation_url.includes('youtu.be') ? 'YouTube' :
+                       userProfile.video_presentation_url.includes('vimeo.com') ? 'Vimeo' : 'Video'}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Portfolios */}
+          {portfolios.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Portfolios
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {portfolios.map((portfolio) => (
+                    <div key={portfolio.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <div className="p-1.5 bg-blue-50 rounded-md mt-0.5">
+                            <Globe className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <h4 className="font-semibold text-gray-900 text-sm leading-tight truncate">{portfolio.title}</h4>
+                              {portfolio.is_primary && (
+                                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 border-yellow-200">
+                                  <Star className="h-3 w-3 mr-1" />
+                                  Principal
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-xs">
+                                {portfolio.type}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 truncate">{portfolio.url}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Descripción */}
+                      {portfolio.description && (
+                        <div className="ml-7 mb-3">
+                          <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                            {portfolio.description}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Acción */}
+                      <div className="ml-7">
+                        <Button
+                          onClick={() => window.open(portfolio.url, '_blank')}
+                          size="sm"
+                          variant="outline"
+                          className="gap-2"
+                        >
+                          <Globe className="h-4 w-4" />
+                          Ver Portfolio
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Redes Sociales */}
+          {socialLinks.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LinkIcon className="h-5 w-5" />
+                  Redes Sociales
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {socialLinks.map((link) => (
+                    <div key={link.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="p-1.5 bg-white rounded-md shadow-sm">
+                          {link.platform === 'linkedin' && <Linkedin className="h-4 w-4 text-blue-600" />}
+                          {link.platform === 'twitter' && <Globe className="h-4 w-4 text-blue-400" />}
+                          {link.platform === 'instagram' && <Globe className="h-4 w-4 text-pink-500" />}
+                          {link.platform === 'github' && <Globe className="h-4 w-4 text-gray-800" />}
+                          {link.platform === 'youtube' && <Video className="h-4 w-4 text-red-600" />}
+                          {!['linkedin', 'twitter', 'instagram', 'github', 'youtube'].includes(link.platform) && <Globe className="h-4 w-4 text-gray-600" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-gray-900 capitalize truncate">{link.platform}</h4>
+                          <p className="text-xs text-gray-500 truncate">{link.url}</p>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        onClick={() => window.open(link.url, '_blank')}
+                        size="sm"
+                        variant="outline"
+                        className="gap-1"
+                      >
+                        Visitar
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* General Experience */}
           {talentProfile?.years_experience && (
