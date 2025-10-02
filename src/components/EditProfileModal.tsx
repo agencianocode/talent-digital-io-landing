@@ -152,6 +152,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
     try {
       const success = await updateProfile(formData as ProfileEditData);
       if (success) {
+        // Disparar evento para actualizar el perfil en la página principal
+        window.dispatchEvent(new CustomEvent('profileUpdated', { 
+          detail: { 
+            type: 'video_presentation_url',
+            value: formData.video_presentation_url 
+          } 
+        }));
         onClose();
       }
     } catch (error) {
@@ -420,18 +427,46 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
 
             <div>
               <Label htmlFor="video_presentation_url">Video de Presentación</Label>
-              <Input
-                id="video_presentation_url"
-                value={formData.video_presentation_url || ''}
-                onChange={(e) => handleInputChange('video_presentation_url', e.target.value)}
-                placeholder="https://loom.com/share/..."
-                className={errors.video_presentation_url ? 'border-red-500' : ''}
-              />
+              <div className="space-y-3">
+                <Input
+                  id="video_presentation_url"
+                  value={formData.video_presentation_url || ''}
+                  onChange={(e) => handleInputChange('video_presentation_url', e.target.value)}
+                  placeholder="https://loom.com/share/..."
+                  className={errors.video_presentation_url ? 'border-red-500' : ''}
+                />
+                
+                <div className="text-center text-sm text-gray-500">
+                  <span className="relative">
+                    O
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                  </span>
+                </div>
+                
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Abrir modal de subida de video o redirigir a wizard
+                      window.open('/talent-onboarding?step=multimedia', '_blank');
+                    }}
+                    className="gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Subir Video desde Archivo
+                  </Button>
+                </div>
+              </div>
+              
               {errors.video_presentation_url && (
                 <p className="text-sm text-red-500 mt-1">{errors.video_presentation_url}</p>
               )}
               <p className="text-xs text-gray-500 mt-1">
-                Enlaces de Loom, YouTube, Vimeo, etc.
+                Enlaces de Loom, YouTube, Vimeo, o sube un archivo de video
               </p>
             </div>
           </div>

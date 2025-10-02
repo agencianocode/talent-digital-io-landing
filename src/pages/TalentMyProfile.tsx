@@ -61,12 +61,14 @@ const TalentMyProfile = () => {
     window.addEventListener('educationUpdated', handleUpdate);
     window.addEventListener('portfolioUpdated', handleUpdate);
     window.addEventListener('socialLinksUpdated', handleUpdate);
+    window.addEventListener('profileUpdated', handleUpdate);
 
     return () => {
       window.removeEventListener('experienceUpdated', handleUpdate);
       window.removeEventListener('educationUpdated', handleUpdate);
       window.removeEventListener('portfolioUpdated', handleUpdate);
       window.removeEventListener('socialLinksUpdated', handleUpdate);
+      window.removeEventListener('profileUpdated', handleUpdate);
     };
   }, []);
 
@@ -271,11 +273,29 @@ const TalentMyProfile = () => {
                 </div>
                 
                 {videoUrl ? (
-                  <div className="w-full h-48 bg-muted rounded-lg flex items-center justify-center">
-                    <Button onClick={() => window.open(videoUrl, '_blank')} size="lg" className="gap-2">
-                      <Video className="h-5 w-5" />
-                      Ver Video
-                    </Button>
+                  <div className="w-full h-48 bg-muted rounded-lg relative group overflow-hidden">
+                    {/* Video thumbnail preview */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="p-3 bg-white/90 rounded-full mb-3 mx-auto w-fit">
+                          <Video className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-700 mb-2">Video de Presentación</p>
+                        <p className="text-xs text-gray-500 mb-3">
+                          {videoUrl.includes('loom.com') ? 'Video en Loom' : 
+                           videoUrl.includes('youtube.com') ? 'Video en YouTube' :
+                           videoUrl.includes('vimeo.com') ? 'Video en Vimeo' : 'Video personalizado'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Hover overlay with play button */}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button onClick={() => window.open(videoUrl, '_blank')} size="lg" className="gap-2 bg-white text-black hover:bg-gray-100">
+                        <Video className="h-5 w-5" />
+                        Reproducir Video
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="w-full h-48 border-2 border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center gap-3 hover:border-primary/30 hover:bg-muted/50 transition-all">
