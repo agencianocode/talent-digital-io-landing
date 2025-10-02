@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Phone, Linkedin, Globe, Calendar, Briefcase, Star, GraduationCap, Clock, MessageSquare, Send, Video, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, Calendar, Briefcase, GraduationCap, Clock, MessageSquare, Send, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -315,119 +315,185 @@ const BusinessTalentProfile = () => {
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
             Perfil de Talento
           </h1>
-          {isBusinessRole(userRole) && (
-            <Button onClick={handleContact} className="w-full sm:w-auto">
-              Contactar
-            </Button>
-          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-        {/* Main Profile Card */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Basic Info */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        {/* Left Column - Profile Info */}
+        <div className="space-y-6">
+          {/* Profile Header Card - Main Profile Info */}
           <Card>
             <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
-                    <AvatarImage src={userProfile.avatar_url || undefined} />
-                    <AvatarFallback className="text-lg">
-                      {userProfile.full_name?.charAt(0) || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                <div>
-                  <CardTitle className="text-xl sm:text-2xl">{userProfile.full_name}</CardTitle>
-                  <p className="text-muted-foreground">
-                    {userProfile.position || 'Talento Digital'}
-                  </p>
-                  {talentProfile?.specialty && (
-                    <Badge variant="secondary" className="mt-2">
-                      {talentProfile.specialty}
-                    </Badge>
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
+                  <AvatarImage src={userProfile.avatar_url || undefined} />
+                  <AvatarFallback className="text-lg">
+                    {userProfile.full_name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                    <div>
+                      <CardTitle className="text-xl sm:text-2xl">{userProfile.full_name}</CardTitle>
+                      <p className="text-muted-foreground font-medium">
+                        {userProfile.position || 'Talento Digital'}
+                      </p>
+                      {talentProfile?.years_experience && (
+                        <p className="text-sm text-muted-foreground">
+                          {talentProfile.years_experience >= 4 ? 'Senior' : 'Junior'} (+{talentProfile.years_experience} años)
+                        </p>
+                      )}
+                    </div>
+                    {isBusinessRole(userRole) && (
+                      <Button onClick={handleContact} className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto">
+                        Enviar Mensaje
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Location */}
+                  <div className="text-sm text-muted-foreground mb-3">
+                    Ubicación / País
+                  </div>
+                  
+                  {/* Skills/Tags */}
+                  {talentProfile?.skills && talentProfile.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {talentProfile.skills.slice(0, 3).map((skill, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
+              {/* Bio/Summary */}
               {talentProfile?.bio && (
                 <div className="mb-4">
-                  <h3 className="font-semibold mb-2">Biografía</h3>
-                  <p className="text-muted-foreground">{talentProfile.bio}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {talentProfile.bio.length > 150 
+                      ? `${talentProfile.bio.substring(0, 150)}...` 
+                      : talentProfile.bio
+                    }
+                  </p>
                 </div>
               )}
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                {userProfile.phone && (
-                  <div className="flex items-center space-x-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{userProfile.phone}</span>
-                  </div>
-                )}
-                {talentProfile?.linkedin_url && (
-                  <div className="flex items-center space-x-2">
-                    <Linkedin className="h-4 w-4 text-muted-foreground" />
-                    <a 
-                      href={talentProfile.linkedin_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      LinkedIn
-                    </a>
-                  </div>
-                )}
-                {talentProfile?.portfolio_url && (
-                  <div className="flex items-center space-x-2">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <a 
-                      href={talentProfile.portfolio_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      Portfolio
-                    </a>
-                  </div>
-                )}
-                {talentProfile?.years_experience && (
-                  <div className="flex items-center space-x-2">
-                    <Briefcase className="h-4 w-4 text-muted-foreground" />
-                    <span>{talentProfile.years_experience} años de experiencia</span>
-                  </div>
-                )}
+              {/* Social Media Links - Like in the image */}
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-red-600 rounded flex items-center justify-center cursor-pointer hover:bg-red-700">
+                  <span className="text-white text-xs">▶</span>
+                </div>
+                <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center cursor-pointer hover:bg-blue-700">
+                  <span className="text-white text-xs font-bold">f</span>
+                </div>
+                <div className="w-7 h-7 bg-green-500 rounded flex items-center justify-center cursor-pointer hover:bg-green-600">
+                  <span className="text-white text-xs font-bold">W</span>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Skills */}
-          {talentProfile?.skills && talentProfile.skills.length > 0 && (
+          {/* Portfolio Card - Like in the image */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Portfolio</CardTitle>
+              <p className="text-sm text-muted-foreground">Ve el portfolio de trabajos</p>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => {
+                  if (talentProfile?.portfolio_url) {
+                    window.open(talentProfile.portfolio_url, '_blank');
+                  } else if (portfolios.length > 0) {
+                    window.open(portfolios[0].url, '_blank');
+                  } else {
+                    toast.info('No hay portfolio disponible');
+                  }
+                }}
+              >
+                Ver Portfolio →
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Share Profile Card - Like in the image */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Compartir este perfil</CardTitle>
+              <p className="text-sm text-muted-foreground">Copia el link para compartir el perfil público</p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={window.location.href}
+                  readOnly
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success('Link copiado al portapapeles');
+                  }}
+                >
+                  Link
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - Professional Sections */}
+        <div className="space-y-6">
+          {/* Video de Presentación */}
+          {userProfile?.video_presentation_url && (
             <Card>
               <CardHeader>
-                <CardTitle>Habilidades</CardTitle>
+                <CardTitle>Video de Presentación</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {talentProfile.skills.map((skill, index) => (
-                    <Badge key={index} variant="outline">
-                      {skill}
+                <div className="w-full h-48 bg-gray-100 rounded-lg relative group overflow-hidden">
+                  <VideoThumbnail url={userProfile.video_presentation_url} />
+                  
+                  {/* Hover overlay with play button */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button 
+                      onClick={() => window.open(userProfile.video_presentation_url!, '_blank')} 
+                      size="lg" 
+                      className="gap-2 bg-white text-black hover:bg-gray-100"
+                    >
+                      <Video className="h-5 w-5" />
+                      Reproducir Video
+                    </Button>
+                  </div>
+                  
+                  {/* Platform badge */}
+                  <div className="absolute top-2 right-2">
+                    <Badge variant="secondary" className="text-xs bg-black/70 text-white">
+                      {userProfile.video_presentation_url.includes('loom.com') ? 'Loom' : 
+                       userProfile.video_presentation_url.includes('youtube.com') || userProfile.video_presentation_url.includes('youtu.be') ? 'YouTube' :
+                       userProfile.video_presentation_url.includes('vimeo.com') ? 'Vimeo' : 'Video'}
                     </Badge>
-                  ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
           )}
 
           {/* Work Experience */}
-          {workExperience.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5" />
-                  Experiencia Laboral
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle>Experiencia</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {workExperience.length > 0 ? (
                 <div className="space-y-4">
                   {workExperience.map((work) => (
                     <div key={work.id} className="border-l-2 border-primary pl-4">
@@ -452,17 +518,19 @@ const BusinessTalentProfile = () => {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <div className="text-center py-8">
+                  <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No se ha agregado información de experiencia</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Education */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5" />
-                Educación
-              </CardTitle>
+              <CardTitle>Educación</CardTitle>
             </CardHeader>
             <CardContent>
               {education.length > 0 ? (
@@ -491,8 +559,8 @@ const BusinessTalentProfile = () => {
                       </div>
                       {edu.description && (
                         <p className="text-sm text-muted-foreground mt-2">{edu.description}</p>
-                    )}
-                  </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -504,210 +572,25 @@ const BusinessTalentProfile = () => {
             </CardContent>
           </Card>
 
-          {/* Video de Presentación */}
-          {userProfile?.video_presentation_url && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Video className="h-5 w-5" />
-                  Video de Presentación
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full h-48 bg-muted rounded-lg relative group overflow-hidden">
-                  <VideoThumbnail url={userProfile.video_presentation_url} />
-                  
-                  {/* Hover overlay with play button */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button 
-                      onClick={() => window.open(userProfile.video_presentation_url!, '_blank')} 
-                      size="lg" 
-                      className="gap-2 bg-white text-black hover:bg-gray-100"
-                    >
-                      <Video className="h-5 w-5" />
-                      Reproducir Video
-                    </Button>
-                  </div>
-                  
-                  {/* Platform badge */}
-                  <div className="absolute top-2 right-2">
-                    <Badge variant="secondary" className="text-xs bg-black/70 text-white">
-                      {userProfile.video_presentation_url.includes('loom.com') ? 'Loom' : 
-                       userProfile.video_presentation_url.includes('youtube.com') || userProfile.video_presentation_url.includes('youtu.be') ? 'YouTube' :
-                       userProfile.video_presentation_url.includes('vimeo.com') ? 'Vimeo' : 'Video'}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Portfolios */}
-          {portfolios.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
-                  Portfolios
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {portfolios.map((portfolio) => (
-                    <div key={portfolio.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div className="p-1.5 bg-blue-50 rounded-md mt-0.5">
-                            <Globe className="h-4 w-4 text-blue-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <h4 className="font-semibold text-gray-900 text-sm leading-tight truncate">{portfolio.title}</h4>
-                              {portfolio.is_primary && (
-                                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 border-yellow-200">
-                                  <Star className="h-3 w-3 mr-1" />
-                                  Principal
-                                </Badge>
-                              )}
-                              <Badge variant="outline" className="text-xs">
-                                {portfolio.type}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-gray-500 truncate">{portfolio.url}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Descripción */}
-                      {portfolio.description && (
-                        <div className="ml-7 mb-3">
-                          <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                            {portfolio.description}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Acción */}
-                      <div className="ml-7">
-                        <Button
-                          onClick={() => window.open(portfolio.url, '_blank')}
-                          size="sm"
-                          variant="outline"
-                          className="gap-2"
-                        >
-                          <Globe className="h-4 w-4" />
-                          Ver Portfolio
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Redes Sociales */}
-          {socialLinks.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LinkIcon className="h-5 w-5" />
-                  Redes Sociales
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {socialLinks.map((link) => (
-                    <div key={link.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="p-1.5 bg-white rounded-md shadow-sm">
-                          {link.platform === 'linkedin' && <Linkedin className="h-4 w-4 text-blue-600" />}
-                          {link.platform === 'twitter' && <Globe className="h-4 w-4 text-blue-400" />}
-                          {link.platform === 'instagram' && <Globe className="h-4 w-4 text-pink-500" />}
-                          {link.platform === 'github' && <Globe className="h-4 w-4 text-gray-800" />}
-                          {link.platform === 'youtube' && <Video className="h-4 w-4 text-red-600" />}
-                          {!['linkedin', 'twitter', 'instagram', 'github', 'youtube'].includes(link.platform) && <Globe className="h-4 w-4 text-gray-600" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 capitalize truncate">{link.platform}</h4>
-                          <p className="text-xs text-gray-500 truncate">{link.url}</p>
-                        </div>
-                      </div>
-                      
-                      <Button
-                        onClick={() => window.open(link.url, '_blank')}
-                        size="sm"
-                        variant="outline"
-                        className="gap-1"
-                      >
-                        Visitar
-                      </Button>
-                    </div>
-                  ))}
-                    </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* General Experience */}
-          {talentProfile?.years_experience && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Experiencia General</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-2">
-                  <Star className="h-5 w-5 text-yellow-500" />
-                  <span className="font-medium">{talentProfile.years_experience} años de experiencia</span>
-                    </div>
-                {talentProfile.availability && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    Disponibilidad: {talentProfile.availability}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Services Section */}
-          {isBusinessRole(userRole) && (
-            <TalentServices 
-              userId={id || ''}
-              talentName={userProfile?.full_name || 'Talento'}
-              talentAvatar={userProfile?.avatar_url || undefined}
-              onContact={handleContact}
-            />
-          )}
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Rate Card */}
-          {talentProfile?.hourly_rate_min && talentProfile?.hourly_rate_max && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Tarifa por Hora</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">
-                  ${talentProfile.hourly_rate_min} - ${talentProfile.hourly_rate_max}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {talentProfile.currency || 'USD'}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Member Since */}
+          {/* Servicios Publicados - Like in the image */}
           <Card>
             <CardHeader>
-              <CardTitle>Miembro desde</CardTitle>
+              <CardTitle>Servicios Publicados</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground">
-                {format(new Date(userProfile.created_at), 'MMMM yyyy', { locale: es })}
-              </div>
+              {isBusinessRole(userRole) ? (
+                <TalentServices 
+                  userId={id || ''}
+                  talentName={userProfile?.full_name || 'Talento'}
+                  talentAvatar={userProfile?.avatar_url || undefined}
+                  onContact={handleContact}
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Servicios publicados próximamente</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
