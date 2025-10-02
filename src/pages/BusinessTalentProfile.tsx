@@ -109,29 +109,45 @@ const BusinessTalentProfile = () => {
         // Fetch education data - try both systems
         let educationData = null;
         
+        console.log('🔍 Searching for education data...');
+        console.log('  - User ID:', id);
+        console.log('  - Talent Profile ID:', talentData.id);
+        
         // Try new system first (talent_education with user_id)
+        console.log('🔍 Trying talent_education table with user_id:', id);
         const { data: newEducationData, error: _newEducationError } = await supabase
           .from('talent_education' as any)
           .select('*')
           .eq('user_id', id || '')
           .order('start_date', { ascending: false });
 
+        console.log('  - talent_education result:', newEducationData?.length || 0, 'items');
         if (newEducationData && newEducationData.length > 0) {
           educationData = newEducationData;
           console.log('✅ Education data found (new system):', educationData);
         } else {
           // Try old system (education with talent_profile_id)
+          console.log('🔍 Trying education table with talent_profile_id:', talentData.id);
           const { data: oldEducationData, error: _oldEducationError } = await supabase
             .from('education')
             .select('*')
             .eq('talent_profile_id', talentData.id)
             .order('graduation_year', { ascending: false });
 
+          console.log('  - education result:', oldEducationData?.length || 0, 'items');
           if (oldEducationData && oldEducationData.length > 0) {
             educationData = oldEducationData;
             console.log('✅ Education data found (old system):', educationData);
           } else {
             console.log('⚠️ No education data found for user:', id);
+            
+            // Let's check what education data exists for this user in any table
+            console.log('🔍 Checking all education tables...');
+            const { data: allEducationData } = await supabase
+              .from('education' as any)
+              .select('*')
+              .or(`talent_profile_id.eq.${talentData.id},user_id.eq.${id}`);
+            console.log('  - All education data found:', allEducationData?.length || 0, 'items', allEducationData);
           }
         }
         
@@ -140,29 +156,45 @@ const BusinessTalentProfile = () => {
         // Fetch work experience data - try both systems
         let workData = null;
         
+        console.log('🔍 Searching for work experience data...');
+        console.log('  - User ID:', id);
+        console.log('  - Talent Profile ID:', talentData.id);
+        
         // Try new system first (talent_experiences with user_id)
+        console.log('🔍 Trying talent_experiences table with user_id:', id);
         const { data: newWorkData, error: _newWorkError } = await supabase
           .from('talent_experiences' as any)
           .select('*')
           .eq('user_id', id || '')
           .order('start_date', { ascending: false });
 
+        console.log('  - talent_experiences result:', newWorkData?.length || 0, 'items');
         if (newWorkData && newWorkData.length > 0) {
           workData = newWorkData;
           console.log('✅ Work experience data found (new system):', workData);
         } else {
           // Try old system (work_experience with talent_profile_id)
+          console.log('🔍 Trying work_experience table with talent_profile_id:', talentData.id);
           const { data: oldWorkData, error: _oldWorkError } = await supabase
             .from('work_experience')
             .select('*')
             .eq('talent_profile_id', talentData.id)
             .order('start_date', { ascending: false });
 
+          console.log('  - work_experience result:', oldWorkData?.length || 0, 'items');
           if (oldWorkData && oldWorkData.length > 0) {
             workData = oldWorkData;
             console.log('✅ Work experience data found (old system):', workData);
           } else {
             console.log('⚠️ No work experience data found for user:', id);
+            
+            // Let's check what work experience data exists for this user in any table
+            console.log('🔍 Checking all work experience tables...');
+            const { data: allWorkData } = await supabase
+              .from('work_experience' as any)
+              .select('*')
+              .or(`talent_profile_id.eq.${talentData.id},user_id.eq.${id}`);
+            console.log('  - All work experience data found:', allWorkData?.length || 0, 'items', allWorkData);
           }
         }
         
