@@ -15,11 +15,15 @@ import {
   Building
 } from 'lucide-react';
 import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
+import { useProfileData } from '@/hooks/useProfileData';
 
 const TalentDashboard = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { opportunities, isLoading: opportunitiesLoading } = useSupabaseOpportunities();
+  const { getProfileCompleteness } = useProfileData();
+  
+  const profileCompleteness = getProfileCompleteness();
 
   const handleSearch = () => {
     navigate('/talent-dashboard/explore');
@@ -39,14 +43,14 @@ const TalentDashboard = () => {
         <Card className="bg-white">
           <CardHeader>
             <CardTitle className="text-xl font-bold text-gray-900 font-['Inter']">
-              Tu perfil está al 60%
+              Tu perfil está al {profileCompleteness}%
             </CardTitle>
             <p className="text-gray-600 font-['Inter']">
               Complétalo para atraer más talento y generar confianza.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Progress value={60} className="h-2" />
+            <Progress value={profileCompleteness} className="h-2" />
             
             <div className="space-y-3">
               {/* Onboarding Completado */}

@@ -758,9 +758,9 @@ if (allEducationRecords && allEducationRecords.length > 0) {
                       <div className="absolute inset-0 flex items-center justify-center group-hover:bg-black/20 transition-all duration-200">
                         <div className="h-12 w-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center group-hover:bg-opacity-100 group-hover:scale-110 transition-all duration-200">
                           <Play className="h-6 w-6 text-gray-800 ml-1" />
-                        </div>
-                      </div>
-                    </div>
+              </div>
+              </div>
+            </div>
                   ) : (
                     /* Embedded Video Player */
                     <div className="bg-black rounded-lg aspect-video overflow-hidden">

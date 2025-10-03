@@ -94,6 +94,21 @@ const TalentMyProfile = () => {
     await copyToClipboard(publicUrl);
   };
 
+  // Criterios mínimos para publicar/compartir
+  const meetsMinimums = (
+    (bio?.trim()?.length || 0) >= 50 &&
+    experiences.length > 0 &&
+    ((education.length > 0) || !!videoUrl || portfolios.length > 0) &&
+    socialLinks.length > 0
+  );
+
+  const minChecklist = [
+    { label: 'Bio mínima (50+ caracteres)', done: (bio?.trim()?.length || 0) >= 50 },
+    { label: 'Al menos 1 experiencia', done: experiences.length > 0 },
+    { label: 'Educación o Video o Portfolio', done: (education.length > 0) || !!videoUrl || portfolios.length > 0 },
+    { label: 'Redes sociales agregadas', done: socialLinks.length > 0 },
+  ];
+
   const nextSteps = [
     { label: 'Agregar experiencia', done: experiences.length > 0, icon: Briefcase },
     { label: 'Agregar educación', done: education.length > 0, icon: GraduationCap },
@@ -122,6 +137,21 @@ const TalentMyProfile = () => {
             Editar Perfil
           </Button>
         </div>
+
+        {/* Banner de requisitos mínimos */}
+        {!meetsMinimums && (
+          <div className="mb-6 p-4 border border-yellow-200 bg-yellow-50 rounded-md">
+            <p className="font-medium text-yellow-900 mb-2">Completa estos pasos para publicar/compartir tu perfil:</p>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {minChecklist.map((item, idx) => (
+                <li key={idx} className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className={`h-4 w-4 ${item.done ? 'text-green-600' : 'text-yellow-500'}`} />
+                  <span className={item.done ? 'text-gray-700 line-through' : 'text-gray-800'}>{item.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
           
@@ -410,7 +440,7 @@ const TalentMyProfile = () => {
                     </Button>
                   </div>
                   
-                  <Button onClick={() => setIsShareModalOpen(true)} className="w-full gap-2">
+                  <Button onClick={() => setIsShareModalOpen(true)} className="w-full gap-2" disabled={!meetsMinimums} title={!meetsMinimums ? 'Completa los requisitos mínimos para compartir tu perfil' : undefined}>
                     <Share2 className="h-4 w-4" />
                     Compartir
                   </Button>

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,8 @@ export const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
 }) => {
   const { getProfileSuggestions } = useProfessionalData();
   const [suggestions, setSuggestions] = useState<ProfileSuggestions | null>(null);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  // loadingSuggestions retained in logic before, but no longer needed for UI feedback
+  // const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   const form = useForm<ProfessionalInfoFormData>({
     resolver: zodResolver(professionalInfoSchema),
@@ -62,14 +63,14 @@ export const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
   useEffect(() => {
     const loadSuggestions = async () => {
       if (selectedCategory) {
-        setLoadingSuggestions(true);
+        // setLoadingSuggestions(true);
         try {
           const categoryData = await getProfileSuggestions(selectedCategory);
           setSuggestions(categoryData);
         } catch (error) {
           console.error('Error loading suggestions:', error);
         } finally {
-          setLoadingSuggestions(false);
+          // setLoadingSuggestions(false);
         }
       }
     };
@@ -89,6 +90,24 @@ export const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
   const applySuggestedBio = () => {
     if (suggestions?.suggested_bio_template) {
       form.setValue('bio', suggestions.suggested_bio_template);
+    }
+  };
+
+  // Apply full template (title + bio + suggested skills into wizard data)
+  const applyFullTemplate = async () => {
+    try {
+      if (!suggestions) return;
+      // Set form fields for title/bio
+      if (suggestions.suggested_title_examples?.length) {
+        form.setValue('title', suggestions.suggested_title_examples[0] || '');
+      }
+      if (suggestions.suggested_bio_template) {
+        form.setValue('bio', suggestions.suggested_bio_template);
+      }
+      // Persist suggested skills into wizard data (even si este paso no tiene UI de skills)
+      await updateData({ skills: suggestions.suggested_skills || [] });
+    } catch (e) {
+      console.error('Error applying full template:', e);
     }
   };
 
@@ -302,12 +321,65 @@ export const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
                       >
                         Usar como base
                       </Button>
+                      {/* Botón para aplicar plantilla completa */}
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="ml-2"
+                        onClick={applyFullTemplate}
+                      >
+                        Aplicar plantilla completa
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
               </FormItem>
             )}
           />
+
+          {/* Suggested skills (informativo y aplicable al wizard) */}
+          {suggestions?.suggested_skills && suggestions.suggested_skills.length > 0 && (
+            <div className="mt-2">
+              <p className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                <Lightbulb className="h-4 w-4" />
+                Skills sugeridas para tu categoría:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {suggestions.suggested_skills.map((skill, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="secondary"
+                    className="cursor-pointer"
+                    onClick={() => updateData({ skills: [...(data.skills || []), skill].filter((v, i, a) => a.indexOf(v) === i) })}
+                  >
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Toca para añadirlas a tu perfil (se guardan como parte del asistente).</p>
+            </div>
+          )}
+
+          {/* Skills seleccionadas (feedback inmediato) */}
+          {Array.isArray(data.skills) && data.skills.length > 0 && (
+            <div className="mt-3">
+              <p className="text-sm font-medium text-muted-foreground mb-2">Tus skills seleccionadas:</p>
+              <div className="flex flex-wrap gap-2">
+                {data.skills.map((skill, idx) => (
+                  <Badge
+                    key={`${skill}-${idx}`}
+                    variant="outline"
+                    className="cursor-pointer"
+                    onClick={() => updateData({ skills: (data.skills || []).filter((s) => s !== skill) })}
+                    title="Quitar skill"
+                  >
+                    {skill} ✕
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Haz clic en una skill para quitarla.</p>
+            </div>
+          )}
 
           {!hideNavigationButtons && (
             <div className="flex justify-between">
