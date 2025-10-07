@@ -62,85 +62,88 @@ const TalentTopNavigation = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="bg-card border-b sticky top-0 z-50 shadow-sm">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo */}
           <div className="flex items-center">
             <button
               onClick={() => navigate('/talent-dashboard')}
-              className="text-xl font-bold text-gray-900 font-['Inter'] hover:text-purple-600 transition-colors cursor-pointer"
+              className="text-base sm:text-xl font-bold text-foreground hover:text-primary transition-colors cursor-pointer"
             >
-              TalentoDigital.io
+              <span className="hidden sm:inline">TalentoDigital.io</span>
+              <span className="sm:hidden">TD.io</span>
             </button>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden lg:flex items-center space-x-2 xl:space-x-4">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Button
                   key={item.id}
                   variant={item.isActive ? "default" : "ghost"}
-                  className={`flex items-center gap-2 font-['Inter'] ${
+                  size="sm"
+                  className={`flex items-center gap-2 ${
                     item.isActive 
-                      ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                   onClick={() => navigate(item.path)}
                 >
                   <Icon className="w-4 h-4" />
-                  {item.label}
+                  <span className="hidden xl:inline">{item.label}</span>
                 </Button>
               );
             })}
           </nav>
 
           {/* Right side - Notifications and Profile */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Messages */}
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="p-2"
                 onClick={() => navigate('/talent-dashboard/messages')}
               >
-                <MessageCircle className="w-5 h-5 text-gray-600" />
+                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                 {unreadMessagesCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs h-5 w-5 flex items-center justify-center">
-                    {unreadMessagesCount}
+                  <Badge className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0">
+                    {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
                   </Badge>
                 )}
               </Button>
             </div>
 
             {/* Notifications */}
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="p-2"
                 onClick={() => navigate('/talent-dashboard/notifications')}
               >
-                <Bell className="w-5 h-5 text-gray-600" />
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                 {unreadNotificationsCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs h-5 w-5 flex items-center justify-center">
-                    {unreadNotificationsCount}
+                  <Badge className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0">
+                    {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
                   </Badge>
                 )}
               </Button>
             </div>
 
             {/* Profile Dropdown */}
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <Button
                 variant="ghost"
-                className="flex items-center gap-2 p-2"
+                size="sm"
+                className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
               >
-                  <Avatar className="w-8 h-8">
+                  <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
                     <AvatarImage 
                       src={
                         userProfile?.avatar_url && !userProfile.avatar_url.startsWith('blob:')
@@ -148,22 +151,22 @@ const TalentTopNavigation = () => {
                           : undefined
                       } 
                     />
-                    <AvatarFallback className="text-sm">
+                    <AvatarFallback className="text-xs sm:text-sm">
                       {userProfile?.full_name?.charAt(0) || profile?.full_name?.charAt(0) || 'T'}
                     </AvatarFallback>
                   </Avatar>
-                <ChevronDown className="w-4 h-4 text-gray-600" />
+                <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
               </Button>
 
               {/* Profile Menu Dropdown */}
               {isProfileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg border z-50">
                   <button
                     onClick={() => {
                       navigate('/talent-dashboard/profile');
                       setIsProfileMenuOpen(false);
                     }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-['Inter']"
+                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted"
                   >
                     Mi Perfil
                   </button>
@@ -172,17 +175,17 @@ const TalentTopNavigation = () => {
                       navigate('/talent-dashboard/settings');
                       setIsProfileMenuOpen(false);
                     }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-['Inter']"
+                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted"
                   >
                     Configuración
                   </button>
-                  <hr className="my-1" />
+                  <hr className="my-1 border-border" />
                   <button
                     onClick={() => {
                       handleLogout();
                       setIsProfileMenuOpen(false);
                     }}
-                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-['Inter']"
+                    className="block w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10"
                   >
                     Cerrar Sesión
                   </button>
@@ -194,13 +197,13 @@ const TalentTopNavigation = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden p-2"
+              className="lg:hidden p-1.5 sm:p-2"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? (
-                <X className="w-5 h-5 text-gray-600" />
+                <X className="w-5 h-5 text-muted-foreground" />
               ) : (
-                <Menu className="w-5 h-5 text-gray-600" />
+                <Menu className="w-5 h-5 text-muted-foreground" />
               )}
             </Button>
           </div>
@@ -208,18 +211,18 @@ const TalentTopNavigation = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 py-4">
-            <nav className="flex flex-col space-y-2">
+          <div className="lg:hidden border-t py-3">
+            <nav className="flex flex-col space-y-1">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Button
                     key={item.id}
                     variant={item.isActive ? "default" : "ghost"}
-                    className={`flex items-center gap-2 justify-start font-['Inter'] ${
+                    className={`flex items-center gap-2 justify-start mobile-nav-item ${
                       item.isActive 
-                        ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                     onClick={() => {
                       navigate(item.path);
@@ -231,6 +234,68 @@ const TalentTopNavigation = () => {
                   </Button>
                 );
               })}
+              
+              {/* Mobile-only items */}
+              <div className="pt-2 mt-2 border-t space-y-1">
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 justify-start mobile-nav-item text-muted-foreground relative"
+                  onClick={() => {
+                    navigate('/talent-dashboard/messages');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Mensajes
+                  {unreadMessagesCount > 0 && (
+                    <Badge className="ml-auto bg-primary text-primary-foreground text-xs">
+                      {unreadMessagesCount}
+                    </Badge>
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 justify-start mobile-nav-item text-muted-foreground"
+                  onClick={() => {
+                    navigate('/talent-dashboard/notifications');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <Bell className="w-4 h-4" />
+                  Notificaciones
+                  {unreadNotificationsCount > 0 && (
+                    <Badge className="ml-auto bg-primary text-primary-foreground text-xs">
+                      {unreadNotificationsCount}
+                    </Badge>
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 justify-start mobile-nav-item text-muted-foreground"
+                  onClick={() => {
+                    navigate('/talent-dashboard/profile');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <Avatar className="w-4 h-4">
+                    <AvatarImage src={userProfile?.avatar_url || undefined} />
+                    <AvatarFallback className="text-xs">
+                      {userProfile?.full_name?.charAt(0) || 'T'}
+                    </AvatarFallback>
+                  </Avatar>
+                  Mi Perfil
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 justify-start mobile-nav-item text-destructive"
+                  onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Cerrar Sesión
+                </Button>
+              </div>
             </nav>
           </div>
         )}
