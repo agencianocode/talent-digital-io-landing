@@ -193,25 +193,25 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
         ) : (
           filteredOpportunities.map((opportunity) => (
             <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-4">
-                  {/* Company Logo Placeholder */}
-                  <div className="w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
+              <CardContent className="p-3 sm:p-5">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                  {/* Company Logo Placeholder - Hidden on mobile */}
+                  <div className="hidden sm:flex w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0 items-center justify-center">
                     <div className="w-8 h-8 bg-gray-300 rounded"></div>
                   </div>
 
                   {/* Main Content */}
                   <div className="flex-1 min-w-0">
                     {/* Header with Title and Status */}
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer"
+                        <div className="flex items-start flex-wrap gap-2 mb-1">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer flex-1"
                               onClick={() => navigate(`/business-dashboard/opportunities/${opportunity.id}`)}>
                             {opportunity.title}
                           </h3>
                           {/* Status Badge */}
-                          <Badge className={`text-xs font-medium px-2 py-1 rounded-full ${
+                          <Badge className={`text-xs font-medium px-2 py-0.5 sm:py-1 rounded-full flex-shrink-0 ${
                             opportunity.status === 'active' 
                               ? 'bg-green-100 text-green-800 border-green-200' 
                               : 'bg-gray-100 text-gray-800 border-gray-200'
@@ -219,7 +219,7 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                             {getStatusText(opportunity.status || 'draft')}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs sm:text-sm text-gray-600">
                           {(opportunity as any).company_name || 'Mi Empresa'} ({formatDistanceToNow(new Date(opportunity.created_at), { 
                             addSuffix: true, 
                             locale: es 
@@ -229,33 +229,106 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                     </div>
 
                     {/* Statistics Row */}
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                       <div className="flex items-center gap-1">
-                        <EyeIcon className="h-4 w-4" />
+                        <EyeIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span>{Math.floor(Math.random() * 200) + 50} vistas</span>
                       </div>
                       
                       <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
+                        <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span>{applicationCounts[opportunity.id] || 0} Postulantes</span>
                       </div>
                       
                       {(applicationCounts[opportunity.id] || 0) > 0 && (
                         <div className="flex items-center gap-1 text-orange-600">
-                          <AlertTriangle className="h-4 w-4" />
-                          <span>{Math.floor((applicationCounts[opportunity.id] || 0) / 3) + 1} Postulaciones sin revisar</span>
+                          <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">{Math.floor((applicationCounts[opportunity.id] || 0) / 3) + 1} Postulaciones sin revisar</span>
+                          <span className="sm:hidden">{Math.floor((applicationCounts[opportunity.id] || 0) / 3) + 1} sin revisar</span>
                         </div>
                       )}
                       
                       <div className="flex items-center gap-1 text-blue-600">
-                        <Mail className="h-4 w-4" />
-                        <span>{Math.floor(Math.random() * 3) + 1} Mensaje sin leer</span>
+                        <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">{Math.floor(Math.random() * 3) + 1} Mensaje sin leer</span>
+                        <span className="sm:hidden">{Math.floor(Math.random() * 3) + 1} sin leer</span>
                       </div>
+                    </div>
+
+                    {/* Action Buttons - Mobile */}
+                    <div className="flex sm:hidden items-center gap-2 mt-3">
+                      <Button
+                        onClick={() => onApplicationsView?.(opportunity.id)}
+                        className="flex-1 bg-black hover:bg-gray-800 text-white rounded-lg text-xs h-8"
+                      >
+                        Ver Postulantes
+                      </Button>
+                      
+                      {/* Actions Menu */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem 
+                            onClick={() => navigate(`/business-dashboard/opportunities/${opportunity.id}`)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ver Detalles Completos
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => onApplicationsView?.(opportunity.id)}
+                          >
+                            <Users className="h-4 w-4 mr-2" />
+                            Ver Postulantes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => navigate(`/business-dashboard/opportunities/${opportunity.id}/edit`)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleToggleStatus(opportunity.id, opportunity.status || 'draft')}
+                          >
+                            {opportunity.status === 'active' ? (
+                              <>
+                                <Pause className="h-4 w-4 mr-2" />
+                                Pausar
+                              </>
+                            ) : (
+                              <>
+                                <Play className="h-4 w-4 mr-2" />
+                                Activar
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          {opportunity.status === 'draft' && (
+                            <DropdownMenuItem onClick={() => handleCopyInvitationLink(opportunity)}>
+                              <Link className="h-4 w-4 mr-2" />
+                              Copiar enlace de invitación
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => handleDuplicate(opportunity)}>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Duplicar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => deleteOpportunity(opportunity.id)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Archive className="h-4 w-4 mr-2" />
+                            Cerrar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Action Buttons - Desktop */}
+                  <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
                     <Button
                       onClick={() => onApplicationsView?.(opportunity.id)}
                       className="bg-black hover:bg-gray-800 text-white rounded-lg"

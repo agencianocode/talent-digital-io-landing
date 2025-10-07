@@ -313,24 +313,24 @@ const BusinessDashboard = () => {
 
             {/* Active Opportunities Section */}
             <Card>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Oportunidades Activas</h3>
+              <CardContent className="p-3 sm:p-4 lg:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 sm:mb-4">
+                  <h3 className="text-base sm:text-lg font-semibold">Oportunidades Activas</h3>
                   <Button 
                     variant="link" 
-                    className="text-blue-600"
+                    className="text-blue-600 p-0 h-auto text-sm sm:text-base self-start sm:self-center"
                     onClick={() => navigate('/business-dashboard/opportunities')}
                   >
                     Ver todas
                   </Button>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {activeOpportunitiesCount === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <p>No hay oportunidades activas</p>
+                    <div className="text-center py-6 sm:py-8 text-slate-500">
+                      <p className="text-sm sm:text-base">No hay oportunidades activas</p>
                       <Button 
-                        className="mt-2 bg-black hover:bg-gray-800 text-white"
+                        className="mt-2 sm:mt-3 bg-black hover:bg-gray-800 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
                         onClick={() => navigate('/business-dashboard/opportunities/new')}
                       >
                         Crear primera oportunidad
@@ -341,24 +341,25 @@ const BusinessDashboard = () => {
                       .filter(opp => opp.status === 'active')
                       .slice(0, 3) // Mostrar máximo 3 en el dashboard
                       .map((opportunity) => (
-                        <div key={opportunity.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center">
-                              <span className="text-slate-600 font-bold">{opportunity.title.charAt(0).toUpperCase()}</span>
+                        <div key={opportunity.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 bg-slate-50 rounded-lg">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <span className="text-slate-600 font-bold text-sm sm:text-base">{opportunity.title.charAt(0).toUpperCase()}</span>
                             </div>
-                            <div>
-                              <h4 className="font-medium text-slate-900">{opportunity.title}</h4>
-                              <div className="flex items-center gap-4 text-sm text-slate-600">
-                                <span>{opportunity.companies?.name || 'Tu empresa'}</span>
-                                <span>Hace {new Date(opportunity.created_at).toLocaleDateString()}</span>
-                                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">Activa</span>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-slate-900 text-sm sm:text-base truncate">{opportunity.title}</h4>
+                              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-slate-600 mt-1">
+                                <span className="truncate max-w-[120px] sm:max-w-none">{opportunity.companies?.name || 'Tu empresa'}</span>
+                                <span className="hidden sm:inline">•</span>
+                                <span className="text-xs">Hace {new Date(opportunity.created_at).toLocaleDateString()}</span>
+                                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs">Activa</span>
                               </div>
-                              <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
-                                <span>
-                                  👁️ {viewsByOpportunity[opportunity.id] || 0} vistas
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-600 mt-1.5 sm:mt-1">
+                                <span className="flex items-center gap-1">
+                                  👁️ <span>{viewsByOpportunity[opportunity.id] || 0} vistas</span>
                                 </span>
-                                <span>
-                                  👤 {applicantsByOpportunity[opportunity.id] || 0} Postulantes
+                                <span className="flex items-center gap-1">
+                                  👤 <span>{applicantsByOpportunity[opportunity.id] || 0} Postulantes</span>
                                 </span>
                               </div>
                             </div>
@@ -366,6 +367,7 @@ const BusinessDashboard = () => {
                           <Button 
                             variant="outline" 
                             size="sm"
+                            className="w-full sm:w-auto text-xs sm:text-sm whitespace-nowrap"
                             onClick={() => navigate(`/business-dashboard/opportunities/${opportunity.id}/applicants`)}
                           >
                             Ver Postulantes
