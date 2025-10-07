@@ -4,14 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Bookmark, Eye, Briefcase, MapPin, DollarSign } from "lucide-react";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import EmptyState from "@/components/EmptyState";
 
 const SavedOpportunities = () => {
   const navigate = useNavigate();
-  const { user } = useSupabaseAuth();
   const { getSavedOpportunitiesWithData, unsaveOpportunity, isLoading } = useSavedOpportunities();
   const { hasApplied } = useSupabaseOpportunities();
   const [savedOpportunities, setSavedOpportunities] = useState<any[]>([]);

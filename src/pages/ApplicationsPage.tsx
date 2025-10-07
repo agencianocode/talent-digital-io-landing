@@ -10,7 +10,7 @@ import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext"
 import { useCompany } from "@/contexts/CompanyContext";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Filter, Eye, MessageSquare, Calendar, MapPin } from "lucide-react";
+import { Search, Eye, MessageSquare, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -48,8 +48,6 @@ const ApplicationsPage = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const statusParam = urlParams.get('status');
-    const opportunityParam = urlParams.get('opportunity');
-    const applicationParam = urlParams.get('application');
     
     if (statusParam) {
       setStatusFilter(statusParam);
@@ -58,7 +56,7 @@ const ApplicationsPage = () => {
 
   // Setup real-time notifications and updates
   useRealTimeNotifications({
-    onNewApplication: (newApplication) => {
+    onNewApplication: () => {
       // Refresh applications list when new one arrives
       fetchApplications();
     },

@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useNavigationFlow } from '@/components/NavigationFlowProvider';
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import { 
@@ -19,7 +18,6 @@ import {
 
 const WelcomePage: React.FC = () => {
   const { 
-    profileState, 
     profileStateInfo, 
     disclosureConfig,
     navigateToOnboarding, 

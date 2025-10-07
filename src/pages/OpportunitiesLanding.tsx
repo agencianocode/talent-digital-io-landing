@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
-import { Search, MapPin, Clock, DollarSign, Briefcase, Building } from "lucide-react";
+import { MapPin, Clock, DollarSign, Briefcase, Building } from "lucide-react";
 
 const OpportunitiesLanding = () => {
   const navigate = useNavigate();

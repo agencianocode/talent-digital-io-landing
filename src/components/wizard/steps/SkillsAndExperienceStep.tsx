@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Form, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Award, Plus, X, Lightbulb, Target } from 'lucide-react';
 import { WizardData } from '../TalentProfileWizard';
@@ -33,7 +33,6 @@ interface SkillsAndExperienceStepProps {
 export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = ({
   data,
   updateData,
-  categories,
   industries,
   onNext,
   onPrev,
@@ -231,7 +230,7 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
               <FormField
                 control={form.control}
                 name="skills"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>Tus Habilidades ({localSkills.length}/20)</FormLabel>
                     <div className="flex flex-wrap gap-2">

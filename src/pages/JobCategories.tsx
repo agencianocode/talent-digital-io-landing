@@ -1,10 +1,7 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 
 const JobCategories = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useSupabaseAuth();
 
   const handleCategorySelect = (category: string) => {
     // Redirect to talent registration with category preference

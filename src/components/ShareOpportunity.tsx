@@ -35,7 +35,7 @@ const ShareOpportunity: React.FC<ShareOpportunityProps> = React.memo(({
   variant = 'button' 
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { shareOpportunity, isLoading } = useOpportunitySharing(opportunityId);
+  const { shareOpportunity, isLoading } = useOpportunitySharing();
 
   const handleShare = async (shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email') => {
     try {

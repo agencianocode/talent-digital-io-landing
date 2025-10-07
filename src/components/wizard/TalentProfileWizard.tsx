@@ -4,7 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useProfessionalData, ProfessionalCategory, Industry } from '@/hooks/useProfessionalData';
+import { useProfessionalData } from '@/hooks/useProfessionalData';
 import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -20,7 +20,6 @@ import {
   Globe,
   Check
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 // Import step components
 import { BasicInfoStep } from './steps/BasicInfoStep';
@@ -304,7 +303,6 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
     if (!user?.id) return;
 
     try {
-      const { toast } = await import('@/hooks/use-toast');
       
       // Update profiles table
       const profileUpdates = {

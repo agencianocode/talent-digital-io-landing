@@ -186,7 +186,6 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Send notification to other participant
     const conversation = state.conversations.find(c => c.id === conversationId);
     if (conversation) {
-      const otherParticipantName = conversation.participantNames.find(name => name !== (profile?.full_name || 'Usuario'));
       addNotification({
         type: 'info',
         title: 'Nuevo mensaje',

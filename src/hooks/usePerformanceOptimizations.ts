@@ -1,11 +1,9 @@
 import { useState, useCallback, useRef } from 'react';
-import { useProfileManager } from '@/contexts/ProfileManagerContext';
 
 /**
  * Hook for handling optimistic updates with rollback capability
  */
 export const useOptimisticUpdates = () => {
-  const { updateProfile } = useProfileManager();
   const [isOptimisticUpdate, setIsOptimisticUpdate] = useState(false);
   const rollbackDataRef = useRef<any>(null);
 
@@ -89,7 +87,7 @@ export const useIntelligentPrefetch = () => {
     lastPrefetchRef.current = now;
   }, []);
 
-  const prefetchBasedOnRoute = useCallback((currentRoute: string, userContext: any) => {
+  const prefetchBasedOnRoute = useCallback((currentRoute: string) => {
     const prefetchMap: Record<string, string[]> = {
       '/talent-dashboard': [
         '/talent-dashboard/opportunities',

@@ -157,7 +157,6 @@ export const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
             value={completionPercentage}
             maxValue={100}
             label="Progreso General"
-            variant={completionPercentage === 100 ? 'success' : 'default'}
             size="lg"
             animated={true}
           />

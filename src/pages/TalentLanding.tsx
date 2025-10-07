@@ -3,15 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Users, 
-  Briefcase, 
-  TrendingUp, 
   Star, 
   MessageSquare, 
   Shield,
   Search,
   Heart,
-  Zap
+  Zap,
+  TrendingUp
 } from "lucide-react";
 
 const TalentLanding = () => {

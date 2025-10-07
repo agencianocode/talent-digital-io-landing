@@ -1,7 +1,6 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSupabaseAuth, isBusinessRole, isTalentRole } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 
 const ProfilePage = () => {
   const navigate = useNavigate();

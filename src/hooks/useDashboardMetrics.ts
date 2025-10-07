@@ -122,8 +122,6 @@ export const useDashboardMetrics = () => {
       const responseTimesInHours: number[] = [];
       for (const app of applications) {
         if (app.status !== 'pending') {
-          // Find the time from created_at to first status update
-          const createdDate = new Date(app.created_at);
           // For now, we'll use a mock response time since we don't track status change history
           // In a real implementation, you'd have an applications_history table
           const mockResponseTimeHours = Math.floor(Math.random() * 48) + 1;

@@ -1,21 +1,18 @@
-import React, { startTransition } from 'react';
+import { startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Shield, Bell, Target } from 'lucide-react';
-import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 import PrivacySettings from './PrivacySettings';
 import NotificationSettings from './NotificationSettings';
 import ProfessionalPreferences from './ProfessionalPreferences';
 
 const TalentProfileSettings = () => {
   const navigate = useNavigate();
-  const { userRole } = useSupabaseAuth();
 
   const handleBackClick = () => {
     startTransition(() => {
-      const dashboardPath = isBusinessRole(userRole) ? '/business-dashboard' : '/talent-dashboard';
-      navigate(dashboardPath);
+      navigate('/talent-dashboard');
     });
   };
   return <div className="space-y-6 mx-[20px] my-[20px] px-[20px] py-[20px]">

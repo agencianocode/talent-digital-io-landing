@@ -25,7 +25,7 @@ export interface ShareStats {
   };
 }
 
-export const useOpportunitySharing = (opportunityId?: string) => {
+export const useOpportunitySharing = () => {
   const { user } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -82,7 +82,7 @@ export const useOpportunitySharing = (opportunityId?: string) => {
   }, [user, generatePublicUrl]);
 
   // Get share statistics
-  const getShareStats = useCallback(async (opportunityId: string): Promise<ShareStats | null> => {
+  const getShareStats = useCallback(async (): Promise<ShareStats | null> => {
     // For now, return mock data until table is created
     return {
       total_shares: 0,
@@ -95,12 +95,6 @@ export const useOpportunitySharing = (opportunityId?: string) => {
         email: 0,
       }
     };
-  }, []);
-
-  // Increment view count
-  const incrementViewCount = useCallback(async (opportunityId: string) => {
-    // TODO: Implement when table is created
-    console.log('Incrementing view count for:', opportunityId);
   }, []);
 
   // Get public opportunity by URL

@@ -5,16 +5,14 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import { CreateCompanyModal } from '@/components/ui/create-company-modal';
-import { Building, Plus, X, Search, Briefcase } from 'lucide-react';
+import { Building, Plus, X, Briefcase, Search } from 'lucide-react';
 import { WizardData } from '../TalentProfileWizard';
 import { useProfessionalData, CompanyDirectory, JobTitle } from '@/hooks/useProfessionalData';
-import { useDebounceCallback } from '@/hooks/useDebounce';
 
 const workExperienceSchema = z.object({
   work_experience: z.array(z.object({
@@ -45,11 +43,10 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
   onPrev,
   hideNavigationButtons = false,
 }) => {
-  const { searchCompaniesDirectory, searchJobTitles, incrementJobTitleUsage, addCompanyToDirectory } = useProfessionalData();
+  const { searchCompaniesDirectory, searchJobTitles } = useProfessionalData();
   const [searchResults, setSearchResults] = useState<{ [key: number]: CompanyDirectory[] }>({});
   const [isSearching, setIsSearching] = useState<{ [key: number]: boolean }>({});
   const [jobTitleResults, setJobTitleResults] = useState<{ [key: number]: JobTitle[] }>({});
-  const [isSearchingJobs, setIsSearchingJobs] = useState<{ [key: number]: boolean }>({});
   const [createCompanyModal, setCreateCompanyModal] = useState<{
     open: boolean;
     fieldIndex: number;
@@ -123,30 +120,18 @@ export const WorkExperienceStep: React.FC<WorkExperienceStepProps> = ({
       return;
     }
 
-    setIsSearchingJobs(prev => ({ ...prev, [fieldIndex]: true }));
     try {
       const results = await searchJobTitles(searchTerm);
       setJobTitleResults(prev => ({ ...prev, [fieldIndex]: results }));
     } catch (error) {
       console.error('Error searching job titles:', error);
-    } finally {
-      setIsSearchingJobs(prev => ({ ...prev, [fieldIndex]: false }));
     }
   }, [searchJobTitles]);
-
-  const debouncedJobSearch = useDebounceCallback(searchJobTitlesDebounced, 300);
 
   const selectJobTitle = useCallback(async (jobTitle: string, fieldIndex: number) => {
     form.setValue(`work_experience.${fieldIndex}.position`, jobTitle);
     setJobTitleResults(prev => ({ ...prev, [fieldIndex]: [] }));
-    
-    // Track usage
-    try {
-      await incrementJobTitleUsage(jobTitle);
-    } catch (error) {
-      console.error('Error tracking job title usage:', error);
-    }
-  }, [form, incrementJobTitleUsage]);
+  }, [form]);
 
   // Company creation functionality
   const handleCreateCompany = (companyName: string, fieldIndex: number) => {

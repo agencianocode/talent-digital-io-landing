@@ -37,7 +37,7 @@ interface UseGamificationReturn {
 const XP_PER_LEVEL = 100;
 const LEVEL_MULTIPLIER = 1.5;
 
-export const useGamification = (userId?: string): UseGamificationReturn => {
+export const useGamification = (): UseGamificationReturn => {
   const { announceToScreenReader } = useAnnouncement();
   const [state, setState] = useState<GamificationState>({
     level: 1,
@@ -248,9 +248,9 @@ export const useGamification = (userId?: string): UseGamificationReturn => {
       const timer = setTimeout(() => {
         setRecentAchievements([]);
       }, 10000); // Clear after 10 seconds
-
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [recentAchievements.length]);
 
   return {

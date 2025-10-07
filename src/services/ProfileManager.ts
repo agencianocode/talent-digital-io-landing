@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 /**
  * ProfileManager Service - Centralized data operations for user profiles
@@ -48,7 +47,6 @@ export interface CachedProfileData {
 
 class ProfileManagerService {
   private cache = new Map<string, CachedProfileData>();
-  private pendingUpdates = new Map<string, Promise<any>>();
   private syncQueue: Array<{ userId: string; operation: () => Promise<any> }> = [];
   private isSyncing = false;
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -88,8 +86,14 @@ class ProfileManagerService {
       const completeness = await this.calculateCompleteness(userId);
 
       const cachedData: CachedProfileData = {
-        profile,
-        talentProfile,
+        profile: profile ? {
+          ...profile,
+          full_name: profile.full_name ?? undefined
+        } as any : null,
+        talentProfile: talentProfile ? {
+          ...talentProfile,
+          title: talentProfile.title ?? undefined
+        } as any : null,
         completeness,
         lastUpdated: new Date(),
         isStale: false

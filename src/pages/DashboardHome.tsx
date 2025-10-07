@@ -7,9 +7,8 @@ import { useCompany } from "@/contexts/CompanyContext";
 import CreateCompanyDialog from "@/components/CreateCompanyDialog";
 import { Building } from "lucide-react";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
-import BusinessMetrics from "@/components/dashboard/BusinessMetrics";
+import { BusinessMetrics } from "@/components/dashboard/BusinessMetrics";
 import RecommendedProfiles from "@/components/dashboard/RecommendedProfiles";
-import DashboardSettings, { DashboardSettings as DashboardSettingsType } from "@/components/dashboard/DashboardSettings";
 import DynamicBanners from "@/components/dashboard/DynamicBanners";
 import DashboardCustomization, { DashboardConfiguration } from "@/components/dashboard/DashboardCustomization";
 import EnhancedMetrics from "@/components/dashboard/EnhancedMetrics";
@@ -18,7 +17,7 @@ import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 
 const DashboardHome = () => {
   const navigate = useNavigate();
-  const { user, profile } = useSupabaseAuth();
+  const { profile } = useSupabaseAuth();
   const { activeCompany } = useCompany();
   const { getBusinessMetrics } = useDashboardMetrics();
   const [metrics, setMetrics] = useState<any>(null);
@@ -189,21 +188,7 @@ const DashboardHome = () => {
 
       {/* Enhanced Business Metrics */}
       {metrics && dashboardConfig.widgets['total-opportunities']?.enabled && (
-        <BusinessMetrics
-          totalOpportunities={metrics.totalOpportunities}
-          totalApplications={metrics.totalApplications}
-          applicationsInActiveOpportunities={metrics.applicationsInActiveOpportunities}
-          activeOpportunities={metrics.activeOpportunities}
-          pendingApplications={metrics.pendingApplications}
-          unreviewedApplications={metrics.unreviewedApplications}
-          applicationsThisMonth={metrics.applicationsThisMonth}
-          applicationsLastMonth={metrics.applicationsLastMonth}
-          averageResponseTime={metrics.averageResponseTime}
-          candidatesContacted={metrics.candidatesContacted}
-          candidatesInEvaluation={metrics.candidatesInEvaluation}
-          topOpportunities={metrics.topOpportunities}
-          recentApplications={metrics.recentApplications}
-        />
+        <BusinessMetrics />
       )}
 
       {/* Enhanced Analytics */}

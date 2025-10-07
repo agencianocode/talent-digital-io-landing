@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { useMessaging } from '@/contexts/MessagingContext';
 import ConversationsList from '@/components/ConversationsList';
 import ChatView from '@/components/ChatView';
@@ -25,13 +23,13 @@ const MessagesPage = () => {
   return (
     <div className="h-screen flex">
       <ConversationsList
-        conversations={conversations}
+        conversations={conversations as any}
         activeConversationId={activeConversationId}
         onSelectConversation={setActiveConversation}
       />
       <ChatView
-        conversation={activeConversation}
-        messages={activeMessages}
+        conversation={activeConversation as any}
+        messages={activeMessages as any}
         onSendMessage={handleSendMessage}
       />
     </div>

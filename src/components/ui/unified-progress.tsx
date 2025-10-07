@@ -8,20 +8,12 @@ interface UnifiedProgressProps {
   value: number;
   maxValue?: number;
   label?: string;
-  variant?: 'default' | 'success' | 'warning' | 'error';
   size?: 'sm' | 'md' | 'lg';
   showBadge?: boolean;
   showIcon?: boolean;
   animated?: boolean;
   className?: string;
 }
-
-const progressVariants = {
-  default: 'bg-primary',
-  success: 'bg-green-500',
-  warning: 'bg-yellow-500',
-  error: 'bg-destructive'
-};
 
 const sizeVariants = {
   sm: 'h-2',
@@ -41,7 +33,6 @@ export const UnifiedProgress: React.FC<UnifiedProgressProps> = ({
   value,
   maxValue = 100,
   label,
-  variant = 'default',
   size = 'md',
   showBadge = true,
   showIcon = true,

@@ -2,13 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
-interface SavedOpportunity {
-  id: string;
-  user_id: string;
-  opportunity_id: string;
-  created_at: string;
-}
-
 export const useSavedOpportunities = () => {
   const { user, isAuthenticated } = useSupabaseAuth();
   const [savedOpportunities, setSavedOpportunities] = useState<string[]>([]);

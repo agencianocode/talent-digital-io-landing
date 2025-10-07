@@ -1,16 +1,14 @@
-import React, { startTransition } from 'react';
+import { startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Shield, Bell, Building, Settings } from 'lucide-react';
-import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
 import PrivacySettings from './PrivacySettings';
 import NotificationSettings from './NotificationSettings';
 import { CompanyProfileWizard } from '@/components/wizard/CompanyProfileWizard';
 
 const BusinessProfileSettings = () => {
   const navigate = useNavigate();
-  const { userRole } = useSupabaseAuth();
 
   const handleBackClick = () => {
     startTransition(() => {
