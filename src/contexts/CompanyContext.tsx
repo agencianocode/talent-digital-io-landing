@@ -199,7 +199,6 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
           business_type: activeComp.business_type ?? undefined,
           employee_count_range: activeComp.employee_count_range ?? undefined,
           industry: activeComp.industry ?? undefined,
-          industry_id: activeComp.industry_id ?? undefined,
           social_links: activeComp.social_links ? (activeComp.social_links as Record<string, string>) : undefined,
           gallery_urls: ((activeComp.gallery_urls as any[]) || []).map((item: any) => ({
             id: item?.id || Math.random().toString(),

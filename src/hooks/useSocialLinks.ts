@@ -20,7 +20,7 @@ export const useSocialLinks = () => {
     setLoading(true);
     try {
       // @ts-ignore - talent_social_links table exists but types not yet generated
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('talent_social_links')
         .select('*')
         .eq('user_id', user.id)
@@ -44,7 +44,7 @@ export const useSocialLinks = () => {
     
     try {
       // @ts-ignore - talent_social_links table exists but types not yet generated
-      const { data: insertedData, error } = await supabase
+      const { data: insertedData, error } = await (supabase as any)
         .from('talent_social_links')
         .insert({
           user_id: user.id,
@@ -60,7 +60,7 @@ export const useSocialLinks = () => {
       
       // Update state immediately with the new data
       setSocialLinks(prev => {
-        const newSocialLinks = [...prev, insertedData];
+        const newSocialLinks = [...prev, insertedData as any];
         console.log('🔄 Updated social links state:', newSocialLinks);
         
         // Dispatch custom event to trigger UI refresh
@@ -86,7 +86,7 @@ export const useSocialLinks = () => {
     
     try {
       // @ts-ignore - talent_social_links table exists but types not yet generated
-      const { data: updatedData, error } = await supabase
+      const { data: updatedData, error } = await (supabase as any)
         .from('talent_social_links')
         .update(data as any)
         .eq('id', id)
@@ -129,7 +129,7 @@ export const useSocialLinks = () => {
     
     try {
       // @ts-ignore - talent_social_links table exists but types not yet generated
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('talent_social_links')
         .delete()
         .eq('id', id)
@@ -214,7 +214,7 @@ export const useSocialLinks = () => {
   const getAvailablePlatforms = useCallback((): string[] => {
     const allPlatforms = ['linkedin', 'twitter', 'instagram', 'youtube', 'facebook', 'github', 'behance', 'dribbble', 'other'];
     const usedPlatforms = socialLinks.map(link => link.platform);
-    return allPlatforms.filter(platform => !usedPlatforms.includes(platform));
+    return allPlatforms.filter(platform => !usedPlatforms.includes(platform as any));
   }, [socialLinks]);
 
   useEffect(() => {

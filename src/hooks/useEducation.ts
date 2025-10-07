@@ -29,7 +29,7 @@ export const useEducation = () => {
 
       if (error) throw error;
       console.log('📊 Fetched education:', data);
-      setEducation((data as TalentEducation[]) || []);
+      setEducation(data as any || []);
     } catch (err: any) {
       console.error('Error fetching education:', err);
       setError(err.message);
@@ -61,7 +61,7 @@ export const useEducation = () => {
       
       // Update state immediately with the new data
       setEducation(prev => {
-        const newEducation = [...prev, insertedData as TalentEducation];
+        const newEducation = [...prev, insertedData as any];
         console.log('🔄 Updated education state:', newEducation);
         
         // Dispatch custom event to trigger UI refresh
@@ -103,7 +103,7 @@ export const useEducation = () => {
       // Update state immediately with the updated data
       setEducation(prev => {
         const newEducation = prev.map(edu => 
-          edu.id === id ? { ...edu, ...(updatedData as TalentEducation) } : edu
+          edu.id === id ? { ...edu, ...(updatedData as any) } : edu
         );
         console.log('🔄 Updated education state:', newEducation);
         

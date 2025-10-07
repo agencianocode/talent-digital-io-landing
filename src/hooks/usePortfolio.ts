@@ -19,7 +19,7 @@ export const usePortfolio = () => {
     console.log('🔄 Fetching portfolios for user:', user.id);
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('talent_portfolios')
         .select('*')
         .eq('user_id', user.id)
@@ -28,7 +28,7 @@ export const usePortfolio = () => {
 
       if (error) throw error;
       console.log('📊 Fetched portfolios:', data);
-      setPortfolios(data || []);
+      setPortfolios(data as any || []);
     } catch (err: any) {
       console.error('Error fetching portfolios:', err);
       setError(err.message);
@@ -45,13 +45,13 @@ export const usePortfolio = () => {
     try {
       // If this is being set as primary, unset other primary portfolios
       if (data.is_primary) {
-        await supabase
+        await (supabase as any)
           .from('talent_portfolios')
           .update({ is_primary: false })
           .eq('user_id', user.id);
       }
 
-      const { data: insertedData, error } = await supabase
+      const { data: insertedData, error } = await (supabase as any)
         .from('talent_portfolios')
         .insert({
           user_id: user.id,
@@ -67,7 +67,7 @@ export const usePortfolio = () => {
       
       // Update state immediately with the new data
       setPortfolios(prev => {
-        const newPortfolios = [...prev, insertedData];
+        const newPortfolios = [...prev, insertedData as any];
         console.log('🔄 Updated portfolios state:', newPortfolios);
         
         // Dispatch custom event to trigger UI refresh
@@ -94,14 +94,14 @@ export const usePortfolio = () => {
     try {
       // If this is being set as primary, unset other primary portfolios
       if (data.is_primary) {
-        await supabase
+        await (supabase as any)
           .from('talent_portfolios')
           .update({ is_primary: false })
           .eq('user_id', user.id)
           .neq('id', id);
       }
 
-      const { data: updatedData, error } = await supabase
+      const { data: updatedData, error } = await (supabase as any)
         .from('talent_portfolios')
         .update(data)
         .eq('id', id)
@@ -117,7 +117,7 @@ export const usePortfolio = () => {
       // Update state immediately with the updated data
       setPortfolios(prev => {
         const newPortfolios = prev.map(portfolio => 
-          portfolio.id === id ? { ...portfolio, ...updatedData } : portfolio
+          portfolio.id === id ? { ...portfolio, ...(updatedData as any) } : portfolio
         );
         console.log('🔄 Updated portfolios state:', newPortfolios);
         
@@ -143,7 +143,7 @@ export const usePortfolio = () => {
     console.log('🗑️ Deleting portfolio:', id);
     
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('talent_portfolios')
         .delete()
         .eq('id', id)
@@ -180,13 +180,13 @@ export const usePortfolio = () => {
     
     try {
       // Unset all primary portfolios first
-      await supabase
+      await (supabase as any)
         .from('talent_portfolios')
         .update({ is_primary: false })
         .eq('user_id', user.id);
 
       // Set the selected one as primary
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('talent_portfolios')
         .update({ is_primary: true })
         .eq('id', id)

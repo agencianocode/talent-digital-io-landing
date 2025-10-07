@@ -41,7 +41,7 @@ export const useOpportunitySharing = (opportunityId?: string) => {
     shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email',
     customUrl?: string
   ) => {
-    if (!user) return;
+    if (!user) return false;
 
     setIsLoading(true);
     try {
@@ -75,6 +75,7 @@ export const useOpportunitySharing = (opportunityId?: string) => {
     } catch (error) {
       console.error('Error sharing opportunity:', error);
       toast.error('Error al compartir la oportunidad');
+      return '';
     } finally {
       setIsLoading(false);
     }

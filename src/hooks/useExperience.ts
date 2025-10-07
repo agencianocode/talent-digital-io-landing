@@ -29,7 +29,7 @@ export const useExperience = () => {
 
       if (error) throw error;
       console.log('📊 Fetched experiences:', data);
-      setExperiences((data as TalentExperience[]) || []);
+      setExperiences(data as any || []);
     } catch (err: any) {
       console.error('Error fetching experiences:', err);
       setError(err.message);
@@ -61,7 +61,7 @@ export const useExperience = () => {
       
       // Update state immediately with the new data
       setExperiences(prev => {
-        const newExperiences = [...prev, insertedData as TalentExperience];
+        const newExperiences = [...prev, insertedData as any];
         console.log('🔄 Updated experiences state:', newExperiences);
         
         // Dispatch custom event to trigger UI refresh
@@ -103,7 +103,7 @@ export const useExperience = () => {
       // Update state immediately with the updated data
       setExperiences(prev => {
         const newExperiences = prev.map(exp => 
-          exp.id === id ? { ...exp, ...(updatedData as TalentExperience) } : exp
+          exp.id === id ? { ...exp, ...(updatedData as any) } : exp
         );
         console.log('🔄 Updated experiences state:', newExperiences);
         
