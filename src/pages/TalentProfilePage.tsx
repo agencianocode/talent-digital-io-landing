@@ -63,8 +63,8 @@ const TalentProfilePage = () => {
   const [contactMessage, setContactMessage] = useState("");
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   
-  // Use the real messaging hook
-  const { sendMessage, getOrCreateConversation } = useMessages();
+  // Mensajería existente basada en tabla messages
+  const { getOrCreateConversation, sendMessage } = useMessages();
 
   useEffect(() => {
     if (id) {
@@ -111,7 +111,7 @@ const TalentProfilePage = () => {
         let educationData = null;
         
         // Try new system first (talent_education with user_id)
-        const { data: newEducationData, error: newEducationError } = await supabase
+        const { data: newEducationData } = await supabase
           .from('talent_education' as any)
           .select('*')
           .eq('user_id', id || '')
@@ -122,7 +122,7 @@ const TalentProfilePage = () => {
           console.log('✅ Education data found (new system):', educationData);
         } else {
           // Try old system (education with talent_profile_id)
-          const { data: oldEducationData, error: oldEducationError } = await supabase
+          const { data: oldEducationData } = await supabase
             .from('education')
             .select('*')
             .eq('talent_profile_id', talentData.id)
@@ -142,7 +142,7 @@ const TalentProfilePage = () => {
         let workData = null;
         
         // Try new system first (talent_experiences with user_id)
-        const { data: newWorkData, error: newWorkError } = await supabase
+        const { data: newWorkData } = await supabase
           .from('talent_experiences' as any)
           .select('*')
           .eq('user_id', id || '')
@@ -153,7 +153,7 @@ const TalentProfilePage = () => {
           console.log('✅ Work experience data found (new system):', workData);
         } else {
           // Try old system (work_experience with talent_profile_id)
-          const { data: oldWorkData, error: oldWorkError } = await supabase
+          const { data: oldWorkData } = await supabase
             .from('work_experience')
             .select('*')
             .eq('talent_profile_id', talentData.id)
@@ -234,21 +234,14 @@ const TalentProfilePage = () => {
 
     setIsSendingMessage(true);
     try {
-      // Get or create conversation
       const conversationId = await getOrCreateConversation(id);
+      await sendMessage(conversationId, contactMessage.trim());
       
-      // Send message
-      const result = await sendMessage({
-        conversation_id: conversationId,
-        recipient_id: id,
-        message_type: 'text',
-        content: contactMessage.trim(),
-      });
-      
-      if (result) {
+      if (conversationId) {
         toast.success('Mensaje enviado exitosamente');
         setShowContactModal(false);
         setContactMessage("");
+        navigate(`/business-dashboard/messages/${conversationId}`);
       }
     } catch (error) {
       console.error('Error sending message:', error);

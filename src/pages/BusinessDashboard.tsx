@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,6 +7,8 @@ import { CheckCircle, Circle, Building } from 'lucide-react';
 import { useProfileProgress } from '@/hooks/useProfileProgress';
 import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
 import { BusinessMetrics } from '@/components/dashboard/BusinessMetrics';
+import { useRealApplications } from '@/hooks/useRealApplications';
+import { supabase } from '@/integrations/supabase/client';
 
 
 const BusinessDashboard = () => {
@@ -23,6 +25,60 @@ const BusinessDashboard = () => {
   } = useProfileProgress();
   
   const { opportunities } = useSupabaseOpportunities();
+  const { metrics: applicationMetrics } = useRealApplications();
+
+  // Map de postulantes por oportunidad desde métricas reales
+  const applicantsByOpportunity = useMemo<Record<string, number>>(() => {
+    return applicationMetrics?.applicationsByOpportunity || {};
+  }, [applicationMetrics]);
+
+  // Vistas por oportunidad (conteo de registros en opportunity_views o suma de shares)
+  const [viewsByOpportunity, setViewsByOpportunity] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchViews = async () => {
+      try {
+        const activeOpportunityIds = opportunities
+          .filter(opp => opp.status === 'active')
+          .map(opp => opp.id);
+
+        if (activeOpportunityIds.length === 0) {
+          setViewsByOpportunity({});
+          return;
+        }
+
+        // 1) Intentar usar tabla de vistas granulares
+        const { data: viewsRows, error: viewsErr } = await (supabase as any)
+          .from('opportunity_views')
+          .select('opportunity_id');
+
+        let aggregated: Record<string, number> = {};
+        if (!viewsErr && viewsRows) {
+          viewsRows.forEach((row: any) => {
+            if (!activeOpportunityIds.includes(row.opportunity_id)) return;
+            aggregated[row.opportunity_id] = (aggregated[row.opportunity_id] || 0) + 1;
+          });
+        } else {
+          // 2) Fallback: sumar views_count desde opportunity_shares si existe
+          const { data: sharesRows, error: sharesErr } = await (supabase as any)
+            .from('opportunity_shares')
+            .select('opportunity_id, views_count');
+          if (sharesErr) throw sharesErr;
+          (sharesRows || []).forEach((row: any) => {
+            if (!activeOpportunityIds.includes(row.opportunity_id)) return;
+            aggregated[row.opportunity_id] = (aggregated[row.opportunity_id] || 0) + (row.views_count || 0);
+          });
+        }
+
+        setViewsByOpportunity(aggregated);
+      } catch (err) {
+        console.error('Error obteniendo vistas de oportunidades:', err);
+        setViewsByOpportunity({});
+      }
+    };
+
+    fetchViews();
+  }, [opportunities]);
   
   // Calcular solo las oportunidades activas para el dashboard
   const activeOpportunitiesCount = opportunities.filter(opp => opp.status === 'active').length;
@@ -298,8 +354,12 @@ const BusinessDashboard = () => {
                                 <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">Activa</span>
                               </div>
                               <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
-                                <span>👁️ 0 vistas</span>
-                                <span>👤 0 Postulantes</span>
+                                <span>
+                                  👁️ {viewsByOpportunity[opportunity.id] || 0} vistas
+                                </span>
+                                <span>
+                                  👤 {applicantsByOpportunity[opportunity.id] || 0} Postulantes
+                                </span>
                               </div>
                             </div>
                           </div>

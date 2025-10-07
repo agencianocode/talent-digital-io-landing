@@ -1,18 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import { useOpportunitySharing } from '@/hooks/useOpportunitySharing';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Building2, 
   MapPin, 
   Clock, 
   DollarSign, 
-  Users, 
   Calendar,
   ArrowLeft,
   ExternalLink,
@@ -23,7 +21,6 @@ import {
   Twitter,
   Briefcase
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 const PublicOpportunity = () => {
   const { opportunityId } = useParams<{ opportunityId: string }>();
@@ -51,6 +48,22 @@ const PublicOpportunity = () => {
       
       if (data) {
         setOpportunity(data);
+        
+        // Registrar vista (solo si hay un usuario autenticado)
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser) {
+          try {
+            await (supabase as any)
+              .from('opportunity_views')
+              .insert({ 
+                opportunity_id: opportunityId,
+                viewer_id: currentUser.id 
+              });
+            console.log('✅ Vista registrada en página pública');
+          } catch (viewErr) {
+            console.warn('No se pudo registrar vista:', viewErr);
+          }
+        }
       } else {
         setError('Oportunidad no encontrada');
       }

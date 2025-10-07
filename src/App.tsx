@@ -51,6 +51,8 @@ const BusinessProfile = lazy(() => import('./pages/BusinessProfile'));
 const BusinessMarketplace = lazy(() => import('./pages/BusinessMarketplace'));
 const BusinessMessagesPage = lazy(() => import('./pages/BusinessMessagesPage'));
 const BusinessNotificationsPage = lazy(() => import('./pages/BusinessNotificationsPage'));
+const TalentMessagesPage = lazy(() => import('./pages/TalentMessagesPage'));
+const TalentNotificationsPage = lazy(() => import('./pages/TalentNotificationsPage'));
 const AcademyDashboard = lazy(() => import('./pages/AcademyDashboard'));
 const AcceptInvitation = lazy(() => import('./pages/AcceptInvitation'));
 
@@ -215,6 +217,21 @@ function App() {
                           <Route path="settings" element={
                             <Suspense fallback={<LoadingSkeleton type="profile" />}>
                               <TalentProfileSettings />
+                            </Suspense>
+                          } />
+                          <Route path="messages" element={
+                            <Suspense fallback={<LoadingSkeleton type="list" />}>
+                              <TalentMessagesPage />
+                            </Suspense>
+                          } />
+                          <Route path="messages/:conversationId" element={
+                            <Suspense fallback={<LoadingSkeleton type="list" />}>
+                              <TalentMessagesPage />
+                            </Suspense>
+                          } />
+                          <Route path="notifications" element={
+                            <Suspense fallback={<LoadingSkeleton type="list" />}>
+                              <TalentNotificationsPage />
                             </Suspense>
                           } />
                         </Route>

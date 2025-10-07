@@ -49,7 +49,6 @@ const DashboardLayout = () => {
     { to: "/business-dashboard", icon: Home, label: "Dashboard" },
     { to: "/business-dashboard/opportunities", icon: Briefcase, label: "Mis Oportunidades" },
     { to: "/business-dashboard/talent-discovery", icon: Search, label: "Buscar Talento" },
-    { to: "/business-dashboard/messages", icon: MessageSquare, label: "Mensajes", hasBadge: true },
     { to: "/business-dashboard/marketplace", icon: Store, label: "Marketplace" },
     { to: "/business-dashboard/academy", icon: GraduationCap, label: "Mi Academia" },
   ];
@@ -182,11 +181,6 @@ const DashboardLayout = () => {
                 >
                   <item.icon className="h-4 w-4" />
                   <span style={{fontSize: '16px'}}>{item.label}</span>
-                  {item.hasBadge && unreadCount > 0 && (
-                    <Badge variant="destructive" className="ml-auto text-xs">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </Badge>
-                  )}
                 </NavLink>
               </li>
             ))}

@@ -22,7 +22,7 @@ interface Notification {
   read_at?: string;
 }
 
-const BusinessNotificationsPage = () => {
+const TalentNotificationsPage = () => {
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -254,5 +254,5 @@ const BusinessNotificationsPage = () => {
   );
 };
 
-export default BusinessNotificationsPage;
+export default TalentNotificationsPage;
 

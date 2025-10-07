@@ -15,12 +15,16 @@ import {
 } from 'lucide-react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useProfileData } from '@/hooks/useProfileData';
+import { useMessages } from '@/hooks/useMessages';
+import { useNotifications } from '@/hooks/useNotifications';
 
 const TalentTopNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, signOut } = useSupabaseAuth();
   const { userProfile } = useProfileData();
+  const { unreadCount: unreadMessagesCount } = useMessages();
+  const { unreadCount: unreadNotificationsCount } = useNotifications();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -97,21 +101,35 @@ const TalentTopNavigation = () => {
           <div className="flex items-center space-x-4">
             {/* Messages */}
             <div className="relative">
-              <Button variant="ghost" size="sm" className="p-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2"
+                onClick={() => navigate('/talent-dashboard/messages')}
+              >
                 <MessageCircle className="w-5 h-5 text-gray-600" />
-                <Badge className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs h-5 w-5 flex items-center justify-center">
-                  1
-                </Badge>
+                {unreadMessagesCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs h-5 w-5 flex items-center justify-center">
+                    {unreadMessagesCount}
+                  </Badge>
+                )}
               </Button>
             </div>
 
             {/* Notifications */}
             <div className="relative">
-              <Button variant="ghost" size="sm" className="p-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2"
+                onClick={() => navigate('/talent-dashboard/notifications')}
+              >
                 <Bell className="w-5 h-5 text-gray-600" />
-                <Badge className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs h-5 w-5 flex items-center justify-center">
-                  3
-                </Badge>
+                {unreadNotificationsCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs h-5 w-5 flex items-center justify-center">
+                    {unreadNotificationsCount}
+                  </Badge>
+                )}
               </Button>
             </div>
 

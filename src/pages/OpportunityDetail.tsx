@@ -65,6 +65,33 @@ const OpportunityDetail = () => {
         
         setOpportunity(opportunityData);
         setCompany(opportunityData.companies);
+        
+        // Registrar una vista de oportunidad
+        // Solo si el usuario no es el dueño de la empresa
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser) {
+          try {
+            // Verificar si el usuario es el dueño de la empresa
+            const { data: companyData } = await supabase
+              .from('companies')
+              .select('user_id')
+              .eq('id', opportunityData.company_id)
+              .single();
+            
+            // Solo registrar vista si NO es el dueño de la empresa
+            if (!companyData || companyData.user_id !== currentUser.id) {
+              await (supabase as any)
+                .from('opportunity_views')
+                .insert({ 
+                  opportunity_id: opportunityData.id,
+                  viewer_id: currentUser.id 
+                });
+              console.log('✅ Vista registrada para oportunidad:', opportunityData.id);
+            }
+          } catch (insertErr) {
+            console.warn('No se pudo registrar la vista:', insertErr);
+          }
+        }
       } catch (error) {
         console.error('Error fetching opportunity:', error);
         toast.error('Error al cargar la oportunidad');

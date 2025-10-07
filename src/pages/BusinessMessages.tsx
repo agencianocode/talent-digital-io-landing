@@ -5,7 +5,7 @@ import ChatView from '@/components/ChatView';
 import { useMessages } from '@/hooks/useMessages';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
-const BusinessMessagesPage = () => {
+const BusinessMessages = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const { user } = useSupabaseAuth();
   const { 
@@ -13,12 +13,8 @@ const BusinessMessagesPage = () => {
     messagesByConversation, 
     loadMessages, 
     loadConversations,
-    sendMessageToConversation, 
-    markAsRead,
-    markAsUnread,
-    archiveConversation,
-    unarchiveConversation,
-    deleteConversation
+    sendMessage, 
+    markAsRead
   } = useMessages();
   
   const [activeId, setActiveId] = useState<string | null>(conversationId || null);
@@ -47,41 +43,14 @@ const BusinessMessagesPage = () => {
 
   useEffect(() => {
     if (!activeId) return;
-    
-    const loadConversationData = async () => {
-      await loadMessages(activeId);
-      await markAsRead(activeId);
-    };
-    
-    loadConversationData();
+    loadMessages(activeId);
+    markAsRead(activeId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId]);
 
-  const handleSendMessage = async (
-    content: string,
-    fileUrl?: string,
-    fileName?: string,
-    fileSize?: number,
-    fileType?: string
-  ) => {
+  const handleSendMessage = async (content: string) => {
     if (!activeId) return;
-    
-    console.log('[BusinessMessagesPage] handleSendMessage called with:', {
-      content,
-      fileUrl,
-      fileName,
-      fileSize,
-      fileType
-    });
-    
-    await sendMessageToConversation(
-      activeId, 
-      content,
-      fileUrl,
-      fileName,
-      fileSize,
-      fileType
-    );
+    await sendMessage(activeId, content);
   };
 
   // Show authentication message if user is not logged in
@@ -104,23 +73,12 @@ const BusinessMessagesPage = () => {
     );
   }
 
-  // Create a key that changes when conversations change
-  const conversationsKey = useMemo(() => 
-    conversations.map(c => `${c.id}-${c.unread_count}`).join(','),
-    [conversations]
-  );
-
   return (
     <div className="flex h-full">
       <ConversationsList
-        key={conversationsKey}
         conversations={conversations as any}
         activeConversationId={activeId}
         onSelectConversation={setActiveId}
-        onMarkAsUnread={markAsUnread}
-        onArchive={archiveConversation}
-        onUnarchive={unarchiveConversation}
-        onDelete={deleteConversation}
       />
       <ChatView
         conversation={activeConversation as any}
@@ -131,4 +89,6 @@ const BusinessMessagesPage = () => {
   );
 };
 
-export default BusinessMessagesPage;
+export default BusinessMessages;
+
+

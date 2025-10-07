@@ -5,7 +5,7 @@ import ChatView from '@/components/ChatView';
 import { useMessages } from '@/hooks/useMessages';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
-const BusinessMessagesPage = () => {
+const TalentMessagesPage = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const { user } = useSupabaseAuth();
   const { 
@@ -66,7 +66,7 @@ const BusinessMessagesPage = () => {
   ) => {
     if (!activeId) return;
     
-    console.log('[BusinessMessagesPage] handleSendMessage called with:', {
+    console.log('[TalentMessagesPage] handleSendMessage called with:', {
       content,
       fileUrl,
       fileName,
@@ -131,4 +131,5 @@ const BusinessMessagesPage = () => {
   );
 };
 
-export default BusinessMessagesPage;
+export default TalentMessagesPage;
+

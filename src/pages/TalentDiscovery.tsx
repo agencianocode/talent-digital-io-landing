@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Search, 
   Star, 
@@ -25,6 +27,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useMessages } from '@/hooks/useMessages';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -73,6 +76,7 @@ const TalentDiscovery = () => {
   
   const [allTalents, setAllTalents] = useState<RealTalent[]>([]);
   const [filteredTalents, setFilteredTalents] = useState<RealTalent[]>([]);
+  const { getOrCreateConversation, sendMessage } = useMessages();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [categoryFilter, setCategoryFilter] = useState<string>(searchParams.get('category') || 'all');
   const [countryFilter, setCountryFilter] = useState<string>(searchParams.get('country') || 'all');
@@ -378,8 +382,32 @@ const TalentDiscovery = () => {
     }, 300);
   };
 
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [selectedTalent, setSelectedTalent] = useState<RealTalent | null>(null);
+  const [messageText, setMessageText] = useState('');
+
   const handleContactTalent = (talent: RealTalent) => {
-    toast.success(`Solicitud de contacto enviada a ${talent.full_name}`);
+    setSelectedTalent(talent);
+    setMessageText(`Hola ${talent.full_name}, me interesa tu perfil.`);
+    setContactDialogOpen(true);
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedTalent || !messageText.trim()) return;
+    
+    try {
+      // Create conversation with type 'profile_contact'
+      const conversationId = await getOrCreateConversation(selectedTalent.user_id, 'profile_contact');
+      await sendMessage(conversationId, messageText.trim());
+      setContactDialogOpen(false);
+      setMessageText('');
+      setSelectedTalent(null);
+      navigate(`/business-dashboard/messages/${conversationId}`);
+      toast.success('Mensaje enviado correctamente');
+    } catch (e) {
+      console.error(e);
+      toast.error('No se pudo enviar el mensaje');
+    }
   };
 
   const handleViewProfile = (talentId: string) => {
@@ -809,6 +837,37 @@ const TalentDiscovery = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Contact Dialog */}
+      <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Contactar a {selectedTalent?.full_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              placeholder="Escribe tu mensaje..."
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              className="min-h-[100px]"
+            />
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setContactDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSendMessage}
+                disabled={!messageText.trim()}
+              >
+                Enviar Mensaje
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
