@@ -23,13 +23,7 @@ class MarketplaceService {
       // Build query
       let query = supabase
         .from('marketplace_services')
-        .select(`
-          *,
-          profiles!marketplace_services_user_id_fkey (
-            full_name,
-            avatar_url
-          )
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .eq('status', 'active')
         .eq('is_available', true);
 
@@ -73,6 +67,7 @@ class MarketplaceService {
       // Transform data to include user info
       const servicesWithUser: TalentServiceWithUser[] = (data || []).map((service: any) => ({
         ...service,
+        tags: Array.isArray(service.tags) ? service.tags : [],
         user_name: service.profiles?.full_name || 'Usuario',
         user_avatar: service.profiles?.avatar_url
       }));
