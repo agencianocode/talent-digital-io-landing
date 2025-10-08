@@ -10,7 +10,6 @@ const PushNotificationSettings = () => {
   const {
     isSupported,
     isSubscribed,
-    isLoading,
     permission,
     subscribe,
     unsubscribe,
@@ -84,7 +83,7 @@ const PushNotificationSettings = () => {
                 unsubscribe();
               }
             }}
-            disabled={isLoading || permission === 'denied'}
+            disabled={permission === 'denied'}
           />
         </div>
 

@@ -1038,6 +1038,7 @@ export type Database = {
           hide_location: boolean | null
           id: string
           linkedin: string | null
+          notification_preferences: Json | null
           phone: string | null
           position: string | null
           profile_completeness: number | null
@@ -1055,6 +1056,7 @@ export type Database = {
           hide_location?: boolean | null
           id?: string
           linkedin?: string | null
+          notification_preferences?: Json | null
           phone?: string | null
           position?: string | null
           profile_completeness?: number | null
@@ -1072,6 +1074,7 @@ export type Database = {
           hide_location?: boolean | null
           id?: string
           linkedin?: string | null
+          notification_preferences?: Json | null
           phone?: string | null
           position?: string | null
           profile_completeness?: number | null
@@ -1159,6 +1162,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      service_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          helpful_count: number | null
+          id: string
+          rating: number
+          reviewer_id: string
+          service_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          rating: number
+          reviewer_id: string
+          service_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          rating?: number
+          reviewer_id?: string
+          service_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_reviews_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       talent_education: {
         Row: {
@@ -1760,6 +1804,17 @@ export type Database = {
           title: string
           usage_count: number
         }[]
+      }
+      send_notification: {
+        Args: {
+          p_action_url?: string
+          p_data?: Json
+          p_message: string
+          p_title: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: string
       }
       start_conversation: {
         Args: {
