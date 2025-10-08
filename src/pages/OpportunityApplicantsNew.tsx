@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Briefcase, User, Mail, Calendar, Eye, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Briefcase, User, Calendar, Eye, CheckCircle, XCircle, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -238,10 +238,10 @@ const OpportunityApplicantsNew = () => {
           applications.map((application) => (
             <Card key={application.id} className="hover:shadow-lg transition-all duration-200">
               <CardHeader className="pb-3 p-3 sm:p-6">
-                <div className="flex flex-col gap-3">
-                  {/* Header con avatar y nombre */}
-                  <div className="flex items-start gap-3">
-                    <Avatar className="w-14 h-14 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                  {/* Avatar y nombre */}
+                  <div className="flex items-start gap-3 sm:gap-4 flex-1">
+                    <Avatar className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
                       <AvatarImage 
                         src={application.profiles?.avatar_url} 
                         alt={application.profiles?.full_name || "Usuario"} 
@@ -256,30 +256,30 @@ const OpportunityApplicantsNew = () => {
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <h3 className="text-base font-bold text-gray-900 leading-tight">
+                        <h3 className="text-base sm:text-xl font-bold text-gray-900 leading-tight">
                           {application.profiles?.full_name || "Usuario sin nombre"}
                         </h3>
-                        <Badge className={`${getStatusColor(application.status)} border-0 text-xs whitespace-nowrap flex-shrink-0`}>
+                        <Badge className={`${getStatusColor(application.status)} border-0 text-xs whitespace-nowrap flex-shrink-0 sm:hidden`}>
                           {getStatusText(application.status)}
                         </Badge>
                       </div>
                       
                       {application.profiles?.position && (
-                        <p className="text-sm text-gray-600 font-medium mb-2 line-clamp-1">
+                        <p className="text-sm sm:text-base text-gray-600 font-medium mb-2">
                           {application.profiles.position}
                         </p>
                       )}
                       
-                      {/* Información de contacto en grid */}
-                      <div className="grid grid-cols-1 gap-1 text-xs text-gray-500">
+                      {/* Información de contacto */}
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-4 text-xs sm:text-sm text-gray-500">
                         <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">Aplicó el {formatDate(application.created_at)}</span>
+                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                          <span>Aplicó el {formatDate(application.created_at)}</span>
                         </div>
                         {(application.profiles?.city || application.profiles?.country) && (
                           <div className="flex items-center gap-1">
-                            <Mail className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">
+                            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                            <span>
                               {[application.profiles?.city, application.profiles?.country]
                                 .filter(Boolean)
                                 .join(', ')}
@@ -289,93 +289,105 @@ const OpportunityApplicantsNew = () => {
                         {application.profiles?.phone && (
                           <div className="flex items-center gap-1">
                             <span>📱</span>
-                            <span className="truncate">{application.profiles.phone}</span>
+                            <span>{application.profiles.phone}</span>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Badge en desktop */}
+                  <Badge className={`${getStatusColor(application.status)} border-0 text-xs whitespace-nowrap hidden sm:block`}>
+                    {getStatusText(application.status)}
+                  </Badge>
                 </div>
               </CardHeader>
               
               <CardContent className="pt-0 p-3 sm:p-6">
-                {/* LinkedIn */}
-                {application.profiles?.linkedin && (
-                  <div className="mb-3">
-                    <p className="text-xs font-medium text-gray-700 mb-1">LinkedIn:</p>
-                    <a 
-                      href={application.profiles.linkedin} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-xs break-all"
-                    >
-                      {application.profiles.linkedin}
-                    </a>
-                  </div>
-                )}
+                <div className="space-y-3 sm:space-y-4">
+                  {/* LinkedIn y Carta de presentación en desktop lado a lado */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    {/* LinkedIn */}
+                    {application.profiles?.linkedin && (
+                      <div>
+                        <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">LinkedIn:</p>
+                        <a 
+                          href={application.profiles.linkedin} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm break-all hover:underline"
+                        >
+                          {application.profiles.linkedin}
+                        </a>
+                      </div>
+                    )}
 
-                {/* Carta de presentación */}
-                {application.cover_letter && (
-                  <div className="mb-3">
-                    <p className="text-xs font-medium text-gray-700 mb-1">Carta de presentación:</p>
-                    <div className="bg-gray-50 p-2 rounded-lg">
-                      <p className="text-xs text-gray-700 line-clamp-3">
-                        {application.cover_letter}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <Separator className="my-3" />
-
-                {/* Acciones */}
-                <div className="flex flex-col gap-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewProfile(application.user_id)}
-                      className="flex items-center justify-center gap-1 text-xs h-9"
-                    >
-                      <Eye className="w-3 h-3" />
-                      <span className="hidden sm:inline">Ver Perfil</span>
-                      <span className="sm:hidden">Perfil</span>
-                    </Button>
-                    
-                    {application.resume_url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(application.resume_url, '_blank')}
-                        className="flex items-center justify-center gap-1 text-xs h-9"
-                      >
-                        <User className="w-3 h-3" />
-                        Ver CV
-                      </Button>
+                    {/* Carta de presentación */}
+                    {application.cover_letter && (
+                      <div className={application.profiles?.linkedin ? '' : 'sm:col-span-2'}>
+                        <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">Carta de presentación:</p>
+                        <div className="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                          <p className="text-xs sm:text-sm text-gray-700 line-clamp-3">
+                            {application.cover_letter}
+                          </p>
+                        </div>
+                      </div>
                     )}
                   </div>
 
-                  {application.status === 'pending' && (
-                    <div className="grid grid-cols-2 gap-2">
+                  <Separator className="my-3 sm:my-4" />
+
+                  {/* Acciones */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    {/* Botones de acción principales */}
+                    <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleUpdateStatus(application.id, 'rejected')}
-                        className="flex items-center justify-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-9"
+                        onClick={() => handleViewProfile(application.user_id)}
+                        className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9"
                       >
-                        <XCircle className="w-3 h-3" />
-                        Rechazar
+                        <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Ver Perfil Completo</span>
+                        <span className="sm:hidden">Perfil</span>
                       </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleUpdateStatus(application.id, 'accepted')}
-                        className="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-xs h-9"
-                      >
-                        <CheckCircle className="w-3 h-3" />
-                        Aceptar
-                      </Button>
+                      
+                      {application.resume_url && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(application.resume_url, '_blank')}
+                          className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9"
+                        >
+                          <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                          Ver CV
+                        </Button>
+                      )}
                     </div>
-                  )}
+
+                    {/* Botones de aceptar/rechazar */}
+                    {application.status === 'pending' && (
+                      <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateStatus(application.id, 'rejected')}
+                          className="flex items-center justify-center gap-1 sm:gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs sm:text-sm h-9"
+                        >
+                          <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                          Rechazar
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleUpdateStatus(application.id, 'accepted')}
+                          className="flex items-center justify-center gap-1 sm:gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm h-9"
+                        >
+                          <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                          Aceptar
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
