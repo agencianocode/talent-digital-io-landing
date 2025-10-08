@@ -15,15 +15,21 @@ import {
   Building
 } from 'lucide-react';
 import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
-import { useProfileData } from '@/hooks/useProfileData';
+import { useTalentProfileProgress } from '@/hooks/useTalentProfileProgress';
 
 const TalentDashboard = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { opportunities, isLoading: opportunitiesLoading } = useSupabaseOpportunities();
-  const { getProfileCompleteness } = useProfileData();
+  const { 
+    getTasksStatus, 
+    getCompletionPercentage, 
+    getNextIncompleteTask
+  } = useTalentProfileProgress();
   
-  const profileCompleteness = getProfileCompleteness();
+  const profileCompleteness = getCompletionPercentage();
+  const tasks = getTasksStatus();
+  const nextTask = getNextIncompleteTask();
 
   const handleSearch = () => {
     navigate('/talent-dashboard/explore');
@@ -53,33 +59,47 @@ const TalentDashboard = () => {
             <Progress value={profileCompleteness} className="h-2" />
             
             <div className="space-y-3">
-              {/* Onboarding Completado */}
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                <span className="text-gray-700 font-['Inter']">Onboarding Completado</span>
-              </div>
-              
-              {/* Agregar Experiencia y Educación */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Circle className="w-5 h-5 text-gray-400" />
-                  <span className="text-gray-700 font-['Inter']">Agrega Experiencia y Educación</span>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-blue-600 hover:text-blue-700 font-['Inter']"
-                  onClick={() => navigate('/talent-dashboard/profile')}
-                >
-                  Completar Perfil ahora <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-              
-              {/* Agregar Video de Presentación */}
-              <div className="flex items-center gap-3">
-                <Circle className="w-5 h-5 text-gray-400" />
-                <span className="text-gray-700 font-['Inter']">Agrega un Video de Presentación</span>
-              </div>
+              {tasks.map((task) => {
+                const isCurrentStep = !task.completed && nextTask?.id === task.id;
+                
+                return (
+                  <div 
+                    key={task.id}
+                    className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                      isCurrentStep 
+                        ? 'bg-blue-50 border-l-4 border-blue-500' 
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      {task.completed ? (
+                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                      ) : (
+                        <Circle className={`w-5 h-5 flex-shrink-0 ${isCurrentStep ? 'text-blue-500' : 'text-gray-400'}`} />
+                      )}
+                      <div className="flex-1">
+                        <span className={`text-gray-700 font-['Inter'] ${isCurrentStep ? 'font-semibold' : ''}`}>
+                          {task.title}
+                        </span>
+                        {!task.completed && task.description && (
+                          <p className="text-xs text-gray-500 mt-1">{task.description}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {!task.completed && task.route && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-blue-600 hover:text-blue-700 font-['Inter'] flex-shrink-0"
+                        onClick={() => task.route && navigate(task.route)}
+                      >
+                        Completar <ArrowRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>

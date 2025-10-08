@@ -8,6 +8,9 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Briefcase, User, Calendar, Eye, CheckCircle, XCircle, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ApplicationRatingModal } from '@/components/ApplicationRating/ApplicationRatingModal';
+import { ApplicationRatingDisplay } from '@/components/ApplicationRating/ApplicationRatingDisplay';
+import { useApplicationRatings } from '@/hooks/useApplicationRatings';
 
 const OpportunityApplicantsNew = () => {
   const { opportunityId } = useParams<{ opportunityId: string }>();
@@ -17,6 +20,10 @@ const OpportunityApplicantsNew = () => {
   const [applications, setApplications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedApplicationForRating, setSelectedApplicationForRating] = useState<any>(null);
+  
+  const { fetchApplicationRatings } = useApplicationRatings();
   
   useEffect(() => {
     if (!opportunityId) {
@@ -70,20 +77,20 @@ const OpportunityApplicantsNew = () => {
                   .eq("user_id", application.user_id)
                   .single();
 
-                console.log('Profile query for user:', application.user_id, {
-                  profileData,
-                  profileError
-                });
+                // Obtener calificaciones para esta aplicación
+                const ratings = await fetchApplicationRatings(application.id);
 
                 return {
                   ...application,
-                  profiles: profileError ? null : profileData
+                  profiles: profileError ? null : profileData,
+                  ratings: ratings || []
                 };
               } catch (error) {
-                console.warn('Error fetching profile for user:', application.user_id, error);
+                console.warn('Error fetching data for application:', application.id, error);
                 return {
                   ...application,
-                  profiles: null
+                  profiles: null,
+                  ratings: []
                 };
               }
             })
@@ -163,6 +170,16 @@ const OpportunityApplicantsNew = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleOpenRatingModal = (application: any) => {
+    setSelectedApplicationForRating(application);
+    setShowRatingModal(true);
+  };
+
+  const handleSaveRating = async () => {
+    // Recargar las aplicaciones para mostrar la nueva calificación
+    window.location.reload();
   };
   
   if (isLoading) {
@@ -335,6 +352,14 @@ const OpportunityApplicantsNew = () => {
                     )}
                   </div>
 
+                  {/* Mostrar calificaciones si existen */}
+                  {application.ratings && application.ratings.length > 0 && (
+                    <>
+                      <Separator className="my-3 sm:my-4" />
+                      <ApplicationRatingDisplay ratings={application.ratings} />
+                    </>
+                  )}
+
                   <Separator className="my-3 sm:my-4" />
 
                   {/* Acciones */}
@@ -363,6 +388,15 @@ const OpportunityApplicantsNew = () => {
                           Ver CV
                         </Button>
                       )}
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenRatingModal(application)}
+                        className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                      >
+                        ⭐ <span className="hidden sm:inline">Calificar</span>
+                      </Button>
                     </div>
 
                     {/* Botones de aceptar/rechazar */}
@@ -394,6 +428,16 @@ const OpportunityApplicantsNew = () => {
           ))
         )}
       </div>
+
+      {/* Modal de Calificación */}
+      {showRatingModal && selectedApplicationForRating && (
+        <ApplicationRatingModal
+          isOpen={showRatingModal}
+          onClose={() => setShowRatingModal(false)}
+          application={selectedApplicationForRating}
+          onSaveRating={handleSaveRating}
+        />
+      )}
     </div>
   );
 };

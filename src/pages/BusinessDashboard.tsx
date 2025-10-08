@@ -170,27 +170,34 @@ const BusinessDashboard = () => {
               </div>
             </div>
 
-            {/* Right Column - Video/Graphic Placeholder */}
+            {/* Right Column - Video Tutorial Real */}
             <div className="hidden lg:flex justify-center">
               <div className="relative">
                 {/* Decorative Background Elements */}
                 <div className="absolute -top-4 -right-4 w-32 h-32 bg-purple-200 rounded-full opacity-20"></div>
                 <div className="absolute -bottom-2 -left-2 w-24 h-24 bg-blue-200 rounded-full opacity-30"></div>
                 
-                {/* Video/Content Placeholder */}
-                <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50 w-72 h-44 flex items-center justify-center">
-                  <div className="text-center space-y-3">
-                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mx-auto flex items-center justify-center">
-                      <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-700">Video Tutorial</p>
-                      <p className="text-xs text-slate-500">Cómo empezar</p>
-                    </div>
-                  </div>
+                {/* Video Tutorial */}
+                <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50 w-80 h-48">
+                  <iframe
+                    className="w-full h-full"
+                    src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                    title="Tutorial TalentoDigital"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
                 </div>
+                
+                {/* Botón alternativo para llamada personalizada */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 w-full text-xs"
+                  onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}
+                >
+                  📞 Agendar llamada personalizada
+                </Button>
               </div>
             </div>
           </div>

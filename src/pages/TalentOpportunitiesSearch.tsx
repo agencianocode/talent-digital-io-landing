@@ -21,6 +21,7 @@ import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
 import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 import ApplicationModal from '@/components/ApplicationModal';
+import { useSavedOpportunities } from '@/hooks/useSavedOpportunities';
 
 interface FilterState {
   category: string;
@@ -182,9 +183,20 @@ const TalentOpportunitiesSearch = () => {
     window.location.reload();
   };
 
-  // TODO: Implementar funcionalidad de guardar oportunidades
-  const handleSave = async (_opportunityId: string) => {
-    toast.info('Funcionalidad de guardado próximamente disponible');
+  const { saveOpportunity, isOpportunitySaved } = useSavedOpportunities();
+
+  const handleSave = async (opportunityId: string) => {
+    if (isOpportunitySaved(opportunityId)) {
+      toast.info('Esta oportunidad ya está guardada');
+      return;
+    }
+    
+    try {
+      await saveOpportunity(opportunityId);
+      toast.success('Oportunidad guardada exitosamente');
+    } catch (error) {
+      toast.error('Error al guardar oportunidad');
+    }
   };
 
   // Limpiar filtros
@@ -510,10 +522,10 @@ const TalentOpportunitiesSearch = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleSave(opportunity.id)}
-                        className="flex items-center gap-2"
+                        className={`flex items-center gap-2 ${isOpportunitySaved(opportunity.id) ? 'bg-purple-50 text-purple-700 border-purple-200' : ''}`}
                       >
-                        <Bookmark className="h-4 w-4" />
-                        Guardar
+                        <Bookmark className={`h-4 w-4 ${isOpportunitySaved(opportunity.id) ? 'fill-current' : ''}`} />
+                        {isOpportunitySaved(opportunity.id) ? 'Guardado' : 'Guardar'}
                       </Button>
 
                       <Button

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
@@ -102,6 +102,50 @@ export type Database = {
             columns: ["academy_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      application_ratings: {
+        Row: {
+          application_id: string
+          comments: string | null
+          created_at: string
+          criteria_ratings: Json
+          id: string
+          overall_rating: number
+          rated_by_user_id: string
+          recommendation: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          comments?: string | null
+          created_at?: string
+          criteria_ratings?: Json
+          id?: string
+          overall_rating: number
+          rated_by_user_id: string
+          recommendation: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          comments?: string | null
+          created_at?: string
+          criteria_ratings?: Json
+          id?: string
+          overall_rating?: number
+          rated_by_user_id?: string
+          recommendation?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_ratings_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
             referencedColumns: ["id"]
           },
         ]
