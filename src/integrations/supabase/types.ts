@@ -417,6 +417,293 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_publishing_requests: {
+        Row: {
+          admin_notes: string | null
+          budget: string | null
+          company_name: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          description: string
+          id: string
+          requirements: string | null
+          service_type: string
+          status: string
+          timeline: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          budget?: string | null
+          company_name: string
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          requirements?: string | null
+          service_type: string
+          status?: string
+          timeline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          budget?: string | null
+          company_name?: string
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          requirements?: string | null
+          service_type?: string
+          status?: string
+          timeline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_service_requests: {
+        Row: {
+          budget_range: string
+          company_name: string | null
+          created_at: string
+          id: string
+          message: string
+          project_type: string
+          requester_email: string
+          requester_id: string | null
+          requester_name: string
+          requester_phone: string | null
+          service_id: string
+          status: string
+          timeline: string
+          updated_at: string
+        }
+        Insert: {
+          budget_range: string
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          project_type: string
+          requester_email: string
+          requester_id?: string | null
+          requester_name: string
+          requester_phone?: string | null
+          service_id: string
+          status?: string
+          timeline: string
+          updated_at?: string
+        }
+        Update: {
+          budget_range?: string
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          project_type?: string
+          requester_email?: string
+          requester_id?: string | null
+          requester_name?: string
+          requester_phone?: string | null
+          service_id?: string
+          status?: string
+          timeline?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_service_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_services: {
+        Row: {
+          category: string
+          created_at: string
+          currency: string
+          delivery_time: string
+          demo_url: string | null
+          description: string
+          id: string
+          is_available: boolean
+          location: string
+          portfolio_url: string | null
+          price: number
+          rating: number | null
+          requests_count: number
+          reviews_count: number
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+          views_count: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          currency?: string
+          delivery_time: string
+          demo_url?: string | null
+          description: string
+          id?: string
+          is_available?: boolean
+          location: string
+          portfolio_url?: string | null
+          price: number
+          rating?: number | null
+          requests_count?: number
+          reviews_count?: number
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+          views_count?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          currency?: string
+          delivery_time?: string
+          demo_url?: string | null
+          description?: string
+          id?: string
+          is_available?: boolean
+          location?: string
+          portfolio_url?: string | null
+          price?: number
+          rating?: number | null
+          requests_count?: number
+          reviews_count?: number
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          archived_by: string[] | null
+          attachment_name: string | null
+          attachment_size: number | null
+          attachment_type: string | null
+          content: string | null
+          conversation_id: string
+          created_at: string
+          delivered_at: string | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          is_read: boolean
+          label: string | null
+          message_type: string
+          read_at: string | null
+          recipient_id: string
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_by?: string[] | null
+          attachment_name?: string | null
+          attachment_size?: number | null
+          attachment_type?: string | null
+          content?: string | null
+          conversation_id: string
+          created_at?: string
+          delivered_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          is_read?: boolean
+          label?: string | null
+          message_type?: string
+          read_at?: string | null
+          recipient_id: string
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_by?: string[] | null
+          attachment_name?: string | null
+          attachment_size?: number | null
+          attachment_type?: string | null
+          content?: string | null
+          conversation_id?: string
+          created_at?: string
+          delivered_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          is_read?: boolean
+          label?: string | null
+          message_type?: string
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_text: string | null
+          action_url: string | null
+          created_at: string
+          data: Json | null
+          id: string
+          message: string
+          read: boolean
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_text?: string | null
+          action_url?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_text?: string | null
+          action_url?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       opportunities: {
         Row: {
           auto_saved_at: string | null
@@ -435,8 +722,10 @@ export type Database = {
           id: string
           is_academy_exclusive: boolean | null
           is_active: boolean | null
+          is_public: boolean | null
           location: string | null
           payment_type: string | null
+          public_url: string | null
           requirements: string | null
           salary_is_public: boolean | null
           salary_max: number | null
@@ -465,8 +754,10 @@ export type Database = {
           id?: string
           is_academy_exclusive?: boolean | null
           is_active?: boolean | null
+          is_public?: boolean | null
           location?: string | null
           payment_type?: string | null
+          public_url?: string | null
           requirements?: string | null
           salary_is_public?: boolean | null
           salary_max?: number | null
@@ -495,8 +786,10 @@ export type Database = {
           id?: string
           is_academy_exclusive?: boolean | null
           is_active?: boolean | null
+          is_public?: boolean | null
           location?: string | null
           payment_type?: string | null
+          public_url?: string | null
           requirements?: string | null
           salary_is_public?: boolean | null
           salary_max?: number | null
@@ -514,6 +807,76 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunity_shares: {
+        Row: {
+          created_at: string
+          id: string
+          opportunity_id: string
+          share_type: string
+          share_url: string | null
+          shared_by: string
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opportunity_id: string
+          share_type: string
+          share_url?: string | null
+          shared_by: string
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opportunity_id?: string
+          share_type?: string
+          share_url?: string | null
+          shared_by?: string
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_shares_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunity_views: {
+        Row: {
+          created_at: string
+          id: string
+          opportunity_id: string
+          viewer_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opportunity_id: string
+          viewer_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opportunity_id?: string
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_views_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
             referencedColumns: ["id"]
           },
         ]
@@ -675,6 +1038,33 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          subscription: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          subscription: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          subscription?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       role_change_audit: {
         Row: {
           changed_at: string | null
@@ -722,6 +1112,126 @@ export type Database = {
           created_at?: string
           id?: string
           opportunity_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      talent_education: {
+        Row: {
+          created_at: string | null
+          current: boolean | null
+          degree: string
+          description: string | null
+          end_date: string | null
+          field: string | null
+          id: string
+          institution: string
+          start_date: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current?: boolean | null
+          degree: string
+          description?: string | null
+          end_date?: string | null
+          field?: string | null
+          id?: string
+          institution: string
+          start_date: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current?: boolean | null
+          degree?: string
+          description?: string | null
+          end_date?: string | null
+          field?: string | null
+          id?: string
+          institution?: string
+          start_date?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      talent_experiences: {
+        Row: {
+          company: string
+          created_at: string | null
+          current: boolean | null
+          description: string | null
+          end_date: string | null
+          id: string
+          location: string | null
+          position: string
+          start_date: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          company: string
+          created_at?: string | null
+          current?: boolean | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          position: string
+          start_date: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          company?: string
+          created_at?: string | null
+          current?: boolean | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          position?: string
+          start_date?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      talent_portfolios: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_primary: boolean | null
+          title: string
+          type: string
+          updated_at: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_primary?: boolean | null
+          title: string
+          type?: string
+          updated_at?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_primary?: boolean | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          url?: string
           user_id?: string
         }
         Relationships: []
@@ -821,6 +1331,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      talent_social_links: {
+        Row: {
+          created_at: string | null
+          id: string
+          platform: string
+          updated_at: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          platform: string
+          updated_at?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          platform?: string
+          updated_at?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      typing_indicators: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       upgrade_requests: {
         Row: {
@@ -987,6 +1548,10 @@ export type Database = {
         Args: { directory_company_id: string; user_uuid: string }
         Returns: string
       }
+      cleanup_expired_typing_indicators: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_academy_students: {
         Args: { academy_uuid: string }
         Returns: {
@@ -1100,6 +1665,38 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      notify_access_request: {
+        Args: {
+          p_company_id: string
+          p_requested_role?: string
+          p_requester_id: string
+        }
+        Returns: undefined
+      }
+      notify_company_warning: {
+        Args: {
+          p_company_id: string
+          p_warning_message: string
+          p_warning_title: string
+        }
+        Returns: undefined
+      }
+      notify_expiring_opportunities: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      notify_inactive_opportunities: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      notify_opportunity_removed: {
+        Args: { p_opportunity_id: string; p_reason?: string }
+        Returns: undefined
+      }
+      notify_service_inquiry: {
+        Args: { p_inquirer_id: string; p_message: string; p_service_id: string }
+        Returns: undefined
+      }
       search_companies_directory: {
         Args: { search_term?: string }
         Returns: {
@@ -1119,6 +1716,15 @@ export type Database = {
           title: string
           usage_count: number
         }[]
+      }
+      start_conversation: {
+        Args: {
+          p_company_id: string
+          p_label?: string
+          p_resource_ref?: Json
+          p_talent_user_id: string
+        }
+        Returns: string
       }
       switch_user_role: {
         Args:
