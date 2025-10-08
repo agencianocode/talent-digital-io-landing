@@ -217,10 +217,10 @@ const OpportunityApplicantsNew = () => {
           Volver
         </Button>
         <div>
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-1">
+          <h1 className="text-base sm:text-2xl font-bold text-gray-900 mb-2 leading-tight">
             Postulantes para: {opportunity.title}
           </h1>
-          <p className="text-xs sm:text-sm text-gray-600 truncate">ID: {opportunity.id}</p>
+          <p className="text-xs text-gray-500 break-all hidden sm:block">ID: {opportunity.id}</p>
         </div>
       </div>
       
@@ -237,38 +237,48 @@ const OpportunityApplicantsNew = () => {
         ) : (
           applications.map((application) => (
             <Card key={application.id} className="hover:shadow-lg transition-all duration-200">
-              <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                  <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-                    <Avatar className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
+              <CardHeader className="pb-3 p-3 sm:p-6">
+                <div className="flex flex-col gap-3">
+                  {/* Header con avatar y nombre */}
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-14 h-14 flex-shrink-0">
                       <AvatarImage 
                         src={application.profiles?.avatar_url} 
                         alt={application.profiles?.full_name || "Usuario"} 
                       />
-                      <AvatarFallback className="bg-blue-100 text-blue-600 text-base sm:text-lg font-semibold">
+                      <AvatarFallback className="bg-blue-100 text-blue-600 text-base font-semibold">
                         {application.profiles?.full_name 
                           ? application.profiles.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
-                          : <User className="w-6 h-6 sm:w-8 sm:h-8" />
+                          : <User className="w-6 h-6" />
                         }
                       </AvatarFallback>
                     </Avatar>
+                    
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-base sm:text-xl font-bold text-gray-900">
-                        {application.profiles?.full_name || "Usuario sin nombre"}
-                      </h3>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className="text-base font-bold text-gray-900 leading-tight">
+                          {application.profiles?.full_name || "Usuario sin nombre"}
+                        </h3>
+                        <Badge className={`${getStatusColor(application.status)} border-0 text-xs whitespace-nowrap flex-shrink-0`}>
+                          {getStatusText(application.status)}
+                        </Badge>
+                      </div>
+                      
                       {application.profiles?.position && (
-                        <p className="text-sm sm:text-base text-gray-600 font-medium truncate">
+                        <p className="text-sm text-gray-600 font-medium mb-2 line-clamp-1">
                           {application.profiles.position}
                         </p>
                       )}
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-xs sm:text-sm text-gray-500 mt-1 gap-1">
+                      
+                      {/* Información de contacto en grid */}
+                      <div className="grid grid-cols-1 gap-1 text-xs text-gray-500">
                         <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                          <Calendar className="w-3 h-3 flex-shrink-0" />
                           <span className="truncate">Aplicó el {formatDate(application.created_at)}</span>
                         </div>
                         {(application.profiles?.city || application.profiles?.country) && (
                           <div className="flex items-center gap-1">
-                            <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                            <Mail className="w-3 h-3 flex-shrink-0" />
                             <span className="truncate">
                               {[application.profiles?.city, application.profiles?.country]
                                 .filter(Boolean)
@@ -276,33 +286,28 @@ const OpportunityApplicantsNew = () => {
                             </span>
                           </div>
                         )}
+                        {application.profiles?.phone && (
+                          <div className="flex items-center gap-1">
+                            <span>📱</span>
+                            <span className="truncate">{application.profiles.phone}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:text-right">
-                    <Badge className={`${getStatusColor(application.status)} border-0 text-xs whitespace-nowrap`}>
-                      {getStatusText(application.status)}
-                    </Badge>
-                    {application.profiles?.phone && (
-                      <p className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                        📱 {application.profiles.phone}
-                      </p>
-                    )}
                   </div>
                 </div>
               </CardHeader>
               
-              <CardContent className="pt-0 p-4 sm:p-6">
-                {/* Información de contacto */}
+              <CardContent className="pt-0 p-3 sm:p-6">
+                {/* LinkedIn */}
                 {application.profiles?.linkedin && (
-                  <div className="mb-3 sm:mb-4">
-                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">LinkedIn:</p>
+                  <div className="mb-3">
+                    <p className="text-xs font-medium text-gray-700 mb-1">LinkedIn:</p>
                     <a 
                       href={application.profiles.linkedin} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm break-all"
+                      className="text-blue-600 hover:text-blue-800 text-xs break-all"
                     >
                       {application.profiles.linkedin}
                     </a>
@@ -311,32 +316,30 @@ const OpportunityApplicantsNew = () => {
 
                 {/* Carta de presentación */}
                 {application.cover_letter && (
-                  <div className="mb-3 sm:mb-4">
-                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Carta de presentación:</p>
-                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg">
-                      <p className="text-xs sm:text-sm text-gray-700">
-                        {application.cover_letter.length > 150 
-                          ? `${application.cover_letter.substring(0, 150)}...` 
-                          : application.cover_letter
-                        }
+                  <div className="mb-3">
+                    <p className="text-xs font-medium text-gray-700 mb-1">Carta de presentación:</p>
+                    <div className="bg-gray-50 p-2 rounded-lg">
+                      <p className="text-xs text-gray-700 line-clamp-3">
+                        {application.cover_letter}
                       </p>
                     </div>
                   </div>
                 )}
 
-                <Separator className="my-3 sm:my-4" />
+                <Separator className="my-3" />
 
                 {/* Acciones */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewProfile(application.user_id)}
-                      className="flex items-center justify-center gap-2 text-xs sm:text-sm"
+                      className="flex items-center justify-center gap-1 text-xs h-9"
                     >
-                      <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
-                      Ver Perfil Completo
+                      <Eye className="w-3 h-3" />
+                      <span className="hidden sm:inline">Ver Perfil</span>
+                      <span className="sm:hidden">Perfil</span>
                     </Button>
                     
                     {application.resume_url && (
@@ -344,31 +347,31 @@ const OpportunityApplicantsNew = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => window.open(application.resume_url, '_blank')}
-                        className="flex items-center justify-center gap-2 text-xs sm:text-sm"
+                        className="flex items-center justify-center gap-1 text-xs h-9"
                       >
-                        <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <User className="w-3 h-3" />
                         Ver CV
                       </Button>
                     )}
                   </div>
 
                   {application.status === 'pending' && (
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleUpdateStatus(application.id, 'rejected')}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs sm:text-sm"
+                        className="flex items-center justify-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-9"
                       >
-                        <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <XCircle className="w-3 h-3" />
                         Rechazar
                       </Button>
                       <Button
                         size="sm"
                         onClick={() => handleUpdateStatus(application.id, 'accepted')}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
+                        className="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-xs h-9"
                       >
-                        <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <CheckCircle className="w-3 h-3" />
                         Aceptar
                       </Button>
                     </div>
