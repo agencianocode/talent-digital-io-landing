@@ -10,3 +10,6 @@ additional_redirect_urls = [
 
 [functions.send-email]
 verify_jwt = false
+
+[functions.check-inactive-opportunities]
+verify_jwt = false
