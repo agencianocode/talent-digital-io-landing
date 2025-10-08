@@ -27,11 +27,11 @@ export interface TalentService {
 export interface ServiceRequest {
   id: string;
   service_id: string;
-  requester_id?: string;
+  requester_id?: string | null;
   requester_name: string;
   requester_email: string;
-  requester_phone?: string;
-  company_name?: string;
+  requester_phone?: string | null;
+  company_name?: string | null;
   message: string;
   budget_range: string;
   timeline: string;
@@ -45,15 +45,15 @@ export interface ServicePublishingRequest {
   id: string;
   contact_name: string;
   contact_email: string;
-  contact_phone?: string;
+  contact_phone?: string | null;
   company_name: string;
   service_type: string;
-  budget?: string;
-  timeline?: string;
+  budget?: string | null;
+  timeline?: string | null;
   description: string;
-  requirements?: string;
+  requirements?: string | null;
   status: 'pending' | 'reviewed' | 'approved' | 'rejected';
-  admin_notes?: string;
+  admin_notes?: string | null;
   created_at: string;
   updated_at: string;
 }

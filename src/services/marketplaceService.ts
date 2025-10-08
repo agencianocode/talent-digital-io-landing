@@ -1,4 +1,4 @@
-// import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import {
   TalentService,
   ServiceRequest,
@@ -20,134 +20,69 @@ class MarketplaceService {
    */
   async getActiveServices(filters?: ServiceFilters, page = 1, limit = 12): Promise<PaginatedResponse<TalentServiceWithUser>> {
     try {
-      // For now, use mock data until tables are created
-      const mockServices: TalentServiceWithUser[] = [
-        {
-          id: '1',
-          user_id: 'user1',
-          title: 'Diseño de Logo Profesional',
-          description: 'Creación de logos únicos y profesionales para tu marca. Incluye 3 conceptos iniciales y 2 revisiones.',
-          category: 'diseno-grafico',
-          price: 150.00,
-          currency: 'USD',
-          delivery_time: '3-5 días',
-          location: 'Remoto',
-          is_available: true,
-          status: 'active',
-          portfolio_url: 'https://portfolio.com/example',
-          demo_url: 'https://demo.com/logo',
-          tags: ['logo', 'branding', 'diseño'],
-          views_count: 45,
-          requests_count: 12,
-          rating: 4.8,
-          reviews_count: 8,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_name: 'MG María García',
-          user_avatar: undefined
-        },
-        {
-          id: '2',
-          user_id: 'user2',
-          title: 'Desarrollo de Sitio Web',
-          description: 'Desarrollo completo de sitios web responsivos con React y Node.js. Incluye diseño y funcionalidades personalizadas.',
-          category: 'desarrollo-web',
-          price: 2500.00,
-          currency: 'USD',
-          delivery_time: '2-3 semanas',
-          location: 'Remoto',
-          is_available: true,
-          status: 'active',
-          portfolio_url: 'https://portfolio.com/example',
-          demo_url: 'https://demo.com/web',
-          tags: ['react', 'nodejs', 'web'],
-          views_count: 78,
-          requests_count: 5,
-          rating: 4.9,
-          reviews_count: 3,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_name: 'CL Carlos López',
-          user_avatar: undefined
-        },
-        {
-          id: '3',
-          user_id: 'user3',
-          title: 'Estrategia de Marketing Digital',
-          description: 'Desarrollo de estrategias completas de marketing digital para redes sociales y campañas publicitarias.',
-          category: 'marketing-digital',
-          price: 800.00,
-          currency: 'USD',
-          delivery_time: '1-2 semanas',
-          location: 'Remoto',
-          is_available: true,
-          status: 'active',
-          portfolio_url: 'https://portfolio.com/example',
-          demo_url: undefined,
-          tags: ['marketing', 'social media', 'estrategia'],
-          views_count: 32,
-          requests_count: 7,
-          rating: 4.6,
-          reviews_count: 5,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_name: 'AR Ana Rodríguez',
-          user_avatar: undefined
-        }
-      ];
+      // Build query
+      let query = supabase
+        .from('marketplace_services')
+        .select(`
+          *,
+          profiles!marketplace_services_user_id_fkey (
+            full_name,
+            avatar_url
+          )
+        `, { count: 'exact' })
+        .eq('status', 'active')
+        .eq('is_available', true);
 
       // Apply filters
-      let filteredServices = mockServices;
-      
       if (filters) {
         if (filters.searchQuery) {
-          const query = filters.searchQuery.toLowerCase();
-          filteredServices = filteredServices.filter(service => 
-            service.title.toLowerCase().includes(query) ||
-            service.description.toLowerCase().includes(query) ||
-            service.user_name.toLowerCase().includes(query)
-          );
+          query = query.or(`title.ilike.%${filters.searchQuery}%,description.ilike.%${filters.searchQuery}%`);
         }
         
         if (filters.categoryFilter && filters.categoryFilter !== 'all') {
-          filteredServices = filteredServices.filter(service => 
-            service.category === filters.categoryFilter
-          );
+          query = query.eq('category', filters.categoryFilter);
         }
         
         if (filters.priceRange && filters.priceRange !== 'all') {
           const [minStr, maxStr] = filters.priceRange.split('-');
           const min = parseFloat(minStr || '0');
-          const max = maxStr === '5000+' ? Infinity : parseFloat(maxStr || '0');
           
-          filteredServices = filteredServices.filter(service => {
-            if (max === Infinity) {
-              return service.price >= min;
-            } else {
-              return service.price >= min && service.price <= max;
-            }
-          });
+          if (maxStr === '5000+') {
+            query = query.gte('price', min);
+          } else {
+            const max = parseFloat(maxStr || '0');
+            query = query.gte('price', min).lte('price', max);
+          }
         }
         
         if (filters.locationFilter && filters.locationFilter !== 'all') {
-          filteredServices = filteredServices.filter(service => 
-            service.location === filters.locationFilter
-          );
+          query = query.eq('location', filters.locationFilter);
         }
       }
 
-      // Apply pagination
-      const total = filteredServices.length;
+      // Apply pagination and ordering
       const from = (page - 1) * limit;
-      const to = from + limit;
-      const paginatedServices = filteredServices.slice(from, to);
+      const to = from + limit - 1;
+      
+      const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+
+      // Transform data to include user info
+      const servicesWithUser: TalentServiceWithUser[] = (data || []).map((service: any) => ({
+        ...service,
+        user_name: service.profiles?.full_name || 'Usuario',
+        user_avatar: service.profiles?.avatar_url
+      }));
 
       return {
-        data: paginatedServices,
-        total,
+        data: servicesWithUser,
+        total: count || 0,
         page,
         limit,
-        hasMore: to < total
+        hasMore: (count || 0) > to + 1
       };
     } catch (error) {
       console.error('Error fetching active services:', error);
@@ -158,10 +93,16 @@ class MarketplaceService {
   /**
    * Get services for a specific user (talent)
    */
-  async getUserServices(_userId: string): Promise<TalentService[]> {
+  async getUserServices(userId: string): Promise<TalentService[]> {
     try {
-      // For now, return empty array until tables are created
-      return [];
+      const { data, error } = await supabase
+        .from('marketplace_services')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as TalentService[];
     } catch (error) {
       console.error('Error fetching user services:', error);
       throw error;
@@ -173,20 +114,18 @@ class MarketplaceService {
    */
   async createService(userId: string, serviceData: ServiceFormData): Promise<TalentService> {
     try {
-      // For now, simulate creation
-      const newService: TalentService = {
-        id: Date.now().toString(),
-        user_id: userId,
-        ...serviceData,
-        status: 'draft',
-        views_count: 0,
-        requests_count: 0,
-        reviews_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      return newService;
+      const { data, error } = await supabase
+        .from('marketplace_services')
+        .insert({
+          user_id: userId,
+          ...serviceData,
+          status: serviceData.is_available ? 'active' : 'draft'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as TalentService;
     } catch (error) {
       console.error('Error creating service:', error);
       throw error;
@@ -198,30 +137,16 @@ class MarketplaceService {
    */
   async updateService(serviceId: string, userId: string, serviceData: Partial<ServiceFormData>): Promise<TalentService> {
     try {
-      // For now, simulate update
-      const updatedService: TalentService = {
-        id: serviceId,
-        user_id: userId,
-        title: serviceData.title || 'Updated Service',
-        description: serviceData.description || 'Updated description',
-        category: serviceData.category || 'diseno-grafico',
-        price: serviceData.price || 100,
-        currency: serviceData.currency || 'USD',
-        delivery_time: serviceData.delivery_time || '1 semana',
-        location: serviceData.location || 'Remoto',
-        is_available: serviceData.is_available ?? true,
-        status: 'active',
-        portfolio_url: serviceData.portfolio_url,
-        demo_url: serviceData.demo_url,
-        tags: serviceData.tags || [],
-        views_count: 0,
-        requests_count: 0,
-        reviews_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      return updatedService;
+      const { data, error } = await supabase
+        .from('marketplace_services')
+        .update(serviceData)
+        .eq('id', serviceId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as TalentService;
     } catch (error) {
       console.error('Error updating service:', error);
       throw error;
@@ -231,10 +156,15 @@ class MarketplaceService {
   /**
    * Delete a service
    */
-  async deleteService(serviceId: string, _userId: string): Promise<void> {
+  async deleteService(serviceId: string, userId: string): Promise<void> {
     try {
-      // For now, simulate deletion
-      console.log(`Deleting service ${serviceId} for user ${_userId}`);
+      const { error } = await supabase
+        .from('marketplace_services')
+        .delete()
+        .eq('id', serviceId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
     } catch (error) {
       console.error('Error deleting service:', error);
       throw error;
@@ -246,8 +176,19 @@ class MarketplaceService {
    */
   async incrementServiceViews(serviceId: string): Promise<void> {
     try {
-      // For now, simulate view increment
-      console.log(`Incrementing views for service ${serviceId}`);
+      // Get current views count
+      const { data: service } = await supabase
+        .from('marketplace_services')
+        .select('views_count')
+        .eq('id', serviceId)
+        .single();
+
+      if (service) {
+        await supabase
+          .from('marketplace_services')
+          .update({ views_count: service.views_count + 1 })
+          .eq('id', serviceId);
+      }
     } catch (error) {
       console.error('Error incrementing service views:', error);
       // Don't throw error for view tracking
@@ -259,10 +200,21 @@ class MarketplaceService {
   /**
    * Get service requests for a user's services
    */
-  async getServiceRequests(_userId: string): Promise<ServiceRequest[]> {
+  async getServiceRequests(userId: string): Promise<ServiceRequest[]> {
     try {
-      // For now, return empty array until tables are created
-      return [];
+      const { data, error } = await supabase
+        .from('marketplace_service_requests')
+        .select(`
+          *,
+          marketplace_services!inner (
+            user_id
+          )
+        `)
+        .eq('marketplace_services.user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as ServiceRequest[];
     } catch (error) {
       console.error('Error fetching service requests:', error);
       throw error;
@@ -274,24 +226,36 @@ class MarketplaceService {
    */
   async createServiceRequest(serviceId: string, requestData: ServiceRequestFormData): Promise<ServiceRequest> {
     try {
-      // For now, simulate request creation
-      const newRequest: ServiceRequest = {
-        id: Date.now().toString(),
-        service_id: serviceId,
-        requester_name: requestData.requester_name,
-        requester_email: requestData.requester_email,
-        requester_phone: requestData.requester_phone,
-        company_name: requestData.company_name,
-        message: requestData.message,
-        budget_range: requestData.budget_range,
-        timeline: requestData.timeline,
-        project_type: requestData.project_type,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      // Get current user ID if authenticated
+      const { data: { user } } = await supabase.auth.getUser();
       
-      return newRequest;
+      const { data, error } = await supabase
+        .from('marketplace_service_requests')
+        .insert({
+          service_id: serviceId,
+          requester_id: user?.id,
+          ...requestData
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Increment requests count
+      const { data: service } = await supabase
+        .from('marketplace_services')
+        .select('requests_count')
+        .eq('id', serviceId)
+        .single();
+
+      if (service) {
+        await supabase
+          .from('marketplace_services')
+          .update({ requests_count: service.requests_count + 1 })
+          .eq('id', serviceId);
+      }
+
+      return data as ServiceRequest;
     } catch (error) {
       console.error('Error creating service request:', error);
       throw error;
@@ -303,22 +267,15 @@ class MarketplaceService {
    */
   async updateRequestStatus(requestId: string, status: 'pending' | 'accepted' | 'declined' | 'completed'): Promise<ServiceRequest> {
     try {
-      // For now, simulate status update
-      const updatedRequest: ServiceRequest = {
-        id: requestId,
-        service_id: 'service1',
-        requester_name: 'Test User',
-        requester_email: 'test@example.com',
-        message: 'Test message',
-        budget_range: '1000-2500',
-        timeline: 'normal',
-        project_type: 'one-time',
-        status,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      return updatedRequest;
+      const { data, error } = await supabase
+        .from('marketplace_service_requests')
+        .update({ status })
+        .eq('id', requestId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as ServiceRequest;
     } catch (error) {
       console.error('Error updating request status:', error);
       throw error;
@@ -332,24 +289,14 @@ class MarketplaceService {
    */
   async createPublishingRequest(requestData: ServicePublishingFormData): Promise<ServicePublishingRequest> {
     try {
-      // For now, simulate publishing request creation
-      const newRequest: ServicePublishingRequest = {
-        id: Date.now().toString(),
-        contact_name: requestData.contact_name,
-        contact_email: requestData.contact_email,
-        contact_phone: requestData.contact_phone,
-        company_name: requestData.company_name,
-        service_type: requestData.service_type,
-        budget: requestData.budget,
-        timeline: requestData.timeline,
-        description: requestData.description,
-        requirements: requestData.requirements,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      return newRequest;
+      const { data, error } = await supabase
+        .from('marketplace_publishing_requests')
+        .insert(requestData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as ServicePublishingRequest;
     } catch (error) {
       console.error('Error creating publishing request:', error);
       throw error;
@@ -361,8 +308,13 @@ class MarketplaceService {
    */
   async getPublishingRequests(): Promise<ServicePublishingRequest[]> {
     try {
-      // For now, return empty array until tables are created
-      return [];
+      const { data, error } = await supabase
+        .from('marketplace_publishing_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as ServicePublishingRequest[];
     } catch (error) {
       console.error('Error fetching publishing requests:', error);
       throw error;
@@ -374,14 +326,21 @@ class MarketplaceService {
   /**
    * Get service statistics
    */
-  async getServiceStats(_serviceId: string): Promise<ServiceStats> {
+  async getServiceStats(serviceId: string): Promise<ServiceStats> {
     try {
-      // For now, return mock stats
+      const { data, error } = await supabase
+        .from('marketplace_services')
+        .select('views_count, requests_count, rating, reviews_count')
+        .eq('id', serviceId)
+        .single();
+
+      if (error) throw error;
+
       return {
-        total_views: 45,
-        total_requests: 12,
-        average_rating: 4.8,
-        total_reviews: 8
+        total_views: data.views_count,
+        total_requests: data.requests_count,
+        average_rating: data.rating || 0,
+        total_reviews: data.reviews_count
       };
     } catch (error) {
       console.error('Error fetching service stats:', error);
@@ -399,16 +358,43 @@ class MarketplaceService {
     totalRequests: number;
   }> {
     try {
-      // For now, return mock stats
+      const { count: totalServices } = await supabase
+        .from('marketplace_services')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+
+      const { data: providers } = await supabase
+        .from('marketplace_services')
+        .select('user_id')
+        .eq('status', 'active');
+
+      const uniqueProviders = new Set(providers?.map(p => p.user_id) || []);
+
+      const { data: stats } = await supabase
+        .from('marketplace_services')
+        .select('rating, requests_count')
+        .eq('status', 'active');
+
+      const avgRating = stats && stats.length > 0
+        ? stats.reduce((sum, s) => sum + (s.rating || 0), 0) / stats.filter(s => s.rating).length
+        : 0;
+
+      const totalRequests = stats?.reduce((sum, s) => sum + s.requests_count, 0) || 0;
+
       return {
-        totalServices: 3,
-        activeProviders: 3,
-        averageRating: 4.7,
-        totalRequests: 24
+        totalServices: totalServices || 0,
+        activeProviders: uniqueProviders.size,
+        averageRating: Number(avgRating.toFixed(1)),
+        totalRequests
       };
     } catch (error) {
       console.error('Error fetching marketplace stats:', error);
-      throw error;
+      return {
+        totalServices: 0,
+        activeProviders: 0,
+        averageRating: 0,
+        totalRequests: 0
+      };
     }
   }
 }
