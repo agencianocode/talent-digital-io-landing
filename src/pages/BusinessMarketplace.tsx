@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Plus, 
-  Search, 
   Grid3X3, 
   List,
   ChevronLeft,
@@ -228,14 +227,22 @@ const BusinessMarketplace: React.FC = () => {
       ) : services.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Search className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No se encontraron servicios</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              Intenta ajustar tus filtros de búsqueda o explorar diferentes categorías.
+            <Package className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
+              {allServices.length === 0 
+                ? 'El marketplace está vacío' 
+                : 'No se encontraron servicios'}
+            </h3>
+            <p className="text-muted-foreground text-center mb-4 max-w-md">
+              {allServices.length === 0 
+                ? 'Aún no hay servicios publicados en el marketplace. Los talentos premium pueden publicar sus servicios.' 
+                : 'Intenta ajustar tus filtros de búsqueda o explorar diferentes categorías.'}
             </p>
-            <Button variant="outline" onClick={handleClearFilters}>
-              Limpiar filtros
-            </Button>
+            {allServices.length > 0 && (
+              <Button variant="outline" onClick={handleClearFilters}>
+                Limpiar filtros
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (

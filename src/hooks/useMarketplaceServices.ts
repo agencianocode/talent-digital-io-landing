@@ -93,10 +93,14 @@ export const useMarketplaceServices = (): UseMarketplaceServicesReturn => {
       setIsLoading(true);
       setError(null);
 
+      console.log('🔍 Loading marketplace services with filters:', filters, 'page:', currentPage);
+      
       const response = await marketplaceService.getActiveServices(filters, currentPage, ITEMS_PER_PAGE);
       
+      console.log('✅ Loaded services:', response.data.length, 'Total count:', response.total);
+      
       setServices(response.data);
-      setTotalPages(Math.ceil(response.total / ITEMS_PER_PAGE));
+      setTotalPages(Math.ceil(response.total / ITEMS_PER_PAGE) || 1);
       setHasMore(response.hasMore);
 
       // Load all services for stats (first page only)
@@ -107,19 +111,21 @@ export const useMarketplaceServices = (): UseMarketplaceServicesReturn => {
 
       // Load marketplace stats
       const marketplaceStats = await marketplaceService.getMarketplaceStats();
+      console.log('📊 Marketplace stats:', marketplaceStats);
       setStats(marketplaceStats);
 
     } catch (err) {
-      console.error('Error loading services:', err);
-      setError(err instanceof Error ? err.message : 'Error al cargar los servicios');
+      console.error('❌ Error loading services:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar los servicios';
+      setError(errorMessage);
       
-      // Fallback to mock data
+      // Set empty arrays instead of keeping old data
       setServices([]);
       setAllServices([]);
       setStats({
         totalServices: 0,
         activeProviders: 0,
-        averageRating: 4.7,
+        averageRating: 0,
         totalRequests: 0
       });
     } finally {
