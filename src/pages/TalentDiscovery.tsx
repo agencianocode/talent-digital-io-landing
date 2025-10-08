@@ -433,20 +433,20 @@ const TalentDiscovery = () => {
 
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
             Descubrir Talento
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Encuentra y conecta con los mejores profesionales para tu equipo
           </p>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-blue-900">{stats.total}</div>
@@ -494,22 +494,22 @@ const TalentDiscovery = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Todos ({allTalents.length})
+        <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 py-2 sm:py-3 px-1 sm:px-3 text-xs sm:text-sm">
+            <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="whitespace-nowrap">Todos ({allTalents.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="featured" className="flex items-center gap-2">
-            <Award className="h-4 w-4" />
-            Destacados ({stats.featured})
+          <TabsTrigger value="featured" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 py-2 sm:py-3 px-1 sm:px-3 text-xs sm:text-sm">
+            <Award className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="whitespace-nowrap">Destacados ({stats.featured})</span>
           </TabsTrigger>
-          <TabsTrigger value="verified" className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            Verificados ({stats.verified})
+          <TabsTrigger value="verified" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 py-2 sm:py-3 px-1 sm:px-3 text-xs sm:text-sm">
+            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="whitespace-nowrap">Verificados ({stats.verified})</span>
           </TabsTrigger>
-          <TabsTrigger value="premium" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Premium ({stats.premium})
+          <TabsTrigger value="premium" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 py-2 sm:py-3 px-1 sm:px-3 text-xs sm:text-sm">
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="whitespace-nowrap">Premium ({stats.premium})</span>
           </TabsTrigger>
         </TabsList>
 
