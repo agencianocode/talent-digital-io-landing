@@ -64,6 +64,28 @@ const TalentOpportunities = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
+  // Cargar filtros guardados del localStorage al montar
+  useEffect(() => {
+    const savedSearch = localStorage.getItem('talent-applications-search');
+    if (savedSearch) {
+      setSearchTerm(savedSearch);
+    }
+
+    const savedStatus = localStorage.getItem('talent-applications-status');
+    if (savedStatus) {
+      setStatusFilter(savedStatus);
+    }
+  }, []);
+
+  // Guardar filtros en localStorage cuando cambien
+  useEffect(() => {
+    localStorage.setItem('talent-applications-search', searchTerm);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    localStorage.setItem('talent-applications-status', statusFilter);
+  }, [statusFilter]);
+
   useEffect(() => {
     if (user) {
       fetchApplications();
