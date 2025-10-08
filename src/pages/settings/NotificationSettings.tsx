@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Bell, Mail, MessageSquare, Briefcase, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { PushNotificationToggle } from '@/components/notifications/PushNotificationToggle';
 
 const notificationSchema = z.object({
   // Email Notifications
@@ -243,6 +244,7 @@ const NotificationSettings = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <PushNotificationToggle />
               <FormField
                 control={form.control}
                 name="push_opportunities"
