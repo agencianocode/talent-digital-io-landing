@@ -18,10 +18,24 @@ serve(async (req) => {
   }
 
   try {
-    // Verify the request is authorized (you can add a secret token check here)
+    // Verify authorization - check for Authorization header or cron secret
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('Missing authorization header')
+    const cronSecret = Deno.env.get('CRON_SECRET')
+    
+    // Allow if called with service role key or matching cron secret
+    const isAuthorized = 
+      authHeader?.includes('Bearer') || 
+      (cronSecret && authHeader === `Bearer ${cronSecret}`)
+    
+    if (!isAuthorized) {
+      console.warn('⚠️ Unauthorized access attempt')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401 
+        }
+      )
     }
 
     // Create Supabase client
