@@ -59,16 +59,19 @@ export const useAdminData = () => {
       setIsLoading(true);
       setError(null);
 
-      // Load user stats (mock data for demonstration)
-      const userStats = {
-        total_users: 150,
-        users_by_role: {
-          'freemium_talent': 120,
-          'premium_talent': 15,
-          'freemium_business': 10,
-          'premium_business': 5
+      // Load real user stats using RPC function
+      const { data: userStatsData, error: statsError } = await supabase
+        .rpc('get_user_stats_for_admin');
+
+      if (statsError) throw statsError;
+
+      const totalUsers = userStatsData?.[0]?.total_users || 0;
+      const usersByRole = userStatsData?.reduce((acc: Record<string, number>, stat: any) => {
+        if (stat.role_name) {
+          acc[stat.role_name] = stat.role_count;
         }
-      };
+        return acc;
+      }, {}) || {};
 
       // Load company stats
       const { count: companyCount, error: companyError } = await supabase
@@ -109,9 +112,6 @@ export const useAdminData = () => {
       const activeServices = services.filter((s: any) => s.is_available).length;
       const totalServices = services.length;
 
-      // Process user stats
-      const totalUsers = userStats.total_users || 0;
-      const usersByRole = userStats.users_by_role || {};
 
       // Calculate recent activity (last 24 hours)
       const yesterday = new Date();
