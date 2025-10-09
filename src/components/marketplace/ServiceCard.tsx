@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   onRequestService,
   onViewPortfolio
 }) => {
+  const navigate = useNavigate();
   const category = getCategoryById(service.category);
 
   const formatPrice = (price: number, currency: string) => {
@@ -47,7 +49,10 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   };
 
   return (
-    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
+    <Card 
+      className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+      onClick={() => navigate(`/marketplace/service/${service.id}`)}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -143,7 +148,10 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         {/* Actions */}
         <div className="flex gap-2 mt-auto">
           <Button 
-            onClick={() => onRequestService(service)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRequestService(service);
+            }}
             className="flex-1"
             size="sm"
           >
@@ -153,7 +161,10 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onViewPortfolio?.(service)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewPortfolio?.(service);
+              }}
             >
               <ExternalLink className="h-4 w-4" />
             </Button>
