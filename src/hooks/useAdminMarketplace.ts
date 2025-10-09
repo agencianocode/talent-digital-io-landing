@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 
 interface MarketplaceFilters {
@@ -60,101 +62,56 @@ export const useAdminMarketplace = () => {
       setIsLoading(true);
       setError(null);
 
-      // Mock data for demonstration since talent_services table doesn't exist yet
-      const mockServices: MarketplaceData[] = [
-        {
-          id: '1',
-          title: 'Diseño de Logo Profesional',
-          description: 'Creación de logos únicos y profesionales para tu marca. Incluye 3 conceptos iniciales y 2 revisiones.',
-          category: 'diseno-grafico',
-          price: 150,
-          currency: 'USD',
-          delivery_time: '3-5 días',
-          location: 'Remoto',
-          is_active: true,
-          status: 'active',
-          created_at: '2024-01-15T10:00:00Z',
-          updated_at: '2024-01-15T10:00:00Z',
-          user_id: 'user1',
-          company_id: 'company1',
-          company_name: 'Design Studio',
-          company_logo: undefined,
-          user_name: 'María García',
-          user_avatar: undefined,
-          views_count: 45,
-          orders_count: 12,
-          rating: 4.8,
-          reviews_count: 8,
-          priority: 'medium',
-          admin_notes: '',
-          tags: ['logo', 'branding', 'diseño'],
-          portfolio_url: 'https://portfolio.com/maria',
-          demo_url: 'https://demo.com/logo'
-        },
-        {
-          id: '2',
-          title: 'Desarrollo de Sitio Web',
-          description: 'Desarrollo completo de sitios web responsivos con React y Node.js. Incluye diseño y funcionalidades personalizadas.',
-          category: 'desarrollo-web',
-          price: 2500,
-          currency: 'USD',
-          delivery_time: '2-3 semanas',
-          location: 'Remoto',
-          is_active: true,
-          status: 'active',
-          created_at: '2024-01-10T14:30:00Z',
-          updated_at: '2024-01-10T14:30:00Z',
-          user_id: 'user2',
-          company_id: 'company2',
-          company_name: 'Tech Solutions',
-          company_logo: undefined,
-          user_name: 'Carlos López',
-          user_avatar: undefined,
-          views_count: 78,
-          orders_count: 5,
-          rating: 4.9,
-          reviews_count: 3,
-          priority: 'high',
-          admin_notes: '',
-          tags: ['react', 'nodejs', 'web'],
-          portfolio_url: 'https://portfolio.com/carlos',
-          demo_url: 'https://demo.com/web'
-        },
-        {
-          id: '3',
-          title: 'Estrategia de Marketing Digital',
-          description: 'Desarrollo de estrategias completas de marketing digital para redes sociales y campañas publicitarias.',
-          category: 'marketing-digital',
-          price: 800,
-          currency: 'USD',
-          delivery_time: '1-2 semanas',
-          location: 'Remoto',
-          is_active: false,
-          status: 'paused',
-          created_at: '2024-01-05T09:15:00Z',
-          updated_at: '2024-01-05T09:15:00Z',
-          user_id: 'user3',
-          company_id: undefined,
-          company_name: undefined,
-          company_logo: undefined,
-          user_name: 'Ana Rodríguez',
-          user_avatar: undefined,
-          views_count: 32,
-          orders_count: 7,
-          rating: 4.6,
-          reviews_count: 5,
-          priority: 'low',
-          admin_notes: 'Servicio pausado temporalmente',
-          tags: ['marketing', 'social media', 'estrategia'],
-          portfolio_url: 'https://portfolio.com/ana',
-          demo_url: undefined
-        }
-      ];
+      // Fetch real marketplace services from Supabase
+      const { data: servicesData, error: servicesError } = await supabase
+        .from('marketplace_services')
+        .select(`
+          *,
+          profiles!marketplace_services_user_id_fkey (
+            full_name,
+            avatar_url
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-      setServices(mockServices);
+      if (servicesError) throw servicesError;
+
+      // Transform data to match interface
+      const transformedServices: MarketplaceData[] = (servicesData || []).map(service => ({
+        id: service.id,
+        title: service.title,
+        description: service.description,
+        category: service.category,
+        price: Number(service.price),
+        currency: service.currency,
+        delivery_time: service.delivery_time,
+        location: service.location,
+        is_active: service.is_available,
+        status: service.status,
+        created_at: service.created_at,
+        updated_at: service.updated_at,
+        user_id: service.user_id,
+        company_id: undefined,
+        company_name: undefined,
+        company_logo: undefined,
+        user_name: service.profiles?.full_name || 'Usuario',
+        user_avatar: service.profiles?.avatar_url,
+        views_count: service.views_count || 0,
+        orders_count: service.requests_count || 0,
+        rating: Number(service.rating) || 0,
+        reviews_count: service.reviews_count || 0,
+        priority: 'medium', // Default priority
+        admin_notes: '',
+        tags: service.tags || [],
+        portfolio_url: service.portfolio_url,
+        demo_url: service.demo_url
+      }));
+
+      setServices(transformedServices);
     } catch (err) {
       console.error('Error loading services:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
+      toast.error('Error al cargar los servicios del marketplace');
     } finally {
       setIsLoading(false);
     }
@@ -250,22 +207,57 @@ export const useAdminMarketplace = () => {
 
   const updateService = async (serviceId: string, updates: Partial<MarketplaceData>) => {
     try {
-      // Update service data in the local state
+      // Map interface fields to database fields
+      const dbUpdates: any = {};
+      
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.category !== undefined) dbUpdates.category = updates.category;
+      if (updates.price !== undefined) dbUpdates.price = updates.price;
+      if (updates.currency !== undefined) dbUpdates.currency = updates.currency;
+      if (updates.delivery_time !== undefined) dbUpdates.delivery_time = updates.delivery_time;
+      if (updates.location !== undefined) dbUpdates.location = updates.location;
+      if (updates.is_active !== undefined) dbUpdates.is_available = updates.is_active;
+      if (updates.status !== undefined) dbUpdates.status = updates.status;
+      if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
+      if (updates.portfolio_url !== undefined) dbUpdates.portfolio_url = updates.portfolio_url;
+      if (updates.demo_url !== undefined) dbUpdates.demo_url = updates.demo_url;
+
+      const { error } = await supabase
+        .from('marketplace_services')
+        .update(dbUpdates)
+        .eq('id', serviceId);
+
+      if (error) throw error;
+
+      // Update local state
       setServices(prev => prev.map(service => 
-        service.id === serviceId ? { ...service, ...updates } : service
+        service.id === serviceId ? { ...service, ...updates, updated_at: new Date().toISOString() } : service
       ));
+
+      toast.success('Servicio actualizado correctamente');
     } catch (err) {
       console.error('Error updating service:', err);
+      toast.error('Error al actualizar el servicio');
       throw err;
     }
   };
 
   const deleteService = async (serviceId: string) => {
     try {
+      const { error } = await supabase
+        .from('marketplace_services')
+        .delete()
+        .eq('id', serviceId);
+
+      if (error) throw error;
+
       // Remove service from local state
       setServices(prev => prev.filter(service => service.id !== serviceId));
+      toast.success('Servicio eliminado correctamente');
     } catch (err) {
       console.error('Error deleting service:', err);
+      toast.error('Error al eliminar el servicio');
       throw err;
     }
   };

@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ChatFilters {
   searchQuery: string;
@@ -50,119 +52,88 @@ export const useAdminChat = () => {
       setIsLoading(true);
       setError(null);
 
-      // Mock data for demonstration
-      const mockConversations: ChatData[] = [
-        {
-          id: '1',
-          user_id: 'user1',
-          user_name: 'María García',
-          user_email: 'maria@example.com',
-          user_type: 'talent',
-          user_avatar: undefined,
-          company_name: undefined,
-          company_logo: undefined,
-          subject: 'Consulta sobre oportunidades de trabajo',
-          status: 'active',
-          priority: 'medium',
-          created_at: '2024-01-15T10:00:00Z',
-          updated_at: '2024-01-15T14:30:00Z',
-          last_message_at: '2024-01-15T14:30:00Z',
-          messages_count: 5,
-          unread_count: 2,
-          tags: ['consulta', 'oportunidades'],
-          admin_notes: 'Usuario interesado en oportunidades de diseño',
-          last_message_preview: 'Perfecto, muchas gracias. ¿Hay algún plazo específico para aplicar?'
-        },
-        {
-          id: '2',
-          user_id: 'user2',
-          user_name: 'Carlos López',
-          user_email: 'carlos@techcorp.com',
-          user_type: 'business',
-          user_avatar: undefined,
-          company_name: 'Tech Corp',
-          company_logo: undefined,
-          subject: 'Problema con publicación de oportunidad',
-          status: 'pending',
-          priority: 'high',
-          created_at: '2024-01-14T16:00:00Z',
-          updated_at: '2024-01-14T16:45:00Z',
-          last_message_at: '2024-01-14T16:45:00Z',
-          messages_count: 3,
-          unread_count: 1,
-          tags: ['problema', 'publicación'],
-          admin_notes: 'Problema técnico con el formulario de publicación',
-          last_message_preview: 'El error dice "Error de validación en el campo descripción" pero no veo qué está mal.'
-        },
-        {
-          id: '3',
-          user_id: 'user3',
-          user_name: 'Ana Rodríguez',
-          user_email: 'ana@marketing.com',
-          user_type: 'business',
-          user_avatar: undefined,
-          company_name: 'Marketing Solutions',
-          company_logo: undefined,
-          subject: 'Solicitud de información sobre servicios premium',
-          status: 'resolved',
-          priority: 'low',
-          created_at: '2024-01-13T09:00:00Z',
-          updated_at: '2024-01-13T11:30:00Z',
-          last_message_at: '2024-01-13T11:30:00Z',
-          messages_count: 4,
-          unread_count: 0,
-          tags: ['servicios', 'premium', 'información'],
-          admin_notes: 'Cliente interesado en servicios premium, conversación resuelta',
-          last_message_preview: 'Perfecto, gracias por la información. Procederé con la contratación.'
-        },
-        {
-          id: '4',
-          user_id: 'user4',
-          user_name: 'Pedro Martínez',
-          user_email: 'pedro@freelancer.com',
-          user_type: 'talent',
-          user_avatar: undefined,
-          company_name: undefined,
-          company_logo: undefined,
-          subject: 'Problema con acceso a mi perfil',
-          status: 'active',
-          priority: 'high',
-          created_at: '2024-01-12T14:00:00Z',
-          updated_at: '2024-01-12T15:20:00Z',
-          last_message_at: '2024-01-12T15:20:00Z',
-          messages_count: 6,
-          unread_count: 3,
-          tags: ['problema', 'acceso', 'perfil'],
-          admin_notes: 'Usuario no puede acceder a su perfil, problema de autenticación',
-          last_message_preview: 'Sigo sin poder acceder. ¿Podrían revisar mi cuenta?'
-        },
-        {
-          id: '5',
-          user_id: 'user5',
-          user_name: 'Laura Fernández',
-          user_email: 'laura@design.com',
-          user_type: 'talent',
-          user_avatar: undefined,
-          company_name: undefined,
-          company_logo: undefined,
-          subject: 'Consulta sobre marketplace de servicios',
-          status: 'pending',
-          priority: 'medium',
-          created_at: '2024-01-11T11:00:00Z',
-          updated_at: '2024-01-11T12:15:00Z',
-          last_message_at: '2024-01-11T12:15:00Z',
-          messages_count: 3,
-          unread_count: 1,
-          tags: ['marketplace', 'servicios', 'consulta'],
-          admin_notes: 'Usuario quiere publicar servicios en el marketplace',
-          last_message_preview: '¿Cuáles son los requisitos para publicar servicios?'
-        }
-      ];
+      // Fetch unique conversations from messages table
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select(`
+          *,
+          sender:profiles!messages_sender_id_fkey (
+            full_name,
+            avatar_url
+          ),
+          recipient:profiles!messages_recipient_id_fkey (
+            full_name,
+            avatar_url
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-      setConversations(mockConversations);
+      if (messagesError) throw messagesError;
+
+      // Get user roles to determine user type
+      const userIds = new Set<string>();
+      messagesData?.forEach(msg => {
+        userIds.add(msg.sender_id);
+        userIds.add(msg.recipient_id);
+      });
+
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', Array.from(userIds));
+
+      const rolesMap = new Map(rolesData?.map(r => [r.user_id, r.role]) || []);
+
+      // Group messages by conversation_id and create conversation objects
+      const conversationsMap = new Map<string, ChatData>();
+      
+      messagesData?.forEach(message => {
+        const convId = message.conversation_id;
+        if (!conversationsMap.has(convId)) {
+          // Determine which user is not admin
+          const userId = message.sender_id;
+          const userName = message.sender?.full_name || 'Usuario';
+          const userAvatar = message.sender?.avatar_url;
+          const userRole = rolesMap.get(userId);
+          
+          conversationsMap.set(convId, {
+            id: convId,
+            user_id: userId,
+            user_name: userName,
+            user_email: '', // We don't have email in profiles query
+            user_type: userRole === 'business' ? 'business' : userRole === 'admin' ? 'admin' : 'talent',
+            user_avatar: userAvatar,
+            company_name: undefined,
+            company_logo: undefined,
+            subject: 'Conversación', // Default subject
+            status: 'active',
+            priority: 'medium',
+            created_at: message.created_at,
+            updated_at: message.created_at,
+            last_message_at: message.created_at,
+            messages_count: 1,
+            unread_count: message.is_read ? 0 : 1,
+            tags: [],
+            admin_notes: '',
+            last_message_preview: message.content?.substring(0, 100)
+          });
+        } else {
+          const conv = conversationsMap.get(convId)!;
+          conv.messages_count++;
+          if (!message.is_read) conv.unread_count++;
+          if (new Date(message.created_at) > new Date(conv.last_message_at)) {
+            conv.last_message_at = message.created_at;
+            conv.updated_at = message.created_at;
+            conv.last_message_preview = message.content?.substring(0, 100);
+          }
+        }
+      });
+
+      setConversations(Array.from(conversationsMap.values()));
     } catch (err) {
       console.error('Error loading conversations:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
+      toast.error('Error al cargar las conversaciones');
     } finally {
       setIsLoading(false);
     }
@@ -248,22 +219,35 @@ export const useAdminChat = () => {
 
   const updateConversation = async (conversationId: string, updates: Partial<ChatData>) => {
     try {
-      // Update conversation data in the local state
+      // Update conversation metadata in local state
       setConversations(prev => prev.map(conversation => 
         conversation.id === conversationId ? { ...conversation, ...updates } : conversation
       ));
+      
+      toast.success('Conversación actualizada correctamente');
     } catch (err) {
       console.error('Error updating conversation:', err);
+      toast.error('Error al actualizar la conversación');
       throw err;
     }
   };
 
   const deleteConversation = async (conversationId: string) => {
     try {
+      // Delete all messages in this conversation
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', conversationId);
+
+      if (error) throw error;
+
       // Remove conversation from local state
       setConversations(prev => prev.filter(conversation => conversation.id !== conversationId));
+      toast.success('Conversación eliminada correctamente');
     } catch (err) {
       console.error('Error deleting conversation:', err);
+      toast.error('Error al eliminar la conversación');
       throw err;
     }
   };
