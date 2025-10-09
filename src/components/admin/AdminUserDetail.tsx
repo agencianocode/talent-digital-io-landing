@@ -186,10 +186,22 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
     setIsUpdating(true);
     try {
-      // Mock suspend user - in real implementation this would use admin API
-      console.log('Suspending user:', userId, 'Current status:', user.is_active);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No active session');
 
-      toast.success(user.is_active ? 'Usuario suspendido' : 'Usuario reactivado');
+      const { error } = await supabase.functions.invoke('admin-suspend-user', {
+        body: { 
+          userId: user.id,
+          suspend: user.is_active
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(user.is_active ? 'Usuario suspendido correctamente' : 'Usuario reactivado correctamente');
       onUserUpdate();
       loadUserDetail();
     } catch (error) {
@@ -205,10 +217,19 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
     setIsUpdating(true);
     try {
-      // Mock password reset - in real implementation this would use admin API
-      console.log('Generating password reset link for:', user.email);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No active session');
 
-      toast.success('Enlace de recuperación enviado al usuario');
+      const { error } = await supabase.functions.invoke('admin-reset-password', {
+        body: { userEmail: user.email },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success('Enlace de recuperación generado. El usuario debe revisar su email.');
       setShowPasswordReset(false);
     } catch (error) {
       console.error('Error generating password reset:', error);

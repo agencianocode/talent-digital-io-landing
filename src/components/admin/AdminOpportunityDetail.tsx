@@ -242,6 +242,33 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
     }
   };
 
+  const handleDeleteOpportunity = async () => {
+    if (!opportunity || !confirm('¿Estás seguro de que deseas dar de baja esta oportunidad?')) return;
+
+    setIsUpdating(true);
+    try {
+      // Soft delete: set status to closed
+      const { error } = await supabase
+        .from('opportunities')
+        .update({ 
+          status: 'closed' as any,
+          is_active: false
+        })
+        .eq('id', opportunityId);
+
+      if (error) throw error;
+
+      toast.success('Oportunidad dada de baja correctamente');
+      onOpportunityUpdate();
+      onClose();
+    } catch (error) {
+      console.error('Error deleting opportunity:', error);
+      toast.error('Error al dar de baja la oportunidad');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -371,6 +398,15 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                   Activar
                 </Button>
               )}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteOpportunity}
+                disabled={isUpdating}
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Dar de Baja
+              </Button>
             </div>
           </div>
 

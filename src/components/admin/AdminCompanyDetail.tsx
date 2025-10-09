@@ -231,7 +231,39 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
 
     setIsUpdating(true);
     try {
-      // TODO: Implement add user to company logic
+      // Find user by email through profiles
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .ilike('user_id', `%${newUserEmail}%`)
+        .limit(1);
+
+      if (profileError) throw profileError;
+      if (!profiles || profiles.length === 0) {
+        toast.error('Usuario no encontrado');
+        return;
+      }
+
+      const targetUserId = profiles?.[0]?.user_id;
+      
+      if (!targetUserId) {
+        toast.error('Usuario no encontrado');
+        return;
+      }
+
+      // Create invitation
+      const { error: inviteError } = await supabase
+        .from('company_user_roles')
+        .insert([{
+          company_id: companyId,
+          user_id: targetUserId,
+          role: newUserRole as any,
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        }]);
+
+      if (inviteError) throw inviteError;
+
       toast.success('Usuario agregado correctamente');
       setShowAddUser(false);
       setNewUserEmail('');
