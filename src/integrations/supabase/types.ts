@@ -1701,6 +1701,10 @@ export type Database = {
           suggested_title_examples: string[]
         }[]
       }
+      get_talent_phone_if_authorized: {
+        Args: { talent_user_uuid: string }
+        Returns: string
+      }
       get_user_companies: {
         Args: { user_uuid: string }
         Returns: string[]
@@ -1731,6 +1735,10 @@ export type Database = {
           required_role: Database["public"]["Enums"]["company_role"]
           user_uuid: string
         }
+        Returns: boolean
+      }
+      has_meaningful_interaction_with_talent: {
+        Args: { business_user_uuid: string; talent_user_uuid: string }
         Returns: boolean
       }
       increment_job_title_usage: {

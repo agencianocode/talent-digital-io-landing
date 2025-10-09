@@ -57,22 +57,16 @@ export const useAdminChat = () => {
         .from('messages')
         .select(`
           *,
-          sender:profiles!messages_sender_id_fkey (
-            full_name,
-            avatar_url
-          ),
-          recipient:profiles!messages_recipient_id_fkey (
-            full_name,
-            avatar_url
-          )
+          sender:sender_id(full_name, avatar_url),
+          recipient:recipient_id(full_name, avatar_url)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
 
       if (messagesError) throw messagesError;
 
       // Get user roles to determine user type
       const userIds = new Set<string>();
-      messagesData?.forEach(msg => {
+      messagesData?.forEach((msg: any) => {
         userIds.add(msg.sender_id);
         userIds.add(msg.recipient_id);
       });
@@ -87,7 +81,7 @@ export const useAdminChat = () => {
       // Group messages by conversation_id and create conversation objects
       const conversationsMap = new Map<string, ChatData>();
       
-      messagesData?.forEach(message => {
+      messagesData?.forEach((message: any) => {
         const convId = message.conversation_id;
         if (!conversationsMap.has(convId)) {
           // Determine which user is not admin

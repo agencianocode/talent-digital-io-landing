@@ -67,17 +67,14 @@ export const useAdminMarketplace = () => {
         .from('marketplace_services')
         .select(`
           *,
-          profiles!marketplace_services_user_id_fkey (
-            full_name,
-            avatar_url
-          )
+          user:user_id(full_name, avatar_url)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
 
       if (servicesError) throw servicesError;
 
       // Transform data to match interface
-      const transformedServices: MarketplaceData[] = (servicesData || []).map(service => ({
+      const transformedServices: MarketplaceData[] = (servicesData || []).map((service: any) => ({
         id: service.id,
         title: service.title,
         description: service.description,
@@ -94,8 +91,8 @@ export const useAdminMarketplace = () => {
         company_id: undefined,
         company_name: undefined,
         company_logo: undefined,
-        user_name: service.profiles?.full_name || 'Usuario',
-        user_avatar: service.profiles?.avatar_url,
+        user_name: service.user?.full_name || 'Usuario',
+        user_avatar: service.user?.avatar_url || undefined,
         views_count: service.views_count || 0,
         orders_count: service.requests_count || 0,
         rating: Number(service.rating) || 0,
@@ -103,8 +100,8 @@ export const useAdminMarketplace = () => {
         priority: 'medium', // Default priority
         admin_notes: '',
         tags: service.tags || [],
-        portfolio_url: service.portfolio_url,
-        demo_url: service.demo_url
+        portfolio_url: service.portfolio_url || undefined,
+        demo_url: service.demo_url || undefined
       }));
 
       setServices(transformedServices);
