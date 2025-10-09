@@ -101,7 +101,7 @@ const TalentDiscovery = () => {
     try {
       setIsLoading(true);
       
-      // Get profiles data
+      // Get profiles data (without phone - use secure function when needed)
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
@@ -111,7 +111,6 @@ const TalentDiscovery = () => {
           avatar_url,
           city,
           country,
-          phone,
           linkedin,
           video_presentation_url,
           social_links,
@@ -172,7 +171,7 @@ const TalentDiscovery = () => {
           avatar_url: profile.avatar_url,
           city: profile.city,
           country: profile.country,
-          phone: profile.phone,
+          phone: null, // Phone protected - use get_talent_phone_if_authorized() when needed
           linkedin: profile.linkedin,
           portfolio_url: talentProfile?.portfolio_url,
           github_url: null, // Column doesn't exist in talent_profiles table
