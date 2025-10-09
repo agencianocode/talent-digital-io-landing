@@ -62,47 +62,62 @@ export const useAdminMarketplace = () => {
       setIsLoading(true);
       setError(null);
 
-      // Fetch real marketplace services from Supabase
+      // Fetch marketplace services
       const { data: servicesData, error: servicesError } = await supabase
         .from('marketplace_services')
-        .select(`
-          *,
-          user:user_id(full_name, avatar_url)
-        `)
-        .order('created_at', { ascending: false }) as any;
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (servicesError) throw servicesError;
 
+      // Get unique user IDs
+      const userIds = [...new Set(servicesData?.map(s => s.user_id) || [])];
+
+      // Fetch profiles for all users
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', userIds);
+
+      // Create a map of user profiles
+      const profilesMap = new Map(
+        profilesData?.map(p => [p.user_id, p]) || []
+      );
+
       // Transform data to match interface
-      const transformedServices: MarketplaceData[] = (servicesData || []).map((service: any) => ({
-        id: service.id,
-        title: service.title,
-        description: service.description,
-        category: service.category,
-        price: Number(service.price),
-        currency: service.currency,
-        delivery_time: service.delivery_time,
-        location: service.location,
-        is_active: service.is_available,
-        status: service.status,
-        created_at: service.created_at,
-        updated_at: service.updated_at,
-        user_id: service.user_id,
-        company_id: undefined,
-        company_name: undefined,
-        company_logo: undefined,
-        user_name: service.user?.full_name || 'Usuario',
-        user_avatar: service.user?.avatar_url || undefined,
-        views_count: service.views_count || 0,
-        orders_count: service.requests_count || 0,
-        rating: Number(service.rating) || 0,
-        reviews_count: service.reviews_count || 0,
-        priority: 'medium', // Default priority
-        admin_notes: '',
-        tags: service.tags || [],
-        portfolio_url: service.portfolio_url || undefined,
-        demo_url: service.demo_url || undefined
-      }));
+      const transformedServices: MarketplaceData[] = (servicesData || []).map((service: any) => {
+        const userProfile = profilesMap.get(service.user_id);
+        
+        return {
+          id: service.id,
+          title: service.title,
+          description: service.description,
+          category: service.category,
+          price: Number(service.price),
+          currency: service.currency,
+          delivery_time: service.delivery_time,
+          location: service.location,
+          is_active: service.is_available,
+          status: service.status,
+          created_at: service.created_at,
+          updated_at: service.updated_at,
+          user_id: service.user_id,
+          company_id: undefined,
+          company_name: undefined,
+          company_logo: undefined,
+          user_name: userProfile?.full_name || 'Usuario',
+          user_avatar: userProfile?.avatar_url || undefined,
+          views_count: service.views_count || 0,
+          orders_count: service.requests_count || 0,
+          rating: Number(service.rating) || 0,
+          reviews_count: service.reviews_count || 0,
+          priority: 'medium',
+          admin_notes: '',
+          tags: service.tags || [],
+          portfolio_url: service.portfolio_url || undefined,
+          demo_url: service.demo_url || undefined
+        };
+      });
 
       setServices(transformedServices);
     } catch (err) {

@@ -52,25 +52,32 @@ export const useAdminChat = () => {
       setIsLoading(true);
       setError(null);
 
-      // Fetch unique conversations from messages table
+      // Fetch messages
       const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
-        .select(`
-          *,
-          sender:sender_id(full_name, avatar_url),
-          recipient:recipient_id(full_name, avatar_url)
-        `)
-        .order('created_at', { ascending: false }) as any;
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (messagesError) throw messagesError;
 
-      // Get user roles to determine user type
+      // Get unique user IDs
       const userIds = new Set<string>();
-      messagesData?.forEach((msg: any) => {
+      messagesData?.forEach(msg => {
         userIds.add(msg.sender_id);
         userIds.add(msg.recipient_id);
       });
 
+      // Fetch profiles
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', Array.from(userIds));
+
+      const profilesMap = new Map(
+        profilesData?.map(p => [p.user_id, p]) || []
+      );
+
+      // Fetch user roles
       const { data: rolesData } = await supabase
         .from('user_roles')
         .select('user_id, role')
@@ -78,28 +85,26 @@ export const useAdminChat = () => {
 
       const rolesMap = new Map(rolesData?.map(r => [r.user_id, r.role]) || []);
 
-      // Group messages by conversation_id and create conversation objects
+      // Group messages by conversation_id
       const conversationsMap = new Map<string, ChatData>();
       
-      messagesData?.forEach((message: any) => {
+      messagesData?.forEach(message => {
         const convId = message.conversation_id;
         if (!conversationsMap.has(convId)) {
-          // Determine which user is not admin
           const userId = message.sender_id;
-          const userName = message.sender?.full_name || 'Usuario';
-          const userAvatar = message.sender?.avatar_url;
+          const userProfile = profilesMap.get(userId);
           const userRole = rolesMap.get(userId);
           
           conversationsMap.set(convId, {
             id: convId,
             user_id: userId,
-            user_name: userName,
-            user_email: '', // We don't have email in profiles query
+            user_name: userProfile?.full_name || 'Usuario',
+            user_email: '',
             user_type: userRole === 'business' ? 'business' : userRole === 'admin' ? 'admin' : 'talent',
-            user_avatar: userAvatar,
+            user_avatar: userProfile?.avatar_url || undefined,
             company_name: undefined,
             company_logo: undefined,
-            subject: 'Conversación', // Default subject
+            subject: 'Conversación',
             status: 'active',
             priority: 'medium',
             created_at: message.created_at,
