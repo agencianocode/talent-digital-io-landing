@@ -51,12 +51,33 @@ git clone <YOUR_GIT_URL>
 # Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
+# Step 3: Set up environment variables
+# IMPORTANT: Copy .env.example to .env and configure your credentials
+cp .env.example .env
+# Edit .env with your actual Supabase credentials and VAPID keys
+
+# Step 4: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 5: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
+
+## 🔐 Environment Variables Setup
+
+**CRITICAL SECURITY**: Never commit the `.env` file to version control. It contains sensitive credentials.
+
+1. Copy `.env.example` to `.env`: `cp .env.example .env`
+2. Get your Supabase credentials from your [Supabase Dashboard](https://supabase.com/dashboard)
+3. Generate VAPID keys for push notifications (see Push Notifications section below)
+4. Fill in all required environment variables in `.env`
+
+### Required Environment Variables
+
+- `VITE_SUPABASE_PROJECT_ID` - Your Supabase project ID
+- `VITE_SUPABASE_URL` - Your Supabase project URL
+- `VITE_SUPABASE_PUBLISHABLE_KEY` - Your Supabase anon/public key
+- `VITE_VAPID_PUBLIC_KEY` - Your VAPID public key for push notifications
 
 **Edit a file directly in GitHub**
 

@@ -12,17 +12,27 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify authorization - check for Authorization header or cron secret
+    // CRITICAL SECURITY: Verify CRON_SECRET for all incoming requests
     const authHeader = req.headers.get('Authorization');
     const cronSecret = Deno.env.get('CRON_SECRET');
     
-    // Allow if called with service role key or matching cron secret
-    const isAuthorized = 
-      authHeader?.includes('Bearer') || 
-      (cronSecret && authHeader === `Bearer ${cronSecret}`);
+    if (!cronSecret) {
+      console.error('❌ CRON_SECRET not configured');
+      return new Response(
+        JSON.stringify({ error: 'Server misconfiguration' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      );
+    }
+    
+    // Strict validation: MUST provide exact CRON_SECRET
+    const providedSecret = authHeader?.replace('Bearer ', '');
+    const isAuthorized = providedSecret === cronSecret;
     
     if (!isAuthorized) {
-      console.warn('⚠️ Unauthorized access attempt');
+      console.warn('⚠️ Unauthorized access attempt to check-inactive-opportunities');
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         {
@@ -31,6 +41,8 @@ Deno.serve(async (req) => {
         }
       );
     }
+    
+    console.log('✅ Authorized CRON request verified');
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);

@@ -1,14 +1,18 @@
-// ⚠️ IMPORTANTE: En producción, estas keys deben estar en variables de entorno
-// Este archivo es temporal para desarrollo. NO subir a repositorio público.
+// ⚠️ CRÍTICO: La VAPID Public Key DEBE estar configurada en variables de entorno
+// NUNCA incluir keys hardcodeadas en el código
 
 export const VAPID_CONFIG = {
-  publicKey: import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BOEKW3QP-LfleNFqh2ug5Ax1hniociI7C3ZHZifBljNwVYj4nWtUlliSQrL2hDoi7dgNYuon-CA0caVLecMCebI',
+  publicKey: import.meta.env.VITE_VAPID_PUBLIC_KEY,
   // La private key NUNCA debe estar en el frontend, solo en el backend
   // privateKey se configura en Supabase Edge Functions
 };
 
-// Verificar que la key esté configurada
-if (!VAPID_CONFIG.publicKey || VAPID_CONFIG.publicKey.includes('YOUR_')) {
-  console.warn('⚠️ VAPID Public Key no configurada. Las notificaciones push no funcionarán.');
+// Verificación estricta - falla inmediatamente si no está configurada
+if (!VAPID_CONFIG.publicKey) {
+  throw new Error(
+    '❌ VAPID_PUBLIC_KEY no está configurada. ' +
+    'Configura VITE_VAPID_PUBLIC_KEY en tu archivo .env. ' +
+    'Consulta .env.example para más información.'
+  );
 }
 
