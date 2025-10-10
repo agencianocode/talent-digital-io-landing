@@ -49,6 +49,7 @@ const PublicTalentProfile = lazy(() => import('./pages/PublicTalentProfile'));
 const CompanyDetails = lazy(() => import('./pages/CompanyDetails'));
 const BusinessProfile = lazy(() => import('./pages/BusinessProfile'));
 const BusinessMarketplace = lazy(() => import('./pages/BusinessMarketplace'));
+const ServiceDetail = lazy(() => import('./pages/ServiceDetail'));
 const BusinessMessagesPage = lazy(() => import('./pages/BusinessMessagesPage'));
 const BusinessNotificationsPage = lazy(() => import('./pages/BusinessNotificationsPage'));
 const TalentMessagesPage = lazy(() => import('./pages/TalentMessagesPage'));
@@ -318,6 +319,11 @@ function App() {
                         <Route path="marketplace" element={
                           <Suspense fallback={<LoadingSkeleton type="list" />}>
                             <BusinessMarketplace />
+                          </Suspense>
+                        } />
+                        <Route path="marketplace/service/:id" element={
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <ServiceDetail />
                           </Suspense>
                         } />
                         <Route path="profile" element={
