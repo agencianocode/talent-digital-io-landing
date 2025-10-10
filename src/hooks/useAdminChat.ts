@@ -81,7 +81,11 @@ export const useAdminChat = () => {
       const avatarsMap = new Map<string, string>();
       (profilesData || []).forEach((p: any) => {
         if (p.avatar_url) {
-          avatarsMap.set(p.user_id, p.avatar_url);
+          const isFullUrl = typeof p.avatar_url === 'string' && /^(http|https):\/\//.test(p.avatar_url);
+          const publicUrl = isFullUrl
+            ? p.avatar_url
+            : supabase.storage.from('avatars').getPublicUrl(p.avatar_url).data.publicUrl;
+          avatarsMap.set(p.user_id, publicUrl);
         }
       });
 
