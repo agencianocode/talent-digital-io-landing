@@ -460,13 +460,22 @@ if (allEducationRecords && allEducationRecords.length > 0) {
     }
   };
 
-  const handleShareProfile = () => {
-    const profileUrl = `${window.location.origin}/business-dashboard/talent-profile/${id}`;
-    navigator.clipboard.writeText(profileUrl);
-    toast({
-      title: "Éxito",
-      description: "Link copiado al portapapeles"
-    });
+  const handleShareProfile = async () => {
+    try {
+      const profileUrl = `${window.location.origin}/business-dashboard/talent-profile/${id}`;
+      await navigator.clipboard.writeText(profileUrl);
+      toast({
+        title: "Éxito",
+        description: "Link copiado al portapapeles"
+      });
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo copiar el link",
+        variant: "destructive"
+      });
+    }
   };
 
   // Function to convert YouTube URL to embed URL
@@ -678,7 +687,7 @@ if (allEducationRecords && allEducationRecords.length > 0) {
                   <div className="flex space-x-2">
                 <input 
                   type="text" 
-                      value={`http://localhost:8080/business-dashboard/talent-profile/${id}`}
+                      value={`${window.location.origin}/business-dashboard/talent-profile/${id}`}
                   readOnly
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-900"
                     />
@@ -693,7 +702,7 @@ if (allEducationRecords && allEducationRecords.length > 0) {
                   variant="outline"
                       size="sm"
                   onClick={() => {
-                        const url = encodeURIComponent(`http://localhost:8080/business-dashboard/talent-profile/${id}`);
+                        const url = encodeURIComponent(`${window.location.origin}/business-dashboard/talent-profile/${id}`);
                         window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
                       }}
                       className="flex items-center gap-2"
@@ -706,7 +715,7 @@ if (allEducationRecords && allEducationRecords.length > 0) {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        const url = encodeURIComponent(`http://localhost:8080/business-dashboard/talent-profile/${id}`);
+                        const url = encodeURIComponent(`${window.location.origin}/business-dashboard/talent-profile/${id}`);
                         const text = encodeURIComponent(`Conoce el perfil de ${userProfile?.full_name || 'este talento'}`);
                         window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
                       }}
@@ -720,7 +729,7 @@ if (allEducationRecords && allEducationRecords.length > 0) {
                   variant="outline"
                       size="sm"
                       onClick={() => {
-                        const url = encodeURIComponent(`http://localhost:8080/business-dashboard/talent-profile/${id}`);
+                        const url = encodeURIComponent(`${window.location.origin}/business-dashboard/talent-profile/${id}`);
                         window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
                       }}
                       className="flex items-center gap-2"
