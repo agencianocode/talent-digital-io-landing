@@ -135,10 +135,11 @@ export const useAdminChat = () => {
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
       filtered = filtered.filter(conversation => 
-        conversation.user_name.toLowerCase().includes(query) ||
-        conversation.user_email.toLowerCase().includes(query) ||
-        conversation.subject.toLowerCase().includes(query) ||
-        (conversation.company_name && conversation.company_name.toLowerCase().includes(query))
+        (conversation.user_name && conversation.user_name.toLowerCase().includes(query)) ||
+        (conversation.user_email && conversation.user_email.toLowerCase().includes(query)) ||
+        (conversation.subject && conversation.subject.toLowerCase().includes(query)) ||
+        (conversation.company_name && conversation.company_name.toLowerCase().includes(query)) ||
+        (conversation.last_message_preview && conversation.last_message_preview.toLowerCase().includes(query))
       );
     }
 
