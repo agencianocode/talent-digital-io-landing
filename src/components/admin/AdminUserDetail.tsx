@@ -131,19 +131,55 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
     }
   }, [isOpen, userId]);
 
+  // Realtime listener to reflect role changes instantly for this user in the modal
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`admin-user-role-changes-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_roles', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const newRoleValue = (payload.new as any)?.role;
+          if (newRoleValue) {
+            setUser((prev) => (prev ? { ...prev, role: newRoleValue as string } : prev));
+            setNewRole(newRoleValue as string);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
   const handleRoleChange = async () => {
     if (!user || newRole === user.role) return;
 
     setIsUpdating(true);
     try {
-      const { error } = await supabase
+      // Try to update; if no row is returned, upsert as fallback
+      const { data: updated, error: updateError } = await supabase
         .from('user_roles')
         .update({ role: newRole as any })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select()
+        .maybeSingle();
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      toast.success('Rol actualizado correctamente. El usuario debe recargar la página para ver los cambios.');
+      if (!updated) {
+        // No existing row; create or update by conflict on user_id
+        const { error: upsertError } = await supabase
+          .from('user_roles')
+          .upsert({ user_id: userId, role: newRole as any }, { onConflict: 'user_id' });
+        if (upsertError) throw upsertError;
+      }
+
+      // Optimistically update local state and refresh details
+      setUser((prev) => prev ? { ...prev, role: newRole } : prev);
+      toast.success('Rol actualizado correctamente.');
       onUserUpdate();
       loadUserDetail();
     } catch (error) {
