@@ -149,79 +149,128 @@ export const TalentServices = ({
       <CardContent>
         <div className="space-y-6">
           {services.map((service) => (
-            <div 
+            <Card 
               key={service.id} 
-              className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              className="border-2 hover:shadow-xl transition-all duration-300"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-lg text-foreground">
-                      {service.title}
-                    </h3>
-                    {getAvailabilityBadge(service.is_available)}
+              <CardContent className="p-6">
+                {/* Header Section */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-xl font-bold text-foreground">
+                        {service.title}
+                      </h3>
+                      {getAvailabilityBadge(service.is_available)}
+                    </div>
+                    <Badge variant="secondary" className="mb-3">
+                      {service.category}
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className="mb-2">
-                    {service.category}
-                  </Badge>
                 </div>
-              </div>
 
-              <p className="text-muted-foreground mb-4 leading-relaxed">
-                {service.description}
-              </p>
+                {/* Description Section */}
+                <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border">
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                    Descripción del servicio
+                  </h4>
+                  <p className="text-foreground leading-relaxed whitespace-pre-line">
+                    {service.description}
+                  </p>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <DollarSign className="h-4 w-4 text-green-600" />
-                  <span className="font-medium">
-                    ${service.price.toLocaleString()} {service.currency}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-blue-600" />
-                  <span>{service.delivery_time}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-purple-600" />
-                  <span>Publicado {new Date(service.created_at).toLocaleDateString('es-ES')}</span>
-                </div>
-              </div>
+                {/* Key Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-900">
+                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                      <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1">
+                        Precio
+                      </p>
+                      <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                        ${service.price.toLocaleString()} {service.currency}
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={talentAvatar} />
-                    <AvatarFallback className="text-xs">
-                      {talentName?.charAt(0) || 'T'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm text-muted-foreground">
-                    Ofrecido por {talentName}
-                  </span>
+                  <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                      <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
+                        Tiempo de entrega
+                      </p>
+                      <p className="font-semibold text-blue-700 dark:text-blue-300">
+                        {service.delivery_time}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-900">
+                    <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                      <Calendar className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1">
+                        Publicado
+                      </p>
+                      <p className="font-semibold text-purple-700 dark:text-purple-300">
+                        {new Date(service.created_at).toLocaleDateString('es-ES', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => onContact && onContact()}
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Contactar
-                  </Button>
-                  {service.is_available && (
+
+                {/* Provider Info & Actions */}
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-4 border-t border-border">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border-2 border-border">
+                      <AvatarImage src={talentAvatar} />
+                      <AvatarFallback className="text-sm font-semibold bg-primary/10">
+                        {talentName?.charAt(0) || 'T'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Ofrecido por
+                      </p>
+                      <p className="font-semibold text-foreground">
+                        {talentName}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3 w-full md:w-auto">
                     <Button 
-                      size="sm"
-                      onClick={() => handleRequestService(service)}
+                      variant="outline" 
+                      size="default"
+                      onClick={() => onContact && onContact()}
+                      className="flex-1 md:flex-none"
                     >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Solicitar
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Contactar
                     </Button>
-                  )}
+                    {service.is_available && (
+                      <Button 
+                        size="default"
+                        onClick={() => handleRequestService(service)}
+                        className="flex-1 md:flex-none"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Solicitar
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
