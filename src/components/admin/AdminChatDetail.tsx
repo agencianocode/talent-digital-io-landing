@@ -18,6 +18,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ChatMessage {
   id: string;
@@ -76,138 +77,88 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
     
     setIsLoading(true);
     try {
-      // Mock data for demonstration
-      const mockConversations: ChatDetail[] = [
-        {
-          id: '1',
-          user_id: 'user1',
-          user_name: 'María García',
-          user_email: 'maria@example.com',
-          user_type: 'talent',
-          user_avatar: undefined,
-          company_name: undefined,
-          company_logo: undefined,
-          subject: 'Consulta sobre oportunidades de trabajo',
-          status: 'active',
-          priority: 'medium',
-          created_at: '2024-01-15T10:00:00Z',
-          updated_at: '2024-01-15T14:30:00Z',
-          last_message_at: '2024-01-15T14:30:00Z',
-          messages_count: 5,
-          unread_count: 2,
-          tags: ['consulta', 'oportunidades'],
-          admin_notes: 'Usuario interesado en oportunidades de diseño',
-          messages: [
-            {
-              id: 'msg1',
-              content: 'Hola, me interesa saber más sobre las oportunidades de trabajo disponibles en diseño gráfico.',
-              sender_id: 'user1',
-              sender_name: 'María García',
-              sender_type: 'user',
-              created_at: '2024-01-15T10:00:00Z',
-              is_read: true,
-              message_type: 'text'
-            },
-            {
-              id: 'msg2',
-              content: 'Hola María, gracias por contactarnos. Te ayudo con información sobre las oportunidades de diseño disponibles.',
-              sender_id: 'admin1',
-              sender_name: 'Admin Support',
-              sender_type: 'admin',
-              created_at: '2024-01-15T10:15:00Z',
-              is_read: true,
-              message_type: 'text'
-            },
-            {
-              id: 'msg3',
-              content: '¿Podrías enviarme más detalles sobre los requisitos y el proceso de aplicación?',
-              sender_id: 'user1',
-              sender_name: 'María García',
-              sender_type: 'user',
-              created_at: '2024-01-15T11:00:00Z',
-              is_read: true,
-              message_type: 'text'
-            },
-            {
-              id: 'msg4',
-              content: 'Por supuesto. Te envío un enlace con toda la información: https://talentodigital.io/oportunidades',
-              sender_id: 'admin1',
-              sender_name: 'Admin Support',
-              sender_type: 'admin',
-              created_at: '2024-01-15T11:30:00Z',
-              is_read: true,
-              message_type: 'text'
-            },
-            {
-              id: 'msg5',
-              content: 'Perfecto, muchas gracias. ¿Hay algún plazo específico para aplicar?',
-              sender_id: 'user1',
-              sender_name: 'María García',
-              sender_type: 'user',
-              created_at: '2024-01-15T14:30:00Z',
-              is_read: false,
-              message_type: 'text'
-            }
-          ]
-        },
-        {
-          id: '2',
-          user_id: 'user2',
-          user_name: 'Carlos López',
-          user_email: 'carlos@techcorp.com',
-          user_type: 'business',
-          user_avatar: undefined,
-          company_name: 'Tech Corp',
-          company_logo: undefined,
-          subject: 'Problema con publicación de oportunidad',
-          status: 'pending',
-          priority: 'high',
-          created_at: '2024-01-14T16:00:00Z',
-          updated_at: '2024-01-14T16:45:00Z',
-          last_message_at: '2024-01-14T16:45:00Z',
-          messages_count: 3,
-          unread_count: 1,
-          tags: ['problema', 'publicación'],
-          admin_notes: 'Problema técnico con el formulario de publicación',
-          messages: [
-            {
-              id: 'msg6',
-              content: 'Hola, tengo un problema al intentar publicar una nueva oportunidad. El formulario no se envía correctamente.',
-              sender_id: 'user2',
-              sender_name: 'Carlos López',
-              sender_type: 'user',
-              created_at: '2024-01-14T16:00:00Z',
-              is_read: true,
-              message_type: 'text'
-            },
-            {
-              id: 'msg7',
-              content: 'Hola Carlos, lamento el inconveniente. ¿Podrías describir exactamente qué error aparece?',
-              sender_id: 'admin1',
-              sender_name: 'Admin Support',
-              sender_type: 'admin',
-              created_at: '2024-01-14T16:15:00Z',
-              is_read: true,
-              message_type: 'text'
-            },
-            {
-              id: 'msg8',
-              content: 'El error dice "Error de validación en el campo descripción" pero no veo qué está mal.',
-              sender_id: 'user2',
-              sender_name: 'Carlos López',
-              sender_type: 'user',
-              created_at: '2024-01-14T16:45:00Z',
-              is_read: false,
-              message_type: 'text'
-            }
-          ]
-        }
-      ];
+      // Fetch messages for this conversation
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
 
-      const conversationData = mockConversations.find(c => c.id === conversationId);
-      if (!conversationData) {
-        throw new Error('Conversación no encontrada');
+      if (messagesError) throw messagesError;
+
+      if (!messagesData || messagesData.length === 0) {
+        throw new Error('No se encontraron mensajes para esta conversación');
       }
+
+      // Get unique user IDs
+      const userIds = new Set<string>();
+      messagesData.forEach(msg => {
+        userIds.add(msg.sender_id);
+        userIds.add(msg.recipient_id);
+      });
+
+      // Fetch user details
+      interface UserData {
+        user_id: string;
+        full_name: string;
+        email: string;
+        role: string;
+      }
+
+      const { data: usersData } = await supabase.functions.invoke('get-all-users');
+      const users: UserData[] = usersData?.users || [];
+      const usersMap = new Map<string, UserData>(users.map((u) => [u.user_id, u]));
+
+      // Determine the other participant (not admin)
+      const firstMessage = messagesData[0];
+      if (!firstMessage) {
+        throw new Error('No hay mensajes en la conversación');
+      }
+
+      const otherUserId = firstMessage.sender_id === '00000000-0000-0000-0000-000000000000' 
+        ? firstMessage.recipient_id 
+        : firstMessage.sender_id;
+      const otherUser = usersMap.get(otherUserId);
+
+      // Transform messages
+      const messages: ChatMessage[] = messagesData.map(msg => ({
+        id: msg.id,
+        content: msg.content || '',
+        sender_id: msg.sender_id,
+        sender_name: msg.sender_id === '00000000-0000-0000-0000-000000000000' 
+          ? 'Sistema' 
+          : usersMap.get(msg.sender_id)?.full_name || 'Usuario',
+        sender_type: (msg.sender_id === '00000000-0000-0000-0000-000000000000' 
+          ? 'system' 
+          : (usersMap.get(msg.sender_id)?.role === 'admin' ? 'admin' : 'user')) as 'admin' | 'user' | 'system',
+        created_at: msg.created_at,
+        is_read: msg.is_read,
+        message_type: (msg.message_type || 'text') as 'text' | 'system' | 'automated'
+      }));
+
+      const lastMessage = messagesData[messagesData.length - 1] || firstMessage;
+
+      const conversationData: ChatDetail = {
+        id: conversationId,
+        user_id: otherUserId,
+        user_name: otherUser?.full_name || 'Usuario',
+        user_email: otherUser?.email || '',
+        user_type: otherUser?.role === 'business' ? 'business' : otherUser?.role === 'admin' ? 'admin' : 'talent',
+        user_avatar: undefined,
+        company_name: undefined,
+        company_logo: undefined,
+        subject: firstMessage.label === 'welcome' ? 'Mensaje de Bienvenida' : 'Conversación',
+        status: 'active',
+        priority: 'medium',
+        created_at: firstMessage.created_at,
+        updated_at: lastMessage.created_at,
+        last_message_at: lastMessage.created_at,
+        messages_count: messages.length,
+        unread_count: messages.filter(m => !m.is_read).length,
+        tags: firstMessage.label ? [firstMessage.label] : [],
+        admin_notes: '',
+        messages
+      };
 
       setConversation(conversationData);
       setAdminNotes(conversationData.admin_notes || '');
@@ -230,15 +181,34 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
 
     setIsSending(true);
     try {
-      // Mock send message - in real implementation this would save to database
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No hay usuario autenticado');
+
+      // Insert new message
+      const { data: insertedMessage, error: insertError } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          recipient_id: conversation.user_id,
+          conversation_id: conversationId,
+          content: newMessage,
+          message_type: 'text',
+          is_read: false
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
       const newMsg: ChatMessage = {
-        id: `msg_${Date.now()}`,
+        id: insertedMessage.id,
         content: newMessage,
-        sender_id: 'admin1',
-        sender_name: 'Admin Support',
+        sender_id: user.id,
+        sender_name: 'Admin',
         sender_type: 'admin',
-        created_at: new Date().toISOString(),
-        is_read: true,
+        created_at: insertedMessage.created_at,
+        is_read: false,
         message_type: 'text'
       };
 

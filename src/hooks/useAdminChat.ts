@@ -52,7 +52,22 @@ export const useAdminChat = () => {
       setIsLoading(true);
       setError(null);
 
-      // Fetch messages
+      // Fetch all users with their profiles and emails
+      const { data: usersData, error: usersError } = await supabase.functions.invoke('get-all-users');
+      
+      if (usersError) throw usersError;
+
+      interface UserData {
+        user_id: string;
+        full_name: string;
+        email: string;
+        role: string;
+      }
+
+      const users: UserData[] = usersData?.users || [];
+      const usersMap = new Map<string, UserData>(users.map((u) => [u.user_id, u]));
+
+      // Fetch all messages
       const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
         .select('*')
@@ -60,59 +75,34 @@ export const useAdminChat = () => {
 
       if (messagesError) throw messagesError;
 
-      // Get unique user IDs
-      const userIds = new Set<string>();
-      messagesData?.forEach(msg => {
-        userIds.add(msg.sender_id);
-        userIds.add(msg.recipient_id);
-      });
-
-      // Fetch profiles
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, avatar_url')
-        .in('user_id', Array.from(userIds));
-
-      const profilesMap = new Map(
-        profilesData?.map(p => [p.user_id, p]) || []
-      );
-
-      // Fetch user roles
-      const { data: rolesData } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', Array.from(userIds));
-
-      const rolesMap = new Map(rolesData?.map(r => [r.user_id, r.role]) || []);
-
       // Group messages by conversation_id
       const conversationsMap = new Map<string, ChatData>();
       
       messagesData?.forEach(message => {
         const convId = message.conversation_id;
         if (!conversationsMap.has(convId)) {
-          const userId = message.sender_id;
-          const userProfile = profilesMap.get(userId);
-          const userRole = rolesMap.get(userId);
+          // Determine the other participant (not the current admin)
+          const otherUserId = message.sender_id;
+          const otherUser = usersMap.get(otherUserId);
           
           conversationsMap.set(convId, {
             id: convId,
-            user_id: userId,
-            user_name: userProfile?.full_name || 'Usuario',
-            user_email: '',
-            user_type: userRole === 'business' ? 'business' : userRole === 'admin' ? 'admin' : 'talent',
-            user_avatar: userProfile?.avatar_url || undefined,
+            user_id: otherUserId,
+            user_name: otherUser?.full_name || 'Usuario',
+            user_email: otherUser?.email || '',
+            user_type: otherUser?.role === 'business' ? 'business' : otherUser?.role === 'admin' ? 'admin' : 'talent',
+            user_avatar: undefined,
             company_name: undefined,
             company_logo: undefined,
-            subject: 'Conversación',
+            subject: message.label === 'welcome' ? 'Mensaje de Bienvenida' : 'Conversación',
             status: 'active',
-            priority: 'medium',
+            priority: message.label === 'welcome' ? 'low' : 'medium',
             created_at: message.created_at,
             updated_at: message.created_at,
             last_message_at: message.created_at,
             messages_count: 1,
             unread_count: message.is_read ? 0 : 1,
-            tags: [],
+            tags: message.label ? [message.label] : [],
             admin_notes: '',
             last_message_preview: message.content?.substring(0, 100)
           });
