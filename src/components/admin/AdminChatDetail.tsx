@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   MessageSquare, 
-  User, 
   Building, 
   Send,
   AlertTriangle,
@@ -392,36 +391,34 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Header con información del usuario */}
-          <Card>
+          {/* Header con información del usuario - Destacado */}
+          <Card className="border-2">
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {conversation.user_avatar ? (
-                    <img 
-                      src={conversation.user_avatar} 
-                      alt={conversation.user_name}
-                      className="h-12 w-12 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-6 w-6 text-primary" />
+              <div className="flex items-center gap-4">
+                {/* Avatar grande */}
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={conversation.user_avatar} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                    {conversation.user_name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                
+                {/* Info del usuario */}
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold mb-1">{conversation.user_name}</h3>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    <span className="text-sm">{conversation.user_email}</span>
+                  </div>
+                  {conversation.company_name && (
+                    <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                      <Building className="h-4 w-4" />
+                      <span className="text-sm">{conversation.company_name}</span>
                     </div>
                   )}
-                  <div>
-                    <h3 className="font-medium">{conversation.user_name}</h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Mail className="h-4 w-4" />
-                      <span>{conversation.user_email}</span>
-                    </div>
-                    {conversation.company_name && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Building className="h-4 w-4" />
-                        <span>{conversation.company_name}</span>
-                      </div>
-                    )}
-                  </div>
                 </div>
+                
+                {/* Badges */}
                 <div className="flex items-center gap-2">
                   {getUserTypeBadge(conversation.user_type)}
                   {getStatusBadge(conversation.status)}
