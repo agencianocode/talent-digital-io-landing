@@ -35,6 +35,7 @@ import AdminCompanyManagement from './admin/AdminCompanyManagement';
 import AdminOpportunityModeration from './admin/AdminOpportunityModeration';
 import AdminMarketplaceManagement from './admin/AdminMarketplaceManagement';
 import AdminChatManagement from './admin/AdminChatManagement';
+import { useAdminChatBadge } from '@/hooks/useAdminChatBadge';
 
 interface AdminStats {
   totalUsers: number;
@@ -52,6 +53,7 @@ interface UserData {
 const AdminPanel: React.FC = () => {
   const { userRole, isAuthenticated, isLoading: authLoading } = useSupabaseAuth();
   const { requests, isLoading: requestsLoading, approveRequest, rejectRequest, loadAllRequests } = useUpgradeRequests();
+  const { unreadCount: unreadAdminMessages } = useAdminChatBadge();
   const [stats, setStats] = useState<AdminStats>({ totalUsers: 0, pendingRequests: 0, usersByRole: {} });
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [adminNotes, setAdminNotes] = useState<string>('');
@@ -278,6 +280,11 @@ const AdminPanel: React.FC = () => {
           <TabsTrigger value="user-chat" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             Chat con Usuarios
+            {unreadAdminMessages > 0 && (
+              <Badge variant="destructive" className="ml-1 px-1.5 py-0 h-5 min-w-[1.25rem] text-xs">
+                {unreadAdminMessages}
+              </Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
