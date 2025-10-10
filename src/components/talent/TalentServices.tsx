@@ -16,6 +16,8 @@ import {
 import { toast } from 'sonner';
 import { TalentService } from '@/hooks/useTalentServices';
 import { marketplaceService } from '@/services/marketplaceService';
+import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
+import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 
 // TalentService interface is now imported from the hook
 
@@ -34,6 +36,8 @@ export const TalentServices = ({
 }: TalentServicesProps) => {
   const [services, setServices] = useState<TalentService[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   useEffect(() => {
     fetchServices();
@@ -52,12 +56,20 @@ export const TalentServices = ({
     }
   };
 
-  const handleContactService = (service: TalentService) => {
-    if (onContact) {
-      onContact();
-    } else {
-      toast.info(`Contactando a ${talentName} sobre: ${service.title}`);
-    }
+  const handleRequestService = (service: TalentService) => {
+    // Convert TalentService to MarketplaceService format for the modal
+    const marketplaceService: MarketplaceService = {
+      ...service,
+      user_name: talentName,
+      user_avatar: talentAvatar
+    };
+    setSelectedService(marketplaceService);
+    setIsRequestModalOpen(true);
+  };
+
+  const handleRequestSent = async () => {
+    // Refresh services after request is sent
+    await fetchServices();
   };
 
   const getAvailabilityBadge = (isAvailable: boolean) => {
@@ -193,8 +205,7 @@ export const TalentServices = ({
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => handleContactService(service)}
-                    disabled={!service.is_available}
+                    onClick={() => onContact && onContact()}
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Contactar
@@ -202,7 +213,7 @@ export const TalentServices = ({
                   {service.is_available && (
                     <Button 
                       size="sm"
-                      onClick={() => handleContactService(service)}
+                      onClick={() => handleRequestService(service)}
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Solicitar
@@ -228,6 +239,14 @@ export const TalentServices = ({
           </div>
         )}
       </CardContent>
+
+      {/* Service Request Modal */}
+      <ServiceRequestModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        service={selectedService}
+        onRequestSent={handleRequestSent}
+      />
     </Card>
   );
 };
