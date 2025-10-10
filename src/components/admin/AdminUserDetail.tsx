@@ -143,7 +143,7 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
       if (error) throw error;
 
-      toast.success('Rol actualizado correctamente');
+      toast.success('Rol actualizado correctamente. El usuario debe recargar la página para ver los cambios.');
       onUserUpdate();
       loadUserDetail();
     } catch (error) {
