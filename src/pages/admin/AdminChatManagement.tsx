@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,7 @@ import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import AdminChatFilters from '@/components/admin/AdminChatFilters';
 import AdminChatDetail from '@/components/admin/AdminChatDetail';
+import StartNewChatModal from '@/components/admin/StartNewChatModal';
 import { useAdminChat } from '@/hooks/useAdminChat';
 
 const AdminChatManagement: React.FC = () => {
@@ -42,6 +44,7 @@ const AdminChatManagement: React.FC = () => {
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
 
   const handleViewConversation = (conversationId: string) => {
     setSelectedConversationId(conversationId);
@@ -61,6 +64,51 @@ const AdminChatManagement: React.FC = () => {
     toast.loading('Actualizando conversaciones...', { id: 'refresh-conversations' });
     await refetch();
     toast.success('Conversaciones actualizadas correctamente', { id: 'refresh-conversations' });
+  };
+
+  const handleStartNewChat = async (userId: string, userName: string) => {
+    try {
+      // Check if conversation already exists
+      const existingConversation = allConversations.find(
+        conv => conv.user_id === userId
+      );
+
+      if (existingConversation) {
+        // Open existing conversation
+        setSelectedConversationId(existingConversation.id);
+        setIsDetailOpen(true);
+        toast.info(`Abriendo conversación existente con ${userName}`);
+      } else {
+        // Create new conversation ID
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('No hay usuario autenticado');
+
+        const newConversationId = `chat_${user.id}_${userId}_${Date.now()}`;
+
+        // Insert initial message to create conversation
+        const { error: insertError } = await supabase
+          .from('messages')
+          .insert({
+            sender_id: user.id,
+            recipient_id: userId,
+            conversation_id: newConversationId,
+            content: '¡Hola! Te escribo desde el panel de administración.',
+            message_type: 'text',
+            is_read: false
+          });
+
+        if (insertError) throw insertError;
+
+        // Refresh conversations and open the new one
+        await refetch();
+        setSelectedConversationId(newConversationId);
+        setIsDetailOpen(true);
+        toast.success(`Nueva conversación iniciada con ${userName}`);
+      }
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      toast.error('Error al iniciar la conversación');
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -140,14 +188,23 @@ const AdminChatManagement: React.FC = () => {
             Gestiona todas las conversaciones y comunicación con usuarios
           </p>
         </div>
-        <Button 
-          onClick={handleRefresh} 
-          variant="outline" 
-          disabled={isLoading}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Actualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => setIsNewChatModalOpen(true)} 
+            variant="default"
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Iniciar Nuevo Chat
+          </Button>
+          <Button 
+            onClick={handleRefresh} 
+            variant="outline" 
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Actualizar
+          </Button>
+        </div>
       </div>
 
       {/* Statistics */}
@@ -391,6 +448,13 @@ const AdminChatManagement: React.FC = () => {
           onConversationUpdate={handleConversationUpdate}
         />
       )}
+
+      {/* Start New Chat Modal */}
+      <StartNewChatModal
+        isOpen={isNewChatModalOpen}
+        onClose={() => setIsNewChatModalOpen(false)}
+        onStartChat={handleStartNewChat}
+      />
     </div>
   );
 };
