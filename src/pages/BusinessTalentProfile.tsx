@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import VideoThumbnail from '@/components/VideoThumbnail';
+import { TalentServices } from '@/components/talent/TalentServices';
 import { ArrowLeft, MessageCircle, Share2, ExternalLink, Calendar, Briefcase, GraduationCap, Play, Linkedin, Youtube, Github, Instagram, Facebook } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -896,23 +897,14 @@ if (allEducationRecords && allEducationRecords.length > 0) {
             </CardContent>
           </Card>
 
-            {/* Published Services - Only show if there are services */}
-            {portfolios && portfolios.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Servicios Publicados</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="text-center py-8">
-                      <Briefcase className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <h4 className="font-medium text-gray-900 mb-2">Servicios Ofrecidos</h4>
-                      <p className="text-gray-500 mb-4">{userProfile?.full_name} aún no ha publicado servicios</p>
-                      <Button variant="outline">
-                        Contactar directamente
-                      </Button>
-                </div>
-            </CardContent>
-          </Card>
+            {/* Published Services */}
+            {id && userProfile && (
+              <TalentServices
+                userId={id}
+                talentName={userProfile.full_name || 'Talento'}
+                talentAvatar={userProfile.avatar_url}
+                onContact={() => setShowContactModal(true)}
+              />
             )}
           </div>
         </div>
