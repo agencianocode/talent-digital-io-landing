@@ -8,7 +8,11 @@ import AdminCharts from '@/components/admin/AdminCharts';
 import { useAdminData } from '@/hooks/useAdminData';
 import { toast } from 'sonner';
 
-const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+  onTabChange?: (tab: string) => void;
+}
+
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
   const { stats, activities, chartData, isLoading, error, refetch } = useAdminData();
 
   const handleRefresh = async () => {
@@ -89,19 +93,35 @@ const AdminDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col gap-2"
+              onClick={() => onTabChange?.('users')}
+            >
               <span className="text-lg">👥</span>
               <span className="text-sm">Gestionar Usuarios</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col gap-2"
+              onClick={() => onTabChange?.('companies')}
+            >
               <span className="text-lg">🏢</span>
               <span className="text-sm">Gestionar Empresas</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col gap-2"
+              onClick={() => onTabChange?.('opportunities')}
+            >
               <span className="text-lg">💼</span>
               <span className="text-sm">Moderar Oportunidades</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col gap-2"
+              onClick={() => onTabChange?.('marketplace')}
+            >
               <span className="text-lg">🛍</span>
               <span className="text-sm">Gestionar Marketplace</span>
             </Button>

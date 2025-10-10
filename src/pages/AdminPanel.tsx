@@ -56,6 +56,7 @@ const AdminPanel: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [adminNotes, setAdminNotes] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   // Load admin stats using secure function
   const loadStats = async () => {
@@ -247,7 +248,7 @@ const AdminPanel: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue="dashboard" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -280,7 +281,15 @@ const AdminPanel: React.FC = () => {
         </TabsList>
 
         <TabsContent value="dashboard">
-          <AdminDashboard />
+          <AdminDashboard onTabChange={(tab) => {
+            const tabMap: Record<string, string> = {
+              'users': 'user-management',
+              'companies': 'company-management',
+              'opportunities': 'opportunity-moderation',
+              'marketplace': 'marketplace-management'
+            };
+            setActiveTab(tabMap[tab] || tab);
+          }} />
         </TabsContent>
 
         <TabsContent value="upgrade-requests">
