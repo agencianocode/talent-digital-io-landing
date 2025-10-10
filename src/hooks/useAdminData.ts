@@ -224,57 +224,69 @@ export const useAdminData = () => {
 
   const loadChartData = async () => {
     try {
-      // Generate chart data for the last 30 days
+      // Optimize by loading all data at once and grouping
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+
+      // Load all profiles
+      const { data: allUsers, error: userError } = await supabase
+        .from('profiles')
+        .select('created_at')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (userError) throw userError;
+
+      // Load all companies
+      const { data: allCompanies, error: companyError } = await supabase
+        .from('companies')
+        .select('created_at')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (companyError) throw companyError;
+
+      // Load all opportunities
+      const { data: allOpportunities, error: oppError } = await supabase
+        .from('opportunities')
+        .select('created_at')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (oppError) throw oppError;
+
+      // Load all applications
+      const { data: allApplications, error: appError } = await supabase
+        .from('applications')
+        .select('created_at')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (appError) throw appError;
+
+      // Group data by date
       const chartData: ChartData[] = [];
       const today = new Date();
 
       for (let i = 29; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0] || date.toISOString().substring(0, 10);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        if (!dateStr) continue;
 
-        // Count users created on this date
-        const { count: users, error: userError } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', `${dateStr}T00:00:00`)
-          .lt('created_at', `${dateStr}T23:59:59`);
-
-        if (userError) throw userError;
-
-        // Count companies created on this date
-        const { count: companies, error: companyError } = await supabase
-          .from('companies')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', `${dateStr}T00:00:00`)
-          .lt('created_at', `${dateStr}T23:59:59`);
-
-        if (companyError) throw companyError;
-
-        // Count opportunities created on this date
-        const { count: opportunities, error: oppError } = await supabase
-          .from('opportunities')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', `${dateStr}T00:00:00`)
-          .lt('created_at', `${dateStr}T23:59:59`);
-
-        if (oppError) throw oppError;
-
-        // Count applications created on this date
-        const { count: applications, error: appError } = await supabase
-          .from('applications')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', `${dateStr}T00:00:00`)
-          .lt('created_at', `${dateStr}T23:59:59`);
-
-        if (appError) throw appError;
+        const users = allUsers?.filter(u => u.created_at?.startsWith(dateStr)).length || 0;
+        const companies = allCompanies?.filter(c => c.created_at?.startsWith(dateStr)).length || 0;
+        const opportunities = allOpportunities?.filter(o => o.created_at?.startsWith(dateStr)).length || 0;
+        const applications = allApplications?.filter(a => a.created_at?.startsWith(dateStr)).length || 0;
 
         chartData.push({
           date: dateStr,
-          users: users || 0,
-          companies: companies || 0,
-          opportunities: opportunities || 0,
-          applications: applications || 0
+          users,
+          companies,
+          opportunities,
+          applications
         });
       }
 
