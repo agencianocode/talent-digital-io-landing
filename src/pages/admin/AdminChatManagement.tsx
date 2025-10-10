@@ -94,6 +94,7 @@ const AdminChatManagement: React.FC = () => {
             conversation_id: newConversationId,
             content: '¡Hola! Te escribo desde el panel de administración.',
             message_type: 'text',
+            label: 'admin_contact',
             is_read: false
           });
 
