@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   Mail
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ interface ChatMessage {
   sender_id: string;
   sender_name: string;
   sender_type: 'admin' | 'user' | 'system';
+  sender_avatar?: string;
   created_at: string;
   is_read: boolean;
   message_type: 'text' | 'system' | 'automated';
@@ -121,20 +123,26 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
       const otherUser = usersMap.get(otherUserId);
 
       // Transform messages
-      const messages: ChatMessage[] = messagesData.map(msg => ({
-        id: msg.id,
-        content: msg.content || '',
-        sender_id: msg.sender_id,
-        sender_name: msg.sender_id === '00000000-0000-0000-0000-000000000000' 
+      const messages: ChatMessage[] = messagesData.map(msg => {
+        const senderData = usersMap.get(msg.sender_id);
+        const senderName = msg.sender_id === '00000000-0000-0000-0000-000000000000' 
           ? 'Sistema' 
-          : usersMap.get(msg.sender_id)?.full_name || 'Usuario',
-        sender_type: (msg.sender_id === '00000000-0000-0000-0000-000000000000' 
-          ? 'system' 
-          : (usersMap.get(msg.sender_id)?.role === 'admin' ? 'admin' : 'user')) as 'admin' | 'user' | 'system',
-        created_at: msg.created_at,
-        is_read: msg.is_read,
-        message_type: (msg.message_type || 'text') as 'text' | 'system' | 'automated'
-      }));
+          : senderData?.full_name || 'Usuario';
+        
+        return {
+          id: msg.id,
+          content: msg.content || '',
+          sender_id: msg.sender_id,
+          sender_name: senderName,
+          sender_type: (msg.sender_id === '00000000-0000-0000-0000-000000000000' 
+            ? 'system' 
+            : (senderData?.role === 'admin' ? 'admin' : 'user')) as 'admin' | 'user' | 'system',
+          sender_avatar: undefined, // Will be fetched from profiles if needed
+          created_at: msg.created_at,
+          is_read: msg.is_read,
+          message_type: (msg.message_type || 'text') as 'text' | 'system' | 'automated'
+        };
+      });
 
       const lastMessage = messagesData[messagesData.length - 1] || firstMessage;
 
@@ -427,14 +435,24 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
                   {conversation.messages.map((message) => (
                     <div
                       key={message.id}
-                      className={`flex ${message.sender_type === 'admin' ? 'justify-end' : 'justify-start'}`}
+                      className={`flex gap-2 ${message.sender_type === 'admin' ? 'justify-end' : 'justify-start'}`}
                     >
+                      {/* Avatar a la izquierda para usuarios */}
+                      {message.sender_type !== 'admin' && (
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarImage src={message.sender_avatar} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                            {message.sender_name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      
                       <div
                         className={`max-w-[70%] rounded-lg p-3 ${
                           message.sender_type === 'admin'
                             ? 'bg-primary text-primary-foreground'
                             : message.sender_type === 'system'
-                            ? 'bg-gray-100 text-gray-800'
+                            ? 'bg-muted/50 border'
                             : 'bg-muted'
                         }`}
                       >
@@ -449,6 +467,15 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
                         </div>
                         <p className="text-sm">{message.content}</p>
                       </div>
+
+                      {/* Avatar a la derecha para admin */}
+                      {message.sender_type === 'admin' && (
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                            A
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                     </div>
                   ))}
                 </div>
