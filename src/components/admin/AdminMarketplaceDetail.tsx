@@ -24,6 +24,7 @@ import {
   User
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MarketplaceDetail {
   id: string;
@@ -77,108 +78,21 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
 
   const loadServiceDetail = async () => {
     if (!serviceId) return;
-    
+
     setIsLoading(true);
     try {
-      // Mock data for demonstration
-      const mockServices: MarketplaceDetail[] = [
-        {
-          id: '1',
-          title: 'Diseño de Logo Profesional',
-          description: 'Creación de logos únicos y profesionales para tu marca. Incluye 3 conceptos iniciales y 2 revisiones.',
-          category: 'diseno-grafico',
-          price: 150,
-          currency: 'USD',
-          delivery_time: '3-5 días',
-          location: 'Remoto',
-          is_active: true,
-          status: 'active',
-          created_at: '2024-01-15T10:00:00Z',
-          updated_at: '2024-01-15T10:00:00Z',
-          user_id: 'user1',
-          company_id: 'company1',
-          company_name: 'Design Studio',
-          company_logo: undefined,
-          user_name: 'María García',
-          user_avatar: undefined,
-          views_count: 45,
-          orders_count: 12,
-          rating: 4.8,
-          reviews_count: 8,
-          priority: 'medium',
-          admin_notes: '',
-          tags: ['logo', 'branding', 'diseño'],
-          portfolio_url: 'https://portfolio.com/maria',
-          demo_url: 'https://demo.com/logo'
-        },
-        {
-          id: '2',
-          title: 'Desarrollo de Sitio Web',
-          description: 'Desarrollo completo de sitios web responsivos con React y Node.js. Incluye diseño y funcionalidades personalizadas.',
-          category: 'desarrollo-web',
-          price: 2500,
-          currency: 'USD',
-          delivery_time: '2-3 semanas',
-          location: 'Remoto',
-          is_active: true,
-          status: 'active',
-          created_at: '2024-01-10T14:30:00Z',
-          updated_at: '2024-01-10T14:30:00Z',
-          user_id: 'user2',
-          company_id: 'company2',
-          company_name: 'Tech Solutions',
-          company_logo: undefined,
-          user_name: 'Carlos López',
-          user_avatar: undefined,
-          views_count: 78,
-          orders_count: 5,
-          rating: 4.9,
-          reviews_count: 3,
-          priority: 'high',
-          admin_notes: '',
-          tags: ['react', 'nodejs', 'web'],
-          portfolio_url: 'https://portfolio.com/carlos',
-          demo_url: 'https://demo.com/web'
-        },
-        {
-          id: '3',
-          title: 'Estrategia de Marketing Digital',
-          description: 'Desarrollo de estrategias completas de marketing digital para redes sociales y campañas publicitarias.',
-          category: 'marketing-digital',
-          price: 800,
-          currency: 'USD',
-          delivery_time: '1-2 semanas',
-          location: 'Remoto',
-          is_active: false,
-          status: 'paused',
-          created_at: '2024-01-05T09:15:00Z',
-          updated_at: '2024-01-05T09:15:00Z',
-          user_id: 'user3',
-          company_id: undefined,
-          company_name: undefined,
-          company_logo: undefined,
-          user_name: 'Ana Rodríguez',
-          user_avatar: undefined,
-          views_count: 32,
-          orders_count: 7,
-          rating: 4.6,
-          reviews_count: 5,
-          priority: 'low',
-          admin_notes: 'Servicio pausado temporalmente',
-          tags: ['marketing', 'social media', 'estrategia'],
-          portfolio_url: 'https://portfolio.com/ana',
-          demo_url: undefined
-        }
-      ];
+      // Fetch real data from Edge Function (admin-only)
+      const { data, error } = await supabase.functions.invoke('admin-get-marketplace-service', {
+        body: { serviceId },
+      });
 
-      const serviceData = mockServices.find(s => s.id === serviceId);
-      if (!serviceData) {
-        throw new Error('Servicio no encontrado');
-      }
+      if (error) throw error;
+      if (!data) throw new Error('Servicio no encontrado');
 
-      setService(serviceData);
-      setEditData(serviceData);
-      setAdminNotes(serviceData.admin_notes || '');
+      const detail = data as unknown as MarketplaceDetail;
+      setService(detail);
+      setEditData(detail);
+      setAdminNotes(detail.admin_notes || '');
     } catch (error) {
       console.error('Error loading service detail:', error);
       toast.error('Error al cargar los detalles del servicio');
