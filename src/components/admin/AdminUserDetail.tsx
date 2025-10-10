@@ -159,25 +159,14 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
     setIsUpdating(true);
     try {
-      // Try to update; if no row is returned, upsert as fallback
-      const { data: updated, error: updateError } = await supabase
+      // Upsert directly for simplicity and robustness
+      const { error } = await supabase
         .from('user_roles')
-        .update({ role: newRole as any })
-        .eq('user_id', userId)
-        .select()
-        .maybeSingle();
+        .upsert({ user_id: userId, role: newRole as any }, { onConflict: 'user_id' });
 
-      if (updateError) throw updateError;
+      if (error) throw error;
 
-      if (!updated) {
-        // No existing row; create or update by conflict on user_id
-        const { error: upsertError } = await supabase
-          .from('user_roles')
-          .upsert({ user_id: userId, role: newRole as any }, { onConflict: 'user_id' });
-        if (upsertError) throw upsertError;
-      }
-
-      // Optimistically update local state and refresh details
+      // Update local state immediately
       setUser((prev) => prev ? { ...prev, role: newRole } : prev);
       toast.success('Rol actualizado correctamente.');
       onUserUpdate();
