@@ -31,6 +31,12 @@ const TalentDashboardHome = () => {
     loadMetrics();
   }, [getTalentMetrics]);
 
+  // Debug: Log user role and premium status
+  useEffect(() => {
+    console.log('🔍 TalentDashboardHome - User Role:', userRole);
+    console.log('🔍 TalentDashboardHome - isPremium:', isPremium);
+  }, [userRole, isPremium]);
+
   if (isLoading) {
     return (
       <div className="p-8">
