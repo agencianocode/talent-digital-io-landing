@@ -127,7 +127,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5" />
@@ -135,16 +135,16 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 py-2">
           {/* URL del Perfil */}
           <div className="space-y-2">
-            <Label htmlFor="profile-url">URL de tu Perfil</Label>
+            <Label htmlFor="profile-url" className="text-sm font-medium">URL de tu Perfil</Label>
             <div className="flex gap-2">
               <Input
                 id="profile-url"
                 value={publicUrl}
                 readOnly
-                className="flex-1"
+                className="flex-1 text-sm"
               />
               {typeof isClipboardSupported === 'function' ? isClipboardSupported() && (
                 <Button
@@ -177,19 +177,17 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-xs text-gray-500">
-              Comparte este enlace para que otros puedan ver tu perfil profesional
-            </p>
           </div>
 
           {/* Compartir Nativo */}
           {(typeof isNativeShareSupported === 'function' ? isNativeShareSupported() : isNativeShareSupported) && (
             <div className="space-y-2">
-              <Label>Compartir con Apps</Label>
+              <Label className="text-sm font-medium">Compartir con Apps</Label>
               <Button
                 onClick={handleNativeShare}
                 className="w-full"
                 variant="outline"
+                size="sm"
               >
                 <Share2 className="h-4 w-4 mr-2" />
                 Compartir con Apps del Sistema
@@ -198,8 +196,8 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
           )}
 
           {/* Redes Sociales */}
-          <div className="space-y-3">
-            <Label>Compartir en Redes Sociales</Label>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Compartir en Redes Sociales</Label>
             <div className="grid grid-cols-2 gap-2">
               {SHARE_PLATFORMS.map((platform) => (
                 <Button
@@ -209,7 +207,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
                   size="sm"
                 >
                   {platform.icon}
-                  <span className="ml-2">{platform.name}</span>
+                  <span className="ml-2 text-xs">{platform.name}</span>
                 </Button>
               ))}
             </div>
@@ -217,14 +215,14 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
 
           {/* Código QR */}
           {shareData?.qr_code && (
-            <div className="space-y-3">
-              <Label>Código QR</Label>
-              <div className="flex flex-col items-center space-y-3">
-                <div className="p-4 bg-white border rounded-lg">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Código QR</Label>
+              <div className="flex flex-col items-center space-y-2">
+                <div className="p-3 bg-white border rounded-lg">
                   <img
                     src={shareData.qr_code}
                     alt="Código QR del perfil"
-                    className="w-32 h-32"
+                    className="w-24 h-24"
                   />
                 </div>
                 <Button
@@ -235,48 +233,29 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
                   <Download className="h-4 w-4 mr-2" />
                   Descargar QR
                 </Button>
-                <p className="text-xs text-gray-500 text-center">
-                  Escanea este código QR para acceder directamente a tu perfil
-                </p>
               </div>
             </div>
           )}
 
           {/* Estadísticas */}
           {shareData && (
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                Estadísticas de Compartir
-              </h4>
-              <div className="flex items-center gap-4">
-                <Badge variant="secondary">
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Badge variant="secondary" className="text-xs">
                   <Share2 className="h-3 w-3 mr-1" />
                   {shareData.share_count} compartidos
                 </Badge>
-                <Badge variant="outline">
+                <Badge variant="outline" className="text-xs">
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Perfil Público
                 </Badge>
               </div>
             </div>
           )}
-
-          {/* Información Adicional */}
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <h4 className="text-sm font-medium text-blue-900 mb-2">
-              💡 Consejos para Compartir
-            </h4>
-            <ul className="text-xs text-blue-800 space-y-1">
-              <li>• Comparte en LinkedIn para oportunidades profesionales</li>
-              <li>• Usa el código QR en tarjetas de presentación</li>
-              <li>• Incluye el enlace en tu firma de email</li>
-              <li>• Comparte en redes sociales para mayor visibilidad</li>
-            </ul>
-          </div>
         </div>
 
-        <div className="flex justify-end pt-4">
-          <Button onClick={onClose} variant="outline">
+        <div className="flex justify-end pt-3 border-t">
+          <Button onClick={onClose} variant="outline" size="sm">
             Cerrar
           </Button>
         </div>
