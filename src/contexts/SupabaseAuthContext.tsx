@@ -365,6 +365,54 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   }, []);
 
+  // Set up realtime listener for role changes
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const setupRealtimeListener = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user?.id) return;
+      
+      const userId = session.user.id;
+      console.log('🔄 Setting up realtime listener for user role changes:', userId);
+
+      channel = supabase
+        .channel('user-role-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'user_roles',
+            filter: `user_id=eq.${userId}`
+          },
+          async (payload) => {
+            console.log('🔔 Role change detected:', payload);
+            const newRole = payload.new?.role;
+            if (newRole) {
+              const mappedRole = mapDatabaseRoleToUserRole(newRole as string);
+              console.log('✅ Updating role in real-time:', mappedRole);
+              setAuthState(prev => ({
+                ...prev,
+                userRole: mappedRole
+              }));
+            }
+          }
+        )
+        .subscribe();
+    };
+
+    setupRealtimeListener();
+
+    return () => {
+      if (channel) {
+        console.log('🔄 Cleaning up realtime listener for user role changes');
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [authState.user?.id]);
+
   const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
     // Set different redirect URLs based on user type
     const redirectUrl = metadata?.user_type === 'business' 
