@@ -16,7 +16,8 @@ import {
   Clock,
   CheckCircle,
   Archive,
-  Star
+  Star,
+  Trash2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -39,7 +40,8 @@ const AdminChatManagement: React.FC = () => {
     totalPages,
     setCurrentPage,
     stats,
-    refetch
+    refetch,
+    deleteConversation
   } = useAdminChat();
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -401,6 +403,19 @@ const AdminChatManagement: React.FC = () => {
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Ver Chat
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={async () => {
+                        const ok = window.confirm('¿Eliminar esta conversación y todos sus mensajes?');
+                        if (!ok) return;
+                        await deleteConversation(conversation.id);
+                        await refetch();
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Eliminar
                     </Button>
                   </div>
                 </div>
