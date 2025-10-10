@@ -60,9 +60,16 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
       
       if (error) throw error;
 
-      const allUsers: UserData[] = data?.users || [];
-      // Filter out admin users
-      const nonAdminUsers = allUsers.filter(u => u.role !== 'admin');
+      const rawUsers: any[] = (data as any)?.users || [];
+      // Normalize keys from edge function (id -> user_id) and filter out admins
+      const nonAdminUsers: UserData[] = rawUsers
+        .filter((u) => u.role !== 'admin')
+        .map((u) => ({
+          user_id: u.id,
+          full_name: u.full_name || 'Usuario',
+          email: u.email || '',
+          role: u.role || 'talent',
+        }));
       setUsers(nonAdminUsers);
       setFilteredUsers(nonAdminUsers);
     } catch (error) {
