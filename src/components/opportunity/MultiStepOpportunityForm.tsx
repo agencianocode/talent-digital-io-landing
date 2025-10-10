@@ -148,11 +148,11 @@ const MultiStepOpportunityForm = ({
     }
   };
 
-  // Autoguardado cada 30 segundos
+  // Autoguardado cada 2 minutos
   const autoSaveData = useAutoSave({
     data: formData,
     onSave: saveDraft,
-    interval: 30000, // 30 segundos
+    interval: 120000, // 2 minutos
     enabled: true,
     storageKey: 'opportunity-draft'
   });

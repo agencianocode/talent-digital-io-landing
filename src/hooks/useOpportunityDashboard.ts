@@ -80,7 +80,7 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
           setApplicationCounts(mockOpportunityData.applications);
         } else {
           // Usar datos reales pero extendidos con campos mock
-          const extendedOpps = realOpportunities.map(opp => ({
+          let extendedOpps = realOpportunities.map(opp => ({
             ...opp,
             status: opp.status || 'draft',
             // Agregar campos que pueden no existir en la DB
@@ -95,6 +95,41 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
             // Agregar información de la empresa
             company_name: (opp as any).companies?.name || 'Mi Empresa'
           }));
+
+          // Filtrar para mostrar solo la última versión de cada borrador y todas las publicadas
+          const opportunityMap = new Map();
+          
+          extendedOpps.forEach(opp => {
+            // Si es publicada, siempre incluir
+            if (opp.status === 'active' || opp.status === 'paused' || opp.status === 'closed') {
+              opportunityMap.set(opp.id, opp);
+            } 
+            // Si es borrador, solo mantener la más reciente
+            else if (opp.status === 'draft') {
+              const existing = Array.from(opportunityMap.values()).find(
+                existingOpp => existingOpp.status === 'draft' && 
+                              existingOpp.title === opp.title && 
+                              existingOpp.company_id === opp.company_id
+              );
+              
+              if (!existing) {
+                opportunityMap.set(opp.id, opp);
+              } else {
+                // Mantener solo el más reciente
+                const existingDate = new Date(existing.created_at);
+                const currentDate = new Date(opp.created_at);
+                
+                if (currentDate > existingDate) {
+                  // Eliminar el anterior
+                  opportunityMap.delete(existing.id);
+                  // Agregar el más reciente
+                  opportunityMap.set(opp.id, opp);
+                }
+              }
+            }
+          });
+
+          extendedOpps = Array.from(opportunityMap.values());
 
           setOpportunitiesWithExtras(extendedOpps as OpportunityWithExtras[]);
           

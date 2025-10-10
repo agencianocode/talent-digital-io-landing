@@ -13,7 +13,7 @@ interface UseAutoSaveOptions {
 export const useAutoSave = ({
   data,
   onSave,
-  interval = 30000, // 30 segundos por defecto
+  interval = 120000, // 2 minutos por defecto
   enabled = true,
   storageKey
 }: UseAutoSaveOptions) => {
