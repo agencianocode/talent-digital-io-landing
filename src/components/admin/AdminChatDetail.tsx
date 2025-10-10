@@ -108,8 +108,15 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
         role: string;
       }
 
-      const { data: usersData } = await supabase.functions.invoke('get-all-users');
-      const users: UserData[] = usersData?.users || [];
+      const { data, error: usersError } = await supabase.functions.invoke('get-all-users', { body: {} });
+      if (usersError) throw usersError;
+      const rawUsers: any[] = (data as any)?.users || [];
+      const users: UserData[] = rawUsers.map((u) => ({
+        user_id: u.user_id || u.id,
+        full_name: u.full_name || 'Usuario',
+        email: u.email || '',
+        role: u.role || 'talent',
+      }));
       const usersMap = new Map<string, UserData>(users.map((u) => [u.user_id, u]));
 
       // Determine the other participant (not admin)
@@ -118,10 +125,24 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
         throw new Error('No hay mensajes en la conversación');
       }
 
-      const otherUserId = firstMessage.sender_id === '00000000-0000-0000-0000-000000000000' 
-        ? firstMessage.recipient_id 
+      const SYSTEM_ID = '00000000-0000-0000-0000-000000000000';
+      const senderRole = usersMap.get(firstMessage.sender_id)?.role;
+      const otherUserId = (firstMessage.sender_id === SYSTEM_ID || senderRole === 'admin')
+        ? firstMessage.recipient_id
         : firstMessage.sender_id;
       const otherUser = usersMap.get(otherUserId);
+
+      // Fetch profiles for participants (avatar)
+      let profilesMap = new Map<string, { avatar_url?: string; full_name?: string }>();
+      try {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, avatar_url, full_name')
+          .in('user_id', Array.from(userIds));
+        profilesMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      } catch (e) {
+        // ignore if not accessible by RLS
+      }
 
       // Transform messages
       const messages: ChatMessage[] = messagesData.map(msg => {
@@ -138,7 +159,7 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
           sender_type: (msg.sender_id === '00000000-0000-0000-0000-000000000000' 
             ? 'system' 
             : (senderData?.role === 'admin' ? 'admin' : 'user')) as 'admin' | 'user' | 'system',
-          sender_avatar: undefined, // Will be fetched from profiles if needed
+          sender_avatar: profilesMap.get(msg.sender_id)?.avatar_url,
           created_at: msg.created_at,
           is_read: msg.is_read,
           message_type: (msg.message_type || 'text') as 'text' | 'system' | 'automated'
@@ -153,7 +174,7 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
         user_name: otherUser?.full_name || 'Usuario',
         user_email: otherUser?.email || '',
         user_type: otherUser?.role === 'business' ? 'business' : otherUser?.role === 'admin' ? 'admin' : 'talent',
-        user_avatar: undefined,
+        user_avatar: profilesMap.get(otherUserId)?.avatar_url,
         company_name: undefined,
         company_logo: undefined,
         subject: firstMessage.label === 'welcome' ? 'Mensaje de Bienvenida' : 'Conversación',
