@@ -23,7 +23,11 @@ import AdminCompanyFilters from '@/components/admin/AdminCompanyFilters';
 import AdminCompanyDetail from '@/components/admin/AdminCompanyDetail';
 import { useAdminCompanies } from '@/hooks/useAdminCompanies';
 
-const AdminCompanyManagement: React.FC = () => {
+interface AdminCompanyManagementProps {
+  onNavigateToOpportunities?: (companyId: string) => void;
+}
+
+const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavigateToOpportunities }) => {
   const {
     companies,
     allCompanies,
@@ -346,6 +350,7 @@ const AdminCompanyManagement: React.FC = () => {
           isOpen={isDetailOpen}
           onClose={handleCloseDetail}
           onCompanyUpdate={handleCompanyUpdate}
+          onNavigateToOpportunities={onNavigateToOpportunities}
         />
       )}
     </div>

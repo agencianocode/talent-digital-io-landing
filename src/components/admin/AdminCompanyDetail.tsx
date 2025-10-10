@@ -61,13 +61,15 @@ interface AdminCompanyDetailProps {
   isOpen: boolean;
   onClose: () => void;
   onCompanyUpdate: () => void;
+  onNavigateToOpportunities?: (companyId: string) => void;
 }
 
 const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
   companyId,
   isOpen,
   onClose,
-  onCompanyUpdate
+  onCompanyUpdate,
+  onNavigateToOpportunities
 }) => {
   const [company, setCompany] = useState<CompanyDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -667,11 +669,19 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 border rounded-lg">
+                <button
+                  onClick={() => {
+                    if (onNavigateToOpportunities) {
+                      onNavigateToOpportunities(companyId);
+                      onClose();
+                    }
+                  }}
+                  className="text-center p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                >
                   <Briefcase className="h-8 w-8 mx-auto mb-2 text-blue-600" />
                   <p className="text-2xl font-bold">{company.opportunities_count}</p>
                   <p className="text-sm text-muted-foreground">Oportunidades Publicadas</p>
-                </div>
+                </button>
                 <div className="text-center p-4 border rounded-lg">
                   <ShoppingBag className="h-8 w-8 mx-auto mb-2 text-green-600" />
                   <p className="text-2xl font-bold">{company.services_count}</p>

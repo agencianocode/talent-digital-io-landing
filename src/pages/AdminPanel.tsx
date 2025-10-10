@@ -57,6 +57,7 @@ const AdminPanel: React.FC = () => {
   const [adminNotes, setAdminNotes] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [companyFilterId, setCompanyFilterId] = useState<string | null>(null);
 
   // Load admin stats using secure function
   const loadStats = async () => {
@@ -424,11 +425,16 @@ const AdminPanel: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="company-management">
-          <AdminCompanyManagement />
+          <AdminCompanyManagement 
+            onNavigateToOpportunities={(companyId) => {
+              setCompanyFilterId(companyId);
+              setActiveTab('opportunity-moderation');
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="opportunity-moderation">
-          <AdminOpportunityModeration />
+          <AdminOpportunityModeration companyFilterId={companyFilterId} />
         </TabsContent>
 
         <TabsContent value="marketplace-management">

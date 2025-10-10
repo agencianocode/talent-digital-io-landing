@@ -22,7 +22,11 @@ import AdminOpportunityFilters from '@/components/admin/AdminOpportunityFilters'
 import AdminOpportunityDetail from '@/components/admin/AdminOpportunityDetail';
 import { useAdminOpportunities } from '@/hooks/useAdminOpportunities';
 
-const AdminOpportunityModeration: React.FC = () => {
+interface AdminOpportunityModerationProps {
+  companyFilterId?: string | null;
+}
+
+const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({ companyFilterId }) => {
   const {
     opportunities,
     allOpportunities,
@@ -36,6 +40,13 @@ const AdminOpportunityModeration: React.FC = () => {
     setCurrentPage,
     refetch
   } = useAdminOpportunities();
+
+  // Apply company filter when provided
+  React.useEffect(() => {
+    if (companyFilterId) {
+      updateFilters({ companyFilter: companyFilterId });
+    }
+  }, [companyFilterId]);
 
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
