@@ -254,34 +254,40 @@ const AdminPanel: React.FC = () => {
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-            <TabsList className="w-full md:w-auto inline-flex min-w-max">
+            <TabsList className="w-full md:w-auto inline-flex">
               <TabsTrigger value="dashboard" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                 <BarChart3 className="h-3 w-3 md:h-4 md:w-4" />
                 <span className="hidden sm:inline">Dashboard</span>
               </TabsTrigger>
               <TabsTrigger value="upgrade-requests" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                 <GraduationCap className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Solicitudes</span>
+                <span className="hidden md:inline">Solicitudes de Upgrade</span>
+                <span className="md:hidden">Solicitudes</span>
               </TabsTrigger>
               <TabsTrigger value="user-management" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                 <UserCheck className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Usuarios</span>
+                <span className="hidden md:inline">Gestión de Usuarios</span>
+                <span className="md:hidden">Usuarios</span>
               </TabsTrigger>
               <TabsTrigger value="company-management" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                 <Building2 className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Empresas</span>
+                <span className="hidden md:inline">Gestión de Empresas</span>
+                <span className="md:hidden">Empresas</span>
               </TabsTrigger>
               <TabsTrigger value="opportunity-moderation" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                 <Briefcase className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Oportunidades</span>
+                <span className="hidden md:inline">Moderación de Oportunidades</span>
+                <span className="md:hidden">Oportunidades</span>
               </TabsTrigger>
               <TabsTrigger value="marketplace-management" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                 <ShoppingBag className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Marketplace</span>
+                <span className="hidden md:inline">Gestión del Marketplace</span>
+                <span className="md:hidden">Marketplace</span>
               </TabsTrigger>
               <TabsTrigger value="user-chat" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                 <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Chat</span>
+                <span className="hidden md:inline">Chat con Usuarios</span>
+                <span className="md:hidden">Chat</span>
                 {unreadAdminMessages > 0 && (
                   <Badge variant="destructive" className="ml-1 px-1.5 py-0 h-4 md:h-5 min-w-[1rem] md:min-w-[1.25rem] text-[10px] md:text-xs">
                     {unreadAdminMessages}
