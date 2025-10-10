@@ -178,6 +178,15 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
 
       if (error) throw error;
 
+      // Send notification to company owner about the invitation
+      if (user?.id) {
+        await supabase.rpc('notify_access_request', {
+          p_company_id: companyId,
+          p_requester_id: user.id,
+          p_requested_role: data.role === 'admin' ? 'Admin' : 'Miembro'
+        });
+      }
+
       toast.success('Invitación enviada correctamente');
       setIsInviteDialogOpen(false);
       form.reset();

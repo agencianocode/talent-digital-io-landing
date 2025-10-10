@@ -212,6 +212,15 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
         throw error;
       }
 
+      // Send notification to company owner about the invitation
+      if (user?.id) {
+        await supabase.rpc('notify_access_request', {
+          p_company_id: companyId,
+          p_requester_id: user.id,
+          p_requested_role: data.role === 'admin' ? 'Admin' : 'Miembro'
+        });
+      }
+
       // Generate invitation link using the actual record ID
       const invitationLink = `${window.location.origin}/accept-invitation?id=${insertResult.id}`;
       
