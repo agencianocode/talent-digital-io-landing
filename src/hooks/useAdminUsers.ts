@@ -41,60 +41,40 @@ export const useAdminUsers = () => {
       setIsLoading(true);
       setError(null);
 
-      // Load users with their profiles and roles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select(`
-          user_id,
-          full_name,
-          created_at,
-          country
-        `);
-
-      if (profilesError) throw profilesError;
-
-      // Load user roles
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-
-      if (rolesError) throw rolesError;
-
-      // Load company counts for each user
-      const { data: companyCounts, error: companyError } = await supabase
-        .from('company_user_roles')
-        .select('user_id')
-        .eq('status', 'accepted');
-
-      if (companyError) throw companyError;
-
-      // Load real auth users using RPC function (returns email, status, etc)
-      const { data: allUsers, error: allUsersError } = await supabase
-        .rpc('get_all_users_for_admin');
-
-      if (allUsersError) {
-        console.error('Error loading all users:', allUsersError);
+      // Get session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
       }
 
-      // Combine all data
-      const usersData: UserData[] = profiles?.map(profile => {
-        const role = roles?.find(r => r.user_id === profile.user_id)?.role || 'freemium_talent';
-        const userData = allUsers?.find((u: any) => u.user_id === profile.user_id);
-        const companiesCount = companyCounts?.filter(c => c.user_id === profile.user_id).length || 0;
+      // Call edge function to get all users with real emails
+      const { data, error: usersError } = await supabase.functions.invoke('get-all-users', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
-        return {
-          id: profile.user_id,
-          full_name: profile.full_name || userData?.full_name || 'Sin nombre',
-          email: `user_${profile.user_id.substring(0, 8)}@example.com`, // Placeholder for email
-          role,
-          created_at: profile.created_at,
-          last_sign_in_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-          email_confirmed_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-          is_active: true, // Default to active
-          country: profile.country || undefined,
-          companies_count: companiesCount
-        };
-      }) || [];
+      if (usersError) {
+        console.error('Error from get-all-users:', usersError);
+        throw usersError;
+      }
+
+      if (!data?.users) {
+        throw new Error('No se pudieron cargar los usuarios');
+      }
+
+      const usersData: UserData[] = data.users.map((user: any) => ({
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email, // Real email from auth
+        role: user.role,
+        created_at: user.created_at,
+        last_sign_in_at: user.last_sign_in_at,
+        email_confirmed_at: user.email_confirmed_at,
+        is_active: user.is_active,
+        country: user.country,
+        companies_count: user.companies_count
+      }));
 
       setUsers(usersData);
     } catch (err) {
