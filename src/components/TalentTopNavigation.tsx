@@ -13,15 +13,17 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, isPremiumRole } from '@/contexts/SupabaseAuthContext';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useMessages } from '@/hooks/useMessages';
 import { useNotifications } from '@/hooks/useNotifications';
+import PremiumBadge from '@/components/PremiumBadge';
 
 const TalentTopNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile, signOut } = useSupabaseAuth();
+  const { profile, signOut, userRole } = useSupabaseAuth();
+  const isPremium = isPremiumRole(userRole);
   const { userProfile } = useProfileData();
   const { unreadCount: unreadMessagesCount } = useMessages();
   const { unreadCount: unreadNotificationsCount } = useNotifications();
@@ -155,6 +157,7 @@ const TalentTopNavigation = () => {
                       {userProfile?.full_name?.charAt(0) || profile?.full_name?.charAt(0) || 'T'}
                     </AvatarFallback>
                   </Avatar>
+                {isPremium && <PremiumBadge variant="icon-only" className="ml-1" showAnimation={false} />}
                 <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
               </Button>
 

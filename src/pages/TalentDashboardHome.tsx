@@ -2,13 +2,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useSupabaseAuth, isPremiumRole } from "@/contexts/SupabaseAuthContext";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import TalentMetrics from "@/components/dashboard/TalentMetrics";
+import PremiumBenefitsCard from "@/components/PremiumBenefitsCard";
 
 const TalentDashboardHome = () => {
   const navigate = useNavigate();
-  const { profile } = useSupabaseAuth();
+  const { profile, userRole } = useSupabaseAuth();
+  const isPremium = isPremiumRole(userRole);
   const { getTalentMetrics } = useDashboardMetrics();
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +58,13 @@ const TalentDashboardHome = () => {
           Buscar Oportunidades
         </Button>
       </div>
+
+      {/* Premium Benefits Section */}
+      {isPremium && (
+        <div className="mb-6 lg:mb-8">
+          <PremiumBenefitsCard />
+        </div>
+      )}
 
       {/* Enhanced Talent Metrics */}
       {metrics && (
