@@ -159,21 +159,26 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
     setIsUpdating(true);
     try {
-      // Upsert directly for simplicity and robustness
-      const { error } = await supabase
-        .from('user_roles')
-        .upsert({ user_id: userId, role: newRole as any }, { onConflict: 'user_id' });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const { data, error } = await supabase.functions.invoke('admin-change-user-role', {
+        body: { userId, newRole },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      // Update local state immediately
       setUser((prev) => prev ? { ...prev, role: newRole } : prev);
       toast.success('Rol actualizado correctamente.');
       onUserUpdate();
       loadUserDetail();
     } catch (error) {
       console.error('Error updating role:', error);
-      toast.error('Error al actualizar el rol');
+      toast.error(error instanceof Error ? error.message : 'Error al actualizar el rol');
     } finally {
       setIsUpdating(false);
     }
