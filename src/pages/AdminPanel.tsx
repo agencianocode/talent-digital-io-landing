@@ -174,119 +174,122 @@ const AdminPanel: React.FC = () => {
   console.log('AdminPanel: User authenticated as admin, rendering panel');
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Shield className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Panel de Administración</h1>
-            <p className="text-muted-foreground">Gestión de usuarios y solicitudes</p>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 md:gap-3">
+            <Shield className="h-6 w-6 md:h-8 md:w-8 text-primary flex-shrink-0" />
+            <div>
+              <h1 className="text-xl md:text-3xl font-bold">Panel de Administración</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">Gestión de usuarios y solicitudes</p>
+            </div>
           </div>
+          <LogoutButton />
         </div>
-        <LogoutButton />
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium">Total Usuarios</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">{stats.totalUsers}</div>
-          </CardContent>
-        </Card>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
+              <CardTitle className="text-[10px] md:text-xs font-medium">Total Usuarios</CardTitle>
+              <Users className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="p-3 md:p-6 pt-0">
+              <div className="text-lg md:text-xl font-bold">{stats.totalUsers}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium">Administrador</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-purple-600">{stats.usersByRole['admin'] || 0}</div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
+              <CardTitle className="text-[10px] md:text-xs font-medium">Administrador</CardTitle>
+              <Shield className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="p-3 md:p-6 pt-0">
+              <div className="text-lg md:text-xl font-bold text-purple-600">{stats.usersByRole['admin'] || 0}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium">Empresa Premium</CardTitle>
-            <Crown className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-yellow-600">{stats.usersByRole['premium_business'] || 0}</div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
+              <CardTitle className="text-[10px] md:text-xs font-medium">Empresa Premium</CardTitle>
+              <Crown className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="p-3 md:p-6 pt-0">
+              <div className="text-lg md:text-xl font-bold text-yellow-600">{stats.usersByRole['premium_business'] || 0}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium">Empresa Freemium</CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-blue-600">{stats.usersByRole['freemium_business'] || 0}</div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
+              <CardTitle className="text-[10px] md:text-xs font-medium">Empresa Freemium</CardTitle>
+              <Building className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="p-3 md:p-6 pt-0">
+              <div className="text-lg md:text-xl font-bold text-blue-600">{stats.usersByRole['freemium_business'] || 0}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium">Talento Premium</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-orange-600">{stats.usersByRole['premium_talent'] || 0}</div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
+              <CardTitle className="text-[10px] md:text-xs font-medium">Talento Premium</CardTitle>
+              <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="p-3 md:p-6 pt-0">
+              <div className="text-lg md:text-xl font-bold text-orange-600">{stats.usersByRole['premium_talent'] || 0}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-medium">Talento Freemium</CardTitle>
-            <User className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-green-600">{stats.usersByRole['freemium_talent'] || 0}</div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
+              <CardTitle className="text-[10px] md:text-xs font-medium">Talento Freemium</CardTitle>
+              <User className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="p-3 md:p-6 pt-0">
+              <div className="text-lg md:text-xl font-bold text-green-600">{stats.usersByRole['freemium_talent'] || 0}</div>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Dashboard
-          </TabsTrigger>
-          <TabsTrigger value="upgrade-requests" className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
-            Solicitudes de Upgrade
-          </TabsTrigger>
-          <TabsTrigger value="user-management" className="flex items-center gap-2">
-            <UserCheck className="h-4 w-4" />
-            Gestión de Usuarios
-          </TabsTrigger>
-          <TabsTrigger value="company-management" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Gestión de Empresas
-          </TabsTrigger>
-          <TabsTrigger value="opportunity-moderation" className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4" />
-            Moderación de Oportunidades
-          </TabsTrigger>
-          <TabsTrigger value="marketplace-management" className="flex items-center gap-2">
-            <ShoppingBag className="h-4 w-4" />
-            Gestión del Marketplace
-          </TabsTrigger>
-          <TabsTrigger value="user-chat" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Chat con Usuarios
-            {unreadAdminMessages > 0 && (
-              <Badge variant="destructive" className="ml-1 px-1.5 py-0 h-5 min-w-[1.25rem] text-xs">
-                {unreadAdminMessages}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+        {/* Main Content */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <TabsList className="w-full md:w-auto inline-flex min-w-max">
+              <TabsTrigger value="dashboard" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <BarChart3 className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="upgrade-requests" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <GraduationCap className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Solicitudes</span>
+              </TabsTrigger>
+              <TabsTrigger value="user-management" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <UserCheck className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Usuarios</span>
+              </TabsTrigger>
+              <TabsTrigger value="company-management" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <Building2 className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Empresas</span>
+              </TabsTrigger>
+              <TabsTrigger value="opportunity-moderation" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <Briefcase className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Oportunidades</span>
+              </TabsTrigger>
+              <TabsTrigger value="marketplace-management" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <ShoppingBag className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Marketplace</span>
+              </TabsTrigger>
+              <TabsTrigger value="user-chat" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Chat</span>
+                {unreadAdminMessages > 0 && (
+                  <Badge variant="destructive" className="ml-1 px-1.5 py-0 h-4 md:h-5 min-w-[1rem] md:min-w-[1.25rem] text-[10px] md:text-xs">
+                    {unreadAdminMessages}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
         <TabsContent value="dashboard">
           <AdminDashboard onTabChange={(tab) => {
@@ -316,44 +319,47 @@ const AdminPanel: React.FC = () => {
                   No hay solicitudes pendientes
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   {requests.map((request) => (
-                    <div key={request.id} className="border rounded-lg p-4 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3">
+                    <div key={request.id} className="border rounded-lg p-3 md:p-4 space-y-3">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3">
                             <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              <span className="font-medium">
+                              <User className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                              <span className="font-medium text-sm md:text-base">
                                 {(request as any).profiles?.full_name || 'Usuario sin nombre'}
                               </span>
                             </div>
-                            <Badge variant="outline">
-                              {getRoleDisplayText(request.user_current_role)}
-                            </Badge>
-                            <span className="text-muted-foreground">→</span>
-                            <Badge variant={getRoleBadgeVariant(request.requested_role)}>
-                              {getRoleDisplayText(request.requested_role)}
-                            </Badge>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="outline" className="text-xs">
+                                {getRoleDisplayText(request.user_current_role)}
+                              </Badge>
+                              <span className="text-muted-foreground text-xs">→</span>
+                              <Badge variant={getRoleBadgeVariant(request.requested_role)} className="text-xs">
+                                {getRoleDisplayText(request.requested_role)}
+                              </Badge>
+                            </div>
                           </div>
                           
                           {request.reason && (
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-xs md:text-sm text-muted-foreground">
                               <strong>Razón:</strong> {request.reason}
                             </div>
                           )}
                           
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-[10px] md:text-xs text-muted-foreground">
                             Solicitado el {new Date(request.created_at).toLocaleDateString()}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                             <DialogTrigger asChild>
                               <Button 
                                 variant="outline" 
                                 size="sm"
+                                className="text-xs md:text-sm"
                                 onClick={() => setSelectedUser({ 
                                   id: request.user_id, 
                                   full_name: (request as any).profiles?.full_name || 'Usuario sin nombre',
@@ -361,8 +367,9 @@ const AdminPanel: React.FC = () => {
                                   created_at: request.created_at 
                                 })}
                               >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Aprobar
+                                <CheckCircle className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                                <span className="hidden sm:inline">Aprobar</span>
+                                <span className="sm:hidden">✓</span>
                               </Button>
                             </DialogTrigger>
                             <DialogContent>
@@ -412,10 +419,12 @@ const AdminPanel: React.FC = () => {
                           <Button 
                             variant="destructive" 
                             size="sm"
+                            className="text-xs md:text-sm"
                             onClick={() => rejectRequest(request.id, 'Solicitud rechazada por el administrador')}
                           >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Rechazar
+                            <XCircle className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                            <span className="hidden sm:inline">Rechazar</span>
+                            <span className="sm:hidden">✕</span>
                           </Button>
                         </div>
                       </div>
@@ -448,10 +457,11 @@ const AdminPanel: React.FC = () => {
           <AdminMarketplaceManagement />
         </TabsContent>
 
-        <TabsContent value="user-chat">
-          <AdminChatManagement />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="user-chat">
+            <AdminChatManagement />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
