@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { 
   Search, 
   MoreVertical, 
@@ -14,12 +15,12 @@ import {
   Users, 
   Play, 
   Pause, 
-  Archive, 
   Copy,
   Link,
   Eye as EyeIcon,
   AlertTriangle,
-  Mail
+  Mail,
+  Trash2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -45,6 +46,8 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [opportunityToDelete, setOpportunityToDelete] = useState<any>(null);
   // Usar applicationCounts del hook
   const applicationCounts = hookApplicationCounts;
 
@@ -110,6 +113,24 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
       toast.success(`Oportunidad ${newStatus === 'active' ? 'activada' : 'pausada'} exitosamente`);
     } catch (error) {
       toast.error('Error al cambiar el estado de la oportunidad');
+    }
+  };
+
+  const handleDeleteClick = (opportunity: any) => {
+    setOpportunityToDelete(opportunity);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!opportunityToDelete) return;
+    
+    try {
+      await deleteOpportunity(opportunityToDelete.id);
+      toast.success('Oportunidad eliminada exitosamente');
+      setDeleteDialogOpen(false);
+      setOpportunityToDelete(null);
+    } catch (error) {
+      toast.error('Error al eliminar la oportunidad');
     }
   };
 
@@ -316,11 +337,11 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                             Duplicar
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => deleteOpportunity(opportunity.id)}
+                            onClick={() => handleDeleteClick(opportunity)}
                             className="text-red-600 focus:text-red-600"
                           >
-                            <Archive className="h-4 w-4 mr-2" />
-                            Cerrar
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Eliminar
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -388,11 +409,11 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                           Duplicar
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={() => deleteOpportunity(opportunity.id)}
+                          onClick={() => handleDeleteClick(opportunity)}
                           className="text-red-600 focus:text-red-600"
                         >
-                          <Archive className="h-4 w-4 mr-2" />
-                          Cerrar
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -403,6 +424,32 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
           ))
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar oportunidad?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la oportunidad{' '}
+              <span className="font-semibold">"{opportunityToDelete?.title}"</span>
+              {opportunityToDelete?.status === 'draft' 
+                ? ' (en borrador)' 
+                : ' y todas las postulaciones asociadas'}
+              .
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
