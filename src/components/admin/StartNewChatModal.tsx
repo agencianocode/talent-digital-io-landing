@@ -54,7 +54,9 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
   const loadUsers = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('get-all-users');
+      const { data, error } = await supabase.functions.invoke('get-all-users', {
+        body: {}
+      });
       
       if (error) throw error;
 
