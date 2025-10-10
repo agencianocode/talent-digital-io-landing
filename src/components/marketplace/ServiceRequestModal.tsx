@@ -125,8 +125,9 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Import the marketplace service
+      // Import the marketplace service and supabase client
       const { marketplaceService } = await import('@/services/marketplaceService');
+      const { supabase } = await import('@/integrations/supabase/client');
       
       // Submit the service request
       await marketplaceService.createServiceRequest(service.id, {
@@ -139,6 +140,18 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
         timeline: formData.timeline,
         project_type: formData.projectType
       });
+
+      // Get current user to send notification
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Send notification to service owner
+      if (user) {
+        await supabase.rpc('notify_service_inquiry', {
+          p_service_id: service.id,
+          p_inquirer_id: user.id,
+          p_message: formData.message
+        });
+      }
       
       toast({
         title: "Solicitud enviada",
