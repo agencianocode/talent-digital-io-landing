@@ -13,7 +13,8 @@ import {
   Building, 
   Send,
   AlertTriangle,
-  Mail
+  Mail,
+  Trash2
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
@@ -73,6 +74,7 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadConversationDetail = async () => {
     if (!conversationId) return;
@@ -274,6 +276,34 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
     } catch (error) {
       console.error('Error updating priority:', error);
       toast.error('Error al actualizar la prioridad');
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!conversation || !conversationId) return;
+
+    const confirmed = window.confirm('¿Estás seguro de que deseas eliminar esta conversación? Esta acción no se puede deshacer.');
+    
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      // Delete all messages in this conversation
+      const { error: deleteError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', conversationId);
+
+      if (deleteError) throw deleteError;
+
+      toast.success('Conversación eliminada correctamente');
+      onConversationUpdate();
+      onClose();
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      toast.error('Error al eliminar la conversación');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -516,7 +546,18 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
           {/* Acciones de moderación */}
           <Card>
             <CardHeader>
-              <CardTitle>Acciones de Moderación</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Acciones de Moderación</CardTitle>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteConversation}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {isDeleting ? 'Eliminando...' : 'Eliminar conversación'}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
