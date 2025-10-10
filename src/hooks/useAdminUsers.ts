@@ -20,6 +20,7 @@ interface UserData {
   is_active: boolean;
   country?: string;
   companies_count: number;
+  avatar_url?: string;
 }
 
 export const useAdminUsers = () => {
@@ -73,7 +74,8 @@ export const useAdminUsers = () => {
         email_confirmed_at: user.email_confirmed_at,
         is_active: user.is_active,
         country: user.country,
-        companies_count: user.companies_count
+        companies_count: user.companies_count,
+        avatar_url: user.avatar_url
       }));
 
       setUsers(usersData);

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
   Users, 
   User, 
   Building, 
@@ -198,9 +199,12 @@ const AdminUserManagement: React.FC = () => {
                 <div key={user.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                   {/* Avatar */}
                   <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      {getRoleIcon(user.role)}
-                    </div>
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={user.avatar_url || undefined} alt={user.full_name} />
+                      <AvatarFallback className="bg-primary/10">
+                        {user.full_name?.charAt(0)?.toUpperCase() || getRoleIcon(user.role)}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
 
                   {/* User Info */}
