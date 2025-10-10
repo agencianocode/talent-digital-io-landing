@@ -75,79 +75,48 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
     
     setIsLoading(true);
     try {
-      // Load user profile with email from auth.users via RPC function
-      const { data: authUsers } = await supabase.auth.admin.listUsers();
-      const authUser = authUsers?.users?.find(u => u.id === userId);
-      
-      // Load user profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error('Profile error:', profileError);
+      // Get session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
       }
 
-      // Load user role
-      const { data: role, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
+      // Call edge function to get complete user details with real email
+      const { data: userDetails, error } = await supabase.functions.invoke('get-user-details', {
+        body: { userId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
-      if (roleError) {
-        console.error('Role error:', roleError);
+      if (error) {
+        console.error('Error from get-user-details:', error);
+        throw error;
       }
 
-      // Load user companies
-      const { data: companies, error: companiesError } = await supabase
-        .from('company_user_roles')
-        .select(`
-          id,
-          role,
-          created_at,
-          companies (
-            id,
-            name
-          )
-        `)
-        .eq('user_id', userId)
-        .eq('status', 'accepted');
-
-      if (companiesError) {
-        console.error('Companies error:', companiesError);
-      }
-
-      if (!profile && !authUser) {
+      if (!userDetails) {
         throw new Error('Usuario no encontrado');
       }
 
       const userDetail: UserDetail = {
-        id: userId,
-        full_name: profile?.full_name || authUser?.user_metadata?.full_name || 'Sin nombre',
-        email: authUser?.email || `user_${userId.substring(0, 8)}@example.com`,
-        phone: profile?.phone || undefined,
-        avatar_url: profile?.avatar_url || undefined,
-        role: role?.role || 'talent',
-        created_at: profile?.created_at || authUser?.created_at || new Date().toISOString(),
-        updated_at: profile?.updated_at || new Date().toISOString(),
-        last_sign_in_at: authUser?.last_sign_in_at || undefined,
-        email_confirmed_at: authUser?.email_confirmed_at || undefined,
-        companies: companies?.map(c => ({
-          id: c.companies.id,
-          name: c.companies.name,
-          role: c.role,
-          joined_at: c.created_at
-        })) || [],
-        profile_completion: profile?.profile_completeness || 0,
-        is_active: !(authUser as any)?.banned_until,
-        country: profile?.country || undefined
+        id: userDetails.id,
+        full_name: userDetails.full_name,
+        email: userDetails.email,
+        phone: userDetails.phone || undefined,
+        avatar_url: userDetails.avatar_url || undefined,
+        role: userDetails.role,
+        created_at: userDetails.created_at,
+        updated_at: userDetails.updated_at,
+        last_sign_in_at: userDetails.last_sign_in_at || undefined,
+        email_confirmed_at: userDetails.email_confirmed_at || undefined,
+        companies: userDetails.companies,
+        profile_completion: userDetails.profile_completion,
+        is_active: userDetails.is_active,
+        country: userDetails.country || undefined
       };
 
       setUser(userDetail);
-      setNewRole(role?.role || 'talent');
+      setNewRole(userDetails.role);
     } catch (error) {
       console.error('Error loading user detail:', error);
       toast.error('Error al cargar los detalles del usuario');
