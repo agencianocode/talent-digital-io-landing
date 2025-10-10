@@ -122,20 +122,32 @@ const TalentMyProfile = () => {
     <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header con progreso */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Mi Perfil</h1>
             <p className="text-muted-foreground">Gestiona tu información profesional y muestra tu experiencia</p>
           </div>
           
-          <Button 
-            onClick={() => setIsEditModalOpen(true)}
-            size="lg"
-            className="gap-2"
-          >
-            <Edit className="h-4 w-4" />
-            Editar Perfil
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setIsShareModalOpen(true)}
+              size="lg"
+              variant="outline"
+              className="gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Compartir
+            </Button>
+            
+            <Button 
+              onClick={() => setIsEditModalOpen(true)}
+              size="lg"
+              className="gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              Editar Perfil
+            </Button>
+          </div>
         </div>
 
         {/* Banner de requisitos mínimos */}
