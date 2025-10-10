@@ -75,23 +75,31 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
     
     setIsLoading(true);
     try {
+      // Load user profile with email from auth.users via RPC function
+      const { data: authUsers } = await supabase.auth.admin.listUsers();
+      const authUser = authUsers?.users?.find(u => u.id === userId);
+      
       // Load user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile error:', profileError);
+      }
 
       // Load user role
       const { data: role, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error('Role error:', roleError);
+      }
 
       // Load user companies
       const { data: companies, error: companiesError } = await supabase
@@ -108,42 +116,38 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
         .eq('user_id', userId)
         .eq('status', 'accepted');
 
-      if (companiesError) throw companiesError;
+      if (companiesError) {
+        console.error('Companies error:', companiesError);
+      }
 
-      // Mock auth user data for demonstration (admin API not available in client)
-      const mockAuthUser = {
-        user: {
-          email: `user${userId}@example.com`,
-          last_sign_in_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-          email_confirmed_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-          banned_until: null
-        }
-      };
+      if (!profile && !authUser) {
+        throw new Error('Usuario no encontrado');
+      }
 
       const userDetail: UserDetail = {
         id: userId,
-        full_name: profile.full_name || 'Sin nombre',
-        email: mockAuthUser.user?.email || '',
-        phone: profile.phone || undefined,
-        avatar_url: profile.avatar_url || undefined,
-        role: role.role,
-        created_at: profile.created_at,
-        updated_at: profile.updated_at,
-        last_sign_in_at: mockAuthUser.user?.last_sign_in_at || undefined,
-        email_confirmed_at: mockAuthUser.user?.email_confirmed_at || undefined,
+        full_name: profile?.full_name || authUser?.user_metadata?.full_name || 'Sin nombre',
+        email: authUser?.email || `user_${userId.substring(0, 8)}@example.com`,
+        phone: profile?.phone || undefined,
+        avatar_url: profile?.avatar_url || undefined,
+        role: role?.role || 'talent',
+        created_at: profile?.created_at || authUser?.created_at || new Date().toISOString(),
+        updated_at: profile?.updated_at || new Date().toISOString(),
+        last_sign_in_at: authUser?.last_sign_in_at || undefined,
+        email_confirmed_at: authUser?.email_confirmed_at || undefined,
         companies: companies?.map(c => ({
           id: c.companies.id,
           name: c.companies.name,
           role: c.role,
           joined_at: c.created_at
         })) || [],
-        profile_completion: 0, // TODO: Calculate profile completion
-        is_active: !(mockAuthUser.user as any)?.banned_until,
-        country: profile.country || undefined
+        profile_completion: profile?.profile_completeness || 0,
+        is_active: !(authUser as any)?.banned_until,
+        country: profile?.country || undefined
       };
 
       setUser(userDetail);
-      setNewRole(role.role);
+      setNewRole(role?.role || 'talent');
     } catch (error) {
       console.error('Error loading user detail:', error);
       toast.error('Error al cargar los detalles del usuario');
