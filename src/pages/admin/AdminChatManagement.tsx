@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   MessageSquare, 
-  User, 
   Building, 
   Mail,
   ChevronLeft,
@@ -335,17 +335,12 @@ const AdminChatManagement: React.FC = () => {
                 <div key={conversation.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                   {/* User Avatar */}
                   <div className="flex-shrink-0">
-                    {conversation.user_avatar ? (
-                      <img 
-                        src={conversation.user_avatar} 
-                        alt={conversation.user_name}
-                        className="h-12 w-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="h-6 w-6 text-primary" />
-                      </div>
-                    )}
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={conversation.user_avatar} />
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                        {conversation.user_name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
 
                   {/* Conversation Info */}

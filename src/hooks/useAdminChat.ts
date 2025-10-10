@@ -53,7 +53,7 @@ export const useAdminChat = () => {
       setError(null);
 
       // Fetch all users with their profiles and emails
-      const { data: usersData, error: usersError } = await supabase.functions.invoke('get-all-users');
+      const { data, error: usersError } = await supabase.functions.invoke('get-all-users', { body: {} });
       
       if (usersError) throw usersError;
 
@@ -64,8 +64,26 @@ export const useAdminChat = () => {
         role: string;
       }
 
-      const users: UserData[] = usersData?.users || [];
+      const rawUsers: any[] = (data as any)?.users || [];
+      const users: UserData[] = rawUsers.map((u) => ({
+        user_id: u.user_id || u.id,
+        full_name: u.full_name || 'Usuario',
+        email: u.email || '',
+        role: u.role || 'talent',
+      }));
       const usersMap = new Map<string, UserData>(users.map((u) => [u.user_id, u]));
+
+      // Fetch profiles for avatars
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, avatar_url');
+      
+      const avatarsMap = new Map<string, string>();
+      (profilesData || []).forEach((p: any) => {
+        if (p.avatar_url) {
+          avatarsMap.set(p.user_id, p.avatar_url);
+        }
+      });
 
       // Fetch all messages
       const { data: messagesData, error: messagesError } = await supabase
@@ -91,7 +109,7 @@ export const useAdminChat = () => {
             user_name: otherUser?.full_name || 'Usuario',
             user_email: otherUser?.email || '',
             user_type: otherUser?.role === 'business' ? 'business' : otherUser?.role === 'admin' ? 'admin' : 'talent',
-            user_avatar: undefined,
+            user_avatar: avatarsMap.get(otherUserId),
             company_name: undefined,
             company_logo: undefined,
             subject: message.label === 'welcome' ? 'Mensaje de Bienvenida' : 'Conversación',
