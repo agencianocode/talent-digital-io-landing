@@ -87,8 +87,8 @@ const TalentTopNavigation = () => {
                   size="sm"
                   className={`flex items-center gap-2 ${
                     item.isActive 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                      : 'text-foreground hover:bg-muted hover:text-foreground'
                   }`}
                   onClick={() => navigate(item.path)}
                 >
@@ -221,8 +221,8 @@ const TalentTopNavigation = () => {
                     variant={item.isActive ? "default" : "ghost"}
                     className={`flex items-center gap-2 justify-start mobile-nav-item ${
                       item.isActive 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'text-muted-foreground hover:text-foreground'
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                        : 'text-foreground hover:bg-muted hover:text-foreground'
                     }`}
                     onClick={() => {
                       navigate(item.path);
@@ -239,7 +239,7 @@ const TalentTopNavigation = () => {
               <div className="pt-2 mt-2 border-t space-y-1">
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 justify-start mobile-nav-item text-muted-foreground relative"
+                  className="flex items-center gap-2 justify-start mobile-nav-item text-foreground hover:bg-muted hover:text-foreground relative"
                   onClick={() => {
                     navigate('/talent-dashboard/messages');
                     setIsMenuOpen(false);
@@ -255,7 +255,7 @@ const TalentTopNavigation = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 justify-start mobile-nav-item text-muted-foreground"
+                  className="flex items-center gap-2 justify-start mobile-nav-item text-foreground hover:bg-muted hover:text-foreground"
                   onClick={() => {
                     navigate('/talent-dashboard/notifications');
                     setIsMenuOpen(false);
@@ -271,7 +271,7 @@ const TalentTopNavigation = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 justify-start mobile-nav-item text-muted-foreground"
+                  className="flex items-center gap-2 justify-start mobile-nav-item text-foreground hover:bg-muted hover:text-foreground"
                   onClick={() => {
                     navigate('/talent-dashboard/profile');
                     setIsMenuOpen(false);
@@ -287,7 +287,7 @@ const TalentTopNavigation = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 justify-start mobile-nav-item text-destructive"
+                  className="flex items-center gap-2 justify-start mobile-nav-item text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => {
                     handleLogout();
                     setIsMenuOpen(false);
