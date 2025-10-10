@@ -51,7 +51,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   return (
     <Card 
       className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-      onClick={() => navigate(`/marketplace/service/${service.id}`)}
+      onClick={() => navigate(`/business-dashboard/marketplace/service/${service.id}`)}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
