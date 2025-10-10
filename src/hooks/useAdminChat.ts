@@ -62,30 +62,29 @@ export const useAdminChat = () => {
         full_name: string;
         email: string;
         role: string;
+        avatar_url?: string | null;
       }
 
       const rawUsers: any[] = (data as any)?.users || [];
+      console.debug('[useAdminChat] users fetched:', rawUsers.length);
       const users: UserData[] = rawUsers.map((u) => ({
         user_id: u.user_id || u.id,
         full_name: u.full_name || 'Usuario',
         email: u.email || '',
         role: u.role || 'talent',
+        avatar_url: u.avatar_url || null,
       }));
       const usersMap = new Map<string, UserData>(users.map((u) => [u.user_id, u]));
 
       // Fetch profiles for avatars
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('user_id, avatar_url');
-      
       const avatarsMap = new Map<string, string>();
-      (profilesData || []).forEach((p: any) => {
-        if (p.avatar_url) {
-          const isFullUrl = typeof p.avatar_url === 'string' && /^(http|https):\/\//.test(p.avatar_url);
+      users.forEach((u) => {
+        if (u.avatar_url) {
+          const isFullUrl = typeof u.avatar_url === 'string' && /^(http|https):\/\//.test(u.avatar_url);
           const publicUrl = isFullUrl
-            ? p.avatar_url
-            : supabase.storage.from('avatars').getPublicUrl(p.avatar_url).data.publicUrl;
-          avatarsMap.set(p.user_id, publicUrl);
+            ? u.avatar_url
+            : supabase.storage.from('avatars').getPublicUrl(u.avatar_url).data.publicUrl;
+          avatarsMap.set(u.user_id, publicUrl);
         }
       });
 
