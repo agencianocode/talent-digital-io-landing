@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import VideoThumbnail from '@/components/VideoThumbnail';
 import { TalentServices } from '@/components/talent/TalentServices';
+import { ShareProfileModal } from '@/components/ShareProfileModal';
 import { ArrowLeft, MessageCircle, Share2, ExternalLink, Calendar, Briefcase, GraduationCap, Play, Linkedin, Youtube, Github, Instagram, Facebook } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -38,6 +39,7 @@ const BusinessTalentProfile = () => {
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [message, setMessage] = useState('');
   const [isFetching, setIsFetching] = useState(false);
   const [showAllEducation, setShowAllEducation] = useState(false);
@@ -461,23 +463,6 @@ if (allEducationRecords && allEducationRecords.length > 0) {
     }
   };
 
-  const handleShareProfile = async () => {
-    try {
-      const profileUrl = `${window.location.origin}/business-dashboard/talent-profile/${id}`;
-      await navigator.clipboard.writeText(profileUrl);
-      toast({
-        title: "Éxito",
-        description: "Link copiado al portapapeles"
-      });
-    } catch (error) {
-      console.error('Error copying to clipboard:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo copiar el link",
-        variant: "destructive"
-      });
-    }
-  };
 
   // Function to convert YouTube URL to embed URL
   const getEmbedUrl = (url: string) => {
@@ -680,66 +665,17 @@ if (allEducationRecords && allEducationRecords.length > 0) {
           <Card>
             <CardHeader>
               <CardTitle>Compartir este perfil</CardTitle>
-                <p className="text-sm text-gray-600">Comparte el perfil en redes sociales</p>
+                <p className="text-sm text-gray-600">Comparte el perfil en redes sociales o genera un QR</p>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
-                  {/* Copy Link Section */}
-                  <div className="flex space-x-2">
-                <input 
-                  type="text" 
-                      value={`${window.location.origin}/business-dashboard/talent-profile/${id}`}
-                  readOnly
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-900"
-                    />
-                    <Button onClick={handleShareProfile} variant="outline" size="sm">
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {/* Social Share Buttons */}
-                  <div className="flex justify-center gap-3">
-                <Button 
-                  variant="outline"
-                      size="sm"
-                  onClick={() => {
-                        const url = encodeURIComponent(`${window.location.origin}/business-dashboard/talent-profile/${id}`);
-                        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <Linkedin className="h-4 w-4 text-blue-600" />
-                      LinkedIn
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const url = encodeURIComponent(`${window.location.origin}/business-dashboard/talent-profile/${id}`);
-                        const text = encodeURIComponent(`Conoce el perfil de ${userProfile?.full_name || 'este talento'}`);
-                        window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <XIcon className="h-4 w-4 text-gray-900" />
-                      X
-                    </Button>
-                    
-                <Button 
-                  variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const url = encodeURIComponent(`${window.location.origin}/business-dashboard/talent-profile/${id}`);
-                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-                      }}
-                      className="flex items-center gap-2"
-                >
-                      <Facebook className="h-4 w-4 text-blue-600" />
-                      Facebook
-                </Button>
-                  </div>
-              </div>
+              <Button 
+                onClick={() => setShowShareModal(true)}
+                className="w-full"
+                variant="outline"
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Opciones para compartir
+              </Button>
             </CardContent>
           </Card>
               </div>
@@ -938,6 +874,12 @@ if (allEducationRecords && allEducationRecords.length > 0) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Share Profile Modal */}
+      <ShareProfileModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+      />
     </div>
   );
 };
