@@ -388,8 +388,24 @@ const CompanyOnboardingStep4 = ({
     countryCode.trim().length > 0;
 
   const handleContinue = () => {
-    if (!isFormValid) return;
+    console.log('CompanyOnboardingStep4 - handleContinue called');
+    console.log('CompanyOnboardingStep4 - isFormValid:', isFormValid);
+    console.log('CompanyOnboardingStep4 - Form data:', {
+      professionalTitle,
+      hasProfilePhoto: !!profilePhoto,
+      country,
+      city,
+      phoneNumber,
+      countryCode,
+      linkedinUrl
+    });
     
+    if (!isFormValid) {
+      console.log('CompanyOnboardingStep4 - Form is invalid, not calling onComplete');
+      return;
+    }
+    
+    console.log('CompanyOnboardingStep4 - Calling onComplete');
     onComplete({
       professionalTitle,
       profilePhoto,
@@ -399,6 +415,7 @@ const CompanyOnboardingStep4 = ({
       countryCode,
       linkedinUrl
     });
+    console.log('CompanyOnboardingStep4 - onComplete called successfully');
   };
 
   return (

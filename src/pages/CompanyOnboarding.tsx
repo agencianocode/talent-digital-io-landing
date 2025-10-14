@@ -312,12 +312,16 @@ const CompanyOnboarding = () => {
   };
 
   const handleStep4Complete = async (data: UserProfile) => {
+    console.log('CompanyOnboarding - handleStep4Complete called with data:', data);
     setCurrentUserProfile(data);
     
     if (!user) {
+      console.log('CompanyOnboarding - No user found, aborting');
       toast.error('Debes estar autenticado para completar el onboarding');
       return;
     }
+    
+    console.log('CompanyOnboarding - Starting final step completion for user:', user.id);
     
     try {
       // 1. Verificar si la empresa ya existe, si no, crearla o actualizarla
