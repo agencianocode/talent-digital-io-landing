@@ -13,3 +13,6 @@ verify_jwt = false
 
 [functions.check-inactive-opportunities]
 verify_jwt = false
+
+[functions.admin-delete-user]
+verify_jwt = true
