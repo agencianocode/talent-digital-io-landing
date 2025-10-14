@@ -220,16 +220,22 @@ const CompanyDetails = () => {
                     </p>
                     
                     {/* Metrics */}
-                    <div className="flex items-center gap-6 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Users className="w-4 h-4" />
-                        <span>{activeCompany.employee_count_range || '10-50 empleados'}</span>
+                    {(activeCompany.employee_count_range || activeCompany.annual_revenue_range) && (
+                      <div className="flex items-center gap-6 mb-4">
+                        {activeCompany.employee_count_range && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Users className="w-4 h-4" />
+                            <span>{activeCompany.employee_count_range}</span>
+                          </div>
+                        )}
+                        {activeCompany.annual_revenue_range && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <DollarSign className="w-4 h-4" />
+                            <span>{activeCompany.annual_revenue_range}</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <DollarSign className="w-4 h-4" />
-                        <span>{activeCompany.annual_revenue_range || '500k-2M anual'}</span>
-                      </div>
-                    </div>
+                    )}
                     
                     {/* Social Links */}
                     <div className="flex items-center gap-3">
