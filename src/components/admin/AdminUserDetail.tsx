@@ -21,7 +21,8 @@ import {
   CheckCircle,
   Clock,
   AlertTriangle,
-  Eye
+  Eye,
+  Trash2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -237,6 +238,39 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
     } catch (error) {
       console.error('Error generating password reset:', error);
       toast.error('Error al generar enlace de recuperación');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!user) return;
+    
+    if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente al usuario ${user.full_name}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No active session');
+
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { userId: user.id },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success('Usuario eliminado correctamente');
+      onUserUpdate();
+      onClose();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(error instanceof Error ? error.message : 'Error al eliminar usuario');
     } finally {
       setIsUpdating(false);
     }
@@ -534,6 +568,23 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
                       </div>
                     </DialogContent>
                   </Dialog>
+                </div>
+
+                {/* Eliminar Usuario */}
+                <div className="flex items-center gap-4 pt-4 border-t">
+                  <Label className="w-32 text-destructive">Zona Peligrosa:</Label>
+                  <Button 
+                    onClick={handleDeleteUser}
+                    disabled={isUpdating}
+                    variant="destructive"
+                    size="sm"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Eliminar Usuario
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Esta acción es permanente y no se puede deshacer
+                  </p>
                 </div>
 
                 {/* Notas Administrativas */}
