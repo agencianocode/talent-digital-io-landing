@@ -80,7 +80,7 @@ serve(async (req) => {
         id: user.id,
         email: user.email,
         full_name: profile?.full_name || user.user_metadata?.full_name || 'Sin nombre',
-        avatar_url: profile?.avatar_url || null,
+        avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || null,
         role: role?.role || 'talent',
         created_at: profile?.created_at || user.created_at,
         updated_at: profile?.updated_at || user.updated_at,
