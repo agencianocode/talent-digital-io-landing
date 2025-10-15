@@ -57,6 +57,7 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
   
   const [opportunitiesWithExtras, setOpportunitiesWithExtras] = useState<OpportunityWithExtras[]>([]);
   const [applicationCounts, setApplicationCounts] = useState<Record<string, number>>({});
+  const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   // Hook real de Supabase
@@ -92,6 +93,12 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
             applicationsThisMonth: mockMetrics.thisWeekApplications
           });
           setApplicationCounts(mockOpportunityData.applications);
+          // Generar conteos de vistas mock
+          const mockViews: Record<string, number> = {};
+          mockOpps.forEach(opp => {
+            mockViews[opp.id] = Math.floor(Math.random() * 200) + 50;
+          });
+          setViewCounts(mockViews);
         } else {
           // Usar datos reales pero extendidos con campos mock
           let extendedOpps = realOpportunities.map(opp => ({
@@ -161,6 +168,25 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
 
           // Usar conteos reales de aplicaciones por oportunidad
           setApplicationCounts(realApplicationMetrics.applicationsByOpportunity);
+
+          // Obtener conteos de vistas reales desde la base de datos
+          const { supabase } = await import('@/integrations/supabase/client');
+          const opportunityIds = extendedOpps.map(opp => opp.id);
+          
+          if (opportunityIds.length > 0) {
+            const { data: viewsData, error: viewsError } = await supabase
+              .from('opportunity_views')
+              .select('opportunity_id')
+              .in('opportunity_id', opportunityIds);
+            
+            if (!viewsError && viewsData) {
+              const viewCountsMap: Record<string, number> = {};
+              viewsData.forEach(view => {
+                viewCountsMap[view.opportunity_id] = (viewCountsMap[view.opportunity_id] || 0) + 1;
+              });
+              setViewCounts(viewCountsMap);
+            }
+          }
         }
       } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -181,6 +207,7 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
     opportunities: opportunitiesWithExtras,
     metrics,
     applicationCounts,
+    viewCounts,
     isLoading,
     deleteOpportunity,
     toggleOpportunityStatus,

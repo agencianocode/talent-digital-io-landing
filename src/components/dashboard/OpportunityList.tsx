@@ -40,7 +40,8 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
     isLoading, 
     deleteOpportunity,
     toggleOpportunityStatus,
-    applicationCounts: hookApplicationCounts
+    applicationCounts: hookApplicationCounts,
+    viewCounts
   } = useOpportunityDashboard(useMockData);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -282,7 +283,7 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                     <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <EyeIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-                        <span>{Math.floor(Math.random() * 200) + 50} vistas</span>
+                        <span>{viewCounts[opportunity.id] || 0} vistas</span>
                       </div>
                       
                       <div className="flex items-center gap-1">
