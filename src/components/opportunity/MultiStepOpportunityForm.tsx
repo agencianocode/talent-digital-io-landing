@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check, Save } from 'lucide-react';
+import { ArrowLeft, Check, Save, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OpportunityStep1 from './OpportunityStep1';
 import OpportunityStep2 from './OpportunityStep2';
@@ -389,6 +389,17 @@ const MultiStepOpportunityForm = ({
                 </p>
               )}
             </div>
+            
+            {/* Edit Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/business-dashboard/settings/company')}
+              className="flex-shrink-0"
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Editar perfil
+            </Button>
           </div>
         </div>
       )}
