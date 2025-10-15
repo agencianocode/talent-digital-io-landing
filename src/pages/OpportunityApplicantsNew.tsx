@@ -1,27 +1,55 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Briefcase, User, Calendar, Eye, CheckCircle, XCircle, MapPin } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Briefcase, 
+  User, 
+  Calendar, 
+  Eye, 
+  CheckCircle, 
+  XCircle, 
+  MapPin,
+  Filter,
+  Star,
+  Edit,
+  DollarSign,
+  Clock,
+  MessageSquare
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ApplicationRatingModal } from '@/components/ApplicationRating/ApplicationRatingModal';
 import { ApplicationRatingDisplay } from '@/components/ApplicationRating/ApplicationRatingDisplay';
 import { useApplicationRatings } from '@/hooks/useApplicationRatings';
+import { ApplicationsEmptyState } from '@/components/EmptyStates/ApplicationsEmptyState';
+import ShareOpportunity from '@/components/ShareOpportunity';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const OpportunityApplicantsNew = () => {
   const { opportunityId } = useParams<{ opportunityId: string }>();
   const navigate = useNavigate();
   
   const [opportunity, setOpportunity] = useState<any>(null);
+  const [company, setCompany] = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedApplicationForRating, setSelectedApplicationForRating] = useState<any>(null);
+  
+  // Estados de filtros
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [ratingFilter, setRatingFilter] = useState<number>(0);
   
   const { fetchApplicationRatings } = useApplicationRatings();
   
@@ -39,7 +67,16 @@ const OpportunityApplicantsNew = () => {
         
         const { data: opportunityData, error: opportunityError } = await supabase
           .from("opportunities")
-          .select("id, title, status")
+          .select(`
+            *,
+            companies (
+              id,
+              name,
+              logo_url,
+              description,
+              industry
+            )
+          `)
           .eq("id", opportunityId)
           .single();
           
@@ -49,6 +86,7 @@ const OpportunityApplicantsNew = () => {
         }
         
         setOpportunity(opportunityData);
+        setCompany(opportunityData.companies);
         
         const { data: applicationsData, error: applicationsError } = await supabase
           .from("applications")
@@ -181,6 +219,67 @@ const OpportunityApplicantsNew = () => {
     // Recargar las aplicaciones para mostrar la nueva calificación
     window.location.reload();
   };
+
+  // Calcular contadores de filtros
+  const filterCounts = useMemo(() => {
+    const counts = {
+      all: applications.length,
+      pending: 0,
+      reviewed: 0,
+      contacted: 0,
+      accepted: 0,
+      rejected: 0,
+      rating1: 0,
+      rating2: 0,
+      rating3: 0,
+      rating4: 0,
+      rating5: 0,
+    };
+
+    applications.forEach(app => {
+      // Contar por estado
+      if (app.status === 'pending') counts.pending++;
+      else if (app.status === 'reviewed') counts.reviewed++;
+      else if (app.status === 'contacted' || app.contact_status === 'contacted') counts.contacted++;
+      else if (app.status === 'accepted') counts.accepted++;
+      else if (app.status === 'rejected') counts.rejected++;
+
+      // Contar por calificación promedio
+      if (app.ratings && app.ratings.length > 0) {
+        const avgRating = app.ratings.reduce((sum: number, r: any) => sum + r.overall_rating, 0) / app.ratings.length;
+        const roundedRating = Math.round(avgRating);
+        if (roundedRating >= 1 && roundedRating <= 5) {
+          counts[`rating${roundedRating}` as keyof typeof counts]++;
+        }
+      }
+    });
+
+    return counts;
+  }, [applications]);
+
+  // Filtrar aplicaciones
+  const filteredApplications = useMemo(() => {
+    return applications.filter(app => {
+      // Filtro por estado
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'contacted' && app.contact_status !== 'contacted' && app.status !== 'contacted') {
+          return false;
+        } else if (statusFilter !== 'contacted' && app.status !== statusFilter) {
+          return false;
+        }
+      }
+
+      // Filtro por calificación
+      if (ratingFilter > 0) {
+        if (!app.ratings || app.ratings.length === 0) return false;
+        const avgRating = app.ratings.reduce((sum: number, r: any) => sum + r.overall_rating, 0) / app.ratings.length;
+        const roundedRating = Math.round(avgRating);
+        if (roundedRating !== ratingFilter) return false;
+      }
+
+      return true;
+    });
+  }, [applications, statusFilter, ratingFilter]);
   
   if (isLoading) {
     return (
@@ -222,37 +321,263 @@ const OpportunityApplicantsNew = () => {
   }
   
   return (
-    <div className="p-3 sm:p-6 lg:p-8">
-      <div className="mb-4 sm:mb-6">
+    <div className="p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-6">
         <Button 
           variant="outline" 
           size="sm"
           onClick={() => navigate("/business-dashboard/opportunities")}
-          className="mb-3 sm:mb-4"
+          className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver
+          Volver a Oportunidades
         </Button>
-        <div>
-          <h1 className="text-base sm:text-2xl font-bold text-gray-900 mb-2 leading-tight">
-            Postulantes para: {opportunity.title}
-          </h1>
-          <p className="text-xs text-gray-500 break-all hidden sm:block">ID: {opportunity.id}</p>
-        </div>
+      </div>
+
+      {/* Detalles de la Oportunidad */}
+      <Card className="mb-6">
+        <CardHeader className="border-b">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-4 flex-1">
+              {company?.logo_url ? (
+                <img 
+                  src={company.logo_url} 
+                  alt={company.name}
+                  className="w-16 h-16 rounded-lg object-cover border"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
+                  <Briefcase className="w-8 h-8 text-primary" />
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h1 className="text-2xl font-bold text-foreground mb-1">
+                      {opportunity.title}
+                    </h1>
+                    <p className="text-muted-foreground">{company?.name}</p>
+                  </div>
+                  <Badge variant={opportunity.status === 'active' ? 'default' : 'secondary'}>
+                    {opportunity.status === 'active' ? 'Activa' : 'Pausada'}
+                  </Badge>
+                </div>
+                
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  {opportunity.location && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      <span>{opportunity.location}</span>
+                    </div>
+                  )}
+                  {opportunity.type && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{opportunity.type}</span>
+                    </div>
+                  )}
+                  {opportunity.salary_min && (
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="w-4 h-4" />
+                      <span>
+                        ${opportunity.salary_min.toLocaleString()}
+                        {opportunity.salary_max && ` - $${opportunity.salary_max.toLocaleString()}`}
+                        {` ${opportunity.currency || 'USD'}`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="pt-4">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/business-dashboard/opportunities/${opportunityId}/edit`)}
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Editar Oportunidad
+            </Button>
+            <ShareOpportunity 
+              opportunityId={opportunityId || ''}
+              opportunityTitle={opportunity.title}
+              variant="button"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/business-dashboard/company/${company?.id}/edit`)}
+            >
+              <Briefcase className="w-4 h-4 mr-2" />
+              Editar Perfil de Empresa
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sección de Postulaciones */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-foreground mb-4">
+          Postulaciones Recibidas ({filterCounts.all})
+        </h2>
       </div>
       
-      <div className="space-y-4 sm:space-y-6">
-        {applications.length === 0 ? (
+      {/* Filtros */}
+      {applications.length > 0 && (
+        <div className="mb-6">
           <Card>
-            <CardContent className="p-6 sm:p-8 text-center">
-              <div className="text-gray-500 mb-4">
-                <Briefcase className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2" />
-                <p className="text-sm sm:text-base">No hay aplicaciones para esta oportunidad</p>
+            <CardContent className="p-4">
+              <div className="flex flex-wrap gap-3">
+                {/* Filtro por Estado */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Filter className="w-4 h-4" />
+                      Estado
+                      {statusFilter !== 'all' && (
+                        <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                          {filterCounts[statusFilter as keyof typeof filterCounts]}
+                        </Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56 bg-background border z-50">
+                    <DropdownMenuItem onClick={() => setStatusFilter('all')}>
+                      <div className="flex items-center justify-between w-full">
+                        <span>Todos</span>
+                        <Badge variant="outline">{filterCounts.all}</Badge>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('pending')}>
+                      <div className="flex items-center justify-between w-full">
+                        <span>Nueva</span>
+                        <Badge variant="outline">{filterCounts.pending}</Badge>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('reviewed')}>
+                      <div className="flex items-center justify-between w-full">
+                        <span>Vista</span>
+                        <Badge variant="outline">{filterCounts.reviewed}</Badge>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('contacted')}>
+                      <div className="flex items-center justify-between w-full">
+                        <span>Contactado</span>
+                        <Badge variant="outline">{filterCounts.contacted}</Badge>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('accepted')}>
+                      <div className="flex items-center justify-between w-full">
+                        <span>Contratado</span>
+                        <Badge variant="outline">{filterCounts.accepted}</Badge>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('rejected')}>
+                      <div className="flex items-center justify-between w-full">
+                        <span>Rechazado</span>
+                        <Badge variant="outline">{filterCounts.rejected}</Badge>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Filtro por Calificación */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Star className="w-4 h-4" />
+                      Calificación
+                      {ratingFilter > 0 && (
+                        <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                          {ratingFilter}⭐
+                        </Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48 bg-background border z-50">
+                    <DropdownMenuItem onClick={() => setRatingFilter(0)}>
+                      <div className="flex items-center justify-between w-full">
+                        <span>Todas</span>
+                      </div>
+                    </DropdownMenuItem>
+                    {[5, 4, 3, 2, 1].map(rating => (
+                      <DropdownMenuItem key={rating} onClick={() => setRatingFilter(rating)}>
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: rating }).map((_, i) => (
+                              <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                            ))}
+                          </div>
+                          <Badge variant="outline">
+                            {filterCounts[`rating${rating}` as keyof typeof filterCounts]}
+                          </Badge>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Indicador de filtros activos */}
+                {(statusFilter !== 'all' || ratingFilter > 0) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setStatusFilter('all');
+                      setRatingFilter(0);
+                    }}
+                    className="text-muted-foreground"
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Limpiar filtros
+                  </Button>
+                )}
+              </div>
+
+              {/* Resumen de filtros */}
+              <div className="mt-3 text-sm text-muted-foreground">
+                Mostrando {filteredApplications.length} de {applications.length} postulaciones
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      <div className="space-y-4 sm:space-y-6">
+        {applications.length === 0 ? (
+          <ApplicationsEmptyState
+            opportunityTitle={opportunity.title}
+            opportunityId={opportunityId || ''}
+            companyId={company?.id}
+          />
+        ) : filteredApplications.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Filter className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                No hay postulaciones con estos filtros
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Intenta ajustar los filtros para ver más resultados
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setStatusFilter('all');
+                  setRatingFilter(0);
+                }}
+              >
+                Limpiar filtros
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
-          applications.map((application) => (
+          filteredApplications.map((application) => (
             <Card key={application.id} className="hover:shadow-lg transition-all duration-200">
               <CardHeader className="pb-3 p-3 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
@@ -399,28 +724,43 @@ const OpportunityApplicantsNew = () => {
                       </Button>
                     </div>
 
-                    {/* Botones de aceptar/rechazar */}
-                    {application.status === 'pending' && (
-                      <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleUpdateStatus(application.id, 'rejected')}
-                          className="flex items-center justify-center gap-1 sm:gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs sm:text-sm h-9"
-                        >
-                          <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                          Rechazar
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleUpdateStatus(application.id, 'accepted')}
-                          className="flex items-center justify-center gap-1 sm:gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm h-9"
-                        >
-                          <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                          Aceptar
-                        </Button>
-                      </div>
-                    )}
+                    {/* Botones de estado */}
+                    <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // Contactar al aplicante - abrir mensajes o email
+                          toast.info('Función de contacto en desarrollo');
+                        }}
+                        className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9"
+                      >
+                        <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
+                        Contactar
+                      </Button>
+
+                      {application.status === 'pending' && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUpdateStatus(application.id, 'rejected')}
+                            className="flex items-center justify-center gap-1 sm:gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs sm:text-sm h-9"
+                          >
+                            <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                            Descartar
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleUpdateStatus(application.id, 'accepted')}
+                            className="flex items-center justify-center gap-1 sm:gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm h-9"
+                          >
+                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                            Contratar
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
