@@ -19,7 +19,8 @@ import {
   Edit,
   Linkedin,
   Instagram,
-  Twitter
+  Twitter,
+  ArrowLeft
 } from 'lucide-react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -185,6 +186,17 @@ const CompanyDetails = () => {
     <TooltipProvider>
       <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Back Button */}
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => navigate('/business-dashboard')}
+          className="flex items-center gap-2 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver al Dashboard
+        </Button>
+
         {/* Header Section */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 mb-8">
           <div className="p-8">
