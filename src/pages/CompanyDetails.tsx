@@ -19,15 +19,20 @@ import {
   Linkedin,
   Instagram,
   Twitter,
-  ArrowLeft
+  ArrowLeft,
+  Briefcase,
+  Eye,
+  UserCheck
 } from 'lucide-react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useOpportunityDashboard } from '@/hooks/useOpportunityDashboard';
 
 const CompanyDetails = () => {
   const navigate = useNavigate();
   const { activeCompany, refreshCompanies } = useCompany();
+  const { opportunities, applicationCounts, isLoading: loadingOpportunities } = useOpportunityDashboard(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('business-data');
   
@@ -394,24 +399,124 @@ const CompanyDetails = () => {
             
             <TabsContent value="opportunities" className="mt-0">
               <div className="p-8">
-                <Card className="shadow-md border border-gray-200">
-                  <CardContent className="p-8">
-                    <div className="text-center py-8">
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Oportunidades Publicadas
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">Oportunidades Publicadas</h3>
+                    <p className="text-gray-600 mt-1">Gestiona las oportunidades de empleo de tu empresa</p>
+                  </div>
+                  <Button 
+                    onClick={() => navigate('/business-dashboard/opportunities')}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Ver Todas
+                  </Button>
+                </div>
+
+                {loadingOpportunities ? (
+                  <div className="grid gap-6">
+                    {[1, 2, 3].map((i) => (
+                      <Card key={i} className="shadow-md border border-gray-200">
+                        <CardContent className="p-6">
+                          <div className="animate-pulse space-y-4">
+                            <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                            <div className="h-4 bg-gray-200 rounded w-full"></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : opportunities.length === 0 ? (
+                  <Card className="shadow-md border border-gray-200">
+                    <CardContent className="p-12 text-center">
+                      <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        No hay oportunidades publicadas
                       </h3>
-                      <p className="text-gray-600 mb-4">
-                        Gestiona las oportunidades de empleo que has publicado
+                      <p className="text-gray-600 mb-6">
+                        Comienza publicando tu primera oportunidad de empleo
                       </p>
                       <Button 
                         onClick={() => navigate('/business-dashboard/opportunities')}
                         className="bg-blue-600 hover:bg-blue-700"
                       >
-                        Ver Mis Oportunidades
+                        Crear Oportunidad
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-6">
+                    {opportunities.map((opportunity) => {
+                      const applicantCount = applicationCounts[opportunity.id] || 0;
+                      const statusText = opportunity.status === 'active' ? 'Activa' : 
+                                        opportunity.status === 'paused' ? 'Pausada' : 
+                                        opportunity.status === 'draft' ? 'Borrador' : 'Cerrada';
+                      const statusColor = opportunity.status === 'active' ? 'bg-green-100 text-green-800' : 
+                                         opportunity.status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 
+                                         opportunity.status === 'draft' ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800';
+
+                      return (
+                        <Card key={opportunity.id} className="shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h4 className="text-xl font-semibold text-gray-900">
+                                    {opportunity.title}
+                                  </h4>
+                                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor}`}>
+                                    {statusText}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-gray-600">
+                                  {opportunity.category && (
+                                    <span className="flex items-center gap-1">
+                                      <Briefcase className="h-4 w-4" />
+                                      {opportunity.category}
+                                    </span>
+                                  )}
+                                  {opportunity.location && (
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="h-4 w-4" />
+                                      {opportunity.location}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <Button 
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/business-dashboard/opportunities/${opportunity.id}/applicants`)}
+                              >
+                                Ver Detalle
+                              </Button>
+                            </div>
+
+                            {opportunity.description && (
+                              <p className="text-gray-700 mb-4 line-clamp-2">
+                                {opportunity.description}
+                              </p>
+                            )}
+
+                            <div className="flex items-center gap-6 pt-4 border-t border-gray-200">
+                              <div className="flex items-center gap-2 text-sm">
+                                <UserCheck className="h-4 w-4 text-blue-600" />
+                                <span className="font-medium text-gray-900">{applicantCount}</span>
+                                <span className="text-gray-600">Postulantes</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Eye className="h-4 w-4 text-gray-600" />
+                                <span className="text-gray-600">
+                                  Publicada {new Date(opportunity.created_at).toLocaleDateString('es-ES')}
+                                </span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </TabsContent>
             
