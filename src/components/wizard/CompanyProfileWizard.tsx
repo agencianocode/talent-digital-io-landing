@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,7 +35,8 @@ import {
   ExternalLink,
   Edit,
   Plus,
-  Users2
+  Users2,
+  ArrowLeft
 } from 'lucide-react';
 
 const companySchema = z.object({
@@ -78,6 +80,7 @@ const revenueOptions = [
 ];
 
 export const CompanyProfileWizard: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useSupabaseAuth();
   const { activeCompany: company, refreshCompanies } = useCompany();
   const { createCompany } = useSupabaseAuth();
@@ -352,6 +355,17 @@ export const CompanyProfileWizard: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      {/* Back Button */}
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={() => navigate('/business-dashboard/company-details')}
+        className="flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Volver a Detalles
+      </Button>
+
       {/* Header */}
       <div className="text-center space-y-2">
         <Building className="h-12 w-12 mx-auto text-primary" />
