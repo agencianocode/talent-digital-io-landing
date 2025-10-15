@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { ImageCropper } from '@/components/ImageCropper';
@@ -376,357 +375,347 @@ export const CompanyProfileWizard: React.FC = () => {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="general" className="flex items-center gap-2">
-                <Building className="h-4 w-4" />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* General Information Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
                 General
-              </TabsTrigger>
-              <TabsTrigger value="classification" className="flex items-center gap-2">
-                <Factory className="h-4 w-4" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Logo Upload */}
+              <div className="flex items-center gap-6">
+                <Avatar className="w-24 h-24">
+                  <AvatarImage src={form.watch('logo_url')} alt="Logo de la empresa" />
+                  <AvatarFallback className="text-lg bg-primary/10">
+                    {company?.name?.charAt(0)?.toUpperCase() || <Building className="h-8 w-8" />}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <label htmlFor="logo-upload">
+                    <Button type="button" variant="outline" asChild disabled={isLoading}>
+                      <span className="flex items-center cursor-pointer">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Cambiar Logo
+                        {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                      </span>
+                    </Button>
+                    <input 
+                      id="logo-upload" 
+                      type="file" 
+                      accept="image/*" 
+                      style={{ display: 'none' }} 
+                      onChange={handleLogoUpload} 
+                      disabled={isLoading} 
+                    />
+                  </label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    PNG, JPG hasta 2MB
+                  </p>
+                </div>
+              </div>
+
+              {/* Company Name */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nombre de la Empresa</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Mi Empresa S.A." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Location */}
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Ubicación
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Ciudad de México, México" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Description */}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descripción de la Empresa</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Describe brevemente tu empresa, sus servicios y valores..." 
+                        className="min-h-[100px]" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Classification Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Factory className="h-5 w-5" />
                 Clasificación
-              </TabsTrigger>
-              <TabsTrigger value="digital" className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Industry */}
+              <FormField
+                control={form.control}
+                name="industry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Factory className="h-4 w-4" />
+                      Industria
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona una industria" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {industries.map((industry) => (
+                          <SelectItem key={industry.id} value={industry.name}>
+                            {industry.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Company Size */}
+              <FormField
+                control={form.control}
+                name="size"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Users2 className="h-4 w-4" />
+                      Tamaño de la Empresa
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona el tamaño" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {companySizeOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Annual Revenue */}
+              <FormField
+                control={form.control}
+                name="annual_revenue_range"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      Facturación Anual
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona el rango de facturación" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {revenueOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Digital Presence Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
                 Presencia Digital
-              </TabsTrigger>
-              <TabsTrigger value="gallery" className="flex items-center gap-2">
-                <Image className="h-4 w-4" />
-                Galería
-              </TabsTrigger>
-            </TabsList>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Website */}
+              <FormField
+                control={form.control}
+                name="website"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Globe className="h-4 w-4" />
+                      Sitio Web
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://miempresa.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* General Information Tab */}
-            <TabsContent value="general" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Información General</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Logo Upload */}
-                  <div className="flex items-center gap-6">
-                    <Avatar className="w-24 h-24">
-                      <AvatarImage src={form.watch('logo_url')} alt="Logo de la empresa" />
-                      <AvatarFallback className="text-lg bg-primary/10">
-                        {company?.name?.charAt(0)?.toUpperCase() || <Building className="h-8 w-8" />}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <label htmlFor="logo-upload">
-                        <Button type="button" variant="outline" asChild disabled={isLoading}>
-                          <span className="flex items-center cursor-pointer">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Cambiar Logo
-                            {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                          </span>
-                        </Button>
-                        <input 
-                          id="logo-upload" 
-                          type="file" 
-                          accept="image/*" 
-                          style={{ display: 'none' }} 
-                          onChange={handleLogoUpload} 
-                          disabled={isLoading} 
-                        />
-                      </label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        PNG, JPG hasta 2MB
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Company Name */}
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nombre de la Empresa</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ej: Mi Empresa S.A." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Location */}
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          Ubicación
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ej: Ciudad de México, México" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Description */}
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Descripción de la Empresa</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Describe brevemente tu empresa, sus servicios y valores..." 
-                            className="min-h-[100px]" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Classification Tab */}
-            <TabsContent value="classification" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Clasificación Empresarial</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Industry */}
-                  <FormField
-                    control={form.control}
-                    name="industry"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Factory className="h-4 w-4" />
-                          Industria
-                        </FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona una industria" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {industries.map((industry) => (
-                              <SelectItem key={industry.id} value={industry.name}>
-                                {industry.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Company Size */}
-                  <FormField
-                    control={form.control}
-                    name="size"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Users2 className="h-4 w-4" />
-                          Tamaño de la Empresa
-                        </FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona el tamaño" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {companySizeOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Annual Revenue */}
-                  <FormField
-                    control={form.control}
-                    name="annual_revenue_range"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4" />
-                          Facturación Anual
-                        </FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona el rango de facturación" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {revenueOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Digital Presence Tab */}
-            <TabsContent value="digital" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Presencia Digital</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Website */}
-                  <FormField
-                    control={form.control}
-                    name="website"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Globe className="h-4 w-4" />
-                          Sitio Web
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://miempresa.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Social Links */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Link2 className="h-4 w-4" />
-                      Redes Sociales
-                    </h3>
+              {/* Social Links */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Link2 className="h-4 w-4" />
+                  Redes Sociales
+                </h3>
+                
+                {/* Social Media Icons Display */}
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { key: 'linkedin', label: 'LinkedIn', icon: Linkedin, color: 'text-blue-600', placeholder: 'https://linkedin.com/company/miempresa' },
+                    { key: 'instagram', label: 'Instagram', icon: Instagram, color: 'text-pink-600', placeholder: 'https://instagram.com/miempresa' },
+                    { key: 'youtube', label: 'YouTube', icon: Youtube, color: 'text-red-600', placeholder: 'https://youtube.com/@miempresa' },
+                    { key: 'twitter', label: 'Twitter (X)', icon: Twitter, color: 'text-gray-600', placeholder: 'https://twitter.com/miempresa' }
+                  ].map(({ key, label, icon: Icon, color, placeholder }) => {
+                    const currentUrl = form.watch(`social_links.${key}` as any) || '';
+                    const isEditing = editingSocialLink === key;
                     
-                    {/* Social Media Icons Display */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {[
-                        { key: 'linkedin', label: 'LinkedIn', icon: Linkedin, color: 'text-blue-600', placeholder: 'https://linkedin.com/company/miempresa' },
-                        { key: 'instagram', label: 'Instagram', icon: Instagram, color: 'text-pink-600', placeholder: 'https://instagram.com/miempresa' },
-                        { key: 'youtube', label: 'YouTube', icon: Youtube, color: 'text-red-600', placeholder: 'https://youtube.com/@miempresa' },
-                        { key: 'twitter', label: 'Twitter (X)', icon: Twitter, color: 'text-gray-600', placeholder: 'https://twitter.com/miempresa' }
-                      ].map(({ key, label, icon: Icon, color, placeholder }) => {
-                        const currentUrl = form.watch(`social_links.${key}` as any) || '';
-                        const isEditing = editingSocialLink === key;
-                        
-                        return (
-                          <div key={key} className="border rounded-lg p-4 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <Icon className={`h-6 w-6 ${color}`} />
-                                <span className="font-medium">{label}</span>
-                              </div>
-                              {currentUrl && !isEditing && (
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => window.open(currentUrl, '_blank')}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <ExternalLink className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEditSocialLink(key, currentUrl)}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              )}
+                    return (
+                      <div key={key} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Icon className={`h-6 w-6 ${color}`} />
+                            <span className="font-medium">{label}</span>
+                          </div>
+                          {currentUrl && !isEditing && (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.open(currentUrl, '_blank')}
+                                className="h-8 w-8 p-0"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditSocialLink(key, currentUrl)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
                             </div>
-                            
-                            {isEditing ? (
-                              <div className="space-y-2">
-                                <Input
-                                  placeholder={placeholder}
-                                  value={tempSocialUrl}
-                                  onChange={(e) => setTempSocialUrl(e.target.value)}
-                                />
-                                <div className="flex gap-2">
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={handleSaveSocialLink}
-                                    className="flex-1"
-                                  >
-                                    Guardar
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleCancelEdit}
-                                    className="flex-1"
-                                  >
-                                    Cancelar
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : currentUrl ? (
-                              <div className="flex items-center justify-between">
-                                <p className="text-sm text-gray-600 truncate flex-1 mr-2">
-                                  {currentUrl}
-                                </p>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveSocialLink(key)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  Eliminar
-                                </Button>
-                              </div>
-                            ) : (
+                          )}
+                        </div>
+                        
+                        {isEditing ? (
+                          <div className="space-y-2">
+                            <Input
+                              placeholder={placeholder}
+                              value={tempSocialUrl}
+                              onChange={(e) => setTempSocialUrl(e.target.value)}
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={handleSaveSocialLink}
+                                className="flex-1"
+                              >
+                                Guardar
+                              </Button>
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleEditSocialLink(key, '')}
-                                className="w-full flex items-center gap-2"
+                                onClick={handleCancelEdit}
+                                className="flex-1"
                               >
-                                <Plus className="h-4 w-4" />
-                                Agregar {label}
+                                Cancelar
                               </Button>
-                            )}
+                            </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                        ) : currentUrl ? (
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-gray-600 truncate flex-1 mr-2">
+                              {currentUrl}
+                            </p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveSocialLink(key)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              Eliminar
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditSocialLink(key, '')}
+                            className="w-full flex items-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Agregar {label}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Gallery Tab */}
-            <TabsContent value="gallery" className="mt-6">
+          {/* Gallery Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Image className="h-5 w-5" />
+                Galería
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               <MediaGallery
                 items={mediaItems}
                 onAddItem={handleAddMediaItem}
@@ -734,61 +723,60 @@ export const CompanyProfileWizard: React.FC = () => {
                 onUpdateItem={handleUpdateMediaItem}
                 maxItems={10}
               />
-            </TabsContent>
+            </CardContent>
+          </Card>
 
-
-            {/* Submit Button - Fixed at bottom */}
-            <div className="flex justify-end gap-4 mt-8 p-4 bg-background border-t sticky bottom-0">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  form.reset();
-                  setHasSocialLinksChanges(false);
-                  setHasGalleryChanges(false);
-                }}
-                disabled={isLoading}
-              >
-                Descartar Cambios
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isLoading || (!form.formState.isDirty && !hasSocialLinksChanges && !hasGalleryChanges)}
-                onClick={() => {
-                  console.log('Submit button clicked');
-                  console.log('Form is dirty:', form.formState.isDirty);
-                  console.log('Has social links changes:', hasSocialLinksChanges);
-                  console.log('Has gallery changes:', hasGalleryChanges);
-                  console.log('Form values:', form.getValues());
-                  console.log('Media items:', mediaItems);
-                }}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Guardando...
-                  </>
-                ) : (
-                  'Guardar Cambios'
-                )}
-              </Button>
-              
-              {/* Botón de prueba temporal */}
-              <Button 
-                type="button" 
-                variant="secondary"
-                onClick={() => {
-                  console.log('Force submit clicked');
-                  const formData = form.getValues();
-                  console.log('Force submitting with data:', formData);
-                  onSubmit(formData);
-                }}
-                disabled={isLoading}
-              >
-                Forzar Guardar
-              </Button>
-            </div>
-          </Tabs>
+          {/* Submit Button - Fixed at bottom */}
+          <div className="flex justify-end gap-4 p-4 bg-background border-t sticky bottom-0">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                form.reset();
+                setHasSocialLinksChanges(false);
+                setHasGalleryChanges(false);
+              }}
+              disabled={isLoading}
+            >
+              Descartar Cambios
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isLoading || (!form.formState.isDirty && !hasSocialLinksChanges && !hasGalleryChanges)}
+              onClick={() => {
+                console.log('Submit button clicked');
+                console.log('Form is dirty:', form.formState.isDirty);
+                console.log('Has social links changes:', hasSocialLinksChanges);
+                console.log('Has gallery changes:', hasGalleryChanges);
+                console.log('Form values:', form.getValues());
+                console.log('Media items:', mediaItems);
+              }}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                'Guardar Cambios'
+              )}
+            </Button>
+            
+            {/* Botón de prueba temporal */}
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => {
+                console.log('Force submit clicked');
+                const formData = form.getValues();
+                console.log('Force submitting with data:', formData);
+                onSubmit(formData);
+              }}
+              disabled={isLoading}
+            >
+              Forzar Guardar
+            </Button>
+          </div>
         </form>
       </Form>
 
