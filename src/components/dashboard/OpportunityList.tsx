@@ -241,17 +241,40 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                           <Badge className={`text-xs font-medium px-2 py-0.5 sm:py-1 rounded-full flex-shrink-0 ${
                             opportunity.status === 'active' 
                               ? 'bg-green-100 text-green-800 border-green-200' 
+                              : opportunity.status === 'paused'
+                              ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                              : opportunity.status === 'closed'
+                              ? 'bg-red-100 text-red-800 border-red-200'
                               : 'bg-gray-100 text-gray-800 border-gray-200'
                           }`}>
                             {getStatusText(opportunity.status || 'draft')}
                           </Badge>
+                          
+                          {/* Academia Exclusiva Badge */}
+                          {(opportunity as any).is_academy_exclusive && (
+                            <Badge className="text-xs font-medium px-2 py-0.5 sm:py-1 rounded-full flex-shrink-0 bg-purple-100 text-purple-800 border-purple-200">
+                              Exclusiva Academia
+                            </Badge>
+                          )}
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-600">
-                          {(opportunity as any).company_name || 'Mi Empresa'} ({formatDistanceToNow(new Date(opportunity.created_at), { 
-                            addSuffix: true, 
-                            locale: es 
-                          })})
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            {(opportunity as any).company_name || 'Mi Empresa'}
+                          </p>
+                          {opportunity.category && (
+                            <>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-xs sm:text-sm text-gray-600">{opportunity.category}</span>
+                            </>
+                          )}
+                          <span className="text-gray-400">•</span>
+                          <span className="text-xs sm:text-sm text-gray-500">
+                            {formatDistanceToNow(new Date(opportunity.created_at), { 
+                              addSuffix: true, 
+                              locale: es 
+                            })}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
