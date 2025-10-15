@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -355,16 +356,24 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Agregar Enlace</h3>
               <div className="space-y-3">
-                <Input
-                  placeholder="Título del enlace"
-                  value={newLink.title}
-                  onChange={(e) => setNewLink(prev => ({ ...prev, title: e.target.value }))}
-                />
-                <Input
-                  placeholder="https://..."
-                  value={newLink.url}
-                  onChange={(e) => setNewLink(prev => ({ ...prev, url: e.target.value }))}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="link-title">Título del enlace</Label>
+                  <Input
+                    id="link-title"
+                    placeholder="Título del enlace"
+                    value={newLink.title}
+                    onChange={(e) => setNewLink(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="link-url">URL</Label>
+                  <Input
+                    id="link-url"
+                    placeholder="https://..."
+                    value={newLink.url}
+                    onChange={(e) => setNewLink(prev => ({ ...prev, url: e.target.value }))}
+                  />
+                </div>
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsAddingLink(false)}>
@@ -387,16 +396,24 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                 Agrega enlaces de YouTube, Loom, Vimeo, Dailymotion o Twitch
               </p>
               <div className="space-y-3">
-                <Input
-                  placeholder="Título del video"
-                  value={newVideo.title}
-                  onChange={(e) => setNewVideo(prev => ({ ...prev, title: e.target.value }))}
-                />
-                <Input
-                  placeholder="https://youtube.com/watch?v=... o https://loom.com/share/..."
-                  value={newVideo.url}
-                  onChange={(e) => setNewVideo(prev => ({ ...prev, url: e.target.value }))}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="video-title">Título del video</Label>
+                  <Input
+                    id="video-title"
+                    placeholder="Título del video"
+                    value={newVideo.title}
+                    onChange={(e) => setNewVideo(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="video-url">URL del video</Label>
+                  <Input
+                    id="video-url"
+                    placeholder="https://youtube.com/watch?v=... o https://loom.com/share/..."
+                    value={newVideo.url}
+                    onChange={(e) => setNewVideo(prev => ({ ...prev, url: e.target.value }))}
+                  />
+                </div>
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsAddingVideo(false)}>
