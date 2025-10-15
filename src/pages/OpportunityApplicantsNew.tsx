@@ -730,8 +730,8 @@ const OpportunityApplicantsNew = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          // Contactar al aplicante - abrir mensajes o email
-                          toast.info('Función de contacto en desarrollo');
+                          // Iniciar conversación con el talento
+                          navigate(`/business-dashboard/messages?user=${application.user_id}`);
                         }}
                         className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9"
                       >
