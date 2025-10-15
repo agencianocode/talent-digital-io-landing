@@ -6,11 +6,15 @@ import { mockOpportunityData, getMockOpportunities, getMockMetrics } from '@/com
 interface DashboardMetrics {
   activeOpportunities: number;
   totalApplications: number;
+  applicationsInActiveOpportunities: number;
   unreadApplications: number;
+  unreviewedApplications: number;
   candidatesInEvaluation: number;
-  averageResponseTime: number;
+  averageResponseTime: number | string;
   contactedCandidates: number;
+  candidatesContacted: number;
   thisWeekApplications: number;
+  applicationsThisMonth: number;
   conversionRate: number;
 }
 
@@ -39,11 +43,15 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     activeOpportunities: 0,
     totalApplications: 0,
+    applicationsInActiveOpportunities: 0,
     unreadApplications: 0,
+    unreviewedApplications: 0,
     candidatesInEvaluation: 0,
     averageResponseTime: 0,
     contactedCandidates: 0,
+    candidatesContacted: 0,
     thisWeekApplications: 0,
+    applicationsThisMonth: 0,
     conversionRate: 0,
   });
   
@@ -76,7 +84,13 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
           const mockMetrics = await getMockMetrics();
           
           setOpportunitiesWithExtras(mockOpps as OpportunityWithExtras[]);
-          setMetrics(mockMetrics);
+          setMetrics({
+            ...mockMetrics,
+            applicationsInActiveOpportunities: mockMetrics.totalApplications,
+            unreviewedApplications: mockMetrics.unreadApplications,
+            candidatesContacted: mockMetrics.contactedCandidates,
+            applicationsThisMonth: mockMetrics.thisWeekApplications
+          });
           setApplicationCounts(mockOpportunityData.applications);
         } else {
           // Usar datos reales pero extendidos con campos mock
@@ -140,11 +154,15 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
           setMetrics({
             activeOpportunities: activeCount,
             totalApplications: realApplicationMetrics.totalApplications,
+            applicationsInActiveOpportunities: realApplicationMetrics.totalApplications,
             unreadApplications: realApplicationMetrics.unreadApplications,
+            unreviewedApplications: realApplicationMetrics.unreadApplications,
             candidatesInEvaluation: Math.floor(realApplicationMetrics.totalApplications * 0.25),
             averageResponseTime: 2.3, // Mantener como mock por ahora
             contactedCandidates: realApplicationMetrics.contactedCandidates,
+            candidatesContacted: realApplicationMetrics.contactedCandidates,
             thisWeekApplications: realApplicationMetrics.thisWeekApplications,
+            applicationsThisMonth: realApplicationMetrics.thisWeekApplications,
             conversionRate: realApplicationMetrics.conversionRate
           });
 
