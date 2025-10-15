@@ -46,12 +46,55 @@ const companySchema = z.object({
   industry: z.string().optional(),
   size: z.string().optional(),
   annual_revenue_range: z.string().optional(),
-  website: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
+  website: z.string()
+    .optional()
+    .transform((val) => {
+      if (!val || val === '') return '';
+      // Si ya tiene protocolo, devolverlo tal cual
+      if (val.startsWith('http://') || val.startsWith('https://')) {
+        return val;
+      }
+      // Si no tiene protocolo, agregar https://
+      return `https://${val}`;
+    })
+    .pipe(z.string().url('Debe ser una URL válida').optional().or(z.literal(''))),
   social_links: z.object({
-    linkedin: z.string().optional(),
-    instagram: z.string().optional(),
-    youtube: z.string().optional(),
-    twitter: z.string().optional(),
+    linkedin: z.string()
+      .optional()
+      .transform((val) => {
+        if (!val || val === '') return '';
+        if (val.startsWith('http://') || val.startsWith('https://')) {
+          return val;
+        }
+        return `https://${val}`;
+      }),
+    instagram: z.string()
+      .optional()
+      .transform((val) => {
+        if (!val || val === '') return '';
+        if (val.startsWith('http://') || val.startsWith('https://')) {
+          return val;
+        }
+        return `https://${val}`;
+      }),
+    youtube: z.string()
+      .optional()
+      .transform((val) => {
+        if (!val || val === '') return '';
+        if (val.startsWith('http://') || val.startsWith('https://')) {
+          return val;
+        }
+        return `https://${val}`;
+      }),
+    twitter: z.string()
+      .optional()
+      .transform((val) => {
+        if (!val || val === '') return '';
+        if (val.startsWith('http://') || val.startsWith('https://')) {
+          return val;
+        }
+        return `https://${val}`;
+      }),
   }).optional(),
 });
 
