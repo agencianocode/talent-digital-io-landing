@@ -29,7 +29,6 @@ interface UserProfile {
   linkedinUrl: string;
   phoneNumber: string;
   country: string;
-  city: string;
   countryCode: string;
   profilePhoto?: File | null;
 }
@@ -62,7 +61,6 @@ const CompanyOnboarding = () => {
     linkedinUrl: '',
     phoneNumber: '',
     country: '',
-    city: '',
     countryCode: '+57',
     profilePhoto: null
   });
@@ -437,10 +435,6 @@ const CompanyOnboarding = () => {
         metadataUpdates.country = data.country;
       }
       
-      if (data.city) {
-        metadataUpdates.city = data.city;
-      }
-      
       if (data.countryCode) {
         metadataUpdates.country_code = data.countryCode;
       }
@@ -484,7 +478,6 @@ const CompanyOnboarding = () => {
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
         phone: data.phoneNumber || null,
         country: data.country || null,
-        city: data.city || null,
         updated_at: new Date().toISOString()
       };
 
