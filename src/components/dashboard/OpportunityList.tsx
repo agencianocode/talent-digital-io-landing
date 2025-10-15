@@ -164,32 +164,38 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
           />
         </div>
         
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="active">Activa</SelectItem>
-            <SelectItem value="draft">Borrador</SelectItem>
-            <SelectItem value="paused">Pausada</SelectItem>
-            <SelectItem value="closed">Cerrada</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="w-full sm:w-40">
+          <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Estado</label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Activa</SelectItem>
+              <SelectItem value="draft">Borrador</SelectItem>
+              <SelectItem value="paused">Pausada</SelectItem>
+              <SelectItem value="closed">Cerrada</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            {categories.map(category => (
-              <SelectItem key={category} value={category || ''}>
-                {category}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="w-full sm:w-40">
+          <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Rol</label>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              {categories.map(category => (
+                <SelectItem key={category} value={category || ''}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Opportunities List */}
