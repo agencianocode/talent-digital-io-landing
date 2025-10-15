@@ -104,21 +104,21 @@ type CompanyFormData = z.infer<typeof companySchema>;
 import type { MediaItem } from '@/components/MediaGallery';
 
 const companySizeOptions = [
-  { value: 'startup', label: '1-10 empleados (Startup)' },
-  { value: 'small', label: '11-50 empleados (Pequeña)' },
-  { value: 'medium', label: '51-200 empleados (Mediana)' },
-  { value: 'large', label: '201-1000 empleados (Grande)' },
-  { value: 'enterprise', label: '1000+ empleados (Corporativo)' },
+  { value: '1', label: '1 (unipersonal / freelance)' },
+  { value: '2-10', label: '2 – 10 empleados' },
+  { value: '11-50', label: '11 – 50 empleados' },
+  { value: '51-200', label: '51 – 200 empleados' },
+  { value: '201-500', label: '201 – 500 empleados' },
+  { value: '501-1000', label: '501 – 1.000 empleados' },
+  { value: '1000+', label: '+1.000 empleados' },
 ];
 
 const revenueOptions = [
-  { value: 'seed', label: 'Pre-ingresos / Semilla' },
-  { value: 'under_100k', label: 'Menos de $100K USD' },
-  { value: '100k_500k', label: '$100K - $500K USD' },
-  { value: '500k_1m', label: '$500K - $1M USD' },
-  { value: '1m_5m', label: '$1M - $5M USD' },
-  { value: '5m_10m', label: '$5M - $10M USD' },
-  { value: '10m_plus', label: 'Más de $10M USD' },
+  { value: 'under_100k', label: 'Menos de $100K' },
+  { value: '500k_2m', label: '$500K – $2M' },
+  { value: '2m_10m', label: '$2M – $10M' },
+  { value: '10m_50m', label: '$10M – $50M' },
+  { value: '50m_plus', label: 'Más de $50M' },
 ];
 
 export const CompanyProfileWizard: React.FC = () => {
