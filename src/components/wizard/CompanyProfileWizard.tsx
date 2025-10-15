@@ -92,6 +92,7 @@ export const CompanyProfileWizard: React.FC = () => {
   const [tempSocialUrl, setTempSocialUrl] = useState('');
   const [hasSocialLinksChanges, setHasSocialLinksChanges] = useState(false);
   const [hasGalleryChanges, setHasGalleryChanges] = useState(false);
+  const [initialMediaItemsCount, setInitialMediaItemsCount] = useState(0);
 
   // Handle social link editing
   const handleEditSocialLink = (platform: string, currentUrl: string) => {
@@ -202,6 +203,10 @@ export const CompanyProfileWizard: React.FC = () => {
       // Load gallery items from company
       if (company.gallery_urls && company.gallery_urls.length > 0) {
         setMediaItems(company.gallery_urls);
+        setInitialMediaItemsCount(company.gallery_urls.length);
+      } else {
+        setMediaItems([]);
+        setInitialMediaItemsCount(0);
       }
       
       // Reset social links changes state when company data loads
@@ -209,6 +214,13 @@ export const CompanyProfileWizard: React.FC = () => {
       setHasGalleryChanges(false);
     }
   }, [company, form]);
+
+  // Detectar cambios en la galería comparando con el estado inicial
+  useEffect(() => {
+    if (mediaItems.length !== initialMediaItemsCount) {
+      setHasGalleryChanges(true);
+    }
+  }, [mediaItems.length, initialMediaItemsCount]);
 
   const onSubmit = async (data: CompanyFormData) => {
     setIsLoading(true);
