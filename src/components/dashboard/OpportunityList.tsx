@@ -20,7 +20,16 @@ import {
   Eye as EyeIcon,
   AlertTriangle,
   Mail,
-  Trash2
+  Trash2,
+  Briefcase,
+  Code,
+  Megaphone,
+  PenTool,
+  BarChart,
+  Wrench,
+  Users as UsersIcon,
+  DollarSign,
+  Heart
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -52,6 +61,38 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
   // Usar applicationCounts del hook
   const applicationCounts = hookApplicationCounts;
 
+
+  const getCategoryIcon = (category: string | null | undefined) => {
+    const categoryLower = category?.toLowerCase() || '';
+    
+    if (categoryLower.includes('ventas') || categoryLower.includes('sales')) {
+      return <DollarSign className="w-6 h-6 text-green-600" />;
+    }
+    if (categoryLower.includes('marketing') || categoryLower.includes('publicidad')) {
+      return <Megaphone className="w-6 h-6 text-purple-600" />;
+    }
+    if (categoryLower.includes('desarrollo') || categoryLower.includes('programación') || categoryLower.includes('dev')) {
+      return <Code className="w-6 h-6 text-blue-600" />;
+    }
+    if (categoryLower.includes('diseño') || categoryLower.includes('design')) {
+      return <PenTool className="w-6 h-6 text-pink-600" />;
+    }
+    if (categoryLower.includes('análisis') || categoryLower.includes('analytics') || categoryLower.includes('data')) {
+      return <BarChart className="w-6 h-6 text-indigo-600" />;
+    }
+    if (categoryLower.includes('soporte') || categoryLower.includes('support') || categoryLower.includes('servicio')) {
+      return <Heart className="w-6 h-6 text-red-600" />;
+    }
+    if (categoryLower.includes('recursos humanos') || categoryLower.includes('rrhh') || categoryLower.includes('hr')) {
+      return <UsersIcon className="w-6 h-6 text-amber-600" />;
+    }
+    if (categoryLower.includes('operaciones') || categoryLower.includes('operations')) {
+      return <Wrench className="w-6 h-6 text-gray-600" />;
+    }
+    
+    // Ícono por defecto
+    return <Briefcase className="w-6 h-6 text-gray-500" />;
+  };
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -223,9 +264,17 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
             <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-3 sm:p-5">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
-                  {/* Company Logo Placeholder - Hidden on mobile */}
-                  <div className="hidden sm:flex w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0 items-center justify-center">
-                    <div className="w-8 h-8 bg-gray-300 rounded"></div>
+                  {/* Company Logo or Category Icon */}
+                  <div className="hidden sm:flex w-12 h-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex-shrink-0 items-center justify-center border border-gray-200">
+                    {(opportunity as any).companies?.logo_url ? (
+                      <img 
+                        src={(opportunity as any).companies.logo_url} 
+                        alt={(opportunity as any).company_name || 'Company'} 
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    ) : (
+                      getCategoryIcon(opportunity.category)
+                    )}
                   </div>
 
                   {/* Main Content */}
