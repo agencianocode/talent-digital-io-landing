@@ -173,10 +173,6 @@ const BusinessDashboard = () => {
             {/* Right Column - Video Tutorial Real */}
             <div className="hidden lg:flex justify-center">
               <div className="relative">
-                {/* Decorative Background Elements */}
-                <div className="absolute -top-4 -right-4 w-32 h-32 bg-purple-200 rounded-full opacity-20"></div>
-                <div className="absolute -bottom-2 -left-2 w-24 h-24 bg-blue-200 rounded-full opacity-30"></div>
-                
                 {/* Video Tutorial */}
                 <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50 w-80 h-48">
                   <iframe
