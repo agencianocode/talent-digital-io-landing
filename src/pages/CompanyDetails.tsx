@@ -5,7 +5,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
@@ -36,16 +35,7 @@ const CompanyDetails = () => {
   const [businessType, setBusinessType] = useState('');
   const [formData, setFormData] = useState({
     certifications: '',
-    remotePolicy: '',
     benefits: ''
-  });
-  
-  // Hiring configuration states
-  const [hiringConfig, setHiringConfig] = useState({
-    preferredCategories: [] as string[],
-    averageBudgetRange: '',
-    responsePolicy: '',
-    autoResponseTemplate: ''
   });
 
 
@@ -69,41 +59,6 @@ const CompanyDetails = () => {
     'Otro'
   ];
 
-  // Remote work policy options
-  const remotePolicyOptions = [
-    '100% Remoto',
-    'Híbrido (3 días oficina, 2 remoto)',
-    'Presencial con flexibilidad',
-    '100% Presencial'
-  ];
-
-  // Job categories for hiring preferences
-  const jobCategories = [
-    'Ventas',
-    'Marketing',
-    'Atención al cliente',
-    'Operaciones',
-    'Creativo',
-    'Tecnología y Automatizaciones',
-    'Soporte Profesional'
-  ];
-
-  // Budget range options
-  const budgetRangeOptions = [
-    '$500 - $1,500 USD',
-    '$1,500 - $3,000 USD',
-    '$3,000 - $5,000 USD',
-    '$5,000 - $10,000 USD',
-    '$10,000+ USD'
-  ];
-
-  // Response policy options
-  const responsePolicyOptions = [
-    'Respuesta automática inmediata',
-    'Respuesta manual en 24-48 horas',
-    'Respuesta manual en 2-5 días laborales',
-    'Solo contactar candidatos seleccionados'
-  ];
 
   useEffect(() => {
     if (activeCompany) {
@@ -111,29 +66,10 @@ const CompanyDetails = () => {
       // Initialize form data if company has additional data
       setFormData({
         certifications: (activeCompany as any).certifications || '',
-        remotePolicy: (activeCompany as any).remote_policy || '',
         benefits: (activeCompany as any).benefits || ''
-      });
-      
-      // Initialize hiring configuration
-      setHiringConfig({
-        preferredCategories: (activeCompany as any).preferred_categories || [],
-        averageBudgetRange: (activeCompany as any).average_budget_range || '',
-        responsePolicy: (activeCompany as any).response_policy || '',
-        autoResponseTemplate: (activeCompany as any).auto_response_template || ''
       });
     }
   }, [activeCompany]);
-
-  // Helper functions for preferred categories
-  const handleCategoryToggle = (category: string) => {
-    setHiringConfig(prev => ({
-      ...prev,
-      preferredCategories: prev.preferredCategories.includes(category)
-        ? prev.preferredCategories.filter(c => c !== category)
-        : [...prev.preferredCategories, category]
-    }));
-  };
 
   const handleSave = async () => {
     if (!activeCompany) return;
@@ -145,12 +81,7 @@ const CompanyDetails = () => {
         .update({
           business_type: businessType,
           certifications: formData.certifications,
-          remote_policy: formData.remotePolicy,
-          benefits: formData.benefits,
-          preferred_categories: hiringConfig.preferredCategories,
-          average_budget_range: hiringConfig.averageBudgetRange,
-          response_policy: hiringConfig.responsePolicy,
-          auto_response_template: hiringConfig.autoResponseTemplate
+          benefits: formData.benefits
         })
         .eq('id', activeCompany.id);
 
@@ -385,7 +316,7 @@ const CompanyDetails = () => {
                 value="opportunities" 
                 className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-4 font-medium"
               >
-                Configuración de Contratación
+                Oportunidades Publicadas
               </TabsTrigger>
               <TabsTrigger 
                 value="services" 
@@ -413,25 +344,6 @@ const CompanyDetails = () => {
                             {businessTypes.map((type) => (
                               <SelectItem key={type} value={type}>
                                 {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      {/* Políticas de trabajo remoto */}
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-3">
-                          Políticas de trabajo remoto
-                        </label>
-                        <Select value={formData.remotePolicy} onValueChange={(value) => setFormData(prev => ({ ...prev, remotePolicy: value }))}>
-                          <SelectTrigger className="w-full h-12 border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <SelectValue placeholder="Selecciona la política de trabajo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {remotePolicyOptions.map((policy) => (
-                              <SelectItem key={policy} value={policy}>
-                                {policy}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -484,109 +396,19 @@ const CompanyDetails = () => {
               <div className="p-8">
                 <Card className="shadow-md border border-gray-200">
                   <CardContent className="p-8">
-                    <h3 className="text-xl font-bold text-gray-900 mb-6">
-                      Configuración de Contratación
-                    </h3>
-                    
-                    <div className="space-y-8">
-                      {/* Categorías Preferidas */}
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-4">
-                          Categorías preferidas para publicar
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {jobCategories.map((category) => (
-                            <Badge
-                              key={category}
-                              variant={hiringConfig.preferredCategories.includes(category) ? "default" : "outline"}
-                              className={`cursor-pointer transition-colors ${
-                                hiringConfig.preferredCategories.includes(category)
-                                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                  : 'hover:bg-gray-100'
-                              }`}
-                              onClick={() => handleCategoryToggle(category)}
-                            >
-                              {category}
-                            </Badge>
-                          ))}
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Selecciona las categorías en las que tu empresa publica más frecuentemente
-                        </p>
-                      </div>
-
-                      {/* Presupuesto Promedio */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-800 mb-3">
-                            Presupuesto promedio por oportunidad
-                          </label>
-                          <Select 
-                            value={hiringConfig.averageBudgetRange} 
-                            onValueChange={(value) => setHiringConfig(prev => ({ ...prev, averageBudgetRange: value }))}
-                          >
-                            <SelectTrigger className="w-full h-12 border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                              <SelectValue placeholder="Selecciona rango de presupuesto" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {budgetRangeOptions.map((range) => (
-                                <SelectItem key={range} value={range}>
-                                  {range}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Política de Respuesta */}
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-800 mb-3">
-                            Políticas de respuesta a candidatos
-                          </label>
-                          <Select 
-                            value={hiringConfig.responsePolicy} 
-                            onValueChange={(value) => setHiringConfig(prev => ({ ...prev, responsePolicy: value }))}
-                          >
-                            <SelectTrigger className="w-full h-12 border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                              <SelectValue placeholder="Selecciona política de respuesta" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {responsePolicyOptions.map((policy) => (
-                                <SelectItem key={policy} value={policy}>
-                                  {policy}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      {/* Plantilla de Respuesta Automática */}
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-3">
-                          Plantilla de mensaje automático
-                        </label>
-                        <Textarea
-                          placeholder="Ej: Gracias por tu interés en nuestra oportunidad. Hemos recibido tu aplicación y la revisaremos en las próximas 48 horas..."
-                          value={hiringConfig.autoResponseTemplate}
-                          onChange={(e) => setHiringConfig(prev => ({ ...prev, autoResponseTemplate: e.target.value }))}
-                          className="min-h-[120px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                        <p className="text-xs text-gray-500 mt-2">
-                          Este mensaje se enviará automáticamente a los candidatos que apliquen a tus oportunidades
-                        </p>
-                      </div>
-
-                      {/* Botón de Ver Oportunidades */}
-                      <div className="pt-4 border-t border-gray-200">
-                        <Button 
-                          onClick={() => navigate('/business-dashboard/opportunities')}
-                          variant="outline"
-                          className="w-full"
-                        >
-                          Ver Mis Oportunidades Publicadas
-                        </Button>
-                      </div>
+                    <div className="text-center py-8">
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Oportunidades Publicadas
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Gestiona las oportunidades de empleo que has publicado
+                      </p>
+                      <Button 
+                        onClick={() => navigate('/business-dashboard/opportunities')}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Ver Mis Oportunidades
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
