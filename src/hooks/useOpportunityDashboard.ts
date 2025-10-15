@@ -110,40 +110,33 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
             company_name: (opp as any).companies?.name || 'Mi Empresa'
           }));
 
-          // Filtrar para mostrar solo la última versión de cada borrador y todas las publicadas
-          const opportunityMap = new Map();
+          // Separar borradores y publicadas
+          const publishedOpps = extendedOpps.filter(
+            opp => opp.status === 'active' || opp.status === 'paused' || opp.status === 'closed'
+          );
           
-          extendedOpps.forEach(opp => {
-            // Si es publicada, siempre incluir
-            if (opp.status === 'active' || opp.status === 'paused' || opp.status === 'closed') {
-              opportunityMap.set(opp.id, opp);
-            } 
-            // Si es borrador, solo mantener la más reciente
-            else if (opp.status === 'draft') {
-              const existing = Array.from(opportunityMap.values()).find(
-                existingOpp => existingOpp.status === 'draft' && 
-                              existingOpp.title === opp.title && 
-                              existingOpp.company_id === opp.company_id
-              );
+          const draftOpps = extendedOpps.filter(opp => opp.status === 'draft');
+          
+          // Para cada company_id, solo mantener el borrador más reciente
+          const latestDraftsByCompany = new Map<string, typeof extendedOpps[0]>();
+          
+          draftOpps.forEach(draft => {
+            const existingDraft = latestDraftsByCompany.get(draft.company_id);
+            
+            if (!existingDraft) {
+              latestDraftsByCompany.set(draft.company_id, draft);
+            } else {
+              const existingDate = new Date(existingDraft.created_at);
+              const currentDate = new Date(draft.created_at);
               
-              if (!existing) {
-                opportunityMap.set(opp.id, opp);
-              } else {
-                // Mantener solo el más reciente
-                const existingDate = new Date(existing.created_at);
-                const currentDate = new Date(opp.created_at);
-                
-                if (currentDate > existingDate) {
-                  // Eliminar el anterior
-                  opportunityMap.delete(existing.id);
-                  // Agregar el más reciente
-                  opportunityMap.set(opp.id, opp);
-                }
+              if (currentDate > existingDate) {
+                latestDraftsByCompany.set(draft.company_id, draft);
               }
             }
           });
-
-          extendedOpps = Array.from(opportunityMap.values());
+          
+          // Combinar publicadas + solo el último borrador de cada empresa
+          extendedOpps = [...publishedOpps, ...Array.from(latestDraftsByCompany.values())];
 
           setOpportunitiesWithExtras(extendedOpps as OpportunityWithExtras[]);
           
