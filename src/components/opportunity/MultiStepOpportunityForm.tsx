@@ -394,7 +394,7 @@ const MultiStepOpportunityForm = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/business-dashboard/settings/company')}
+              onClick={() => navigate('/business-dashboard/company-profile')}
               className="flex-shrink-0"
             >
               <Pencil className="w-4 h-4 mr-2" />
