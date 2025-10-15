@@ -336,8 +336,14 @@ export const CompanyProfileWizard: React.FC = () => {
       ...item,
       id: `media-${Date.now()}`,
     };
-    setMediaItems(prev => [...prev, newItem]);
+    console.log('Adding media item:', newItem);
+    setMediaItems(prev => {
+      const updated = [...prev, newItem];
+      console.log('Updated media items:', updated);
+      return updated;
+    });
     setHasGalleryChanges(true);
+    console.log('hasGalleryChanges set to true');
   };
 
   const handleRemoveMediaItem = (itemId: string) => {
@@ -743,6 +749,14 @@ export const CompanyProfileWizard: React.FC = () => {
             <Button 
               type="submit" 
               disabled={isLoading || (!form.formState.isDirty && !hasSocialLinksChanges && !hasGalleryChanges)}
+              onClick={() => {
+                console.log('=== SAVE BUTTON STATE ===');
+                console.log('Form is dirty:', form.formState.isDirty);
+                console.log('Has social links changes:', hasSocialLinksChanges);
+                console.log('Has gallery changes:', hasGalleryChanges);
+                console.log('Media items count:', mediaItems.length);
+                console.log('Button should be enabled:', form.formState.isDirty || hasSocialLinksChanges || hasGalleryChanges);
+              }}
             >
               {isLoading ? (
                 <>
