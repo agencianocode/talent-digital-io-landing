@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -32,7 +33,7 @@ import {
 } from '@/components/ui/select';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { format } from 'date-fns';
-import { MessageCircle, MoreVertical, Mail, Archive, MailOpen, Briefcase, User, ShoppingBag, Trash2, Search, Filter } from 'lucide-react';
+import { MessageCircle, MoreVertical, Mail, Archive, MailOpen, Briefcase, User, ShoppingBag, Trash2, Search, Filter, ArrowLeft } from 'lucide-react';
 
 interface Conversation {
   id: string;
@@ -72,11 +73,16 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   onDelete
 }) => {
   const { user } = useSupabaseAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<'inbox' | 'archived'>('inbox');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+
+  // Detectar si venimos de una página específica (por URL params)
+  const shouldShowBackButton = location.search.includes('user=') || document.referrer.includes('applicants');
 
   if (!user) return null;
 
@@ -258,6 +264,19 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   return (
     <div className="w-80 border-r border-border bg-card flex flex-col">
       <div className="p-4 border-b border-border">
+        {/* Botón de Volver si viene de otra página */}
+        {shouldShowBackButton && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="mb-3 -ml-2"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+        )}
+        
         <h2 className="text-lg font-semibold text-foreground mb-3">Mensajes</h2>
         
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'inbox' | 'archived')}>
