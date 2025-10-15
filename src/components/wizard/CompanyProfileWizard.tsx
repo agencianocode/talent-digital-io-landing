@@ -743,14 +743,6 @@ export const CompanyProfileWizard: React.FC = () => {
             <Button 
               type="submit" 
               disabled={isLoading || (!form.formState.isDirty && !hasSocialLinksChanges && !hasGalleryChanges)}
-              onClick={() => {
-                console.log('Submit button clicked');
-                console.log('Form is dirty:', form.formState.isDirty);
-                console.log('Has social links changes:', hasSocialLinksChanges);
-                console.log('Has gallery changes:', hasGalleryChanges);
-                console.log('Form values:', form.getValues());
-                console.log('Media items:', mediaItems);
-              }}
             >
               {isLoading ? (
                 <>
@@ -760,21 +752,6 @@ export const CompanyProfileWizard: React.FC = () => {
               ) : (
                 'Guardar Cambios'
               )}
-            </Button>
-            
-            {/* Botón de prueba temporal */}
-            <Button 
-              type="button" 
-              variant="secondary"
-              onClick={() => {
-                console.log('Force submit clicked');
-                const formData = form.getValues();
-                console.log('Force submitting with data:', formData);
-                onSubmit(formData);
-              }}
-              disabled={isLoading}
-            >
-              Forzar Guardar
             </Button>
           </div>
         </form>
