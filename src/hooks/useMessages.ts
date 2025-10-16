@@ -441,6 +441,7 @@ export const useMessages = () => {
       }
 
       // Create new conversation ID based on type
+      // Don't insert an initial message - let the actual message be the first one
       let conversationId = '';
       switch (conversationType) {
         case 'application':
@@ -456,21 +457,8 @@ export const useMessages = () => {
           conversationId = `conv_${user.id}_${otherUserId}_${Date.now()}`;
       }
       
-      const { data, error } = await supabase
-        .from('messages' as any)
-        .insert({
-          conversation_id: conversationId,
-          sender_id: user.id,
-          recipient_id: otherUserId,
-          message_type: 'text',
-          content: 'Conversación iniciada',
-        })
-        .select('conversation_id')
-        .single();
-
-      if (error) throw error;
-      
-      return (data as any).conversation_id;
+      // Simply return the conversation ID - the first real message will create the conversation
+      return conversationId;
     } catch (error) {
       console.error('Error getting or creating conversation:', error);
       throw error;
