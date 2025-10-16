@@ -102,6 +102,28 @@ const TalentDiscovery = () => {
     try {
       setIsLoading(true);
       
+      // First, get users with 'talent' role
+      const { data: talentRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'talent');
+
+      if (rolesError) {
+        console.error('Error fetching talent roles:', rolesError);
+        toast.error('Error al cargar los roles de talento');
+        return;
+      }
+
+      const talentUserIds = talentRoles?.map(r => r.user_id) || [];
+
+      if (talentUserIds.length === 0) {
+        console.log('No talent users found');
+        setAllTalents([]);
+        setFilteredTalents([]);
+        setIsLoading(false);
+        return;
+      }
+
       // Get profiles data (without phone - use secure function when needed)
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -118,7 +140,8 @@ const TalentDiscovery = () => {
           profile_completeness,
           created_at,
           updated_at
-        `);
+        `)
+        .in('user_id', talentUserIds);
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
@@ -135,7 +158,8 @@ const TalentDiscovery = () => {
           title,
           bio,
           portfolio_url
-        `);
+        `)
+        .in('user_id', talentUserIds);
 
       if (talentProfilesError) {
         console.error('Error fetching talent profiles:', talentProfilesError);
