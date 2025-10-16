@@ -20,7 +20,6 @@ import {
   categoryTemplates, 
   contractTypes, 
   durationUnits, 
-  locationTypes, 
   salaryPeriods, 
   experienceLevelOptions,
   timezones 
@@ -42,15 +41,14 @@ interface OpportunityData {
   duration_unit: string;
   skills: string[];
   experience_levels: string[];
-  location_type: string; // NUEVO: remote, onsite, hybrid
   timezone_preference: string;
   deadline_date: Date | null;
   payment_type: string;
   commission_percentage: string;
-  salary_period: string; // NUEVO: hourly, weekly, monthly
+  salary_period: string;
   salary_is_public: boolean;
   is_academy_exclusive: boolean;
-  auto_save_data?: any; // NUEVO: para datos de autoguardado
+  auto_save_data?: any;
 }
 
 const NewOpportunity = () => {
@@ -75,12 +73,11 @@ const NewOpportunity = () => {
     duration_unit: 'months',
     skills: [],
     experience_levels: [],
-    location_type: 'remote', // NUEVO: default remoto
     timezone_preference: '',
     deadline_date: null,
     payment_type: 'fixed',
     commission_percentage: '',
-    salary_period: 'monthly', // NUEVO: default mensual
+    salary_period: 'monthly',
     salary_is_public: true,
     is_academy_exclusive: false,
   });
@@ -104,22 +101,20 @@ const NewOpportunity = () => {
         location: data.location,
         salary_min: data.salary_min ? parseInt(data.salary_min) : null,
         salary_max: data.salary_max ? parseInt(data.salary_max) : null,
-        contract_type: data.contract_type,
+        contract_type: data.contract_type || null,
         duration_type: data.duration_type,
         duration_value: data.duration_value ? parseInt(data.duration_value) : null,
         duration_unit: data.duration_unit,
         skills: data.skills,
         experience_levels: data.experience_levels,
-        location_type: data.location_type || 'remote',
-        timezone_preference: data.timezone_preference,
+        timezone_preference: data.timezone_preference || null,
         deadline_date: data.deadline_date ? data.deadline_date.toISOString().split('T')[0] : null,
         payment_type: data.payment_type,
         commission_percentage: data.commission_percentage ? parseFloat(data.commission_percentage) : null,
-        salary_period: data.salary_period || 'monthly',
         salary_is_public: data.salary_is_public,
         is_academy_exclusive: data.is_academy_exclusive,
-        status: (data.status as 'draft' | 'active' | 'paused' | 'closed'), // Mantener el estado actual durante auto-guardado
-        auto_save_data: data
+        status: (data.status as 'draft' | 'active' | 'paused' | 'closed'),
+        auto_saved_at: new Date().toISOString()
       };
 
       if (isEditing && id) {
@@ -166,112 +161,79 @@ const NewOpportunity = () => {
 
         if (error) throw error;
 
-        const auto: any = (data as any).auto_save_data || {};
+        console.log('📥 Datos cargados desde BD:', data);
 
-        // Normalización de valores desde la BD a los valores esperados por los Selects
-        const toSlug = (s?: string) => (s || '')
-          .toString()
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '') // quitar acentos
-          .replace(/[^a-z0-9_]+/g, '_')
-          .replace(/_{2,}/g, '_')
-          .replace(/^_|_$/g, '');
-
-        // Categoría: usar clave exacta de categoryTemplates (títulos en español)
-        const categoryOptions = Object.keys(categoryTemplates);
-        const categoryInput = (data.category || auto.category || '') as string;
-        const categorySlug = toSlug(categoryInput);
-        const categorySlugMap: Record<string, string> = {
-          ventas: 'Ventas',
-          marketing: 'Marketing',
-          atencion_cliente: 'Atención al cliente',
-          operaciones: 'Operaciones',
-          creativo: 'Creativo',
-          tecnologia: 'Tecnología y Automatizaciones',
-          tecnologia_y_automatizaciones: 'Tecnología y Automatizaciones',
-          soporte_profesional: 'Soporte Profesional',
+        // Mapeo correcto de categoría
+        const categoryMap: Record<string, string> = {
+          'Cierre de ventas': 'Ventas',
+          'Ventas': 'Ventas',
+          'Marketing': 'Marketing',
+          'Atención al cliente': 'Atención al cliente',
+          'Operaciones': 'Operaciones',
+          'Creativo': 'Creativo',
+          'Tecnología y Automatizaciones': 'Tecnología y Automatizaciones',
+          'Soporte Profesional': 'Soporte Profesional',
         };
-        const normalizedCategory = categorySlugMap[categorySlug]
-          || categoryOptions.find(k => toSlug(k) === categorySlug)
-          || ''; 
 
-        // Modalidad (tipo de jornada): valores del Select son slugs de los labels
-        const jobTypeLabels = ['Tiempo Completo','Medio Tiempo','Freelance','Contrato','Prácticas'];
-        const jobTypeValues = jobTypeLabels.map(t => t.toLowerCase().replace(/ /g, '_'));
-        const typeInput = (data.type || auto.type || '') as string;
-        const typeSlug = toSlug(typeInput);
-        const typeIdx = jobTypeValues.findIndex(v => toSlug(v) === typeSlug);
-        const normalizedType = typeIdx >= 0 ? jobTypeValues[typeIdx] : ({
-          full_time: 'tiempo_completo',
-          'full-time': 'tiempo_completo',
-          part_time: 'medio_tiempo',
-          'part-time': 'medio_tiempo',
-          contract: 'contrato',
-          contrato: 'contrato',
-          freelance: 'freelance',
-          internship: 'prácticas',
-          practicas: 'prácticas'
-        } as Record<string,string>)[typeSlug] || '';
+        // Mapeo correcto de modalidad (type)
+        const typeMap: Record<string, string> = {
+          'Trabajo Continuo': 'tiempo_completo',
+          'Proyecto Una Vez': 'freelance',
+          'Tiempo Completo': 'tiempo_completo',
+          'Medio Tiempo': 'medio_tiempo',
+          'Freelance': 'freelance',
+          'Contrato': 'contrato',
+          'Prácticas': 'prácticas',
+        };
 
-        // Tipo de contrato: options son labels exactos de contractTypes
-        const contractInput = (data.contract_type || auto.contract_type || '') as string;
-        const contractSlug = toSlug(contractInput);
-        const normalizedContract = ({
-          full_time: 'Full Time',
-          'full-time': 'Full Time',
-          'full time': 'Full Time',
-          part_time: 'Part Time',
-          'part-time': 'Part Time',
-          'part time': 'Part Time',
-          freelance: 'Freelance',
-          commission: 'Por Comisión',
-          por_comision: 'Por Comisión',
-          'por comision': 'Por Comisión',
-          'por comision_': 'Por Comisión',
-          fixed_plus_commission: 'Fijo + Comisión',
-          fixed_commission: 'Fijo + Comisión',
-          'fijo_mas_comision': 'Fijo + Comisión',
-          'fijo_comision': 'Fijo + Comisión'
-        } as Record<string,string>)[contractSlug] || (contractTypes.find(ct => toSlug(ct) === contractSlug) || '');
+        // Mapeo correcto de tipo de contrato
+        const contractMap: Record<string, string> = {
+          'Full Time': 'Full Time',
+          'Part Time': 'Part Time',
+          'Freelance': 'Freelance',
+          'Por Comisión': 'Por Comisión',
+          'Fijo + Comisión': 'Fijo + Comisión',
+        };
 
-        // Modalidad de trabajo (location_type): valores esperados remote|onsite|hybrid
-        const locationInput = ((data as any).location_type || auto.location_type || '') as string;
-        const locationSlug = toSlug(locationInput);
-        const normalizedLocationType = ['remote','onsite','hybrid'].includes(locationSlug)
-          ? locationSlug
-          : ({ remoto: 'remote', presencial: 'onsite', hibrido: 'hybrid', hibrid: 'hybrid' } as Record<string,string>)[locationSlug] || 'remote';
+        const mappedCategory = categoryMap[data.category || ''] || data.category || '';
+        const mappedType = typeMap[data.type || ''] || data.type || '';
+        const mappedContract = contractMap[data.contract_type || ''] || data.contract_type || '';
 
-        // Fecha límite: garantizar Date válido
-        const rawDeadline = (data.deadline_date || auto.deadline_date || null) as string | null;
-        const normalizedDeadline = rawDeadline
-          ? new Date((/T/.test(rawDeadline) ? rawDeadline : `${rawDeadline}T00:00:00`))
+        // Fecha límite
+        const deadlineDate = data.deadline_date 
+          ? new Date(data.deadline_date + 'T00:00:00') 
           : null;
 
+        console.log('📋 Datos mapeados:', {
+          category: mappedCategory,
+          type: mappedType,
+          contract_type: mappedContract,
+          deadline_date: deadlineDate
+        });
+
         setFormData({
-          title: data.title || auto.title || '',
-          description: data.description || auto.description || '',
-          requirements: data.requirements || auto.requirements || '',
-          salary_min: (data.salary_min ?? auto.salary_min ?? '').toString(),
-          salary_max: (data.salary_max ?? auto.salary_max ?? '').toString(),
-          location: data.location || auto.location || '',
-          category: normalizedCategory as string,
-          type: (normalizedType || '') as string,
-          status: (data.status || auto.status || 'draft') as any,
-          contract_type: (normalizedContract || '') as string,
-          duration_type: data.duration_type || auto.duration_type || 'indefinite',
-          duration_value: (data.duration_value ?? auto.duration_value ?? '').toString(),
-          duration_unit: data.duration_unit || auto.duration_unit || 'months',
-          skills: data.skills || auto.skills || [],
-          experience_levels: data.experience_levels || auto.experience_levels || [],
-          location_type: normalizedLocationType,
-          timezone_preference: data.timezone_preference || auto.timezone_preference || '',
-          deadline_date: normalizedDeadline,
-          payment_type: data.payment_type || auto.payment_type || 'fixed',
-          commission_percentage: (data.commission_percentage ?? auto.commission_percentage ?? '').toString(),
-          salary_period: (data as any).salary_period || auto.salary_period || 'monthly',
-          salary_is_public: (data.salary_is_public ?? auto.salary_is_public) !== false,
-          is_academy_exclusive: data.is_academy_exclusive ?? auto.is_academy_exclusive ?? false,
+          title: data.title || '',
+          description: data.description || '',
+          requirements: data.requirements || '',
+          salary_min: data.salary_min?.toString() || '',
+          salary_max: data.salary_max?.toString() || '',
+          location: data.location || '',
+          category: mappedCategory,
+          type: mappedType,
+          status: data.status || 'draft',
+          contract_type: mappedContract,
+          duration_type: data.duration_type || 'indefinite',
+          duration_value: data.duration_value?.toString() || '',
+          duration_unit: data.duration_unit || 'months',
+          skills: data.skills || [],
+          experience_levels: data.experience_levels || [],
+          timezone_preference: data.timezone_preference || '',
+          deadline_date: deadlineDate,
+          payment_type: data.payment_type || 'fixed',
+          commission_percentage: data.commission_percentage?.toString() || '',
+          salary_period: 'monthly',
+          salary_is_public: data.salary_is_public !== false,
+          is_academy_exclusive: data.is_academy_exclusive || false,
         });
         setIsEditing(true);
       } catch (error) {
@@ -349,41 +311,59 @@ const NewOpportunity = () => {
       return;
     }
 
-    if (!formData.title || !formData.description) {
-      toast.error('Título y descripción son obligatorios');
+    if (!formData.title || !formData.description || !formData.category) {
+      toast.error('Título, descripción y categoría son obligatorios');
       return;
     }
 
     setLoading(true);
     try {
+      // Mapeo inverso: de valores del formulario a valores de BD
+      const categoryReverseMap: Record<string, string> = {
+        'Ventas': 'Ventas',
+        'Marketing': 'Marketing',
+        'Atención al cliente': 'Atención al cliente',
+        'Operaciones': 'Operaciones',
+        'Creativo': 'Creativo',
+        'Tecnología y Automatizaciones': 'Tecnología y Automatizaciones',
+        'Soporte Profesional': 'Soporte Profesional',
+      };
+
+      const typeReverseMap: Record<string, string> = {
+        'tiempo_completo': 'Tiempo Completo',
+        'medio_tiempo': 'Medio Tiempo',
+        'freelance': 'Freelance',
+        'contrato': 'Contrato',
+        'prácticas': 'Prácticas',
+      };
+
       const opportunityData = {
         title: formData.title,
         description: formData.description,
         requirements: formData.requirements || null,
         location: formData.location || null,
-        type: formData.type,
-        category: formData.category,
+        type: typeReverseMap[formData.type] || formData.type,
+        category: categoryReverseMap[formData.category] || formData.category,
         salary_min: formData.salary_min ? parseInt(formData.salary_min) : null,
         salary_max: formData.salary_max ? parseInt(formData.salary_max) : null,
         status: (publishNow ? 'active' : formData.status) as 'draft' | 'active' | 'paused' | 'closed',
-        contract_type: formData.contract_type,
+        contract_type: formData.contract_type || null,
         duration_type: formData.duration_type,
         duration_value: formData.duration_value ? parseInt(formData.duration_value) : null,
         duration_unit: formData.duration_unit,
         skills: formData.skills,
         experience_levels: formData.experience_levels,
-        location_type: formData.location_type,
-        timezone_preference: formData.timezone_preference,
+        timezone_preference: formData.timezone_preference || null,
         deadline_date: formData.deadline_date?.toISOString().split('T')[0] || null,
         payment_type: formData.payment_type,
         commission_percentage: formData.commission_percentage ? parseFloat(formData.commission_percentage) : null,
-        salary_period: formData.salary_period,
         salary_is_public: formData.salary_is_public,
         is_academy_exclusive: formData.is_academy_exclusive,
       };
 
+      console.log('💾 Guardando datos:', opportunityData);
+
       if (isEditing && id) {
-        // Update existing opportunity
         const { data: updatedData, error: updateError } = await supabase
           .from('opportunities')
           .update(opportunityData)
@@ -391,11 +371,13 @@ const NewOpportunity = () => {
           .select()
           .single();
         
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('❌ Error al actualizar:', updateError);
+          throw updateError;
+        }
         
-        console.log('Opportunity updated successfully:', updatedData);
+        console.log('✅ Oportunidad actualizada:', updatedData);
       } else {
-        // Create new opportunity
         const { data: insertedData, error: insertError } = await supabase
           .from('opportunities')
           .insert({
@@ -405,17 +387,20 @@ const NewOpportunity = () => {
           .select()
           .single();
         
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('❌ Error al crear:', insertError);
+          throw insertError;
+        }
         
-        console.log('Opportunity created successfully:', insertedData);
+        console.log('✅ Oportunidad creada:', insertedData);
       }
 
       const action = publishNow ? 'publicada' : 'guardada';
       toast.success(isEditing ? `Oportunidad ${action} exitosamente` : `Oportunidad ${action} exitosamente`);
       navigate('/business-dashboard/opportunities');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving opportunity:', error);
-      toast.error(isEditing ? 'Error al actualizar la oportunidad' : 'Error al guardar la oportunidad');
+      toast.error(error.message || (isEditing ? 'Error al actualizar la oportunidad' : 'Error al guardar la oportunidad'));
     } finally {
       setLoading(false);
     }
@@ -521,23 +506,6 @@ const NewOpportunity = () => {
                   </Select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Modalidad de trabajo *
-                  </label>
-                  <Select value={formData.location_type} onValueChange={(value) => handleInputChange('location_type', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona modalidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {locationTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-3">
