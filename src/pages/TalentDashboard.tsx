@@ -134,7 +134,8 @@ const TalentDashboard = () => {
               />
               <Button 
                 onClick={handleSearch}
-                className="bg-black hover:bg-gray-800 text-white font-['Inter']"
+                variant="default"
+                className="font-['Inter']"
               >
                 Buscar
               </Button>
@@ -228,7 +229,8 @@ const TalentDashboard = () => {
                         <div className="flex items-center gap-2">
                           <Button 
                             size="sm"
-                            className="bg-black hover:bg-gray-800 text-white font-['Inter']"
+                            variant="default"
+                            className="font-['Inter']"
                             onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
                           >
                             Ver Detalles

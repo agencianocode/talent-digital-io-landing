@@ -155,14 +155,15 @@ const BusinessDashboard = () => {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <Button 
-                  className="bg-black hover:bg-gray-800 text-white px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base"
+                  variant="default"
+                  className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base"
                   onClick={() => navigate('/business-dashboard/opportunities/new')}
                 >
                   Publicar Oportunidad
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base border-slate-300 hover:bg-black hover:text-white"
+                  className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base"
                   onClick={() => navigate('/business-dashboard/talent-discovery')}
                 >
                   Buscar Talento

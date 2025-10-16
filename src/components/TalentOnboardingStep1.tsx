@@ -226,7 +226,8 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
         <Button
           onClick={handleContinue}
           disabled={!isFormValid}
-          className="w-full bg-black hover:bg-gray-800 text-white font-['Inter'] disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="default"
+          className="w-full font-['Inter']"
         >
           Siguiente
         </Button>

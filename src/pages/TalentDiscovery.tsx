@@ -448,8 +448,8 @@ const TalentDiscovery = () => {
           
           <div className="flex gap-3">
             <Button 
-              onClick={() => navigate('/business-dashboard/opportunities/new')} 
-              className="bg-black hover:bg-gray-800 text-white"
+              onClick={() => navigate('/business-dashboard/opportunities/new')}
+              size="default"
             >
               <Plus className="h-4 w-4 mr-2" />
               Publicar Oportunidad

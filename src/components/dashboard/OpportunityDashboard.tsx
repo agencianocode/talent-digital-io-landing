@@ -45,7 +45,7 @@ export const OpportunityDashboard = () => {
             <TestTube className="h-4 w-4 mr-2" />
             {useMockData ? 'Datos de Prueba' : 'Datos Reales'}
           </Button>
-          <Button onClick={handleCreateOpportunity} className="bg-black hover:bg-gray-800 text-white">
+          <Button onClick={handleCreateOpportunity} variant="default">
             <Plus className="h-4 w-4 mr-2" />
             Publicar Oportunidad
           </Button>

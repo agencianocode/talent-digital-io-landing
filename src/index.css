@@ -46,6 +46,10 @@
     --chart-5: 0 0% 85%;
     
     --radius: 0.5rem;
+    
+    /* Transiciones consistentes */
+    --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
@@ -122,15 +126,6 @@
   /* Card hover effects */
   .card-hover {
     @apply transition-all duration-300 ease-out hover:shadow-lg hover:border-primary/20;
-  }
-
-  /* Button enhancements */
-  .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 ease-out hover:shadow-md;
-  }
-
-  .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all duration-200 ease-out;
   }
 
   /* Loading spinner utility */

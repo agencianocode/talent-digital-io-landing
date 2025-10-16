@@ -30,7 +30,7 @@ export const OpportunityListPage = () => {
         </div>
         
         <div className="flex gap-3">
-          <Button onClick={handleCreateOpportunity} className="bg-black hover:bg-gray-800 text-white">
+          <Button onClick={handleCreateOpportunity} variant="default">
             <Plus className="h-4 w-4 mr-2" />
             Publicar Oportunidad
           </Button>

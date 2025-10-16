@@ -259,11 +259,8 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
           <Button
             onClick={handleContinue}
             disabled={!isValid}
-            className={`w-full h-10 sm:h-12 font-medium rounded-lg transition-colors font-['Inter'] ${
-              isValid 
-                ? 'bg-black hover:bg-gray-800 text-white' 
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            variant="default"
+            className="w-full h-10 sm:h-12 font-medium rounded-lg font-['Inter']"
             style={{fontSize: 'clamp(12px, 3vw, 14px)'}}
           >
             Continuar

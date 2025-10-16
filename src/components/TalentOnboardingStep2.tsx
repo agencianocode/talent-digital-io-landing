@@ -267,7 +267,8 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
                 type="button"
                 onClick={addSkill}
                 disabled={!skillInput.trim() || skills.includes(skillInput.trim())}
-                className="h-11 px-4 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-['Inter'] disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="secondary"
+                className="h-11 px-4 rounded-lg font-['Inter']"
               >
                 +
               </Button>
@@ -285,11 +286,8 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
           <Button
             onClick={handleContinue}
             disabled={!isFormValid}
-            className={`w-full h-11 rounded-lg font-medium text-sm font-['Inter'] transition-all ${
-              isFormValid
-                ? 'bg-black hover:bg-gray-800 text-white'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
+            variant="default"
+            className="w-full h-11 rounded-lg font-medium text-sm font-['Inter']"
           >
             Completar perfil
           </Button>

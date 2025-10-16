@@ -362,7 +362,8 @@ const CompanyOnboardingStep3 = ({ onComplete, onCompleteLater, initialData, onDe
           </Button>
           <Button
             onClick={handleSaveAndContinue}
-            className="flex-1 h-12 font-medium rounded-lg bg-black hover:bg-gray-800 text-white transition-colors font-['Inter']"
+            variant="default"
+            className="flex-1 h-12 font-medium rounded-lg font-['Inter']"
             style={{fontSize: '14px'}}
           >
             Guardar y continuar

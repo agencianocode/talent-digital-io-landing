@@ -359,7 +359,9 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                     <div className="flex sm:hidden items-center gap-2 mt-3">
                       <Button
                         onClick={() => onApplicationsView?.(opportunity.id)}
-                        className="flex-1 bg-black hover:bg-gray-800 text-white rounded-lg text-xs h-8"
+                        variant="default"
+                        size="sm"
+                        className="flex-1 rounded-lg text-xs h-8"
                       >
                         Ver Postulantes
                       </Button>
@@ -431,7 +433,8 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                   <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
                     <Button
                       onClick={() => onApplicationsView?.(opportunity.id)}
-                      className="bg-black hover:bg-gray-800 text-white rounded-lg"
+                      variant="default"
+                      className="rounded-lg"
                     >
                       Ver Postulantes
                     </Button>

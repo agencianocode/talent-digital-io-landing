@@ -314,11 +314,8 @@ const CompanyOnboardingStep4 = ({
           <Button
             onClick={handleContinue}
             disabled={!isFormValid}
-            className={`w-full h-12 font-medium rounded-lg transition-colors font-['Inter'] ${
-              isFormValid 
-                ? 'bg-black hover:bg-gray-800 text-white' 
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            variant="default"
+            className="w-full h-12 font-medium rounded-lg font-['Inter']"
             style={{fontSize: '14px'}}
           >
             Comenzar 🚀
