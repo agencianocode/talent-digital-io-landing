@@ -93,7 +93,6 @@ export const useMessages = () => {
         },
         (payload) => {
           console.log('[useMessages] New message received via Realtime:', payload);
-          // Reload conversations and unread count when a new message arrives
           loadConversations();
           loadUnreadCount();
         }
@@ -108,7 +107,25 @@ export const useMessages = () => {
         },
         (payload) => {
           console.log('[useMessages] Message updated via Realtime (recipient):', payload);
-          // Reload conversations and counts when a message is marked read/unread
+          loadConversations();
+          loadUnreadCount();
+        }
+      )
+      .subscribe();
+
+    // Setup Realtime subscription for conversation overrides
+    const overridesSubscription = supabase
+      .channel('conversation_overrides_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversation_overrides',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('[useMessages] Conversation override changed:', payload);
           loadConversations();
           loadUnreadCount();
         }
@@ -131,6 +148,7 @@ export const useMessages = () => {
     return () => {
       console.log('[useMessages] Cleaning up Realtime subscription');
       messagesSubscription.unsubscribe();
+      overridesSubscription.unsubscribe();
       window.removeEventListener('focus', handleFocus);
       clearInterval(interval);
     };
@@ -196,6 +214,16 @@ export const useMessages = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      // Fetch conversation overrides
+      const { data: overrides } = await supabase
+        .from('conversation_overrides' as any)
+        .select('*')
+        .eq('user_id', user.id);
+
+      const overridesMap = new Map(
+        (overrides || []).map((o: any) => [o.conversation_id, o])
+      );
       
       // Get unique user IDs to fetch profile names
       const userIds = new Set<string>();
@@ -292,6 +320,19 @@ export const useMessages = () => {
           conversation.unread_count++;
         }
       });
+
+      // Apply overrides
+      for (const [convId, override] of overridesMap) {
+        const conv = conversationsMap.get(convId);
+        if (conv) {
+          if ((override as any).force_unread && conv.unread_count === 0) {
+            conv.unread_count = 1;
+          }
+          if ((override as any).archived) {
+            conv.archived = true;
+          }
+        }
+      }
       
       return Array.from(conversationsMap.values()).sort((a, b) => 
         new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
@@ -513,17 +554,59 @@ export const useMessages = () => {
     try {
       console.log('[getUnreadCount] Fetching unread count for user:', user.id);
       
-      const { count, error } = await supabase
+      // Get count of real unread messages
+      const { count: messagesCount, error: messagesError } = await supabase
         .from('messages' as any)
         .select('*', { count: 'exact', head: true })
         .eq('recipient_id', user.id)
         .eq('is_read', false)
-        .not('archived_by', 'cs', `{${user.id}}`); // Exclude archived messages
+        .not('archived_by', 'cs', `{${user.id}}`);
 
-      if (error) throw error;
-      
-      console.log('[getUnreadCount] Unread count result:', count);
-      return count || 0;
+      if (messagesError) throw messagesError;
+
+      // Get conversation IDs that already have unread messages
+      const { data: unreadConversations } = await supabase
+        .from('messages' as any)
+        .select('conversation_id')
+        .eq('recipient_id', user.id)
+        .eq('is_read', false)
+        .not('archived_by', 'cs', `{${user.id}}`);
+
+      const unreadConvIds = new Set(
+        (unreadConversations || []).map((m: any) => m.conversation_id)
+      );
+
+      // Get force_unread overrides that don't already have real unread messages
+      let overridesCount = 0;
+      if (unreadConvIds.size === 0) {
+        // If no unread conversations, count all force_unread overrides
+        const { count, error: overridesError } = await supabase
+          .from('conversation_overrides' as any)
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('force_unread', true);
+
+        if (!overridesError) {
+          overridesCount = count || 0;
+        }
+      } else {
+        // If there are unread conversations, only count overrides for other conversations
+        const { data: allOverrides, error: overridesError } = await supabase
+          .from('conversation_overrides' as any)
+          .select('conversation_id')
+          .eq('user_id', user.id)
+          .eq('force_unread', true);
+
+        if (!overridesError && allOverrides) {
+          overridesCount = allOverrides.filter(
+            (o: any) => !unreadConvIds.has(o.conversation_id)
+          ).length;
+        }
+      }
+
+      const totalCount = (messagesCount || 0) + overridesCount;
+      console.log('[getUnreadCount] Unread count:', { messagesCount, overridesCount, totalCount });
+      return totalCount;
     } catch (error) {
       console.error('Error getting unread count:', error);
       return 0;
@@ -583,10 +666,10 @@ export const useMessages = () => {
         const updated = prev.map(conv => 
           conv.id === conversationId 
             ? { ...conv, unread_count: 0, updated_at: new Date().toISOString() }
-            : { ...conv } // Create new object for all items
+            : { ...conv }
         );
-        console.log('[markAsRead] Local state updated, forcing refresh');
-        return updated; // Return new array
+        console.log('[markAsRead] Local state updated');
+        return updated;
       });
       
       // Update global unread count immediately
@@ -594,12 +677,25 @@ export const useMessages = () => {
         setUnreadCount(prev => Math.max(0, prev - currentUnreadCount));
       }
       
-      // Then update in database
+      // Update in database - mark messages as read
       const success = await markMessagesAsRead(conversationId);
       console.log('[markAsRead] Database update success:', success);
+
+      // Clear force_unread override if it exists
+      const { error: overrideError } = await supabase
+        .from('conversation_overrides' as any)
+        .upsert({
+          user_id: user.id,
+          conversation_id: conversationId,
+          force_unread: false
+        }, {
+          onConflict: 'user_id,conversation_id'
+        });
+
+      if (overrideError) {
+        console.error('[markAsRead] Error clearing override:', overrideError);
+      }
       
-      // Don't reload immediately - let the local state update persist
-      // The state will sync naturally on next page load or interaction
     } catch (error) {
       console.error('[markAsRead] Error:', error);
     }
@@ -697,68 +793,50 @@ export const useMessages = () => {
     try {
       console.log('[markAsUnread] Marking conversation as unread:', conversationId);
       
-      // Get all messages in the conversation sent TO the current user that are currently read
-      const { data: messages, error } = await supabase
+      // First try to mark actual messages as unread
+      const { data: updatedMessages, error: updateError } = await supabase
         .from('messages' as any)
-        .select('*')
+        .update({ is_read: false, read_at: null })
         .eq('conversation_id', conversationId)
         .eq('recipient_id', user.id)
         .eq('is_read', true)
-        .order('created_at', { ascending: false });
+        .select();
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      console.log('[markAsUnread] Found messages to mark as unread:', messages?.length || 0);
+      console.log('[markAsUnread] Updated messages:', updatedMessages?.length || 0);
 
-      if (messages && messages.length > 0) {
-        const unreadCount = messages.length;
-        
-        // Mark all read messages as unread in database FIRST
-        const messageIds = messages.map((m: any) => m.id);
-        
-        console.log('[markAsUnread] Updating messages in database:', messageIds);
-        
-        const { error: updateError } = await supabase
-          .from('messages' as any)
-          .update({ is_read: false, read_at: null })
-          .in('id', messageIds);
+      // If no messages were updated, use override
+      if (!updatedMessages || updatedMessages.length === 0) {
+        console.log('[markAsUnread] No incoming messages to mark unread, using override');
+        const { error: overrideError } = await supabase
+          .from('conversation_overrides' as any)
+          .upsert({
+            user_id: user.id,
+            conversation_id: conversationId,
+            force_unread: true
+          }, {
+            onConflict: 'user_id,conversation_id'
+          });
 
-        if (updateError) throw updateError;
-
-        console.log('[markAsUnread] Successfully marked as unread in DB');
-        
-        // Update local state after DB update
-        setConversations(prev => 
-          prev.map(conv => 
-            conv.id === conversationId 
-              ? { ...conv, unread_count: unreadCount }
-              : conv
-          )
-        );
-        
-        // Update unread count badge
-        setUnreadCount(prev => prev + unreadCount);
-
-        toast({
-          title: "Marcado como no leído",
-          description: "La conversación ha sido marcada como no leída",
-        });
-      } else {
-        // Fallback: no hay mensajes recibidos por el usuario para marcar
-        console.log('[markAsUnread] No inbound messages found; applying local fallback to show unread badge');
-        setConversations(prev => 
-          prev.map(conv => 
-            conv.id === conversationId 
-              ? { ...conv, unread_count: Math.max(1, conv.unread_count || 0) }
-              : conv
-          )
-        );
-        setUnreadCount(prev => prev + 1);
-        toast({
-          title: "Marcado como no leído",
-          description: "Se marcará como pendiente para ti",
-        });
+        if (overrideError) throw overrideError;
       }
+
+      // Update local state
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, unread_count: Math.max(1, conv.unread_count) }
+            : conv
+        )
+      );
+      
+      setUnreadCount(prev => prev + 1);
+
+      toast({
+        title: "Marcado como no leído",
+        description: "La conversación ha sido marcada como no leída",
+      });
     } catch (error) {
       console.error('[markAsUnread] Error:', error);
       toast({

@@ -371,6 +371,36 @@ export type Database = {
           },
         ]
       }
+      conversation_overrides: {
+        Row: {
+          archived: boolean
+          conversation_id: string
+          created_at: string
+          force_unread: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          conversation_id: string
+          created_at?: string
+          force_unread?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          conversation_id?: string
+          created_at?: string
+          force_unread?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       education: {
         Row: {
           created_at: string
