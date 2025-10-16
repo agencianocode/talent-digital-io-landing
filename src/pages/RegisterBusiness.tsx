@@ -17,7 +17,8 @@ const RegisterBusiness = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    fullName: ''
+    firstName: '',
+    lastName: ''
   });
   
   const [showPassword, setShowPassword] = useState(false);
@@ -48,7 +49,7 @@ const RegisterBusiness = () => {
     setError('');
     setMessage('');
 
-    if (!formData.email || !formData.password || !formData.fullName) {
+    if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
       setError('Por favor completa todos los campos');
       setIsSubmitting(false);
       return;
@@ -68,7 +69,7 @@ const RegisterBusiness = () => {
     }
 
     const signUpResult = await signUp(formData.email, formData.password, {
-      full_name: formData.fullName,
+      full_name: `${formData.firstName} ${formData.lastName}`.trim(),
       user_type: 'business'
     });
     
@@ -142,17 +143,31 @@ const RegisterBusiness = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nombre completo *</Label>
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Tu nombre completo"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">Nombre *</Label>
+                  <Input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="Tu nombre"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Apellido *</Label>
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder="Tu apellido"
+                    required
+                  />
+                </div>
               </div>
 
 
