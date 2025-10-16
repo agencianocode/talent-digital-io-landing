@@ -168,6 +168,72 @@ const NewOpportunity = () => {
 
         const auto: any = (data as any).auto_save_data || {};
 
+        // Normalización de valores desde la BD a los valores esperados por los Selects
+        const toSlug = (s?: string) => (s || '')
+          .toString()
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // quitar acentos
+          .replace(/[^a-z0-9_]+/g, '_')
+          .replace(/_{2,}/g, '_')
+          .replace(/^_|_$/g, '');
+
+        // Categoría: usar clave exacta de categoryTemplates (títulos en español)
+        const categoryOptions = Object.keys(categoryTemplates);
+        const categoryInput = (data.category || auto.category || '') as string;
+        const categorySlug = toSlug(categoryInput);
+        const normalizedCategory = categoryOptions.find(k => toSlug(k) === categorySlug) || (categoryInput || '');
+
+        // Modalidad (tipo de jornada): valores del Select son slugs de los labels
+        const jobTypeLabels = ['Tiempo Completo','Medio Tiempo','Freelance','Contrato','Prácticas'];
+        const jobTypeValues = jobTypeLabels.map(t => t.toLowerCase().replace(/ /g, '_'));
+        const typeInput = (data.type || auto.type || '') as string;
+        const typeSlug = toSlug(typeInput);
+        const typeIdx = jobTypeValues.findIndex(v => toSlug(v) === typeSlug);
+        const normalizedType = typeIdx >= 0 ? jobTypeValues[typeIdx] : ({
+          full_time: 'tiempo_completo',
+          'full-time': 'tiempo_completo',
+          part_time: 'medio_tiempo',
+          'part-time': 'medio_tiempo',
+          contrato: 'contrato',
+          freelance: 'freelance',
+          practicas: 'prácticas'
+        } as Record<string,string>)[typeSlug] || '';
+
+        // Tipo de contrato: options son labels exactos de contractTypes
+        const contractInput = (data.contract_type || auto.contract_type || '') as string;
+        const contractSlug = toSlug(contractInput);
+        const normalizedContract = ({
+          full_time: 'Full Time',
+          'full-time': 'Full Time',
+          'full time': 'Full Time',
+          part_time: 'Part Time',
+          'part-time': 'Part Time',
+          'part time': 'Part Time',
+          freelance: 'Freelance',
+          commission: 'Por Comisión',
+          por_comision: 'Por Comisión',
+          'por comision': 'Por Comisión',
+          'por comision_': 'Por Comisión',
+          fixed_plus_commission: 'Fijo + Comisión',
+          fixed_commission: 'Fijo + Comisión',
+          'fijo_mas_comision': 'Fijo + Comisión',
+          'fijo_comision': 'Fijo + Comisión'
+        } as Record<string,string>)[contractSlug] || (contractTypes.find(ct => toSlug(ct) === contractSlug) || '');
+
+        // Modalidad de trabajo (location_type): valores esperados remote|onsite|hybrid
+        const locationInput = ((data as any).location_type || auto.location_type || '') as string;
+        const locationSlug = toSlug(locationInput);
+        const normalizedLocationType = ['remote','onsite','hybrid'].includes(locationSlug)
+          ? locationSlug
+          : ({ remoto: 'remote', presencial: 'onsite', hibrido: 'hybrid', hibrid: 'hybrid' } as Record<string,string>)[locationSlug] || 'remote';
+
+        // Fecha límite: garantizar Date válido
+        const rawDeadline = (data.deadline_date || auto.deadline_date || null) as string | null;
+        const normalizedDeadline = rawDeadline
+          ? new Date((/T/.test(rawDeadline) ? rawDeadline : `${rawDeadline}T00:00:00`))
+          : null;
+
         setFormData({
           title: data.title || auto.title || '',
           description: data.description || auto.description || '',
@@ -175,20 +241,18 @@ const NewOpportunity = () => {
           salary_min: (data.salary_min ?? auto.salary_min ?? '').toString(),
           salary_max: (data.salary_max ?? auto.salary_max ?? '').toString(),
           location: data.location || auto.location || '',
-          category: data.category || auto.category || '',
-          type: data.type || auto.type || '',
+          category: normalizedCategory as string,
+          type: (normalizedType || '') as string,
           status: (data.status || auto.status || 'draft') as any,
-          contract_type: data.contract_type || auto.contract_type || '',
+          contract_type: (normalizedContract || '') as string,
           duration_type: data.duration_type || auto.duration_type || 'indefinite',
           duration_value: (data.duration_value ?? auto.duration_value ?? '').toString(),
           duration_unit: data.duration_unit || auto.duration_unit || 'months',
           skills: data.skills || auto.skills || [],
           experience_levels: data.experience_levels || auto.experience_levels || [],
-          location_type: (data as any).location_type || auto.location_type || 'remote',
+          location_type: normalizedLocationType,
           timezone_preference: data.timezone_preference || auto.timezone_preference || '',
-          deadline_date: data.deadline_date
-            ? new Date(data.deadline_date)
-            : (auto.deadline_date ? new Date(auto.deadline_date) : null),
+          deadline_date: normalizedDeadline,
           payment_type: data.payment_type || auto.payment_type || 'fixed',
           commission_percentage: (data.commission_percentage ?? auto.commission_percentage ?? '').toString(),
           salary_period: (data as any).salary_period || auto.salary_period || 'monthly',
