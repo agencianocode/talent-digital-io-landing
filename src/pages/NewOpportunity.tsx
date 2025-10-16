@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon, X, ArrowLeft, Clock, Save } from 'lucide-react';
+import { CalendarIcon, X, ArrowLeft, Clock } from 'lucide-react';
 import { OpportunityTemplates, JobTemplate } from '@/components/OpportunityTemplates';
 import { toast } from 'sonner';
 import { useAutoSave } from '@/hooks/useAutoSave';
@@ -143,7 +143,7 @@ const NewOpportunity = () => {
     }
   }, [user, userRole, activeCompany, isEditing, id]);
 
-  const { saveNow, isAutoSaveEnabled } = useAutoSave({
+  useAutoSave({
     data: formData,
     onSave: autoSaveToDatabase,
     interval: 30000, // 30 segundos
@@ -376,16 +376,6 @@ const NewOpportunity = () => {
                 Guardado automáticamente: {format(lastSaved, 'HH:mm')}
               </div>
             )}
-            {isAutoSaveEnabled && (
-              <div className="text-sm text-green-600 flex items-center gap-2">
-                <Save className="h-4 w-4" />
-                Auto-guardado activo
-              </div>
-            )}
-            <Button onClick={saveNow} variant="outline" size="sm">
-              <Save className="h-4 w-4 mr-2" />
-              Guardar ahora
-            </Button>
           </div>
         </div>
       </div>
