@@ -708,22 +708,7 @@ export const useMessages = () => {
       if (messages && messages.length > 0) {
         const unreadCount = messages.length;
         
-        console.log('[markAsUnread] Updating local state with unread count:', unreadCount);
-        
-        // Update local state immediately for instant feedback
-        setConversations(prev => {
-          const updated = prev.map(conv => 
-            conv.id === conversationId 
-              ? { ...conv, unread_count: unreadCount, updated_at: new Date().toISOString() }
-              : { ...conv } // Create new object for all items
-          );
-          return updated; // Return new array
-        });
-        
-        // Update unread count badge immediately
-        setUnreadCount(prev => prev + unreadCount);
-        
-        // Mark all read messages as unread in database
+        // Mark all read messages as unread in database FIRST
         const messageIds = messages.map((m: any) => m.id);
         
         console.log('[markAsUnread] Updating messages in database:', messageIds);
@@ -735,18 +720,25 @@ export const useMessages = () => {
 
         if (updateError) throw updateError;
 
-        console.log('[markAsUnread] Successfully marked as unread');
+        console.log('[markAsUnread] Successfully marked as unread in DB');
+        
+        // Update local state after DB update
+        setConversations(prev => 
+          prev.map(conv => 
+            conv.id === conversationId 
+              ? { ...conv, unread_count: unreadCount }
+              : conv
+          )
+        );
+        
+        // Update unread count badge
+        setUnreadCount(prev => prev + unreadCount);
 
         toast({
           title: "Marcado como no leído",
           description: "La conversación ha sido marcada como no leída",
         });
-
-        // Don't reload immediately - let the local state update persist
-        // The state will sync naturally on next interaction
       } else {
-        // If no messages were found, it means there are no messages TO this user
-        // or they're already unread
         console.log('[markAsUnread] No messages to mark as unread');
         toast({
           title: "Info",
@@ -761,13 +753,15 @@ export const useMessages = () => {
         variant: "destructive",
       });
     }
-  }, [user, toast, loadConversations, loadUnreadCount]);
+  }, [user, toast]);
 
   // Archive conversation
   const archiveConversation = useCallback(async (conversationId: string) => {
     if (!user) return;
 
     try {
+      console.log('[archiveConversation] Archiving conversation:', conversationId);
+      
       // Get all messages in the conversation
       const { data: messages, error } = await supabase
         .from('messages' as any)
@@ -789,13 +783,21 @@ export const useMessages = () => {
         }
       }
 
+      console.log('[archiveConversation] Successfully archived in DB');
+      
+      // Update local state
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, archived: true }
+            : conv
+        )
+      );
+
       toast({
         title: "Conversación archivada",
         description: "La conversación ha sido archivada correctamente",
       });
-
-      // Reload conversations
-      await loadConversations();
     } catch (error) {
       console.error('Error archiving conversation:', error);
       toast({
@@ -804,13 +806,15 @@ export const useMessages = () => {
         variant: "destructive",
       });
     }
-  }, [user, toast, loadConversations]);
+  }, [user, toast]);
 
   // Unarchive conversation
   const unarchiveConversation = useCallback(async (conversationId: string) => {
     if (!user) return;
 
     try {
+      console.log('[unarchiveConversation] Unarchiving conversation:', conversationId);
+      
       // Get all messages in the conversation
       const { data: messages, error } = await supabase
         .from('messages' as any)
@@ -832,13 +836,21 @@ export const useMessages = () => {
         }
       }
 
+      console.log('[unarchiveConversation] Successfully unarchived in DB');
+      
+      // Update local state
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, archived: false }
+            : conv
+        )
+      );
+
       toast({
         title: "Conversación desarchivada",
         description: "La conversación ha sido restaurada",
       });
-
-      // Reload conversations
-      await loadConversations();
     } catch (error) {
       console.error('Error unarchiving conversation:', error);
       toast({
