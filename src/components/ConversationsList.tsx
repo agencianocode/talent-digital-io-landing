@@ -163,6 +163,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                     {onMarkAsUnread && (
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
+                        console.log('[ConversationsList] Calling markAsUnread for:', conversation.id);
                         onMarkAsUnread(conversation.id);
                       }}>
                         <Mail className="h-4 w-4 mr-2" />
