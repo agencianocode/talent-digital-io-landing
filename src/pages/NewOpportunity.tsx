@@ -166,30 +166,34 @@ const NewOpportunity = () => {
 
         if (error) throw error;
 
+        const auto: any = (data as any).auto_save_data || {};
+
         setFormData({
-          title: data.title || '',
-          description: data.description || '',
-          requirements: data.requirements || '',
-          salary_min: data.salary_min?.toString() || '',
-          salary_max: data.salary_max?.toString() || '',
-          location: data.location || '',
-          category: data.category || '',
-          type: data.type || '',
-          status: data.status || 'draft',
-          contract_type: data.contract_type || '',
-          duration_type: data.duration_type || 'indefinite',
-          duration_value: data.duration_value?.toString() || '',
-          duration_unit: data.duration_unit || 'months',
-          skills: data.skills || [],
-          experience_levels: data.experience_levels || [],
-          location_type: (data as any).location_type || 'remote',
-          timezone_preference: data.timezone_preference || '',
-          deadline_date: data.deadline_date ? new Date(data.deadline_date) : null,
-          payment_type: data.payment_type || 'fixed',
-          commission_percentage: data.commission_percentage?.toString() || '',
-          salary_period: (data as any).salary_period || 'monthly',
-          salary_is_public: data.salary_is_public !== false,
-          is_academy_exclusive: data.is_academy_exclusive || false,
+          title: data.title || auto.title || '',
+          description: data.description || auto.description || '',
+          requirements: data.requirements || auto.requirements || '',
+          salary_min: (data.salary_min ?? auto.salary_min ?? '').toString(),
+          salary_max: (data.salary_max ?? auto.salary_max ?? '').toString(),
+          location: data.location || auto.location || '',
+          category: data.category || auto.category || '',
+          type: data.type || auto.type || '',
+          status: (data.status || auto.status || 'draft') as any,
+          contract_type: data.contract_type || auto.contract_type || '',
+          duration_type: data.duration_type || auto.duration_type || 'indefinite',
+          duration_value: (data.duration_value ?? auto.duration_value ?? '').toString(),
+          duration_unit: data.duration_unit || auto.duration_unit || 'months',
+          skills: data.skills || auto.skills || [],
+          experience_levels: data.experience_levels || auto.experience_levels || [],
+          location_type: (data as any).location_type || auto.location_type || 'remote',
+          timezone_preference: data.timezone_preference || auto.timezone_preference || '',
+          deadline_date: data.deadline_date
+            ? new Date(data.deadline_date)
+            : (auto.deadline_date ? new Date(auto.deadline_date) : null),
+          payment_type: data.payment_type || auto.payment_type || 'fixed',
+          commission_percentage: (data.commission_percentage ?? auto.commission_percentage ?? '').toString(),
+          salary_period: (data as any).salary_period || auto.salary_period || 'monthly',
+          salary_is_public: (data.salary_is_public ?? auto.salary_is_public) !== false,
+          is_academy_exclusive: data.is_academy_exclusive ?? auto.is_academy_exclusive ?? false,
         });
         setIsEditing(true);
       } catch (error) {
