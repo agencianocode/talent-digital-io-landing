@@ -112,13 +112,13 @@ const NewOpportunity = () => {
         experience_levels: data.experience_levels,
         location_type: data.location_type || 'remote',
         timezone_preference: data.timezone_preference,
-        deadline_date: data.deadline_date?.toISOString(),
+        deadline_date: data.deadline_date ? data.deadline_date.toISOString().split('T')[0] : null,
         payment_type: data.payment_type,
         commission_percentage: data.commission_percentage ? parseFloat(data.commission_percentage) : null,
         salary_period: data.salary_period || 'monthly',
         salary_is_public: data.salary_is_public,
         is_academy_exclusive: data.is_academy_exclusive,
-        status: 'draft' as 'draft' | 'active' | 'paused' | 'closed', // Auto-save siempre como borrador
+        status: (data.status as 'draft' | 'active' | 'paused' | 'closed'), // Mantener el estado actual durante auto-guardado
         auto_save_data: data
       };
 
