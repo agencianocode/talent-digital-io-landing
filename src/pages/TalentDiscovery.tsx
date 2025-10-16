@@ -191,8 +191,11 @@ const TalentDiscovery = () => {
         return bioOk && locationOk && mediaOk && socialsOk;
       };
 
+
       const talents: RealTalent[] = profiles?.map(profile => {
         const talentProfile = (talentProfiles as any)?.find((tp: any) => tp.user_id === profile.user_id);
+        const userRole = talentRoles?.find(r => r.user_id === profile.user_id);
+        
         return {
           id: profile.id,
           user_id: profile.user_id,
@@ -219,7 +222,7 @@ const TalentDiscovery = () => {
           }),
           is_featured: false, // Column doesn't exist in talent_profiles table
           is_verified: false, // Column doesn't exist in talent_profiles table
-          is_premium: false, // Column doesn't exist in talent_profiles table
+          is_premium: userRole?.role === 'premium_talent', // Usar el rol real del usuario
           rating: 0, // Column doesn't exist in talent_profiles table
           reviews_count: 0, // Column doesn't exist in talent_profiles table
           response_rate: 0, // Column doesn't exist in talent_profiles table
