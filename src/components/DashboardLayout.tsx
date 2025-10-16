@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
@@ -24,21 +24,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-  const { getUnreadCount } = useMessages();
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // Cargar contador de mensajes no leídos
-  React.useEffect(() => {
-    const loadUnreadCount = async () => {
-      try {
-        const count = await getUnreadCount();
-        setUnreadCount(count);
-      } catch (error) {
-        console.error('Error loading unread count:', error);
-      }
-    };
-    loadUnreadCount();
-  }, [getUnreadCount]);
+  const { unreadCount } = useMessages();
 
   const handleLogout = async () => {
     await signOut();
