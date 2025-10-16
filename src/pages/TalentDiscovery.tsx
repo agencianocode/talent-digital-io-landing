@@ -23,7 +23,8 @@ import {
   CheckCircle,
   Clock,
   TrendingUp,
-  Github
+  Github,
+  Plus
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -435,13 +436,25 @@ const TalentDiscovery = () => {
     <div className="p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="space-y-3 sm:space-y-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
-            Descubrir Talento
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
-            Encuentra y conecta con los mejores profesionales para tu equipo
-          </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+              Descubrir Talento
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">
+              Encuentra y conecta con los mejores profesionales para tu equipo
+            </p>
+          </div>
+          
+          <div className="flex gap-3">
+            <Button 
+              onClick={() => navigate('/business-dashboard/opportunities/new')} 
+              className="bg-black hover:bg-gray-800 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Publicar Oportunidad
+            </Button>
+          </div>
         </div>
 
         {/* Quick Stats */}
