@@ -300,26 +300,33 @@ const NewOpportunity = () => {
         is_academy_exclusive: formData.is_academy_exclusive,
       };
 
-      let error;
       if (isEditing && id) {
         // Update existing opportunity
-        const { error: updateError } = await supabase
+        const { data: updatedData, error: updateError } = await supabase
           .from('opportunities')
           .update(opportunityData)
-          .eq('id', id);
-        error = updateError;
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (updateError) throw updateError;
+        
+        console.log('Opportunity updated successfully:', updatedData);
       } else {
         // Create new opportunity
-        const { error: insertError } = await supabase
+        const { data: insertedData, error: insertError } = await supabase
           .from('opportunities')
           .insert({
             ...opportunityData,
             company_id: activeCompany.id,
-          });
-        error = insertError;
+          })
+          .select()
+          .single();
+        
+        if (insertError) throw insertError;
+        
+        console.log('Opportunity created successfully:', insertedData);
       }
-
-      if (error) throw error;
 
       const action = publishNow ? 'publicada' : 'guardada';
       toast.success(isEditing ? `Oportunidad ${action} exitosamente` : `Oportunidad ${action} exitosamente`);
