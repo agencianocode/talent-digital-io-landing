@@ -244,7 +244,7 @@ const TalentDiscovery = () => {
             country: talent.country || 'Colombia',
             is_featured: true,
             is_verified: true,
-            is_premium: false,
+            is_premium: talent.is_premium,
             rating: 4.8,
             reviews_count: 12,
             response_rate: 95,
