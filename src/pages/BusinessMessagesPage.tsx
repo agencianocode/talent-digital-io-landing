@@ -50,7 +50,8 @@ const BusinessMessagesPage = () => {
     
     const loadConversationData = async () => {
       await loadMessages(activeId);
-      await markAsRead(activeId);
+      // Ya no marcamos automáticamente como leído para que persista hasta acción manual
+      // await markAsRead(activeId);
     };
     
     loadConversationData();
@@ -118,6 +119,7 @@ const BusinessMessagesPage = () => {
         activeConversationId={activeId}
         onSelectConversation={setActiveId}
         onMarkAsUnread={markAsUnread}
+        onMarkAsRead={markAsRead}
         onArchive={archiveConversation}
         onUnarchive={unarchiveConversation}
         onDelete={deleteConversation}

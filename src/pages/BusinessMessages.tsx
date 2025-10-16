@@ -48,7 +48,8 @@ const BusinessMessages = () => {
   useEffect(() => {
     if (!activeId) return;
     loadMessages(activeId);
-    markAsRead(activeId);
+    // Ya no marcamos automáticamente como leído para que persista entre recargas
+    // markAsRead(activeId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId]);
 
@@ -84,6 +85,7 @@ const BusinessMessages = () => {
         activeConversationId={activeId}
         onSelectConversation={setActiveId}
         onMarkAsUnread={markAsUnread}
+        onMarkAsRead={markAsRead}
         onArchive={archiveConversation}
         onUnarchive={unarchiveConversation}
         onDelete={deleteConversation}

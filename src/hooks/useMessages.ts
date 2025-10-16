@@ -104,11 +104,11 @@ export const useMessages = () => {
           event: 'UPDATE',
           schema: 'public',
           table: 'messages',
-          filter: `sender_id=eq.${user.id}`
+          filter: `recipient_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('[useMessages] Message updated via Realtime:', payload);
-          // Reload conversations when a message is marked as read
+          console.log('[useMessages] Message updated via Realtime (recipient):', payload);
+          // Reload conversations and counts when a message is marked read/unread
           loadConversations();
           loadUnreadCount();
         }

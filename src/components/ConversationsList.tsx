@@ -58,6 +58,7 @@ interface ConversationsListProps {
   activeConversationId: string | null;
   onSelectConversation: (conversationId: string) => void;
   onMarkAsUnread?: (conversationId: string) => void;
+  onMarkAsRead?: (conversationId: string) => void;
   onArchive?: (conversationId: string) => void;
   onUnarchive?: (conversationId: string) => void;
   onDelete?: (conversationId: string) => void;
@@ -68,6 +69,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   activeConversationId,
   onSelectConversation,
   onMarkAsUnread,
+  onMarkAsRead,
   onArchive,
   onUnarchive,
   onDelete
@@ -168,6 +170,16 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                       }}>
                         <Mail className="h-4 w-4 mr-2" />
                         Marcar como no leído
+                      </DropdownMenuItem>
+                    )}
+                    {onMarkAsRead && conversation.unread_count > 0 && (
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('[ConversationsList] Calling markAsRead for:', conversation.id);
+                        onMarkAsRead(conversation.id);
+                      }}>
+                        <MailOpen className="h-4 w-4 mr-2" />
+                        Marcar como leído
                       </DropdownMenuItem>
                     )}
                     {activeTab === 'inbox' && onArchive && (
