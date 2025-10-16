@@ -102,11 +102,11 @@ const TalentDiscovery = () => {
     try {
       setIsLoading(true);
       
-      // First, get users with 'talent' role
+      // First, get users with talent roles (talent OR premium_talent)
       const { data: talentRoles, error: rolesError } = await supabase
         .from('user_roles')
-        .select('user_id')
-        .eq('role', 'talent');
+        .select('user_id, role')
+        .in('role', ['talent', 'premium_talent']);
 
       if (rolesError) {
         console.error('Error fetching talent roles:', rolesError);
@@ -114,10 +114,12 @@ const TalentDiscovery = () => {
         return;
       }
 
+      console.log('👥 Usuarios con rol de talento encontrados:', talentRoles?.length || 0);
+
       const talentUserIds = talentRoles?.map(r => r.user_id) || [];
 
       if (talentUserIds.length === 0) {
-        console.log('No talent users found');
+        console.log('⚠️ No se encontraron usuarios con rol de talento');
         setAllTalents([]);
         setFilteredTalents([]);
         setIsLoading(false);
@@ -149,6 +151,8 @@ const TalentDiscovery = () => {
         return;
       }
 
+      console.log('📋 Perfiles encontrados:', profiles?.length || 0);
+
       // Get talent_profiles data (only basic columns that exist)
       const { data: talentProfiles, error: talentProfilesError } = await supabase
         .from('talent_profiles')
@@ -166,6 +170,8 @@ const TalentDiscovery = () => {
         toast.error('Error al cargar los perfiles de talento');
         return;
       }
+
+      console.log('💼 Perfiles de talento encontrados:', talentProfiles?.length || 0);
 
       // Combine profiles and talent_profiles data
       const meetsMinimums = (params: {
