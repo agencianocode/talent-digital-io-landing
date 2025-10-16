@@ -63,11 +63,6 @@ export const useMessages = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messagesByConversation, setMessagesByConversation] = useState<Record<string, Message[]>>({});
   const [unreadCount, setUnreadCount] = useState(0);
-
-  // Emit broadcast when unread count changes
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent('messages:unread-updated', { detail: { count: unreadCount } }));
-  }, [unreadCount]);
   
   // Debug: Log when conversations change
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
@@ -24,30 +24,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-  const { getUnreadCount } = useMessages();
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // Cargar contador y escuchar broadcasts
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const count = await getUnreadCount();
-        setUnreadCount(count);
-      } catch (e) {
-        console.error('[DashboardLayout] load unread:', e);
-      }
-    };
-    load();
-
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as { count?: number } | undefined;
-      if (detail && typeof detail.count === 'number') setUnreadCount(detail.count);
-      else load();
-    };
-
-    window.addEventListener('messages:unread-updated', handler as EventListener);
-    return () => window.removeEventListener('messages:unread-updated', handler as EventListener);
-  }, [getUnreadCount]);
+  const { unreadCount } = useMessages();
   const handleLogout = async () => {
     await signOut();
     navigate('/');
