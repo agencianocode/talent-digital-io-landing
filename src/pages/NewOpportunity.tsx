@@ -182,7 +182,19 @@ const NewOpportunity = () => {
         const categoryOptions = Object.keys(categoryTemplates);
         const categoryInput = (data.category || auto.category || '') as string;
         const categorySlug = toSlug(categoryInput);
-        const normalizedCategory = categoryOptions.find(k => toSlug(k) === categorySlug) || (categoryInput || '');
+        const categorySlugMap: Record<string, string> = {
+          ventas: 'Ventas',
+          marketing: 'Marketing',
+          atencion_cliente: 'Atención al cliente',
+          operaciones: 'Operaciones',
+          creativo: 'Creativo',
+          tecnologia: 'Tecnología y Automatizaciones',
+          tecnologia_y_automatizaciones: 'Tecnología y Automatizaciones',
+          soporte_profesional: 'Soporte Profesional',
+        };
+        const normalizedCategory = categorySlugMap[categorySlug]
+          || categoryOptions.find(k => toSlug(k) === categorySlug)
+          || ''; 
 
         // Modalidad (tipo de jornada): valores del Select son slugs de los labels
         const jobTypeLabels = ['Tiempo Completo','Medio Tiempo','Freelance','Contrato','Prácticas'];
@@ -195,8 +207,10 @@ const NewOpportunity = () => {
           'full-time': 'tiempo_completo',
           part_time: 'medio_tiempo',
           'part-time': 'medio_tiempo',
+          contract: 'contrato',
           contrato: 'contrato',
           freelance: 'freelance',
+          internship: 'prácticas',
           practicas: 'prácticas'
         } as Record<string,string>)[typeSlug] || '';
 
