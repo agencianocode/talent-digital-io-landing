@@ -19,13 +19,11 @@ import { getCategoryById } from '@/lib/marketplace-categories';
 interface ServiceCardProps {
   service: MarketplaceService;
   onRequestService: (service: MarketplaceService) => void;
-  onViewPortfolio?: (service: MarketplaceService) => void;
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({
   service,
-  onRequestService,
-  onViewPortfolio
+  onRequestService
 }) => {
   const navigate = useNavigate();
   const category = getCategoryById(service.category);
@@ -157,18 +155,16 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           >
             Solicitar Servicio
           </Button>
-          {service.portfolio_url && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewPortfolio?.(service);
-              }}
-            >
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/business-dashboard/marketplace/service/${service.id}`);
+            }}
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
         </div>
       </CardContent>
     </Card>

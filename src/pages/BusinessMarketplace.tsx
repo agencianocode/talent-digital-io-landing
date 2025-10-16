@@ -46,12 +46,6 @@ const BusinessMarketplace: React.FC = () => {
     setIsRequestModalOpen(true);
   };
 
-  const handleViewPortfolio = (service: MarketplaceService) => {
-    if (service.portfolio_url) {
-      window.open(service.portfolio_url, '_blank');
-    }
-  };
-
   const handleRequestSent = async () => {
     // Refresh services to update request counts
     await refreshServices();
@@ -257,7 +251,6 @@ const BusinessMarketplace: React.FC = () => {
                 key={service.id}
                 service={service}
                 onRequestService={handleRequestService}
-                onViewPortfolio={handleViewPortfolio}
               />
             ))}
           </div>
