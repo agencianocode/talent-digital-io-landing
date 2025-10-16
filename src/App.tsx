@@ -85,6 +85,9 @@ const PublicOpportunity = lazy(() => import('./pages/PublicOpportunity'));
 const WelcomePage = lazy(() => import('./pages/WelcomePage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// Testing pages
+const NotificationsDemo = lazy(() => import('./pages/testing/NotificationsDemo'));
+
 function App() {
   return (
     <ThemeProvider
@@ -405,6 +408,13 @@ function App() {
                       <Route path="/opportunity/:opportunityId" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <PublicOpportunity />
+                        </Suspense>
+                      } />
+
+                      {/* Testing Routes */}
+                      <Route path="/testing/notifications-demo" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <NotificationsDemo />
                         </Suspense>
                       } />
 
