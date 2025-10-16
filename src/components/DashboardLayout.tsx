@@ -10,7 +10,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import CompanySwitcher from "@/components/CompanySwitcher";
 import HelpFeedbackModal from "@/components/HelpFeedbackModal";
 import NotificationCenter from "@/components/NotificationCenter";
-import { useMessages } from "@/hooks/useMessages";
+import { useSupabaseMessages } from "@/contexts/SupabaseMessagesContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +24,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-  const { unreadCount } = useMessages();
+  const { unreadCount } = useSupabaseMessages();
   const handleLogout = async () => {
     await signOut();
     navigate('/');

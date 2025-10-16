@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useSupabaseAuth, isPremiumRole } from '@/contexts/SupabaseAuthContext';
 import { useProfileData } from '@/hooks/useProfileData';
-import { useMessages } from '@/hooks/useMessages';
+import { useSupabaseMessages } from '@/contexts/SupabaseMessagesContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import PremiumBadge from '@/components/PremiumBadge';
 
@@ -25,7 +25,7 @@ const TalentTopNavigation = () => {
   const { profile, signOut, userRole } = useSupabaseAuth();
   const isPremium = isPremiumRole(userRole);
   const { userProfile } = useProfileData();
-  const { unreadCount: unreadMessagesCount } = useMessages();
+  const { unreadCount: unreadMessagesCount } = useSupabaseMessages();
   const { unreadCount: unreadNotificationsCount } = useNotifications();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);

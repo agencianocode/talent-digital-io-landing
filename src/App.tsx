@@ -6,6 +6,7 @@ import { ToastProvider } from '@/contexts/ToastContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { OpportunitiesProvider } from '@/contexts/OpportunitiesContext';
 import { MessagingProvider } from '@/contexts/MessagingContext';
+import { SupabaseMessagesProvider } from '@/contexts/SupabaseMessagesContext';
 import { NavigationFlowProvider } from '@/components/NavigationFlowProvider';
 import { ProfileManagerProvider } from '@/contexts/ProfileManagerContext';
 import ToastContainer from '@/components/ToastContainer';
@@ -95,8 +96,9 @@ function App() {
       <ProfileManagerProvider>
         <NotificationsProvider>
           <OpportunitiesProvider>
-            <MessagingProvider>
-              <ToastProvider>
+            <SupabaseMessagesProvider>
+              <MessagingProvider>
+                <ToastProvider>
                   <BrowserRouter>
                     <NavigationFlowProvider>
                       <AccessibilityWrapper>
@@ -421,9 +423,10 @@ function App() {
                   </BrowserRouter>
                 </ToastProvider>
               </MessagingProvider>
-            </OpportunitiesProvider>
+            </SupabaseMessagesProvider>
+          </OpportunitiesProvider>
         </NotificationsProvider>
-        </ProfileManagerProvider>
+      </ProfileManagerProvider>
     </ThemeProvider>
   );
 }
