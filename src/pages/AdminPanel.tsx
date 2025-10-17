@@ -61,49 +61,47 @@ const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [companyFilterId, setCompanyFilterId] = useState<string | null>(null);
 
-  // Load admin stats using secure function, with fallback if RPC returns no rows
+  // Load admin stats using get-all-users Edge Function
   const loadStats = async () => {
     try {
-      // 1) Try RPC (bypasses RLS)
-      const { data: statsData, error } = await supabase
-        .rpc('get_user_stats_for_admin');
-
-      console.log('Raw stats data:', statsData, error);
-
-      let usersByRole: Record<string, number> = {};
-      let totalUsers = 0;
-
-      if (statsData && statsData.length > 0) {
-        totalUsers = Number(statsData?.[0]?.total_users || 0);
-        usersByRole = statsData.reduce((acc: Record<string, number>, stat: any) => {
-          if (stat.role_name) acc[stat.role_name] = Number(stat.role_count || 0);
-          return acc;
-        }, {});
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('No active session');
+        return;
       }
 
-      // 2) Fallback: direct SELECT if RPC yielded no role rows
-      if (!statsData || statsData.length === 0 || Object.keys(usersByRole).length === 0) {
-        const { data: rolesRows, error: rolesErr } = await supabase
-          .from('user_roles')
-          .select('role');
-        if (!rolesErr && rolesRows) {
-          totalUsers = rolesRows.length;
-          usersByRole = rolesRows.reduce((acc: Record<string, number>, row: any) => {
-            acc[row.role] = (acc[row.role] || 0) + 1;
-            return acc;
-          }, {});
-        }
-      }
+      const { data, error } = await supabase.functions.invoke('get-all-users', {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+
+      if (error) throw error;
+
+      const users = data?.users || [];
+      const roleCounts = users.reduce((acc: Record<string, number>, u: any) => {
+        acc[u.role] = (acc[u.role] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Normalize all possible roles to ensure they appear even if count is 0
+      const usersByRole = {
+        admin: 0,
+        premium_business: 0,
+        freemium_business: 0,
+        business: 0,
+        premium_talent: 0,
+        talent: 0,
+        ...roleCounts,
+      };
 
       const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
 
       setStats({
-        totalUsers: Number(totalUsers),
+        totalUsers: users.length,
         pendingRequests: pendingRequestsCount,
         usersByRole
       });
 
-      console.log('Admin stats loaded (final):', { totalUsers, usersByRole });
+      console.log('Admin stats loaded:', { totalUsers: users.length, usersByRole });
     } catch (error) {
       console.error('Error loading stats:', error);
       toast.error('Error cargando estadísticas');

@@ -59,27 +59,37 @@ export const useAdminData = () => {
       setIsLoading(true);
       setError(null);
 
-      // Load real user stats using RPC function
-      const { data: userStatsData } = await supabase
-        .rpc('get_user_stats_for_admin');
+      // Load real user stats using get-all-users Edge Function
+      const { data: { session } } = await supabase.auth.getSession();
+      let totalUsers = 0;
+      let usersByRole: Record<string, number> = {};
 
-      let totalUsers = userStatsData?.[0]?.total_users || 0;
-      let usersByRole: Record<string, number> = (userStatsData?.reduce((acc: Record<string, number>, stat: any) => {
-        if (stat.role_name) acc[stat.role_name] = Number(stat.role_count || 0);
-        return acc;
-      }, {}) as Record<string, number>) || {};
+      if (session) {
+        try {
+          const { data, error } = await supabase.functions.invoke('get-all-users', {
+            headers: { Authorization: `Bearer ${session.access_token}` }
+          });
 
-      // Fallback if RPC returned no role rows
-      if (!userStatsData || userStatsData.length === 0 || Object.keys(usersByRole).length === 0) {
-        const { data: rolesRows } = await supabase
-          .from('user_roles')
-          .select('role');
-        if (rolesRows) {
-          totalUsers = rolesRows.length;
-          usersByRole = rolesRows.reduce((acc: Record<string, number>, row: any) => {
-            acc[row.role] = (acc[row.role] || 0) + 1;
-            return acc;
-          }, {});
+          if (!error && data?.users) {
+            const users = data.users;
+            totalUsers = users.length;
+            const counts = users.reduce((acc: Record<string, number>, u: any) => {
+              acc[u.role] = (acc[u.role] || 0) + 1;
+              return acc;
+            }, {});
+
+            usersByRole = {
+              admin: 0,
+              premium_business: 0,
+              freemium_business: 0,
+              business: 0,
+              premium_talent: 0,
+              talent: 0,
+              ...counts
+            };
+          }
+        } catch (e) {
+          console.error('Error calling get-all-users:', e);
         }
       }
 
