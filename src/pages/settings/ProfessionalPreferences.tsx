@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -74,39 +74,40 @@ const ProfessionalPreferences = () => {
   });
 
   // Load existing settings
-  React.useEffect(() => {
+  useEffect(() => {
     const loadSettings = async () => {
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('professional_preferences')
-        .eq('user_id', user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('professional_preferences')
+          .eq('user_id', user.id)
+          .single();
 
-      if (error) {
+        if (error) throw error;
+
+        if (data?.professional_preferences) {
+          const prefs = data.professional_preferences as any;
+          form.reset({
+            availability_status: prefs.availability_status ?? 'open_to_offers',
+            work_modality: prefs.work_modality ?? ['remote', 'hybrid'],
+            preferred_locations: prefs.preferred_locations ?? '',
+            salary_min: prefs.salary_min,
+            salary_max: prefs.salary_max,
+            salary_currency: prefs.salary_currency ?? 'USD',
+            contract_types: prefs.contract_types ?? ['full_time'],
+            notice_period: prefs.notice_period ?? '2_weeks',
+            auto_apply_enabled: prefs.auto_apply_enabled ?? false,
+            auto_apply_criteria: prefs.auto_apply_criteria,
+            preferred_company_size: prefs.preferred_company_size ?? ['small', 'medium'],
+            preferred_industries: prefs.preferred_industries ?? '',
+            career_goals: prefs.career_goals,
+            deal_breakers: prefs.deal_breakers,
+          });
+        }
+      } catch (error) {
         console.error('Error loading professional preferences:', error);
-        return;
-      }
-
-      if (data?.professional_preferences) {
-        const prefs = data.professional_preferences as any;
-        form.reset({
-          availability_status: prefs.availability_status ?? 'open_to_offers',
-          work_modality: prefs.work_modality ?? ['remote', 'hybrid'],
-          preferred_locations: prefs.preferred_locations ?? '',
-          salary_min: prefs.salary_min,
-          salary_max: prefs.salary_max,
-          salary_currency: prefs.salary_currency ?? 'USD',
-          contract_types: prefs.contract_types ?? ['full_time'],
-          notice_period: prefs.notice_period ?? '2_weeks',
-          auto_apply_enabled: prefs.auto_apply_enabled ?? false,
-          auto_apply_criteria: prefs.auto_apply_criteria,
-          preferred_company_size: prefs.preferred_company_size ?? ['small', 'medium'],
-          preferred_industries: prefs.preferred_industries ?? '',
-          career_goals: prefs.career_goals,
-          deal_breakers: prefs.deal_breakers,
-        });
       }
     };
 

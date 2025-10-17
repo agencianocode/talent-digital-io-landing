@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -43,23 +43,24 @@ const PrivacySettings = () => {
   });
 
   // Load existing settings
-  React.useEffect(() => {
+  useEffect(() => {
     const loadSettings = async () => {
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('privacy_settings')
-        .eq('user_id', user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('privacy_settings')
+          .eq('user_id', user.id)
+          .single();
 
-      if (error) {
+        if (error) throw error;
+
+        if (data?.privacy_settings) {
+          form.reset(data.privacy_settings as PrivacyFormData);
+        }
+      } catch (error) {
         console.error('Error loading privacy settings:', error);
-        return;
-      }
-
-      if (data?.privacy_settings) {
-        form.reset(data.privacy_settings as PrivacyFormData);
       }
     };
 

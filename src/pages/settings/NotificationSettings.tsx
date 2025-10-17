@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -76,42 +76,43 @@ const NotificationSettings = () => {
   });
 
   // Load existing settings
-  React.useEffect(() => {
+  useEffect(() => {
     const loadSettings = async () => {
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('notification_preferences')
-        .eq('user_id', user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('notification_preferences')
+          .eq('user_id', user.id)
+          .single();
 
-      if (error) {
+        if (error) throw error;
+
+        if (data?.notification_preferences) {
+          const prefs = data.notification_preferences as any;
+          form.reset({
+            email_opportunities: prefs.email_opportunities ?? true,
+            email_messages: prefs.email_messages ?? true,
+            email_company_invitations: prefs.email_company_invitations ?? true,
+            email_profile_views: prefs.email_profile_views ?? false,
+            email_weekly_digest: prefs.email_weekly_digest ?? true,
+            email_frequency: prefs.email_frequency ?? 'daily',
+            push_opportunities: prefs.push_opportunities ?? true,
+            push_messages: prefs.push_messages ?? true,
+            push_company_invitations: prefs.push_company_invitations ?? true,
+            push_profile_matches: prefs.push_profile_matches ?? false,
+            inapp_opportunities: prefs.inapp_opportunities ?? true,
+            inapp_messages: prefs.inapp_messages ?? true,
+            inapp_company_activity: prefs.inapp_company_activity ?? true,
+            inapp_system_updates: prefs.inapp_system_updates ?? true,
+            quiet_hours_enabled: prefs.quiet_hours_enabled ?? false,
+            quiet_hours_start: prefs.quiet_hours_start ?? '22:00',
+            quiet_hours_end: prefs.quiet_hours_end ?? '08:00',
+          });
+        }
+      } catch (error) {
         console.error('Error loading notification settings:', error);
-        return;
-      }
-
-      if (data?.notification_preferences) {
-        const prefs = data.notification_preferences as any;
-        form.reset({
-          email_opportunities: prefs.email_opportunities ?? true,
-          email_messages: prefs.email_messages ?? true,
-          email_company_invitations: prefs.email_company_invitations ?? true,
-          email_profile_views: prefs.email_profile_views ?? false,
-          email_weekly_digest: prefs.email_weekly_digest ?? true,
-          email_frequency: prefs.email_frequency ?? 'daily',
-          push_opportunities: prefs.push_opportunities ?? true,
-          push_messages: prefs.push_messages ?? true,
-          push_company_invitations: prefs.push_company_invitations ?? true,
-          push_profile_matches: prefs.push_profile_matches ?? false,
-          inapp_opportunities: prefs.inapp_opportunities ?? true,
-          inapp_messages: prefs.inapp_messages ?? true,
-          inapp_company_activity: prefs.inapp_company_activity ?? true,
-          inapp_system_updates: prefs.inapp_system_updates ?? true,
-          quiet_hours_enabled: prefs.quiet_hours_enabled ?? false,
-          quiet_hours_start: prefs.quiet_hours_start ?? '22:00',
-          quiet_hours_end: prefs.quiet_hours_end ?? '08:00',
-        });
       }
     };
 
