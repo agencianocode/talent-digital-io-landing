@@ -1071,6 +1071,8 @@ export type Database = {
           notification_preferences: Json | null
           phone: string | null
           position: string | null
+          privacy_settings: Json | null
+          professional_preferences: Json | null
           profile_completeness: number | null
           social_links: Json | null
           updated_at: string
@@ -1089,6 +1091,8 @@ export type Database = {
           notification_preferences?: Json | null
           phone?: string | null
           position?: string | null
+          privacy_settings?: Json | null
+          professional_preferences?: Json | null
           profile_completeness?: number | null
           social_links?: Json | null
           updated_at?: string
@@ -1107,6 +1111,8 @@ export type Database = {
           notification_preferences?: Json | null
           phone?: string | null
           position?: string | null
+          privacy_settings?: Json | null
+          professional_preferences?: Json | null
           profile_completeness?: number | null
           social_links?: Json | null
           updated_at?: string
@@ -1785,6 +1791,10 @@ export type Database = {
       }
       is_company_member: {
         Args: { company_uuid: string; user_uuid: string }
+        Returns: boolean
+      }
+      is_profile_visible_to: {
+        Args: { profile_user_id: string; viewer_user_id: string }
         Returns: boolean
       }
       migrate_existing_talent_profiles: {
