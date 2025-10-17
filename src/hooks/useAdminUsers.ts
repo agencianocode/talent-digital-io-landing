@@ -117,7 +117,25 @@ export const useAdminUsers = () => {
 
     // Country filter
     if (filters.countryFilter !== 'all') {
-      filtered = filtered.filter(user => user.country === filters.countryFilter);
+      if (filters.countryFilter === 'other') {
+        const knownCountries = ['Argentina', 'Brasil', 'Chile', 'Colombia', 'México', 'Perú', 'Uruguay', 'Estados Unidos', 'España'];
+        filtered = filtered.filter(user => user.country && !knownCountries.includes(user.country));
+      } else {
+        // Map country codes to full country names
+        const countryMap: Record<string, string> = {
+          'AR': 'Argentina',
+          'BR': 'Brasil',
+          'CL': 'Chile',
+          'CO': 'Colombia',
+          'MX': 'México',
+          'PE': 'Perú',
+          'UY': 'Uruguay',
+          'US': 'Estados Unidos',
+          'ES': 'España'
+        };
+        const countryName = countryMap[filters.countryFilter] || filters.countryFilter;
+        filtered = filtered.filter(user => user.country === countryName);
+      }
     }
 
     // Date range filter
