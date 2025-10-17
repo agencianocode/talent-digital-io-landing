@@ -4,10 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Search, 
-  Filter, 
   MapPin, 
   Clock, 
   DollarSign, 
@@ -62,7 +60,6 @@ const TalentOpportunities = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
 
   // Cargar filtros guardados del localStorage al montar
   useEffect(() => {
@@ -137,12 +134,17 @@ const TalentOpportunities = () => {
 
   // Estados disponibles para filtros
   const applicationStates = [
-    { value: 'pending', label: 'En revisión', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'reviewed', label: 'Revisada', color: 'bg-blue-100 text-blue-800' },
-    { value: 'contacted', label: 'Contactado', color: 'bg-green-100 text-green-800' },
-    { value: 'rejected', label: 'Rechazado', color: 'bg-red-100 text-red-800' },
-    { value: 'hired', label: 'Contratado', color: 'bg-purple-100 text-purple-800' }
+    { value: 'pending', label: 'En revisión', color: 'bg-yellow-100 text-yellow-800', borderColor: 'border-yellow-400', bgHover: 'hover:bg-yellow-50' },
+    { value: 'reviewed', label: 'Revisada', color: 'bg-blue-100 text-blue-800', borderColor: 'border-blue-400', bgHover: 'hover:bg-blue-50' },
+    { value: 'contacted', label: 'Contactado', color: 'bg-green-100 text-green-800', borderColor: 'border-green-400', bgHover: 'hover:bg-green-50' },
+    { value: 'rejected', label: 'Rechazado', color: 'bg-red-100 text-red-800', borderColor: 'border-red-400', bgHover: 'hover:bg-red-50' },
+    { value: 'hired', label: 'Contratado', color: 'bg-purple-100 text-purple-800', borderColor: 'border-purple-400', bgHover: 'hover:bg-purple-50' }
   ];
+
+  // Manejar click en card de filtro
+  const handleCardClick = (status: string) => {
+    setStatusFilter(prev => prev === status ? "" : status);
+  };
 
   const getStatusBadgeClass = (status: string) => {
     const state = applicationStates.find(s => s.value === status);
@@ -262,81 +264,55 @@ const TalentOpportunities = () => {
           </p>
         </div>
 
-        {/* Barra de búsqueda y filtros */}
+        {/* Barra de búsqueda */}
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Buscar por título o empresa..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              Filtros
-            </Button>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Buscar por título o empresa..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
-
-          {/* Panel de filtros */}
-          {showFilters && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg border-t">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                {/* Estado */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estado
-                  </label>
-                  <Select
-                    value={statusFilter || "all"}
-                    onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos los estados" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        Todos los estados ({applications.length})
-                      </SelectItem>
-                      {applicationStates.map(state => (
-                        <SelectItem key={state.value} value={state.value}>
-                          {state.label} ({getApplicationCount(state.value)})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button variant="ghost" onClick={clearFilters}>
-                  Limpiar filtros
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Estadísticas rápidas */}
+        {/* Cards de filtro clickeables */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          {applicationStates.map(state => (
-            <Card key={state.value}>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-gray-900">
-                  {getApplicationCount(state.value)}
-                </div>
-                <div className="text-sm text-gray-600">
-                  {state.label}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {applicationStates.map(state => {
+            const isActive = statusFilter === state.value;
+            const count = getApplicationCount(state.value);
+            
+            return (
+              <Card 
+                key={state.value}
+                onClick={() => handleCardClick(state.value)}
+                className={`
+                  cursor-pointer transition-all duration-200 
+                  ${isActive 
+                    ? `border-2 ${state.borderColor} ${state.color.replace('bg-', 'bg-').replace('-100', '-50')} shadow-md` 
+                    : 'border hover:shadow-md hover:border-gray-300'
+                  }
+                  ${!isActive && statusFilter ? 'opacity-60' : ''}
+                  ${state.bgHover}
+                `}
+              >
+                <CardContent className="p-4 text-center">
+                  <div className={`text-2xl font-bold transition-colors ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>
+                    {count}
+                  </div>
+                  <div className={`text-sm transition-colors ${isActive ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
+                    {state.label}
+                  </div>
+                  {isActive && (
+                    <div className="mt-1 text-xs text-gray-500">
+                      Click para limpiar
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Resultados */}
