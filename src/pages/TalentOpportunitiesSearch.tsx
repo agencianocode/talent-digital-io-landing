@@ -22,7 +22,7 @@ import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import FilterBar from "@/components/FilterBar";
 
 interface FilterState {
-  category?: string;
+  category?: string | string[];
   subcategory?: string;
   contractType?: string;
   workMode?: string;
@@ -83,6 +83,18 @@ const TalentOpportunitiesSearch = () => {
     setSearchTerm(term);
   };
 
+  // Normalización y sinónimos para categorías
+  const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const CATEGORY_SYNONYMS: Record<string, string[]> = {
+    'ventas': ['ventas', 'comercial', 'sales'],
+    'marketing': ['marketing'],
+    'creativo': ['creativo', 'diseño', 'design', 'creative'],
+    'atencion-cliente': ['atencion al cliente', 'customer success', 'customer support', 'soporte al cliente'],
+    'operaciones': ['operaciones', 'operations'],
+    'tecnologia-automatizaciones': ['tecnologia', 'tecnología', 'technology', 'it', 'automatizaciones', 'automation', 'software'],
+    'soporte-profesional': ['soporte profesional', 'recursos humanos', 'legal', 'finanzas', 'administracion', 'administración']
+  };
+
   // Filtrar oportunidades según búsqueda y filtros
   const filteredOpportunities = opportunities?.filter(opportunity => {
     // Filtro de búsqueda por título, descripción y empresa
@@ -97,11 +109,15 @@ const TalentOpportunitiesSearch = () => {
       if (!matchesSearch) return false;
     }
 
-    // Filtro de categoría (comparación case-insensitive)
+    // Filtro de categoría (soporta múltiples categorías y sinónimos)
     if (filters.category) {
-      const oppCategory = opportunity.category?.toLowerCase() || '';
-      const filterCategory = filters.category.toLowerCase();
-      if (oppCategory !== filterCategory) return false;
+      const oppCatNorm = normalize(opportunity.category || '');
+      const selectedCats = Array.isArray(filters.category) ? filters.category : [filters.category];
+      const matchesCategory = selectedCats.some((cat) => {
+        const synonyms = CATEGORY_SYNONYMS[cat] || [cat];
+        return synonyms.some((syn) => oppCatNorm.includes(normalize(syn)));
+      });
+      if (!matchesCategory) return false;
     }
 
     // Filtro de subcategoría (comparación case-insensitive en descripción/requisitos)

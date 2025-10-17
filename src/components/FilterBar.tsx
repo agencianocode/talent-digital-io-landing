@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Search, Filter, X, ChevronDown, RotateCcw } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 
@@ -149,6 +151,21 @@ const FilterBar: React.FC<FilterBarProps> = ({
     handleFilterChange('salaryRange', range);
   };
 
+  // Selección múltiple de categorías
+  const selectedCategories = Array.isArray(filters.category)
+    ? (filters.category as string[])
+    : (filters.category ? [filters.category] : []);
+
+  const setCategorySelection = (value: string, checked: boolean) => {
+    let updated = [...selectedCategories];
+    if (checked) {
+      if (!updated.includes(value)) updated.push(value);
+    } else {
+      updated = updated.filter(v => v !== value);
+    }
+    handleFilterChange('category', updated.length > 0 ? updated : '');
+  };
+
   const clearAllFilters = () => {
     onFilterChange({});
     setLocalSearchTerm('');
@@ -158,14 +175,18 @@ const FilterBar: React.FC<FilterBarProps> = ({
     return Object.keys(filters).length + (searchTerm ? 1 : 0);
   };
 
-  const removeFilter = (key: string) => {
-    const newFilters = { ...filters };
-    delete newFilters[key];
+  const removeFilter = (key: string, subValue?: string) => {
+    const newFilters = { ...filters } as Record<string, any>;
+    if (subValue && Array.isArray(newFilters[key])) {
+      const arr = (newFilters[key] as string[]).filter(v => v !== subValue);
+      if (arr.length > 0) newFilters[key] = arr; else delete newFilters[key];
+    } else {
+      delete newFilters[key];
+    }
     onFilterChange(newFilters);
   };
-
   const renderActiveFilters = () => {
-    const activeFilters = [];
+    const activeFilters: React.ReactNode[] = [];
 
     if (searchTerm) {
       activeFilters.push(
@@ -179,9 +200,23 @@ const FilterBar: React.FC<FilterBarProps> = ({
     Object.entries(filters).forEach(([key, value]) => {
       if (value && value !== '') {
         let label = '';
+        let skipPush = false;
         switch (key) {
           case 'category':
-            label = `Categoría: ${OPPORTUNITY_CATEGORIES.find(c => c.value === value)?.label || value}`;
+            if (Array.isArray(value)) {
+              (value as string[]).forEach((v) => {
+                const lbl = OPPORTUNITY_CATEGORIES.find(c => c.value === v)?.label || v;
+                activeFilters.push(
+                  <Badge key={`category-${v}`} variant="secondary" className="gap-1">
+                    Categoría: {lbl}
+                    <X className="h-3 w-3 cursor-pointer" onClick={() => removeFilter('category', v)} />
+                  </Badge>
+                );
+              });
+              skipPush = true;
+            } else {
+              label = `Categoría: ${OPPORTUNITY_CATEGORIES.find(c => c.value === value)?.label || value}`;
+            }
             break;
           case 'subcategory':
             label = `Subcategoría: ${value}`;
@@ -196,11 +231,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
             label = `País: ${COUNTRIES.find(c => c.value === value)?.label || value}`;
             break;
           case 'salaryRange':
-            label = `Salario: €${value[0]}K - €${value[1]}K`;
+            label = `Salario: €${(value as number[])[0]}K - €${(value as number[])[1]}K`;
             break;
           default:
-            label = `${key}: ${value}`;
+            label = `${key}: ${value as string}`;
         }
+
+        if (skipPush) return;
 
         activeFilters.push(
           <Badge key={key} variant="secondary" className="gap-1">
@@ -281,28 +318,37 @@ const FilterBar: React.FC<FilterBarProps> = ({
             <CardContent className="p-6">
               {type === 'opportunities' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Category */}
+                  {/* Category (multi-select) */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Categoría</label>
-                    <Select
-                      value={filters.category || ''}
-                      onValueChange={(value) => handleFilterChange('category', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todas las categorías" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {OPPORTUNITY_CATEGORIES.map((category) => (
-                          <SelectItem key={category.value} value={category.value}>
-                            {category.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-medium">Categorías</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          {selectedCategories.length > 0 ? `${selectedCategories.length} seleccionadas` : 'Todas las categorías'}
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[280px] p-3" align="start">
+                        <div className="space-y-2">
+                          {OPPORTUNITY_CATEGORIES.map((category) => (
+                            <div key={category.value} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`cat-${category.value}`}
+                                checked={selectedCategories.includes(category.value)}
+                                onCheckedChange={(checked) => setCategorySelection(category.value, !!checked)}
+                              />
+                              <label htmlFor={`cat-${category.value}`} className="text-sm">
+                                {category.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {/* Subcategory */}
-                  {filters.category && SUBCATEGORIES[filters.category as keyof typeof SUBCATEGORIES] && (
+                  {selectedCategories.length === 1 && SUBCATEGORIES[selectedCategories[0] as keyof typeof SUBCATEGORIES] && (
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Subcategoría</label>
                       <Select
@@ -313,7 +359,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                           <SelectValue placeholder="Todas las subcategorías" />
                         </SelectTrigger>
                         <SelectContent>
-                          {SUBCATEGORIES[filters.category as keyof typeof SUBCATEGORIES].map((sub) => (
+                           {SUBCATEGORIES[selectedCategories[0] as keyof typeof SUBCATEGORIES]?.map((sub) => (
                             <SelectItem key={sub.value} value={sub.value}>
                               {sub.label}
                             </SelectItem>
