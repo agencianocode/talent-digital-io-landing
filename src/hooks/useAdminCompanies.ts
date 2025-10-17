@@ -173,8 +173,27 @@ export const useAdminCompanies = () => {
         filtered = filtered.filter(company => 
           company.location && company.location.toLowerCase().includes('remoto')
         );
+      } else if (filters.locationFilter === 'other') {
+        const knownLocations = ['Argentina', 'Brasil', 'Chile', 'Colombia', 'Costa Rica', 'México', 'Perú', 'Uruguay', 'Estados Unidos', 'España'];
+        filtered = filtered.filter(company => 
+          company.location && !knownLocations.some(loc => company.location?.includes(loc))
+        );
       } else {
-        filtered = filtered.filter(company => company.location === filters.locationFilter);
+        // Map country codes to full names
+        const locationMap: Record<string, string> = {
+          'AR': 'Argentina',
+          'BR': 'Brasil',
+          'CL': 'Chile',
+          'CO': 'Colombia',
+          'CR': 'Costa Rica',
+          'MX': 'México',
+          'PE': 'Perú',
+          'UY': 'Uruguay',
+          'US': 'Estados Unidos',
+          'ES': 'España'
+        };
+        const locationName = locationMap[filters.locationFilter] || filters.locationFilter;
+        filtered = filtered.filter(company => company.location?.includes(locationName));
       }
     }
 
