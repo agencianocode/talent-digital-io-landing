@@ -97,11 +97,23 @@ const TalentOpportunitiesSearch = () => {
       if (!matchesSearch) return false;
     }
 
-    // Filtro de categoría
-    if (filters.category && opportunity.category !== filters.category) return false;
+    // Filtro de categoría (comparación case-insensitive)
+    if (filters.category) {
+      const oppCategory = opportunity.category?.toLowerCase() || '';
+      const filterCategory = filters.category.toLowerCase();
+      if (oppCategory !== filterCategory) return false;
+    }
 
-    // Filtro de subcategoría
-    if (filters.subcategory && opportunity.category !== filters.subcategory) return false;
+    // Filtro de subcategoría (comparación case-insensitive en descripción/requisitos)
+    if (filters.subcategory) {
+      const subcategoryLower = filters.subcategory.toLowerCase();
+      const matchesSubcategory = 
+        opportunity.title?.toLowerCase().includes(subcategoryLower) ||
+        opportunity.description?.toLowerCase().includes(subcategoryLower) ||
+        opportunity.requirements?.toLowerCase().includes(subcategoryLower);
+      
+      if (!matchesSubcategory) return false;
+    }
 
     // Filtro de tipo de contrato
     if (filters.contractType && opportunity.type !== filters.contractType) return false;
