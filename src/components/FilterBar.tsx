@@ -124,13 +124,27 @@ const FilterBar: React.FC<FilterBarProps> = ({
   }, [debouncedSearchTerm, onSearchChange]);
 
   const handleFilterChange = (key: string, value: any) => {
-    const newFilters = { ...filters, [key]: value };
-    if (!value || value === '') {
-      delete newFilters[key];
+    const newFilters = { ...filters };
+
+    if (key === 'category') {
+      // Al cambiar categoría, limpiar subcategoría para evitar filtros incompatibles
+      if (!value || value === '') {
+        delete newFilters.category;
+      } else {
+        newFilters.category = value;
+      }
+      // Resetear subcategoría siempre que cambie la categoría
+      delete newFilters.subcategory;
+    } else {
+      if (!value || value === '') {
+        delete newFilters[key];
+      } else {
+        (newFilters as any)[key] = value;
+      }
     }
+
     onFilterChange(newFilters);
   };
-
   const handleSalaryChange = (range: number[]) => {
     handleFilterChange('salaryRange', range);
   };
