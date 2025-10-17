@@ -31,6 +31,7 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
     opportunities,
     allOpportunities,
     filteredOpportunities,
+    companies,
     isLoading,
     error,
     filters,
@@ -188,6 +189,7 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
         totalOpportunities={allOpportunities.length}
         filteredCount={filteredOpportunities.length}
         isLoading={isLoading}
+        companies={companies}
       />
 
       {/* Opportunities List */}

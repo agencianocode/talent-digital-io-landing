@@ -21,6 +21,7 @@ interface AdminOpportunityFiltersProps {
   totalOpportunities: number;
   filteredCount: number;
   isLoading?: boolean;
+  companies?: Array<{ id: string; name: string }>;
 }
 
 const AdminOpportunityFilters: React.FC<AdminOpportunityFiltersProps> = ({
@@ -28,7 +29,8 @@ const AdminOpportunityFilters: React.FC<AdminOpportunityFiltersProps> = ({
   onFiltersChange,
   totalOpportunities,
   filteredCount,
-  isLoading = false
+  isLoading = false,
+  companies = []
 }) => {
   const handleFilterChange = (key: keyof OpportunityFilters, value: string) => {
     onFiltersChange({
@@ -106,24 +108,14 @@ const AdminOpportunityFilters: React.FC<AdminOpportunityFiltersProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las empresas</SelectItem>
-                <SelectItem value="tech-corp">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Tech Corp
-                  </div>
-                </SelectItem>
-                <SelectItem value="marketing-agency">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Marketing Agency
-                  </div>
-                </SelectItem>
-                <SelectItem value="startup-xyz">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Startup XYZ
-                  </div>
-                </SelectItem>
+                {companies.map((company) => (
+                  <SelectItem key={company.id} value={company.id}>
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4" />
+                      {company.name}
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -302,7 +294,7 @@ const AdminOpportunityFilters: React.FC<AdminOpportunityFiltersProps> = ({
             )}
             {filters.companyFilter !== 'all' && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Empresa: {filters.companyFilter}
+                Empresa: {companies.find(c => c.id === filters.companyFilter)?.name || filters.companyFilter}
                 <X 
                   className="h-3 w-3 cursor-pointer" 
                   onClick={() => handleFilterChange('companyFilter', 'all')}

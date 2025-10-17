@@ -42,6 +42,7 @@ interface OpportunityData {
 
 export const useAdminOpportunities = () => {
   const [opportunities, setOpportunities] = useState<OpportunityData[]>([]);
+  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<OpportunityFilters>({
@@ -74,6 +75,16 @@ export const useAdminOpportunities = () => {
         .order('created_at', { ascending: false });
 
       if (opportunitiesError) throw opportunitiesError;
+
+      // Load all companies for filter dropdown
+      const { data: companiesData, error: companiesError } = await supabase
+        .from('companies')
+        .select('id, name')
+        .order('name');
+
+      if (!companiesError && companiesData) {
+        setCompanies(companiesData);
+      }
 
       // Load applications count for each opportunity
       const { data: applicationsData, error: applicationsError } = await supabase
@@ -144,9 +155,35 @@ export const useAdminOpportunities = () => {
       filtered = filtered.filter(opportunity => opportunity.company_id === filters.companyFilter);
     }
 
-    // Category filter
+    // Category filter - normalize category values for comparison
     if (filters.categoryFilter !== 'all') {
-      filtered = filtered.filter(opportunity => opportunity.category === filters.categoryFilter);
+      filtered = filtered.filter(opportunity => {
+        const oppCategory = (opportunity.category || '').toLowerCase().trim();
+        const filterCategory = filters.categoryFilter.toLowerCase().trim();
+        
+        // Direct match
+        if (oppCategory === filterCategory) return true;
+        
+        // Handle common variations
+        const categoryMap: Record<string, string[]> = {
+          'ventas': ['ventas', 'sales', 'cierre de ventas'],
+          'marketing': ['marketing', 'marketing digital'],
+          'atencion-cliente': ['atencion-cliente', 'atención al cliente', 'customer service'],
+          'operaciones': ['operaciones', 'operations'],
+          'creativo': ['creativo', 'creative', 'diseño'],
+          'tecnologia': ['tecnologia', 'tecnología', 'technology', 'tech'],
+          'soporte-profesional': ['soporte-profesional', 'soporte profesional', 'professional support']
+        };
+        
+        // Check if the opportunity category matches any variation
+        for (const [key, variations] of Object.entries(categoryMap)) {
+          if (key === filterCategory && variations.some(v => oppCategory.includes(v))) {
+            return true;
+          }
+        }
+        
+        return false;
+      });
     }
 
     // Status filter
@@ -235,6 +272,7 @@ export const useAdminOpportunities = () => {
     opportunities: paginatedOpportunities,
     allOpportunities: opportunities,
     filteredOpportunities,
+    companies,
     isLoading,
     error,
     filters,
