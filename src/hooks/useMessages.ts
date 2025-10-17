@@ -547,34 +547,30 @@ export const useMessages = () => {
     }
   }, [user, toast]);
 
-  // Get unread message count
+  // Get unread message count - ONLY chat messages, NOT system notifications
   const getUnreadCount = useCallback(async (): Promise<number> => {
     if (!user) return 0;
 
     try {
       console.log('[getUnreadCount] Fetching unread count for user:', user.id);
       
-      // Get count of real unread messages
-      const { count: messagesCount, error: messagesError } = await supabase
+      // Get unique conversation IDs with unread messages (excluding welcome messages)
+      const { data: unreadMessages, error: messagesError } = await supabase
         .from('messages' as any)
-        .select('*', { count: 'exact', head: true })
+        .select('conversation_id, label')
         .eq('recipient_id', user.id)
         .eq('is_read', false)
+        .neq('label', 'welcome') // Exclude welcome messages from system
         .not('archived_by', 'cs', `{${user.id}}`);
 
       if (messagesError) throw messagesError;
 
-      // Get conversation IDs that already have unread messages
-      const { data: unreadConversations } = await supabase
-        .from('messages' as any)
-        .select('conversation_id')
-        .eq('recipient_id', user.id)
-        .eq('is_read', false)
-        .not('archived_by', 'cs', `{${user.id}}`);
-
+      // Count unique conversations with unread messages
       const unreadConvIds = new Set(
-        (unreadConversations || []).map((m: any) => m.conversation_id)
+        (unreadMessages || []).map((m: any) => m.conversation_id)
       );
+      
+      const messagesCount = unreadConvIds.size;
 
       // Get force_unread overrides that don't already have real unread messages
       let overridesCount = 0;
