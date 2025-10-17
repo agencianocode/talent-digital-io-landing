@@ -157,14 +157,55 @@ export const useAdminCompanies = () => {
       );
     }
 
-    // Industry filter
+    // Industry filter (robust matching with Spanish/English synonyms)
     if (filters.industryFilter !== 'all') {
-      filtered = filtered.filter(company => company.industry === filters.industryFilter);
+      const industryMap: Record<string, string[]> = {
+        technology: ['tecnología', 'technology', 'tech'],
+        marketing: ['marketing'],
+        sales: ['ventas', 'sales'],
+        consulting: ['consultoría', 'consulting'],
+        education: ['educación', 'education'],
+        healthcare: ['salud', 'healthcare'],
+        finance: ['finanzas', 'finance'],
+      };
+
+      if (filters.industryFilter === 'other') {
+        const allKnown = Object.values(industryMap).flat();
+        filtered = filtered.filter(company => {
+          const ind = (company.industry || '').toLowerCase();
+          return ind && !allKnown.some(k => ind.includes(k));
+        });
+      } else {
+        const synonyms = industryMap[filters.industryFilter] || [filters.industryFilter];
+        filtered = filtered.filter(company => {
+          const ind = (company.industry || '').toLowerCase();
+          return synonyms.some(s => ind.includes(s));
+        });
+      }
     }
 
-    // Size filter
+    // Size filter (normalize common ranges and labels)
     if (filters.sizeFilter !== 'all') {
-      filtered = filtered.filter(company => company.size === filters.sizeFilter);
+      const matchesSize = (companySize?: string, target?: string) => {
+        const s = (companySize || '').toLowerCase();
+        if (!s || !target) return false;
+        switch (target) {
+          case 'startup':
+            return s.includes('startup') || s.includes('1-10') || s.includes('1 — 10') || s.includes('1 a 10');
+          case 'small':
+            return s.includes('small') || s.includes('peque') || s.includes('11-50') || s.includes('11 — 50') || s.includes('11 a 50');
+          case 'medium':
+            return s.includes('medium') || s.includes('mediana') || s.includes('51-200') || s.includes('51 — 200') || s.includes('51 a 200');
+          case 'large':
+            return s.includes('large') || s.includes('grande') || s.includes('201-1000') || s.includes('201 — 1000') || s.includes('201 a 1000');
+          case 'enterprise':
+            return s.includes('enterprise') || s.includes('1000') || s.includes('1000+') || s.includes('1000 +') || s.includes('más de 1000');
+          default:
+            return s.includes(target);
+        }
+      };
+
+      filtered = filtered.filter(company => matchesSize(company.size, filters.sizeFilter));
     }
 
     // Location filter
