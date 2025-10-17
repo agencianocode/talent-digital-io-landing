@@ -61,28 +61,39 @@ const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [companyFilterId, setCompanyFilterId] = useState<string | null>(null);
 
-  // Load admin stats using secure function
+  // Load admin stats using secure function, with fallback if RPC returns no rows
   const loadStats = async () => {
     try {
+      // 1) Try RPC (bypasses RLS)
       const { data: statsData, error } = await supabase
         .rpc('get_user_stats_for_admin');
 
-      if (error) throw error;
+      console.log('Raw stats data:', statsData, error);
 
-      console.log('Raw stats data:', statsData);
+      let usersByRole: Record<string, number> = {};
+      let totalUsers = 0;
 
-      if (!statsData || statsData.length === 0) {
-        setStats({ totalUsers: 0, pendingRequests: 0, usersByRole: {} });
-        return;
+      if (statsData && statsData.length > 0) {
+        totalUsers = Number(statsData?.[0]?.total_users || 0);
+        usersByRole = statsData.reduce((acc: Record<string, number>, stat: any) => {
+          if (stat.role_name) acc[stat.role_name] = Number(stat.role_count || 0);
+          return acc;
+        }, {});
       }
 
-      const totalUsers = statsData[0]?.total_users || 0;
-      const usersByRole = statsData.reduce((acc, stat) => {
-        if (stat.role_name) {
-          acc[stat.role_name] = stat.role_count;
+      // 2) Fallback: direct SELECT if RPC yielded no role rows
+      if (!statsData || statsData.length === 0 || Object.keys(usersByRole).length === 0) {
+        const { data: rolesRows, error: rolesErr } = await supabase
+          .from('user_roles')
+          .select('role');
+        if (!rolesErr && rolesRows) {
+          totalUsers = rolesRows.length;
+          usersByRole = rolesRows.reduce((acc: Record<string, number>, row: any) => {
+            acc[row.role] = (acc[row.role] || 0) + 1;
+            return acc;
+          }, {});
         }
-        return acc;
-      }, {} as Record<string, number>);
+      }
 
       const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
 
@@ -92,11 +103,7 @@ const AdminPanel: React.FC = () => {
         usersByRole
       });
 
-      console.log('Admin stats loaded:', {
-        totalUsers: Number(totalUsers),
-        pendingRequests: pendingRequestsCount,
-        usersByRole
-      });
+      console.log('Admin stats loaded (final):', { totalUsers, usersByRole });
     } catch (error) {
       console.error('Error loading stats:', error);
       toast.error('Error cargando estadísticas');

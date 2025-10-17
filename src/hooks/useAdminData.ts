@@ -60,18 +60,28 @@ export const useAdminData = () => {
       setError(null);
 
       // Load real user stats using RPC function
-      const { data: userStatsData, error: statsError } = await supabase
+      const { data: userStatsData } = await supabase
         .rpc('get_user_stats_for_admin');
 
-      if (statsError) throw statsError;
-
-      const totalUsers = userStatsData?.[0]?.total_users || 0;
-      const usersByRole = userStatsData?.reduce((acc: Record<string, number>, stat: any) => {
-        if (stat.role_name) {
-          acc[stat.role_name] = stat.role_count;
-        }
+      let totalUsers = userStatsData?.[0]?.total_users || 0;
+      let usersByRole: Record<string, number> = (userStatsData?.reduce((acc: Record<string, number>, stat: any) => {
+        if (stat.role_name) acc[stat.role_name] = Number(stat.role_count || 0);
         return acc;
-      }, {}) || {};
+      }, {}) as Record<string, number>) || {};
+
+      // Fallback if RPC returned no role rows
+      if (!userStatsData || userStatsData.length === 0 || Object.keys(usersByRole).length === 0) {
+        const { data: rolesRows } = await supabase
+          .from('user_roles')
+          .select('role');
+        if (rolesRows) {
+          totalUsers = rolesRows.length;
+          usersByRole = rolesRows.reduce((acc: Record<string, number>, row: any) => {
+            acc[row.role] = (acc[row.role] || 0) + 1;
+            return acc;
+          }, {});
+        }
+      }
 
       // Load company stats
       const { count: companyCount, error: companyError } = await supabase
