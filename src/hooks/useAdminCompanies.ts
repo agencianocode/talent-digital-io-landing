@@ -189,17 +189,51 @@ export const useAdminCompanies = () => {
       const matchesSize = (companySize?: string, target?: string) => {
         const s = (companySize || '').toLowerCase();
         if (!s || !target) return false;
+
+        // Try to extract numeric ranges like "2-10", "11 — 50", "1 a 10", etc.
+        const nums = s.match(/\d{1,4}/g)?.map((n) => parseInt(n, 10)) || null;
+        const min = nums && nums.length >= 1 ? nums[0] : undefined;
+        const max = nums && nums.length >= 2 ? nums[1] : min;
+        const inRange = (lo?: number, hi?: number) => {
+          if (min === undefined && max === undefined) return false;
+          const a = min ?? 0;
+          const b = max ?? min ?? 0;
+          return a >= (lo ?? a) && b <= (hi ?? b);
+        };
+
         switch (target) {
           case 'startup':
-            return s.includes('startup') || s.includes('1-10') || s.includes('1 — 10') || s.includes('1 a 10');
+            // Accept explicit labels and any range whose max <= 10 (covers 1-10, 2-10, etc.)
+            return (
+              s.includes('startup') ||
+              s.includes('1-10') || s.includes('1 — 10') || s.includes('1 a 10') ||
+              s.includes('2-10') || s.includes('2 — 10') || s.includes('2 a 10') ||
+              (max !== undefined && max <= 10)
+            );
           case 'small':
-            return s.includes('small') || s.includes('peque') || s.includes('11-50') || s.includes('11 — 50') || s.includes('11 a 50');
+            // Accept common labels and numeric ranges up to 50 (min >= 10 allows 10-50 variants)
+            return (
+              s.includes('small') || s.includes('peque') ||
+              s.includes('11-50') || s.includes('11 — 50') || s.includes('11 a 50') ||
+              (min !== undefined && max !== undefined && min >= 10 && max <= 50)
+            );
           case 'medium':
-            return s.includes('medium') || s.includes('mediana') || s.includes('51-200') || s.includes('51 — 200') || s.includes('51 a 200');
+            return (
+              s.includes('medium') || s.includes('mediana') ||
+              s.includes('51-200') || s.includes('51 — 200') || s.includes('51 a 200') ||
+              inRange(51, 200)
+            );
           case 'large':
-            return s.includes('large') || s.includes('grande') || s.includes('201-1000') || s.includes('201 — 1000') || s.includes('201 a 1000');
+            return (
+              s.includes('large') || s.includes('grande') ||
+              s.includes('201-1000') || s.includes('201 — 1000') || s.includes('201 a 1000') ||
+              inRange(201, 1000)
+            );
           case 'enterprise':
-            return s.includes('enterprise') || s.includes('1000') || s.includes('1000+') || s.includes('1000 +') || s.includes('más de 1000');
+            return (
+              s.includes('enterprise') || s.includes('1000') || s.includes('1000+') || s.includes('1000 +') || s.includes('más de 1000') ||
+              (min !== undefined && (min >= 1000 || (max !== undefined && max >= 1000)))
+            );
           default:
             return s.includes(target);
         }
