@@ -173,7 +173,7 @@ const TalentOpportunities = () => {
     }
 
     // Filtro por estado
-    if (statusFilter && app.status !== statusFilter) {
+    if (statusFilter && statusFilter !== "" && app.status !== statusFilter) {
       return false;
     }
 
@@ -294,14 +294,14 @@ const TalentOpportunities = () => {
                     Estado
                   </label>
                   <Select
-                    value={statusFilter}
-                    onValueChange={setStatusFilter}
+                    value={statusFilter || "all"}
+                    onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Todos los estados" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">
+                      <SelectItem value="all">
                         Todos los estados ({applications.length})
                       </SelectItem>
                       {applicationStates.map(state => (
