@@ -4,11 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X, ShoppingBag, Building, Tag, AlertTriangle } from 'lucide-react';
+import { Search, Filter, X, ShoppingBag, User, Tag, AlertTriangle } from 'lucide-react';
 
 interface MarketplaceFilters {
   searchQuery: string;
-  companyFilter: string;
+  userFilter: string;
   categoryFilter: string;
   statusFilter: string;
   dateRange: string;
@@ -21,6 +21,7 @@ interface AdminMarketplaceFiltersProps {
   totalServices: number;
   filteredCount: number;
   isLoading?: boolean;
+  users?: Array<{ id: string; name: string }>;
 }
 
 const AdminMarketplaceFilters: React.FC<AdminMarketplaceFiltersProps> = ({
@@ -28,7 +29,8 @@ const AdminMarketplaceFilters: React.FC<AdminMarketplaceFiltersProps> = ({
   onFiltersChange,
   totalServices,
   filteredCount,
-  isLoading = false
+  isLoading = false,
+  users = []
 }) => {
   const handleFilterChange = (key: keyof MarketplaceFilters, value: string) => {
     onFiltersChange({
@@ -40,7 +42,7 @@ const AdminMarketplaceFilters: React.FC<AdminMarketplaceFiltersProps> = ({
   const clearFilters = () => {
     onFiltersChange({
       searchQuery: '',
-      companyFilter: 'all',
+      userFilter: 'all',
       categoryFilter: 'all',
       statusFilter: 'all',
       dateRange: 'all',
@@ -94,36 +96,26 @@ const AdminMarketplaceFilters: React.FC<AdminMarketplaceFiltersProps> = ({
             </div>
           </div>
 
-          {/* Filtro por Empresa */}
+          {/* Filtro por Usuario */}
           <div>
             <Select
-              value={filters.companyFilter}
-              onValueChange={(value) => handleFilterChange('companyFilter', value)}
+              value={filters.userFilter}
+              onValueChange={(value) => handleFilterChange('userFilter', value)}
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Todas las empresas" />
+                <SelectValue placeholder="Todos los usuarios" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas las empresas</SelectItem>
-                <SelectItem value="tech-corp">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Tech Corp
-                  </div>
-                </SelectItem>
-                <SelectItem value="marketing-agency">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Marketing Agency
-                  </div>
-                </SelectItem>
-                <SelectItem value="startup-xyz">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Startup XYZ
-                  </div>
-                </SelectItem>
+                <SelectItem value="all">Todos los usuarios</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {user.name}
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -287,12 +279,12 @@ const AdminMarketplaceFilters: React.FC<AdminMarketplaceFiltersProps> = ({
                 />
               </Badge>
             )}
-            {filters.companyFilter !== 'all' && (
+            {filters.userFilter !== 'all' && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Empresa: {filters.companyFilter}
+                Usuario: {users.find(u => u.id === filters.userFilter)?.name || filters.userFilter}
                 <X 
                   className="h-3 w-3 cursor-pointer" 
-                  onClick={() => handleFilterChange('companyFilter', 'all')}
+                  onClick={() => handleFilterChange('userFilter', 'all')}
                 />
               </Badge>
             )}

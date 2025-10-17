@@ -28,6 +28,7 @@ const AdminMarketplaceManagement: React.FC = () => {
     services,
     allServices,
     filteredServices,
+    users,
     isLoading,
     error,
     filters,
@@ -161,6 +162,7 @@ const AdminMarketplaceManagement: React.FC = () => {
         totalServices={allServices.length}
         filteredCount={filteredServices.length}
         isLoading={isLoading}
+        users={users}
       />
 
       {/* Services List */}
