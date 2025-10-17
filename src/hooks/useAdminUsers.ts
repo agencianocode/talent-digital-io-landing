@@ -118,15 +118,16 @@ export const useAdminUsers = () => {
     // Country filter
     if (filters.countryFilter !== 'all') {
       if (filters.countryFilter === 'other') {
-        const knownCountries = ['Argentina', 'Brasil', 'Chile', 'Colombia', 'México', 'Perú', 'Uruguay', 'Estados Unidos', 'España'];
-        filtered = filtered.filter(user => user.country && !knownCountries.includes(user.country));
+        const knownCountries = ['Argentina', 'Brasil', 'Chile', 'Colombia', 'Costa Rica', 'México', 'Perú', 'Uruguay', 'Estados Unidos', 'España'];
+        filtered = filtered.filter(user => user.country && !knownCountries.some(kc => user.country?.includes(kc)));
       } else {
-        // Map country codes to full country names
+        // Map country codes to full country names - match partial to handle variations
         const countryMap: Record<string, string> = {
           'AR': 'Argentina',
           'BR': 'Brasil',
           'CL': 'Chile',
           'CO': 'Colombia',
+          'CR': 'Costa Rica',
           'MX': 'México',
           'PE': 'Perú',
           'UY': 'Uruguay',
@@ -134,7 +135,7 @@ export const useAdminUsers = () => {
           'ES': 'España'
         };
         const countryName = countryMap[filters.countryFilter] || filters.countryFilter;
-        filtered = filtered.filter(user => user.country === countryName);
+        filtered = filtered.filter(user => user.country?.includes(countryName));
       }
     }
 

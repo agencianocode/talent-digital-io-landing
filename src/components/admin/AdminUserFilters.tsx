@@ -173,6 +173,7 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
                 <SelectItem value="BR">Brasil</SelectItem>
                 <SelectItem value="CL">Chile</SelectItem>
                 <SelectItem value="CO">Colombia</SelectItem>
+                <SelectItem value="CR">Costa Rica</SelectItem>
                 <SelectItem value="MX">México</SelectItem>
                 <SelectItem value="PE">Perú</SelectItem>
                 <SelectItem value="UY">Uruguay</SelectItem>
