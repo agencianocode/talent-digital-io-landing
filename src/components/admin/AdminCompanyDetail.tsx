@@ -191,8 +191,25 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         is_active: true // TODO: Determine based on company status
       };
 
+      console.log('📊 Empresa cargada:', {
+        name: companyDetail.name,
+        industry: companyDetail.industry,
+        size: companyDetail.size,
+        description: companyDetail.description,
+        website: companyDetail.website,
+        location: companyDetail.location
+      });
+
       setCompany(companyDetail);
-      setEditData(companyDetail);
+      // Inicializar editData con valores vacíos para campos nulos
+      setEditData({
+        name: companyDetail.name,
+        description: companyDetail.description || '',
+        website: companyDetail.website || '',
+        industry: companyDetail.industry || '',
+        size: companyDetail.size || '',
+        location: companyDetail.location || ''
+      });
     } catch (error) {
       console.error('Error loading company detail:', error);
       toast.error('Error al cargar los detalles de la empresa');
@@ -207,22 +224,39 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
     }
   }, [isOpen, companyId]);
 
+  const handleEditToggle = () => {
+    if (!isEditing && company) {
+      // Al activar edición, sincronizar datos con valores actuales
+      console.log('🔄 Activando modo edición');
+      setEditData({
+        name: company.name,
+        description: company.description || '',
+        website: company.website || '',
+        industry: company.industry || '',
+        size: company.size || '',
+        location: company.location || ''
+      });
+    }
+    setIsEditing(!isEditing);
+  };
+
   const handleSaveChanges = async () => {
     if (!company || !editData) return;
 
     setIsUpdating(true);
     try {
-      const updateData: any = {};
-      
-      // Only include fields that have values
-      if (editData.name !== undefined) updateData.name = editData.name;
-      if (editData.description !== undefined) updateData.description = editData.description;
-      if (editData.website !== undefined) updateData.website = editData.website;
-      if (editData.industry !== undefined) updateData.industry = editData.industry;
-      if (editData.size !== undefined) updateData.size = editData.size;
-      if (editData.location !== undefined) updateData.location = editData.location;
+      // Incluir todos los campos, mapeando cadenas vacías a null
+      const updateData = {
+        name: editData.name || company.name,
+        description: editData.description || null,
+        website: editData.website || null,
+        industry: editData.industry || null,
+        size: editData.size || null,
+        location: editData.location || null
+      };
 
-      console.log('Updating company with data:', updateData);
+      console.log('🔄 Actualizando empresa:', companyId);
+      console.log('📋 Datos a actualizar:', updateData);
 
       const { data, error } = await supabase
         .from('companies')
@@ -231,18 +265,22 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         .select();
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('❌ Error de Supabase:', error);
         throw error;
       }
 
-      console.log('Update successful:', data);
+      console.log('✅ Actualización exitosa:', data);
       toast.success('Empresa actualizada correctamente');
       setIsEditing(false);
       onCompanyUpdate();
       await loadCompanyDetail();
-    } catch (error) {
-      console.error('Error updating company:', error);
-      toast.error('Error al actualizar la empresa');
+    } catch (error: any) {
+      console.error('❌ Error al actualizar empresa:', error);
+      if (error.message?.includes('permission')) {
+        toast.error('No tienes permisos para actualizar esta empresa');
+      } else {
+        toast.error('Error al actualizar la empresa: ' + error.message);
+      }
     } finally {
       setIsUpdating(false);
     }
@@ -419,7 +457,7 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setIsEditing(!isEditing)}
+                    onClick={handleEditToggle}
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     {isEditing ? 'Cancelar' : 'Editar'}
@@ -489,7 +527,10 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
                     {isEditing ? (
                       <Select
                         value={editData.industry || ''}
-                        onValueChange={(value) => setEditData({ ...editData, industry: value })}
+                        onValueChange={(value) => {
+                          console.log('🔄 Cambiando industry a:', value);
+                          setEditData({ ...editData, industry: value });
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar industria" />
@@ -515,7 +556,10 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
                     {isEditing ? (
                       <Select
                         value={editData.size || ''}
-                        onValueChange={(value) => setEditData({ ...editData, size: value })}
+                        onValueChange={(value) => {
+                          console.log('🔄 Cambiando size a:', value);
+                          setEditData({ ...editData, size: value });
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar tamaño" />
@@ -567,12 +611,21 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
 
               {isEditing && (
                 <div className="flex justify-end gap-2 mt-6">
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
+                  <Button variant="outline" onClick={handleEditToggle}>
                     Cancelar
                   </Button>
                   <Button onClick={handleSaveChanges} disabled={isUpdating}>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Guardar Cambios
+                    {isUpdating ? (
+                      <>
+                        <span className="animate-spin mr-2">⏳</span>
+                        Guardando...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Guardar Cambios
+                      </>
+                    )}
                   </Button>
                 </div>
               )}
