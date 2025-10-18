@@ -219,6 +219,7 @@ export type Database = {
           name: string
           size: string | null
           social_links: Json | null
+          status: string
           updated_at: string
           user_id: string
           website: string | null
@@ -238,6 +239,7 @@ export type Database = {
           name: string
           size?: string | null
           social_links?: Json | null
+          status?: string
           updated_at?: string
           user_id: string
           website?: string | null
@@ -257,6 +259,7 @@ export type Database = {
           name?: string
           size?: string | null
           social_links?: Json | null
+          status?: string
           updated_at?: string
           user_id?: string
           website?: string | null

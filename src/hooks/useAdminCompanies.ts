@@ -25,6 +25,7 @@ interface CompanyData {
   owner_name?: string;
   users_count: number;
   opportunities_count: number;
+  status: 'active' | 'inactive' | 'suspended' | 'pending';
   is_active: boolean;
 }
 
@@ -62,7 +63,8 @@ export const useAdminCompanies = () => {
           logo_url,
           created_at,
           updated_at,
-          user_id
+          user_id,
+          status
         `);
 
       if (companiesError) {
@@ -131,7 +133,8 @@ export const useAdminCompanies = () => {
           owner_name: ownerName,
           users_count: usersCount,
           opportunities_count: opportunitiesCount,
-          is_active: true // TODO: Determine based on company status
+          status: (company.status as 'active' | 'inactive' | 'suspended' | 'pending') || 'active',
+          is_active: company.status === 'active'
         };
       }) || [];
 
@@ -274,11 +277,7 @@ export const useAdminCompanies = () => {
 
     // Status filter
     if (filters.statusFilter !== 'all') {
-      if (filters.statusFilter === 'active') {
-        filtered = filtered.filter(company => company.is_active);
-      } else if (filters.statusFilter === 'inactive') {
-        filtered = filtered.filter(company => !company.is_active);
-      }
+      filtered = filtered.filter(company => company.status === filters.statusFilter);
     }
 
     // Date range filter
