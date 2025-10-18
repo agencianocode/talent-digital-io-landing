@@ -191,14 +191,11 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
   // Quick invite user
   const onInvite = async (data: InviteFormData) => {
     try {
-      // Generate a real UUID for pending invitations
-      const tempUserId = crypto.randomUUID();
-      
       const { data: insertResult, error } = await (supabase as any)
         .from('company_user_roles')
         .insert({
           company_id: companyId,
-          user_id: tempUserId, // Temporary UUID for pending invitations
+          user_id: null, // Will be set when user accepts
           invited_email: data.email,
           role: data.role,
           status: 'pending',
@@ -210,15 +207,6 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
       if (error) {
         console.error('Database error:', error);
         throw error;
-      }
-
-      // Send notification to company owner about the invitation
-      if (user?.id) {
-        await supabase.rpc('notify_access_request', {
-          p_company_id: companyId,
-          p_requester_id: user.id,
-          p_requested_role: data.role === 'admin' ? 'Admin' : 'Miembro'
-        });
       }
 
       // Generate invitation link using the actual record ID
