@@ -208,28 +208,38 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
   }, [isOpen, companyId]);
 
   const handleSaveChanges = async () => {
-    if (!company) return;
+    if (!company || !editData) return;
 
     setIsUpdating(true);
     try {
-      const { error } = await supabase
+      const updateData: any = {};
+      
+      // Only include fields that have values
+      if (editData.name !== undefined) updateData.name = editData.name;
+      if (editData.description !== undefined) updateData.description = editData.description;
+      if (editData.website !== undefined) updateData.website = editData.website;
+      if (editData.industry !== undefined) updateData.industry = editData.industry;
+      if (editData.size !== undefined) updateData.size = editData.size;
+      if (editData.location !== undefined) updateData.location = editData.location;
+
+      console.log('Updating company with data:', updateData);
+
+      const { data, error } = await supabase
         .from('companies')
-        .update({
-          name: editData.name,
-          description: editData.description,
-          website: editData.website,
-          industry: editData.industry,
-          size: editData.size,
-          location: editData.location
-        })
-        .eq('id', companyId);
+        .update(updateData)
+        .eq('id', companyId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
+      console.log('Update successful:', data);
       toast.success('Empresa actualizada correctamente');
       setIsEditing(false);
       onCompanyUpdate();
-      loadCompanyDetail();
+      await loadCompanyDetail();
     } catch (error) {
       console.error('Error updating company:', error);
       toast.error('Error al actualizar la empresa');
