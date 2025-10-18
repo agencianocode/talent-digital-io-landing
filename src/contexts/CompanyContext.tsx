@@ -32,10 +32,11 @@ export interface Company {
 export interface CompanyUserRole {
   id: string;
   company_id: string;
-  user_id: string;
+  user_id: string | null;
   role: 'owner' | 'admin' | 'viewer';
   status: 'pending' | 'accepted' | 'declined';
   invited_by?: string;
+  invited_email?: string;
   invited_at: string;
   accepted_at?: string;
   created_at: string;
@@ -167,7 +168,8 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
         role: role.role as 'owner' | 'admin' | 'viewer',
         status: role.status as 'pending' | 'accepted' | 'declined',
         invited_by: role.invited_by || undefined,
-        invited_at: role.created_at, // Use created_at as invited_at since it's when the record was created
+        invited_email: role.invited_email || undefined,
+        invited_at: role.created_at,
         accepted_at: role.accepted_at || undefined,
         created_at: role.created_at,
         updated_at: role.updated_at,

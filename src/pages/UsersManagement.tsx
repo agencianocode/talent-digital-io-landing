@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 
 interface TeamMember {
   id: string;
-  user_id: string;
+  user_id: string | null;
   company_id: string;
   role: 'owner' | 'admin' | 'viewer';
   status: string;
@@ -37,7 +37,7 @@ interface TeamMember {
   invited_email?: string | null;
   invited_by?: string | null;
   user?: {
-    id: string;
+    id: string | null;
     email: string;
     full_name?: string;
     avatar_url?: string;

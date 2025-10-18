@@ -33,12 +33,44 @@ serve(async (req) => {
     let authError;
 
     if (email) {
-      // Get user by email
-      const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
-      if (error) throw error;
+      console.log(`Searching for user by email: ${email.substring(0, 3)}***`);
       
-      user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      // Paginate through users to find the email
+      let found = false;
+      let page = 1;
+      const perPage = 1000;
+      const maxPages = 10;
+      
+      while (!found && page <= maxPages) {
+        console.log(`Searching page ${page}...`);
+        const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage
+        });
+        
+        if (error) {
+          console.error('Error listing users:', error);
+          throw error;
+        }
+        
+        user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+        
+        if (user) {
+          console.log(`User found on page ${page}`);
+          found = true;
+          break;
+        }
+        
+        if (users.length < perPage) {
+          console.log('Reached end of users list');
+          break;
+        }
+        
+        page++;
+      }
+      
       if (!user) {
+        console.log(`User not found with email: ${email.substring(0, 3)}***`);
         throw new Error('User not found with that email');
       }
     } else {

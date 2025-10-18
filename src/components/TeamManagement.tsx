@@ -131,7 +131,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
           const profile = Array.isArray(role.profiles) ? role.profiles[0] : role.profiles;
           members.push({
             id: role.id,
-            user_id: role.user_id,
+            user_id: role.user_id || undefined,
             invited_email: role.invited_email || undefined,
             role: role.role,
             status: role.status as 'accepted' | 'pending' | 'declined',

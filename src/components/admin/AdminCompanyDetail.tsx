@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Building, 
   Users, 
@@ -15,19 +16,30 @@ import {
   Globe, 
   Edit,
   UserPlus,
-  UserMinus,
-  Crown,
-  Shield,
-  Eye,
+  Trash2,
   Briefcase,
   ShoppingBag,
   AlertTriangle,
-  CheckCircle
+  X
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+interface CompanyUser {
+  roleRowId: string;
+  id: string | null;
+  user_id: string | null;
+  email: string;
+  full_name: string;
+  avatar_url: string | null | undefined;
+  role: string;
+  status: string;
+  created_at: string;
+  accepted_at: string | null;
+  isPending: boolean;
+}
 
 interface CompanyDetail {
   id: string;
@@ -41,26 +53,22 @@ interface CompanyDetail {
   created_at: string;
   updated_at: string;
   user_id: string;
-  owner_name?: string;
-  owner_email?: string;
-  users?: Array<{
+  owner: {
     id: string;
-    name: string;
-    email: string;
-    role: string;
-    joined_at: string;
-    status: string;
-  }>;
-  opportunities_count: number;
-  services_count: number;
-  is_active: boolean;
+    full_name: string;
+    avatar_url?: string;
+    phone?: string;
+  };
+  users: CompanyUser[];
+  opportunitiesCount: number;
+  servicesCount: number;
 }
 
 interface AdminCompanyDetailProps {
   companyId: string;
   isOpen: boolean;
   onClose: () => void;
-  onCompanyUpdate: () => void;
+  onCompanyUpdate?: () => void;
   onNavigateToOpportunities?: (companyId: string) => void;
 }
 
@@ -68,151 +76,134 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
   companyId,
   isOpen,
   onClose,
-  onCompanyUpdate,
-  onNavigateToOpportunities
+  onCompanyUpdate
 }) => {
-  const [company, setCompany] = useState<CompanyDetail | null>(null);
+  const [companyData, setCompanyData] = useState<CompanyDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<CompanyDetail>>({});
   const [adminNotes, setAdminNotes] = useState('');
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState('viewer');
+  const [isAddingUser, setIsAddingUser] = useState(false);
 
   const loadCompanyDetail = async () => {
     if (!companyId) return;
-    
+
     setIsLoading(true);
+    setError(null);
+
     try {
-      // Load company data
-      const { data: companyData, error: companyError } = await supabase
+      const { data: company, error: companyError } = await supabase
         .from('companies')
-        .select('*')
+        .select(`
+          *,
+          industries (
+            id,
+            name
+          )
+        `)
         .eq('id', companyId)
         .single();
 
-      if (companyError) {
-        console.error('Error loading company:', companyError);
-        toast.error('Error al cargar los detalles de la empresa');
-        setIsLoading(false);
-        return;
-      }
+      if (companyError) throw companyError;
 
-      // Load company owner
-      const { data: ownerData, error: ownerError } = await supabase
+      const { data: ownerProfile } = await supabase
         .from('profiles')
-        .select('full_name, user_id')
-        .eq('user_id', companyData.user_id)
+        .select('full_name, avatar_url, phone')
+        .eq('user_id', company.user_id)
         .single();
 
-      if (ownerError) {
-        console.error('Error loading owner:', ownerError);
-      }
-
-      // Load company users - fetch roles first, then profiles separately
-      const { data: rolesData, error: usersError } = await supabase
+      // Fetch ALL roles (including pending)
+      const { data: rolesData, error: rolesError } = await supabase
         .from('company_user_roles')
-        .select('id, user_id, role, status, created_at')
+        .select('*')
         .eq('company_id', companyId)
-        .eq('status', 'accepted');
+        .order('created_at', { ascending: false });
 
-      let usersData: any[] = [];
-      if (!usersError && rolesData && rolesData.length > 0) {
-        // Get all user IDs
-        const userIds = rolesData.map(r => r.user_id);
-        
-        // Fetch profiles for these users
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('user_id, full_name')
-          .in('user_id', userIds);
-        
-        // Merge the data
-        usersData = rolesData.map(role => ({
-          ...role,
-          profiles: profilesData?.find(p => p.user_id === role.user_id) || null
-        }));
-      }
+      if (rolesError) throw rolesError;
 
-      if (usersError) {
-        console.error('Error loading company users:', usersError);
-      }
+      // Enrich with user profiles
+      const enrichedUsers = await Promise.all(
+        (rolesData || []).map(async (roleRow) => {
+          if (!roleRow.user_id) {
+            // Pending invitation
+            return {
+              roleRowId: roleRow.id,
+              id: null,
+              user_id: null,
+              email: roleRow.invited_email || 'Email no disponible',
+              full_name: roleRow.invited_email || 'Usuario invitado',
+              avatar_url: null,
+              role: roleRow.role,
+              status: roleRow.status,
+              created_at: roleRow.created_at,
+              accepted_at: roleRow.accepted_at,
+              isPending: true
+            };
+          }
 
-      // Load opportunities count
-      const { count: opportunitiesCount, error: oppError } = await supabase
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('user_id', roleRow.user_id)
+            .single();
+
+          const { data: { user } } = await supabase.auth.admin.getUserById(roleRow.user_id);
+
+          return {
+            roleRowId: roleRow.id,
+            id: roleRow.user_id,
+            user_id: roleRow.user_id,
+            email: user?.email || 'Email no disponible',
+            full_name: profile?.full_name || user?.email || 'Usuario',
+            avatar_url: profile?.avatar_url || undefined,
+            role: roleRow.role,
+            status: roleRow.status,
+            created_at: roleRow.created_at,
+            accepted_at: roleRow.accepted_at,
+            isPending: false
+          };
+        })
+      );
+
+      const { count: opportunitiesCount } = await supabase
         .from('opportunities')
         .select('*', { count: 'exact', head: true })
         .eq('company_id', companyId);
 
-      if (oppError) {
-        console.error('Error loading opportunities count:', oppError);
-      }
+      const { count: servicesCount } = await supabase
+        .from('marketplace_services')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', company.user_id);
 
-      // Load services count (if talent_services table exists)
-      let servicesCount = 0;
-      try {
-        const { count: servicesCountData, error: servicesError } = await supabase
-          .from('talent_services' as any)
-          .select('*', { count: 'exact', head: true });
-        
-        if (!servicesError) {
-          servicesCount = servicesCountData || 0;
-        }
-      } catch (err) {
-        console.log('talent_services table not found');
-      }
-
-      const companyDetail: CompanyDetail = {
-        id: companyData.id,
-        name: companyData.name,
-        description: companyData.description || undefined,
-        website: companyData.website || undefined,
-        industry: companyData.industry || undefined,
-        size: companyData.size || undefined,
-        location: companyData.location || undefined,
-        logo_url: companyData.logo_url || undefined,
-        created_at: companyData.created_at,
-        updated_at: companyData.updated_at,
-        user_id: companyData.user_id,
-        owner_name: ownerData?.full_name || undefined,
-        owner_email: '', // TODO: Get from auth.users
-        users: usersData?.map(u => ({
-          id: (u.profiles as any)?.user_id || '',
-          name: (u.profiles as any)?.full_name || 'Sin nombre',
-          email: '', // TODO: Get from auth.users
-          role: u.role,
-          joined_at: u.created_at,
-          status: u.status
-        })) || [],
-        opportunities_count: opportunitiesCount || 0,
-        services_count: servicesCount,
-        is_active: true // TODO: Determine based on company status
-      };
-
-      console.log('📊 Empresa cargada:', {
-        name: companyDetail.name,
-        industry: companyDetail.industry,
-        size: companyDetail.size,
-        description: companyDetail.description,
-        website: companyDetail.website,
-        location: companyDetail.location
+      setCompanyData({
+        id: company.id,
+        name: company.name,
+        description: company.description || undefined,
+        website: company.website || undefined,
+        industry: company.industry || undefined,
+        size: company.size || undefined,
+        location: company.location || undefined,
+        logo_url: company.logo_url || undefined,
+        created_at: company.created_at,
+        updated_at: company.updated_at,
+        user_id: company.user_id,
+        owner: {
+          id: company.user_id,
+          full_name: ownerProfile?.full_name || 'Propietario',
+          avatar_url: ownerProfile?.avatar_url || undefined,
+          phone: ownerProfile?.phone || undefined
+        },
+        users: enrichedUsers,
+        opportunitiesCount: opportunitiesCount || 0,
+        servicesCount: servicesCount || 0
       });
-
-      setCompany(companyDetail);
-      // Inicializar editData con valores vacíos para campos nulos
-      setEditData({
-        name: companyDetail.name,
-        description: companyDetail.description || '',
-        website: companyDetail.website || '',
-        industry: companyDetail.industry || '',
-        size: companyDetail.size || '',
-        location: companyDetail.location || ''
-      });
-    } catch (error) {
-      console.error('Error loading company detail:', error);
-      toast.error('Error al cargar los detalles de la empresa');
+    } catch (err) {
+      console.error('Error loading company details:', err);
+      setError(err instanceof Error ? err.message : 'Error al cargar la empresa');
     } finally {
       setIsLoading(false);
     }
@@ -225,190 +216,154 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
   }, [isOpen, companyId]);
 
   const handleEditToggle = () => {
-    if (!isEditing && company) {
-      // Al activar edición, sincronizar datos con valores actuales
-      console.log('🔄 Activando modo edición');
+    setIsEditing(!isEditing);
+    if (!isEditing && companyData) {
       setEditData({
-        name: company.name,
-        description: company.description || '',
-        website: company.website || '',
-        industry: company.industry || '',
-        size: company.size || '',
-        location: company.location || ''
+        name: companyData.name,
+        description: companyData.description || '',
+        website: companyData.website || '',
+        industry: companyData.industry || '',
+        size: companyData.size || '',
+        location: companyData.location || ''
       });
     }
-    setIsEditing(!isEditing);
   };
 
   const handleSaveChanges = async () => {
-    if (!company || !editData) return;
+    if (!companyData || !editData) return;
 
-    setIsUpdating(true);
     try {
-      // Incluir todos los campos, mapeando cadenas vacías a null
-      const updateData = {
-        name: editData.name || company.name,
-        description: editData.description || null,
-        website: editData.website || null,
-        industry: editData.industry || null,
-        size: editData.size || null,
-        location: editData.location || null
-      };
-
-      console.log('🔄 Actualizando empresa:', companyId);
-      console.log('📋 Datos a actualizar:', updateData);
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('companies')
-        .update(updateData)
-        .eq('id', companyId)
-        .select();
+        .update({
+          name: editData.name || companyData.name,
+          description: editData.description || null,
+          website: editData.website || null,
+          industry: editData.industry || null,
+          size: editData.size || null,
+          location: editData.location || null
+        })
+        .eq('id', companyId);
 
-      if (error) {
-        console.error('❌ Error de Supabase:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Actualización exitosa:', data);
       toast.success('Empresa actualizada correctamente');
       setIsEditing(false);
-      onCompanyUpdate();
+      onCompanyUpdate?.();
       await loadCompanyDetail();
-    } catch (error: any) {
-      console.error('❌ Error al actualizar empresa:', error);
-      if (error.message?.includes('permission')) {
-        toast.error('No tienes permisos para actualizar esta empresa');
-      } else {
-        toast.error('Error al actualizar la empresa: ' + error.message);
-      }
-    } finally {
-      setIsUpdating(false);
+    } catch (err) {
+      console.error('Error updating company:', err);
+      toast.error('Error al actualizar la empresa');
     }
   };
 
   const handleAddUser = async () => {
-    if (!newUserEmail || !company) return;
+    if (!newUserEmail.trim() || !companyData) {
+      toast.error('Por favor ingresa un email válido');
+      return;
+    }
 
-    setIsUpdating(true);
+    setIsAddingUser(true);
+
     try {
-      console.log('🔍 Buscando usuario:', newUserEmail);
+      // Check if user already exists in this company
+      const isDuplicate = companyData.users.some(
+        u => u.email?.toLowerCase() === newUserEmail.toLowerCase()
+      );
 
-      // Get user by email from auth.users via RPC or edge function
-      // Since we can't query auth.users directly, we'll use the get-user-details edge function
-      const { data: userData, error: userError } = await supabase.functions.invoke('get-user-details', {
-        body: { email: newUserEmail }
-      });
-
-      if (userError) {
-        console.error('❌ Error buscando usuario:', userError);
-        toast.error('Error al buscar el usuario');
+      if (isDuplicate) {
+        toast.error('Este usuario ya pertenece a la empresa');
+        setIsAddingUser(false);
         return;
       }
 
-      if (!userData || !userData.user_id) {
-        toast.error('Usuario no encontrado con ese email');
-        return;
-      }
+      // Try to find the user
+      const { data: userData, error: userError } = await supabase.functions.invoke(
+        'get-user-details',
+        {
+          body: { email: newUserEmail }
+        }
+      );
 
-      const targetUserId = userData.user_id;
-      console.log('✅ Usuario encontrado:', targetUserId);
+      if (userError || !userData) {
+        console.log('User not found, creating pending invitation');
+        
+        // User doesn't exist - create pending invitation
+        const invitationToken = crypto.randomUUID();
+        
+        const currentUser = await supabase.auth.getUser();
+        const { error: insertError } = await supabase
+          .from('company_user_roles')
+          .insert([{
+            company_id: companyData.id,
+            user_id: null,
+            invited_email: newUserEmail,
+            role: newUserRole as any,
+            status: 'pending',
+            invited_by: currentUser.data.user?.id || null,
+            invitation_token: invitationToken
+          }]);
 
-      // Check if user is already in the company
-      const { data: existingRole } = await supabase
-        .from('company_user_roles')
-        .select('id')
-        .eq('company_id', companyId)
-        .eq('user_id', targetUserId)
-        .maybeSingle();
+        if (insertError) throw insertError;
 
-      if (existingRole) {
-        toast.error('Este usuario ya está en la empresa');
-        setIsUpdating(false);
-        return;
-      }
+        // Send invitation email
+        await supabase.functions.invoke('send-invitation', {
+          body: {
+            company_id: companyData.id,
+            role: newUserRole,
+            invited_by: (await supabase.auth.getUser()).data.user?.id,
+            invitation_id: invitationToken
+          }
+        });
 
-      // Create company role
-      console.log('➕ Agregando usuario a la empresa con rol:', newUserRole);
-      const { error: inviteError } = await supabase
-        .from('company_user_roles')
-        .insert([{
-          company_id: companyId,
-          user_id: targetUserId,
-          role: newUserRole as any,
-          status: 'accepted',
-          accepted_at: new Date().toISOString()
-        }]);
-
-      if (inviteError) {
-        console.error('❌ Error al agregar usuario:', inviteError);
-        throw inviteError;
-      }
-
-      console.log('✅ Usuario agregado exitosamente');
-      toast.success('Usuario agregado correctamente');
-      setShowAddUser(false);
-      setNewUserEmail('');
-      setNewUserRole('viewer');
-      onCompanyUpdate();
-      await loadCompanyDetail();
-    } catch (error: any) {
-      console.error('❌ Error al agregar usuario:', error);
-      if (error.message?.includes('permission')) {
-        toast.error('No tienes permisos para agregar usuarios a esta empresa');
+        toast.success(`Se envió una invitación a ${newUserEmail}`);
       } else {
-        toast.error('Error al agregar usuario: ' + error.message);
+        // User exists - add directly as accepted
+        const { error: insertError } = await supabase
+          .from('company_user_roles')
+          .insert([{
+            company_id: companyData.id,
+            user_id: userData.user_id,
+            role: newUserRole as any,
+            status: 'accepted',
+            accepted_at: new Date().toISOString()
+          }]);
+
+        if (insertError) throw insertError;
+
+        toast.success(`${userData.full_name} fue agregado a la empresa`);
       }
+
+      setNewUserEmail('');
+      setShowAddUser(false);
+      await loadCompanyDetail();
+    } catch (err) {
+      console.error('Error adding user:', err);
+      toast.error(err instanceof Error ? err.message : 'Error al agregar usuario');
     } finally {
-      setIsUpdating(false);
+      setIsAddingUser(false);
     }
   };
 
-  const handleRemoveUser = async (userId: string) => {
-    if (!company) return;
+  const handleRemoveUser = async (roleRowId: string) => {
+    if (!companyData) return;
 
-    setIsUpdating(true);
     try {
-      console.log('🗑️ Removiendo usuario:', userId, 'de empresa:', companyId);
-
       const { error } = await supabase
         .from('company_user_roles')
         .delete()
-        .eq('company_id', companyId)
-        .eq('user_id', userId);
+        .eq('id', roleRowId);
 
-      if (error) {
-        console.error('❌ Error al remover usuario:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Usuario removido exitosamente');
-      toast.success('Usuario removido correctamente');
-      onCompanyUpdate();
+      toast.success('Usuario eliminado correctamente');
       await loadCompanyDetail();
-    } catch (error: any) {
-      console.error('❌ Error al remover usuario:', error);
-      if (error.message?.includes('permission')) {
-        toast.error('No tienes permisos para remover usuarios de esta empresa');
-      } else {
-        toast.error('Error al remover usuario: ' + error.message);
-      }
-    } finally {
-      setIsUpdating(false);
+    } catch (err) {
+      console.error('Error removing user:', err);
+      toast.error('No se pudo eliminar el usuario');
     }
   };
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'owner':
-        return <Crown className="h-4 w-4 text-yellow-600" />;
-      case 'admin':
-        return <Shield className="h-4 w-4 text-purple-600" />;
-      case 'viewer':
-        return <Eye className="h-4 w-4 text-blue-600" />;
-      default:
-        return <Users className="h-4 w-4 text-gray-600" />;
-    }
-  };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -429,7 +384,7 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         return <Badge variant="default" className="bg-green-100 text-green-800">Activo</Badge>;
       case 'pending':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pendiente</Badge>;
-      case 'rejected':
+      case 'declined':
         return <Badge variant="destructive">Rechazado</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -453,16 +408,16 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
     );
   }
 
-  if (!company) {
+  if (error || !companyData) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Empresa no encontrada</DialogTitle>
+            <DialogTitle>Error</DialogTitle>
           </DialogHeader>
           <div className="text-center py-8">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-            <p>No se pudo cargar la información de la empresa</p>
+            <p>{error || 'No se pudo cargar la información de la empresa'}</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -480,341 +435,239 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Información Básica */}
+          {/* Basic Information */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Información Básica</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant={company.is_active ? "default" : "destructive"}>
-                    {company.is_active ? "Activa" : "Inactiva"}
-                  </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleEditToggle}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    {isEditing ? 'Cancelar' : 'Editar'}
-                  </Button>
-                </div>
+                <Button variant="outline" size="sm" onClick={handleEditToggle}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  {isEditing ? 'Cancelar' : 'Editar'}
+                </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="space-y-4">
+              {isEditing ? (
                 <div className="space-y-4">
                   <div>
-                    <Label>Nombre de la Empresa</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editData.name || ''}
-                        onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                      />
-                    ) : (
-                      <p className="font-medium">{company.name}</p>
-                    )}
+                    <Label>Nombre</Label>
+                    <Input
+                      value={editData.name || ''}
+                      onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                    />
                   </div>
-                  
                   <div>
                     <Label>Descripción</Label>
-                    {isEditing ? (
-                      <Textarea
-                        value={editData.description || ''}
-                        onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                        rows={3}
-                      />
-                    ) : (
-                      <p className="text-sm text-muted-foreground">{company.description || 'Sin descripción'}</p>
-                    )}
+                    <Textarea
+                      value={editData.description || ''}
+                      onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                    />
                   </div>
-
                   <div>
-                    <Label>Sitio Web</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editData.website || ''}
-                        onChange={(e) => setEditData({ ...editData, website: e.target.value })}
-                        placeholder="https://ejemplo.com"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        {company.website ? (
-                          <a 
-                            href={company.website} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline flex items-center gap-1"
-                          >
-                            <Globe className="h-4 w-4" />
-                            {company.website}
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">No especificado</span>
-                        )}
-                      </div>
-                    )}
+                    <Label>Sitio web</Label>
+                    <Input
+                      value={editData.website || ''}
+                      onChange={(e) => setEditData({ ...editData, website: e.target.value })}
+                    />
                   </div>
-                </div>
-
-                <div className="space-y-4">
                   <div>
                     <Label>Industria</Label>
-                    {isEditing ? (
-                      <Select
-                        value={editData.industry || ''}
-                        onValueChange={(value) => {
-                          console.log('🔄 Cambiando industry a:', value);
-                          setEditData({ ...editData, industry: value });
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar industria" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="technology">Tecnología</SelectItem>
-                          <SelectItem value="marketing">Marketing</SelectItem>
-                          <SelectItem value="sales">Ventas</SelectItem>
-                          <SelectItem value="consulting">Consultoría</SelectItem>
-                          <SelectItem value="education">Educación</SelectItem>
-                          <SelectItem value="healthcare">Salud</SelectItem>
-                          <SelectItem value="finance">Finanzas</SelectItem>
-                          <SelectItem value="other">Otras</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <p className="font-medium">{company.industry || 'No especificada'}</p>
-                    )}
+                    <Input
+                      value={editData.industry || ''}
+                      onChange={(e) => setEditData({ ...editData, industry: e.target.value })}
+                    />
                   </div>
-
                   <div>
                     <Label>Tamaño</Label>
-                    {isEditing ? (
-                      <Select
-                        value={editData.size || ''}
-                        onValueChange={(value) => {
-                          console.log('🔄 Cambiando size a:', value);
-                          setEditData({ ...editData, size: value });
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar tamaño" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="startup">Startup (1-10)</SelectItem>
-                          <SelectItem value="small">Pequeña (11-50)</SelectItem>
-                          <SelectItem value="medium">Mediana (51-200)</SelectItem>
-                          <SelectItem value="large">Grande (201-1000)</SelectItem>
-                          <SelectItem value="enterprise">Enterprise (1000+)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <p className="font-medium">{company.size || 'No especificado'}</p>
-                    )}
+                    <Input
+                      value={editData.size || ''}
+                      onChange={(e) => setEditData({ ...editData, size: e.target.value })}
+                    />
                   </div>
-
                   <div>
                     <Label>Ubicación</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editData.location || ''}
-                        onChange={(e) => setEditData({ ...editData, location: e.target.value })}
-                        placeholder="Ciudad, País"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{company.location || 'No especificada'}</span>
-                      </div>
-                    )}
+                    <Input
+                      value={editData.location || ''}
+                      onChange={(e) => setEditData({ ...editData, location: e.target.value })}
+                    />
                   </div>
-
-                  <div>
-                    <Label>Fecha de Registro</Label>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>
-                        {new Date(company.created_at).toLocaleDateString('es')} 
-                        ({formatDistanceToNow(new Date(company.created_at), { 
-                          addSuffix: true, 
-                          locale: es 
-                        })})
-                      </span>
-                    </div>
-                  </div>
+                  <Button onClick={handleSaveChanges}>Guardar Cambios</Button>
                 </div>
-              </div>
-
-              {isEditing && (
-                <div className="flex justify-end gap-2 mt-6">
-                  <Button variant="outline" onClick={handleEditToggle}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSaveChanges} disabled={isUpdating}>
-                    {isUpdating ? (
-                      <>
-                        <span className="animate-spin mr-2">⏳</span>
-                        Guardando...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Guardar Cambios
-                      </>
-                    )}
-                  </Button>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">{companyData.name}</span>
+                  </div>
+                  {companyData.description && (
+                    <p className="text-sm text-muted-foreground">{companyData.description}</p>
+                  )}
+                  {companyData.website && (
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <a href={companyData.website} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+                        {companyData.website}
+                      </a>
+                    </div>
+                  )}
+                  {companyData.location && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{companyData.location}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Usuarios de la Empresa */}
+          {/* Company Users */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Usuarios de la Empresa ({company.users?.length || 0})
+                  Usuarios ({companyData.users.length})
                 </CardTitle>
-                <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Agregar Usuario
+                <Button variant="outline" size="sm" onClick={() => setShowAddUser(true)}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Agregar Usuario
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {showAddUser && (
+                  <div className="border rounded-lg p-4 space-y-3 bg-muted/50">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Agregar Nuevo Usuario</h4>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowAddUser(false);
+                          setNewUserEmail('');
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email del Usuario</Label>
+                      <Input
+                        type="email"
+                        placeholder="usuario@ejemplo.com"
+                        value={newUserEmail}
+                        onChange={(e) => setNewUserEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Rol</Label>
+                      <Select value={newUserRole} onValueChange={setNewUserRole}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="viewer">Visualizador</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      onClick={handleAddUser}
+                      disabled={isAddingUser}
+                      className="w-full"
+                    >
+                      {isAddingUser ? 'Agregando...' : 'Agregar Usuario'}
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Agregar Usuario a la Empresa</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="user-email">Email del Usuario</Label>
-                        <Input
-                          id="user-email"
-                          type="email"
-                          value={newUserEmail}
-                          onChange={(e) => setNewUserEmail(e.target.value)}
-                          placeholder="usuario@ejemplo.com"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="user-role">Rol</Label>
-                        <Select value={newUserRole} onValueChange={setNewUserRole}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="admin">Administrador</SelectItem>
-                            <SelectItem value="viewer">Visualizador</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => setShowAddUser(false)}>
-                          Cancelar
-                        </Button>
-                        <Button onClick={handleAddUser} disabled={isUpdating || !newUserEmail}>
-                          Agregar Usuario
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {company.users && company.users.length > 0 ? (
-                <div className="space-y-3">
-                  {company.users.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0">
-                          {getRoleIcon(user.role)}
+                  </div>
+                )}
+
+                {companyData.users.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No hay usuarios en esta empresa
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {companyData.users.map((user) => (
+                      <div key={user.roleRowId} className="flex items-center justify-between py-3 border-b last:border-0">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={user.avatar_url || undefined} />
+                            <AvatarFallback>{user.full_name?.charAt(0) || 'U'}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">
+                              {user.full_name}
+                              {user.isPending && (
+                                <span className="ml-2 text-xs text-muted-foreground">(Pendiente)</span>
+                              )}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Se unió {formatDistanceToNow(new Date(user.joined_at), { 
-                              addSuffix: true, 
-                              locale: es 
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getRoleBadge(user.role)}
-                        {getStatusBadge(user.status)}
-                        {user.role !== 'owner' && (
+                        <div className="flex items-center gap-2">
+                          {getRoleBadge(user.role)}
+                          {getStatusBadge(user.status)}
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            onClick={() => handleRemoveUser(user.id)}
-                            disabled={isUpdating}
+                            onClick={() => handleRemoveUser(user.roleRowId)}
                           >
-                            <UserMinus className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No hay usuarios asociados a esta empresa</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Estadísticas */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5" />
-                Estadísticas de la Empresa
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                  onClick={() => {
-                    if (onNavigateToOpportunities) {
-                      onNavigateToOpportunities(companyId);
-                      onClose();
-                    }
-                  }}
-                  className="text-center p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                >
-                  <Briefcase className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <p className="text-2xl font-bold">{company.opportunities_count}</p>
-                  <p className="text-sm text-muted-foreground">Oportunidades Publicadas</p>
-                </button>
-                <div className="text-center p-4 border rounded-lg">
-                  <ShoppingBag className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <p className="text-2xl font-bold">{company.services_count}</p>
-                  <p className="text-sm text-muted-foreground">Servicios Activos</p>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <Users className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-                  <p className="text-2xl font-bold">{company.users?.length || 0}</p>
-                  <p className="text-sm text-muted-foreground">Usuarios Activos</p>
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Notas Administrativas */}
+          {/* Company Statistics */}
           <Card>
             <CardHeader>
-              <CardTitle>Notas Administrativas</CardTitle>
+              <CardTitle>Estadísticas</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Oportunidades</span>
+                </div>
+                <Badge variant="secondary">{companyData.opportunitiesCount}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Servicios</span>
+                </div>
+                <Badge variant="secondary">{companyData.servicesCount}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Creada</span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {formatDistanceToNow(new Date(companyData.created_at), { addSuffix: true, locale: es })}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Admin Notes */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Notas de Admin</CardTitle>
             </CardHeader>
             <CardContent>
               <Textarea
-                placeholder="Agregar notas sobre esta empresa..."
+                placeholder="Agregar notas internas sobre esta empresa..."
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
-                rows={3}
+                rows={4}
               />
             </CardContent>
           </Card>

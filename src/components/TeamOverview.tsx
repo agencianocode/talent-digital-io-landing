@@ -145,7 +145,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
           
           members.push({
             id: role.id,
-            user_id: role.user_id,
+            user_id: role.user_id || undefined,
             invited_email: role.invited_email || undefined,
             role: role.role,
             status: role.status as 'accepted' | 'pending' | 'declined',
