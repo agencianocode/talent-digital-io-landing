@@ -44,6 +44,15 @@ serve(async (req) => {
       console.error('Profiles error:', profilesError);
     }
 
+    // Get all talent profiles (for country data)
+    const { data: talentProfiles, error: talentError } = await supabaseAdmin
+      .from('talent_profiles')
+      .select('user_id, country');
+
+    if (talentError) {
+      console.error('Talent profiles error:', talentError);
+    }
+
     // Get all user roles
     const { data: roles, error: rolesError } = await supabaseAdmin
       .from('user_roles')
@@ -73,6 +82,7 @@ serve(async (req) => {
     // Combine all data
     const allUsers = users?.map(user => {
       const profile = profiles?.find(p => p.user_id === user.id);
+      const talentProfile = talentProfiles?.find(tp => tp.user_id === user.id);
       const role = roles?.find(r => r.user_id === user.id);
       const companies_count = companyCountsMap.get(user.id) || 0;
 
@@ -87,7 +97,7 @@ serve(async (req) => {
         last_sign_in_at: user.last_sign_in_at,
         email_confirmed_at: user.email_confirmed_at,
         is_active: !user.banned_until,
-        country: profile?.country || null,
+        country: profile?.country || talentProfile?.country || null,
         companies_count
       };
     }) || [];
