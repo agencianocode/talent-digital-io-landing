@@ -111,20 +111,30 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         console.error('Error loading owner:', ownerError);
       }
 
-      // Load company users
-      const { data: usersData, error: usersError } = await supabase
+      // Load company users - fetch roles first, then profiles separately
+      const { data: rolesData, error: usersError } = await supabase
         .from('company_user_roles')
-        .select(`
-          id,
-          role,
-          status,
-          created_at,
-          profiles (
-            user_id,
-            full_name
-          )
-        `)
-        .eq('company_id', companyId);
+        .select('id, user_id, role, status, created_at')
+        .eq('company_id', companyId)
+        .eq('status', 'accepted');
+
+      let usersData: any[] = [];
+      if (!usersError && rolesData && rolesData.length > 0) {
+        // Get all user IDs
+        const userIds = rolesData.map(r => r.user_id);
+        
+        // Fetch profiles for these users
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', userIds);
+        
+        // Merge the data
+        usersData = rolesData.map(role => ({
+          ...role,
+          profiles: profilesData?.find(p => p.user_id === role.user_id) || null
+        }));
+      }
 
       if (usersError) {
         console.error('Error loading company users:', usersError);
