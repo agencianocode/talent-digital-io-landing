@@ -119,7 +119,8 @@ export const useAdminUsers = () => {
     if (filters.countryFilter !== 'all') {
       if (filters.countryFilter === 'other') {
         const knownCountries = ['Argentina', 'Brasil', 'Chile', 'Colombia', 'Costa Rica', 'México', 'Perú', 'Uruguay', 'Estados Unidos', 'España'];
-        filtered = filtered.filter(user => user.country && !knownCountries.some(kc => user.country?.includes(kc)));
+        // Include users without country in "other" category
+        filtered = filtered.filter(user => !user.country || !knownCountries.some(kc => user.country?.includes(kc)));
       } else {
         // Map country codes to full country names - match partial to handle variations
         const countryMap: Record<string, string> = {
@@ -138,6 +139,7 @@ export const useAdminUsers = () => {
         filtered = filtered.filter(user => user.country?.includes(countryName));
       }
     }
+    // When "all" is selected, include ALL users regardless of country field
 
     // Date range filter
     if (filters.dateRange !== 'all') {
