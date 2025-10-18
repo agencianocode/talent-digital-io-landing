@@ -291,27 +291,44 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
 
     setIsUpdating(true);
     try {
-      // Find user by email through profiles
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .ilike('user_id', `%${newUserEmail}%`)
-        .limit(1);
+      console.log('🔍 Buscando usuario:', newUserEmail);
 
-      if (profileError) throw profileError;
-      if (!profiles || profiles.length === 0) {
-        toast.error('Usuario no encontrado');
+      // Get user by email from auth.users via RPC or edge function
+      // Since we can't query auth.users directly, we'll use the get-user-details edge function
+      const { data: userData, error: userError } = await supabase.functions.invoke('get-user-details', {
+        body: { email: newUserEmail }
+      });
+
+      if (userError) {
+        console.error('❌ Error buscando usuario:', userError);
+        toast.error('Error al buscar el usuario');
         return;
       }
 
-      const targetUserId = profiles?.[0]?.user_id;
-      
-      if (!targetUserId) {
-        toast.error('Usuario no encontrado');
+      if (!userData || !userData.user_id) {
+        toast.error('Usuario no encontrado con ese email');
         return;
       }
 
-      // Create invitation
+      const targetUserId = userData.user_id;
+      console.log('✅ Usuario encontrado:', targetUserId);
+
+      // Check if user is already in the company
+      const { data: existingRole } = await supabase
+        .from('company_user_roles')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('user_id', targetUserId)
+        .maybeSingle();
+
+      if (existingRole) {
+        toast.error('Este usuario ya está en la empresa');
+        setIsUpdating(false);
+        return;
+      }
+
+      // Create company role
+      console.log('➕ Agregando usuario a la empresa con rol:', newUserRole);
       const { error: inviteError } = await supabase
         .from('company_user_roles')
         .insert([{
@@ -322,17 +339,25 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
           accepted_at: new Date().toISOString()
         }]);
 
-      if (inviteError) throw inviteError;
+      if (inviteError) {
+        console.error('❌ Error al agregar usuario:', inviteError);
+        throw inviteError;
+      }
 
+      console.log('✅ Usuario agregado exitosamente');
       toast.success('Usuario agregado correctamente');
       setShowAddUser(false);
       setNewUserEmail('');
       setNewUserRole('viewer');
       onCompanyUpdate();
-      loadCompanyDetail();
-    } catch (error) {
-      console.error('Error adding user:', error);
-      toast.error('Error al agregar usuario');
+      await loadCompanyDetail();
+    } catch (error: any) {
+      console.error('❌ Error al agregar usuario:', error);
+      if (error.message?.includes('permission')) {
+        toast.error('No tienes permisos para agregar usuarios a esta empresa');
+      } else {
+        toast.error('Error al agregar usuario: ' + error.message);
+      }
     } finally {
       setIsUpdating(false);
     }
@@ -343,20 +368,30 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
 
     setIsUpdating(true);
     try {
+      console.log('🗑️ Removiendo usuario:', userId, 'de empresa:', companyId);
+
       const { error } = await supabase
         .from('company_user_roles')
         .delete()
         .eq('company_id', companyId)
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error al remover usuario:', error);
+        throw error;
+      }
 
+      console.log('✅ Usuario removido exitosamente');
       toast.success('Usuario removido correctamente');
       onCompanyUpdate();
-      loadCompanyDetail();
-    } catch (error) {
-      console.error('Error removing user:', error);
-      toast.error('Error al remover usuario');
+      await loadCompanyDetail();
+    } catch (error: any) {
+      console.error('❌ Error al remover usuario:', error);
+      if (error.message?.includes('permission')) {
+        toast.error('No tienes permisos para remover usuarios de esta empresa');
+      } else {
+        toast.error('Error al remover usuario: ' + error.message);
+      }
     } finally {
       setIsUpdating(false);
     }

@@ -23,31 +23,49 @@ serve(async (req) => {
       }
     );
 
-    const { userId } = await req.json();
+    const { userId, email } = await req.json();
 
-    if (!userId) {
-      throw new Error('userId is required');
+    if (!userId && !email) {
+      throw new Error('userId or email is required');
     }
 
-    // Get user from auth.users
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    let user;
+    let authError;
 
-    if (authError) {
-      throw authError;
+    if (email) {
+      // Get user by email
+      const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
+      if (error) throw error;
+      
+      user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      if (!user) {
+        throw new Error('User not found with that email');
+      }
+    } else {
+      // Get user by ID
+      const response = await supabaseAdmin.auth.admin.getUserById(userId);
+      user = response.data.user;
+      authError = response.error;
+      
+      if (authError) {
+        throw authError;
+      }
     }
+
+    const actualUserId = user.id;
 
     // Get profile data
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', actualUserId)
       .maybeSingle();
 
     // Get user role
     const { data: role, error: roleError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
-      .eq('user_id', userId)
+      .eq('user_id', actualUserId)
       .maybeSingle();
 
     // Get companies
@@ -62,11 +80,12 @@ serve(async (req) => {
           name
         )
       `)
-      .eq('user_id', userId)
+      .eq('user_id', actualUserId)
       .eq('status', 'accepted');
 
     const userDetails = {
-      id: userId,
+      user_id: actualUserId,
+      id: actualUserId,
       email: user?.email || '',
       full_name: profile?.full_name || user?.user_metadata?.full_name || 'Sin nombre',
       phone: profile?.phone || null,
