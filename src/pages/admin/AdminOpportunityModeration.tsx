@@ -163,12 +163,12 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Moderación de Oportunidades</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl md:text-2xl font-bold">Moderación de Oportunidades</h2>
+          <p className="text-sm text-muted-foreground">
             Administra y modera todas las oportunidades publicadas
           </p>
         </div>
@@ -176,6 +176,7 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
           onClick={handleRefresh} 
           variant="outline" 
           disabled={isLoading}
+          className="w-full sm:w-auto"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           Actualizar
@@ -226,90 +227,101 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {opportunities.map((opportunity) => (
-                <div key={opportunity.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                  {/* Company Logo */}
-                  <div className="flex-shrink-0">
-                    {opportunity.company_logo ? (
-                      <img 
-                        src={opportunity.company_logo} 
-                        alt={opportunity.company_name}
-                        className="h-12 w-12 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Building className="h-6 w-6 text-primary" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Opportunity Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium truncate">{opportunity.title}</h3>
-                      {getStatusBadge(opportunity.status)}
-                      {getPriorityBadge(opportunity.priority)}
-                      {getCategoryBadge(opportunity.category)}
-                      {getContractTypeBadge(opportunity.contract_type)}
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate mb-2">
-                      {opportunity.description}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Building className="h-3 w-3" />
-                        <span>{opportunity.company_name}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        <span>{opportunity.location}</span>
-                      </div>
-                      {opportunity.salary_amount && (
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          <span>{opportunity.salary_amount}</span>
+                <div key={opportunity.id} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-3 md:p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                  {/* Logo + Basic Info */}
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {/* Company Logo */}
+                    <div className="flex-shrink-0">
+                      {opportunity.company_logo ? (
+                        <img 
+                          src={opportunity.company_logo} 
+                          alt={opportunity.company_name}
+                          className="h-12 w-12 md:h-14 md:w-14 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 md:h-14 md:w-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Building className="h-6 w-6 text-primary" />
                         </div>
                       )}
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>
-                          Publicada {formatDistanceToNow(new Date(opportunity.created_at), { 
-                            addSuffix: true, 
-                            locale: es 
-                          })}
-                        </span>
+                    </div>
+
+                    {/* Opportunity Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start flex-col gap-2 mb-2">
+                        <h3 className="font-medium text-sm md:text-base">{opportunity.title}</h3>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {getStatusBadge(opportunity.status)}
+                          {getPriorityBadge(opportunity.priority)}
+                          {getCategoryBadge(opportunity.category)}
+                          {getContractTypeBadge(opportunity.contract_type)}
+                        </div>
+                      </div>
+                      
+                      {opportunity.description && (
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-2">
+                          {opportunity.description}
+                        </p>
+                      )}
+                      
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Building className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{opportunity.company_name}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{opportunity.location}</span>
+                        </div>
+                        {opportunity.salary_amount && (
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-3 w-3 flex-shrink-0" />
+                            <span>{opportunity.salary_amount}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
+                            Publicada {formatDistanceToNow(new Date(opportunity.created_at), { 
+                              addSuffix: true, 
+                              locale: es 
+                            })}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Stats */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="text-center">
+                  {/* Stats + Actions */}
+                  <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4">
+                    {/* Stats */}
+                    <div className="flex items-center gap-3 md:gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <FileText className="h-4 w-4" />
-                        <span className="font-medium">{opportunity.applications_count}</span>
+                        <FileText className="h-4 w-4 flex-shrink-0" />
+                        <div className="flex flex-col md:flex-row md:items-center md:gap-1">
+                          <span className="font-medium">{opportunity.applications_count}</span>
+                          <span className="text-xs md:text-sm">postulaciones</span>
+                        </div>
                       </div>
-                      <span className="text-xs">postulaciones</span>
-                    </div>
-                    <div className="text-center">
                       <div className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        <span className="font-medium">{opportunity.views_count}</span>
+                        <Eye className="h-4 w-4 flex-shrink-0" />
+                        <div className="flex flex-col md:flex-row md:items-center md:gap-1">
+                          <span className="font-medium">{opportunity.views_count}</span>
+                          <span className="text-xs md:text-sm">vistas</span>
+                        </div>
                       </div>
-                      <span className="text-xs">visualizaciones</span>
                     </div>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
+                    {/* Actions */}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewOpportunity(opportunity.id)}
+                      className="flex-shrink-0"
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Detalles
+                      <Eye className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">Ver Detalles</span>
                     </Button>
                   </div>
                 </div>
@@ -319,8 +331,8 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 Mostrando {((currentPage - 1) * 20) + 1} a {Math.min(currentPage * 20, filteredOpportunities.length)} de {filteredOpportunities.length} oportunidades
               </div>
               <div className="flex items-center gap-2">
@@ -331,7 +343,7 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
                   disabled={currentPage === 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Anterior
+                  <span className="hidden sm:inline">Anterior</span>
                 </Button>
                 
                 <div className="flex items-center gap-1">
@@ -358,7 +370,7 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  Siguiente
+                  <span className="hidden sm:inline">Siguiente</span>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

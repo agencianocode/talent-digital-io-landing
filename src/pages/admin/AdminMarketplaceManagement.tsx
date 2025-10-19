@@ -136,12 +136,12 @@ const AdminMarketplaceManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Gestión del Marketplace</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl md:text-2xl font-bold">Gestión del Marketplace</h2>
+          <p className="text-sm text-muted-foreground">
             Administra y modera todos los servicios del marketplace
           </p>
         </div>
@@ -149,6 +149,7 @@ const AdminMarketplaceManagement: React.FC = () => {
           onClick={handleRefresh} 
           variant="outline" 
           disabled={isLoading}
+          className="w-full sm:w-auto"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           Actualizar
@@ -199,100 +200,102 @@ const AdminMarketplaceManagement: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {services.map((service) => (
-                <div key={service.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                  {/* Service Image/Icon */}
-                  <div className="flex-shrink-0">
-                    {service.user_avatar ? (
-                      <img 
-                        src={service.user_avatar} 
-                        alt={service.user_name}
-                        className="h-12 w-12 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <ShoppingBag className="h-6 w-6 text-primary" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Service Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium truncate">{service.title}</h3>
-                      {getStatusBadge(service.status)}
-                      {getPriorityBadge(service.priority)}
-                      {getCategoryBadge(service.category)}
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate mb-2">
-                      {service.description}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        <span>{service.user_name}</span>
-                      </div>
-                      {service.company_name && (
-                        <div className="flex items-center gap-1">
-                          <Building className="h-3 w-3" />
-                          <span>{service.company_name}</span>
+                <div key={service.id} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-3 md:p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                  {/* Avatar + Basic Info */}
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {/* Service Image/Icon */}
+                    <div className="flex-shrink-0">
+                      {service.user_avatar ? (
+                        <img 
+                          src={service.user_avatar} 
+                          alt={service.user_name}
+                          className="h-12 w-12 md:h-14 md:w-14 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 md:h-14 md:w-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <ShoppingBag className="h-6 w-6 text-primary" />
                         </div>
                       )}
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        <span>{service.location}</span>
+                    </div>
+
+                    {/* Service Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start flex-col gap-2 mb-2">
+                        <h3 className="font-medium text-sm md:text-base">{service.title}</h3>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {getStatusBadge(service.status)}
+                          {getPriorityBadge(service.priority)}
+                          {getCategoryBadge(service.category)}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" />
-                        <span>{service.currency} {service.price}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>
-                          Publicado {formatDistanceToNow(new Date(service.created_at), { 
-                            addSuffix: true, 
-                            locale: es 
-                          })}
-                        </span>
+                      
+                      {service.description && (
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-2">
+                          {service.description}
+                        </p>
+                      )}
+                      
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{service.user_name}</span>
+                        </div>
+                        {service.company_name && (
+                          <div className="flex items-center gap-1">
+                            <Building className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{service.company_name}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{service.location}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-3 w-3 flex-shrink-0" />
+                          <span>{service.currency} {service.price}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
+                            Publicado {formatDistanceToNow(new Date(service.created_at), { 
+                              addSuffix: true, 
+                              locale: es 
+                            })}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Stats */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="text-center">
+                  {/* Stats + Actions */}
+                  <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4">
+                    {/* Stats */}
+                    <div className="flex items-center gap-2 md:gap-3 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        <span className="font-medium">{service.views_count}</span>
+                        <Eye className="h-4 w-4 flex-shrink-0" />
+                        <span className="font-medium text-xs md:text-sm">{service.views_count}</span>
                       </div>
-                      <span className="text-xs">vistas</span>
-                    </div>
-                    <div className="text-center">
                       <div className="flex items-center gap-1">
-                        <ShoppingBag className="h-4 w-4" />
-                        <span className="font-medium">{service.orders_count}</span>
+                        <ShoppingBag className="h-4 w-4 flex-shrink-0" />
+                        <span className="font-medium text-xs md:text-sm">{service.orders_count}</span>
                       </div>
-                      <span className="text-xs">pedidos</span>
-                    </div>
-                    <div className="text-center">
                       <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4" />
-                        <span className="font-medium">{service.rating.toFixed(1)}</span>
+                        <Star className="h-4 w-4 flex-shrink-0" />
+                        <span className="font-medium text-xs md:text-sm">{service.rating.toFixed(1)}</span>
                       </div>
-                      <span className="text-xs">rating</span>
                     </div>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
+                    {/* Actions */}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewService(service.id)}
+                      className="flex-shrink-0"
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Detalles
+                      <Eye className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">Ver Detalles</span>
                     </Button>
                   </div>
                 </div>
@@ -302,8 +305,8 @@ const AdminMarketplaceManagement: React.FC = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 Mostrando {((currentPage - 1) * 20) + 1} a {Math.min(currentPage * 20, filteredServices.length)} de {filteredServices.length} servicios
               </div>
               <div className="flex items-center gap-2">
@@ -314,7 +317,7 @@ const AdminMarketplaceManagement: React.FC = () => {
                   disabled={currentPage === 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Anterior
+                  <span className="hidden sm:inline">Anterior</span>
                 </Button>
                 
                 <div className="flex items-center gap-1">
@@ -341,7 +344,7 @@ const AdminMarketplaceManagement: React.FC = () => {
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  Siguiente
+                  <span className="hidden sm:inline">Siguiente</span>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

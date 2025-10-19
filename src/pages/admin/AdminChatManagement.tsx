@@ -196,19 +196,20 @@ const AdminChatManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Sistema de Chat con Usuarios</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl md:text-2xl font-bold">Sistema de Chat con Usuarios</h2>
+          <p className="text-sm text-muted-foreground">
             Gestiona todas las conversaciones y comunicación con usuarios
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <Button 
             onClick={() => setIsNewChatModalOpen(true)} 
             variant="default"
+            className="w-full sm:w-auto"
           >
             <MessageSquare className="h-4 w-4 mr-2" />
             Iniciar Nuevo Chat
@@ -217,6 +218,7 @@ const AdminChatManagement: React.FC = () => {
             onClick={handleRefresh} 
             variant="outline" 
             disabled={isLoading}
+            className="w-full sm:w-auto"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Actualizar
@@ -225,58 +227,58 @@ const AdminChatManagement: React.FC = () => {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-8 w-8 text-blue-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total</p>
+              <MessageSquare className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-lg md:text-2xl font-bold">{stats.total}</p>
+                <p className="text-xs md:text-sm text-muted-foreground truncate">Total</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
             <div className="flex items-center gap-2">
-              <Clock className="h-8 w-8 text-yellow-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.pending}</p>
-                <p className="text-sm text-muted-foreground">Pendientes</p>
+              <Clock className="h-6 w-6 md:h-8 md:w-8 text-yellow-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-lg md:text-2xl font-bold">{stats.pending}</p>
+                <p className="text-xs md:text-sm text-muted-foreground truncate">Pendientes</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.active}</p>
-                <p className="text-sm text-muted-foreground">Activas</p>
+              <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-green-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-lg md:text-2xl font-bold">{stats.active}</p>
+                <p className="text-xs md:text-sm text-muted-foreground truncate">Activas</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
             <div className="flex items-center gap-2">
-              <Archive className="h-8 w-8 text-blue-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.resolved}</p>
-                <p className="text-sm text-muted-foreground">Resueltas</p>
+              <Archive className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-lg md:text-2xl font-bold">{stats.resolved}</p>
+                <p className="text-xs md:text-sm text-muted-foreground truncate">Resueltas</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
             <div className="flex items-center gap-2">
-              <Star className="h-8 w-8 text-red-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.unread}</p>
-                <p className="text-sm text-muted-foreground">Sin leer</p>
+              <Star className="h-6 w-6 md:h-8 md:w-8 text-red-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-lg md:text-2xl font-bold">{stats.unread}</p>
+                <p className="text-xs md:text-sm text-muted-foreground truncate">Sin leer</p>
               </div>
             </div>
           </CardContent>
@@ -326,61 +328,71 @@ const AdminChatManagement: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {conversations.map((conversation) => (
-                <div key={conversation.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                  {/* User Avatar */}
-                  <div className="flex-shrink-0">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={conversation.user_avatar} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                        {conversation.user_name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-
-                  {/* Conversation Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium truncate">{conversation.user_name}</h3>
-                      {getUserTypeBadge(conversation.user_type)}
-                      {getStatusBadge(conversation.status)}
-                      {getPriorityBadge(conversation.priority)}
-                      {conversation.unread_count > 0 && (
-                        <Badge variant="destructive" className="bg-red-100 text-red-800">
-                          {conversation.unread_count} sin leer
-                        </Badge>
-                      )}
+                <div key={conversation.id} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-3 md:p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                  {/* Avatar + Basic Info */}
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {/* User Avatar */}
+                    <div className="flex-shrink-0">
+                      <Avatar className="h-12 w-12 md:h-14 md:w-14">
+                        <AvatarImage src={conversation.user_avatar} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                          {conversation.user_name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">
-                      {conversation.subject}
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate mb-2">
-                      {conversation.last_message_preview}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        <span>{conversation.user_email}</span>
-                      </div>
-                      {conversation.company_name && (
-                        <div className="flex items-center gap-1">
-                          <Building className="h-3 w-3" />
-                          <span>{conversation.company_name}</span>
+
+                    {/* Conversation Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start flex-col gap-2 mb-2">
+                        <h3 className="font-medium text-sm md:text-base">{conversation.user_name}</h3>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {getUserTypeBadge(conversation.user_type)}
+                          {getStatusBadge(conversation.status)}
+                          {getPriorityBadge(conversation.priority)}
+                          {conversation.unread_count > 0 && (
+                            <Badge variant="destructive" className="bg-red-100 text-red-800">
+                              {conversation.unread_count} sin leer
+                            </Badge>
+                          )}
                         </div>
-                      )}
-                      <div className="flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" />
-                        <span>{conversation.messages_count} mensajes</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>
-                          {formatDistanceToNow(new Date(conversation.last_message_at), { 
-                            addSuffix: true, 
-                            locale: es 
-                          })}
-                        </span>
+                      
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">
+                        {conversation.subject}
+                      </p>
+                      
+                      {conversation.last_message_preview && (
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-2">
+                          {conversation.last_message_preview}
+                        </p>
+                      )}
+                      
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{conversation.user_email}</span>
+                        </div>
+                        {conversation.company_name && (
+                          <div className="flex items-center gap-1">
+                            <Building className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{conversation.company_name}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                          <span>{conversation.messages_count} mensajes</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
+                            {formatDistanceToNow(new Date(conversation.last_message_at), { 
+                              addSuffix: true, 
+                              locale: es 
+                            })}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -391,9 +403,10 @@ const AdminChatManagement: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewConversation(conversation.id)}
+                      className="flex-1 md:flex-initial"
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Chat
+                      <Eye className="h-4 w-4 md:mr-2" />
+                      <span className="md:inline">Ver Chat</span>
                     </Button>
                     <Button
                       variant="destructive"
@@ -404,9 +417,10 @@ const AdminChatManagement: React.FC = () => {
                         await deleteConversation(conversation.id);
                         await refetch();
                       }}
+                      className="flex-shrink-0"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Eliminar
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Eliminar</span>
                     </Button>
                   </div>
                 </div>
@@ -416,8 +430,8 @@ const AdminChatManagement: React.FC = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 Mostrando {((currentPage - 1) * 20) + 1} a {Math.min(currentPage * 20, filteredConversations.length)} de {filteredConversations.length} conversaciones
               </div>
               <div className="flex items-center gap-2">
@@ -428,7 +442,7 @@ const AdminChatManagement: React.FC = () => {
                   disabled={currentPage === 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Anterior
+                  <span className="hidden sm:inline">Anterior</span>
                 </Button>
                 
                 <div className="flex items-center gap-1">
@@ -455,7 +469,7 @@ const AdminChatManagement: React.FC = () => {
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  Siguiente
+                  <span className="hidden sm:inline">Siguiente</span>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
