@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { 
   Briefcase, 
   Building, 
@@ -21,7 +22,9 @@ import {
   CheckCircle,
   Eye,
   FileText,
-  Tag
+  Tag,
+  Clock,
+  Globe
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -30,21 +33,29 @@ interface OpportunityDetail {
   id: string;
   title: string;
   description: string;
+  requirements?: string;
   category: string;
+  type: string;
   contract_type: string;
-  duration?: string;
+  duration_type?: string | null;
+  duration_value?: number | null;
+  duration_unit?: string | null;
   location: string;
-  timezone?: string;
-  deadline?: string;
-  salary_type: string;
-  salary_amount?: string;
-  salary_period?: string;
-  commission_percentage?: string;
-  show_salary_publicly: boolean;
+  timezone_preference?: string | null;
+  deadline_date?: string | null;
+  payment_type: string;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  currency: string;
+  commission_percentage?: number | null;
+  salary_is_public: boolean;
   skills: string[];
   experience_levels: string[];
   is_active: boolean;
   status: string;
+  is_academy_exclusive: boolean;
+  is_public: boolean;
+  public_url?: string | null;
   created_at: string;
   updated_at: string;
   company_id: string;
@@ -109,21 +120,29 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
         id: opportunityData.id,
         title: opportunityData.title,
         description: opportunityData.description,
+        requirements: opportunityData.requirements || '',
         category: opportunityData.category,
+        type: opportunityData.type || 'remote',
         contract_type: opportunityData.contract_type || 'full-time',
-        duration: (opportunityData as any).duration,
+        duration_type: opportunityData.duration_type || 'indefinite',
+        duration_value: opportunityData.duration_value,
+        duration_unit: opportunityData.duration_unit,
         location: opportunityData.location || '',
-        timezone: (opportunityData as any).timezone,
-        deadline: (opportunityData as any).deadline,
-        salary_type: (opportunityData as any).salary_type || 'fixed',
-        salary_amount: (opportunityData as any).salary_amount || opportunityData.salary_min?.toString(),
-        salary_period: (opportunityData as any).salary_period,
-        commission_percentage: opportunityData.commission_percentage?.toString(),
-        show_salary_publicly: (opportunityData as any).show_salary_publicly || false,
+        timezone_preference: opportunityData.timezone_preference,
+        deadline_date: opportunityData.deadline_date,
+        payment_type: opportunityData.payment_type || 'fixed',
+        salary_min: opportunityData.salary_min,
+        salary_max: opportunityData.salary_max,
+        currency: opportunityData.currency || 'USD',
+        commission_percentage: opportunityData.commission_percentage,
+        salary_is_public: opportunityData.salary_is_public ?? true,
         skills: opportunityData.skills || [],
         experience_levels: opportunityData.experience_levels || [],
         is_active: opportunityData.is_active || false,
         status: opportunityData.status || 'draft',
+        is_academy_exclusive: opportunityData.is_academy_exclusive || false,
+        is_public: opportunityData.is_public ?? true,
+        public_url: opportunityData.public_url,
         created_at: opportunityData.created_at,
         updated_at: opportunityData.updated_at,
         company_id: opportunityData.company_id,
@@ -157,22 +176,41 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
     setIsUpdating(true);
     try {
+      // Validate salary range
+      if (editData.salary_min && editData.salary_max && editData.salary_min > editData.salary_max) {
+        toast.error('El salario mínimo no puede ser mayor que el máximo');
+        return;
+      }
+
+      // Validate duration
+      if (editData.duration_type !== 'indefinite' && editData.duration_value && editData.duration_value <= 0) {
+        toast.error('La duración debe ser un valor positivo');
+        return;
+      }
+
       const { error } = await supabase
         .from('opportunities')
         .update({
           title: editData.title,
           description: editData.description,
+          requirements: editData.requirements,
           category: editData.category,
+          type: editData.type,
           contract_type: editData.contract_type,
-          duration: editData.duration,
+          duration_type: editData.duration_type,
+          duration_value: editData.duration_value,
+          duration_unit: editData.duration_unit,
           location: editData.location,
-          timezone: editData.timezone,
-          deadline: editData.deadline,
-          salary_type: editData.salary_type,
-          salary_amount: editData.salary_amount ? parseFloat(editData.salary_amount) : null,
-          salary_period: editData.salary_period,
-          commission_percentage: editData.commission_percentage ? parseFloat(editData.commission_percentage) : null,
-          show_salary_publicly: editData.show_salary_publicly,
+          timezone_preference: editData.timezone_preference,
+          deadline_date: editData.deadline_date,
+          payment_type: editData.payment_type,
+          salary_min: editData.salary_min,
+          salary_max: editData.salary_max,
+          currency: editData.currency,
+          commission_percentage: editData.commission_percentage,
+          salary_is_public: editData.salary_is_public,
+          is_academy_exclusive: editData.is_academy_exclusive,
+          is_public: editData.is_public,
           skills: editData.skills,
           experience_levels: editData.experience_levels,
           admin_notes: adminNotes
@@ -494,15 +532,79 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                   </div>
 
                   <div>
+                    <Label>Tipo de Oportunidad</Label>
+                    {isEditing ? (
+                      <Select
+                        value={editData.type || ''}
+                        onValueChange={(value) => setEditData({ ...editData, type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="remote">Remoto</SelectItem>
+                          <SelectItem value="on-site">Presencial</SelectItem>
+                          <SelectItem value="hybrid">Híbrido</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="font-medium">{opportunity.type}</p>
+                    )}
+                  </div>
+
+                  <div>
                     <Label>Duración</Label>
                     {isEditing ? (
-                      <Input
-                        value={editData.duration || ''}
-                        onChange={(e) => setEditData({ ...editData, duration: e.target.value })}
-                        placeholder="Indefinido o duración específica"
-                      />
+                      <div className="flex gap-2">
+                        <Select
+                          value={editData.duration_type || 'indefinite'}
+                          onValueChange={(value) => setEditData({ ...editData, duration_type: value })}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="indefinite">Indefinido</SelectItem>
+                            <SelectItem value="temporary">Temporal</SelectItem>
+                            <SelectItem value="project">Por proyecto</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {editData.duration_type !== 'indefinite' && (
+                          <>
+                            <Input
+                              type="number"
+                              className="w-20"
+                              value={editData.duration_value || ''}
+                              onChange={(e) => setEditData({ ...editData, duration_value: parseInt(e.target.value) || undefined })}
+                              placeholder="0"
+                            />
+                            <Select
+                              value={editData.duration_unit || 'months'}
+                              onValueChange={(value) => setEditData({ ...editData, duration_unit: value })}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="days">Días</SelectItem>
+                                <SelectItem value="weeks">Semanas</SelectItem>
+                                <SelectItem value="months">Meses</SelectItem>
+                                <SelectItem value="years">Años</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </>
+                        )}
+                      </div>
                     ) : (
-                      <p className="font-medium">{opportunity.duration || 'Indefinido'}</p>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span>
+                          {opportunity.duration_type === 'indefinite' 
+                            ? 'Indefinido' 
+                            : `${opportunity.duration_value} ${opportunity.duration_unit}`
+                          }
+                        </span>
+                      </div>
                     )}
                   </div>
 
@@ -522,17 +624,62 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                     )}
                   </div>
 
-                  {opportunity.deadline && (
+                  <div>
+                    <Label>Zona Horaria Preferida</Label>
+                    {isEditing ? (
+                      <Input
+                        value={editData.timezone_preference || ''}
+                        onChange={(e) => setEditData({ ...editData, timezone_preference: e.target.value })}
+                        placeholder="Ej: GMT-5, UTC-3"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <span>{opportunity.timezone_preference || 'No especificada'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {(opportunity.deadline_date || isEditing) && (
                     <div>
                       <Label>Fecha Límite</Label>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{new Date(opportunity.deadline).toLocaleDateString('es')}</span>
-                      </div>
+                      {isEditing ? (
+                        <Input
+                          type="date"
+                          value={editData.deadline_date || ''}
+                          onChange={(e) => setEditData({ ...editData, deadline_date: e.target.value })}
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span>{opportunity.deadline_date ? new Date(opportunity.deadline_date).toLocaleDateString('es') : 'Sin fecha límite'}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Requisitos */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Requisitos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <Textarea
+                  value={editData.requirements || ''}
+                  onChange={(e) => setEditData({ ...editData, requirements: e.target.value })}
+                  rows={4}
+                  placeholder="Describe los requisitos para esta oportunidad..."
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {opportunity.requirements || 'No especificados'}
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -548,25 +695,115 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label>Tipo de Pago</Label>
-                  <p className="font-medium">{opportunity.salary_type}</p>
+                  {isEditing ? (
+                    <Select
+                      value={editData.payment_type || ''}
+                      onValueChange={(value) => setEditData({ ...editData, payment_type: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">Fijo</SelectItem>
+                        <SelectItem value="commission">Por Comisión</SelectItem>
+                        <SelectItem value="fixed_commission">Fijo + Comisión</SelectItem>
+                        <SelectItem value="hourly">Por Hora</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="font-medium">{opportunity.payment_type}</p>
+                  )}
                 </div>
-                {opportunity.salary_amount && (
-                  <div>
-                    <Label>Monto</Label>
-                    <p className="font-medium">
-                      {opportunity.salary_amount} {opportunity.salary_period && `por ${opportunity.salary_period}`}
-                    </p>
-                  </div>
-                )}
-                {opportunity.commission_percentage && (
-                  <div>
-                    <Label>Comisión</Label>
-                    <p className="font-medium">{opportunity.commission_percentage}%</p>
-                  </div>
-                )}
+
                 <div>
+                  <Label>Moneda</Label>
+                  {isEditing ? (
+                    <Select
+                      value={editData.currency || 'USD'}
+                      onValueChange={(value) => setEditData({ ...editData, currency: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="MXN">MXN</SelectItem>
+                        <SelectItem value="ARS">ARS</SelectItem>
+                        <SelectItem value="COP">COP</SelectItem>
+                        <SelectItem value="CLP">CLP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="font-medium">{opportunity.currency}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label>Salario Mínimo</Label>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      value={editData.salary_min || ''}
+                      onChange={(e) => setEditData({ ...editData, salary_min: parseInt(e.target.value) || undefined })}
+                      placeholder="0"
+                    />
+                  ) : (
+                    <p className="font-medium">
+                      {opportunity.salary_min 
+                        ? `${opportunity.currency} ${opportunity.salary_min.toLocaleString()}`
+                        : 'No especificado'
+                      }
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label>Salario Máximo</Label>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      value={editData.salary_max || ''}
+                      onChange={(e) => setEditData({ ...editData, salary_max: parseInt(e.target.value) || undefined })}
+                      placeholder="0"
+                    />
+                  ) : (
+                    <p className="font-medium">
+                      {opportunity.salary_max 
+                        ? `${opportunity.currency} ${opportunity.salary_max.toLocaleString()}`
+                        : 'No especificado'
+                      }
+                    </p>
+                  )}
+                </div>
+
+                {(opportunity.commission_percentage || isEditing) && (
+                  <div>
+                    <Label>Comisión (%)</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        value={editData.commission_percentage || ''}
+                        onChange={(e) => setEditData({ ...editData, commission_percentage: parseInt(e.target.value) || undefined })}
+                        placeholder="0"
+                        max="100"
+                      />
+                    ) : (
+                      <p className="font-medium">{opportunity.commission_percentage}%</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
                   <Label>Mostrar Salario Públicamente</Label>
-                  <p className="font-medium">{opportunity.show_salary_publicly ? 'Sí' : 'No'}</p>
+                  {isEditing ? (
+                    <Switch
+                      checked={editData.salary_is_public ?? true}
+                      onCheckedChange={(checked) => setEditData({ ...editData, salary_is_public: checked })}
+                    />
+                  ) : (
+                    <p className="font-medium">{opportunity.salary_is_public ? 'Sí' : 'No'}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -585,19 +822,105 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                 <div>
                   <Label>Skills Requeridas</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {opportunity.skills.map((skill, index) => (
-                      <Badge key={index} variant="outline">{skill}</Badge>
-                    ))}
+                    {opportunity.skills.length > 0 ? (
+                      opportunity.skills.map((skill, index) => (
+                        <Badge key={index} variant="outline">{skill}</Badge>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No especificadas</p>
+                    )}
                   </div>
                 </div>
                 <div>
                   <Label>Niveles de Experiencia</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {opportunity.experience_levels.map((level, index) => (
-                      <Badge key={index} variant="secondary">{level}</Badge>
-                    ))}
+                    {opportunity.experience_levels.length > 0 ? (
+                      opportunity.experience_levels.map((level, index) => (
+                        <Badge key={index} variant="secondary">{level}</Badge>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No especificados</p>
+                    )}
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Configuración de Visibilidad */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5" />
+                Configuración de Visibilidad
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Oportunidad Pública</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {opportunity.is_public 
+                        ? 'Visible en búsquedas públicas' 
+                        : 'Solo visible para usuarios autenticados'
+                      }
+                    </p>
+                  </div>
+                  {isEditing ? (
+                    <Switch
+                      checked={editData.is_public ?? true}
+                      onCheckedChange={(checked) => setEditData({ ...editData, is_public: checked })}
+                    />
+                  ) : (
+                    <Badge variant={opportunity.is_public ? 'default' : 'secondary'}>
+                      {opportunity.is_public ? 'Pública' : 'Privada'}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Exclusivo para Academias</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {opportunity.is_academy_exclusive 
+                        ? 'Solo visible para estudiantes de academias' 
+                        : 'Visible para todos los usuarios'
+                      }
+                    </p>
+                  </div>
+                  {isEditing ? (
+                    <Switch
+                      checked={editData.is_academy_exclusive ?? false}
+                      onCheckedChange={(checked) => setEditData({ ...editData, is_academy_exclusive: checked })}
+                    />
+                  ) : (
+                    <Badge variant={opportunity.is_academy_exclusive ? 'default' : 'outline'}>
+                      {opportunity.is_academy_exclusive ? 'Sí' : 'No'}
+                    </Badge>
+                  )}
+                </div>
+
+                {opportunity.public_url && (
+                  <div>
+                    <Label>URL Pública</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <code className="flex-1 text-xs bg-muted p-2 rounded">
+                        {opportunity.public_url}
+                      </code>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(opportunity.public_url!);
+                          toast.success('URL copiada al portapapeles');
+                        }}
+                      >
+                        Copiar
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
