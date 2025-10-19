@@ -104,7 +104,6 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
                 <p className="font-medium text-sm text-foreground">
                   {profile?.full_name || user?.email || "Admin"}
                 </p>
-                <Badge variant="destructive" className="text-xs mt-1">Admin</Badge>
               </div>
             </div>
           </div>

@@ -20,7 +20,7 @@ import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext'
 import { useUpgradeRequests } from '@/hooks/useUpgradeRequests';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import LogoutButton from '@/components/LogoutButton';
+
 import AdminDashboard from './admin/AdminDashboard';
 import AdminUserManagement from './admin/AdminUserManagement';
 import AdminCompanyManagement from './admin/AdminCompanyManagement';
@@ -180,11 +180,6 @@ const AdminPanel: React.FC = () => {
           <header className="h-16 border-b flex items-center justify-between px-4 bg-card">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
-              <Shield className="h-6 w-6 text-primary flex-shrink-0" />
-              <div>
-                <h1 className="text-xl font-bold">Panel de Administración</h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">Gestión de usuarios y solicitudes</p>
-              </div>
             </div>
             <div className="flex items-center gap-3">
               {stats.pendingRequests > 0 && activeTab !== 'upgrade-requests' && (
@@ -192,7 +187,6 @@ const AdminPanel: React.FC = () => {
                   {stats.pendingRequests} solicitudes
                 </Badge>
               )}
-              <LogoutButton />
             </div>
           </header>
 
