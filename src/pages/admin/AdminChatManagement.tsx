@@ -70,60 +70,56 @@ const AdminChatManagement: React.FC = () => {
 
   const handleStartNewChat = async (userId: string, userName: string) => {
     try {
-      // Check if conversation already exists
-      const existingConversation = allConversations.find(
-        (conv) => conv.user_id === userId
-      );
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No hay usuario autenticado');
 
-      if (existingConversation) {
-        // Open existing conversation
-        setSelectedConversationId(existingConversation.id);
+      // Check if conversation already exists
+      const { data: existingConv } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('admin_id', user.id)
+        .single();
+
+      if (existingConv) {
+        setSelectedConversationId(existingConv.id);
         setIsDetailOpen(true);
         toast.info(`Abriendo conversación existente con ${userName}`);
         return;
       }
 
-      // Ensure we have a valid UUID for the recipient
-      let targetUserId = userId;
-      const uuidRegex = /^[0-9a-fA-F-]{36}$/;
-      if (!targetUserId || !uuidRegex.test(targetUserId)) {
-        const { data, error } = await supabase.functions.invoke('get-all-users', { body: {} });
-        if (error) throw error;
-        const rawUsers: any[] = (data as any)?.users || [];
-        const match = rawUsers.find(
-          (u) =>
-            (u.full_name && u.full_name.toLowerCase() === (userName || '').toLowerCase()) ||
-            (u.email && u.email.toLowerCase() === (userName || '').toLowerCase())
-        );
-        if (!match?.id) throw new Error('No se pudo resolver el usuario destino');
-        targetUserId = match.id;
-      }
+      // Create new conversation
+      const { data: newConv, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          user_id: userId,
+          admin_id: user.id,
+          subject: 'Nueva conversación',
+          status: 'active',
+          priority: 'medium'
+        })
+        .select()
+        .single();
 
-      // Create new conversation ID
-      const { data: authRes } = await supabase.auth.getUser();
-      const currentUser = authRes?.user;
-      if (!currentUser) throw new Error('No hay usuario autenticado');
+      if (convError) throw convError;
 
-      const newConversationId = `chat_${currentUser.id}_${targetUserId}_${Date.now()}`;
-
-      // Insert initial message to create conversation
-      const { error: insertError } = await supabase
+      // Insert initial message
+      const { error: msgError } = await supabase
         .from('messages')
         .insert({
-          sender_id: currentUser.id,
-          recipient_id: targetUserId,
-          conversation_id: newConversationId,
+          sender_id: user.id,
+          recipient_id: userId,
+          conversation_id: `chat_${user.id}_${userId}_${Date.now()}`,
+          conversation_uuid: newConv.id,
           content: '¡Hola! Te escribo desde el panel de administración.',
           message_type: 'text',
-          label: 'profile_contact',
           is_read: false,
         });
 
-      if (insertError) throw insertError;
+      if (msgError) throw msgError;
 
-      // Refresh conversations and open the new one
       await refetch();
-      setSelectedConversationId(newConversationId);
+      setSelectedConversationId(newConv.id);
       setIsDetailOpen(true);
       toast.success(`Nueva conversación iniciada con ${userName}`);
     } catch (error) {

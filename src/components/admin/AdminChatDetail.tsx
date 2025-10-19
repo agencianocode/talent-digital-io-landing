@@ -80,11 +80,20 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
     
     setIsLoading(true);
     try {
+      // Fetch conversation metadata
+      const { data: convData, error: convError } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .single();
+
+      if (convError) throw convError;
+
       // Fetch messages for this conversation
       const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
         .select('*')
-        .eq('conversation_id', conversationId)
+        .eq('conversation_uuid', conversationId)
         .order('created_at', { ascending: true });
 
       if (messagesError) throw messagesError;
@@ -119,18 +128,8 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
       }));
       const usersMap = new Map<string, UserData>(users.map((u) => [u.user_id, u]));
 
-      // Determine the other participant (not admin)
-      const firstMessage = messagesData[0];
-      if (!firstMessage) {
-        throw new Error('No hay mensajes en la conversación');
-      }
-
-      const SYSTEM_ID = '00000000-0000-0000-0000-000000000000';
-      const senderRole = usersMap.get(firstMessage.sender_id)?.role;
-      const otherUserId = (firstMessage.sender_id === SYSTEM_ID || senderRole === 'admin')
-        ? firstMessage.recipient_id
-        : firstMessage.sender_id;
-      const otherUser = usersMap.get(otherUserId);
+      // Get user data
+      const userFromMap = usersMap.get(convData.user_id);
 
       // Fetch profiles for participants (avatar)
       let profilesMap = new Map<string, { avatar_url?: string; full_name?: string }>();
@@ -166,27 +165,27 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
         };
       });
 
-      const lastMessage = messagesData[messagesData.length - 1] || firstMessage;
+      const lastMsgData = messagesData[messagesData.length - 1];
 
       const conversationData: ChatDetail = {
         id: conversationId,
-        user_id: otherUserId,
-        user_name: otherUser?.full_name || 'Usuario',
-        user_email: otherUser?.email || '',
-        user_type: otherUser?.role === 'business' ? 'business' : otherUser?.role === 'admin' ? 'admin' : 'talent',
-        user_avatar: profilesMap.get(otherUserId)?.avatar_url,
+        user_id: convData.user_id,
+        user_name: userFromMap?.full_name || 'Usuario',
+        user_email: userFromMap?.email || '',
+        user_type: userFromMap?.role === 'business' ? 'business' : userFromMap?.role === 'admin' ? 'admin' : 'talent',
+        user_avatar: profilesMap.get(convData.user_id)?.avatar_url,
         company_name: undefined,
         company_logo: undefined,
-        subject: firstMessage.label === 'welcome' ? 'Mensaje de Bienvenida' : 'Conversación',
-        status: 'active',
-        priority: 'medium',
-        created_at: firstMessage.created_at,
-        updated_at: lastMessage.created_at,
-        last_message_at: lastMessage.created_at,
+        subject: convData.subject,
+        status: convData.status as 'active' | 'pending' | 'resolved' | 'archived',
+        priority: convData.priority as 'high' | 'medium' | 'low',
+        created_at: convData.created_at,
+        updated_at: convData.updated_at,
+        last_message_at: convData.last_message_at || (lastMsgData?.created_at || convData.created_at),
         messages_count: messages.length,
         unread_count: messages.filter(m => !m.is_read).length,
-        tags: firstMessage.label ? [firstMessage.label] : [],
-        admin_notes: '',
+        tags: convData.tags || [],
+        admin_notes: convData.admin_notes || '',
         messages
       };
 
@@ -201,8 +200,25 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
   };
 
   useEffect(() => {
+    const markAsRead = async () => {
+      if (!conversationId) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from('messages')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('conversation_uuid', conversationId)
+        .eq('recipient_id', user.id)
+        .eq('is_read', false);
+
+      onConversationUpdate();
+    };
+
     if (isOpen && conversationId) {
       loadConversationDetail();
+      markAsRead();
     }
   }, [isOpen, conversationId]);
 
@@ -221,7 +237,8 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
         .insert({
           sender_id: user.id,
           recipient_id: conversation.user_id,
-          conversation_id: conversationId,
+          conversation_id: `chat_${user.id}_${conversation.user_id}`,
+          conversation_uuid: conversationId,
           content: newMessage,
           message_type: 'text',
           is_read: false
@@ -265,14 +282,20 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
     if (!conversation) return;
 
     try {
-      // Mock update - in real implementation this would update the database
+      const { error } = await supabase
+        .from('conversations')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', conversation.id);
+
+      if (error) throw error;
+
       setConversation(prev => prev ? {
         ...prev,
         status: newStatus as any,
         updated_at: new Date().toISOString()
       } : null);
 
-      toast.success(`Conversación ${newStatus === 'resolved' ? 'resuelta' : 'actualizada'} correctamente`);
+      toast.success(`Estado actualizado a ${newStatus}`);
       onConversationUpdate();
     } catch (error) {
       console.error('Error updating status:', error);
@@ -284,7 +307,13 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
     if (!conversation) return;
 
     try {
-      // Mock update - in real implementation this would update the database
+      const { error } = await supabase
+        .from('conversations')
+        .update({ priority: newPriority, updated_at: new Date().toISOString() })
+        .eq('id', conversation.id);
+
+      if (error) throw error;
+
       setConversation(prev => prev ? {
         ...prev,
         priority: newPriority as any,
@@ -308,11 +337,11 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
 
     setIsDeleting(true);
     try {
-      // Delete all messages in this conversation
+      // Delete conversation (cascade will delete messages)
       const { error: deleteError } = await supabase
-        .from('messages')
+        .from('conversations')
         .delete()
-        .eq('conversation_id', conversationId);
+        .eq('id', conversationId);
 
       if (deleteError) throw deleteError;
 
@@ -324,6 +353,25 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
       toast.error('Error al eliminar la conversación');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!conversation) return;
+
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .update({ admin_notes: adminNotes, updated_at: new Date().toISOString() })
+        .eq('id', conversation.id);
+
+      if (error) throw error;
+
+      toast.success('Notas guardadas correctamente');
+      onConversationUpdate();
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      toast.error('Error al guardar las notas');
     }
   };
 
@@ -617,6 +665,9 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
                     onChange={(e) => setAdminNotes(e.target.value)}
                     rows={3}
                   />
+                  <Button onClick={handleSaveNotes} variant="outline" size="sm">
+                    Guardar Notas
+                  </Button>
                 </div>
               </div>
             </CardContent>

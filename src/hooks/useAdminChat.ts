@@ -52,9 +52,24 @@ export const useAdminChat = () => {
       setIsLoading(true);
       setError(null);
 
-      // Fetch all users with their profiles and emails
+      // Fetch conversations with related data
+      const { data: conversationsData, error: convError } = await supabase
+        .from('conversations')
+        .select('*')
+        .order('last_message_at', { ascending: false });
+
+      if (convError) throw convError;
+
+      if (!conversationsData || conversationsData.length === 0) {
+        setConversations([]);
+        return;
+      }
+
+      // Get user IDs
+      const userIds = conversationsData.map(c => c.user_id);
+
+      // Fetch users data
       const { data, error: usersError } = await supabase.functions.invoke('get-all-users', { body: {} });
-      
       if (usersError) throw usersError;
 
       interface UserData {
@@ -66,7 +81,6 @@ export const useAdminChat = () => {
       }
 
       const rawUsers: any[] = (data as any)?.users || [];
-      console.debug('[useAdminChat] users fetched:', rawUsers.length);
       const users: UserData[] = rawUsers.map((u) => ({
         user_id: u.user_id || u.id,
         full_name: u.full_name || 'Usuario',
@@ -77,69 +91,61 @@ export const useAdminChat = () => {
       const usersMap = new Map<string, UserData>(users.map((u) => [u.user_id, u]));
 
       // Fetch profiles for avatars
-      const avatarsMap = new Map<string, string>();
-      users.forEach((u) => {
-        if (u.avatar_url) {
-          const isFullUrl = typeof u.avatar_url === 'string' && /^(http|https):\/\//.test(u.avatar_url);
-          const publicUrl = isFullUrl
-            ? u.avatar_url
-            : supabase.storage.from('avatars').getPublicUrl(u.avatar_url).data.publicUrl;
-          avatarsMap.set(u.user_id, publicUrl);
-        }
-      });
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, avatar_url, full_name')
+        .in('user_id', userIds);
 
-      // Fetch all messages
-      const { data: messagesData, error: messagesError } = await supabase
+      const profilesMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+
+      // Get message counts
+      const conversationIds = conversationsData.map(c => c.id);
+      const { data: messagesData } = await supabase
         .from('messages')
-        .select('*')
+        .select('conversation_uuid, content, created_at, is_read')
+        .in('conversation_uuid', conversationIds)
         .order('created_at', { ascending: false });
 
-      if (messagesError) throw messagesError;
-
-      // Group messages by conversation_id
-      const conversationsMap = new Map<string, ChatData>();
-      
-      messagesData?.forEach(message => {
-        const convId = message.conversation_id;
-        if (!conversationsMap.has(convId)) {
-          // Determine the other participant (not the current admin)
-          const otherUserId = message.sender_id;
-          const otherUser = usersMap.get(otherUserId);
-          
-          conversationsMap.set(convId, {
-            id: convId,
-            user_id: otherUserId,
-            user_name: otherUser?.full_name || 'Usuario',
-            user_email: otherUser?.email || '',
-            user_type: otherUser?.role === 'business' ? 'business' : otherUser?.role === 'admin' ? 'admin' : 'talent',
-            user_avatar: avatarsMap.get(otherUserId),
-            company_name: undefined,
-            company_logo: undefined,
-            subject: message.label === 'welcome' ? 'Mensaje de Bienvenida' : 'Conversación',
-            status: 'active',
-            priority: message.label === 'welcome' ? 'low' : 'medium',
-            created_at: message.created_at,
-            updated_at: message.created_at,
-            last_message_at: message.created_at,
-            messages_count: 1,
-            unread_count: message.is_read ? 0 : 1,
-            tags: message.label ? [message.label] : [],
-            admin_notes: '',
-            last_message_preview: message.content?.substring(0, 100)
-          });
-        } else {
-          const conv = conversationsMap.get(convId)!;
-          conv.messages_count++;
-          if (!message.is_read) conv.unread_count++;
-          if (new Date(message.created_at) > new Date(conv.last_message_at)) {
-            conv.last_message_at = message.created_at;
-            conv.updated_at = message.created_at;
-            conv.last_message_preview = message.content?.substring(0, 100);
+      // Group messages by conversation
+      const messagesMap = new Map<string, any[]>();
+      messagesData?.forEach(msg => {
+        if (msg.conversation_uuid) {
+          if (!messagesMap.has(msg.conversation_uuid)) {
+            messagesMap.set(msg.conversation_uuid, []);
           }
+          messagesMap.get(msg.conversation_uuid)!.push(msg);
         }
       });
 
-      setConversations(Array.from(conversationsMap.values()));
+      // Transform data
+      const conversations: ChatData[] = conversationsData.map(conv => {
+        const user = usersMap.get(conv.user_id);
+        const profile = profilesMap.get(conv.user_id);
+        const messages = messagesMap.get(conv.id) || [];
+        const lastMsg = messages[0];
+        
+        return {
+          id: conv.id,
+          user_id: conv.user_id,
+          user_name: user?.full_name || profile?.full_name || 'Usuario',
+          user_email: user?.email || '',
+          user_type: user?.role === 'business' ? 'business' : user?.role === 'admin' ? 'admin' : 'talent',
+          user_avatar: profile?.avatar_url ? String(profile.avatar_url) : undefined,
+          subject: conv.subject ? String(conv.subject) : 'Conversación',
+          status: (conv.status ? String(conv.status) : 'active') as 'active' | 'pending' | 'resolved' | 'archived',
+          priority: (conv.priority ? String(conv.priority) : 'medium') as 'high' | 'medium' | 'low',
+          tags: conv.tags || [],
+          admin_notes: conv.admin_notes ? String(conv.admin_notes) : undefined,
+          created_at: conv.created_at,
+          updated_at: conv.updated_at,
+          last_message_at: conv.last_message_at || conv.created_at,
+          messages_count: messages.length,
+          unread_count: messages.filter(m => !m.is_read).length,
+          last_message_preview: lastMsg?.content ? String(lastMsg.content).substring(0, 100) : undefined
+        };
+      });
+
+      setConversations(conversations);
     } catch (err) {
       console.error('Error loading conversations:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -230,7 +236,23 @@ export const useAdminChat = () => {
 
   const updateConversation = async (conversationId: string, updates: Partial<ChatData>) => {
     try {
-      // Update conversation metadata in local state
+      const dbUpdates: any = {};
+      
+      if (updates.status) dbUpdates.status = updates.status;
+      if (updates.priority) dbUpdates.priority = updates.priority;
+      if (updates.admin_notes !== undefined) dbUpdates.admin_notes = updates.admin_notes;
+      if (updates.tags) dbUpdates.tags = updates.tags;
+      
+      dbUpdates.updated_at = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('conversations')
+        .update(dbUpdates)
+        .eq('id', conversationId);
+
+      if (error) throw error;
+
+      // Update local state
       setConversations(prev => prev.map(conversation => 
         conversation.id === conversationId ? { ...conversation, ...updates } : conversation
       ));
@@ -245,11 +267,11 @@ export const useAdminChat = () => {
 
   const deleteConversation = async (conversationId: string) => {
     try {
-      // Delete all messages in this conversation
+      // Delete conversation (cascade will delete messages)
       const { error } = await supabase
-        .from('messages')
+        .from('conversations')
         .delete()
-        .eq('conversation_id', conversationId);
+        .eq('id', conversationId);
 
       if (error) throw error;
 

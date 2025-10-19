@@ -404,6 +404,48 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          admin_id: string | null
+          admin_notes: string | null
+          created_at: string
+          id: string
+          last_message_at: string | null
+          priority: string
+          status: string
+          subject: string
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          priority?: string
+          status?: string
+          subject?: string
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_id?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          priority?: string
+          status?: string
+          subject?: string
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       education: {
         Row: {
           created_at: string
@@ -681,6 +723,7 @@ export type Database = {
           attachment_type: string | null
           content: string | null
           conversation_id: string
+          conversation_uuid: string | null
           created_at: string
           delivered_at: string | null
           file_name: string | null
@@ -702,6 +745,7 @@ export type Database = {
           attachment_type?: string | null
           content?: string | null
           conversation_id: string
+          conversation_uuid?: string | null
           created_at?: string
           delivered_at?: string | null
           file_name?: string | null
@@ -723,6 +767,7 @@ export type Database = {
           attachment_type?: string | null
           content?: string | null
           conversation_id?: string
+          conversation_uuid?: string | null
           created_at?: string
           delivered_at?: string | null
           file_name?: string | null
@@ -737,7 +782,15 @@ export type Database = {
           sender_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_uuid_fkey"
+            columns: ["conversation_uuid"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -1799,6 +1852,10 @@ export type Database = {
       is_profile_visible_to: {
         Args: { profile_user_id: string; viewer_user_id: string }
         Returns: boolean
+      }
+      migrate_existing_conversations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       migrate_existing_talent_profiles: {
         Args: Record<PropertyKey, never>
