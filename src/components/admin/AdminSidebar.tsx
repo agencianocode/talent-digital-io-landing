@@ -81,18 +81,20 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   };
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
+    <Sidebar className={cn(collapsed ? "w-14" : "w-64", "bg-background border-r")} collapsible="icon">
       {/* Header */}
-      <SidebarHeader className="border-b p-4">
+      <SidebarHeader className="border-b p-4 bg-background">
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-lg font-semibold text-foreground">TalentoDigital.io</h2>
-          <Button variant="ghost" size="sm" className="p-1 h-auto">
-            <RefreshCw className="h-3 w-3" />
-          </Button>
+          {!collapsed && <h2 className="text-lg font-semibold text-foreground">TalentoDigital.io</h2>}
+          {!collapsed && (
+            <Button variant="ghost" size="sm" className="p-1 h-auto">
+              <RefreshCw className="h-3 w-3" />
+            </Button>
+          )}
         </div>
         
         {!collapsed && (
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 space-y-2">
+          <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-lg p-3 space-y-2">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
                 <AvatarImage src={profile?.avatar_url || undefined} />
@@ -115,7 +117,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
       </SidebarHeader>
 
       {/* Content */}
-      <SidebarContent>
+      <SidebarContent className="bg-background">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 px-2">
@@ -127,14 +129,14 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
                       onClick={() => onTabChange(item.value)}
                       isActive={isActive}
                       className={cn(
-                        "cursor-pointer px-3 py-2.5 rounded-md transition-colors",
+                        "cursor-pointer px-3 py-2.5 rounded-md transition-colors w-full",
                         isActive
-                          ? "bg-purple-100 text-purple-700 hover:bg-purple-100 hover:text-purple-700"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                          ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300"
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
                       )}
                     >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      {!collapsed && <span className="truncate">{item.title}</span>}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -145,7 +147,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="border-t p-4">
+      <SidebarFooter className="border-t p-4 bg-background">
         {/* Bottom navigation: Mensajes y Notificaciones */}
         <div className="space-y-2 mb-4">
           <SidebarMenuButton
@@ -154,16 +156,16 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
             className={cn(
               "cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
               activeTab === "chat"
-                ? "bg-purple-100 text-purple-700 hover:bg-purple-100 hover:text-purple-700"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
             )}
           >
-            <MessageSquare className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4 flex-shrink-0" />
             {!collapsed && (
               <>
-                <span>Mensajes</span>
+                <span className="flex-1 truncate">Mensajes</span>
                 {unreadMessagesCount > 0 && (
-                  <Badge variant="destructive" className="ml-auto text-xs">
+                  <Badge variant="destructive" className="text-xs flex-shrink-0">
                     {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
                   </Badge>
                 )}
@@ -177,16 +179,16 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
             className={cn(
               "cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
               activeTab === "notifications"
-                ? "bg-purple-100 text-purple-700 hover:bg-purple-100 hover:text-purple-700"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
             )}
           >
-            <Bell className="h-4 w-4" />
+            <Bell className="h-4 w-4 flex-shrink-0" />
             {!collapsed && (
               <>
-                <span>Notificaciones</span>
+                <span className="flex-1 truncate">Notificaciones</span>
                 {unreadNotificationsCount > 0 && (
-                  <Badge variant="destructive" className="ml-auto text-xs">
+                  <Badge variant="destructive" className="text-xs flex-shrink-0">
                     {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
                   </Badge>
                 )}
@@ -199,24 +201,24 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
         {!collapsed && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start p-2.5 h-auto hover:bg-slate-50">
+              <Button variant="ghost" className="w-full justify-start p-2.5 h-auto hover:bg-slate-50 dark:hover:bg-slate-800">
                 <div className="flex items-center gap-3 w-full">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarImage src={profile?.avatar_url || undefined} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {getInitials(profile?.full_name || user?.email || "Admin")}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-sm text-foreground">
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="font-medium text-sm text-foreground truncate">
                       {profile?.full_name || user?.email || "Admin"}
                     </p>
                   </div>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-56 bg-popover">
               <DropdownMenuItem onClick={() => onTabChange("admin-profile")}>
                 <User className="h-4 w-4 mr-2" />
                 Mi Perfil
@@ -228,7 +230,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={handleLogout} 
-                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/50"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Cerrar Sesión
@@ -243,7 +245,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="p-2"
+              className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800"
               onClick={() => onTabChange("admin-profile")}
             >
               <User className="h-4 w-4" />
@@ -251,7 +253,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="p-2 text-red-600 hover:text-red-600 hover:bg-red-50"
+              className="p-2 text-red-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />

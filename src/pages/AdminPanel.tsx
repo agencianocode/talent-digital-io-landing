@@ -176,85 +176,85 @@ const AdminPanel: React.FC = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
         
-        <div className="flex-1 flex flex-col">
-          <header className="h-16 border-b flex items-center justify-between px-4 bg-card">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 md:h-16 border-b flex items-center justify-between px-3 md:px-4 bg-card sticky top-0 z-10">
+            <div className="flex items-center gap-2 md:gap-3">
+              <SidebarTrigger className="flex-shrink-0" />
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               {stats.pendingRequests > 0 && activeTab !== 'upgrade-requests' && (
-                <Badge variant="destructive" className="text-xs">
-                  {stats.pendingRequests} solicitudes
+                <Badge variant="destructive" className="text-[10px] md:text-xs px-1.5 md:px-2.5">
+                  {stats.pendingRequests} {stats.pendingRequests === 1 ? 'solicitud' : 'solicitudes'}
                 </Badge>
               )}
             </div>
           </header>
 
-          <div className="p-4 border-b bg-muted/30">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-[10px] md:text-xs font-medium">Total Usuarios</CardTitle>
-                  <Users className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+          <div className="p-2 md:p-4 border-b bg-muted/30 overflow-x-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3 min-w-max sm:min-w-0">
+              <Card className="min-w-[140px] sm:min-w-0">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-2 md:p-4">
+                  <CardTitle className="text-[10px] md:text-xs font-medium truncate">Total Usuarios</CardTitle>
+                  <Users className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
                 </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0">
-                  <div className="text-lg md:text-xl font-bold">{stats.totalUsers}</div>
+                <CardContent className="p-2 md:p-4 pt-0">
+                  <div className="text-base md:text-xl font-bold">{stats.totalUsers}</div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-[10px] md:text-xs font-medium">Administrador</CardTitle>
-                  <Shield className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+              <Card className="min-w-[140px] sm:min-w-0">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-2 md:p-4">
+                  <CardTitle className="text-[10px] md:text-xs font-medium truncate">Administrador</CardTitle>
+                  <Shield className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
                 </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0">
-                  <div className="text-lg md:text-xl font-bold text-purple-600">{stats.usersByRole['admin'] || 0}</div>
+                <CardContent className="p-2 md:p-4 pt-0">
+                  <div className="text-base md:text-xl font-bold text-purple-600">{stats.usersByRole['admin'] || 0}</div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-[10px] md:text-xs font-medium">Empresa Premium</CardTitle>
-                  <Crown className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+              <Card className="min-w-[140px] sm:min-w-0">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-2 md:p-4">
+                  <CardTitle className="text-[10px] md:text-xs font-medium truncate">Empresa Premium</CardTitle>
+                  <Crown className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
                 </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0">
-                  <div className="text-lg md:text-xl font-bold text-yellow-600">{stats.usersByRole['premium_business'] || 0}</div>
+                <CardContent className="p-2 md:p-4 pt-0">
+                  <div className="text-base md:text-xl font-bold text-yellow-600">{stats.usersByRole['premium_business'] || 0}</div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-[10px] md:text-xs font-medium">Empresa Freemium</CardTitle>
-                  <Building className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+              <Card className="min-w-[140px] sm:min-w-0">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-2 md:p-4">
+                  <CardTitle className="text-[10px] md:text-xs font-medium truncate">Empresa Freemium</CardTitle>
+                  <Building className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
                 </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0">
-                  <div className="text-lg md:text-xl font-bold text-blue-600">{stats.usersByRole['freemium_business'] || 0}</div>
+                <CardContent className="p-2 md:p-4 pt-0">
+                  <div className="text-base md:text-xl font-bold text-blue-600">{stats.usersByRole['freemium_business'] || 0}</div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-[10px] md:text-xs font-medium">Talento Premium</CardTitle>
-                  <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+              <Card className="min-w-[140px] sm:min-w-0">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-2 md:p-4">
+                  <CardTitle className="text-[10px] md:text-xs font-medium truncate">Talento Premium</CardTitle>
+                  <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
                 </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0">
-                  <div className="text-lg md:text-xl font-bold text-orange-600">{stats.usersByRole['premium_talent'] || 0}</div>
+                <CardContent className="p-2 md:p-4 pt-0">
+                  <div className="text-base md:text-xl font-bold text-orange-600">{stats.usersByRole['premium_talent'] || 0}</div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
-                  <CardTitle className="text-[10px] md:text-xs font-medium">Talento Freemium</CardTitle>
-                  <User className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+              <Card className="min-w-[140px] sm:min-w-0">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-2 md:p-4">
+                  <CardTitle className="text-[10px] md:text-xs font-medium truncate">Talento Freemium</CardTitle>
+                  <User className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
                 </CardHeader>
-                <CardContent className="p-3 md:p-6 pt-0">
-                  <div className="text-lg md:text-xl font-bold text-green-600">{stats.usersByRole['freemium_talent'] || 0}</div>
+                <CardContent className="p-2 md:p-4 pt-0">
+                  <div className="text-base md:text-xl font-bold text-green-600">{stats.usersByRole['freemium_talent'] || 0}</div>
                 </CardContent>
               </Card>
             </div>
           </div>
 
-          <main className="flex-1 overflow-auto p-4 md:p-6">
+          <main className="flex-1 overflow-auto p-3 md:p-6">`
             {activeTab === "dashboard" && (
               <AdminDashboard onTabChange={(tab) => {
                 const tabMap: Record<string, string> = {
