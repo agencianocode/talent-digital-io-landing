@@ -35,6 +35,7 @@ import AdminCompanyManagement from './admin/AdminCompanyManagement';
 import AdminOpportunityModeration from './admin/AdminOpportunityModeration';
 import AdminMarketplaceManagement from './admin/AdminMarketplaceManagement';
 import AdminChatManagement from './admin/AdminChatManagement';
+import { AdminProfileSettings } from '@/components/admin/AdminProfileSettings';
 import { useAdminChatBadge } from '@/hooks/useAdminChatBadge';
 
 interface AdminStats {
@@ -299,6 +300,11 @@ const AdminPanel: React.FC = () => {
                   </Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="admin-profile" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <User className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden md:inline">Mi Perfil</span>
+                <span className="md:hidden">Perfil</span>
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -468,12 +474,16 @@ const AdminPanel: React.FC = () => {
           <AdminMarketplaceManagement />
         </TabsContent>
 
-          <TabsContent value="user-chat">
-            <AdminChatManagement />
-          </TabsContent>
-        </Tabs>
-      </div>
+        <TabsContent value="user-chat">
+          <AdminChatManagement />
+        </TabsContent>
+
+        <TabsContent value="admin-profile">
+          <AdminProfileSettings />
+        </TabsContent>
+      </Tabs>
     </div>
+  </div>
   );
 };
 
