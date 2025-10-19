@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Search, MessageSquare, User } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Search, MessageSquare, User, Send, Users, CheckSquare, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -19,22 +20,31 @@ interface StartNewChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   onStartChat: (userId: string, userName: string) => void;
+  onBulkMessage?: (userIds: string[], message: string) => void;
 }
 
 const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
   isOpen,
   onClose,
-  onStartChat
+  onStartChat,
+  onBulkMessage
 }) => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [bulkMessage, setBulkMessage] = useState('');
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [isSendingBulk, setIsSendingBulk] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       loadUsers();
       setSearchQuery('');
+      setSelectedUsers(new Set());
+      setBulkMessage('');
+      setIsBulkMode(false);
     }
   }, [isOpen]);
 
@@ -85,6 +95,45 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
     onClose();
   };
 
+  const handleUserSelect = (userId: string) => {
+    const newSelected = new Set(selectedUsers);
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId);
+    } else {
+      newSelected.add(userId);
+    }
+    setSelectedUsers(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUsers.size === filteredUsers.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(filteredUsers.map(user => user.user_id)));
+    }
+  };
+
+  const handleBulkSend = async () => {
+    if (!onBulkMessage || selectedUsers.size === 0 || !bulkMessage.trim()) {
+      toast.error('Selecciona usuarios y escribe un mensaje');
+      return;
+    }
+
+    setIsSendingBulk(true);
+    try {
+      await onBulkMessage(Array.from(selectedUsers), bulkMessage);
+      toast.success(`Mensaje enviado a ${selectedUsers.size} usuarios`);
+      setBulkMessage('');
+      setSelectedUsers(new Set());
+      setIsBulkMode(false);
+    } catch (error) {
+      console.error('Error sending bulk message:', error);
+      toast.error('Error al enviar el mensaje masivo');
+    } finally {
+      setIsSendingBulk(false);
+    }
+  };
+
   const getUserTypeBadge = (role: string) => {
     switch (role) {
       case 'talent':
@@ -109,9 +158,21 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            Iniciar Nuevo Chat
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Iniciar Nuevo Chat
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={isBulkMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIsBulkMode(!isBulkMode)}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Mensaje Masivo
+              </Button>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
@@ -126,6 +187,52 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
               className="pl-10"
             />
           </div>
+
+          {/* Bulk Mode Controls */}
+          {isBulkMode && (
+            <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                  >
+                    {selectedUsers.size === filteredUsers.length ? (
+                      <CheckSquare className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Square className="h-4 w-4 mr-2" />
+                    )}
+                    {selectedUsers.size === filteredUsers.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {selectedUsers.size} de {filteredUsers.length} usuarios seleccionados
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Mensaje para todos los usuarios seleccionados:</label>
+                <textarea
+                  placeholder="Escribe tu mensaje aquí..."
+                  value={bulkMessage}
+                  onChange={(e) => setBulkMessage(e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-500"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleBulkSend}
+                    disabled={selectedUsers.size === 0 || !bulkMessage.trim() || isSendingBulk}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {isSendingBulk ? 'Enviando...' : `Enviar a ${selectedUsers.size} usuarios`}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Users List */}
           <div className="flex-1 overflow-y-auto border rounded-lg">
@@ -154,8 +261,16 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
                 {filteredUsers.map((user) => (
                   <div
                     key={user.user_id}
-                    className="flex items-center justify-between gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    className={`flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors ${
+                      isBulkMode ? 'justify-start' : 'justify-between'
+                    }`}
                   >
+                    {isBulkMode && (
+                      <Checkbox
+                        checked={selectedUsers.has(user.user_id)}
+                        onCheckedChange={() => handleUserSelect(user.user_id)}
+                      />
+                    )}
                     <div className="flex items-center gap-3 flex-1">
                       <Avatar>
                         <AvatarFallback className="bg-primary/10 text-primary">
@@ -170,13 +285,15 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
                         <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                       </div>
                     </div>
-                    <Button
-                      onClick={() => handleStartChat(user)}
-                      size="sm"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Iniciar Chat
-                    </Button>
+                    {!isBulkMode && (
+                      <Button
+                        onClick={() => handleStartChat(user)}
+                        size="sm"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Iniciar Chat
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>

@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
-import { Upload, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Upload, Eye, EyeOff, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const profileSchema = z.object({
@@ -36,6 +36,7 @@ type PasswordFormData = z.infer<typeof passwordSchema>;
 export const AdminProfileSettings: React.FC = () => {
   const { user, profile, updateProfile, updatePassword } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -86,6 +87,7 @@ export const AdminProfileSettings: React.FC = () => {
 
   const onProfileSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
+    setSaveMessage(null); // Clear previous message
     try {
       if (!user) {
         throw new Error('Usuario no autenticado');
@@ -103,11 +105,22 @@ export const AdminProfileSettings: React.FC = () => {
         throw new Error(result.error.message || 'Error al actualizar el perfil');
       }
 
+      // Show success message
+      setSaveMessage({ type: 'success', text: 'Perfil actualizado correctamente' });
       toast.success('Perfil actualizado correctamente');
-      profileForm.reset(data);
+      
+      // Don't reset the form to avoid navigation issues
+      // profileForm.reset(data);
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
+      setSaveMessage({ type: 'error', text: `Error al actualizar el perfil: ${error instanceof Error ? error.message : 'Error desconocido'}` });
       toast.error(`Error al actualizar el perfil: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      
+      // Clear error message after 5 seconds
+      setTimeout(() => setSaveMessage(null), 5000);
     } finally {
       setIsLoading(false);
     }
@@ -120,6 +133,7 @@ export const AdminProfileSettings: React.FC = () => {
     }
 
     setIsLoading(true);
+    setSaveMessage(null); // Clear previous message
     try {
       const { error: currentPasswordError } = await supabase.auth.signInWithPassword({
         email: user.email!,
@@ -127,21 +141,32 @@ export const AdminProfileSettings: React.FC = () => {
       });
 
       if (currentPasswordError) {
+        setSaveMessage({ type: 'error', text: 'La contraseña actual es incorrecta' });
         toast.error('La contraseña actual es incorrecta');
+        setTimeout(() => setSaveMessage(null), 5000);
         return;
       }
 
       const { error } = await updatePassword(data.newPassword);
       
       if (error) {
+        setSaveMessage({ type: 'error', text: 'Error al cambiar la contraseña: ' + error.message });
         toast.error('Error al cambiar la contraseña: ' + error.message);
+        setTimeout(() => setSaveMessage(null), 5000);
       } else {
+        setSaveMessage({ type: 'success', text: 'Contraseña actualizada correctamente' });
         toast.success('Contraseña actualizada correctamente');
-        passwordForm.reset();
+        
+        // Don't reset the form to avoid navigation issues
+        // passwordForm.reset();
+        
+        setTimeout(() => setSaveMessage(null), 3000);
       }
     } catch (error) {
       console.error('Error al cambiar contraseña:', error);
+      setSaveMessage({ type: 'error', text: 'Error al cambiar la contraseña' });
       toast.error('Error al cambiar la contraseña');
+      setTimeout(() => setSaveMessage(null), 5000);
     } finally {
       setIsLoading(false);
     }
@@ -359,6 +384,22 @@ export const AdminProfileSettings: React.FC = () => {
                 />
               </div>
 
+              {/* Save Message */}
+              {saveMessage && (
+                <div className={`flex items-center gap-2 p-3 rounded-lg border ${
+                  saveMessage.type === 'success' 
+                    ? 'bg-green-50 border-green-200 text-green-800' 
+                    : 'bg-red-50 border-red-200 text-red-800'
+                }`}>
+                  {saveMessage.type === 'success' ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <XCircle className="h-4 w-4" />
+                  )}
+                  <span className="text-sm font-medium">{saveMessage.text}</span>
+                </div>
+              )}
+
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Guardar Cambios
@@ -473,6 +514,22 @@ export const AdminProfileSettings: React.FC = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Save Message */}
+              {saveMessage && (
+                <div className={`flex items-center gap-2 p-3 rounded-lg border ${
+                  saveMessage.type === 'success' 
+                    ? 'bg-green-50 border-green-200 text-green-800' 
+                    : 'bg-red-50 border-red-200 text-red-800'
+                }`}>
+                  {saveMessage.type === 'success' ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <XCircle className="h-4 w-4" />
+                  )}
+                  <span className="text-sm font-medium">{saveMessage.text}</span>
+                </div>
+              )}
 
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

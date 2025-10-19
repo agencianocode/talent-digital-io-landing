@@ -134,10 +134,10 @@ const AdminUserManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Gestión de Usuarios</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold">Gestión de Usuarios</h2>
+          <p className="text-sm text-muted-foreground">
             Administra todos los usuarios de la plataforma
           </p>
         </div>
@@ -145,6 +145,7 @@ const AdminUserManagement: React.FC = () => {
           onClick={handleRefresh} 
           variant="outline" 
           disabled={isLoading}
+          className="w-full sm:w-auto"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           Actualizar
@@ -194,60 +195,68 @@ const AdminUserManagement: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {users.map((user) => (
-                <div key={user.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                  {/* Avatar */}
-                  <div className="flex-shrink-0">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={user.avatar_url || undefined} alt={user.full_name} />
-                      <AvatarFallback className="bg-primary/10">
-                        {user.full_name?.charAt(0)?.toUpperCase() || getRoleIcon(user.role)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-
-                  {/* User Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium truncate">{user.full_name}</h3>
-                      {getRoleBadge(user.role)}
-                      {getStatusBadge(user)}
+                <div key={user.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                  {/* Avatar and Basic Info */}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex-shrink-0">
+                      <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+                        <AvatarImage src={user.avatar_url || undefined} alt={user.full_name} />
+                        <AvatarFallback className="bg-primary/10 text-xs sm:text-sm">
+                          {user.full_name?.charAt(0)?.toUpperCase() || getRoleIcon(user.role)}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-                    <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                      <span>
-                        Registrado {formatDistanceToNow(new Date(user.created_at), { 
-                          addSuffix: true, 
-                          locale: es 
-                        })}
-                      </span>
-                      {user.last_sign_in_at && (
-                        <span>
-                          Último acceso {formatDistanceToNow(new Date(user.last_sign_in_at), { 
+
+                    {/* User Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                        <h3 className="font-medium text-sm sm:text-base truncate">{user.full_name}</h3>
+                        <div className="flex flex-wrap gap-1">
+                          {getRoleBadge(user.role)}
+                          {getStatusBadge(user)}
+                        </div>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate mb-1">{user.email}</p>
+                      
+                      {/* Mobile: Stack info vertically, Desktop: horizontal */}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-muted-foreground">
+                        <span className="truncate">
+                          Registrado {formatDistanceToNow(new Date(user.created_at), { 
                             addSuffix: true, 
                             locale: es 
                           })}
                         </span>
-                      )}
-                      {user.companies_count > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Building className="h-3 w-3" />
-                          {user.companies_count} empresa{user.companies_count > 1 ? 's' : ''}
-                        </span>
-                      )}
+                        {user.last_sign_in_at && (
+                          <span className="truncate">
+                            acceso {formatDistanceToNow(new Date(user.last_sign_in_at), { 
+                              addSuffix: true, 
+                              locale: es 
+                            })}
+                          </span>
+                        )}
+                        {user.companies_count > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Building className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{user.companies_count} empresa{user.companies_count > 1 ? 's' : ''}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 sm:flex-shrink-0">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewUser(user.id)}
+                      className="w-full sm:w-auto text-xs sm:text-sm"
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Detalles
+                      <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Ver Detalles</span>
+                      <span className="sm:hidden">Ver</span>
                     </Button>
                   </div>
                 </div>
@@ -257,19 +266,20 @@ const AdminUserManagement: React.FC = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-6">
+              <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
                 Mostrando {((currentPage - 1) * 20) + 1} a {Math.min(currentPage * 20, filteredUsers.length)} de {filteredUsers.length} usuarios
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
+                  className="text-xs sm:text-sm"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                  Anterior
+                  <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline ml-1">Anterior</span>
                 </Button>
                 
                 <div className="flex items-center gap-1">
@@ -282,7 +292,7 @@ const AdminUserManagement: React.FC = () => {
                         variant={isActive ? "default" : "outline"}
                         size="sm"
                         onClick={() => setCurrentPage(page)}
-                        className="w-8 h-8 p-0"
+                        className="w-7 h-7 sm:w-8 sm:h-8 p-0 text-xs sm:text-sm"
                       >
                         {page}
                       </Button>
@@ -295,9 +305,10 @@ const AdminUserManagement: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
+                  className="text-xs sm:text-sm"
                 >
-                  Siguiente
-                  <ChevronRight className="h-4 w-4" />
+                  <span className="hidden sm:inline mr-1">Siguiente</span>
+                  <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </div>

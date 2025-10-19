@@ -3,17 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   MessageSquare, 
   Building, 
   Send,
   AlertTriangle,
-  Mail,
-  Trash2
+  Mail
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
@@ -72,8 +68,6 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [adminNotes, setAdminNotes] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadConversationDetail = async () => {
     if (!conversationId) return;
@@ -190,7 +184,6 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
       };
 
       setConversation(conversationData);
-      setAdminNotes(conversationData.admin_notes || '');
     } catch (error) {
       console.error('Error loading conversation detail:', error);
       toast.error('Error al cargar los detalles de la conversación');
@@ -278,102 +271,6 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
     }
   };
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!conversation) return;
-
-    try {
-      const { error } = await supabase
-        .from('conversations')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', conversation.id);
-
-      if (error) throw error;
-
-      setConversation(prev => prev ? {
-        ...prev,
-        status: newStatus as any,
-        updated_at: new Date().toISOString()
-      } : null);
-
-      toast.success(`Estado actualizado a ${newStatus}`);
-      onConversationUpdate();
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Error al cambiar el estado');
-    }
-  };
-
-  const handlePriorityChange = async (newPriority: string) => {
-    if (!conversation) return;
-
-    try {
-      const { error } = await supabase
-        .from('conversations')
-        .update({ priority: newPriority, updated_at: new Date().toISOString() })
-        .eq('id', conversation.id);
-
-      if (error) throw error;
-
-      setConversation(prev => prev ? {
-        ...prev,
-        priority: newPriority as any,
-        updated_at: new Date().toISOString()
-      } : null);
-
-      toast.success('Prioridad actualizada correctamente');
-      onConversationUpdate();
-    } catch (error) {
-      console.error('Error updating priority:', error);
-      toast.error('Error al actualizar la prioridad');
-    }
-  };
-
-  const handleDeleteConversation = async () => {
-    if (!conversation || !conversationId) return;
-
-    const confirmed = window.confirm('¿Estás seguro de que deseas eliminar esta conversación? Esta acción no se puede deshacer.');
-    
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    try {
-      // Delete conversation (cascade will delete messages)
-      const { error: deleteError } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('id', conversationId);
-
-      if (deleteError) throw deleteError;
-
-      toast.success('Conversación eliminada correctamente');
-      onConversationUpdate();
-      onClose();
-    } catch (error) {
-      console.error('Error deleting conversation:', error);
-      toast.error('Error al eliminar la conversación');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleSaveNotes = async () => {
-    if (!conversation) return;
-
-    try {
-      const { error } = await supabase
-        .from('conversations')
-        .update({ admin_notes: adminNotes, updated_at: new Date().toISOString() })
-        .eq('id', conversation.id);
-
-      if (error) throw error;
-
-      toast.success('Notas guardadas correctamente');
-      onConversationUpdate();
-    } catch (error) {
-      console.error('Error saving notes:', error);
-      toast.error('Error al guardar las notas');
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -502,11 +399,11 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
             <CardContent className="pt-6">
               <div className="space-y-4">
                 <div>
-                  <Label>Asunto</Label>
+                  <div className="text-sm font-medium text-muted-foreground">Asunto</div>
                   <p className="font-medium">{conversation.subject}</p>
                 </div>
                 <div>
-                  <Label>Tags</Label>
+                  <div className="text-sm font-medium text-muted-foreground">Tags</div>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {conversation.tags.map((tag, index) => (
                       <Badge key={index} variant="outline">{tag}</Badge>
@@ -587,13 +484,14 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="new-message">Mensaje</Label>
-                  <Textarea
+                  <div className="text-sm font-medium text-muted-foreground mb-2">Mensaje</div>
+                  <textarea
                     id="new-message"
                     placeholder="Escribe tu mensaje aquí..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     rows={3}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-500"
                   />
                 </div>
                 <div className="flex justify-end">
@@ -609,69 +507,6 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
             </CardContent>
           </Card>
 
-          {/* Acciones de moderación */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Acciones de Moderación</CardTitle>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDeleteConversation}
-                  disabled={isDeleting}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {isDeleting ? 'Eliminando...' : 'Eliminar conversación'}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Label className="w-32">Estado:</Label>
-                  <Select value={conversation.status} onValueChange={handleStatusChange}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Activa</SelectItem>
-                      <SelectItem value="pending">Pendiente</SelectItem>
-                      <SelectItem value="resolved">Resuelta</SelectItem>
-                      <SelectItem value="archived">Archivada</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <Label className="w-32">Prioridad:</Label>
-                  <Select value={conversation.priority} onValueChange={handlePriorityChange}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="high">Alta</SelectItem>
-                      <SelectItem value="medium">Media</SelectItem>
-                      <SelectItem value="low">Baja</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="admin-notes">Notas Administrativas:</Label>
-                  <Textarea
-                    id="admin-notes"
-                    placeholder="Agregar notas sobre esta conversación..."
-                    value={adminNotes}
-                    onChange={(e) => setAdminNotes(e.target.value)}
-                    rows={3}
-                  />
-                  <Button onClick={handleSaveNotes} variant="outline" size="sm">
-                    Guardar Notas
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </DialogContent>
     </Dialog>

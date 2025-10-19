@@ -358,9 +358,9 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
   if (isLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Cargando oportunidad...</DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto w-[95vw] sm:w-full mx-2 sm:mx-0 p-2 sm:p-6">
+          <DialogHeader className="px-3 sm:px-6">
+            <DialogTitle className="text-lg sm:text-xl">Cargando oportunidad...</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="animate-pulse">
@@ -375,13 +375,13 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
   if (!opportunity) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Oportunidad no encontrada</DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto w-[95vw] sm:w-full mx-2 sm:mx-0 p-2 sm:p-6">
+          <DialogHeader className="px-3 sm:px-6">
+            <DialogTitle className="text-lg sm:text-xl">Oportunidad no encontrada</DialogTitle>
           </DialogHeader>
           <div className="text-center py-8">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-            <p>No se pudo cargar la información de la oportunidad</p>
+            <p className="text-sm sm:text-base">No se pudo cargar la información de la oportunidad</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -390,29 +390,30 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5" />
-            Detalles de la Oportunidad
+      <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto w-[95vw] sm:w-full mx-2 sm:mx-0 p-2 sm:p-6">
+        <DialogHeader className="px-2 sm:px-6 pb-2">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-xl">
+            <Briefcase className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="truncate">Detalles de la Oportunidad</span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-4 px-2 sm:px-0">
           {/* Header con acciones */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
               {getStatusBadge(opportunity.status)}
               {getPriorityBadge(opportunity.priority)}
               {getCategoryBadge(opportunity.category)}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsEditing(!isEditing)}
+                className="text-xs"
               >
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="h-3 w-3 mr-1" />
                 {isEditing ? 'Cancelar' : 'Editar'}
               </Button>
               {opportunity.status === 'active' ? (
@@ -421,8 +422,9 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                   size="sm"
                   onClick={() => handleStatusChange('paused')}
                   disabled={isUpdating}
+                  className="text-xs"
                 >
-                  <Pause className="h-4 w-4 mr-2" />
+                  <Pause className="h-3 w-3 mr-1" />
                   Pausar
                 </Button>
               ) : (
@@ -431,8 +433,9 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                   size="sm"
                   onClick={() => handleStatusChange('active')}
                   disabled={isUpdating}
+                  className="text-xs"
                 >
-                  <Play className="h-4 w-4 mr-2" />
+                  <Play className="h-3 w-3 mr-1" />
                   Activar
                 </Button>
               )}
@@ -441,8 +444,9 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                 size="sm"
                 onClick={handleDeleteOpportunity}
                 disabled={isUpdating}
+                className="text-xs"
               >
-                <AlertTriangle className="h-4 w-4 mr-2" />
+                <AlertTriangle className="h-3 w-3 mr-1" />
                 Dar de Baja
               </Button>
             </div>
@@ -450,36 +454,39 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
           {/* Información Básica */}
           <Card>
-            <CardHeader>
-              <CardTitle>Información Básica</CardTitle>
+            <CardHeader className="pb-2 px-3 sm:px-6">
+              <CardTitle className="text-sm sm:text-base">Información Básica</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label>Título</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editData.title || ''}
-                        onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-                      />
-                    ) : (
-                      <p className="font-medium">{opportunity.title}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label>Descripción</Label>
-                    {isEditing ? (
-                      <Textarea
-                        value={editData.description || ''}
-                        onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                        rows={4}
-                      />
-                    ) : (
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{opportunity.description}</p>
-                    )}
-                  </div>
+            <CardContent className="px-3 sm:px-6 pt-0">
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium">Título</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editData.title || ''}
+                      onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <p className="font-medium text-sm sm:text-base mt-1">{opportunity.title}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Descripción</Label>
+                  {isEditing ? (
+                    <Textarea
+                      value={editData.description || ''}
+                      onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                      rows={4}
+                      className="mt-1 resize-none w-full"
+                    />
+                  ) : (
+                    <div className="mt-1 p-2 bg-gray-50 rounded text-xs sm:text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto">
+                      {opportunity.description}
+                    </div>
+                  )}
+                </div>
 
                   <div>
                     <Label>Categoría</Label>
@@ -505,17 +512,14 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                       <p className="font-medium">{opportunity.category}</p>
                     )}
                   </div>
-                </div>
-
-                <div className="space-y-4">
                   <div>
-                    <Label>Tipo de Contrato</Label>
+                    <Label className="text-sm font-medium">Tipo de Contrato</Label>
                     {isEditing ? (
                       <Select
                         value={editData.contract_type || ''}
                         onValueChange={(value) => setEditData({ ...editData, contract_type: value })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Seleccionar tipo" />
                         </SelectTrigger>
                         <SelectContent>
@@ -527,18 +531,18 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                         </SelectContent>
                       </Select>
                     ) : (
-                      <p className="font-medium">{opportunity.contract_type}</p>
+                      <p className="font-medium text-sm sm:text-base mt-1">{opportunity.contract_type}</p>
                     )}
                   </div>
 
                   <div>
-                    <Label>Tipo de Oportunidad</Label>
+                    <Label className="text-sm font-medium">Tipo de Oportunidad</Label>
                     {isEditing ? (
                       <Select
                         value={editData.type || ''}
                         onValueChange={(value) => setEditData({ ...editData, type: value })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Seleccionar tipo" />
                         </SelectTrigger>
                         <SelectContent>
@@ -548,7 +552,7 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                         </SelectContent>
                       </Select>
                     ) : (
-                      <p className="font-medium">{opportunity.type}</p>
+                      <p className="font-medium text-sm sm:text-base mt-1">{opportunity.type}</p>
                     )}
                   </div>
 
@@ -609,33 +613,35 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                   </div>
 
                   <div>
-                    <Label>Ubicación</Label>
+                    <Label className="text-sm font-medium">Ubicación</Label>
                     {isEditing ? (
                       <Input
                         value={editData.location || ''}
                         onChange={(e) => setEditData({ ...editData, location: e.target.value })}
                         placeholder="Remoto, Ciudad, País"
+                        className="mt-1"
                       />
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{opportunity.location}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm sm:text-base break-words min-w-0 flex-1">{opportunity.location}</span>
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <Label>Zona Horaria Preferida</Label>
+                    <Label className="text-sm font-medium">Zona Horaria Preferida</Label>
                     {isEditing ? (
                       <Input
                         value={editData.timezone_preference || ''}
                         onChange={(e) => setEditData({ ...editData, timezone_preference: e.target.value })}
                         placeholder="Ej: GMT-5, UTC-3"
+                        className="mt-1"
                       />
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-muted-foreground" />
-                        <span>{opportunity.timezone_preference || 'No especificada'}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm sm:text-base break-words min-w-0 flex-1">{opportunity.timezone_preference || 'No especificada'}</span>
                       </div>
                     )}
                   </div>
@@ -657,17 +663,16 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                       )}
                     </div>
                   )}
-                </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Requisitos */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2 px-3 sm:px-6">
               <CardTitle>Requisitos</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6 pt-0">
               {isEditing ? (
                 <Textarea
                   value={editData.requirements || ''}
@@ -685,13 +690,13 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
           {/* Información Salarial */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2 px-3 sm:px-6">
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
                 Información Salarial
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6 pt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label>Tipo de Pago</Label>
@@ -749,7 +754,7 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                       placeholder="0"
                     />
                   ) : (
-                    <p className="font-medium">
+                    <p className="font-medium text-sm sm:text-base break-words">
                       {opportunity.salary_min 
                         ? `${opportunity.currency} ${opportunity.salary_min.toLocaleString()}`
                         : 'No especificado'
@@ -768,7 +773,7 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                       placeholder="0"
                     />
                   ) : (
-                    <p className="font-medium">
+                    <p className="font-medium text-sm sm:text-base break-words">
                       {opportunity.salary_max 
                         ? `${opportunity.currency} ${opportunity.salary_max.toLocaleString()}`
                         : 'No especificado'
@@ -811,13 +816,13 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
           {/* Skills y Experiencia */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2 px-3 sm:px-6">
               <CardTitle className="flex items-center gap-2">
                 <Tag className="h-5 w-5" />
                 Skills y Experiencia
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6 pt-0">
               <div className="space-y-4">
                 <div>
                   <Label>Skills Requeridas</Label>
@@ -849,13 +854,13 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
           {/* Configuración de Visibilidad */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2 px-3 sm:px-6">
               <CardTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />
                 Configuración de Visibilidad
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6 pt-0">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -927,28 +932,28 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
           {/* Estadísticas */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2 px-3 sm:px-6">
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 Estadísticas
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 border rounded-lg">
-                  <FileText className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <p className="text-2xl font-bold">{opportunity.applications_count}</p>
-                  <p className="text-sm text-muted-foreground">Postulaciones</p>
+            <CardContent className="px-3 sm:px-6 pt-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="text-center p-3 sm:p-4 border rounded-lg">
+                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-blue-600" />
+                  <p className="text-lg sm:text-2xl font-bold">{opportunity.applications_count}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Postulaciones</p>
                 </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <Eye className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <p className="text-2xl font-bold">{opportunity.views_count}</p>
-                  <p className="text-sm text-muted-foreground">Visualizaciones</p>
+                <div className="text-center p-3 sm:p-4 border rounded-lg">
+                  <Eye className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-green-600" />
+                  <p className="text-lg sm:text-2xl font-bold">{opportunity.views_count}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Visualizaciones</p>
                 </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <Building className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-                  <p className="text-2xl font-bold">{opportunity.company_name}</p>
-                  <p className="text-sm text-muted-foreground">Empresa</p>
+                <div className="text-center p-3 sm:p-4 border rounded-lg sm:col-span-2 lg:col-span-1">
+                  <Building className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-purple-600" />
+                  <p className="text-lg sm:text-2xl font-bold break-words">{opportunity.company_name}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Empresa</p>
                 </div>
               </div>
             </CardContent>
@@ -956,10 +961,10 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
           {/* Acciones de Moderación */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2 px-3 sm:px-6">
               <CardTitle>Acciones de Moderación</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6 pt-0">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <Label className="w-32">Prioridad:</Label>

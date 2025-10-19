@@ -284,9 +284,9 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
   if (isLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Cargando servicio...</DialogTitle>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[98vw] sm:w-full mx-1 sm:mx-0">
+          <DialogHeader className="px-3 sm:px-6">
+            <DialogTitle className="text-lg sm:text-xl">Cargando servicio...</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="animate-pulse">
@@ -301,13 +301,13 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
   if (!service) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Servicio no encontrado</DialogTitle>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[98vw] sm:w-full mx-1 sm:mx-0">
+          <DialogHeader className="px-3 sm:px-6">
+            <DialogTitle className="text-lg sm:text-xl">Servicio no encontrado</DialogTitle>
           </DialogHeader>
           <div className="text-center py-8">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-            <p>No se pudo cargar la información del servicio</p>
+            <p className="text-sm sm:text-base">No se pudo cargar la información del servicio</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -316,29 +316,30 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5" />
-            Detalles del Servicio
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[98vw] sm:w-full mx-1 sm:mx-0">
+        <DialogHeader className="px-3 sm:px-6">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="truncate">Detalles del Servicio</span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 px-1 sm:px-0">
           {/* Header con acciones */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
               {getStatusBadge(service.status)}
               {getPriorityBadge(service.priority)}
               {getCategoryBadge(service.category)}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsEditing(!isEditing)}
+                className="w-full sm:w-auto text-xs sm:text-sm"
               >
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 {isEditing ? 'Cancelar' : 'Editar'}
               </Button>
               {service.status === 'draft' || service.status === 'paused' ? (
@@ -347,9 +348,9 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                   size="sm"
                   onClick={handleApproveService}
                   disabled={isUpdating}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 w-full sm:w-auto text-xs sm:text-sm"
                 >
-                  <Check className="h-4 w-4 mr-2" />
+                  <Check className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Aprobar y Publicar
                 </Button>
               ) : null}
@@ -359,8 +360,9 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                   size="sm"
                   onClick={handleUnpublishService}
                   disabled={isUpdating}
+                  className="w-full sm:w-auto text-xs sm:text-sm"
                 >
-                  <X className="h-4 w-4 mr-2" />
+                  <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Despublicar
                 </Button>
               ) : null}
@@ -369,8 +371,9 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                 size="sm"
                 onClick={handleDeleteService}
                 disabled={isUpdating}
+                className="w-full sm:w-auto text-xs sm:text-sm"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Eliminar
               </Button>
             </div>
@@ -378,74 +381,76 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
 
           {/* Información Básica */}
           <Card>
-            <CardHeader>
-              <CardTitle>Información Básica</CardTitle>
+            <CardHeader className="pb-3 sm:pb-6 px-3 sm:px-6">
+              <CardTitle className="text-sm sm:text-base">Información Básica</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label>Título</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editData.title || ''}
-                        onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-                      />
-                    ) : (
-                      <p className="font-medium">{service.title}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label>Descripción</Label>
-                    {isEditing ? (
-                      <Textarea
-                        value={editData.description || ''}
-                        onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                        rows={4}
-                      />
-                    ) : (
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{service.description}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label>Categoría</Label>
-                    {isEditing ? (
-                      <Select
-                        value={editData.category || ''}
-                        onValueChange={(value) => setEditData({ ...editData, category: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar categoría" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="diseno-grafico">Diseño Gráfico</SelectItem>
-                          <SelectItem value="desarrollo-web">Desarrollo Web</SelectItem>
-                          <SelectItem value="marketing-digital">Marketing Digital</SelectItem>
-                          <SelectItem value="consultoria">Consultoría</SelectItem>
-                          <SelectItem value="redaccion">Redacción</SelectItem>
-                          <SelectItem value="traduccion">Traducción</SelectItem>
-                          <SelectItem value="video-edicion">Video y Edición</SelectItem>
-                          <SelectItem value="otros">Otros</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <p className="font-medium">{service.category}</p>
-                    )}
-                  </div>
+            <CardContent className="px-3 sm:px-6">
+              <div className="space-y-3 sm:space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Título</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editData.title || ''}
+                      onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <p className="font-medium text-sm sm:text-base mt-1 break-words">{service.title}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Descripción</Label>
+                  {isEditing ? (
+                    <Textarea
+                      value={editData.description || ''}
+                      onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                      rows={4}
+                      className="mt-1 resize-none"
+                    />
+                  ) : (
+                    <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-wrap mt-1 break-words">{service.description}</p>
+                  )}
                 </div>
 
-                <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Categoría</Label>
+                  {isEditing ? (
+                    <Select
+                      value={editData.category || ''}
+                      onValueChange={(value) => setEditData({ ...editData, category: value })}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Seleccionar categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="diseno-grafico">Diseño Gráfico</SelectItem>
+                        <SelectItem value="desarrollo-web">Desarrollo Web</SelectItem>
+                        <SelectItem value="marketing-digital">Marketing Digital</SelectItem>
+                        <SelectItem value="consultoria">Consultoría</SelectItem>
+                        <SelectItem value="redaccion">Redacción</SelectItem>
+                        <SelectItem value="traduccion">Traducción</SelectItem>
+                        <SelectItem value="video-edicion">Video y Edición</SelectItem>
+                        <SelectItem value="otros">Otros</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm sm:text-base mt-1 break-words">{service.category}</p>
+                  )}
+                </div>
+                </div>
+
+                <div className="space-y-3 sm:space-y-4">
                   <div>
-                    <Label>Precio</Label>
+                    <Label className="text-sm font-medium">Precio</Label>
                     {isEditing ? (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-1">
                         <Input
                           type="number"
                           value={editData.price || ''}
                           onChange={(e) => setEditData({ ...editData, price: parseFloat(e.target.value) })}
                           placeholder="0.00"
+                          className="flex-1"
                         />
                         <Select
                           value={editData.currency || 'USD'}
@@ -463,40 +468,41 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                         </Select>
                       </div>
                     ) : (
-                      <p className="font-medium">{service.currency} {service.price}</p>
+                      <p className="font-medium text-sm sm:text-base mt-1 break-words">{service.currency} {service.price}</p>
                     )}
                   </div>
 
                   <div>
-                    <Label>Tiempo de Entrega</Label>
+                    <Label className="text-sm font-medium">Tiempo de Entrega</Label>
                     {isEditing ? (
                       <Input
                         value={editData.delivery_time || ''}
                         onChange={(e) => setEditData({ ...editData, delivery_time: e.target.value })}
                         placeholder="Ej: 3-5 días"
+                        className="mt-1"
                       />
                     ) : (
-                      <p className="font-medium">{service.delivery_time}</p>
+                      <p className="font-medium text-sm sm:text-base mt-1 break-words">{service.delivery_time}</p>
                     )}
                   </div>
 
                   <div>
-                    <Label>Ubicación</Label>
+                    <Label className="text-sm font-medium">Ubicación</Label>
                     {isEditing ? (
                       <Input
                         value={editData.location || ''}
                         onChange={(e) => setEditData({ ...editData, location: e.target.value })}
                         placeholder="Remoto, Ciudad, País"
+                        className="mt-1"
                       />
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{service.location}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm sm:text-base break-words min-w-0 flex-1">{service.location}</span>
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
             </CardContent>
           </Card>
 
@@ -508,7 +514,7 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                 Información del Proveedor
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               <div className="flex items-center gap-4">
                 {service.user_avatar ? (
                   <img 
@@ -542,7 +548,7 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                 Enlaces y Portfolio
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               <div className="space-y-4">
                 <div>
                   <Label>URL del Portfolio</Label>
@@ -604,7 +610,7 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                 Estadísticas
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 border rounded-lg">
                   <Eye className="h-8 w-8 mx-auto mb-2 text-blue-600" />
@@ -632,10 +638,10 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
 
           {/* Acciones de Moderación */}
           <Card>
-            <CardHeader>
-              <CardTitle>Acciones de Moderación</CardTitle>
+            <CardHeader className="pb-3 sm:pb-6 px-3 sm:px-6">
+              <CardTitle className="text-sm sm:text-base">Acciones de Moderación</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <Label className="w-32">Prioridad:</Label>

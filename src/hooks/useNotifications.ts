@@ -7,6 +7,12 @@ export const useNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
+  // For now, always return 0 until notifications system is properly implemented
+  // This prevents showing fake notification counts
+  useEffect(() => {
+    setUnreadCount(0);
+  }, [user]);
+
   // Fetch unread count from Supabase
   const fetchUnreadCount = useCallback(async () => {
     if (!user) {
@@ -17,18 +23,25 @@ export const useNotifications = () => {
     try {
       setIsLoading(true);
       
+      // Check if notifications table exists and has data
       const { count, error } = await supabase
         .from('notifications' as any)
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('read', false);
 
-      if (error) throw error;
+      if (error) {
+        console.log('[useNotifications] Notifications table not found or error:', error.message);
+        // If table doesn't exist or has errors, set count to 0
+        setUnreadCount(0);
+        return;
+      }
       
       setUnreadCount(count || 0);
       console.log('[useNotifications] Unread count:', count || 0);
     } catch (error) {
       console.error('[useNotifications] Error fetching unread count:', error);
+      // Always set to 0 if there's any error
       setUnreadCount(0);
     } finally {
       setIsLoading(false);
@@ -36,6 +49,8 @@ export const useNotifications = () => {
   }, [user]);
 
   // Load unread count on mount and setup realtime subscription
+  // Commented out until notifications system is properly implemented
+  /*
   useEffect(() => {
     fetchUnreadCount();
     
@@ -106,6 +121,7 @@ export const useNotifications = () => {
       clearInterval(interval);
     };
   }, [fetchUnreadCount, user]);
+  */
 
   // Reload unread count (can be called externally)
   const reload = useCallback(() => {

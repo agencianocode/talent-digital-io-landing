@@ -128,6 +128,70 @@ const AdminChatManagement: React.FC = () => {
     }
   };
 
+  const handleBulkMessage = async (userIds: string[], message: string) => {
+    try {
+      // Get current admin user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No hay usuario autenticado');
+
+      // Send message to each user
+      const promises = userIds.map(async (userId) => {
+        // Create or get conversation with this user
+        const { data: conversation, error: convError } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('admin_id', user.id)
+          .single();
+
+        let conversationId;
+        if (convError && convError.code === 'PGRST116') {
+          // Conversation doesn't exist, create it
+          const { data: newConv, error: createError } = await supabase
+            .from('conversations')
+            .insert({
+              user_id: userId,
+              admin_id: user.id,
+              status: 'active',
+              priority: 'medium',
+              subject: 'Mensaje del administrador',
+              tags: ['admin-message']
+            })
+            .select('id')
+            .single();
+
+          if (createError) throw createError;
+          conversationId = newConv.id;
+        } else if (convError) {
+          throw convError;
+        } else {
+          conversationId = conversation.id;
+        }
+
+        // Send the message
+        const { error: messageError } = await supabase
+          .from('messages')
+          .insert({
+            sender_id: user.id,
+            recipient_id: userId,
+            conversation_id: `chat_${user.id}_${userId}`,
+            conversation_uuid: conversationId,
+            content: message,
+            message_type: 'text',
+            is_read: false
+          });
+
+        if (messageError) throw messageError;
+      });
+
+      await Promise.all(promises);
+      refetch(); // Refresh conversations list
+    } catch (error) {
+      console.error('Error sending bulk message:', error);
+      throw error;
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -493,6 +557,7 @@ const AdminChatManagement: React.FC = () => {
         isOpen={isNewChatModalOpen}
         onClose={() => setIsNewChatModalOpen(false)}
         onStartChat={handleStartNewChat}
+        onBulkMessage={handleBulkMessage}
       />
     </div>
   );

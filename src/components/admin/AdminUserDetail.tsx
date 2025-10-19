@@ -345,21 +345,21 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full mx-2 sm:mx-0">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             {getRoleIcon(user.role)}
-            Detalles del Usuario
+            <span className="truncate">Detalles del Usuario</span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Información Básica */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <span>Información Básica</span>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {getRoleBadge(user.role)}
                   <Badge variant={user.is_active ? "default" : "destructive"}>
                     {user.is_active ? "Activo" : "Suspendido"}
@@ -368,53 +368,53 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{user.full_name}</p>
-                      <p className="text-sm text-muted-foreground">Nombre completo</p>
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm sm:text-base truncate">{user.full_name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Nombre completo</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{user.email}</p>
-                      <p className="text-sm text-muted-foreground">Email</p>
+                    <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm sm:text-base truncate">{user.email}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Email</p>
                     </div>
                   </div>
 
                   {user.phone && (
                     <div className="flex items-center gap-3">
-                      <Phone className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">{user.phone}</p>
-                        <p className="text-sm text-muted-foreground">Teléfono</p>
+                      <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm sm:text-base truncate">{user.phone}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Teléfono</p>
                       </div>
                     </div>
                   )}
 
                   {user.country && (
                     <div className="flex items-center gap-3">
-                      <MapPin className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">{user.country}</p>
-                        <p className="text-sm text-muted-foreground">País</p>
+                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm sm:text-base truncate">{user.country}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">País</p>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="flex items-center gap-3">
-                    <Calendar className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm sm:text-base">
                         {new Date(user.created_at).toLocaleDateString('es')}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Registrado {formatDistanceToNow(new Date(user.created_at), { 
                           addSuffix: true, 
                           locale: es 
@@ -425,12 +425,12 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
                   {user.last_sign_in_at && (
                     <div className="flex items-center gap-3">
-                      <Clock className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">
+                      <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm sm:text-base">
                           {new Date(user.last_sign_in_at).toLocaleDateString('es')}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           Último acceso {formatDistanceToNow(new Date(user.last_sign_in_at), { 
                             addSuffix: true, 
                             locale: es 
@@ -442,10 +442,10 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
                   {user.email_confirmed_at && (
                     <div className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <div>
-                        <p className="font-medium text-green-600">Email verificado</p>
-                        <p className="text-sm text-muted-foreground">
+                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-green-600 text-sm sm:text-base">Email verificado</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {new Date(user.email_confirmed_at).toLocaleDateString('es')}
                         </p>
                       </div>
@@ -459,7 +459,7 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
           {/* Empresas Asociadas */}
           {user.companies && user.companies.length > 0 && (
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3 sm:pb-6">
                 <CardTitle className="flex items-center gap-2">
                   <Building className="h-5 w-5" />
                   Empresas Asociadas
@@ -468,17 +468,17 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
               <CardContent>
                 <div className="space-y-3">
                   {user.companies.map((company) => (
-                    <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{company.name}</p>
-                        <p className="text-sm text-muted-foreground">
+                    <div key={company.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 border rounded-lg">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm sm:text-base truncate">{company.name}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           Se unió {formatDistanceToNow(new Date(company.joined_at), { 
                             addSuffix: true, 
                             locale: es 
                           })}
                         </p>
                       </div>
-                      <Badge variant="outline">{company.role}</Badge>
+                      <Badge variant="outline" className="w-fit">{company.role}</Badge>
                     </div>
                   ))}
                 </div>
@@ -488,44 +488,48 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
           {/* Acciones Administrativas */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3 sm:pb-6">
               <CardTitle>Acciones Administrativas</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {/* Cambiar Rol */}
-                <div className="flex items-center gap-4">
-                  <Label htmlFor="role-select" className="w-32">Cambiar Rol:</Label>
-                  <Select value={newRole} onValueChange={setNewRole}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Administrador</SelectItem>
-                      <SelectItem value="premium_business">Empresa Premium</SelectItem>
-                      <SelectItem value="freemium_business">Empresa Freemium</SelectItem>
-                      <SelectItem value="premium_talent">Talento Premium</SelectItem>
-                      <SelectItem value="freemium_talent">Talento Freemium</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    onClick={handleRoleChange}
-                    disabled={isUpdating || newRole === user.role}
-                    size="sm"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Actualizar
-                  </Button>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <Label htmlFor="role-select" className="w-full sm:w-32 text-sm font-medium">Cambiar Rol:</Label>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 flex-1">
+                    <Select value={newRole} onValueChange={setNewRole}>
+                      <SelectTrigger className="w-full sm:w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Administrador</SelectItem>
+                        <SelectItem value="premium_business">Empresa Premium</SelectItem>
+                        <SelectItem value="freemium_business">Empresa Freemium</SelectItem>
+                        <SelectItem value="premium_talent">Talento Premium</SelectItem>
+                        <SelectItem value="freemium_talent">Talento Freemium</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      onClick={handleRoleChange}
+                      disabled={isUpdating || newRole === user.role}
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Actualizar
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Suspender/Reactivar */}
-                <div className="flex items-center gap-4">
-                  <Label className="w-32">Estado:</Label>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <Label className="w-full sm:w-32 text-sm font-medium">Estado:</Label>
                   <Button 
                     onClick={handleSuspendUser}
                     disabled={isUpdating}
                     variant={user.is_active ? "destructive" : "default"}
                     size="sm"
+                    className="w-full sm:w-auto"
                   >
                     {user.is_active ? (
                       <>
@@ -542,26 +546,26 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
                 </div>
 
                 {/* Resetear Contraseña */}
-                <div className="flex items-center gap-4">
-                  <Label className="w-32">Contraseña:</Label>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <Label className="w-full sm:w-32 text-sm font-medium">Contraseña:</Label>
                   <Dialog open={showPasswordReset} onOpenChange={setShowPasswordReset}>
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         <Eye className="h-4 w-4 mr-2" />
                         Resetear
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="w-[95vw] sm:w-full mx-2 sm:mx-0">
                       <DialogHeader>
-                        <DialogTitle>Resetear Contraseña</DialogTitle>
+                        <DialogTitle className="text-lg sm:text-xl">Resetear Contraseña</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
-                        <p>¿Estás seguro de que quieres enviar un enlace de recuperación de contraseña a <strong>{user.email}</strong>?</p>
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setShowPasswordReset(false)}>
+                        <p className="text-sm sm:text-base">¿Estás seguro de que quieres enviar un enlace de recuperación de contraseña a <strong className="break-all">{user.email}</strong>?</p>
+                        <div className="flex flex-col sm:flex-row justify-end gap-2">
+                          <Button variant="outline" onClick={() => setShowPasswordReset(false)} className="w-full sm:w-auto">
                             Cancelar
                           </Button>
-                          <Button onClick={handlePasswordReset} disabled={isUpdating}>
+                          <Button onClick={handlePasswordReset} disabled={isUpdating} className="w-full sm:w-auto">
                             Enviar Enlace
                           </Button>
                         </div>
@@ -571,31 +575,35 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
                 </div>
 
                 {/* Eliminar Usuario */}
-                <div className="flex items-center gap-4 pt-4 border-t">
-                  <Label className="w-32 text-destructive">Zona Peligrosa:</Label>
-                  <Button 
-                    onClick={handleDeleteUser}
-                    disabled={isUpdating}
-                    variant="destructive"
-                    size="sm"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Eliminar Usuario
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    Esta acción es permanente y no se puede deshacer
-                  </p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 pt-4 border-t">
+                  <Label className="w-full sm:w-32 text-destructive text-sm font-medium">Zona Peligrosa:</Label>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 flex-1">
+                    <Button 
+                      onClick={handleDeleteUser}
+                      disabled={isUpdating}
+                      variant="destructive"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Eliminar Usuario
+                    </Button>
+                    <p className="text-xs text-muted-foreground flex-1">
+                      Esta acción es permanente y no se puede deshacer
+                    </p>
+                  </div>
                 </div>
 
                 {/* Notas Administrativas */}
                 <div className="space-y-2">
-                  <Label htmlFor="admin-notes">Notas Administrativas:</Label>
+                  <Label htmlFor="admin-notes" className="text-sm font-medium">Notas Administrativas:</Label>
                   <Textarea
                     id="admin-notes"
                     placeholder="Agregar notas sobre este usuario..."
                     value={adminNotes}
                     onChange={(e) => setAdminNotes(e.target.value)}
                     rows={3}
+                    className="resize-none"
                   />
                 </div>
               </div>
