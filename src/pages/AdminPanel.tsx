@@ -426,6 +426,20 @@ const AdminPanel: React.FC = () => {
               <AdminChatManagement />
             )}
 
+            {activeTab === "notifications" && (
+              <div className="p-6">
+                <h2 className="text-2xl font-bold mb-4">Notificaciones</h2>
+                <p className="text-muted-foreground">Panel de notificaciones administrativas</p>
+              </div>
+            )}
+
+            {activeTab === "settings" && (
+              <div className="p-6">
+                <h2 className="text-2xl font-bold mb-4">Configuración</h2>
+                <p className="text-muted-foreground">Configuración del sistema</p>
+              </div>
+            )}
+
             {activeTab === "admin-profile" && (
               <AdminProfileSettings />
             )}
