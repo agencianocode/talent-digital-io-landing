@@ -48,12 +48,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard Administrativo</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">Dashboard Administrativo</h1>
+          <p className="text-sm text-muted-foreground">
             Resumen general de la plataforma
           </p>
         </div>
@@ -61,6 +61,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
           onClick={handleRefresh} 
           variant="outline" 
           disabled={isLoading}
+          className="w-full sm:w-auto"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           Actualizar
@@ -86,51 +87,51 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
             Acciones Rápidas
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
             <Button 
               variant="outline" 
-              className="h-20 flex flex-col gap-2"
+              className="h-auto min-h-[80px] md:h-20 flex flex-col gap-1 md:gap-2 p-3"
               onClick={() => onTabChange?.('users')}
             >
-              <span className="text-lg">👥</span>
-              <span className="text-sm">Gestionar Usuarios</span>
+              <span className="text-base md:text-lg">👥</span>
+              <span className="text-xs md:text-sm text-center leading-tight">Gestionar Usuarios</span>
             </Button>
             <Button 
               variant="outline" 
-              className="h-20 flex flex-col gap-2"
+              className="h-auto min-h-[80px] md:h-20 flex flex-col gap-1 md:gap-2 p-3"
               onClick={() => onTabChange?.('companies')}
             >
-              <span className="text-lg">🏢</span>
-              <span className="text-sm">Gestionar Empresas</span>
+              <span className="text-base md:text-lg">🏢</span>
+              <span className="text-xs md:text-sm text-center leading-tight">Gestionar Empresas</span>
             </Button>
             <Button 
               variant="outline" 
-              className="h-20 flex flex-col gap-2"
+              className="h-auto min-h-[80px] md:h-20 flex flex-col gap-1 md:gap-2 p-3"
               onClick={() => onTabChange?.('opportunities')}
             >
-              <span className="text-lg">💼</span>
-              <span className="text-sm">Moderar Oportunidades</span>
+              <span className="text-base md:text-lg">💼</span>
+              <span className="text-xs md:text-sm text-center leading-tight">Moderar Oportunidades</span>
             </Button>
             <Button 
               variant="outline" 
-              className="h-20 flex flex-col gap-2"
+              className="h-auto min-h-[80px] md:h-20 flex flex-col gap-1 md:gap-2 p-3"
               onClick={() => onTabChange?.('marketplace')}
             >
-              <span className="text-lg">🛍</span>
-              <span className="text-sm">Gestionar Marketplace</span>
+              <span className="text-base md:text-lg">🛍</span>
+              <span className="text-xs md:text-sm text-center leading-tight">Gestionar Marketplace</span>
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* System Status */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Estado del Sistema</CardTitle>
