@@ -139,12 +139,12 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Gestión de Empresas</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl md:text-2xl font-bold">Gestión de Empresas</h2>
+          <p className="text-sm text-muted-foreground">
             Administra todas las empresas registradas en la plataforma
           </p>
         </div>
@@ -152,6 +152,7 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
           onClick={handleRefresh} 
           variant="outline" 
           disabled={isLoading}
+          className="w-full sm:w-auto"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           Actualizar
@@ -201,91 +202,102 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {companies.map((company) => (
-                <div key={company.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                  {/* Logo */}
-                  <div className="flex-shrink-0">
-                    {company.logo_url ? (
-                      <img 
-                        src={company.logo_url} 
-                        alt={company.name}
-                        className="h-12 w-12 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Building className="h-6 w-6 text-primary" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Company Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium truncate">{company.name}</h3>
-                      {getIndustryBadge(company.industry)}
-                      {getSizeBadge(company.size)}
-                      {getStatusBadge(company.is_active)}
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate mb-2">
-                      {company.description || 'Sin descripción'}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Crown className="h-3 w-3" />
-                        <span>{company.owner_name}</span>
-                      </div>
-                      {company.location && (
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          <span>{company.location}</span>
+                <div key={company.id} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-3 md:p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                  {/* Logo + Basic Info */}
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {/* Logo */}
+                    <div className="flex-shrink-0">
+                      {company.logo_url ? (
+                        <img 
+                          src={company.logo_url} 
+                          alt={company.name}
+                          className="h-12 w-12 md:h-14 md:w-14 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 md:h-14 md:w-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Building className="h-6 w-6 text-primary" />
                         </div>
                       )}
-                      {company.website && (
-                        <div className="flex items-center gap-1">
-                          <Globe className="h-3 w-3" />
-                          <span>Sitio web</span>
+                    </div>
+
+                    {/* Company Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start flex-col gap-2 mb-2">
+                        <h3 className="font-medium text-sm md:text-base">{company.name}</h3>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {getIndustryBadge(company.industry)}
+                          {getSizeBadge(company.size)}
+                          {getStatusBadge(company.is_active)}
                         </div>
+                      </div>
+                      
+                      {company.description && (
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-2">
+                          {company.description}
+                        </p>
                       )}
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>
-                          Registrada {formatDistanceToNow(new Date(company.created_at), { 
-                            addSuffix: true, 
-                            locale: es 
-                          })}
-                        </span>
+                      
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Crown className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{company.owner_name}</span>
+                        </div>
+                        {company.location && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{company.location}</span>
+                          </div>
+                        )}
+                        {company.website && (
+                          <div className="flex items-center gap-1">
+                            <Globe className="h-3 w-3 flex-shrink-0" />
+                            <span>Sitio web</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
+                            Registrada {formatDistanceToNow(new Date(company.created_at), { 
+                              addSuffix: true, 
+                              locale: es 
+                            })}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Stats */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="text-center">
+                  {/* Stats + Actions */}
+                  <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4">
+                    {/* Stats */}
+                    <div className="flex items-center gap-3 md:gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span className="font-medium">{company.users_count}</span>
+                        <Users className="h-4 w-4 flex-shrink-0" />
+                        <div className="flex flex-col md:flex-row md:items-center md:gap-1">
+                          <span className="font-medium">{company.users_count}</span>
+                          <span className="text-xs md:text-sm">usuarios</span>
+                        </div>
                       </div>
-                      <span className="text-xs">usuarios</span>
-                    </div>
-                    <div className="text-center">
                       <div className="flex items-center gap-1">
-                        <Briefcase className="h-4 w-4" />
-                        <span className="font-medium">{company.opportunities_count}</span>
+                        <Briefcase className="h-4 w-4 flex-shrink-0" />
+                        <div className="flex flex-col md:flex-row md:items-center md:gap-1">
+                          <span className="font-medium">{company.opportunities_count}</span>
+                          <span className="text-xs md:text-sm">oportunidades</span>
+                        </div>
                       </div>
-                      <span className="text-xs">oportunidades</span>
                     </div>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
+                    {/* Actions */}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewCompany(company.id)}
+                      className="flex-shrink-0"
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Detalles
+                      <Eye className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">Ver Detalles</span>
                     </Button>
                   </div>
                 </div>
@@ -295,8 +307,8 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 Mostrando {((currentPage - 1) * 20) + 1} a {Math.min(currentPage * 20, filteredCompanies.length)} de {filteredCompanies.length} empresas
               </div>
               <div className="flex items-center gap-2">
@@ -307,7 +319,7 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
                   disabled={currentPage === 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Anterior
+                  <span className="hidden sm:inline">Anterior</span>
                 </Button>
                 
                 <div className="flex items-center gap-1">
@@ -334,7 +346,7 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  Siguiente
+                  <span className="hidden sm:inline">Siguiente</span>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
