@@ -157,7 +157,7 @@ export const useAdminMarketplace = () => {
     }
 
     // Category filter - normalize category values for comparison
-    if (filters.categoryFilter !== 'all') {
+    if (filters.categoryFilter && filters.categoryFilter !== 'all') {
       filtered = filtered.filter(service => {
         const serviceCategory = (service.category || '').toLowerCase().trim();
         const filterCategory = filters.categoryFilter.toLowerCase().trim();
@@ -167,20 +167,20 @@ export const useAdminMarketplace = () => {
         
         // Handle common variations
         const categoryMap: Record<string, string[]> = {
-          'diseno-grafico': ['diseno-grafico', 'diseño gráfico', 'diseño', 'graphic design'],
-          'desarrollo-web': ['desarrollo-web', 'desarrollo web', 'web development', 'programacion'],
-          'marketing-digital': ['marketing-digital', 'marketing digital', 'digital marketing'],
+          'diseno-grafico': ['diseno-grafico', 'diseño gráfico', 'diseño', 'graphic design', 'diseno grafico'],
+          'desarrollo-web': ['desarrollo-web', 'desarrollo web', 'web development', 'programacion', 'desarrollo web'],
+          'marketing-digital': ['marketing-digital', 'marketing digital', 'digital marketing', 'marketing digital'],
           'consultoria': ['consultoria', 'consultoría', 'consulting'],
           'redaccion': ['redaccion', 'redacción', 'writing', 'copywriting'],
           'traduccion': ['traduccion', 'traducción', 'translation'],
-          'video-edicion': ['video-edicion', 'video y edición', 'video editing', 'edicion'],
+          'video-edicion': ['video-edicion', 'video y edición', 'video editing', 'edicion', 'video edicion'],
           'otros': ['otros', 'other', 'otro']
         };
         
         // Check if the service category matches any variation
         for (const [key, variations] of Object.entries(categoryMap)) {
-          if (key === filterCategory && variations.some(v => serviceCategory.includes(v))) {
-            return true;
+          if (key === filterCategory) {
+            return variations.some(v => serviceCategory.includes(v) || v.includes(serviceCategory));
           }
         }
         

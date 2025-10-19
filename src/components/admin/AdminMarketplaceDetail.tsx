@@ -13,15 +13,16 @@ import {
   MapPin, 
   Users,
   Edit,
-  Pause,
-  Play,
   AlertTriangle,
   CheckCircle,
   Eye,
   FileText,
   Tag,
   Star,
-  User
+  User,
+  Trash2,
+  Check,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -160,6 +161,79 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
     }
   };
 
+  const handleDeleteService = async () => {
+    if (!service) return;
+    
+    if (!confirm('¿Estás seguro de eliminar este servicio? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('marketplace_services')
+        .delete()
+        .eq('id', serviceId);
+
+      if (error) throw error;
+
+      toast.success('Servicio eliminado correctamente');
+      onServiceUpdate();
+      onClose();
+    } catch (error) {
+      console.error('Error deleting service:', error);
+      toast.error('Error al eliminar el servicio');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleApproveService = async () => {
+    if (!service) return;
+
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('marketplace_services')
+        .update({ status: 'active', is_available: true })
+        .eq('id', serviceId);
+
+      if (error) throw error;
+
+      toast.success('Servicio aprobado y publicado correctamente');
+      onServiceUpdate();
+      loadServiceDetail();
+    } catch (error) {
+      console.error('Error approving service:', error);
+      toast.error('Error al aprobar el servicio');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleUnpublishService = async () => {
+    if (!service) return;
+
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('marketplace_services')
+        .update({ status: 'paused', is_available: false })
+        .eq('id', serviceId);
+
+      if (error) throw error;
+
+      toast.success('Servicio despublicado correctamente');
+      onServiceUpdate();
+      loadServiceDetail();
+    } catch (error) {
+      console.error('Error unpublishing service:', error);
+      toast.error('Error al despublicar el servicio');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -267,27 +341,38 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                 <Edit className="h-4 w-4 mr-2" />
                 {isEditing ? 'Cancelar' : 'Editar'}
               </Button>
+              {service.status === 'draft' || service.status === 'paused' ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleApproveService}
+                  disabled={isUpdating}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Aprobar y Publicar
+                </Button>
+              ) : null}
               {service.status === 'active' ? (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleStatusChange('paused')}
+                  onClick={handleUnpublishService}
                   disabled={isUpdating}
                 >
-                  <Pause className="h-4 w-4 mr-2" />
-                  Pausar
+                  <X className="h-4 w-4 mr-2" />
+                  Despublicar
                 </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleStatusChange('active')}
-                  disabled={isUpdating}
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Activar
-                </Button>
-              )}
+              ) : null}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteService}
+                disabled={isUpdating}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar
+              </Button>
             </div>
           </div>
 
