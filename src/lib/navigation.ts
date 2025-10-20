@@ -33,7 +33,7 @@ export const ROUTES = {
   // Settings
   SETTINGS_PROFILE: '/settings/profile',
   SETTINGS_TALENT_PROFILE: '/settings/talent-profile',
-  SETTINGS_COMPANY: '/settings/company',
+  SETTINGS_COMPANY: '/business-dashboard/settings/company',
   
   // Onboarding
   ONBOARDING: '/onboarding',

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,17 +28,27 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useOpportunityDashboard } from '@/hooks/useOpportunityDashboard';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { UnsavedChangesModal } from '@/components/UnsavedChangesModal';
 
 const CompanyDetails = () => {
   const navigate = useNavigate();
   const { activeCompany, refreshCompanies } = useCompany();
   const { opportunities, applicationCounts, isLoading: loadingOpportunities } = useOpportunityDashboard(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('business-data');
   
   // Form data states
   const [businessType, setBusinessType] = useState('');
   const [formData, setFormData] = useState({
+    certifications: '',
+    benefits: ''
+  });
+
+  // Initial data for comparison
+  const [initialData, setInitialData] = useState({
+    businessType: '',
     certifications: '',
     benefits: ''
   });
@@ -67,14 +77,65 @@ const CompanyDetails = () => {
 
   useEffect(() => {
     if (activeCompany) {
-      setBusinessType(activeCompany.business_type || '');
-      // Initialize form data if company has additional data
+      const businessTypeValue = activeCompany.business_type || '';
+      const certificationsValue = (activeCompany as any).certifications || '';
+      const benefitsValue = (activeCompany as any).benefits || '';
+      
+      setBusinessType(businessTypeValue);
       setFormData({
-        certifications: (activeCompany as any).certifications || '',
-        benefits: (activeCompany as any).benefits || ''
+        certifications: certificationsValue,
+        benefits: benefitsValue
+      });
+      
+      // Set initial data for comparison
+      setInitialData({
+        businessType: businessTypeValue,
+        certifications: certificationsValue,
+        benefits: benefitsValue
       });
     }
   }, [activeCompany]);
+
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = useMemo(() => {
+    return (
+      businessType !== initialData.businessType ||
+      formData.certifications !== initialData.certifications ||
+      formData.benefits !== initialData.benefits
+    );
+  }, [businessType, formData, initialData]);
+
+  // Handle save function for unsaved changes
+  const handleSaveForNavigation = async () => {
+    setIsSaving(true);
+    try {
+      await handleSave();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle discard changes
+  const handleDiscardChanges = () => {
+    setBusinessType(initialData.businessType);
+    setFormData({
+      certifications: initialData.certifications,
+      benefits: initialData.benefits
+    });
+  };
+
+  // Use unsaved changes hook
+  const {
+    showModal,
+    handleSaveAndContinue,
+    handleDiscardAndContinue,
+    handleCancel
+  } = useUnsavedChanges({
+    hasUnsavedChanges,
+    onSave: handleSaveForNavigation,
+    onDiscard: handleDiscardChanges,
+    message: 'Tienes cambios sin guardar en los detalles de la empresa. ¿Quieres guardar antes de salir?'
+  });
 
   const handleSave = async () => {
     if (!activeCompany) return;
@@ -91,6 +152,13 @@ const CompanyDetails = () => {
         .eq('id', activeCompany.id);
 
       if (error) throw error;
+      
+      // Update initial data to reflect saved state
+      setInitialData({
+        businessType,
+        certifications: formData.certifications,
+        benefits: formData.benefits
+      });
       
       toast.success('Datos guardados exitosamente');
       await refreshCompanies();
@@ -546,6 +614,15 @@ const CompanyDetails = () => {
         </div>
       </div>
 
+      {/* Unsaved Changes Modal */}
+      <UnsavedChangesModal
+        isOpen={showModal}
+        onClose={handleCancel}
+        onSave={handleSaveAndContinue}
+        onDiscard={handleDiscardAndContinue}
+        isSaving={isSaving}
+        message="Tienes cambios sin guardar en los detalles de la empresa. ¿Quieres guardar antes de salir?"
+      />
     </div>
     </TooltipProvider>
   );

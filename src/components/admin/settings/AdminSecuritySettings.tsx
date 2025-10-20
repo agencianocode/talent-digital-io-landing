@@ -149,7 +149,7 @@ const AdminSecuritySettings: React.FC = () => {
         form.reset(settings);
       }
     } catch (error) {
-      console.error('Error loading security settings:', error);
+      // console.error('Error loading security settings:', error); // REMOVED FOR PRODUCTION
       toast.error('Error al cargar la configuración de seguridad');
     } finally {
       setIsLoading(false);
@@ -166,18 +166,18 @@ const AdminSecuritySettings: React.FC = () => {
         .limit(5);
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error loading security alerts:', error);
+        // console.error('Error loading security alerts:', error); // REMOVED FOR PRODUCTION
         return;
       }
 
       setSecurityAlerts(data || []);
     } catch (error) {
-      console.error('Error loading security alerts:', error);
+      // console.error('Error loading security alerts:', error); // REMOVED FOR PRODUCTION
     }
   };
 
   const onSubmit = async (data: SecuritySettingsFormData) => {
-    console.log('onSubmit called with data:', data);
+    // console.log('onSubmit called with data:', data); // REMOVED FOR PRODUCTION
     setIsSaving(true);
     setSaveMessage(null); // Clear previous message
     try {
@@ -198,7 +198,7 @@ const AdminSecuritySettings: React.FC = () => {
         };
       });
 
-      console.log('Settings to save:', settingsToSave);
+      // console.log('Settings to save:', settingsToSave); // REMOVED FOR PRODUCTION
 
       // Delete existing settings
       const { error: deleteError } = await supabase
@@ -207,7 +207,7 @@ const AdminSecuritySettings: React.FC = () => {
         .eq('category', 'security');
 
       if (deleteError) {
-        console.error('Delete error:', deleteError);
+        // console.error('Delete error:', deleteError); // REMOVED FOR PRODUCTION
         throw deleteError;
       }
 
@@ -217,11 +217,11 @@ const AdminSecuritySettings: React.FC = () => {
         .insert(settingsToSave);
 
       if (error) {
-        console.error('Insert error:', error);
+        // console.error('Insert error:', error); // REMOVED FOR PRODUCTION
         throw error;
       }
 
-      console.log('Settings saved successfully');
+      // console.log('Settings saved successfully'); // REMOVED FOR PRODUCTION
 
       // Show success message
       setSaveMessage({ type: 'success', text: 'Configuración de seguridad guardada correctamente' });
@@ -230,7 +230,7 @@ const AdminSecuritySettings: React.FC = () => {
       // Clear message after 3 seconds
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
-      console.error('Error saving security settings:', error);
+      // console.error('Error saving security settings:', error); // REMOVED FOR PRODUCTION
       setSaveMessage({ type: 'error', text: 'Error al guardar la configuración de seguridad' });
       toast.error('Error al guardar la configuración de seguridad');
       
@@ -295,7 +295,7 @@ const AdminSecuritySettings: React.FC = () => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
-          console.log('Form validation errors:', errors);
+          // console.log('Form validation errors:', errors); // REMOVED FOR PRODUCTION
           toast.error('Por favor corrige los errores en el formulario');
         })} className="space-y-6">
           {/* Authentication Settings */}

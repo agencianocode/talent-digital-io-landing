@@ -26,6 +26,67 @@ TalentoDigital.io es una plataforma completa para conectar empresas con talento 
 - **TypeScript Estricto**: Configuración robusta para mejor mantenibilidad
 - **Logging Optimizado**: Sistema de logs centralizado y eficiente
 
+## 🚀 Deployment y Configuración
+
+### Variables de Entorno Requeridas
+
+Crea un archivo `.env.local` basado en `.env.example`:
+
+```bash
+# Supabase Configuration
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key-here
+
+# Web Push Notifications (VAPID Keys)
+VITE_VAPID_PUBLIC_KEY=your-vapid-public-key-here
+```
+
+### Configuración de Supabase
+
+1. **Ejecutar Migraciones SQL**:
+   ```sql
+   -- Ejecutar en Supabase SQL Editor
+   -- Archivo: setup_admin_system_complete.sql
+   ```
+
+2. **Configurar Edge Functions**:
+   ```bash
+   # Instalar Supabase CLI
+   npm install -g supabase
+   
+   # Login y link del proyecto
+   supabase login
+   supabase link --project-ref [tu-project-ref]
+   
+   # Configurar secretos VAPID
+   supabase secrets set VAPID_PUBLIC_KEY=your-public-key
+   supabase secrets set VAPID_PRIVATE_KEY=your-private-key
+   supabase secrets set VAPID_SUBJECT=mailto:your-email@domain.com
+   
+   # Desplegar Edge Functions
+   supabase functions deploy send-push-notification
+   supabase functions deploy send-email
+   supabase functions deploy send-invitation
+   # ... otras funciones
+   ```
+
+3. **Configurar Storage Buckets**:
+   - `avatars`: Para avatares de usuarios (público)
+   - `message-attachments`: Para archivos de mensajería (privado)
+
+### Build de Producción
+
+```bash
+# Instalar dependencias
+npm install
+
+# Build para producción
+npm run build
+
+# Preview del build
+npm run preview
+```
+
 ## How can I edit this code?
 
 There are several ways of editing your application.

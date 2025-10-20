@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,6 +14,8 @@ import { TalentProfileWizard } from '@/components/wizard/TalentProfileWizard';
 import { CompanyProfileWizard } from '@/components/wizard/CompanyProfileWizard';
 import { ProfileCompletenessCard } from '@/components/ProfileCompletenessCard';
 import { useProfileSync } from '@/hooks/useProfileSync';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { UnsavedChangesModal } from '@/components/UnsavedChangesModal';
 import { toast } from 'sonner';
 import { Upload, Eye, EyeOff, Loader2, ArrowLeft, User, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +49,7 @@ const ProfileSettings = () => {
   } = useSupabaseAuth();
   const { handleProfileUpdate } = useProfileSync();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     const tabParam = searchParams.get('tab');
     console.log('ProfileSettings: initial tab from URL', tabParam);
@@ -117,6 +120,65 @@ const ProfileSettings = () => {
       profileForm.setValue('photo', profile.avatar_url);
     }
   }, [profile?.avatar_url, profileForm]);
+
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = useMemo(() => {
+    const currentValues = profileForm.getValues();
+    const initialValues = {
+      name: profile?.full_name || user?.user_metadata?.full_name || '',
+      email: user?.email || '',
+      phone: profile?.phone || user?.user_metadata?.phone || '',
+      country: profile?.country || user?.user_metadata?.country || '',
+      city: profile?.city || user?.user_metadata?.city || '',
+      photo: profile?.avatar_url || user?.user_metadata?.avatar_url || ''
+    };
+
+    return (
+      currentValues.name !== initialValues.name ||
+      currentValues.email !== initialValues.email ||
+      currentValues.phone !== initialValues.phone ||
+      currentValues.country !== initialValues.country ||
+      currentValues.city !== initialValues.city ||
+      currentValues.photo !== initialValues.photo
+    );
+  }, [profileForm.watch(), profile, user]);
+
+  // Handle save function for unsaved changes
+  const handleSaveForNavigation = async () => {
+    setIsSaving(true);
+    try {
+      const currentValues = profileForm.getValues();
+      await onProfileSubmit(currentValues);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle discard changes
+  const handleDiscardChanges = () => {
+    const initialValues = {
+      name: profile?.full_name || user?.user_metadata?.full_name || '',
+      email: user?.email || '',
+      phone: profile?.phone || user?.user_metadata?.phone || '',
+      country: profile?.country || user?.user_metadata?.country || '',
+      city: profile?.city || user?.user_metadata?.city || '',
+      photo: profile?.avatar_url || user?.user_metadata?.avatar_url || ''
+    };
+    profileForm.reset(initialValues);
+  };
+
+  // Use unsaved changes hook
+  const {
+    showModal,
+    handleSaveAndContinue,
+    handleDiscardAndContinue,
+    handleCancel
+  } = useUnsavedChanges({
+    hasUnsavedChanges,
+    onSave: handleSaveForNavigation,
+    onDiscard: handleDiscardChanges,
+    message: 'Tienes cambios sin guardar en tu perfil. ¿Quieres guardar antes de salir?'
+  });
   const onProfileSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
     try {
@@ -560,6 +622,16 @@ const ProfileSettings = () => {
             <CompanyProfileWizard />
           </TabsContent>}
       </Tabs>
+
+      {/* Unsaved Changes Modal */}
+      <UnsavedChangesModal
+        isOpen={showModal}
+        onClose={handleCancel}
+        onSave={handleSaveAndContinue}
+        onDiscard={handleDiscardAndContinue}
+        isSaving={isSaving}
+        message="Tienes cambios sin guardar en tu perfil. ¿Quieres guardar antes de salir?"
+      />
     </div>;
 };
 export default ProfileSettings;

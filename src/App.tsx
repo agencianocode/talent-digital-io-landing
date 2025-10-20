@@ -85,8 +85,8 @@ const PublicOpportunity = lazy(() => import('./pages/PublicOpportunity'));
 const WelcomePage = lazy(() => import('./pages/WelcomePage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-// Testing pages
-const NotificationsDemo = lazy(() => import('./pages/testing/NotificationsDemo'));
+// Testing pages - REMOVED FOR PRODUCTION
+// const NotificationsDemo = lazy(() => import('./pages/testing/NotificationsDemo'));
 
 function App() {
   return (
@@ -366,6 +366,11 @@ function App() {
                             <UsersManagement />
                           </Suspense>
                         } />
+                        <Route path="settings/company" element={
+                          <Suspense fallback={<LoadingSkeleton type="profile" />}>
+                            <CompanySettings />
+                          </Suspense>
+                        } />
                       </Route>
 
                       {/* Settings Routes */}
@@ -377,11 +382,6 @@ function App() {
                       <Route path="/settings/talent-profile" element={
                         <Suspense fallback={<LoadingSkeleton type="profile" />}>
                           <TalentProfileSettings />
-                        </Suspense>
-                      } />
-                      <Route path="/settings/company" element={
-                        <Suspense fallback={<LoadingSkeleton type="profile" />}>
-                          <CompanySettings />
                         </Suspense>
                       } />
                       <Route path="/onboarding" element={
@@ -411,12 +411,12 @@ function App() {
                         </Suspense>
                       } />
 
-                      {/* Testing Routes */}
-                      <Route path="/testing/notifications-demo" element={
+                      {/* Testing Routes - REMOVED FOR PRODUCTION */}
+                      {/* <Route path="/testing/notifications-demo" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <NotificationsDemo />
                         </Suspense>
-                      } />
+                      } /> */}
 
                       {/* 404 */}
                       <Route path="/404" element={

@@ -80,7 +80,7 @@ export const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
       description: 'Nombre, logo, descripción',
       completed: false,
       points: 100,
-      route: '/settings/company'
+      route: '/business-dashboard/settings/company'
     },
     {
       id: 'company-details',

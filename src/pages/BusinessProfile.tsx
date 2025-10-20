@@ -154,14 +154,17 @@ const BusinessProfile = () => {
     const file = e.target.files[0];
     if (!user || !file) return;
 
-    const maxSize = 2 * 1024 * 1024; // 2MB
-    if (file.size > maxSize) {
-      toast.error('El archivo es demasiado grande. Máximo 2MB.');
+    // Validar tipo de archivo
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Tipo de archivo no admitido. Tipos permitidos: PNG, JPG');
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Solo se permiten archivos de imagen.');
+    // Validar tamaño del archivo
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      toast.error('El archivo excede el tamaño permitido. Máximo: 2MB');
       return;
     }
 

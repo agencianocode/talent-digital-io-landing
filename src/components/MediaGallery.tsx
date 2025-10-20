@@ -10,7 +10,6 @@ import {
   X, 
   Play, 
   Image as ImageIcon, 
-  FileText,
   ExternalLink,
   Loader2
 } from 'lucide-react';
@@ -51,72 +50,32 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   const [cropperState, setCropperState] = useState<{
     isOpen: boolean;
     src: string;
-    type: 'image' | 'video' | 'document';
+    type: 'image' | 'video';
   }>({ isOpen: false, src: '', type: 'image' });
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'document') => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'image') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validar tamaño del archivo (máximo 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('El archivo es demasiado grande. Máximo 10MB.');
+    // Validar tipo de archivo
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Tipo de archivo no admitido. Tipos permitidos: PNG, JPG');
+      return;
+    }
+
+    // Validar tamaño del archivo (máximo 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('El archivo excede el tamaño permitido. Máximo: 2MB');
       return;
     }
 
     if (type === 'image') {
       const url = URL.createObjectURL(file);
       setCropperState({ isOpen: true, src: url, type });
-    } else {
-      // Para documentos, subir directamente
-      await uploadFileToStorage(file, type);
     }
   };
 
-  const uploadFileToStorage = async (file: File, type: 'image' | 'document') => {
-    if (!user?.id) {
-      toast.error('Usuario no autenticado');
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      // Crear nombre único para el archivo
-      const timestamp = Date.now();
-      const fileExt = file.name.split('.').pop() || 'bin';
-      const fileName = `${type}-${timestamp}.${fileExt}`;
-      const filePath = `company-gallery/${user.id}/${fileName}`;
-
-      // Subir archivo a Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // Obtener URL pública
-      const { data } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      // Agregar item a la galería
-      onAddItem({
-        type,
-        url: data.publicUrl,
-        title: file.name,
-        description: `Documento subido: ${file.name}`
-      });
-
-      toast.success('Documento subido correctamente');
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast.error('Error al subir documento');
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   const handleCropComplete = async (croppedImageUrl: string) => {
     if (!user?.id) {
@@ -260,7 +219,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     switch (type) {
       case 'image': return <ImageIcon className="h-4 w-4" />;
       case 'video': return <Play className="h-4 w-4" />;
-      case 'document': return <FileText className="h-4 w-4" />;
       case 'link': return <ExternalLink className="h-4 w-4" />;
       default: return <ImageIcon className="h-4 w-4" />;
     }
@@ -270,7 +228,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     switch (type) {
       case 'image': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'video': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'document': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'link': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
@@ -283,7 +240,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
           <div>
             <CardTitle>Galería Multimedia</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Gestiona imágenes, videos y documentos de tu empresa ({items.length}/{maxItems})
+              Gestiona imágenes y videos de tu empresa ({items.length}/{maxItems})
             </p>
           </div>
           <Badge variant="outline">{items.length} elementos</Badge>
@@ -295,14 +252,19 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
         {items.length < maxItems && (
           <div className="border-2 border-dashed border-muted rounded-lg p-6">
             <div className="flex flex-wrap gap-2 justify-center">
-              <div className="relative">
+              <div className="relative group">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleFileUpload(e, 'image')}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
-                <Button variant="outline" size="sm" disabled={isUploading}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={isUploading}
+                  className="group-hover:bg-accent group-hover:text-accent-foreground transition-colors"
+                >
                   {isUploading ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
@@ -310,6 +272,9 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                   )}
                   Subir Imagen
                 </Button>
+                <p className="text-xs text-muted-foreground mt-1">
+                  PNG, JPG hasta 2MB
+                </p>
               </div>
               
               <Button 
@@ -321,22 +286,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                 Agregar Video
               </Button>
               
-              <div className="relative">
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx,.ppt,.pptx"
-                  onChange={(e) => handleFileUpload(e, 'document')}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <Button variant="outline" size="sm" disabled={isUploading}>
-                  {isUploading ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <FileText className="h-4 w-4 mr-2" />
-                  )}
-                  Subir Documento
-                </Button>
-              </div>
               
               <Button 
                 variant="outline" 

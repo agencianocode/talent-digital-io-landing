@@ -118,7 +118,7 @@ const DashboardLayout = () => {
                   <User className="h-4 w-4 mr-2" />
                   Mi Perfil
                 </Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => { navigate('/settings/company'); closeMobileMenu(); }}>
+                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => { navigate('/business-dashboard/settings/company'); closeMobileMenu(); }}>
                   <Settings className="h-4 w-4 mr-2" />
                   Configuración
                 </Button>
@@ -155,6 +155,7 @@ const DashboardLayout = () => {
               <li key={item.to}>
                 <NavLink
                   to={item.to}
+                  end={item.to === "/business-dashboard"}
                   className={({ isActive }) =>
                     cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
@@ -234,7 +235,7 @@ const DashboardLayout = () => {
                 <User className="h-4 w-4 mr-2" />
                 Mi Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/settings/company')}>
+              <DropdownMenuItem onClick={() => navigate('/business-dashboard/settings/company')}>
                 <Settings className="h-4 w-4 mr-2" />
                 Configuración
               </DropdownMenuItem>

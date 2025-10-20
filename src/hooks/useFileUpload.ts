@@ -21,16 +21,20 @@ export const useFileUpload = () => {
       return null;
     }
 
-    // Validate file size (10MB max)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    // Validate file size (2MB max for images, 10MB for other files)
+    const isImage = file.type.startsWith('image/');
+    const maxSize = isImage ? 2 * 1024 * 1024 : 10 * 1024 * 1024; // 2MB for images, 10MB for others
+    
     if (file.size > maxSize) {
-      toast.error('El archivo es demasiado grande. Máximo 10MB');
+      const maxSizeText = isImage ? '2MB' : '10MB';
+      toast.error(`El archivo excede el tamaño permitido. Máximo: ${maxSizeText}`);
       return null;
     }
 
     // Validate file type
     const allowedTypes = [
       'image/jpeg',
+      'image/jpg',
       'image/png',
       'image/gif',
       'image/webp',
@@ -44,7 +48,11 @@ export const useFileUpload = () => {
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Tipo de archivo no permitido');
+      if (isImage) {
+        toast.error('Tipo de archivo no admitido. Tipos permitidos: PNG, JPG');
+      } else {
+        toast.error('Tipo de archivo no permitido');
+      }
       return null;
     }
 

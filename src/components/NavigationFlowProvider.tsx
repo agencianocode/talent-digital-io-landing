@@ -229,31 +229,31 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
       talentOnboardingComplete ?? undefined
     );
     
-    // Debug logging for talent users
-    if (isTalentRole(userRole)) {
-      console.log('🎯 NavigationFlowProvider - Talent user check:', {
-        userRole,
-        isEmailConfirmed: Boolean(user?.email_confirmed_at),
-        profileState,
-        currentPath,
-        idealRoute,
-        talentOnboardingComplete,
-        businessOnboardingComplete,
-        shouldRedirect: currentPath !== idealRoute
-      });
-    }
+    // Debug logging for talent users - REMOVED FOR PRODUCTION
+    // if (isTalentRole(userRole)) {
+    //   console.log('🎯 NavigationFlowProvider - Talent user check:', {
+    //     userRole,
+    //     isEmailConfirmed: Boolean(user?.email_confirmed_at),
+    //     profileState,
+    //     currentPath,
+    //     idealRoute,
+    //     talentOnboardingComplete,
+    //     businessOnboardingComplete,
+    //     shouldRedirect: currentPath !== idealRoute
+    //   });
+    // }
     
-    // Debug logging
-    if (currentPath === '/') {
-      console.log('NavigationFlowProvider - Home page check:', {
-        userRole,
-        isEmailConfirmed: Boolean(user?.email_confirmed_at),
-        profileState,
-        currentPath,
-        idealRoute,
-        user: !!user
-      });
-    }
+    // Debug logging - REMOVED FOR PRODUCTION
+    // if (currentPath === '/') {
+    //   console.log('NavigationFlowProvider - Home page check:', {
+    //     userRole,
+    //     isEmailConfirmed: Boolean(user?.email_confirmed_at),
+    //     profileState,
+    //     currentPath,
+    //     idealRoute,
+    //     user: !!user
+    //   });
+    // }
 
     // Only auto-navigate if user is on a route that doesn't match their state
     // and they're not already on the correct route
@@ -272,7 +272,7 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
     );
 
     if (shouldAutoNavigate) {
-      console.log('🤖 Auto-navigating from', currentPath, 'to', idealRoute);
+      // console.log('🤖 Auto-navigating from', currentPath, 'to', idealRoute); // REMOVED FOR PRODUCTION
       navigateToNextStep();
     }
   }, [user, userRole, profileState, location.pathname, shouldShowOnboarding, isTransitioning, navigateToNextStep]);

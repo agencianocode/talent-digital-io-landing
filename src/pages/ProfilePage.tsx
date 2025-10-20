@@ -9,7 +9,7 @@ const ProfilePage = () => {
   useEffect(() => {
     // Redirect to appropriate settings page based on user type
     if (isBusinessRole(userRole)) {
-      navigate('/settings/company');
+      navigate('/business-dashboard/settings/company');
     } else {
       navigate('/settings/profile');
     }

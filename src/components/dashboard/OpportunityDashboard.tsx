@@ -7,11 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, TrendingUp, Users, Briefcase, Star, TestTube } from 'lucide-react';
 import { OpportunityMetrics } from './OpportunityMetrics';
 import { OpportunityList } from './OpportunityList';
+import { useProfileProgress } from '@/hooks/useProfileProgress';
 
 export const OpportunityDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [useMockData, setUseMockData] = useState(false);
+  const { getCompletionPercentage } = useProfileProgress();
 
   const handleApplicationsView = (opportunityId: string) => {
     console.log('🔍 Navigating to applicants for opportunity:', opportunityId);
@@ -52,46 +54,48 @@ export const OpportunityDashboard = () => {
         </div>
       </div>
 
-      {/* Quick Stats Banner */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                ¡Impulsa tu alcance de talento!
-              </h3>
-              <p className="text-blue-700 text-sm mb-4">
-                Las empresas con logo y descripción completa reciben 3x más aplicaciones de calidad.
-              </p>
-              <div className="flex gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                  <span className="text-blue-800">Perfil de empresa activo</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
-                  <span className="text-blue-800">Optimización disponible</span>
+      {/* Quick Stats Banner - Only show if profile is not 100% complete */}
+      {getCompletionPercentage() < 100 && (
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                  ¡Impulsa tu alcance de talento!
+                </h3>
+                <p className="text-blue-700 text-sm mb-4">
+                  Las empresas con logo y descripción completa reciben 3x más aplicaciones de calidad.
+                </p>
+                <div className="flex gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                    <span className="text-blue-800">Perfil de empresa activo</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
+                    <span className="text-blue-800">Optimización disponible</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="hidden sm:flex items-center gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-900">85%</div>
-                <div className="text-xs text-blue-600">Completitud</div>
+              <div className="hidden sm:flex items-center gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-900">{getCompletionPercentage()}%</div>
+                  <div className="text-xs text-blue-600">Completitud</div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-blue-300 text-blue-700"
+                  onClick={() => navigate('/business-dashboard/company-profile')}
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  Optimizar Perfil
+                </Button>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="border-blue-300 text-blue-700"
-                onClick={() => navigate('/business-dashboard/company-profile')}
-              >
-                <Star className="h-4 w-4 mr-2" />
-                Optimizar Perfil
-              </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

@@ -328,13 +328,16 @@ export const CompanyProfileWizard: React.FC = () => {
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error('El archivo es demasiado grande. Máximo 2MB.');
+      // Validar tipo de archivo
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Tipo de archivo no admitido. Tipos permitidos: PNG, JPG');
         return;
       }
       
-      if (!file.type.startsWith('image/')) {
-        toast.error('Solo se permiten archivos de imagen.');
+      // Validar tamaño del archivo
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('El archivo excede el tamaño permitido. Máximo: 2MB');
         return;
       }
 

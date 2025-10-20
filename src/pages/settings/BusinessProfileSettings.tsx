@@ -17,7 +17,7 @@ const BusinessProfileSettings = () => {
   };
 
   const handleAdvancedSettings = () => {
-    navigate('/settings/company');
+    navigate('/business-dashboard/settings/company');
   };
 
   return (
