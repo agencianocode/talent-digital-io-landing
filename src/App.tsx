@@ -15,7 +15,6 @@ import AccessibilityWrapper from '@/components/AccessibilityWrapper';
 import AuthErrorBoundary from '@/components/AuthErrorBoundary';
 
 // Importar páginas básicas
-import LandingPage from './pages/LandingPage';
 import Auth from './pages/Auth';
 
 // Importar layouts de dashboard
@@ -73,10 +72,8 @@ const UsersManagement = lazy(() => import('./pages/UsersManagement'));
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 const EmailVerificationPending = lazy(() => import('./pages/EmailVerificationPending'));
 
-// Lazy load páginas de landing específicas
+// Lazy load página de oportunidades landing
 const OpportunitiesLanding = lazy(() => import('./pages/OpportunitiesLanding'));
-const TalentLanding = lazy(() => import('./pages/TalentLanding'));
-const BusinessLanding = lazy(() => import('./pages/BusinessLanding'));
 
 // Lazy load otras páginas
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
@@ -107,18 +104,17 @@ function App() {
                       <AccessibilityWrapper>
                         <div className="min-h-screen bg-background text-foreground">
                           <Routes>
-                      <Route path="/" element={<LandingPage />} />
+                      <Route path="/" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <UserTypeSelector />
+                        </Suspense>
+                      } />
                       <Route path="/auth" element={
                         <AuthErrorBoundary>
                           <Suspense fallback={<LoadingSkeleton type="card" />}>
                             <Auth />
                           </Suspense>
                         </AuthErrorBoundary>
-                      } />
-                      <Route path="/user-selector" element={
-                        <Suspense fallback={<LoadingSkeleton type="card" />}>
-                          <UserTypeSelector />
-                        </Suspense>
                       } />
                       
                       {/* Ruta pública para invitaciones a oportunidades */}
@@ -167,16 +163,6 @@ function App() {
                       <Route path="/oportunidades-laborales" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <OpportunitiesLanding />
-                        </Suspense>
-                      } />
-                      <Route path="/para-talento-digital" element={
-                        <Suspense fallback={<LoadingSkeleton type="card" />}>
-                          <TalentLanding />
-                        </Suspense>
-                      } />
-                      <Route path="/para-negocios" element={
-                        <Suspense fallback={<LoadingSkeleton type="card" />}>
-                          <BusinessLanding />
                         </Suspense>
                       } />
 

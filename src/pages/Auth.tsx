@@ -636,7 +636,7 @@ const Auth = () => {
               <p className="text-muted-foreground mb-2">¿No tienes cuenta?</p>
               <Button 
                 variant="link" 
-                onClick={() => navigate('/user-selector')}
+                onClick={() => navigate('/')}
                 className="text-primary hover:text-primary/80"
               >
                 Crear cuenta

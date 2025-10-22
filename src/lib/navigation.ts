@@ -9,7 +9,6 @@ export const ROUTES = {
   // Landing and Auth
   HOME: '/',
   AUTH: '/auth',
-  USER_SELECTOR: '/user-selector',
   
   // Registration
   REGISTER_BUSINESS: '/register-business',

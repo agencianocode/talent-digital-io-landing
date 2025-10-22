@@ -21,9 +21,9 @@ const EmailVerificationPending = () => {
       setEmail(userEmail);
     }
     
-    // Si no hay parámetros, redirigir al selector de usuario
+    // Si no hay parámetros, redirigir a la home
     if (!type && !userEmail) {
-      navigate('/user-selector');
+      navigate('/');
     }
   }, [searchParams, navigate]);
 

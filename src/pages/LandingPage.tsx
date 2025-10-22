@@ -36,20 +36,7 @@ const LandingPage = () => {
                 Talento Digital
               </h1>
               <nav className="hidden lg:flex space-x-6">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => navigate('/para-talento-digital')}
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted"
-                >
-                  Buscar Trabajo
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => navigate('/para-negocios')}
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted"
-                >
-                  Contratar Talento
-                </Button>
+                {/* Sección de navegación eliminada */}
               </nav>
             </div>
             <div className="flex items-center space-x-2 lg:space-x-4">
@@ -83,7 +70,7 @@ const LandingPage = () => {
                     Iniciar Sesión
                   </Button>
                   <Button 
-                    onClick={() => navigate('/user-selector')}
+                    onClick={() => navigate('/')}
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                     size="sm"
                   >
@@ -94,7 +81,7 @@ const LandingPage = () => {
               {!isAuthenticated && (
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate('/user-selector')}
+                  onClick={() => navigate('/')}
                   size="sm"
                   className="sm:hidden"
                 >
@@ -117,26 +104,6 @@ const LandingPage = () => {
           {isMobileMenuOpen && (
             <div className="lg:hidden mt-4 pb-4 border-t pt-4">
               <nav className="flex flex-col space-y-2">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => {
-                    navigate('/para-talento-digital');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted justify-start"
-                >
-                  Buscar Trabajo
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => {
-                    navigate('/para-negocios');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted justify-start"
-                >
-                  Contratar Talento
-                </Button>
                 {isAuthenticated && (
                   <>
                     <Button 
@@ -184,7 +151,7 @@ const LandingPage = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 lg:mb-12 px-4">
             <Button 
               size="lg"
-              onClick={() => navigate('/user-selector')}
+              onClick={() => navigate('/')}
               className="text-base lg:text-lg px-6 lg:px-8 py-4 lg:py-6 hover-lift btn-primary group"
             >
               <Briefcase className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
@@ -194,7 +161,7 @@ const LandingPage = () => {
             <Button 
               size="lg" 
               variant="outline"
-              onClick={() => navigate('/user-selector')}
+              onClick={() => navigate('/')}
               className="text-base lg:text-lg px-6 lg:px-8 py-4 lg:py-6 hover-lift btn-secondary group"
             >
               <Users className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
@@ -301,7 +268,7 @@ const LandingPage = () => {
             <Button 
               size="lg" 
               variant="secondary"
-              onClick={() => navigate('/user-selector')}
+              onClick={() => navigate('/')}
               className="text-lg px-8 py-6"
             >
               Registrar Empresa
@@ -309,7 +276,7 @@ const LandingPage = () => {
             <Button 
               size="lg" 
               variant="outline"
-              onClick={() => navigate('/user-selector')}
+              onClick={() => navigate('/')}
               className="text-lg px-8 py-6 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
             >
               Registrarse como Talento

@@ -111,7 +111,7 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
   useEffect(() => {
     const path = location.pathname;
     
-    if (path.includes('/register') || path.includes('/user-selector')) {
+    if (path.includes('/register')) {
       setNavigationState(NavigationFlowState.REGISTRATION);
     } else if (path.includes('/email-verification')) {
       setNavigationState(NavigationFlowState.EMAIL_VERIFICATION);

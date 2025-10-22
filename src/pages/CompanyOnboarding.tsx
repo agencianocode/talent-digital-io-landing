@@ -540,7 +540,7 @@ const CompanyOnboarding = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
-      navigate('/user-selector');
+      navigate('/');
     }
   };
 
