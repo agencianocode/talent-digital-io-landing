@@ -294,8 +294,7 @@ const AdminSecuritySettings: React.FC = () => {
       </Card>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
-          // console.log('Form validation errors:', errors); // REMOVED FOR PRODUCTION
+        <form onSubmit={form.handleSubmit(onSubmit, () => {
           toast.error('Por favor corrige los errores en el formulario');
         })} className="space-y-6">
           {/* Authentication Settings */}

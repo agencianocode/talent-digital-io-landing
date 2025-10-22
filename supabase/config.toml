@@ -1,11 +1,11 @@
 project_id = "wyrieetebfzmgffxecpz"
 
 [auth]
-site_url = "http://localhost:8080"
+site_url = "https://app.talentodigital.io"
 additional_redirect_urls = [
-  "http://localhost:8080/talent-onboarding",
-  "http://localhost:8080/company-onboarding",
-  "http://localhost:8080/auth"
+  "https://app.talentodigital.io/talent-onboarding",
+  "https://app.talentodigital.io/company-onboarding",
+  "https://app.talentodigital.io/auth"
 ]
 
 [functions.send-email]
