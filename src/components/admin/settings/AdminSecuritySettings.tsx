@@ -28,12 +28,12 @@ import { supabase } from '@/integrations/supabase/client';
 const securitySettingsSchema = z.object({
   // Authentication Settings
   enable_two_factor_auth: z.boolean(),
-  session_timeout_minutes: z.number().min(5, 'Mínimo 5 minutos'),
-  max_login_attempts: z.number().min(1, 'Mínimo 1 intento'),
-  lockout_duration_minutes: z.number().min(1, 'Mínimo 1 minuto'),
+  session_timeout_minutes: z.coerce.number().min(5, 'Mínimo 5 minutos'),
+  max_login_attempts: z.coerce.number().min(1, 'Mínimo 1 intento'),
+  lockout_duration_minutes: z.coerce.number().min(1, 'Mínimo 1 minuto'),
   
   // Password Policy
-  min_password_length: z.number().min(8, 'Mínimo 8 caracteres'),
+  min_password_length: z.coerce.number().min(8, 'Mínimo 8 caracteres'),
   require_uppercase: z.boolean(),
   require_lowercase: z.boolean(),
   require_numbers: z.boolean(),
@@ -52,7 +52,7 @@ const securitySettingsSchema = z.object({
   
   // Audit Logging
   enable_audit_logging: z.boolean(),
-  log_retention_days: z.number().min(1, 'Mínimo 1 día'),
+  log_retention_days: z.coerce.number().min(1, 'Mínimo 1 día'),
   log_failed_attempts: z.boolean(),
   log_admin_actions: z.boolean(),
   log_user_actions: z.boolean(),
@@ -60,13 +60,13 @@ const securitySettingsSchema = z.object({
   // Backup Settings
   enable_automatic_backup: z.boolean(),
   backup_frequency: z.enum(['daily', 'weekly', 'monthly']),
-  backup_retention_days: z.number().min(1, 'Mínimo 1 día'),
+  backup_retention_days: z.coerce.number().min(1, 'Mínimo 1 día'),
   backup_encryption: z.boolean(),
   
   // API Security
   enable_api_rate_limiting: z.boolean(),
-  api_rate_limit_requests: z.number().min(1, 'Mínimo 1 request'),
-  api_rate_limit_window_minutes: z.number().min(1, 'Mínimo 1 minuto'),
+  api_rate_limit_requests: z.coerce.number().min(1, 'Mínimo 1 request'),
+  api_rate_limit_window_minutes: z.coerce.number().min(1, 'Mínimo 1 minuto'),
   require_api_key: z.boolean(),
 });
 

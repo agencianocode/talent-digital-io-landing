@@ -34,9 +34,9 @@ const systemSettingsSchema = z.object({
   platform_logo_url: z.string().url().optional().or(z.literal('')),
   
   // User Limits
-  max_users_per_company: z.number().min(1, 'Debe ser al menos 1'),
-  max_opportunities_per_company: z.number().min(1, 'Debe ser al menos 1'),
-  max_marketplace_services_per_user: z.number().min(1, 'Debe ser al menos 1'),
+  max_users_per_company: z.coerce.number().min(1, 'Debe ser al menos 1'),
+  max_opportunities_per_company: z.coerce.number().min(1, 'Debe ser al menos 1'),
+  max_marketplace_services_per_user: z.coerce.number().min(1, 'Debe ser al menos 1'),
   
   // System Settings
   maintenance_mode: z.boolean(),
@@ -165,12 +165,20 @@ const AdminSystemSettings: React.FC = () => {
     setSaveMessage(null); // Clear previous message
     try {
       // Save settings to Supabase
-      const settingsToSave = Object.entries(data).map(([key, value]) => ({
-        key,
-        value: value?.toString() || '',
-        type: typeof value === 'boolean' ? 'boolean' : 'string',
-        category: 'system'
-      }));
+      const settingsToSave = Object.entries(data).map(([key, value]) => {
+        let type: 'boolean' | 'number' | 'string' = 'string';
+        if (typeof value === 'boolean') {
+          type = 'boolean';
+        } else if (typeof value === 'number' && !Number.isNaN(value)) {
+          type = 'number';
+        }
+        return {
+          key,
+          value: value !== undefined && value !== null ? String(value) : '',
+          type,
+          category: 'system'
+        };
+      });
 
       // Delete existing settings
       await supabase
