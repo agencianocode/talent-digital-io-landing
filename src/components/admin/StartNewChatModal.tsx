@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, MessageSquare, User, Send, Users, CheckSquare, Square } from 'lucide-react';
+import { Search, MessageSquare, User, Send, Users, CheckSquare, Square, Briefcase, UserCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -37,6 +37,7 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
   const [bulkMessage, setBulkMessage] = useState('');
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [isSendingBulk, setIsSendingBulk] = useState(false);
+  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'talent' | 'business'>('all');
 
   useEffect(() => {
     if (isOpen) {
@@ -45,21 +46,37 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
       setSelectedUsers(new Set());
       setBulkMessage('');
       setIsBulkMode(false);
+      setUserTypeFilter('all');
     }
   }, [isOpen]);
 
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredUsers(users);
-    } else {
+    let filtered = users;
+    
+    // Apply user type filter
+    if (userTypeFilter === 'talent') {
+      filtered = filtered.filter(user => 
+        user.role === 'talent' || user.role === 'premium_talent'
+      );
+    } else if (userTypeFilter === 'business') {
+      filtered = filtered.filter(user => 
+        user.role === 'business' || 
+        user.role === 'freemium_business' || 
+        user.role === 'premium_business'
+      );
+    }
+    
+    // Apply search query
+    if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase();
-      const filtered = users.filter(user => 
+      filtered = filtered.filter(user => 
         user.full_name.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query)
       );
-      setFilteredUsers(filtered);
     }
-  }, [searchQuery, users]);
+    
+    setFilteredUsers(filtered);
+  }, [searchQuery, users, userTypeFilter]);
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -187,6 +204,39 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
               className="pl-10"
             />
           </div>
+
+          {/* User Type Filter - Only in Bulk Mode */}
+          {isBulkMode && (
+            <div className="flex gap-2">
+              <Button
+                variant={userTypeFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setUserTypeFilter('all')}
+                className="flex-1"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Todos
+              </Button>
+              <Button
+                variant={userTypeFilter === 'talent' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setUserTypeFilter('talent')}
+                className="flex-1"
+              >
+                <UserCircle className="h-4 w-4 mr-2" />
+                Solo Talento
+              </Button>
+              <Button
+                variant={userTypeFilter === 'business' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setUserTypeFilter('business')}
+                className="flex-1"
+              >
+                <Briefcase className="h-4 w-4 mr-2" />
+                Solo Empresas
+              </Button>
+            </div>
+          )}
 
           {/* Bulk Mode Controls */}
           {isBulkMode && (
