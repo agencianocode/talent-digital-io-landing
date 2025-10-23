@@ -3,19 +3,16 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { 
   Bell, 
   Mail, 
   MessageSquare, 
-  Users, 
-  Briefcase, 
-  Shield,
-  Database,
+  Smartphone,
   Save,
   RefreshCw,
   CheckCircle,
@@ -24,47 +21,160 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define notification types with their channels
+type NotificationType = {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  email: boolean;
+  sms: boolean;
+  push: boolean;
+};
+
 const notificationSettingsSchema = z.object({
-  // General Notifications
-  enable_notifications: z.boolean(),
-  notification_frequency: z.enum(['immediate', 'hourly', 'daily', 'weekly']),
-  
-  // User Registration Notifications
-  notify_new_user_registration: z.boolean(),
-  notify_user_email_verification: z.boolean(),
-  notify_user_profile_completion: z.boolean(),
-  
-  // Company Notifications
-  notify_new_company_registration: z.boolean(),
-  notify_company_upgrade_request: z.boolean(),
-  notify_company_verification: z.boolean(),
-  
-  // Content Moderation Notifications
-  notify_opportunity_reports: z.boolean(),
-  notify_marketplace_reports: z.boolean(),
-  notify_user_reports: z.boolean(),
-  notify_content_approval: z.boolean(),
-  
-  // System Notifications
-  notify_system_errors: z.boolean(),
-  notify_performance_issues: z.boolean(),
-  notify_security_alerts: z.boolean(),
-  notify_backup_status: z.boolean(),
-  
-  // Email Settings
   admin_email: z.string().email().optional().or(z.literal('')),
-  email_notifications_enabled: z.boolean(),
-  sms_notifications_enabled: z.boolean(),
-  push_notifications_enabled: z.boolean(),
-  
-  // Notification Channels
-  notify_via_email: z.boolean(),
-  notify_via_sms: z.boolean(),
-  notify_via_push: z.boolean(),
-  notify_via_dashboard: z.boolean(),
+  notifications: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string(),
+    enabled: z.boolean(),
+    email: z.boolean(),
+    sms: z.boolean(),
+    push: z.boolean(),
+  })),
 });
 
 type NotificationSettingsFormData = z.infer<typeof notificationSettingsSchema>;
+
+const defaultNotifications: NotificationType[] = [
+  {
+    id: 'new_user_registration',
+    name: 'Nuevos Registros de Usuario',
+    description: 'Recibe una notificación cuando se registre un nuevo usuario en la plataforma.',
+    enabled: true,
+    email: true,
+    sms: false,
+    push: true,
+  },
+  {
+    id: 'user_email_verification',
+    name: 'Verificación de Email',
+    description: 'Notificación cuando un usuario verifique su correo electrónico.',
+    enabled: false,
+    email: true,
+    sms: false,
+    push: false,
+  },
+  {
+    id: 'user_profile_completion',
+    name: 'Perfil Completado',
+    description: 'Notificación cuando un usuario complete su perfil.',
+    enabled: false,
+    email: true,
+    sms: false,
+    push: false,
+  },
+  {
+    id: 'new_company_registration',
+    name: 'Nueva Empresa Registrada',
+    description: 'Recibe una notificación cuando se registre una nueva empresa.',
+    enabled: true,
+    email: true,
+    sms: false,
+    push: true,
+  },
+  {
+    id: 'company_upgrade_request',
+    name: 'Solicitud de Upgrade',
+    description: 'Notificación cuando una empresa solicite un upgrade de plan.',
+    enabled: true,
+    email: true,
+    sms: true,
+    push: true,
+  },
+  {
+    id: 'company_verification',
+    name: 'Verificación de Empresa',
+    description: 'Notificación cuando una empresa complete su verificación.',
+    enabled: true,
+    email: true,
+    sms: false,
+    push: false,
+  },
+  {
+    id: 'opportunity_reports',
+    name: 'Reportes de Oportunidades',
+    description: 'Notificación cuando se reporte contenido en oportunidades.',
+    enabled: true,
+    email: true,
+    sms: false,
+    push: true,
+  },
+  {
+    id: 'marketplace_reports',
+    name: 'Reportes del Marketplace',
+    description: 'Notificación cuando se reporte contenido en el marketplace.',
+    enabled: true,
+    email: true,
+    sms: false,
+    push: true,
+  },
+  {
+    id: 'user_reports',
+    name: 'Reportes de Usuarios',
+    description: 'Notificación cuando se reporte un usuario.',
+    enabled: true,
+    email: true,
+    sms: false,
+    push: true,
+  },
+  {
+    id: 'content_approval',
+    name: 'Aprobación de Contenido',
+    description: 'Notificación cuando haya contenido pendiente de aprobar.',
+    enabled: true,
+    email: true,
+    sms: false,
+    push: false,
+  },
+  {
+    id: 'system_errors',
+    name: 'Errores del Sistema',
+    description: 'Notificación cuando ocurran errores críticos en el sistema.',
+    enabled: true,
+    email: true,
+    sms: true,
+    push: true,
+  },
+  {
+    id: 'performance_issues',
+    name: 'Problemas de Rendimiento',
+    description: 'Notificación cuando se detecten problemas de rendimiento.',
+    enabled: true,
+    email: true,
+    sms: false,
+    push: true,
+  },
+  {
+    id: 'security_alerts',
+    name: 'Alertas de Seguridad',
+    description: 'Notificación de alertas de seguridad críticas.',
+    enabled: true,
+    email: true,
+    sms: true,
+    push: true,
+  },
+  {
+    id: 'backup_status',
+    name: 'Estado de Backups',
+    description: 'Notificación sobre el estado de los backups automáticos.',
+    enabled: false,
+    email: true,
+    sms: false,
+    push: false,
+  },
+];
 
 const AdminNotificationSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -74,30 +184,8 @@ const AdminNotificationSettings: React.FC = () => {
   const form = useForm<NotificationSettingsFormData>({
     resolver: zodResolver(notificationSettingsSchema),
     defaultValues: {
-      enable_notifications: true,
-      notification_frequency: 'immediate',
-      notify_new_user_registration: true,
-      notify_user_email_verification: false,
-      notify_user_profile_completion: false,
-      notify_new_company_registration: true,
-      notify_company_upgrade_request: true,
-      notify_company_verification: true,
-      notify_opportunity_reports: true,
-      notify_marketplace_reports: true,
-      notify_user_reports: true,
-      notify_content_approval: true,
-      notify_system_errors: true,
-      notify_performance_issues: true,
-      notify_security_alerts: true,
-      notify_backup_status: false,
       admin_email: '',
-      email_notifications_enabled: true,
-      sms_notifications_enabled: false,
-      push_notifications_enabled: true,
-      notify_via_email: true,
-      notify_via_sms: false,
-      notify_via_push: true,
-      notify_via_dashboard: true,
+      notifications: defaultNotifications,
     }
   });
 
@@ -109,7 +197,6 @@ const AdminNotificationSettings: React.FC = () => {
   const loadSettings = async () => {
     setIsLoading(true);
     try {
-      // Load notification settings from Supabase
       const { data, error } = await supabase
         .from('admin_settings')
         .select('*')
@@ -119,19 +206,20 @@ const AdminNotificationSettings: React.FC = () => {
         throw error;
       }
 
-      if (data) {
-        const settings: any = {};
-        data.forEach(setting => {
-          // Convert value based on type
-          let value: any = setting.value;
-          if (setting.type === 'boolean') {
-            value = setting.value === 'true';
-          } else if (setting.type === 'number') {
-            value = parseFloat(setting.value || '0');
-          }
-          settings[setting.key] = value;
+      if (data && data.length > 0) {
+        // Load admin email
+        const adminEmailSetting = data.find(s => s.key === 'admin_email');
+        
+        // Load notifications array
+        const notificationsSetting = data.find(s => s.key === 'notifications');
+        const loadedNotifications = notificationsSetting && notificationsSetting.value
+          ? JSON.parse(notificationsSetting.value)
+          : defaultNotifications;
+
+        form.reset({
+          admin_email: adminEmailSetting?.value || '',
+          notifications: loadedNotifications,
         });
-        form.reset(settings);
       }
     } catch (error) {
       console.error('Error loading notification settings:', error);
@@ -143,15 +231,22 @@ const AdminNotificationSettings: React.FC = () => {
 
   const onSubmit = async (data: NotificationSettingsFormData) => {
     setIsSaving(true);
-    setSaveMessage(null); // Clear previous message
+    setSaveMessage(null);
     try {
-      // Save settings to Supabase
-      const settingsToSave = Object.entries(data).map(([key, value]) => ({
-        key,
-        value: value?.toString() || '',
-        type: typeof value === 'boolean' ? 'boolean' : 'string',
-        category: 'notifications'
-      }));
+      const settingsToSave = [
+        {
+          key: 'admin_email',
+          value: data.admin_email || '',
+          type: 'string',
+          category: 'notifications'
+        },
+        {
+          key: 'notifications',
+          value: JSON.stringify(data.notifications),
+          type: 'json',
+          category: 'notifications'
+        }
+      ];
 
       // Delete existing settings
       await supabase
@@ -166,18 +261,15 @@ const AdminNotificationSettings: React.FC = () => {
 
       if (error) throw error;
 
-      // Show success message
       setSaveMessage({ type: 'success', text: 'Configuración de notificaciones guardada correctamente' });
       toast.success('Configuración de notificaciones guardada correctamente');
       
-      // Clear message after 3 seconds
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
       console.error('Error saving notification settings:', error);
       setSaveMessage({ type: 'error', text: 'Error al guardar la configuración de notificaciones' });
       toast.error('Error al guardar la configuración de notificaciones');
       
-      // Clear error message after 5 seconds
       setTimeout(() => setSaveMessage(null), 5000);
     } finally {
       setIsSaving(false);
@@ -196,63 +288,15 @@ const AdminNotificationSettings: React.FC = () => {
     <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* General Notification Settings */}
+          {/* Admin Email */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
-                Configuración General de Notificaciones
+                Configuración General
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="enable_notifications"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Notificaciones Habilitadas</FormLabel>
-                      <FormDescription>
-                        Activar o desactivar todas las notificaciones del sistema
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="notification_frequency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Frecuencia de Notificaciones</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona la frecuencia" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="immediate">Inmediata</SelectItem>
-                        <SelectItem value="hourly">Cada hora</SelectItem>
-                        <SelectItem value="daily">Diaria</SelectItem>
-                        <SelectItem value="weekly">Semanal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Con qué frecuencia recibir notificaciones
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+            <CardContent>
               <FormField
                 control={form.control}
                 name="admin_email"
@@ -262,443 +306,137 @@ const AdminNotificationSettings: React.FC = () => {
                     <FormControl>
                       <Input {...field} type="email" placeholder="admin@ejemplo.com" />
                     </FormControl>
-                    <FormDescription>
+                    <p className="text-sm text-muted-foreground mt-1">
                       Email donde recibir las notificaciones administrativas
-                    </FormDescription>
-                    <FormMessage />
+                    </p>
                   </FormItem>
                 )}
               />
             </CardContent>
           </Card>
 
-          {/* User Registration Notifications */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Notificaciones de Usuarios
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="notify_new_user_registration"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Nuevos Registros</FormLabel>
-                        <FormDescription>
-                          Notificar cuando se registre un nuevo usuario
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notify_user_email_verification"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Verificación de Email</FormLabel>
-                        <FormDescription>
-                          Notificar cuando un usuario verifique su email
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notify_user_profile_completion"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Completar Perfil</FormLabel>
-                        <FormDescription>
-                          Notificar cuando un usuario complete su perfil
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Company Notifications */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5" />
-                Notificaciones de Empresas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="notify_new_company_registration"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Nuevas Empresas</FormLabel>
-                        <FormDescription>
-                          Notificar cuando se registre una nueva empresa
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notify_company_upgrade_request"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Solicitudes de Upgrade</FormLabel>
-                        <FormDescription>
-                          Notificar solicitudes de upgrade de empresas
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notify_company_verification"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Verificación de Empresas</FormLabel>
-                        <FormDescription>
-                          Notificar cuando una empresa sea verificada
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Content Moderation Notifications */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Notificaciones de Moderación
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="notify_opportunity_reports"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Reportes de Oportunidades</FormLabel>
-                        <FormDescription>
-                          Notificar reportes de contenido en oportunidades
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notify_marketplace_reports"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Reportes del Marketplace</FormLabel>
-                        <FormDescription>
-                          Notificar reportes de contenido en el marketplace
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notify_user_reports"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Reportes de Usuarios</FormLabel>
-                        <FormDescription>
-                          Notificar reportes de usuarios
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notify_content_approval"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Aprobación de Contenido</FormLabel>
-                        <FormDescription>
-                          Notificar contenido pendiente de aprobación
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* System Notifications */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Notificaciones del Sistema
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="notify_system_errors"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Errores del Sistema</FormLabel>
-                        <FormDescription>
-                          Notificar errores críticos del sistema
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notify_performance_issues"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Problemas de Rendimiento</FormLabel>
-                        <FormDescription>
-                          Notificar problemas de rendimiento del sistema
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notify_security_alerts"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Alertas de Seguridad</FormLabel>
-                        <FormDescription>
-                          Notificar alertas de seguridad
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notify_backup_status"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Estado de Backups</FormLabel>
-                        <FormDescription>
-                          Notificar estado de backups automáticos
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Notification Channels */}
+          {/* Notifications Table */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Canales de Notificación
+                Tipos de Notificaciones
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="notify_via_email"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          Email
-                        </FormLabel>
-                        <FormDescription>
-                          Recibir notificaciones por email
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+            <CardContent>
+              <div className="border rounded-lg overflow-hidden">
+                {/* Table Header */}
+                <div className="grid grid-cols-[40px,1fr,120px,120px,140px] gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
+                  <div></div>
+                  <div>Notificación</div>
+                  <div className="flex items-center justify-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    <span className="hidden sm:inline">Email</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="hidden sm:inline">SMS</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <Smartphone className="h-4 w-4" />
+                    <span className="hidden sm:inline">Push móvil</span>
+                  </div>
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="notify_via_push"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base flex items-center gap-2">
-                          <Bell className="h-4 w-4" />
-                          Push Notifications
-                        </FormLabel>
-                        <FormDescription>
-                          Recibir notificaciones push en el navegador
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                {/* Table Rows */}
+                <div className="divide-y">
+                  {form.watch('notifications').map((notification, index) => (
+                    <div 
+                      key={notification.id}
+                      className="grid grid-cols-[40px,1fr,120px,120px,140px] gap-4 p-4 hover:bg-muted/30 transition-colors"
+                    >
+                      {/* Toggle Switch */}
+                      <div className="flex items-start pt-1">
+                        <FormField
+                          control={form.control}
+                          name={`notifications.${index}.enabled`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                      </div>
 
-                <FormField
-                  control={form.control}
-                  name="notify_via_dashboard"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base flex items-center gap-2">
-                          <Database className="h-4 w-4" />
-                          Dashboard
+                      {/* Notification Name & Description */}
+                      <div className="flex flex-col gap-1">
+                        <FormLabel className="text-sm font-medium">
+                          {notification.name}
                         </FormLabel>
-                        <FormDescription>
-                          Mostrar notificaciones en el dashboard
-                        </FormDescription>
+                        <p className="text-xs text-muted-foreground">
+                          {notification.description}
+                        </p>
                       </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+
+                      {/* Email Checkbox */}
+                      <div className="flex items-start justify-center pt-1">
+                        <FormField
+                          control={form.control}
+                          name={`notifications.${index}.email`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  disabled={!form.watch(`notifications.${index}.enabled`)}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                      </div>
+
+                      {/* SMS Checkbox */}
+                      <div className="flex items-start justify-center pt-1">
+                        <FormField
+                          control={form.control}
+                          name={`notifications.${index}.sms`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  disabled={!form.watch(`notifications.${index}.enabled`)}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Push Checkbox */}
+                      <div className="flex items-start justify-center pt-1">
+                        <FormField
+                          control={form.control}
+                          name={`notifications.${index}.push`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  disabled={!form.watch(`notifications.${index}.enabled`)}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -707,8 +445,8 @@ const AdminNotificationSettings: React.FC = () => {
           {saveMessage && (
             <div className={`flex items-center gap-2 p-3 rounded-lg border ${
               saveMessage.type === 'success' 
-                ? 'bg-green-50 border-green-200 text-green-800' 
-                : 'bg-red-50 border-red-200 text-red-800'
+                ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-200' 
+                : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-200'
             }`}>
               {saveMessage.type === 'success' ? (
                 <CheckCircle className="h-4 w-4" />
