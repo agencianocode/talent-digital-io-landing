@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Sending notification email to:', to);
 
     const emailResponse = await resend.emails.send({
-      from: 'Notificaciones <notifications@resend.dev>',
+      from: 'TalentoDigital Notificaciones <notificaciones@app.talentodigital.io>',
       to: [to],
       subject: title,
       html: `
