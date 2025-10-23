@@ -2040,6 +2040,13 @@ export type Database = {
         Args: { p_inquirer_id: string; p_message: string; p_service_id: string }
         Returns: undefined
       }
+      process_pending_notifications: {
+        Args: never
+        Returns: {
+          notification_id: string
+          processed: boolean
+        }[]
+      }
       search_companies_directory: {
         Args: { search_term?: string }
         Returns: {
