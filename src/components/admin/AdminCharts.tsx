@@ -8,6 +8,7 @@ interface ChartData {
   companies: number;
   opportunities: number;
   applications: number;
+  activeUsers: number;
 }
 
 interface AdminChartsProps {
@@ -144,6 +145,26 @@ const AdminCharts: React.FC<AdminChartsProps> = ({ chartData, isLoading = false 
             </div>
           ) : (
             renderSimpleChart(chartData, 'applications', 'Nuevas Aplicaciones', '#f59e0b')
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Usuarios Activos por Mes */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Usuarios Activos por Mes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {chartData.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No hay datos disponibles</p>
+            </div>
+          ) : (
+            renderSimpleChart(chartData, 'activeUsers', 'Usuarios Activos', '#06b6d4')
           )}
         </CardContent>
       </Card>

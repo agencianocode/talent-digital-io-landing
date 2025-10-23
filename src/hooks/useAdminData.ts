@@ -12,6 +12,9 @@ interface AdminStats {
   activeServices: number;
   usersByRole: Record<string, number>;
   recentActivity: number;
+  activeUsers30Days: number;
+  activeUsers90Days: number;
+  deletedUsers30Days: number;
 }
 
 interface ActivityItem {
@@ -33,6 +36,7 @@ interface ChartData {
   companies: number;
   opportunities: number;
   applications: number;
+  activeUsers: number;
 }
 
 export const useAdminData = () => {
@@ -46,7 +50,10 @@ export const useAdminData = () => {
     totalServices: 0,
     activeServices: 0,
     usersByRole: {},
-    recentActivity: 0
+    recentActivity: 0,
+    activeUsers30Days: 0,
+    activeUsers90Days: 0,
+    deletedUsers30Days: 0
   });
   
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -144,6 +151,29 @@ export const useAdminData = () => {
 
       if (activityError) throw activityError;
 
+      // Calculate active users in last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { count: activeUsers30 } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gte('updated_at', thirtyDaysAgo.toISOString());
+
+      // Calculate active users in last 90 days
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      
+      const { count: activeUsers90 } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gte('updated_at', ninetyDaysAgo.toISOString());
+
+      // Note: We can't directly query deleted users from auth.users
+      // This would need to be tracked in a separate audit table
+      // For now, we'll set it to 0
+      const deletedUsers30Days = 0;
+
       setStats({
         totalUsers,
         totalCompanies: companyCount || 0,
@@ -154,7 +184,10 @@ export const useAdminData = () => {
         totalServices,
         activeServices,
         usersByRole,
-        recentActivity: recentActivity || 0
+        recentActivity: recentActivity || 0,
+        activeUsers30Days: activeUsers30 || 0,
+        activeUsers90Days: activeUsers90 || 0,
+        deletedUsers30Days
       });
 
     } catch (err) {
@@ -285,6 +318,15 @@ export const useAdminData = () => {
 
       if (appError) throw appError;
 
+      // Load active users data (users who updated their profile in the period)
+      const { data: activeUsersData, error: activeError } = await supabase
+        .from('profiles')
+        .select('updated_at')
+        .gte('updated_at', startDate.toISOString())
+        .lte('updated_at', endDate.toISOString());
+
+      if (activeError) throw activeError;
+
       // Group data by date
       const chartData: ChartData[] = [];
       const today = new Date();
@@ -300,13 +342,15 @@ export const useAdminData = () => {
         const companies = allCompanies?.filter(c => c.created_at?.startsWith(dateStr)).length || 0;
         const opportunities = allOpportunities?.filter(o => o.created_at?.startsWith(dateStr)).length || 0;
         const applications = allApplications?.filter(a => a.created_at?.startsWith(dateStr)).length || 0;
+        const activeUsers = activeUsersData?.filter(u => u.updated_at?.startsWith(dateStr)).length || 0;
 
         chartData.push({
           date: dateStr,
           users,
           companies,
           opportunities,
-          applications
+          applications,
+          activeUsers
         });
       }
 

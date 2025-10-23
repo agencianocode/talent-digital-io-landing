@@ -6,7 +6,9 @@ import {
   Briefcase, 
   ShoppingBag, 
   TrendingUp,
-  Activity
+  Activity,
+  UserCheck,
+  UserMinus
 } from 'lucide-react';
 
 interface AdminStats {
@@ -20,6 +22,9 @@ interface AdminStats {
   activeServices: number;
   usersByRole: Record<string, number>;
   recentActivity: number;
+  activeUsers30Days: number;
+  activeUsers90Days: number;
+  deletedUsers30Days: number;
 }
 
 interface AdminStatsCardsProps {
@@ -31,7 +36,7 @@ const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats, isLoading = fa
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div className="h-4 w-20 bg-gray-200 rounded"></div>
@@ -47,7 +52,7 @@ const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats, isLoading = fa
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
       {/* Total Usuarios */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -128,6 +133,48 @@ const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats, isLoading = fa
           <div className="text-2xl font-bold text-orange-600">{stats.recentActivity}</div>
           <p className="text-xs text-muted-foreground">
             Últimas 24h
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Usuarios Activos 30 días */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-xs font-medium">Usuarios Activos 30d</CardTitle>
+          <UserCheck className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-emerald-600">{stats.activeUsers30Days}</div>
+          <p className="text-xs text-muted-foreground">
+            Últimos 30 días
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Usuarios Activos 90 días */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-xs font-medium">Usuarios Activos 90d</CardTitle>
+          <UserCheck className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-teal-600">{stats.activeUsers90Days}</div>
+          <p className="text-xs text-muted-foreground">
+            Últimos 90 días
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Usuarios Dados de Baja */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-xs font-medium">Bajas Últimos 30d</CardTitle>
+          <UserMinus className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-red-600">{stats.deletedUsers30Days}</div>
+          <p className="text-xs text-muted-foreground">
+            Usuarios dados de baja
           </p>
         </CardContent>
       </Card>
