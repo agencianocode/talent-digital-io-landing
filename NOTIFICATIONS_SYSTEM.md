@@ -13,7 +13,15 @@ El sistema de notificaciones ahora está completamente integrado con la configur
   - Seleccionar canales específicos (Email, SMS, Push) para cada tipo
   - Configurar email administrativo para recibir notificaciones
 
-### 2. Base de Datos
+### 2. Configuración de Usuario (Talent y Business)
+- **Talent**: `/talent-dashboard/settings` → Configuración de Talento → Tab Notificaciones
+- **Business**: `/business-dashboard/settings` → Configuración Avanzada → Tab Notificaciones
+- Los usuarios pueden:
+  - Habilitar/deshabilitar tipos de notificaciones individuales para ellos
+  - Seleccionar canales específicos (Email, SMS, Push) para cada tipo
+  - Sus preferencias se respetan siempre que el admin haya habilitado el tipo
+
+### 3. Base de Datos
 
 #### Funciones SQL Clave
 
@@ -26,9 +34,27 @@ El sistema de notificaciones ahora está completamente integrado con la configur
 
 **`send_notification(p_user_id, p_type, p_title, p_message, p_action_url, p_data)`**
 - Función unificada para crear notificaciones
-- Verifica automáticamente si la notificación debe enviarse
+- Verifica automáticamente:
+  1. Si el admin ha habilitado la notificación
+  2. Si el usuario ha habilitado la notificación en sus preferencias
 - Inserta en la tabla `notifications` si está habilitada
 - Retorna: `UUID` del notification_id o `NULL` si está deshabilitada
+
+#### Tablas
+
+**`admin_settings`**
+- Almacena la configuración global de notificaciones del admin
+- Category: 'notifications'
+- Key: 'notifications' (JSON array) y 'admin_email' (string)
+
+**`user_notification_preferences`**
+- Almacena las preferencias individuales de cada usuario
+- Columnas:
+  - `user_id`: UUID del usuario
+  - `notification_type`: Tipo de notificación
+  - `enabled`: Si el usuario ha habilitado este tipo
+  - `email`, `sms`, `push`: Canales habilitados
+- Constraint único: (user_id, notification_type)
 
 #### Triggers Actualizados
 
@@ -47,7 +73,8 @@ Los siguientes triggers ahora respetan la configuración del admin:
 1. Recibe `notification_id`
 2. Consulta detalles de la notificación
 3. Lee configuración de admin_settings
-4. Envía por canales habilitados:
+4. Lee preferencias del usuario de user_notification_preferences
+5. Envía por canales habilitados (respeta tanto admin como usuario):
    - **Email**: Via `send-notification-email` function
    - **SMS**: Placeholder (por implementar con Twilio)
    - **Push**: Via `send-push-notification` function
@@ -135,19 +162,22 @@ const config = await getNotificationConfig();
 ```mermaid
 graph TD
     A[Evento del Sistema] --> B[Trigger SQL]
-    B --> C{should_send_notification?}
-    C -->|No| D[Finaliza - No enviar]
-    C -->|Sí| E[send_notification]
-    E --> F[INSERT en tabla notifications]
-    F --> G[Trigger: after_notification_insert]
-    G --> H[process-notification Edge Function]
-    H --> I{Verificar canales habilitados}
-    I -->|Email| J[send-notification-email]
-    I -->|SMS| K[Enviar SMS - Por implementar]
-    I -->|Push| L[send-push-notification]
-    J --> M[Notificación entregada]
-    K --> M
-    L --> M
+    B --> C{Admin: should_send_notification?}
+    C -->|No| D[Finaliza - Admin deshabilitó]
+    C -->|Sí| E{Usuario: preferencias?}
+    E -->|Deshabilitado| F[Finaliza - Usuario deshabilitó]
+    E -->|Habilitado| G[send_notification]
+    G --> H[INSERT en tabla notifications]
+    H --> I[Trigger: after_notification_insert]
+    I --> J[process-notification Edge Function]
+    J --> K{Verificar canales Admin}
+    K --> L{Verificar canales Usuario}
+    L -->|Email habilitado| M[send-notification-email]
+    L -->|SMS habilitado| N[Enviar SMS - Por implementar]
+    L -->|Push habilitado| O[send-push-notification]
+    M --> P[Notificación entregada]
+    N --> P
+    O --> P
 ```
 
 ## Configuración Inicial
@@ -160,11 +190,22 @@ graph TD
 5. Seleccionar canales para cada tipo
 6. Guardar configuración
 
-### 2. Verificación
+### 2. Configuración de Usuarios
+1. **Talent**: Ir a `/talent-dashboard/settings` → Notificaciones
+2. **Business**: Ir a `/business-dashboard/settings` → Tab Notificaciones
+3. Personalizar preferencias individuales
+4. Seleccionar canales deseados
+5. Guardar preferencias
+
+### 3. Verificación
 ```sql
 -- Ver configuración actual
 SELECT * FROM admin_settings 
 WHERE category = 'notifications';
+
+-- Ver preferencias de usuarios
+SELECT * FROM user_notification_preferences
+WHERE user_id = 'user-id-here';
 
 -- Probar función de verificación
 SELECT should_send_notification('new_user_registration', 'email');
@@ -203,6 +244,16 @@ LIMIT 10;
 SELECT type, COUNT(*) as count 
 FROM notifications 
 GROUP BY type;
+
+-- Ver preferencias de un usuario
+SELECT 
+  unp.*,
+  CASE 
+    WHEN unp.enabled THEN 'Habilitado'
+    ELSE 'Deshabilitado'
+  END as status
+FROM user_notification_preferences unp
+WHERE user_id = 'user-id-here';
 ```
 
 ### Probar manualmente la edge function
@@ -222,10 +273,28 @@ console.log('Resultado:', data, error);
 
 1. **Implementar SMS**: Integrar Twilio para envío de SMS
 2. **Plantillas de Email**: Crear plantillas HTML más sofisticadas
-3. **Preferencias de Usuario**: Permitir que usuarios configuren sus propias preferencias
+3. **Horarios de Silencio**: Implementar quiet hours para no molestar
 4. **Resumen Diario/Semanal**: Implementar notificaciones agrupadas
 5. **Notificaciones In-App**: Sistema de notificaciones dentro de la aplicación
 6. **Analytics**: Tracking de tasas de apertura y clics
+7. **Testing A/B**: Probar diferentes mensajes y canales
+
+## Jerarquía de Configuración
+
+**Prioridad de configuración (de mayor a menor):**
+1. **Admin deshabilitado** → No se envía, sin importar preferencias del usuario
+2. **Usuario deshabilitado** → No se envía para ese usuario específico
+3. **Canal deshabilitado por Admin** → No se envía por ese canal, sin importar usuario
+4. **Canal deshabilitado por Usuario** → No se envía por ese canal para ese usuario
+
+**Ejemplo:**
+- Admin habilita "Nuevas Aplicaciones" con Email y Push
+- Usuario A deshabilita Push para "Nuevas Aplicaciones"
+- Resultado: Usuario A solo recibe por Email
+
+- Admin deshabilita "Nuevas Aplicaciones" completamente
+- Usuario A tiene todo habilitado
+- Resultado: Nadie recibe notificaciones de ese tipo
 
 ## Soporte
 

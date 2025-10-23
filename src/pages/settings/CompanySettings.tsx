@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, Bell } from 'lucide-react';
 import PrivacySettings from './PrivacySettings';
-import NotificationSettingsForm from '@/components/NotificationSettingsForm';
+import UserNotificationSettings from '@/components/UserNotificationSettings';
 
 const CompanySettings = () => {
   return (
@@ -24,7 +24,7 @@ const CompanySettings = () => {
         </TabsList>
 
         <TabsContent value="notifications" className="mt-6">
-          <NotificationSettingsForm />
+          <UserNotificationSettings userType="business" />
         </TabsContent>
 
         <TabsContent value="privacy" className="mt-6">

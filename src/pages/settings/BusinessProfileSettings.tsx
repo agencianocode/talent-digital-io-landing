@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Shield, Bell, Building, Settings } from 'lucide-react';
 import PrivacySettings from './PrivacySettings';
-import NotificationSettings from './NotificationSettings';
+import UserNotificationSettings from '@/components/UserNotificationSettings';
 import { CompanyProfileWizard } from '@/components/wizard/CompanyProfileWizard';
 
 const BusinessProfileSettings = () => {
@@ -62,7 +62,7 @@ const BusinessProfileSettings = () => {
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-6">
-          <NotificationSettings />
+          <UserNotificationSettings userType="business" />
         </TabsContent>
 
         <TabsContent value="advanced" className="mt-6">

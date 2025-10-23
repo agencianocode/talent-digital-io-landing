@@ -114,14 +114,38 @@ Deno.serve(async (req) => {
 
     console.log('Notification config:', config);
 
+    // Get user's personal preferences
+    const { data: userPrefs, error: userPrefsError } = await supabase
+      .from('user_notification_preferences')
+      .select('*')
+      .eq('user_id', notification.user_id)
+      .eq('notification_type', configId)
+      .single();
+
+    if (userPrefsError && userPrefsError.code !== 'PGRST116') {
+      console.error('Error fetching user preferences:', userPrefsError);
+    }
+
+    // If user has disabled this notification type, skip
+    if (userPrefs && !userPrefs.enabled) {
+      console.log('User has disabled this notification type:', configId);
+      return new Response(
+        JSON.stringify({ success: true, message: 'Notification disabled by user' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('User preferences:', userPrefs);
+
     const results = {
       email: false,
       sms: false,
       push: false,
     };
 
-    // Send email notification if enabled
-    if (config.email) {
+    // Send email notification if enabled (check both config and user prefs)
+    const emailEnabled = config.email && (!userPrefs || userPrefs.email);
+    if (emailEnabled) {
       try {
         console.log('Sending email notification...');
         
@@ -172,16 +196,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Send SMS notification if enabled (placeholder)
-    if (config.sms) {
+    // Send SMS notification if enabled (check both config and user prefs)
+    const smsEnabled = config.sms && (!userPrefs || userPrefs.sms);
+    if (smsEnabled) {
       console.log('SMS notifications not yet implemented');
       // TODO: Implement SMS sending via Twilio or similar
       // For now, just log that it would be sent
       results.sms = false;
     }
 
-    // Send push notification if enabled
-    if (config.push) {
+    // Send push notification if enabled (check both config and user prefs)
+    const pushEnabled = config.push && (!userPrefs || userPrefs.push);
+    if (pushEnabled) {
       try {
         console.log('Sending push notification...');
         

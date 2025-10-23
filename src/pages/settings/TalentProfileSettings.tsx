@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Shield, Bell, Target } from 'lucide-react';
 import PrivacySettings from './PrivacySettings';
-import NotificationSettings from './NotificationSettings';
+import UserNotificationSettings from '@/components/UserNotificationSettings';
 import ProfessionalPreferences from './ProfessionalPreferences';
 
 const TalentProfileSettings = () => {
@@ -48,7 +48,7 @@ const TalentProfileSettings = () => {
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-6">
-          <NotificationSettings />
+          <UserNotificationSettings userType="talent" />
         </TabsContent>
 
         <TabsContent value="preferences" className="mt-6">
