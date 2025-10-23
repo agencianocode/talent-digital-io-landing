@@ -34,20 +34,20 @@ export const ConfirmSignupEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>¡Bienvenido a TalentFlow! Confirma tu cuenta para empezar</Preview>
+      <Preview>¡Bienvenido a TalentoDigital! Confirma tu cuenta para empezar</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Heading style={h1}>🚀 TalentFlow</Heading>
+            <Heading style={h1}>🎯 TalentoDigital</Heading>
           </Section>
           
           <Section style={content}>
-            <Heading style={h2}>¡Bienvenido a TalentFlow!</Heading>
+            <Heading style={h2}>¡Bienvenido a TalentoDigital!</Heading>
             <Text style={text}>
               ¡Hola y bienvenido a bordo!
             </Text>
             <Text style={text}>
-              Gracias por unirte a TalentFlow con el email <strong>{userEmail}</strong>. 
+              Gracias por unirte a TalentoDigital con el email <strong>{userEmail}</strong>. 
               Estás a un paso de descubrir increíbles oportunidades de talento.
             </Text>
             
@@ -69,7 +69,7 @@ export const ConfirmSignupEmail = ({
             </Text>
             
             <Section style={welcomeBox}>
-              <Text style={welcomeTitle}>¿Qué puedes hacer en TalentFlow?</Text>
+              <Text style={welcomeTitle}>¿Qué puedes hacer en TalentoDigital?</Text>
               <Text style={welcomeItem}>✨ Descubrir oportunidades perfectas para tu perfil</Text>
               <Text style={welcomeItem}>🎯 Conectar con empresas que buscan tu talento</Text>
               <Text style={welcomeItem}>🚀 Hacer crecer tu carrera profesional</Text>
@@ -87,10 +87,12 @@ export const ConfirmSignupEmail = ({
           
           <Section style={footer}>
             <Text style={footerText}>
-              © 2024 TalentFlow - Conectamos talento con oportunidades
+              © 2024 TalentoDigital - Conectamos talento con oportunidades
             </Text>
             <Text style={footerText}>
-              ¿Necesitas ayuda? Responde a este email y te ayudaremos.
+              <Link href="https://app.talentodigital.io" style={footerLink}>
+                Visita nuestra plataforma
+              </Link>
             </Text>
           </Section>
         </Container>
@@ -111,12 +113,13 @@ const container = {
   margin: '0 auto',
   padding: '20px 0 48px',
   marginBottom: '64px',
+  maxWidth: '600px',
 }
 
 const header = {
   padding: '32px 24px',
   textAlign: 'center' as const,
-  backgroundColor: '#0f172a',
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 }
 
 const content = {
@@ -152,7 +155,7 @@ const buttonContainer = {
 }
 
 const button = {
-  backgroundColor: '#10b981',
+  backgroundColor: '#667eea',
   borderRadius: '8px',
   color: '#ffffff',
   fontSize: '16px',
@@ -160,15 +163,15 @@ const button = {
   textDecoration: 'none',
   textAlign: 'center' as const,
   display: 'inline-block',
-  padding: '12px 24px',
+  padding: '14px 32px',
 }
 
 const linkText = {
-  color: '#3b82f6',
-  fontSize: '14px',
+  color: '#667eea',
+  fontSize: '13px',
   backgroundColor: '#f1f5f9',
   padding: '12px',
-  borderRadius: '4px',
+  borderRadius: '6px',
   wordBreak: 'break-all' as const,
   fontFamily: 'monospace',
 }
@@ -213,5 +216,10 @@ const footer = {
 const footerText = {
   color: '#9ca3af',
   fontSize: '12px',
-  margin: '0 0 8px 0',
+  margin: '8px 0',
+}
+
+const footerLink = {
+  color: '#667eea',
+  textDecoration: 'none',
 }

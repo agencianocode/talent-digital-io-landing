@@ -34,11 +34,11 @@ export const MagicLinkEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>Accede a TalentFlow con tu enlace mágico</Preview>
+      <Preview>Accede a TalentoDigital con tu enlace de acceso</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Heading style={h1}>🚀 TalentFlow</Heading>
+            <Heading style={h1}>🚀 TalentoDigital</Heading>
           </Section>
           
           <Section style={content}>
@@ -47,12 +47,12 @@ export const MagicLinkEmail = ({
               Hola,
             </Text>
             <Text style={text}>
-              Hemos recibido una solicitud para acceder a tu cuenta de TalentFlow usando tu email <strong>{userEmail}</strong>.
+              Hemos recibido una solicitud para acceder a tu cuenta de TalentoDigital usando tu email <strong>{userEmail}</strong>.
             </Text>
             
             <Section style={buttonContainer}>
               <Button href={loginUrl} style={button}>
-                Acceder a TalentFlow
+                Acceder a TalentoDigital
               </Button>
             </Section>
             
@@ -74,7 +74,12 @@ export const MagicLinkEmail = ({
           
           <Section style={footer}>
             <Text style={footerText}>
-              © 2024 TalentFlow - Conectamos talento con oportunidades
+              © 2024 TalentoDigital - Conectamos talento con oportunidades
+            </Text>
+            <Text style={footerText}>
+              <Link href="https://app.talentodigital.io" style={footerLink}>
+                Visita nuestra plataforma
+              </Link>
             </Text>
           </Section>
         </Container>
@@ -95,16 +100,17 @@ const container = {
   margin: '0 auto',
   padding: '20px 0 48px',
   marginBottom: '64px',
+  maxWidth: '600px',
 }
 
 const header = {
   padding: '32px 24px',
   textAlign: 'center' as const,
-  backgroundColor: '#0f172a',
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 }
 
 const content = {
-  padding: '24px',
+  padding: '32px 24px',
 }
 
 const h1 = {
@@ -136,7 +142,7 @@ const buttonContainer = {
 }
 
 const button = {
-  backgroundColor: '#3b82f6',
+  backgroundColor: '#667eea',
   borderRadius: '8px',
   color: '#ffffff',
   fontSize: '16px',
@@ -144,17 +150,18 @@ const button = {
   textDecoration: 'none',
   textAlign: 'center' as const,
   display: 'inline-block',
-  padding: '12px 24px',
+  padding: '14px 32px',
 }
 
 const linkText = {
-  color: '#3b82f6',
-  fontSize: '14px',
+  color: '#667eea',
+  fontSize: '13px',
   backgroundColor: '#f1f5f9',
   padding: '12px',
-  borderRadius: '4px',
+  borderRadius: '6px',
   wordBreak: 'break-all' as const,
   fontFamily: 'monospace',
+  margin: '8px 0',
 }
 
 const smallText = {
@@ -173,5 +180,10 @@ const footer = {
 const footerText = {
   color: '#9ca3af',
   fontSize: '12px',
-  margin: '0',
+  margin: '8px 0',
+}
+
+const footerLink = {
+  color: '#667eea',
+  textDecoration: 'none',
 }

@@ -34,11 +34,11 @@ export const ResetPasswordEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>Restablece tu contraseña de TalentFlow</Preview>
+      <Preview>Restablece tu contraseña de TalentoDigital</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Heading style={h1}>🚀 TalentFlow</Heading>
+            <Heading style={h1}>🔐 TalentoDigital</Heading>
           </Section>
           
           <Section style={content}>
@@ -47,7 +47,7 @@ export const ResetPasswordEmail = ({
               Hola,
             </Text>
             <Text style={text}>
-              Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de TalentFlow 
+              Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de TalentoDigital 
               asociada al email <strong>{userEmail}</strong>.
             </Text>
             
@@ -88,10 +88,12 @@ export const ResetPasswordEmail = ({
           
           <Section style={footer}>
             <Text style={footerText}>
-              © 2024 TalentFlow - Conectamos talento con oportunidades
+              © 2024 TalentoDigital - Conectamos talento con oportunidades
             </Text>
             <Text style={footerText}>
-              Este email fue enviado por motivos de seguridad.
+              <Link href="https://app.talentodigital.io" style={footerLink}>
+                Visita nuestra plataforma
+              </Link>
             </Text>
           </Section>
         </Container>
@@ -112,12 +114,13 @@ const container = {
   margin: '0 auto',
   padding: '20px 0 48px',
   marginBottom: '64px',
+  maxWidth: '600px',
 }
 
 const header = {
   padding: '32px 24px',
   textAlign: 'center' as const,
-  backgroundColor: '#0f172a',
+  backgroundColor: '#dc2626',
 }
 
 const content = {
@@ -153,7 +156,7 @@ const buttonContainer = {
 }
 
 const button = {
-  backgroundColor: '#ef4444',
+  backgroundColor: '#dc2626',
   borderRadius: '8px',
   color: '#ffffff',
   fontSize: '16px',
@@ -161,15 +164,15 @@ const button = {
   textDecoration: 'none',
   textAlign: 'center' as const,
   display: 'inline-block',
-  padding: '12px 24px',
+  padding: '14px 32px',
 }
 
 const linkText = {
-  color: '#3b82f6',
-  fontSize: '14px',
-  backgroundColor: '#f1f5f9',
+  color: '#dc2626',
+  fontSize: '13px',
+  backgroundColor: '#fee2e2',
   padding: '12px',
-  borderRadius: '4px',
+  borderRadius: '6px',
   wordBreak: 'break-all' as const,
   fontFamily: 'monospace',
 }
@@ -212,5 +215,10 @@ const footer = {
 const footerText = {
   color: '#9ca3af',
   fontSize: '12px',
-  margin: '0 0 8px 0',
+  margin: '8px 0',
+}
+
+const footerLink = {
+  color: '#667eea',
+  textDecoration: 'none',
 }
