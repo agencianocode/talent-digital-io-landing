@@ -778,7 +778,7 @@ const AdminSystemSettings: React.FC = () => {
 
           {/* Save Button */}
           <div className="flex justify-end">
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving || !form.formState.isDirty}>
               {isSaving ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
