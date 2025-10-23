@@ -20,7 +20,9 @@ import {
   Plus,
   Trash2,
   CheckCircle,
-  XCircle
+  XCircle,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,6 +65,10 @@ const AdminSystemSettings: React.FC = () => {
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [categories, setCategories] = useState<Array<{id: string, name: string, type: 'opportunity' | 'marketplace'}>>([]);
   const [newCategory, setNewCategory] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string>('');
+  const [faviconPreview, setFaviconPreview] = useState<string>('');
 
   const form = useForm<SystemSettingsFormData>({
     resolver: zodResolver(systemSettingsSchema),
@@ -235,6 +241,87 @@ const AdminSystemSettings: React.FC = () => {
     }
   };
 
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor selecciona un archivo de imagen');
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('system-assets')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('system-assets')
+        .getPublicUrl(filePath);
+
+      setLogoPreview(publicUrl);
+      form.setValue('platform_logo_url', publicUrl);
+      toast.success('Logo subido correctamente');
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast.error('Error al subir el logo');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleFaviconUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor selecciona un archivo de imagen');
+      return;
+    }
+
+    setUploadingFavicon(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `favicon-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('system-assets')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('system-assets')
+        .getPublicUrl(filePath);
+
+      setFaviconPreview(publicUrl);
+      // Store favicon URL in settings
+      await supabase
+        .from('admin_settings')
+        .upsert({
+          key: 'platform_favicon_url',
+          value: publicUrl,
+          type: 'string',
+          category: 'system'
+        }, { onConflict: 'key,category' });
+
+      toast.success('Favicon subido correctamente');
+    } catch (error) {
+      console.error('Error uploading favicon:', error);
+      toast.error('Error al subir el favicon');
+    } finally {
+      setUploadingFavicon(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -290,22 +377,97 @@ const AdminSystemSettings: React.FC = () => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="platform_logo_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL del Logo</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="https://ejemplo.com/logo.png" />
-                    </FormControl>
+              <div className="space-y-4">
+                <div>
+                  <FormLabel>Logo de la Plataforma</FormLabel>
+                  <div className="mt-2 space-y-3">
+                    {(logoPreview || form.watch('platform_logo_url')) && (
+                      <div className="flex items-center gap-4 p-4 border rounded-lg">
+                        <img 
+                          src={logoPreview || form.watch('platform_logo_url')} 
+                          alt="Logo preview" 
+                          className="h-16 w-auto object-contain"
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={uploadingLogo}
+                        onClick={() => document.getElementById('logo-upload')?.click()}
+                      >
+                        {uploadingLogo ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Subiendo...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Subir Logo
+                          </>
+                        )}
+                      </Button>
+                      <input
+                        id="logo-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                      />
+                    </div>
                     <FormDescription>
-                      URL del logo de la plataforma
+                      Sube el logo de la plataforma (formatos: PNG, JPG, SVG)
                     </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </div>
+                </div>
+
+                <div>
+                  <FormLabel>Favicon de la Plataforma</FormLabel>
+                  <div className="mt-2 space-y-3">
+                    {faviconPreview && (
+                      <div className="flex items-center gap-4 p-4 border rounded-lg">
+                        <img 
+                          src={faviconPreview} 
+                          alt="Favicon preview" 
+                          className="h-8 w-8 object-contain"
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={uploadingFavicon}
+                        onClick={() => document.getElementById('favicon-upload')?.click()}
+                      >
+                        {uploadingFavicon ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Subiendo...
+                          </>
+                        ) : (
+                          <>
+                            <ImageIcon className="h-4 w-4 mr-2" />
+                            Subir Favicon
+                          </>
+                        )}
+                      </Button>
+                      <input
+                        id="favicon-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFaviconUpload}
+                      />
+                    </div>
+                    <FormDescription>
+                      Sube el favicon de la plataforma (32x32px recomendado)
+                    </FormDescription>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

@@ -106,6 +106,42 @@ export type Database = {
           },
         ]
       }
+      admin_settings: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          key: string
+          type: string | null
+          updated_at: string | null
+          updated_by: string | null
+          value: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       application_ratings: {
         Row: {
           application_id: string
@@ -202,6 +238,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       companies: {
         Row: {
@@ -533,6 +605,33 @@ export type Database = {
           title?: string
           updated_at?: string
           usage_count?: number | null
+        }
+        Relationships: []
+      }
+      marketplace_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -941,6 +1040,33 @@ export type Database = {
           },
         ]
       }
+      opportunity_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       opportunity_shares: {
         Row: {
           created_at: string
@@ -1252,6 +1378,45 @@ export type Database = {
           id?: string
           opportunity_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      security_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string | null
+          description: string | null
+          details: Json | null
+          id: string
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string | null
+          description?: string | null
+          details?: Json | null
+          id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string | null
+          description?: string | null
+          details?: Json | null
+          id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          title?: string
         }
         Relationships: []
       }
@@ -1706,195 +1871,6 @@ export type Database = {
         }
         Relationships: []
       }
-      admin_settings: {
-        Row: {
-          id: string
-          key: string
-          value: string | null
-          type: string
-          category: string
-          description: string | null
-          created_at: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          id?: string
-          key: string
-          value?: string | null
-          type?: string
-          category: string
-          description?: string | null
-          created_at?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          id?: string
-          key?: string
-          value?: string | null
-          type?: string
-          category?: string
-          description?: string | null
-          created_at?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admin_settings_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      opportunity_categories: {
-        Row: {
-          id: string
-          name: string
-          description: string | null
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      marketplace_categories: {
-        Row: {
-          id: string
-          name: string
-          description: string | null
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      audit_logs: {
-        Row: {
-          id: string
-          user_id: string | null
-          action: string
-          resource_type: string
-          resource_id: string | null
-          details: Json | null
-          ip_address: string | null
-          user_agent: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          action: string
-          resource_type: string
-          resource_id?: string | null
-          details?: Json | null
-          ip_address?: string | null
-          user_agent?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          action?: string
-          resource_type?: string
-          resource_id?: string | null
-          details?: Json | null
-          ip_address?: string | null
-          user_agent?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "audit_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      security_alerts: {
-        Row: {
-          id: string
-          alert_type: string
-          severity: string
-          title: string
-          description: string | null
-          details: Json | null
-          resolved: boolean
-          resolved_at: string | null
-          resolved_by: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          alert_type: string
-          severity?: string
-          title: string
-          description?: string | null
-          details?: Json | null
-          resolved?: boolean
-          resolved_at?: string | null
-          resolved_by?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          alert_type?: string
-          severity?: string
-          title?: string
-          description?: string | null
-          details?: Json | null
-          resolved?: boolean
-          resolved_at?: string | null
-          resolved_by?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "security_alerts_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -1917,10 +1893,7 @@ export type Database = {
         Args: { directory_company_id: string; user_uuid: string }
         Returns: string
       }
-      cleanup_expired_typing_indicators: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_expired_typing_indicators: { Args: never; Returns: undefined }
       get_academy_students: {
         Args: { academy_uuid: string }
         Returns: {
@@ -1947,7 +1920,7 @@ export type Database = {
         }[]
       }
       get_all_users_for_admin: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           full_name: string
@@ -1956,7 +1929,7 @@ export type Database = {
         }[]
       }
       get_industries: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           description: string
           id: string
@@ -1964,7 +1937,7 @@ export type Database = {
         }[]
       }
       get_professional_categories: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           description: string
           icon: string
@@ -1986,10 +1959,7 @@ export type Database = {
         Args: { talent_user_uuid: string }
         Returns: string
       }
-      get_user_companies: {
-        Args: { user_uuid: string }
-        Returns: string[]
-      }
+      get_user_companies: { Args: { user_uuid: string }; Returns: string[] }
       get_user_company_role: {
         Args: { company_uuid: string; user_uuid: string }
         Returns: Database["public"]["Enums"]["company_role"]
@@ -2003,7 +1973,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["company_role"]
       }
       get_user_stats_for_admin: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           role_count: number
           role_name: Database["public"]["Enums"]["user_role"]
@@ -2042,14 +2012,8 @@ export type Database = {
         Args: { profile_user_id: string; viewer_user_id: string }
         Returns: boolean
       }
-      migrate_existing_conversations: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      migrate_existing_talent_profiles: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      migrate_existing_conversations: { Args: never; Returns: undefined }
+      migrate_existing_talent_profiles: { Args: never; Returns: string }
       notify_access_request: {
         Args: {
           p_company_id: string
@@ -2066,14 +2030,8 @@ export type Database = {
         }
         Returns: undefined
       }
-      notify_expiring_opportunities: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      notify_inactive_opportunities: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      notify_expiring_opportunities: { Args: never; Returns: undefined }
+      notify_inactive_opportunities: { Args: never; Returns: undefined }
       notify_opportunity_removed: {
         Args: { p_opportunity_id: string; p_reason?: string }
         Returns: undefined
@@ -2122,12 +2080,19 @@ export type Database = {
         }
         Returns: string
       }
-      switch_user_role: {
-        Args:
-          | { new_role: Database["public"]["Enums"]["user_role"] }
-          | { new_role: string }
-        Returns: boolean
-      }
+      switch_user_role:
+        | {
+            Args: { new_role: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.switch_user_role(new_role => text), public.switch_user_role(new_role => user_role). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+        | {
+            Args: { new_role: Database["public"]["Enums"]["user_role"] }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.switch_user_role(new_role => text), public.switch_user_role(new_role => user_role). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
       update_profile_completeness: {
         Args: { user_uuid: string }
         Returns: number

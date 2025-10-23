@@ -38,7 +38,6 @@ const securitySettingsSchema = z.object({
   require_lowercase: z.boolean(),
   require_numbers: z.boolean(),
   require_special_chars: z.boolean(),
-  password_expiry_days: z.number().min(0, 'Mínimo 0 días'),
   
   // IP Restrictions
   enable_ip_whitelist: z.boolean(),
@@ -91,7 +90,6 @@ const AdminSecuritySettings: React.FC = () => {
       require_lowercase: true,
       require_numbers: true,
       require_special_chars: true,
-      password_expiry_days: 90,
       enable_ip_whitelist: false,
       allowed_ips: '',
       blocked_ips: '',
@@ -394,43 +392,26 @@ const AdminSecuritySettings: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="min_password_length"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Longitud Mínima</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password_expiry_days"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Expiración (días)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="min_password_length"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Longitud Mínima</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Las contraseñas nunca expirarán
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
