@@ -2071,6 +2071,10 @@ export type Database = {
         }
         Returns: string
       }
+      should_send_notification: {
+        Args: { channel?: string; notification_type: string }
+        Returns: boolean
+      }
       start_conversation: {
         Args: {
           p_company_id: string
