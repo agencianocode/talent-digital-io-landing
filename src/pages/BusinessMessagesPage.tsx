@@ -50,8 +50,8 @@ const BusinessMessagesPage = () => {
     
     const loadConversationData = async () => {
       await loadMessages(activeId);
-      // Ya no marcamos automáticamente como leído para que persista hasta acción manual
-      // await markAsRead(activeId);
+      // Marcar automáticamente como leído al seleccionar la conversación
+      await markAsRead(activeId);
     };
     
     loadConversationData();
