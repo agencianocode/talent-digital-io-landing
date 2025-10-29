@@ -1148,6 +1148,21 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
         </Select>
       </div>
 
+      {/* Location - Moved right after Work Modality */}
+      {data.locationType !== 'remote' && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            Ubicación específica
+          </Label>
+          <Input
+            value={data.location}
+            onChange={(e) => onChange({ location: e.target.value })}
+            placeholder="Ej: Buenos Aires, Argentina"
+            className="h-12"
+          />
+        </div>
+      )}
+
       {/* Preferences */}
       <div className="space-y-3">
         <div className="flex flex-col space-y-3">
@@ -1234,21 +1249,6 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
           </div>
         </div>
       </div>
-
-      {/* Location */}
-      {data.locationType !== 'remote' && (
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-900">
-            Ubicación específica
-          </Label>
-          <Input
-            value={data.location}
-            onChange={(e) => onChange({ location: e.target.value })}
-            placeholder="Ej: Buenos Aires, Argentina"
-            className="h-12"
-          />
-        </div>
-      )}
 
       {/* Deadline Date */}
       <div className="space-y-2">
