@@ -71,7 +71,7 @@ export const useSupabaseOpportunities = () => {
       });
       
       if (isTalentRole(userRole)) {
-        // Para talentos: solo oportunidades activas
+        // Para talentos: solo oportunidades activas (no cerradas)
         const { data, error } = await supabase
           .from('opportunities')
           .select(`
@@ -102,7 +102,7 @@ export const useSupabaseOpportunities = () => {
 
         console.log('🔍 Querying opportunities for company_id:', company.id);
         
-        // Fetch active opportunities
+        // Fetch active and paused opportunities
         const { data: activeData, error: activeError } = await supabase
           .from('opportunities')
           .select(`
@@ -113,7 +113,7 @@ export const useSupabaseOpportunities = () => {
             )
           `)
           .eq('company_id', company.id)
-          .eq('status', 'active')
+          .in('status', ['active', 'paused', 'closed'])
           .order('created_at', { ascending: false });
 
         if (activeError) {
@@ -200,6 +200,23 @@ export const useSupabaseOpportunities = () => {
     }
 
     try {
+      // Check if opportunity is still open
+      const { data: oppCheck, error: checkError } = await supabase
+        .from('opportunities')
+        .select('status, title')
+        .eq('id', opportunityId)
+        .single();
+
+      if (checkError) throw checkError;
+
+      if (oppCheck.status === 'closed') {
+        throw new Error('Esta oportunidad ya ha sido cerrada y no acepta más postulaciones');
+      }
+
+      if (oppCheck.status !== 'active') {
+        throw new Error('Esta oportunidad no está disponible para aplicaciones en este momento');
+      }
+
       const { error } = await supabase
         .from('applications')
         .insert({
@@ -355,11 +372,12 @@ export const useSupabaseOpportunities = () => {
   }, [fetchOpportunities]);
 
   // Toggle opportunity status (for business users)
-  const toggleOpportunityStatus = useCallback(async (opportunityId: string, currentStatus: boolean) => {
+  const toggleOpportunityStatus = useCallback(async (opportunityId: string, isActive: boolean) => {
     try {
+      const newStatus = isActive ? 'paused' : 'active';
       const { error } = await supabase
         .from('opportunities')
-        .update({ status: currentStatus ? 'paused' : 'active' })
+        .update({ status: newStatus })
         .eq('id', opportunityId);
 
       if (error) throw error;
@@ -368,6 +386,62 @@ export const useSupabaseOpportunities = () => {
       await fetchOpportunities();
     } catch (err) {
       logger.error('Error toggling opportunity status:', err);
+      throw err;
+    }
+  }, [fetchOpportunities]);
+
+  // Close opportunity (for business users)
+  const closeOpportunity = useCallback(async (opportunityId: string) => {
+    try {
+      // Get opportunity details and all applicants
+      const { data: opportunityData } = await supabase
+        .from('opportunities')
+        .select('title, company_id')
+        .eq('id', opportunityId)
+        .single();
+
+      if (!opportunityData) {
+        throw new Error('Opportunity not found');
+      }
+
+      // Get all applicants for this opportunity
+      const { data: applicants } = await supabase
+        .from('applications')
+        .select('user_id')
+        .eq('opportunity_id', opportunityId);
+
+      // Update opportunity status to closed
+      const { error: updateError } = await supabase
+        .from('opportunities')
+        .update({ status: 'closed' })
+        .eq('id', opportunityId);
+
+      if (updateError) throw updateError;
+
+      // Send notifications to all applicants
+      if (applicants && applicants.length > 0) {
+        const notifications = applicants.map(applicant => ({
+          user_id: applicant.user_id,
+          type: 'opportunity',
+          title: 'Oportunidad cerrada',
+          message: `La oportunidad "${opportunityData.title}" ha sido cerrada por la empresa`,
+          action_url: `/talent-dashboard/opportunities`,
+          read: false
+        }));
+
+        try {
+          await supabase
+            .from('notifications' as any)
+            .insert(notifications);
+        } catch (notifError) {
+          console.warn('Failed to create notifications:', notifError);
+        }
+      }
+      
+      // Refresh opportunities
+      await fetchOpportunities();
+    } catch (err) {
+      logger.error('Error closing opportunity:', err);
       throw err;
     }
   }, [fetchOpportunities]);
@@ -418,6 +492,7 @@ export const useSupabaseOpportunities = () => {
     updateOpportunity,
     deleteOpportunity,
     toggleOpportunityStatus,
+    closeOpportunity,
     refreshOpportunities: fetchOpportunities,
     refreshApplications: fetchUserApplications
   };

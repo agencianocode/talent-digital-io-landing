@@ -65,7 +65,8 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
     opportunities: realOpportunities, 
     isLoading: realLoading, 
     deleteOpportunity,
-    toggleOpportunityStatus
+    toggleOpportunityStatus,
+    closeOpportunity
   } = useSupabaseOpportunities();
 
   // Hook para aplicaciones reales
@@ -211,6 +212,7 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
     isLoading,
     deleteOpportunity,
     toggleOpportunityStatus,
+    closeOpportunity,
     // Función para alternar entre mock y real data
     toggleMockData: () => !useMockData
   };

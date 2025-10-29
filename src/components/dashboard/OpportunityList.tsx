@@ -49,6 +49,7 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
     isLoading, 
     deleteOpportunity,
     toggleOpportunityStatus,
+    closeOpportunity,
     applicationCounts: hookApplicationCounts,
     viewCounts
   } = useOpportunityDashboard(useMockData);
@@ -58,6 +59,8 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [opportunityToDelete, setOpportunityToDelete] = useState<any>(null);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+  const [opportunityToClose, setOpportunityToClose] = useState<any>(null);
   // Usar applicationCounts del hook
   const applicationCounts = hookApplicationCounts;
 
@@ -150,11 +153,29 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
 
   const handleToggleStatus = async (opportunityId: string, currentStatus: string) => {
     try {
-      const newStatus = currentStatus === 'active' ? 'paused' : 'active';
-      await toggleOpportunityStatus(opportunityId, newStatus === 'active');
-      toast.success(`Oportunidad ${newStatus === 'active' ? 'activada' : 'pausada'} exitosamente`);
+      const isActive = currentStatus === 'active';
+      await toggleOpportunityStatus(opportunityId, isActive);
+      toast.success(`Oportunidad ${isActive ? 'pausada' : 'activada'} exitosamente`);
     } catch (error) {
       toast.error('Error al cambiar el estado de la oportunidad');
+    }
+  };
+
+  const handleCloseClick = (opportunity: any) => {
+    setOpportunityToClose(opportunity);
+    setCloseDialogOpen(true);
+  };
+
+  const confirmClose = async () => {
+    if (!opportunityToClose) return;
+    
+    try {
+      await closeOpportunity(opportunityToClose.id);
+      toast.success('Oportunidad cerrada exitosamente. Se ha notificado a todos los postulantes.');
+      setCloseDialogOpen(false);
+      setOpportunityToClose(null);
+    } catch (error) {
+      toast.error('Error al cerrar la oportunidad');
     }
   };
 
@@ -422,17 +443,26 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                               Copiar enlace de invitación
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => handleDuplicate(opportunity)}>
-                            <Copy className="h-4 w-4 mr-2" />
-                            Duplicar
-                          </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDuplicate(opportunity)}>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Duplicar
+                        </DropdownMenuItem>
+                        {opportunity.status !== 'closed' && (
                           <DropdownMenuItem 
-                            onClick={() => handleDeleteClick(opportunity)}
-                            className="text-red-600 focus:text-red-600"
+                            onClick={() => handleCloseClick(opportunity)}
+                            className="text-orange-600 focus:text-orange-600"
                           >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Eliminar
+                            <AlertTriangle className="h-4 w-4 mr-2" />
+                            Cerrar Oportunidad
                           </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteClick(opportunity)}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Eliminar
+                        </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -499,6 +529,15 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                           <Copy className="h-4 w-4 mr-2" />
                           Duplicar
                         </DropdownMenuItem>
+                        {opportunity.status !== 'closed' && (
+                          <DropdownMenuItem 
+                            onClick={() => handleCloseClick(opportunity)}
+                            className="text-orange-600 focus:text-orange-600"
+                          >
+                            <AlertTriangle className="h-4 w-4 mr-2" />
+                            Cerrar Oportunidad
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
                           onClick={() => handleDeleteClick(opportunity)}
                           className="text-red-600 focus:text-red-600"
@@ -537,6 +576,33 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
               className="bg-red-600 hover:bg-red-700"
             >
               Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Close Confirmation Dialog */}
+      <AlertDialog open={closeDialogOpen} onOpenChange={setCloseDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cerrar oportunidad?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Al cerrar la oportunidad <span className="font-semibold">"{opportunityToClose?.title}"</span>:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Ya no aparecerá en el feed de oportunidades</li>
+                <li>No se aceptarán nuevas postulaciones</li>
+                <li>Todos los postulantes actuales serán notificados</li>
+              </ul>
+              <p className="mt-2 text-sm">Esta acción puede revertirse editando la oportunidad más tarde.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmClose}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Cerrar Oportunidad
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
