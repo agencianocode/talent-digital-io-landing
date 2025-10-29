@@ -353,7 +353,7 @@ const TalentMyProfile = () => {
           <div className="xl:col-span-4 space-y-4">
             
             {/* Completitud - Circular */}
-            <Card className="sticky top-4">
+            <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Completitud del Perfil</h3>
                 
