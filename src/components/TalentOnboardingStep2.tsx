@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X } from 'lucide-react';
+import { categoryTemplates } from '@/lib/opportunityTemplates';
 
 interface ProfessionalInfo {
   title: string;
@@ -51,12 +52,18 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
   ];
 
   const experienceLevels = [
-    'Estudiante',
-    'Junior (0-2 años)',
-    'Mid-level (2-5 años)',
-    'Senior (5+ años)',
-    'Lead/Architect (8+ años)'
+    'Principiante: 0-1 año',
+    'Intermedio: 1-3 años',
+    'Avanzado: 3-6 años',
+    'Experto: +6 años'
   ];
+
+  // Get suggested skills based on selected category
+  const getSuggestedSkills = () => {
+    if (!category) return [];
+    const template = categoryTemplates[category];
+    return template?.skills || [];
+  };
 
   // Funciones para manejar habilidades
   const addSkill = () => {
@@ -90,7 +97,7 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
 
   // Validar si el formulario está completo (categoría secundaria es opcional)
   const isFormValid = title.trim().length > 0 && category.length > 0 && 
-                     experience.length > 0 && bio.trim().length > 0;
+                     experience.length > 0 && bio.trim().length >= 50;
 
   const handleContinue = () => {
     if (!isFormValid) return;
@@ -110,7 +117,7 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
       {/* Title */}
       <div className="text-center space-y-1">
         <h1 className="text-xl font-bold text-black font-['Inter']">
-          Información Profesional
+          Contanos qué haces y en qué sos experto
         </h1>
         <p className="text-gray-600 font-['Inter'] text-xs">
           Cuéntanos sobre tu experiencia y especialización
@@ -124,13 +131,13 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
           {/* Categoría Principal */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 font-['Inter']">
-              Categoría Principal *
+              Categoría principal en la que desarrollas tu actividad *
             </label>
             <Select value={category} onValueChange={handleCategoryChange}>
               <SelectTrigger className="h-11 text-sm border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white">
                 <SelectValue placeholder="Selecciona tu área principal" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white z-50">
                 {mainCategories.map((cat) => (
                   <SelectItem key={cat} value={cat} className="font-['Inter']">
                     {cat}
@@ -138,11 +145,6 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
                 ))}
               </SelectContent>
             </Select>
-            {category && (
-              <p className="mt-1 text-xs text-green-600 font-['Inter']">
-                ✓ Seleccionado: {category}
-              </p>
-            )}
           </div>
 
           {/* Categoría Secundaria */}
@@ -154,7 +156,7 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
               <SelectTrigger className="h-11 text-sm border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white">
                 <SelectValue placeholder="Selecciona una segunda área (opcional)" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white z-50">
                 <SelectItem value="none" className="font-['Inter'] text-gray-500">
                   Sin categoría secundaria
                 </SelectItem>
@@ -165,28 +167,27 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
                 ))}
               </SelectContent>
             </Select>
-            {category2 && category2 !== 'none' && (
-              <p className="mt-1 text-xs text-blue-600 font-['Inter']">
-                ✓ Seleccionado: {category2}
-              </p>
-            )}
+            <p className="mt-1 text-xs text-gray-500 font-['Inter']">
+              Si tenés más de un enfoque profesional, agregá una segunda área.
+            </p>
           </div>
         </div>
 
         {/* Title */}
         <div>
           <div className="mb-1">
-            <label className="text-sm font-medium text-gray-700 font-['Inter']">Una sola línea</label>
+            <label className="text-sm font-medium text-gray-700 font-['Inter']">Título profesional</label>
           </div>
           <Input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Desarrollador web que crea sitios web modernos y responsivos."
+            placeholder="Closer de Ventas High Ticket especializado en Infoproductos"
+            maxLength={60}
             className="h-11 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white"
           />
           <div className="mt-1 flex justify-between items-center">
-            <p className="text-xs text-gray-500 font-['Inter']">Resalte su enfoque creativo.</p>
+            <p className="text-xs text-gray-500 font-['Inter']">Esta frase se mostrará como tu título principal en el perfil.</p>
             <span className="text-xs text-gray-400 font-['Inter']">{title.length}/60</span>
           </div>
         </div>
@@ -200,7 +201,7 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
             <SelectTrigger className="h-11 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white">
               <SelectValue placeholder="Seleccione su nivel de experiencia" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white z-50">
               {experienceLevels.map((level) => (
                 <SelectItem key={level} value={level} className="font-['Inter']">
                   {level}
@@ -219,10 +220,15 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
           <Textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            placeholder="Cuéntanos sobre ti, tu experiencia y qué te apasiona..."
-            className="min-h-16 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] resize-none bg-white"
+            placeholder="Cuéntanos brevemente tu experiencia, tus resultados o qué te apasiona del trabajo que hacés..."
+            className="min-h-20 text-base border border-gray-300 rounded-lg px-4 py-3 focus:border-gray-400 focus:ring-0 font-['Inter'] resize-none bg-white"
           />
-          <p className="mt-1 text-xs text-gray-500 font-['Inter']">Describa su experiencia y pasión profesional.</p>
+          <div className="mt-1 flex justify-between items-center">
+            <p className={`text-xs font-['Inter'] ${bio.length >= 50 ? 'text-green-600' : 'text-gray-500'}`}>
+              {bio.length >= 50 ? '✓ Mínimo alcanzado' : 'Mínimo 50 caracteres'}
+            </p>
+            <span className="text-xs text-gray-400 font-['Inter']">{bio.length} caracteres</span>
+          </div>
         </div>
 
         {/* Skills */}
@@ -231,19 +237,43 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
             <label className="text-sm font-medium text-gray-700 font-['Inter']">Habilidades</label>
           </div>
           
+          {/* Suggested skills based on category */}
+          {category && getSuggestedSkills().length > 0 && (
+            <div className="mb-3">
+              <p className="text-xs text-gray-600 mb-2 font-['Inter']">Sugerencias basadas en tu categoría:</p>
+              <div className="flex flex-wrap gap-2">
+                {getSuggestedSkills().slice(0, 10).map((suggestedSkill) => (
+                  <button
+                    key={suggestedSkill}
+                    type="button"
+                    onClick={() => {
+                      if (skills.length < 3 && !skills.includes(suggestedSkill)) {
+                        setSkills([...skills, suggestedSkill]);
+                      }
+                    }}
+                    disabled={skills.includes(suggestedSkill) || skills.length >= 3}
+                    className="px-3 py-1 rounded-full text-sm font-['Inter'] transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                  >
+                    + {suggestedSkill}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          
           {/* Tags de habilidades */}
           {skills.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {skills.map((skill, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-['Inter']"
+                  className="flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-['Inter'] border border-green-200"
                 >
                   <span>{skill}</span>
                   <button
                     type="button"
                     onClick={() => removeSkill(skill)}
-                    className="hover:bg-gray-200 rounded-full p-0.5 transition-colors"
+                    className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -260,7 +290,7 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
                 value={skillInput}
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyPress={handleSkillKeyPress}
-                placeholder="Añade una habilidad"
+                placeholder="Añade una habilidad personalizada"
                 className="flex-1 h-11 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white"
               />
               <Button
@@ -276,7 +306,7 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
           )}
 
           <div className="mt-1 flex justify-between items-center">
-            <p className="text-xs text-gray-500 font-['Inter']">Diseñador de marca, redactor, gerente de proyectos, etc.</p>
+            <p className="text-xs text-gray-500 font-['Inter']">Agregá hasta 3 habilidades clave</p>
             <span className="text-xs text-gray-400 font-['Inter']">{skills.length}/3</span>
           </div>
         </div>
