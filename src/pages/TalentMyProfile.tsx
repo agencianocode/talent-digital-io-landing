@@ -13,8 +13,6 @@ import {
   MapPin, 
   Phone, 
   Video,
-  DollarSign,
-  Clock,
   Eye,
   Briefcase,
   GraduationCap,
@@ -86,10 +84,6 @@ const TalentMyProfile = () => {
   const location = profile?.location || '';
   const phone = profile?.phone || '';
   const videoUrl = profile?.video_presentation_url || '';
-  const hourlyRateMin = profile?.hourly_rate_min || 0;
-  const hourlyRateMax = profile?.hourly_rate_max || 0;
-  const currency = profile?.currency || 'USD';
-  const availability = profile?.availability || '';
 
   const profileCompleteness = getProfileCompleteness();
   const publicUrl = generatePublicUrl();
@@ -202,18 +196,6 @@ const TalentMyProfile = () => {
                         <Badge variant="secondary" className="gap-1">
                           <Phone className="h-3 w-3" />
                           {phone}
-                        </Badge>
-                      )}
-                      {hourlyRateMin > 0 && hourlyRateMax > 0 && (
-                        <Badge variant="secondary" className="gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          ${hourlyRateMin}-${hourlyRateMax} {currency}/hora
-                        </Badge>
-                      )}
-                      {availability && (
-                        <Badge variant="secondary" className="gap-1">
-                          <Clock className="h-3 w-3" />
-                          {availability}
                         </Badge>
                       )}
                     </div>
