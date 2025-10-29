@@ -2,25 +2,24 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, DollarSign, Briefcase, Clock, Heart, Send, Mail, Linkedin, Instagram, Youtube, Twitter, ExternalLink } from "lucide-react";
+import { ArrowLeft, MapPin, DollarSign, Briefcase, Clock, Heart, Mail, Linkedin, Instagram, Youtube, Twitter, ExternalLink } from "lucide-react";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import { useSupabaseAuth, isTalentRole } from "@/contexts/SupabaseAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLocation } from "react-router-dom";
 import ProfileCompletenessModal from "@/components/ProfileCompletenessModal";
 import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
+import ApplicationModal from "@/components/ApplicationModal";
 
 const OpportunityDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
   const { userRole } = useSupabaseAuth();
-  const { applyToOpportunity, hasApplied, getApplicationStatus } = useSupabaseOpportunities();
+  const { hasApplied, getApplicationStatus } = useSupabaseOpportunities();
   const { isOpportunitySaved, saveOpportunity, unsaveOpportunity } = useSavedOpportunities();
   const { completeness } = useProfileCompleteness();
   
@@ -30,9 +29,7 @@ const OpportunityDetail = () => {
   const [opportunity, setOpportunity] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [coverLetter, setCoverLetter] = useState("");
-  const [isApplying, setIsApplying] = useState(false);
-  const [showApplicationDialog, setShowApplicationDialog] = useState(false);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [showCompletenessModal, setShowCompletenessModal] = useState(false);
 
   const jobTypes = [
@@ -107,29 +104,22 @@ const OpportunityDetail = () => {
     fetchOpportunity();
   }, [id]);
 
-  const handleApply = async () => {
+  const handleApplyClick = () => {
     if (!opportunity) return;
     
-    // Verificar completitud del perfil antes de aplicar
+    // Verificar completitud del perfil antes de mostrar el modal
     const minCompleteness = 60;
     if (completeness < minCompleteness) {
       setShowCompletenessModal(true);
-      setShowApplicationDialog(false);
       return;
     }
     
-    setIsApplying(true);
-    try {
-      await applyToOpportunity(opportunity.id, coverLetter);
-      toast.success('¡Aplicación enviada exitosamente!');
-      setShowApplicationDialog(false);
-      setCoverLetter("");
-    } catch (error) {
-      console.error('Error applying:', error);
-      toast.error('Error al enviar la aplicación');
-    } finally {
-      setIsApplying(false);
-    }
+    setShowApplicationModal(true);
+  };
+
+  const handleApplicationSent = () => {
+    setShowApplicationModal(false);
+    window.location.reload();
   };
 
   const handleSaveToggle = async () => {
@@ -271,45 +261,9 @@ const OpportunityDetail = () => {
             </Button>
             
             {!applied && opportunity.status === 'active' && (
-              <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2">
-                    <Send className="h-4 w-4" />
-                    Aplicar
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Aplicar a {opportunity.title}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium">Carta de Presentación (Opcional)</label>
-                      <Textarea
-                        placeholder="Cuéntanos por qué eres ideal para esta posición..."
-                        value={coverLetter}
-                        onChange={(e) => setCoverLetter(e.target.value)}
-                        rows={4}
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={handleApply}
-                        disabled={isApplying}
-                        className="flex-1"
-                      >
-                        {isApplying ? 'Enviando...' : 'Enviar Aplicación'}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowApplicationDialog(false)}
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <Button className="gap-2" onClick={handleApplyClick}>
+                Aplicar
+              </Button>
             )}
           </div>
         )}
@@ -491,6 +445,16 @@ const OpportunityDetail = () => {
           isOpen={showCompletenessModal}
           onClose={() => setShowCompletenessModal(false)}
           minCompletenessRequired={60}
+        />
+      )}
+      
+      {/* Modal de aplicación */}
+      {showApplicationModal && (
+        <ApplicationModal
+          isOpen={showApplicationModal}
+          onClose={() => setShowApplicationModal(false)}
+          opportunity={opportunity}
+          onApplicationSent={handleApplicationSent}
         />
       )}
     </div>
