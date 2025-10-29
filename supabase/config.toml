@@ -22,3 +22,6 @@ verify_jwt = true
 
 [functions.process-notification]
 verify_jwt = false
+
+[functions.opportunity-share]
+verify_jwt = false

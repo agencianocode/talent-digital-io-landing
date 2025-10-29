@@ -53,12 +53,13 @@ const PublicOpportunity = () => {
             logo_url,
             description,
             industry,
-            company_size,
+            size,
             website,
             social_links
           )
         `)
         .eq('id', opportunityId)
+        .eq('status', 'active')
         .maybeSingle();
       
       if (error) throw error;
@@ -134,12 +135,9 @@ const PublicOpportunity = () => {
 
   const handleApply = () => {
     if (!user) {
-      // Redirect to login with return URL
-      navigate(`/login?redirect=/opportunity/${opportunityId}`);
+      navigate(`/auth?redirect=/opportunity/${opportunityId}`);
       return;
     }
-    
-    // Navigate to apply page
     navigate(`/talent-dashboard/opportunities/${opportunityId}`);
   };
 

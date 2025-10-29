@@ -157,14 +157,41 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
     }
   };
 
-  const handleShareOpportunity = async (opportunity: any) => {
-    try {
-      const publicUrl = `${window.location.origin}/opportunity/${opportunity.id}`;
-      await navigator.clipboard.writeText(publicUrl);
-      toast.success('¡Enlace público copiado al portapapeles!');
-    } catch (error) {
-      console.error('Error copying public link:', error);
-      toast.error('Error al copiar el enlace');
+  const handleShareOpportunity = async (opportunity: any, shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email' = 'link') => {
+    const publicUrl = `${window.location.origin}/opportunity/${opportunity.id}`;
+    
+    if (shareType === 'link') {
+      try {
+        await navigator.clipboard.writeText(publicUrl);
+        toast.success('¡Enlace público copiado al portapapeles!');
+      } catch (error) {
+        console.error('Error copying public link:', error);
+        toast.error('Error al copiar el enlace');
+      }
+    } else {
+      // Share via social media
+      const title = opportunity.title;
+      const text = `${title} - ${(opportunity as any).companies?.name || 'Oportunidad laboral'}`;
+      
+      let shareUrl = '';
+      switch (shareType) {
+        case 'whatsapp':
+          shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + publicUrl)}`;
+          break;
+        case 'linkedin':
+          shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl)}`;
+          break;
+        case 'twitter':
+          shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(publicUrl)}`;
+          break;
+        case 'email':
+          shareUrl = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text + '\n\n' + publicUrl)}`;
+          break;
+      }
+      
+      if (shareUrl) {
+        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+      }
     }
   };
 
@@ -446,10 +473,34 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                             Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => handleShareOpportunity(opportunity)}
+                            onClick={() => handleShareOpportunity(opportunity, 'link')}
                           >
                             <Share2 className="h-4 w-4 mr-2" />
-                            Compartir
+                            Copiar enlace
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleShareOpportunity(opportunity, 'whatsapp')}
+                          >
+                            <Share2 className="h-4 w-4 mr-2" />
+                            WhatsApp
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleShareOpportunity(opportunity, 'linkedin')}
+                          >
+                            <Share2 className="h-4 w-4 mr-2" />
+                            LinkedIn
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleShareOpportunity(opportunity, 'twitter')}
+                          >
+                            <Share2 className="h-4 w-4 mr-2" />
+                            X (Twitter)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleShareOpportunity(opportunity, 'email')}
+                          >
+                            <Mail className="h-4 w-4 mr-2" />
+                            Email
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => handleToggleStatus(opportunity.id, opportunity.status || 'draft')}
@@ -534,10 +585,34 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={() => handleShareOpportunity(opportunity)}
+                          onClick={() => handleShareOpportunity(opportunity, 'link')}
                         >
                           <Share2 className="h-4 w-4 mr-2" />
-                          Compartir
+                          Copiar enlace
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleShareOpportunity(opportunity, 'whatsapp')}
+                        >
+                          <Share2 className="h-4 w-4 mr-2" />
+                          WhatsApp
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleShareOpportunity(opportunity, 'linkedin')}
+                        >
+                          <Share2 className="h-4 w-4 mr-2" />
+                          LinkedIn
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleShareOpportunity(opportunity, 'twitter')}
+                        >
+                          <Share2 className="h-4 w-4 mr-2" />
+                          X (Twitter)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleShareOpportunity(opportunity, 'email')}
+                        >
+                          <Mail className="h-4 w-4 mr-2" />
+                          Email
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => handleToggleStatus(opportunity.id, opportunity.status || 'draft')}
