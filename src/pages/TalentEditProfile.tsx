@@ -8,11 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { X, Plus, MapPin, Phone, User, Camera, Upload, ArrowLeft, Link as LinkIcon } from 'lucide-react';
+import { X, Plus, MapPin, Phone, User, Camera, Upload, ArrowLeft, Link as LinkIcon, Target } from 'lucide-react';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useSocialLinks } from '@/hooks/useSocialLinks';
 import { ProfileEditData } from '@/types/profile';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const EXPERIENCE_LEVELS = [
   { value: 'junior', label: 'Junior (0-2 años)' },
@@ -51,6 +52,33 @@ const AVAILABILITY_OPTIONS = [
   { value: 'consulting', label: 'Consultoría' }
 ];
 
+const AVAILABILITY_STATUS_OPTIONS = [
+  { value: 'actively_looking', label: 'Búsqueda Activa - Estoy buscando trabajo activamente' },
+  { value: 'open_to_offers', label: 'Abierto a Ofertas - Evaluaré buenas oportunidades' },
+  { value: 'not_available', label: 'No Disponible - No estoy buscando en este momento' }
+];
+
+const WORK_MODALITY_OPTIONS = [
+  { value: 'remote', label: 'Remoto' },
+  { value: 'hybrid', label: 'Híbrido' },
+  { value: 'onsite', label: 'Presencial' }
+];
+
+const CONTRACT_TYPE_OPTIONS = [
+  { value: 'full_time', label: 'Tiempo Completo' },
+  { value: 'part_time', label: 'Medio Tiempo' },
+  { value: 'freelance', label: 'Freelance' },
+  { value: 'contract', label: 'Por Contrato' }
+];
+
+const COMPANY_SIZE_OPTIONS = [
+  { value: 'startup', label: 'Startup (1-10)' },
+  { value: 'small', label: 'Pequeña (11-50)' },
+  { value: 'medium', label: 'Mediana (51-200)' },
+  { value: 'large', label: 'Grande (201-1000)' },
+  { value: 'enterprise', label: 'Empresa (1000+)' }
+];
+
 const TalentEditProfile = () => {
   const navigate = useNavigate();
   const { profile, userProfile, updateProfile, updateAvatar, validateProfile } = useProfileData();
@@ -62,6 +90,15 @@ const TalentEditProfile = () => {
   const [newSkill, setNewSkill] = useState('');
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [socialUrls, setSocialUrls] = useState<Record<string, string>>({});
+  const [professionalPrefs, setProfessionalPrefs] = useState({
+    availability_status: 'open_to_offers',
+    work_modality: [] as string[],
+    contract_types: [] as string[],
+    preferred_company_size: [] as string[],
+    preferred_industries: '',
+    career_goals: '',
+    deal_breakers: ''
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize form data
@@ -92,6 +129,38 @@ const TalentEditProfile = () => {
     setSocialUrls(urls);
   }, [socialLinks]);
 
+  // Load professional preferences
+  useEffect(() => {
+    const loadPreferences = async () => {
+      if (!userProfile) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('professional_preferences')
+          .eq('user_id', userProfile.user_id)
+          .single();
+
+        if (!error && data?.professional_preferences) {
+          const prefs = data.professional_preferences as any;
+          setProfessionalPrefs({
+            availability_status: prefs.availability_status || 'open_to_offers',
+            work_modality: prefs.work_modality || [],
+            contract_types: prefs.contract_types || [],
+            preferred_company_size: prefs.preferred_company_size || [],
+            preferred_industries: prefs.preferred_industries || '',
+            career_goals: prefs.career_goals || '',
+            deal_breakers: prefs.deal_breakers || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading professional preferences:', error);
+      }
+    };
+
+    loadPreferences();
+  }, [userProfile]);
+
   const handleInputChange = (field: keyof ProfileEditData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -118,6 +187,17 @@ const TalentEditProfile = () => {
     setSocialUrls(prev => ({ ...prev, [platform]: url }));
   };
 
+  const toggleArrayValue = (currentValues: string[], value: string) => {
+    if (currentValues.includes(value)) {
+      return currentValues.filter(v => v !== value);
+    }
+    return [...currentValues, value];
+  };
+
+  const handlePrefChange = (field: string, value: any) => {
+    setProfessionalPrefs(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -136,6 +216,21 @@ const TalentEditProfile = () => {
       
       if (!success) {
         toast.error('Error al actualizar el perfil');
+        return;
+      }
+
+      // Update professional preferences
+      const { error: prefsError } = await supabase
+        .from('profiles')
+        .update({
+          professional_preferences: professionalPrefs,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userProfile?.user_id || '');
+
+      if (prefsError) {
+        console.error('Error updating preferences:', prefsError);
+        toast.error('Error al actualizar las preferencias');
         return;
       }
       
@@ -513,6 +608,144 @@ const TalentEditProfile = () => {
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
                   Un video de presentación corto puede aumentar tus oportunidades hasta 3 veces 🎥
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Professional Preferences */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Preferencias Profesionales
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Availability Status */}
+              <div>
+                <Label htmlFor="availability_status">Estado de Disponibilidad</Label>
+                <Select
+                  value={professionalPrefs.availability_status}
+                  onValueChange={(value) => handlePrefChange('availability_status', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="¿Estás buscando trabajo?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AVAILABILITY_STATUS_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Esto afecta cómo las empresas ven tu perfil
+                </p>
+              </div>
+
+              {/* Work Modality */}
+              <div>
+                <Label>Modalidad de trabajo preferida</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Selecciona todas las modalidades que te interesan
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {WORK_MODALITY_OPTIONS.map(option => (
+                    <Badge
+                      key={option.value}
+                      variant={professionalPrefs.work_modality.includes(option.value) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => handlePrefChange('work_modality', toggleArrayValue(professionalPrefs.work_modality, option.value))}
+                    >
+                      {option.label}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Contract Types */}
+              <div>
+                <Label>Tipos de contrato</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Selecciona los tipos de contrato que te interesan
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {CONTRACT_TYPE_OPTIONS.map(option => (
+                    <Badge
+                      key={option.value}
+                      variant={professionalPrefs.contract_types.includes(option.value) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => handlePrefChange('contract_types', toggleArrayValue(professionalPrefs.contract_types, option.value))}
+                    >
+                      {option.label}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Company Size */}
+              <div>
+                <Label>Tamaño de empresa preferido</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Selecciona los tamaños de empresa que te interesan
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {COMPANY_SIZE_OPTIONS.map(option => (
+                    <Badge
+                      key={option.value}
+                      variant={professionalPrefs.preferred_company_size.includes(option.value) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => handlePrefChange('preferred_company_size', toggleArrayValue(professionalPrefs.preferred_company_size, option.value))}
+                    >
+                      {option.label}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preferred Industries */}
+              <div>
+                <Label htmlFor="preferred_industries">Industrias de interés</Label>
+                <Input
+                  id="preferred_industries"
+                  value={professionalPrefs.preferred_industries}
+                  onChange={(e) => handlePrefChange('preferred_industries', e.target.value)}
+                  placeholder="ej: Tecnología, Fintech, E-commerce..."
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Industrias donde te gustaría trabajar
+                </p>
+              </div>
+
+              {/* Career Goals */}
+              <div>
+                <Label htmlFor="career_goals">Objetivos profesionales</Label>
+                <Textarea
+                  id="career_goals"
+                  value={professionalPrefs.career_goals}
+                  onChange={(e) => handlePrefChange('career_goals', e.target.value)}
+                  placeholder="Describe tus objetivos profesionales a corto y largo plazo..."
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Ayuda a las empresas a entender qué buscas en tu próximo rol
+                </p>
+              </div>
+
+              {/* Deal Breakers */}
+              <div>
+                <Label htmlFor="deal_breakers">Deal breakers</Label>
+                <Textarea
+                  id="deal_breakers"
+                  value={professionalPrefs.deal_breakers}
+                  onChange={(e) => handlePrefChange('deal_breakers', e.target.value)}
+                  placeholder="ej: No disponible para viajes constantes, no trabajo fines de semana..."
+                  rows={2}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Condiciones que no estás dispuesto a aceptar
                 </p>
               </div>
             </CardContent>
