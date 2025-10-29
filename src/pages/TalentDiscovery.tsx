@@ -99,7 +99,7 @@ const TalentDiscovery = () => {
       const { data: talentRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role')
-        .in('role', ['talent', 'premium_talent']);
+.in('role', ['talent', 'freemium_talent', 'premium_talent']);
 
       if (rolesError) {
         console.error('Error fetching talent roles:', rolesError);
