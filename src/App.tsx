@@ -41,7 +41,7 @@ const OpportunitiesPage = lazy(() => import('./pages/OpportunitiesPage'));
 const NewOpportunity = lazy(() => import('./pages/NewOpportunity'));
 const NewOpportunityMultiStep = lazy(() => import('./pages/NewOpportunityMultiStep'));
 const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage'));
-const TalentSearchPage = lazy(() => import('./pages/TalentSearchPage'));
+
 const TalentProfilePage = lazy(() => import('./pages/TalentProfilePage'));
 const OpportunityApplicants = lazy(() => import('./pages/OpportunityApplicantsNew'));
 const TalentDiscovery = lazy(() => import('./pages/TalentDiscovery'));
@@ -280,11 +280,6 @@ function App() {
                         <Route path="applications" element={
                           <Suspense fallback={<LoadingSkeleton type="list" />}>
                             <ApplicationsPage />
-                          </Suspense>
-                        } />
-                        <Route path="talent" element={
-                          <Suspense fallback={<LoadingSkeleton type="list" />}>
-                            <TalentSearchPage />
                           </Suspense>
                         } />
                         <Route path="talent-discovery" element={
