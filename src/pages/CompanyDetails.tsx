@@ -354,7 +354,7 @@ const CompanyDetails = () => {
                 <Tooltip content="Editar información de la empresa">
                   <Button 
                     variant="outline" 
-                    className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium"
+                    className="w-full h-11 border-gray-300 hover:bg-gray-50 hover:text-foreground shadow-sm font-medium"
                     onClick={() => navigate('/business-dashboard/company-profile')}
                   >
                     <Edit className="w-4 h-4 mr-2" />
@@ -365,7 +365,7 @@ const CompanyDetails = () => {
                 <Tooltip content="Compartir perfil de empresa">
                   <Button 
                     variant="outline" 
-                    className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium"
+                    className="w-full h-11 border-gray-300 hover:bg-gray-50 hover:text-foreground shadow-sm font-medium"
                     onClick={async () => {
                       if (!activeCompany?.id) {
                         toast.error('No se pudo obtener la información de la empresa');
