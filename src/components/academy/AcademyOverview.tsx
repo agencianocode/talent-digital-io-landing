@@ -2,6 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useAcademyData } from '@/hooks/useAcademyData';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { 
   Users, 
   Mail, 
@@ -14,39 +17,22 @@ import {
 
 interface AcademyOverviewProps {
   academyId: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export const AcademyOverview: React.FC<AcademyOverviewProps> = () => {
-  // Mock data for now
-  const stats = {
-    totalStudents: 0,
-    activeStudents: 0,
-    graduatedStudents: 0,
-    pendingInvitations: 0,
-    totalApplications: 0,
-    exclusiveOpportunities: 0
-  };
+export const AcademyOverview: React.FC<AcademyOverviewProps> = ({ academyId, onTabChange }) => {
+  const { stats, activity, isLoading } = useAcademyData(academyId);
 
-  const recentActivity = [
-    {
-      id: '1',
-      type: 'new_member',
-      description: 'María García se unió a la academia',
-      timestamp: 'Hace 2 horas'
-    },
-    {
-      id: '2',
-      type: 'application',
-      description: 'Juan Pérez aplicó a Desarrollador Frontend en TechCorp',
-      timestamp: 'Hace 4 horas'
-    },
-    {
-      id: '3',
-      type: 'graduation',
-      description: 'Ana López completó el curso de Desarrollo Web',
-      timestamp: 'Hace 1 día'
-    }
-  ];
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Activity className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
+          <p>Cargando datos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -58,9 +44,9 @@ export const AcademyOverview: React.FC<AcademyOverviewProps> = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeStudents}</div>
+            <div className="text-2xl font-bold">{stats.active_students}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalStudents} estudiantes totales
+              {stats.total_students} estudiantes totales
             </p>
           </CardContent>
         </Card>
@@ -71,7 +57,7 @@ export const AcademyOverview: React.FC<AcademyOverviewProps> = () => {
             <Mail className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingInvitations}</div>
+            <div className="text-2xl font-bold">{stats.pending_invitations}</div>
             <p className="text-xs text-muted-foreground">
               Esperando respuesta
             </p>
@@ -84,7 +70,7 @@ export const AcademyOverview: React.FC<AcademyOverviewProps> = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalApplications}</div>
+            <div className="text-2xl font-bold">{stats.total_applications}</div>
             <p className="text-xs text-muted-foreground">
               Esta semana
             </p>
@@ -97,7 +83,7 @@ export const AcademyOverview: React.FC<AcademyOverviewProps> = () => {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.exclusiveOpportunities}</div>
+            <div className="text-2xl font-bold">{stats.exclusive_opportunities}</div>
             <p className="text-xs text-muted-foreground">
               Disponibles para estudiantes
             </p>
@@ -110,7 +96,7 @@ export const AcademyOverview: React.FC<AcademyOverviewProps> = () => {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.graduatedStudents}</div>
+            <div className="text-2xl font-bold">{stats.graduated_students}</div>
             <p className="text-xs text-muted-foreground">
               Certificados completados
             </p>
@@ -124,11 +110,11 @@ export const AcademyOverview: React.FC<AcademyOverviewProps> = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <Button size="sm" className="w-full">
+              <Button size="sm" className="w-full" onClick={() => onTabChange?.('invitations')}>
                 <Plus className="h-4 w-4 mr-2" />
                 Invitar Estudiantes
               </Button>
-              <Button variant="outline" size="sm" className="w-full">
+              <Button variant="outline" size="sm" className="w-full" onClick={() => onTabChange?.('directory')}>
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Ver Directorio Público
               </Button>
@@ -146,24 +132,28 @@ export const AcademyOverview: React.FC<AcademyOverviewProps> = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {recentActivity.length === 0 ? (
+          {activity.length === 0 ? (
             <div className="text-center py-8">
               <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No hay actividad reciente</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {recentActivity.map((item) => (
+              {activity.slice(0, 5).map((item) => (
                 <div key={item.id} className="flex items-start gap-3 p-3 border rounded-lg">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm">{item.description}</p>
-                    <p className="text-xs text-muted-foreground">{item.timestamp}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: es })}
+                    </p>
                   </div>
                   <Badge variant="outline" className="text-xs">
                     {item.type === 'new_member' && 'Nuevo miembro'}
                     {item.type === 'application' && 'Aplicación'}
                     {item.type === 'graduation' && 'Graduación'}
+                    {item.type === 'invitation_sent' && 'Invitación'}
+                    {item.type === 'profile_update' && 'Actualización'}
                   </Badge>
                 </div>
               ))}

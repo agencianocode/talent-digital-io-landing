@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAcademyData } from '@/hooks/useAcademyData';
 import { 
   GraduationCap, 
   Users, 
@@ -24,11 +27,11 @@ import PublicDirectory from '../components/academy/PublicDirectory';
 
 const AcademyDashboard: React.FC = () => {
   const { user, userRole } = useSupabaseAuth();
+  const { activeCompany, isLoading: companyLoading } = useCompany();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [academyId, setAcademyId] = useState<string | null>(null);
 
-  // Check if user has academy role - for now allow all business roles
+  // Check if user has academy role
   const isAcademyRole = userRole === 'business' || userRole === 'premium_business' || userRole === 'freemium_business' || userRole === 'admin';
 
   useEffect(() => {
@@ -42,10 +45,28 @@ const AcademyDashboard: React.FC = () => {
       return;
     }
 
-    // For now, we'll use a mock academy ID
-    // In production, this would come from the user's academy association
-    setAcademyId('mock-academy-id');
-  }, [user, userRole, navigate, isAcademyRole]);
+    if (!companyLoading && !activeCompany) {
+      toast.error('No se encontró ninguna empresa activa');
+      navigate('/business-dashboard');
+    }
+  }, [user, userRole, navigate, isAcademyRole, activeCompany, companyLoading]);
+
+  // Show loading while getting company
+  if (companyLoading || !activeCompany) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando academia...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const academyId = activeCompany.id;
+  const { stats } = useAcademyData(academyId);
 
   if (!isAcademyRole) {
     return (
@@ -60,19 +81,6 @@ const AcademyDashboard: React.FC = () => {
             <p className="text-sm text-muted-foreground">
               Rol actual: {userRole || 'No definido'}
             </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!academyId) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando academia...</p>
           </CardContent>
         </Card>
       </div>
@@ -102,7 +110,7 @@ const AcademyDashboard: React.FC = () => {
               <Settings className="h-4 w-4 mr-2" />
               Configuración
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={() => setActiveTab('invitations')}>
               <Plus className="h-4 w-4 mr-2" />
               Invitar Estudiantes
             </Button>
@@ -119,7 +127,7 @@ const AcademyDashboard: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Estudiantes</p>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{stats.active_students}</p>
                 </div>
               </div>
             </CardContent>
@@ -132,7 +140,7 @@ const AcademyDashboard: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Invitaciones</p>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{stats.pending_invitations}</p>
                 </div>
               </div>
             </CardContent>
@@ -145,7 +153,7 @@ const AcademyDashboard: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Aplicaciones</p>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{stats.total_applications}</p>
                 </div>
               </div>
             </CardContent>
@@ -158,7 +166,7 @@ const AcademyDashboard: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Oportunidades</p>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{stats.exclusive_opportunities}</p>
                 </div>
               </div>
             </CardContent>
@@ -196,11 +204,11 @@ const AcademyDashboard: React.FC = () => {
         </TabsList>
 
         <TabsContent value="overview">
-          <AcademyOverview academyId={academyId} />
+          <AcademyOverview academyId={academyId} onTabChange={setActiveTab} />
         </TabsContent>
 
         <TabsContent value="students">
-          <StudentDirectory academyId={academyId} />
+          <StudentDirectory academyId={academyId} onInviteClick={() => setActiveTab('invitations')} />
         </TabsContent>
 
         <TabsContent value="invitations">

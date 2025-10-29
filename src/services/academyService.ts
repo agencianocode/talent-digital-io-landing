@@ -1,3 +1,4 @@
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Academy, 
   AcademyStudent, 
@@ -9,229 +10,329 @@ import {
   PublicDirectoryStudent 
 } from '@/types/academy';
 
+// Real Academy Service connected to Supabase
 export const academyService = {
-  // Academy Management
+  // Get academy details by ID (company acts as academy)
   async getAcademy(academyId: string): Promise<Academy | null> {
-    // Mock data for now
-    return {
-      id: academyId,
-      name: 'Academia de Desarrollo Digital',
-      description: 'Academia especializada en desarrollo web y móvil',
-      website: 'https://academia.example.com',
-      logo_url: undefined,
-      contact_email: 'contacto@academia.example.com',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z'
-    };
+    try {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('id', academyId)
+        .single();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description || undefined,
+        website: data.website || undefined,
+        logo_url: data.logo_url || undefined,
+        contact_email: undefined,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+    } catch (error) {
+      console.error('Error fetching academy:', error);
+      return null;
+    }
   },
 
-  async getAcademyByUserId(_userId: string): Promise<Academy | null> {
-    // Mock data for now
-    return {
-      id: 'mock-academy-id',
-      name: 'Academia de Desarrollo Digital',
-      description: 'Academia especializada en desarrollo web y móvil',
-      website: 'https://academia.example.com',
-      logo_url: undefined,
-      contact_email: 'contacto@academia.example.com',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z'
-    };
+  // Get academy by user ID (get user's company)
+  async getAcademyByUserId(userId: string): Promise<Academy | null> {
+    try {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description || undefined,
+        website: data.website || undefined,
+        logo_url: data.logo_url || undefined,
+        contact_email: undefined,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+    } catch (error) {
+      console.error('Error fetching academy by user:', error);
+      return null;
+    }
   },
 
-  // Academy Stats
-  async getAcademyStats(_academyId: string): Promise<AcademyStats> {
-    // Mock data for now
-    return {
-      total_students: 25,
-      active_students: 18,
-      graduated_students: 7,
-      pending_invitations: 3,
-      total_applications: 12,
-      exclusive_opportunities: 5,
-      recent_activity_count: 8
-    };
+  // Get academy statistics
+  async getAcademyStats(academyId: string): Promise<AcademyStats> {
+    try {
+      // Get total students
+      const { count: totalStudents } = await supabase
+        .from('academy_students')
+        .select('*', { count: 'exact', head: true })
+        .eq('academy_id', academyId);
+
+      // Get active students
+      const { count: activeStudents } = await supabase
+        .from('academy_students')
+        .select('*', { count: 'exact', head: true })
+        .eq('academy_id', academyId)
+        .eq('status', 'enrolled');
+
+      // Get graduated students
+      const { count: graduatedStudents } = await supabase
+        .from('academy_students')
+        .select('*', { count: 'exact', head: true })
+        .eq('academy_id', academyId)
+        .eq('status', 'graduated');
+
+      return {
+        total_students: totalStudents || 0,
+        active_students: activeStudents || 0,
+        graduated_students: graduatedStudents || 0,
+        pending_invitations: 0,
+        total_applications: 0,
+        exclusive_opportunities: 0,
+        recent_activity_count: 0
+      };
+    } catch (error) {
+      console.error('Error fetching academy stats:', error);
+      return {
+        total_students: 0,
+        active_students: 0,
+        graduated_students: 0,
+        pending_invitations: 0,
+        total_applications: 0,
+        exclusive_opportunities: 0,
+        recent_activity_count: 0
+      };
+    }
   },
 
-  // Students Management
-  async getStudents(_academyId: string, filters?: { status?: string; search?: string }): Promise<AcademyStudent[]> {
-    // Mock data for now
-    const mockStudents: AcademyStudent[] = [
-      {
-        id: '1',
-        academy_id: _academyId,
-        user_id: 'user1',
-        status: 'active',
-        joined_at: '2024-01-15T10:00:00Z',
-        graduation_date: undefined,
-        talent_profiles: {
-          full_name: 'María García',
-          avatar_url: undefined,
-          email: 'maria@example.com',
-          city: 'Madrid',
-          country: 'España'
-        }
-      },
-      {
-        id: '2',
-        academy_id: _academyId,
-        user_id: 'user2',
-        status: 'graduated',
-        joined_at: '2023-12-01T10:00:00Z',
-        graduation_date: '2024-01-10T10:00:00Z',
-        talent_profiles: {
-          full_name: 'Juan Pérez',
-          avatar_url: undefined,
-          email: 'juan@example.com',
-          city: 'Barcelona',
-          country: 'España'
-        }
+  // Get students with optional filters
+  async getStudents(
+    academyId: string, 
+    filters?: { status?: string; search?: string }
+  ): Promise<AcademyStudent[]> {
+    try {
+      let query = supabase
+        .from('academy_students')
+        .select('*')
+        .eq('academy_id', academyId);
+
+      // Apply status filter
+      if (filters?.status && filters.status !== 'all') {
+        query = query.eq('status', filters.status);
       }
-    ];
 
-    let filtered = mockStudents;
+      const { data, error } = await query.order('created_at', { ascending: false });
 
-    if (filters?.status && filters.status !== 'all') {
-      filtered = filtered.filter(student => student.status === filters.status);
+      if (error) throw error;
+
+      // Transform data to match AcademyStudent type
+      const students: AcademyStudent[] = (data || []).map(student => ({
+        id: student.id,
+        academy_id: student.academy_id,
+        user_id: student.student_email,
+        status: (student.status || 'enrolled') as 'active' | 'graduated' | 'paused' | 'suspended',
+        joined_at: student.enrollment_date || student.created_at,
+        graduation_date: student.graduation_date || undefined,
+        certificate_url: undefined,
+        talent_profiles: {
+          full_name: student.student_name || 'Estudiante',
+          email: student.student_email
+        }
+      }));
+
+      // Apply search filter
+      if (filters?.search) {
+        const searchLower = filters.search.toLowerCase();
+        return students.filter(student => 
+          student.talent_profiles?.full_name?.toLowerCase().includes(searchLower) ||
+          student.talent_profiles?.email?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      return students;
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      return [];
     }
-
-    if (filters?.search) {
-      filtered = filtered.filter(student => 
-        student.talent_profiles?.full_name?.toLowerCase().includes(filters.search!.toLowerCase()) ||
-        student.talent_profiles?.email?.toLowerCase().includes(filters.search!.toLowerCase())
-      );
-    }
-
-    return filtered;
   },
 
-  async removeStudent(_academyId: string, _userId: string): Promise<boolean> {
-    // Mock implementation
-    console.log('Removing student:', _userId, 'from academy:', _academyId);
-    return true;
+  // Remove a student from the academy
+  async removeStudent(academyId: string, studentEmail: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('academy_students')
+        .delete()
+        .eq('academy_id', academyId)
+        .eq('student_email', studentEmail);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error removing student:', error);
+      return false;
+    }
   },
 
-  // Invitations Management
+  // Get pending and sent invitations
   async getInvitations(_academyId: string): Promise<AcademyInvitation[]> {
-    // Mock data for now
-    return [
-      {
-        id: '1',
-        academy_id: _academyId,
-        email: 'estudiante1@example.com',
-        status: 'pending',
-        invited_at: '2024-01-20T10:00:00Z',
-        expires_at: '2024-01-27T10:00:00Z'
-      },
-      {
-        id: '2',
-        academy_id: _academyId,
-        email: 'estudiante2@example.com',
-        status: 'accepted',
-        invited_at: '2024-01-18T10:00:00Z',
-        expires_at: '2024-01-25T10:00:00Z',
-        accepted_at: '2024-01-19T14:00:00Z'
-      }
-    ];
+    // TODO: Implement invitations table if needed
+    return [];
   },
 
-  async sendInvitations(_academyId: string, invitationData: InvitationRequest): Promise<boolean> {
-    // Mock implementation
-    console.log('Sending invitations for academy:', _academyId, 'to emails:', invitationData.emails);
-    return true;
+  // Send bulk invitations - adds students directly to academy
+  async sendInvitations(academyId: string, invitationData: InvitationRequest): Promise<boolean> {
+    try {
+      const students = invitationData.emails.map(email => ({
+        academy_id: academyId,
+        student_email: email.trim(),
+        student_name: null,
+        status: 'enrolled',
+        program_name: invitationData.message || null,
+        enrollment_date: new Date().toISOString()
+      }));
+
+      const { error } = await supabase
+        .from('academy_students')
+        .insert(students);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error sending invitations:', error);
+      return false;
+    }
   },
 
-  async cancelInvitation(invitationId: string): Promise<boolean> {
-    // Mock implementation
-    console.log('Canceling invitation:', invitationId);
-    return true;
+  // Cancel an invitation - removes pending student
+  async cancelInvitation(studentId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('academy_students')
+        .delete()
+        .eq('id', studentId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error canceling invitation:', error);
+      return false;
+    }
   },
 
-  // Activity Feed
-  async getActivity(_academyId: string, _limit: number = 20): Promise<AcademyActivity[]> {
-    // Mock data for now
-    return [
-      {
-        id: '1',
-        academy_id: _academyId,
-        type: 'application',
-        description: 'María García aplicó a Desarrollador Frontend en TechCorp',
-        user_id: 'user1',
-        opportunity_id: 'opp1',
-        created_at: '2024-01-20T14:00:00Z',
-        metadata: {
-          opportunity_title: 'Desarrollador Frontend',
-          company_name: 'TechCorp'
-        }
-      },
-      {
-        id: '2',
-        academy_id: _academyId,
-        type: 'new_member',
-        description: 'Juan Pérez se unió a la academia',
-        user_id: 'user2',
-        created_at: '2024-01-20T10:00:00Z'
-      },
-      {
-        id: '3',
-        academy_id: _academyId,
-        type: 'graduation',
-        description: 'Ana López completó el curso de Desarrollo Web',
-        user_id: 'user3',
-        created_at: '2024-01-19T16:00:00Z',
-        metadata: {
-          course_name: 'Desarrollo Web'
-        }
-      }
-    ];
+  // Get recent activity feed
+  async getActivity(academyId: string, limit: number = 20): Promise<AcademyActivity[]> {
+    try {
+      // Get recent students joined
+      const { data: students, error } = await supabase
+        .from('academy_students')
+        .select('id, student_name, student_email, enrollment_date, graduation_date, status, created_at')
+        .eq('academy_id', academyId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+
+      const activities: AcademyActivity[] = (students || []).map(student => ({
+        id: student.id,
+        academy_id: academyId,
+        type: student.graduation_date ? 'graduation' : 'new_member',
+        description: student.graduation_date 
+          ? `${student.student_name || student.student_email} completó su programa`
+          : `${student.student_name || student.student_email} se unió a la academia`,
+        user_id: student.student_email,
+        created_at: student.graduation_date || student.created_at,
+        metadata: { status: student.status }
+      }));
+
+      return activities;
+    } catch (error) {
+      console.error('Error fetching activity:', error);
+      return [];
+    }
   },
 
-  // Exclusive Opportunities
-  async getExclusiveOpportunities(_academyId: string): Promise<AcademyOpportunity[]> {
-    // Mock data for now
-    return [
-      {
-        id: '1',
-        academy_id: _academyId,
-        opportunity_id: 'opp1',
-        created_at: '2024-01-20T10:00:00Z',
+  // Get exclusive opportunities for academy
+  async getExclusiveOpportunities(academyId: string): Promise<AcademyOpportunity[]> {
+    try {
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select(`
+          id,
+          title,
+          description,
+          status,
+          created_at,
+          companies:company_id (
+            name,
+            logo_url
+          )
+        `)
+        .eq('company_id', academyId)
+        .eq('is_academy_exclusive', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map(opp => ({
+        id: opp.id,
+        academy_id: academyId,
+        opportunity_id: opp.id,
+        created_at: opp.created_at,
+        expires_at: undefined,
         opportunities: {
-          id: 'opp1',
-          title: 'Desarrollador Frontend Senior',
-          description: 'Buscamos un desarrollador frontend con experiencia en React...',
-          status: 'active',
-          created_at: '2024-01-20T10:00:00Z',
-          companies: {
-            name: 'TechCorp',
-            logo_url: undefined
-          }
+          id: opp.id,
+          title: opp.title,
+          description: opp.description,
+          status: opp.status || 'draft',
+          created_at: opp.created_at,
+          companies: Array.isArray(opp.companies) && opp.companies.length > 0
+            ? {
+                name: opp.companies[0].name,
+                logo_url: opp.companies[0].logo_url || undefined
+              }
+            : undefined
         }
-      }
-    ];
+      }));
+    } catch (error) {
+      console.error('Error fetching exclusive opportunities:', error);
+      return [];
+    }
   },
 
-  // Public Directory
-  async getPublicDirectory(_academyId: string): Promise<PublicDirectoryStudent[]> {
-    // Mock data for now
-    return [
-      {
-        id: '1',
-        full_name: 'María García',
+  // Get public directory of graduates
+  async getPublicDirectory(academyId: string): Promise<PublicDirectoryStudent[]> {
+    try {
+      const { data, error } = await supabase
+        .from('academy_students')
+        .select('*')
+        .eq('academy_id', academyId)
+        .eq('status', 'graduated')
+        .not('graduation_date', 'is', null)
+        .order('graduation_date', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map(student => ({
+        id: student.id,
+        full_name: student.student_name || 'Graduado',
         avatar_url: undefined,
-        graduation_date: '2024-01-15T10:00:00Z',
-        certificate_url: 'https://example.com/certificate1.pdf',
-        skills: ['React', 'TypeScript', 'Node.js'],
-        location: 'Madrid, España'
-      },
-      {
-        id: '2',
-        full_name: 'Juan Pérez',
-        avatar_url: undefined,
-        graduation_date: '2024-01-10T10:00:00Z',
-        certificate_url: 'https://example.com/certificate2.pdf',
-        skills: ['Python', 'Django', 'PostgreSQL'],
-        location: 'Barcelona, España'
-      }
-    ];
+        graduation_date: student.graduation_date!,
+        certificate_url: undefined,
+        skills: [],
+        location: undefined
+      }));
+    } catch (error) {
+      console.error('Error fetching public directory:', error);
+      return [];
+    }
   }
 };

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAcademyData } from '@/hooks/useAcademyData';
+import { toast } from 'sonner';
 import { 
   Users, 
   Search, 
@@ -24,43 +26,21 @@ import {
 
 interface StudentDirectoryProps {
   academyId: string;
+  onInviteClick?: () => void;
 }
 
-export const StudentDirectory: React.FC<StudentDirectoryProps> = () => {
+export const StudentDirectory: React.FC<StudentDirectoryProps> = ({ academyId, onInviteClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const { students, loadStudents, removeStudent, isLoading } = useAcademyData(academyId);
 
-  // Mock data for now
-  const students = [
-    {
-      id: '1',
-      user_id: 'user1',
-      status: 'active',
-      joined_at: '2024-01-15T10:00:00Z',
-      graduation_date: null,
-      talent_profiles: {
-        full_name: 'María García',
-        avatar_url: null,
-        email: 'maria@example.com',
-        city: 'Madrid',
-        country: 'España'
-      }
-    },
-    {
-      id: '2',
-      user_id: 'user2',
-      status: 'graduated',
-      joined_at: '2023-12-01T10:00:00Z',
-      graduation_date: '2024-01-10T10:00:00Z',
-      talent_profiles: {
-        full_name: 'Juan Pérez',
-        avatar_url: null,
-        email: 'juan@example.com',
-        city: 'Barcelona',
-        country: 'España'
-      }
-    }
-  ];
+  // Load students when filters change
+  useEffect(() => {
+    loadStudents({ 
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      search: searchTerm || undefined 
+    });
+  }, [statusFilter]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -82,27 +62,30 @@ export const StudentDirectory: React.FC<StudentDirectoryProps> = () => {
     }
   };
 
+  // Filter locally by search term
   const filteredStudents = students.filter(student => {
-    const matchesSearch = student.talent_profiles?.full_name
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase()) ||
-      student.talent_profiles?.email
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return student.talent_profiles?.full_name?.toLowerCase().includes(searchLower) ||
+      student.talent_profiles?.email?.toLowerCase().includes(searchLower);
   });
 
-  const handleRemoveStudent = (userId: string) => {
-    // TODO: Implement remove student
-    console.log('Remove student:', userId);
+  const handleRemoveStudent = async (studentEmail: string) => {
+    if (!confirm('¿Estás seguro de que deseas desligar este estudiante de la academia?')) {
+      return;
+    }
+
+    const success = await removeStudent(studentEmail);
+    if (success) {
+      toast.success('Estudiante desligado correctamente');
+    } else {
+      toast.error('Error al desligar estudiante');
+    }
   };
 
-  const handleSendMessage = (userId: string) => {
-    // TODO: Implement send message
-    console.log('Send message to:', userId);
+  const handleSendMessage = (_userId: string) => {
+    // TODO: Implement send message navigation
+    toast.info('Función de mensajería próximamente');
   };
 
   return (
@@ -115,7 +98,7 @@ export const StudentDirectory: React.FC<StudentDirectoryProps> = () => {
             Gestiona los estudiantes de tu academia
           </p>
         </div>
-        <Button>
+        <Button onClick={onInviteClick}>
           <Users className="h-4 w-4 mr-2" />
           Invitar Estudiantes
         </Button>
@@ -155,7 +138,14 @@ export const StudentDirectory: React.FC<StudentDirectoryProps> = () => {
 
       {/* Students List */}
       <div className="space-y-4">
-        {filteredStudents.length === 0 ? (
+        {isLoading ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Users className="h-12 w-12 text-primary animate-pulse mb-4" />
+              <p>Cargando estudiantes...</p>
+            </CardContent>
+          </Card>
+        ) : filteredStudents.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Users className="h-12 w-12 text-muted-foreground mb-4" />
@@ -167,7 +157,7 @@ export const StudentDirectory: React.FC<StudentDirectoryProps> = () => {
                 }
               </p>
               {students.length === 0 && (
-                <Button>
+                <Button onClick={onInviteClick}>
                   <Users className="h-4 w-4 mr-2" />
                   Invitar Primer Estudiante
                 </Button>
@@ -237,7 +227,7 @@ export const StudentDirectory: React.FC<StudentDirectoryProps> = () => {
                               Enviar Mensaje
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleRemoveStudent(student.user_id)}
+                              onClick={() => handleRemoveStudent(student.talent_profiles?.email || student.user_id)}
                               className="text-red-600"
                             >
                               <UserX className="h-4 w-4 mr-2" />
