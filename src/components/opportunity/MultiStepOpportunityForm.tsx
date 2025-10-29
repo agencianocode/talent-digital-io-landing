@@ -29,7 +29,6 @@ interface FormData {
   locationType: string;
   location: string;
   contractorsCount: number;
-  usOnlyApplicants: boolean;
   preferredTimezone: string;
   preferredLanguages: string[];
   deadlineDate: Date | null;
@@ -100,7 +99,6 @@ const MultiStepOpportunityForm = ({
     locationType: 'remote',
     location: '',
     contractorsCount: 1,
-    usOnlyApplicants: false,
     preferredTimezone: '',
     preferredLanguages: [],
     deadlineDate: null,
@@ -244,7 +242,6 @@ const MultiStepOpportunityForm = ({
               locationType: formData.locationType,
               location: formData.location,
               contractorsCount: formData.contractorsCount,
-              usOnlyApplicants: formData.usOnlyApplicants,
               preferredTimezone: formData.preferredTimezone,
               preferredLanguages: formData.preferredLanguages,
               deadlineDate: formData.deadlineDate

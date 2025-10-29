@@ -14,7 +14,6 @@ interface MultiStepFormData {
   skills: string[];
   tools: string[];
   contractorsCount: number;
-  usOnlyApplicants: boolean;
   preferredTimezone: string;
   preferredLanguages: string[];
   
@@ -114,10 +113,6 @@ const NewOpportunityMultiStep = () => {
       }
 
       const selectedCategory: string = (formData.skills && formData.skills.length > 0) ? (formData.skills[0] ?? 'General') : 'General';
-      
-      // Extraer el país de la empresa para la restricción
-      const companyCountry = activeCompany.location ? 
-        activeCompany.location.split(',').map(part => part.trim()).pop() : null;
 
       // Construir descripción de requisitos más detallada
       let requirements = '';
@@ -133,9 +128,6 @@ const NewOpportunityMultiStep = () => {
       }
       if (formData.preferredLanguages?.length > 0) {
         requirements += `Idiomas preferidos: ${formData.preferredLanguages.join(', ')}\n`;
-      }
-      if (formData.usOnlyApplicants && companyCountry) {
-        requirements += `Restricción de país: Solo ${companyCountry}\n`;
       }
 
       const opportunityData = {

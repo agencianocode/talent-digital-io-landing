@@ -11,7 +11,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Plus, Minus, X, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { professionalTools, type ProfessionalTool } from '@/lib/tools';
-import { getApplicantRestrictionText } from '@/lib/country-nationalities';
 import { type Company } from '@/contexts/CompanyContext';
 import { 
   categoryTemplates, 
@@ -32,7 +31,6 @@ interface OpportunityStep1Data {
   locationType: string;
   location: string;
   contractorsCount: number;
-  usOnlyApplicants: boolean;
   preferredTimezone: string;
   preferredLanguages: string[];
   deadlineDate: Date | null;
@@ -479,7 +477,7 @@ const languageOptions = [
   'Alemán'
 ];
 
-const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) => {
+const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
   // State for expanding sections
   const [showTimezoneSection, setShowTimezoneSection] = useState(false);
   const [showLanguagesSection, setShowLanguagesSection] = useState(false);
@@ -1112,49 +1110,56 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
         </div>
       </div>
 
-      {/* US Only Applicants with Preferences */}
-      <div className="space-y-3">
-        {/* Checkbox and preferences in same row */}
-        <div className="flex items-center space-x-6">
-          {/* Checkbox section */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="usOnly"
-              checked={data.usOnlyApplicants}
-              onCheckedChange={(checked) => {
-                const isChecked = !!checked;
-                onChange({ 
-                  usOnlyApplicants: isChecked,
-                  // Si se activa la restricción de país, solo desactivar zona horaria
-                  ...(isChecked && { 
-                    preferredTimezone: undefined
-                  })
-                });
-                // También cerrar la sección de zona horaria si estaba abierta
-                if (isChecked && showTimezoneSection) {
-                  setShowTimezoneSection(false);
-                }
-              }}
-            />
-            <Label htmlFor="usOnly" className="text-sm font-medium text-gray-900">
-              {getApplicantRestrictionText(company?.location)}
-            </Label>
-          </div>
-        </div>
 
-        {/* Preferences buttons */}
+      {/* Experience Levels */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-gray-900">
+          Nivel de experiencia (puede seleccionar múltiples)
+        </Label>
+        <div className="space-y-2">
+          {experienceLevelOptions.map((level) => (
+            <div key={level.value} className="flex items-center space-x-2">
+              <Checkbox
+                id={level.value}
+                checked={data.experienceLevels?.includes(level.value) || false}
+                onCheckedChange={(checked) => handleExperienceLevelChange(level.value, checked as boolean)}
+              />
+              <Label htmlFor={level.value} className="text-sm">
+                {level.label}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Work Modality */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-gray-900">
+          Modalidad de trabajo *
+        </Label>
+        <Select value={data.locationType} onValueChange={(value) => onChange({ locationType: value })}>
+          <SelectTrigger className="h-12">
+            <SelectValue placeholder="Selecciona modalidad" />
+          </SelectTrigger>
+          <SelectContent>
+            {locationTypes.map((type) => (
+              <SelectItem key={type.value} value={type.value}>
+                {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Preferences */}
+      <div className="space-y-3">
         <div className="flex flex-col space-y-3">
           {/* Zona horaria preferida button */}
           <div className="flex items-center space-x-4">
             <Button
               type="button"
-              className={`px-4 py-2 rounded-full text-sm font-medium border-0 ${
-                data.usOnlyApplicants 
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700"
-              }`}
-              onClick={() => !data.usOnlyApplicants && setShowTimezoneSection(!showTimezoneSection)}
-              disabled={data.usOnlyApplicants}
+              className="px-4 py-2 rounded-full text-sm font-medium border-0 bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700"
+              onClick={() => setShowTimezoneSection(!showTimezoneSection)}
             >
               + Zona horaria preferida
             </Button>
@@ -1231,47 +1236,6 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
             )}
           </div>
         </div>
-
-      </div>
-
-      {/* Experience Levels */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-gray-900">
-          Nivel de experiencia (puede seleccionar múltiples)
-        </Label>
-        <div className="space-y-2">
-          {experienceLevelOptions.map((level) => (
-            <div key={level.value} className="flex items-center space-x-2">
-              <Checkbox
-                id={level.value}
-                checked={data.experienceLevels?.includes(level.value) || false}
-                onCheckedChange={(checked) => handleExperienceLevelChange(level.value, checked as boolean)}
-              />
-              <Label htmlFor={level.value} className="text-sm">
-                {level.label}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Work Modality */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-gray-900">
-          Modalidad de trabajo *
-        </Label>
-        <Select value={data.locationType} onValueChange={(value) => onChange({ locationType: value })}>
-          <SelectTrigger className="h-12">
-            <SelectValue placeholder="Selecciona modalidad" />
-          </SelectTrigger>
-          <SelectContent>
-            {locationTypes.map((type) => (
-              <SelectItem key={type.value} value={type.value}>
-                {type.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Location */}
