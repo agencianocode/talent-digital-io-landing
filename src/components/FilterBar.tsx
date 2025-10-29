@@ -88,9 +88,10 @@ const SUBCATEGORIES = {
 };
 
 const EXPERIENCE_LEVELS = [
-  { value: 'junior', label: 'Junior (0-2 años)' },
-  { value: 'semi-senior', label: 'Semi-senior (2-5 años)' },
-  { value: 'senior', label: 'Senior (5+ años)' }
+  { value: 'Principiante', label: 'Principiante: 0-1 año' },
+  { value: 'Intermedio', label: 'Intermedio: 1-3 años' },
+  { value: 'Avanzado', label: 'Avanzado: 3-6 años' },
+  { value: 'Experto', label: 'Experto: +6 años' }
 ];
 
 const CONTRACT_TYPES = [
