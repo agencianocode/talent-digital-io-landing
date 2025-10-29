@@ -29,6 +29,13 @@ import { toast } from 'sonner';
 import { useOpportunityDashboard } from '@/hooks/useOpportunityDashboard';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { UnsavedChangesModal } from '@/components/UnsavedChangesModal';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
 
 const CompanyDetails = () => {
   const navigate = useNavigate();
@@ -37,6 +44,8 @@ const CompanyDetails = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('business-data');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
   
   // Form data states
   const [formData, setFormData] = useState({
@@ -381,7 +390,6 @@ const CompanyDetails = () => {
                           // Copy to clipboard
                           if (navigator.clipboard && navigator.clipboard.writeText) {
                             await navigator.clipboard.writeText(previewUrl);
-                            toast.success('Enlace copiado al portapapeles');
                           } else {
                             // Manual fallback for older browsers
                             const textarea = document.createElement('textarea');
@@ -390,18 +398,15 @@ const CompanyDetails = () => {
                             textarea.style.opacity = '0';
                             document.body.appendChild(textarea);
                             textarea.select();
-                            const success = document.execCommand('copy');
+                            document.execCommand('copy');
                             document.body.removeChild(textarea);
-                            
-                            if (success) {
-                              toast.success('Enlace copiado al portapapeles');
-                            } else {
-                              throw new Error('Copy command failed');
-                            }
                           }
+                          
+                          setShareUrl(previewUrl);
+                          setShowShareModal(true);
                         } catch (error) {
                           console.error('Error sharing profile:', error);
-                          toast.error('No se pudo compartir el perfil. Intenta nuevamente.');
+                          toast.error('No se pudo copiar el enlace. Intenta nuevamente.');
                         }
                       }}
                     >
@@ -670,6 +675,43 @@ const CompanyDetails = () => {
         isSaving={isSaving}
         message="Tienes cambios sin guardar en los detalles de la empresa. ¿Quieres guardar antes de salir?"
       />
+
+      {/* Share Success Modal */}
+      <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>✓ Enlace copiado</DialogTitle>
+            <DialogDescription>
+              El enlace del perfil público ha sido copiado al portapapeles. Compártelo en redes sociales o envíalo directamente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+              <code className="text-xs flex-1 truncate">{shareUrl}</code>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  if (activeCompany?.id) {
+                    window.open(`/company/${activeCompany.id}`, '_blank');
+                  }
+                }}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Ver perfil público
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => setShowShareModal(false)}
+              >
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
     </TooltipProvider>
   );

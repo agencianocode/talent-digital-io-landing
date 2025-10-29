@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     const companyName = company.name || 'Empresa';
     const companyLogo = company.logo_url || '';
     const description = company.description?.substring(0, 160) || 'Conoce más sobre esta empresa';
-    const appUrl = `https://app.talentodigital.io/public-company/${companyId}`;
+    const appUrl = `https://app.talentodigital.io/company/${companyId}`;
 
     // Generate HTML with Open Graph and Twitter meta tags
     const html = `<!DOCTYPE html>
