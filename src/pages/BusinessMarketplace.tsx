@@ -8,19 +8,22 @@ import {
   List,
   ChevronLeft,
   ChevronRight,
-  Package
+  Package,
+  Search
 } from 'lucide-react';
 import { useMarketplaceServices } from '@/hooks/useMarketplaceServices';
 import ServiceCard from '@/components/marketplace/ServiceCard';
 import ServiceFilters from '@/components/marketplace/ServiceFilters';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import PublishServiceModal from '@/components/marketplace/PublishServiceModal';
+import RequestServiceModal from '@/components/marketplace/RequestServiceModal';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 
 const BusinessMarketplace: React.FC = () => {
   const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [isRequestServiceModalOpen, setIsRequestServiceModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const {
@@ -93,10 +96,20 @@ const BusinessMarketplace: React.FC = () => {
               Encuentra los mejores talentos para tu empresa
             </p>
           </div>
-          <Button onClick={handlePublishService} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Publicar Servicio
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setIsRequestServiceModalOpen(true)} 
+              variant="outline" 
+              className="flex items-center gap-2"
+            >
+              <Search className="h-4 w-4" />
+              Solicitar Servicio
+            </Button>
+            <Button onClick={handlePublishService} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Publicar Servicio
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -245,6 +258,12 @@ const BusinessMarketplace: React.FC = () => {
       <PublishServiceModal
         isOpen={isPublishModalOpen}
         onClose={() => setIsPublishModalOpen(false)}
+      />
+
+      {/* Request Service Modal */}
+      <RequestServiceModal
+        isOpen={isRequestServiceModalOpen}
+        onClose={() => setIsRequestServiceModalOpen(false)}
       />
     </div>
   );
