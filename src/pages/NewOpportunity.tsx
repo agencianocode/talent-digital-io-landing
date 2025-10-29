@@ -48,6 +48,7 @@ interface OpportunityData {
   salary_period: string;
   salary_is_public: boolean;
   is_academy_exclusive: boolean;
+  currency: string;
   auto_save_data?: any;
 }
 
@@ -80,6 +81,7 @@ const NewOpportunity = () => {
     salary_period: 'monthly',
     salary_is_public: true,
     is_academy_exclusive: false,
+    currency: 'USD',
   });
 
   const [loading, setLoading] = useState(false);
@@ -96,17 +98,15 @@ const NewOpportunity = () => {
         title: data.title,
         description: data.description,
         requirements: data.requirements,
-        category: data.category,
-        type: data.type,
         location: data.location,
-        salary_min: data.salary_min ? parseInt(data.salary_min) : null,
-        salary_max: data.salary_max ? parseInt(data.salary_max) : null,
-        contract_type: data.contract_type || null,
-        duration_type: data.duration_type,
-        duration_value: data.duration_value ? parseInt(data.duration_value) : null,
-        duration_unit: data.duration_unit,
-        skills: data.skills,
-        experience_levels: data.experience_levels,
+        type: data.type,
+        category: data.category,
+        salary_min: data.salary_min ? parseFloat(data.salary_min) : null,
+        salary_max: data.salary_max ? parseFloat(data.salary_max) : null,
+        currency: data.currency,
+        contract_type: data.contract_type,
+        skills: data.skills || [],
+        experience_levels: data.experience_levels || [],
         timezone_preference: data.timezone_preference || null,
         deadline_date: data.deadline_date ? data.deadline_date.toISOString().split('T')[0] : null,
         payment_type: data.payment_type,
@@ -118,17 +118,31 @@ const NewOpportunity = () => {
       };
 
       if (isEditing && id) {
+        // Actualizar oportunidad existente
         await supabase
           .from('opportunities')
           .update(opportunityData)
           .eq('id', id);
       } else {
-        await supabase
+        // Insertar nueva oportunidad y capturar el ID
+        const { data: insertedData, error } = await supabase
           .from('opportunities')
           .insert({
             ...opportunityData,
             company_id: activeCompany.id,
-          });
+          })
+          .select('id')
+          .single();
+        
+        if (error) throw error;
+        
+        // CRÍTICO: Guardar el ID y cambiar a modo edición para evitar duplicados
+        if (insertedData?.id) {
+          console.log('✅ Borrador creado con ID:', insertedData.id);
+          setIsEditing(true);
+          // Actualizar la URL para reflejar que ahora estamos editando
+          window.history.replaceState(null, '', `/business-dashboard/opportunities/edit/${insertedData.id}`);
+        }
       }
       
       setLastSaved(new Date());
@@ -234,6 +248,7 @@ const NewOpportunity = () => {
           salary_period: 'monthly',
           salary_is_public: data.salary_is_public !== false,
           is_academy_exclusive: data.is_academy_exclusive || false,
+          currency: data.currency || 'USD',
         });
         setIsEditing(true);
       } catch (error) {
