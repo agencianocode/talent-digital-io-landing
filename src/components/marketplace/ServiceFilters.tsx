@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Search, Filter, X } from 'lucide-react';
 import { ServiceFilters as ServiceFiltersType } from '@/hooks/useMarketplaceServices';
-import { SERVICE_CATEGORIES } from '@/lib/marketplace-categories';
+import { SERVICE_CATEGORIES, getAllSkills } from '@/lib/marketplace-categories';
 
 interface ServiceFiltersProps {
   filters: ServiceFiltersType;
@@ -32,7 +32,8 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
     filters.categoryFilter !== 'all' ||
     filters.priceRange !== 'all' ||
     filters.locationFilter !== 'all' ||
-    filters.availabilityFilter !== 'all';
+    filters.availabilityFilter !== 'all' ||
+    (filters.skillsFilter && filters.skillsFilter !== 'all');
 
   const priceRanges = [
     { value: 'all', label: 'Todos los precios' },
@@ -95,7 +96,7 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
         </div>
 
         {/* Filters Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Category Filter */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Categoría</label>
@@ -176,6 +177,27 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Skills Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Skills</label>
+            <Select
+              value={filters.skillsFilter || 'all'}
+              onValueChange={(value) => onFiltersChange({ skillsFilter: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todas las skills" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las skills</SelectItem>
+                {getAllSkills().map((skill) => (
+                  <SelectItem key={skill} value={skill}>
+                    {skill}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Active Filters */}
@@ -205,6 +227,11 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
             {filters.availabilityFilter !== 'all' && (
               <Badge variant="secondary" className="text-xs">
                 Disponibilidad: {availabilityOptions.find(o => o.value === filters.availabilityFilter)?.label}
+              </Badge>
+            )}
+            {filters.skillsFilter && filters.skillsFilter !== 'all' && (
+              <Badge variant="secondary" className="text-xs">
+                Skill: {filters.skillsFilter}
               </Badge>
             )}
           </div>

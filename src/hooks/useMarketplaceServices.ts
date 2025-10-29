@@ -66,7 +66,8 @@ export const useMarketplaceServices = (): UseMarketplaceServicesReturn => {
     categoryFilter: 'all',
     priceRange: 'all',
     locationFilter: 'all',
-    availabilityFilter: 'all'
+    availabilityFilter: 'all',
+    skillsFilter: 'all'
   });
 
   // Load services from localStorage on mount

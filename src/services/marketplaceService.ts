@@ -52,6 +52,11 @@ class MarketplaceService {
         if (filters.locationFilter && filters.locationFilter !== 'all') {
           query = query.eq('location', filters.locationFilter);
         }
+        
+        if (filters.skillsFilter && filters.skillsFilter !== 'all') {
+          // Filter by tags array containing the skill
+          query = query.contains('tags', [filters.skillsFilter]);
+        }
       }
 
       // Apply pagination and ordering

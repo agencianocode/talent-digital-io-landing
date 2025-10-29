@@ -114,6 +114,7 @@ export interface ServiceFilters {
   priceRange: string;
   locationFilter: string;
   availabilityFilter: string;
+  skillsFilter?: string;
 }
 
 // Statistics types
