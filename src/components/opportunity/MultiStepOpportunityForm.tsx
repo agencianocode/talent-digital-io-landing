@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip } from '@/components/ui/tooltip';
 import OpportunityStep1 from './OpportunityStep1';
 import OpportunityStep2 from './OpportunityStep2';
 import PublishJobModal from './PublishJobModal';
@@ -358,39 +359,44 @@ const MultiStepOpportunityForm = ({
 
       {/* Company Info Section */}
       {company && (
-        <div className="bg-gray-50 rounded-lg p-6 mb-8 border border-gray-200">
-          <div className="flex items-center gap-4">
-            {/* Company Logo */}
-            <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
-              {company.logo_url ? (
-                <img 
-                  src={company.logo_url} 
-                  alt={company.name}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                company.name?.charAt(0)?.toUpperCase() || 'A'
-              )}
-            </div>
-            
-            {/* Company Details */}
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Acerca de {company.name}
-              </h3>
-              {company.description && (
-                <p className="text-gray-600 text-sm mb-2">
-                  {company.description}
-                </p>
-              )}
-              {company.location && (
-                <p className="text-gray-500 text-sm">
-                  Tiene su sede en {company.location}.
-                </p>
-              )}
+        <Tooltip 
+          content="Para editar los datos de la empresa que se mostrarán en la publicación, guarda el borrador y ve a tu perfil de empresa > Detalles del negocio"
+          position="top"
+        >
+          <div className="bg-gray-50 rounded-lg p-6 mb-8 border border-gray-200 cursor-help">
+            <div className="flex items-center gap-4">
+              {/* Company Logo */}
+              <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+                {company.logo_url ? (
+                  <img 
+                    src={company.logo_url} 
+                    alt={company.name}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  company.name?.charAt(0)?.toUpperCase() || 'A'
+                )}
+              </div>
+              
+              {/* Company Details */}
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  Acerca de {company.name}
+                </h3>
+                {company.description && (
+                  <p className="text-gray-600 text-sm mb-2">
+                    {company.description}
+                  </p>
+                )}
+                {company.location && (
+                  <p className="text-gray-500 text-sm">
+                    Tiene su sede en {company.location}.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </Tooltip>
       )}
 
       {/* Validation Message for Step 1 */}
