@@ -93,19 +93,29 @@ const EXPERIENCE_LEVELS = [
   { value: 'senior', label: 'Senior (5+ años)' }
 ];
 
+const CONTRACT_TYPES = [
+  { value: 'full-time', label: 'Full Time' },
+  { value: 'comision', label: 'Comisión' },
+  { value: 'por-proyecto', label: 'Por Proyecto' },
+  { value: 'part-time', label: 'Part Time' }
+];
+
 const WORK_MODES = [
   { value: 'remote', label: 'Remoto' },
   { value: 'onsite', label: 'Presencial' },
   { value: 'hybrid', label: 'Híbrido' }
 ];
 
-const COUNTRIES = [
-  { value: 'es', label: 'España' },
-  { value: 'mx', label: 'México' },
-  { value: 'ar', label: 'Argentina' },
-  { value: 'co', label: 'Colombia' },
-  { value: 'pe', label: 'Perú' },
-  { value: 'cl', label: 'Chile' }
+const LOCATIONS = [
+  { value: 'remoto-mundial', label: 'Remoto - Mundial' },
+  { value: 'remoto-latam', label: 'Remoto - LATAM' },
+  { value: 'remoto-españa', label: 'Remoto - España' },
+  { value: 'españa', label: 'España' },
+  { value: 'méxico', label: 'México' },
+  { value: 'argentina', label: 'Argentina' },
+  { value: 'colombia', label: 'Colombia' },
+  { value: 'perú', label: 'Perú' },
+  { value: 'chile', label: 'Chile' }
 ];
 
 const FilterBar: React.FC<FilterBarProps> = ({
@@ -221,14 +231,17 @@ const FilterBar: React.FC<FilterBarProps> = ({
           case 'subcategory':
             label = `Subcategoría: ${value}`;
             break;
+          case 'contractType':
+            label = `Tipo de contrato: ${CONTRACT_TYPES.find(t => t.value === value)?.label || value}`;
+            break;
           case 'workMode':
             label = `Modalidad: ${WORK_MODES.find(m => m.value === value)?.label || value}`;
             break;
           case 'experience':
             label = `Experiencia: ${EXPERIENCE_LEVELS.find(e => e.value === value)?.label || value}`;
             break;
-          case 'country':
-            label = `País: ${COUNTRIES.find(c => c.value === value)?.label || value}`;
+          case 'location':
+            label = `Ubicación: ${LOCATIONS.find(l => l.value === value)?.label || value}`;
             break;
           case 'salaryRange':
             label = `Salario: €${(value as number[])[0]}K - €${(value as number[])[1]}K`;
@@ -259,7 +272,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             type="text"
-            placeholder={type === 'opportunities' ? 'Buscar oportunidades...' : 'Buscar talento por nombre o skills...'}
+            placeholder={type === 'opportunities' ? 'Buscar por título, empresa o palabra clave (ej. closer, marketing, remoto)' : 'Buscar talento por nombre o skills...'}
             value={localSearchTerm}
             onChange={(e) => setLocalSearchTerm(e.target.value)}
             className="pl-10"
@@ -358,7 +371,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                         <SelectTrigger>
                           <SelectValue placeholder="Todas las subcategorías" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-background z-50">
                            {SUBCATEGORIES[selectedCategories[0] as keyof typeof SUBCATEGORIES]?.map((sub) => (
                             <SelectItem key={sub.value} value={sub.value}>
                               {sub.label}
@@ -369,20 +382,20 @@ const FilterBar: React.FC<FilterBarProps> = ({
                     </div>
                   )}
 
-                  {/* Work Mode */}
+                  {/* Contract Type */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Modalidad</label>
+                    <label className="text-sm font-medium">Tipo de contrato</label>
                     <Select
-                      value={filters.workMode || ''}
-                      onValueChange={(value) => handleFilterChange('workMode', value)}
+                      value={filters.contractType || ''}
+                      onValueChange={(value) => handleFilterChange('contractType', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Todas las modalidades" />
+                        <SelectValue placeholder="Todos los contratos" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {WORK_MODES.map((mode) => (
-                          <SelectItem key={mode.value} value={mode.value}>
-                            {mode.label}
+                      <SelectContent className="bg-background z-50">
+                        {CONTRACT_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -399,10 +412,30 @@ const FilterBar: React.FC<FilterBarProps> = ({
                       <SelectTrigger>
                         <SelectValue placeholder="Todos los niveles" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         {EXPERIENCE_LEVELS.map((level) => (
                           <SelectItem key={level.value} value={level.value}>
                             {level.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Location */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Ubicación</label>
+                    <Select
+                      value={filters.location || ''}
+                      onValueChange={(value) => handleFilterChange('location', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Todas las ubicaciones" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        {LOCATIONS.map((location) => (
+                          <SelectItem key={location.value} value={location.value}>
+                            {location.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -437,7 +470,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                       <SelectTrigger>
                         <SelectValue placeholder="Todas las especialidades" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         {OPPORTUNITY_CATEGORIES.map((category) => (
                           <SelectItem key={category.value} value={category.value}>
                             {category.label}
@@ -457,7 +490,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                       <SelectTrigger>
                         <SelectValue placeholder="Cualquier experiencia" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         {EXPERIENCE_LEVELS.map((level) => (
                           <SelectItem key={level.value} value={level.value}>
                             {level.label}
@@ -477,10 +510,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
                       <SelectTrigger>
                         <SelectValue placeholder="Todos los países" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {COUNTRIES.map((country) => (
-                          <SelectItem key={country.value} value={country.value}>
-                            {country.label}
+                      <SelectContent className="bg-background z-50">
+                        {LOCATIONS.map((location) => (
+                          <SelectItem key={location.value} value={location.value}>
+                            {location.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -497,7 +530,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                       <SelectTrigger>
                         <SelectValue placeholder="Cualquier disponibilidad" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value="immediate">Inmediata</SelectItem>
                         <SelectItem value="1-week">1 semana</SelectItem>
                         <SelectItem value="2-weeks">2 semanas</SelectItem>

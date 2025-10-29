@@ -328,7 +328,11 @@ const TalentOpportunitiesSearch = () => {
           </Card>
         ) : (
           filteredOpportunities.map((opportunity) => (
-            <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
+            <Card 
+              key={opportunity.id} 
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
+            >
               <CardContent className="p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   {/* Información principal */}
@@ -425,11 +429,14 @@ const TalentOpportunitiesSearch = () => {
                   </div>
 
                   {/* Acciones */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleSave(opportunity.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSave(opportunity.id);
+                      }}
                       disabled={isOpportunitySaved(opportunity.id)}
                       className="flex items-center gap-2"
                     >
@@ -440,7 +447,10 @@ const TalentOpportunitiesSearch = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/talent-dashboard/opportunities/${opportunity.id}`);
+                      }}
                       className="flex items-center gap-2"
                     >
                       <Eye className="h-4 w-4" />
@@ -450,7 +460,10 @@ const TalentOpportunitiesSearch = () => {
                     <Button
                       variant="default"
                       size="sm"
-                      onClick={() => handleApply(opportunity)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleApply(opportunity);
+                      }}
                       disabled={hasApplied(opportunity.id)}
                       className="flex items-center gap-2"
                     >
