@@ -523,7 +523,7 @@ export const CompanyProfileWizard: React.FC = () => {
                     <FormLabel>Descripción de la Empresa</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Describe brevemente tu empresa, sus servicios y valores..." 
+                        placeholder="Describí brevemente a qué se dedica tu empresa, su propósito o qué la hace diferente." 
                         className="min-h-[100px]" 
                         {...field} 
                       />

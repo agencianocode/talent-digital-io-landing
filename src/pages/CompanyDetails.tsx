@@ -2,10 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   ExternalLink, 
@@ -22,7 +20,8 @@ import {
   ArrowLeft,
   Briefcase,
   Eye,
-  UserCheck
+  UserCheck,
+  Share2
 } from 'lucide-react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,58 +39,42 @@ const CompanyDetails = () => {
   const [activeTab, setActiveTab] = useState('business-data');
   
   // Form data states
-  const [businessType, setBusinessType] = useState('');
   const [formData, setFormData] = useState({
-    certifications: '',
-    benefits: ''
+    benefits: '',
+    work_culture: '',
+    business_impact: '',
+    team_values: ''
   });
 
   // Initial data for comparison
   const [initialData, setInitialData] = useState({
-    businessType: '',
-    certifications: '',
-    benefits: ''
+    benefits: '',
+    work_culture: '',
+    business_impact: '',
+    team_values: ''
   });
-
-
-
-  // Business types options
-  const businessTypes = [
-    'Educación digital',
-    'E-commerce',
-    'SaaS',
-    'Consultoría',
-    'Marketing Digital',
-    'Desarrollo de Software',
-    'Fintech',
-    'Salud Digital',
-    'Inmobiliaria',
-    'Alimentación',
-    'Retail',
-    'Manufactura',
-    'Servicios Profesionales',
-    'Entretenimiento',
-    'Otro'
-  ];
 
 
   useEffect(() => {
     if (activeCompany) {
-      const businessTypeValue = activeCompany.business_type || '';
-      const certificationsValue = (activeCompany as any).certifications || '';
       const benefitsValue = (activeCompany as any).benefits || '';
+      const workCultureValue = (activeCompany as any).work_culture || '';
+      const businessImpactValue = (activeCompany as any).business_impact || '';
+      const teamValuesValue = (activeCompany as any).team_values || '';
       
-      setBusinessType(businessTypeValue);
       setFormData({
-        certifications: certificationsValue,
-        benefits: benefitsValue
+        benefits: benefitsValue,
+        work_culture: workCultureValue,
+        business_impact: businessImpactValue,
+        team_values: teamValuesValue
       });
       
       // Set initial data for comparison
       setInitialData({
-        businessType: businessTypeValue,
-        certifications: certificationsValue,
-        benefits: benefitsValue
+        benefits: benefitsValue,
+        work_culture: workCultureValue,
+        business_impact: businessImpactValue,
+        team_values: teamValuesValue
       });
     }
   }, [activeCompany]);
@@ -99,11 +82,12 @@ const CompanyDetails = () => {
   // Check if there are unsaved changes
   const hasUnsavedChanges = useMemo(() => {
     return (
-      businessType !== initialData.businessType ||
-      formData.certifications !== initialData.certifications ||
-      formData.benefits !== initialData.benefits
+      formData.benefits !== initialData.benefits ||
+      formData.work_culture !== initialData.work_culture ||
+      formData.business_impact !== initialData.business_impact ||
+      formData.team_values !== initialData.team_values
     );
-  }, [businessType, formData, initialData]);
+  }, [formData, initialData]);
 
   // Handle save function for unsaved changes
   const handleSaveForNavigation = async () => {
@@ -117,10 +101,11 @@ const CompanyDetails = () => {
 
   // Handle discard changes
   const handleDiscardChanges = () => {
-    setBusinessType(initialData.businessType);
     setFormData({
-      certifications: initialData.certifications,
-      benefits: initialData.benefits
+      benefits: initialData.benefits,
+      work_culture: initialData.work_culture,
+      business_impact: initialData.business_impact,
+      team_values: initialData.team_values
     });
   };
 
@@ -145,19 +130,21 @@ const CompanyDetails = () => {
       const { error } = await supabase
         .from('companies')
         .update({
-          business_type: businessType,
-          certifications: formData.certifications,
-          benefits: formData.benefits
-        })
+          benefits: formData.benefits,
+          work_culture: formData.work_culture,
+          business_impact: formData.business_impact,
+          team_values: formData.team_values
+        } as any)
         .eq('id', activeCompany.id);
 
       if (error) throw error;
       
       // Update initial data to reflect saved state
       setInitialData({
-        businessType,
-        certifications: formData.certifications,
-        benefits: formData.benefits
+        benefits: formData.benefits,
+        work_culture: formData.work_culture,
+        business_impact: formData.business_impact,
+        team_values: formData.team_values
       });
       
       toast.success('Datos guardados exitosamente');
@@ -209,13 +196,20 @@ const CompanyDetails = () => {
               {/* Left Side - Company Info */}
               <div className="flex-1">
                 <div className="flex items-start gap-4 mb-6">
-                  {/* Company Logo */}
-                  <Avatar className="w-16 h-16">
-                    <AvatarImage src={activeCompany.logo_url} alt={activeCompany.name} />
-                    <AvatarFallback className="bg-gray-200 text-gray-600 text-xl font-semibold">
-                      {activeCompany.name.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  {/* Company Logo - Square */}
+                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0">
+                    {activeCompany.logo_url ? (
+                      <img 
+                        src={activeCompany.logo_url} 
+                        alt={activeCompany.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-gray-600 text-xl font-semibold">
+                        {activeCompany.name.substring(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
                   
                   {/* Company Details */}
                   <div className="flex-1">
@@ -370,6 +364,22 @@ const CompanyDetails = () => {
                   </TooltipTrigger>
                 </Tooltip>
                 
+                <Tooltip content="Compartir perfil de empresa">
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium"
+                      onClick={() => {
+                        const profileUrl = `${window.location.origin}/company/${activeCompany.id}`;
+                        navigator.clipboard.writeText(profileUrl);
+                        toast.success('Enlace copiado al portapapeles');
+                      }}
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Compartir Perfil
+                    </Button>
+                  </TooltipTrigger>
+                </Tooltip>
               </div>
             </div>
           </div>
@@ -403,49 +413,56 @@ const CompanyDetails = () => {
               <div className="p-8">
                 <Card className="shadow-md border border-gray-200">
                   <CardContent className="p-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Business Type */}
-                      <div className="lg:col-span-2 mb-6">
-                        <label className="block text-sm font-semibold text-gray-800 mb-3">
-                          Tipo de Negocio
-                        </label>
-                        <Select value={businessType} onValueChange={setBusinessType}>
-                          <SelectTrigger className="w-full h-12 border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <SelectValue placeholder="Selecciona el tipo de negocio" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {businessTypes.map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      {/* Certificaciones (una columna completa para que tenga más espacio) */}
-                      <div className="lg:col-span-2">
-                        <label className="block text-sm font-semibold text-gray-800 mb-3">
-                          Certificaciones y acreditaciones
-                        </label>
-                        <Textarea
-                          placeholder="Ej: ISO 9001, Google Partner, Certificación AWS, etc."
-                          value={formData.certifications}
-                          onChange={(e) => setFormData(prev => ({ ...prev, certifications: e.target.value }))}
-                          className="min-h-[100px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      </div>
-                      
-                      {/* Beneficios (una columna completa para que tenga más espacio) */}
-                      <div className="lg:col-span-2">
+                    <div className="space-y-6">
+                      {/* Beneficios */}
+                      <div>
                         <label className="block text-sm font-semibold text-gray-800 mb-3">
                           Beneficios que ofrece la empresa
                         </label>
                         <Textarea
-                          placeholder="Ej: Seguro médico, Gym membership, Días libres adicionales, Capacitaciones, etc."
+                          placeholder="Ej: Seguro médico, trabajo remoto, días libres adicionales, capacitaciones..."
                           value={formData.benefits}
                           onChange={(e) => setFormData(prev => ({ ...prev, benefits: e.target.value }))}
-                          className="min-h-[100px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          className="min-h-[120px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      {/* Cultura de trabajo */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-3">
+                          ¿Cómo describirías tu cultura de trabajo?
+                        </label>
+                        <Textarea
+                          placeholder="Ej: Somos un equipo colaborativo y flexible, valoramos la autonomía y el aprendizaje continuo..."
+                          value={formData.work_culture}
+                          onChange={(e) => setFormData(prev => ({ ...prev, work_culture: e.target.value }))}
+                          className="min-h-[120px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      {/* Impacto del negocio */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-3">
+                          ¿Qué impacto querés generar con tu negocio?
+                        </label>
+                        <Textarea
+                          placeholder="Ej: Queremos democratizar el acceso a la educación digital y ayudar a personas a alcanzar su máximo potencial..."
+                          value={formData.business_impact}
+                          onChange={(e) => setFormData(prev => ({ ...prev, business_impact: e.target.value }))}
+                          className="min-h-[120px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      {/* Valores del equipo */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-3">
+                          ¿Qué valores son innegociables en tu equipo?
+                        </label>
+                        <Textarea
+                          placeholder="Ej: Integridad, compromiso con la excelencia, respeto mutuo, innovación..."
+                          value={formData.team_values}
+                          onChange={(e) => setFormData(prev => ({ ...prev, team_values: e.target.value }))}
+                          className="min-h-[120px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         />
                       </div>
                     </div>
@@ -514,7 +531,7 @@ const CompanyDetails = () => {
                   </Card>
                 ) : (
                   <div className="grid gap-6">
-                    {opportunities.map((opportunity) => {
+                    {opportunities.filter(opp => opp.status !== 'draft').map((opportunity) => {
                       const applicantCount = applicationCounts[opportunity.id] || 0;
                       const statusText = opportunity.status === 'active' ? 'Activa' : 
                                         opportunity.status === 'paused' ? 'Pausada' : 
