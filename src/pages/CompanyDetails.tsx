@@ -369,10 +369,21 @@ const CompanyDetails = () => {
                     <Button 
                       variant="outline" 
                       className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium"
-                      onClick={() => {
+                      onClick={async () => {
+                        if (!activeCompany?.id) {
+                          toast.error('No se pudo obtener la información de la empresa');
+                          return;
+                        }
+                        
                         const profileUrl = `${window.location.origin}/company/${activeCompany.id}`;
-                        navigator.clipboard.writeText(profileUrl);
-                        toast.success('Enlace copiado al portapapeles');
+                        
+                        try {
+                          await navigator.clipboard.writeText(profileUrl);
+                          toast.success('Enlace copiado al portapapeles');
+                        } catch (error) {
+                          console.error('Error copying to clipboard:', error);
+                          toast.error('No se pudo copiar el enlace');
+                        }
                       }}
                     >
                       <Share2 className="w-4 h-4 mr-2" />
