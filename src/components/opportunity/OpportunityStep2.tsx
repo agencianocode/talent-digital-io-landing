@@ -10,23 +10,31 @@ import {
 } from '@/lib/opportunityTemplates';
 
 interface OpportunityStep2Data {
-  projectType: 'ongoing' | 'one-time';
   durationType: 'indefinite' | 'fixed';
   durationValue: number;
   durationUnit: 'days' | 'weeks' | 'months';
   paymentType: 'fixed' | 'commission' | 'fixed_plus_commission';
-  paymentMethod: 'hourly' | 'weekly' | 'monthly';
+  paymentMethod: 'hourly' | 'weekly' | 'monthly' | 'one-time';
+  
+  // Budget fields
+  showBudgetRange: boolean;
+  budget: string;
   hourlyMinRate: string;
   hourlyMaxRate: string;
   weeklyMinBudget: string;
   weeklyMaxBudget: string;
   monthlyMinBudget: string;
   monthlyMaxBudget: string;
+  
+  // Commission fields
+  showCommissionRange: boolean;
   commissionPercentage: string;
+  commissionMin: string;
+  commissionMax: string;
+  
   salaryIsPublic: boolean;
   maxHoursPerWeek: number;
   maxHoursPerMonth: number;
-  isMaxHoursOptional: boolean;
 }
 
 interface OpportunityStep2Props {
@@ -35,194 +43,343 @@ interface OpportunityStep2Props {
 }
 
 const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
-  const renderPaymentFields = () => {
+  
+  const getBudgetLabel = () => {
     switch (data.paymentMethod) {
-      case 'hourly':
-        return (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-900">
-                  Tarifa mínima por hora
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                  <Input
-                    type="number"
-                    placeholder="75"
-                    value={data.hourlyMinRate}
-                    onChange={(e) => onChange({ hourlyMinRate: e.target.value })}
-                    className="pl-8 h-12"
-                  />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">/ hora</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-900">
-                  Tarifa máxima por hora
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                  <Input
-                    type="number"
-                    placeholder="125"
-                    value={data.hourlyMaxRate}
-                    onChange={(e) => onChange({ hourlyMaxRate: e.target.value })}
-                    className="pl-8 h-12"
-                  />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">/ hora</span>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-900">
-                Máximo de horas por semana
-              </Label>
-              <div className="flex items-center space-x-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onChange({ maxHoursPerWeek: Math.max(0, data.maxHoursPerWeek - 1) })}
-                  disabled={data.maxHoursPerWeek <= 0}
-                >
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <Input
-                  type="number"
-                  value={data.maxHoursPerWeek}
-                  onChange={(e) => onChange({ maxHoursPerWeek: parseInt(e.target.value) || 0 })}
-                  className="w-20 text-center h-10"
-                  min="0"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onChange({ maxHoursPerWeek: data.maxHoursPerWeek + 1 })}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </>
-        );
-
-      case 'weekly':
-        return (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-900">
-                  Presupuesto semanal mínimo
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                  <Input
-                    type="number"
-                    placeholder="2000"
-                    value={data.weeklyMinBudget}
-                    onChange={(e) => onChange({ weeklyMinBudget: e.target.value })}
-                    className="pl-8 h-12"
-                  />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">/ semana</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-900">
-                  Presupuesto semanal máximo
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                  <Input
-                    type="number"
-                    placeholder="4000"
-                    value={data.weeklyMaxBudget}
-                    onChange={(e) => onChange({ weeklyMaxBudget: e.target.value })}
-                    className="pl-8 h-12"
-                  />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">/ semana</span>
-                </div>
-              </div>
-            </div>
-          </>
-        );
-
-      case 'monthly':
-        return (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-900">
-                  Presupuesto mensual mínimo
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                  <Input
-                    type="number"
-                    placeholder="4000"
-                    value={data.monthlyMinBudget}
-                    onChange={(e) => onChange({ monthlyMinBudget: e.target.value })}
-                    className="pl-8 h-12"
-                  />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">/ mes</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-900">
-                  Presupuesto mensual máximo
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                  <Input
-                    type="number"
-                    placeholder="8000"
-                    value={data.monthlyMaxBudget}
-                    onChange={(e) => onChange({ monthlyMaxBudget: e.target.value })}
-                    className="pl-8 h-12"
-                  />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">/ mes</span>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-900">
-                Máximo de horas por mes
-              </Label>
-              <div className="flex items-center space-x-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onChange({ maxHoursPerMonth: Math.max(0, data.maxHoursPerMonth - 1) })}
-                  disabled={data.maxHoursPerMonth <= 0}
-                >
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <Input
-                  type="number"
-                  value={data.maxHoursPerMonth}
-                  onChange={(e) => onChange({ maxHoursPerMonth: parseInt(e.target.value) || 0 })}
-                  className="w-20 text-center h-10"
-                  min="0"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onChange({ maxHoursPerMonth: data.maxHoursPerMonth + 1 })}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-                <span className="text-sm text-gray-500">Opcional</span>
-              </div>
-            </div>
-          </>
-        );
-
-      default:
-        return null;
+      case 'hourly': return data.showBudgetRange ? 'Tarifa por hora' : 'Tarifa por hora';
+      case 'weekly': return data.showBudgetRange ? 'Presupuesto semanal' : 'Presupuesto semanal';
+      case 'monthly': return data.showBudgetRange ? 'Presupuesto mensual' : 'Presupuesto mensual';
+      case 'one-time': return data.showBudgetRange ? 'Presupuesto' : 'Presupuesto';
+      default: return 'Presupuesto';
     }
+  };
+
+  const getBudgetSuffix = () => {
+    switch (data.paymentMethod) {
+      case 'hourly': return '/ hora';
+      case 'weekly': return '/ semana';
+      case 'monthly': return '/ mes';
+      case 'one-time': return '';
+      default: return '';
+    }
+  };
+
+  const renderBudgetFields = () => {
+    if (data.paymentType === 'commission') return null;
+
+    const label = getBudgetLabel();
+    const suffix = getBudgetSuffix();
+
+    if (!data.showBudgetRange) {
+      // Single budget field
+      let value = '';
+      let onChangeHandler = (_val: string) => {};
+
+      switch (data.paymentMethod) {
+        case 'hourly':
+          value = data.hourlyMinRate;
+          onChangeHandler = (val) => onChange({ hourlyMinRate: val });
+          break;
+        case 'weekly':
+          value = data.weeklyMinBudget;
+          onChangeHandler = (val) => onChange({ weeklyMinBudget: val });
+          break;
+        case 'monthly':
+          value = data.monthlyMinBudget;
+          onChangeHandler = (val) => onChange({ monthlyMinBudget: val });
+          break;
+        case 'one-time':
+          value = data.budget;
+          onChangeHandler = (val) => onChange({ budget: val });
+          break;
+      }
+
+      return (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            {label}
+          </Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+            <Input
+              type="number"
+              placeholder="5000"
+              value={value}
+              onChange={(e) => onChangeHandler(e.target.value)}
+              className="pl-8 h-12"
+            />
+            {suffix && (
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                {suffix}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center space-x-2 mt-2">
+            <Checkbox
+              id="budget_range"
+              checked={data.showBudgetRange}
+              onCheckedChange={(checked) => onChange({ showBudgetRange: !!checked })}
+            />
+            <Label htmlFor="budget_range" className="text-sm text-gray-600 font-normal">
+              Especificar rango de presupuesto
+            </Label>
+          </div>
+        </div>
+      );
+    } else {
+      // Range fields (min and max)
+      let minValue = '';
+      let maxValue = '';
+      let onChangeMin = (_val: string) => {};
+      let onChangeMax = (_val: string) => {};
+
+      switch (data.paymentMethod) {
+        case 'hourly':
+          minValue = data.hourlyMinRate;
+          maxValue = data.hourlyMaxRate;
+          onChangeMin = (val) => onChange({ hourlyMinRate: val });
+          onChangeMax = (val) => onChange({ hourlyMaxRate: val });
+          break;
+        case 'weekly':
+          minValue = data.weeklyMinBudget;
+          maxValue = data.weeklyMaxBudget;
+          onChangeMin = (val) => onChange({ weeklyMinBudget: val });
+          onChangeMax = (val) => onChange({ weeklyMaxBudget: val });
+          break;
+        case 'monthly':
+          minValue = data.monthlyMinBudget;
+          maxValue = data.monthlyMaxBudget;
+          onChangeMin = (val) => onChange({ monthlyMinBudget: val });
+          onChangeMax = (val) => onChange({ monthlyMaxBudget: val });
+          break;
+        case 'one-time':
+          minValue = data.budget;
+          maxValue = data.monthlyMaxBudget; // Reutilizamos este campo
+          onChangeMin = (val) => onChange({ budget: val });
+          onChangeMax = (val) => onChange({ monthlyMaxBudget: val });
+          break;
+      }
+
+      return (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            {label}
+          </Label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-600">Mínimo</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                <Input
+                  type="number"
+                  placeholder="3000"
+                  value={minValue}
+                  onChange={(e) => onChangeMin(e.target.value)}
+                  className="pl-8 h-12"
+                />
+                {suffix && (
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs">
+                    {suffix}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-600">Máximo</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                <Input
+                  type="number"
+                  placeholder="8000"
+                  value={maxValue}
+                  onChange={(e) => onChangeMax(e.target.value)}
+                  className="pl-8 h-12"
+                />
+                {suffix && (
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs">
+                    {suffix}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 mt-2">
+            <Checkbox
+              id="budget_range"
+              checked={data.showBudgetRange}
+              onCheckedChange={(checked) => onChange({ showBudgetRange: !!checked })}
+            />
+            <Label htmlFor="budget_range" className="text-sm text-gray-600 font-normal">
+              Especificar rango de presupuesto
+            </Label>
+          </div>
+        </div>
+      );
+    }
+  };
+
+  const renderCommissionFields = () => {
+    if (data.paymentType !== 'commission' && data.paymentType !== 'fixed_plus_commission') {
+      return null;
+    }
+
+    if (!data.showCommissionRange) {
+      // Single commission field
+      return (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            Porcentaje de comisión
+          </Label>
+          <div className="relative">
+            <Input
+              type="number"
+              value={data.commissionPercentage}
+              onChange={(e) => onChange({ commissionPercentage: e.target.value })}
+              placeholder="10"
+              max="100"
+              className="h-12 pr-12"
+            />
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+          </div>
+          <div className="flex items-center space-x-2 mt-2">
+            <Checkbox
+              id="commission_range"
+              checked={data.showCommissionRange}
+              onCheckedChange={(checked) => onChange({ showCommissionRange: !!checked })}
+            />
+            <Label htmlFor="commission_range" className="text-sm text-gray-600 font-normal">
+              Especificar rango de comisión
+            </Label>
+          </div>
+        </div>
+      );
+    } else {
+      // Range fields for commission
+      return (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            Porcentaje de comisión
+          </Label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-600">Mínima</Label>
+              <div className="relative">
+                <Input
+                  type="number"
+                  placeholder="5"
+                  value={data.commissionMin}
+                  onChange={(e) => onChange({ commissionMin: e.target.value })}
+                  max="100"
+                  className="h-12 pr-12"
+                />
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-600">Máxima</Label>
+              <div className="relative">
+                <Input
+                  type="number"
+                  placeholder="15"
+                  value={data.commissionMax}
+                  onChange={(e) => onChange({ commissionMax: e.target.value })}
+                  max="100"
+                  className="h-12 pr-12"
+                />
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 mt-2">
+            <Checkbox
+              id="commission_range"
+              checked={data.showCommissionRange}
+              onCheckedChange={(checked) => onChange({ showCommissionRange: !!checked })}
+            />
+            <Label htmlFor="commission_range" className="text-sm text-gray-600 font-normal">
+              Especificar rango de comisión
+            </Label>
+          </div>
+        </div>
+      );
+    }
+  };
+
+  const renderMaxHoursField = () => {
+    if (data.paymentMethod === 'hourly') {
+      return (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            Máximo de horas por semana
+          </Label>
+          <div className="flex items-center space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onChange({ maxHoursPerWeek: Math.max(0, data.maxHoursPerWeek - 1) })}
+              disabled={data.maxHoursPerWeek <= 0}
+            >
+              <Minus className="w-4 h-4" />
+            </Button>
+            <Input
+              type="number"
+              value={data.maxHoursPerWeek}
+              onChange={(e) => onChange({ maxHoursPerWeek: parseInt(e.target.value) || 0 })}
+              className="w-20 text-center h-10"
+              min="0"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onChange({ maxHoursPerWeek: data.maxHoursPerWeek + 1 })}
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    if (data.paymentMethod === 'monthly') {
+      return (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            Máximo de horas por mes
+          </Label>
+          <div className="flex items-center space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onChange({ maxHoursPerMonth: Math.max(0, data.maxHoursPerMonth - 1) })}
+              disabled={data.maxHoursPerMonth <= 0}
+            >
+              <Minus className="w-4 h-4" />
+            </Button>
+            <Input
+              type="number"
+              value={data.maxHoursPerMonth}
+              onChange={(e) => onChange({ maxHoursPerMonth: parseInt(e.target.value) || 0 })}
+              className="w-20 text-center h-10"
+              min="0"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onChange({ maxHoursPerMonth: data.maxHoursPerMonth + 1 })}
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+            <span className="text-sm text-gray-500">Opcional</span>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -318,13 +475,16 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
         </div>
       </div>
 
-      {/* Salary Period for Fixed Payments */}
-      {(data.paymentType === 'fixed' || data.paymentType === 'fixed_plus_commission') && (
+      {/* Payment Period - Always show when not commission-only */}
+      {data.paymentType !== 'commission' && (
         <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-900">
             Período de pago *
           </Label>
-          <Select value={data.paymentMethod} onValueChange={(value: 'hourly' | 'weekly' | 'monthly') => onChange({ paymentMethod: value })}>
+          <Select 
+            value={data.paymentMethod} 
+            onValueChange={(value: 'hourly' | 'weekly' | 'monthly' | 'one-time') => onChange({ paymentMethod: value })}
+          >
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecciona período" />
             </SelectTrigger>
@@ -339,22 +499,14 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
         </div>
       )}
 
-      {/* Commission Percentage */}
-      {(data.paymentType === 'commission' || data.paymentType === 'fixed_plus_commission') && (
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-900">
-            Porcentaje de comisión (%)
-          </Label>
-          <Input
-            type="number"
-            value={data.commissionPercentage}
-            onChange={(e) => onChange({ commissionPercentage: e.target.value })}
-            placeholder="10"
-            max="100"
-            className="h-12"
-          />
-        </div>
-      )}
+      {/* Budget Fields */}
+      {renderBudgetFields()}
+
+      {/* Max Hours Field */}
+      {renderMaxHoursField()}
+
+      {/* Commission Fields */}
+      {renderCommissionFields()}
 
       {/* Salary Visibility */}
       <div className="flex items-center space-x-2">
@@ -367,110 +519,6 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
           Mostrar información de salario públicamente
         </Label>
       </div>
-
-      {/* Project Type */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-gray-900">
-          ¿Qué tipo de proyecto necesitas?
-        </Label>
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            type="button"
-            variant={data.projectType === 'ongoing' ? 'default' : 'outline'}
-            onClick={() => onChange({ projectType: 'ongoing' })}
-            className="h-14 text-base"
-          >
-            En curso
-          </Button>
-          <Button
-            type="button"
-            variant={data.projectType === 'one-time' ? 'default' : 'outline'}
-            onClick={() => onChange({ projectType: 'one-time' })}
-            className="h-14 text-base"
-          >
-            Una sola vez
-          </Button>
-        </div>
-      </div>
-
-      {/* Payment Method for Ongoing Projects */}
-      {data.projectType === 'ongoing' && (
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-gray-900">
-            ¿Cómo deseas pagar este trabajo continuo?
-          </Label>
-          <div className="grid grid-cols-3 gap-3">
-            <Button
-              type="button"
-              variant={data.paymentMethod === 'hourly' ? 'default' : 'outline'}
-              onClick={() => onChange({ paymentMethod: 'hourly' })}
-              className="h-12 text-sm"
-            >
-              Cada hora
-            </Button>
-            <Button
-              type="button"
-              variant={data.paymentMethod === 'weekly' ? 'default' : 'outline'}
-              onClick={() => onChange({ paymentMethod: 'weekly' })}
-              className="h-12 text-sm"
-            >
-              Semanalmente
-            </Button>
-            <Button
-              type="button"
-              variant={data.paymentMethod === 'monthly' ? 'default' : 'outline'}
-              onClick={() => onChange({ paymentMethod: 'monthly' })}
-              className="h-12 text-sm"
-            >
-              Mensual
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* One-time Project Budget */}
-      {data.projectType === 'one-time' && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-900">
-              Presupuesto mínimo
-            </Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-              <Input
-                type="number"
-                placeholder="2500"
-                value={data.monthlyMinBudget}
-                onChange={(e) => onChange({ monthlyMinBudget: e.target.value })}
-                className="pl-8 h-12"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-900">
-              Presupuesto máximo
-            </Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-              <Input
-                type="number"
-                placeholder="5000"
-                value={data.monthlyMaxBudget}
-                onChange={(e) => onChange({ monthlyMaxBudget: e.target.value })}
-                className="pl-8 h-12"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Payment Fields based on selection */}
-      {data.projectType === 'ongoing' && data.paymentMethod && (
-        <div className="space-y-4">
-          {renderPaymentFields()}
-        </div>
-      )}
-
     </div>
   );
 };

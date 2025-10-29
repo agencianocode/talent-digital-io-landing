@@ -211,7 +211,8 @@ export const paymentTypes = [
 export const salaryPeriods = [
   { value: 'hourly', label: 'Por hora' },
   { value: 'weekly', label: 'Semanal' },
-  { value: 'monthly', label: 'Mensual' }
+  { value: 'monthly', label: 'Mensual' },
+  { value: 'one-time', label: 'Único' }
 ];
 
 export const experienceLevelOptions = [

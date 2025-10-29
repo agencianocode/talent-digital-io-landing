@@ -34,23 +34,32 @@ interface FormData {
   deadlineDate: Date | null;
   
   // Step 2 - Presupuesto y duración
-  projectType: 'ongoing' | 'one-time';
   durationType: 'indefinite' | 'fixed';
   durationValue: number;
   durationUnit: 'days' | 'weeks' | 'months';
   paymentType: 'fixed' | 'commission' | 'fixed_plus_commission';
-  paymentMethod: 'hourly' | 'weekly' | 'monthly';
+  paymentMethod: 'hourly' | 'weekly' | 'monthly' | 'one-time';
+  
+  // Budget fields
+  showBudgetRange: boolean;
+  budget: string;
   hourlyMinRate: string;
   hourlyMaxRate: string;
   weeklyMinBudget: string;
   weeklyMaxBudget: string;
   monthlyMinBudget: string;
   monthlyMaxBudget: string;
+  
+  // Commission fields
+  showCommissionRange: boolean;
   commissionPercentage: string;
+  commissionMin: string;
+  commissionMax: string;
+  
   salaryIsPublic: boolean;
   maxHoursPerWeek: number;
   maxHoursPerMonth: number;
-  isMaxHoursOptional: boolean;
+  
   // Estado y publicación
   status: 'draft' | 'published';
   publishToFeed?: boolean;
@@ -104,23 +113,32 @@ const MultiStepOpportunityForm = ({
     deadlineDate: null,
     
     // Step 2 defaults
-    projectType: 'ongoing',
     durationType: 'indefinite',
     durationValue: 1,
     durationUnit: 'months',
     paymentType: 'fixed',
     paymentMethod: 'monthly',
+    
+    // Budget defaults
+    showBudgetRange: false,
+    budget: '',
     hourlyMinRate: '',
     hourlyMaxRate: '',
     weeklyMinBudget: '',
     weeklyMaxBudget: '',
     monthlyMinBudget: '',
     monthlyMaxBudget: '',
+    
+    // Commission defaults
+    showCommissionRange: false,
     commissionPercentage: '',
+    commissionMin: '',
+    commissionMax: '',
+    
     salaryIsPublic: true,
-    maxHoursPerWeek: 20,
+    maxHoursPerWeek: 0,
     maxHoursPerMonth: 0,
-    isMaxHoursOptional: true,
+    
     // Estado por defecto como borrador
     status: 'draft',
     
@@ -173,13 +191,60 @@ const MultiStepOpportunityForm = ({
       case 2:
         const hasDuration = formData.durationType === 'indefinite' || 
           (formData.durationType === 'fixed' && formData.durationValue > 0);
-        const hasPayment = formData.paymentType && 
-          (formData.paymentType === 'commission' || 
-           (formData.paymentMethod && 
-            ((formData.paymentMethod === 'hourly' && formData.hourlyMinRate?.trim()) ||
-             (formData.paymentMethod === 'weekly' && formData.weeklyMinBudget?.trim()) ||
-             (formData.paymentMethod === 'monthly' && formData.monthlyMinBudget?.trim()))));
-        return !!(hasDuration && hasPayment);
+        
+        // Check payment validity
+        let hasValidPayment = false;
+        if (formData.paymentType === 'commission') {
+          hasValidPayment = formData.showCommissionRange 
+            ? !!(formData.commissionMin?.trim() && formData.commissionMax?.trim())
+            : !!formData.commissionPercentage?.trim();
+        } else if (formData.paymentType === 'fixed' || formData.paymentType === 'fixed_plus_commission') {
+          // Check budget based on payment method
+          let hasBudget = false;
+          if (formData.showBudgetRange) {
+            switch (formData.paymentMethod) {
+              case 'hourly':
+                hasBudget = !!(formData.hourlyMinRate?.trim() && formData.hourlyMaxRate?.trim());
+                break;
+              case 'weekly':
+                hasBudget = !!(formData.weeklyMinBudget?.trim() && formData.weeklyMaxBudget?.trim());
+                break;
+              case 'monthly':
+                hasBudget = !!(formData.monthlyMinBudget?.trim() && formData.monthlyMaxBudget?.trim());
+                break;
+              case 'one-time':
+                hasBudget = !!(formData.budget?.trim() && formData.monthlyMaxBudget?.trim());
+                break;
+            }
+          } else {
+            switch (formData.paymentMethod) {
+              case 'hourly':
+                hasBudget = !!formData.hourlyMinRate?.trim();
+                break;
+              case 'weekly':
+                hasBudget = !!formData.weeklyMinBudget?.trim();
+                break;
+              case 'monthly':
+                hasBudget = !!formData.monthlyMinBudget?.trim();
+                break;
+              case 'one-time':
+                hasBudget = !!formData.budget?.trim();
+                break;
+            }
+          }
+          
+          // For fixed_plus_commission, also check commission
+          if (formData.paymentType === 'fixed_plus_commission') {
+            const hasCommission = formData.showCommissionRange
+              ? !!(formData.commissionMin?.trim() && formData.commissionMax?.trim())
+              : !!formData.commissionPercentage?.trim();
+            hasValidPayment = hasBudget && hasCommission;
+          } else {
+            hasValidPayment = hasBudget;
+          }
+        }
+        
+        return !!(hasDuration && hasValidPayment);
       default:
         return true;
     }
@@ -255,23 +320,31 @@ const MultiStepOpportunityForm = ({
         return (
           <OpportunityStep2
             data={{
-              projectType: formData.projectType,
               durationType: formData.durationType,
               durationValue: formData.durationValue,
               durationUnit: formData.durationUnit,
               paymentType: formData.paymentType,
               paymentMethod: formData.paymentMethod,
+              
+              // Budget fields
+              showBudgetRange: formData.showBudgetRange,
+              budget: formData.budget,
               hourlyMinRate: formData.hourlyMinRate,
               hourlyMaxRate: formData.hourlyMaxRate,
               weeklyMinBudget: formData.weeklyMinBudget,
               weeklyMaxBudget: formData.weeklyMaxBudget,
               monthlyMinBudget: formData.monthlyMinBudget,
               monthlyMaxBudget: formData.monthlyMaxBudget,
+              
+              // Commission fields
+              showCommissionRange: formData.showCommissionRange,
               commissionPercentage: formData.commissionPercentage,
+              commissionMin: formData.commissionMin,
+              commissionMax: formData.commissionMax,
+              
               salaryIsPublic: formData.salaryIsPublic,
               maxHoursPerWeek: formData.maxHoursPerWeek,
-              maxHoursPerMonth: formData.maxHoursPerMonth,
-              isMaxHoursOptional: formData.isMaxHoursOptional
+              maxHoursPerMonth: formData.maxHoursPerMonth
             }}
             onChange={updateFormData}
           />
@@ -419,10 +492,17 @@ const MultiStepOpportunityForm = ({
           {currentStep === 2 && (
             <ul className="text-sm text-amber-700 space-y-1">
               {formData.durationType === 'fixed' && formData.durationValue <= 0 && <li>• Duración del proyecto</li>}
-              {formData.paymentType !== 'commission' && !formData.paymentMethod && <li>• Método de pago</li>}
-              {formData.paymentMethod === 'hourly' && !formData.hourlyMinRate && <li>• Rango de tarifa por hora</li>}
-              {formData.paymentMethod === 'weekly' && !formData.weeklyMinBudget && <li>• Presupuesto semanal</li>}
-              {formData.paymentMethod === 'monthly' && !formData.monthlyMinBudget && <li>• Presupuesto mensual</li>}
+              {formData.paymentType !== 'commission' && !formData.paymentMethod && <li>• Período de pago</li>}
+              {formData.paymentType !== 'commission' && formData.paymentMethod === 'hourly' && !formData.showBudgetRange && !formData.hourlyMinRate && <li>• Tarifa por hora</li>}
+              {formData.paymentType !== 'commission' && formData.paymentMethod === 'hourly' && formData.showBudgetRange && (!formData.hourlyMinRate || !formData.hourlyMaxRate) && <li>• Rango de tarifa por hora (mínimo y máximo)</li>}
+              {formData.paymentType !== 'commission' && formData.paymentMethod === 'weekly' && !formData.showBudgetRange && !formData.weeklyMinBudget && <li>• Presupuesto semanal</li>}
+              {formData.paymentType !== 'commission' && formData.paymentMethod === 'weekly' && formData.showBudgetRange && (!formData.weeklyMinBudget || !formData.weeklyMaxBudget) && <li>• Rango de presupuesto semanal (mínimo y máximo)</li>}
+              {formData.paymentType !== 'commission' && formData.paymentMethod === 'monthly' && !formData.showBudgetRange && !formData.monthlyMinBudget && <li>• Presupuesto mensual</li>}
+              {formData.paymentType !== 'commission' && formData.paymentMethod === 'monthly' && formData.showBudgetRange && (!formData.monthlyMinBudget || !formData.monthlyMaxBudget) && <li>• Rango de presupuesto mensual (mínimo y máximo)</li>}
+              {formData.paymentType !== 'commission' && formData.paymentMethod === 'one-time' && !formData.showBudgetRange && !formData.budget && <li>• Presupuesto</li>}
+              {formData.paymentType !== 'commission' && formData.paymentMethod === 'one-time' && formData.showBudgetRange && (!formData.budget || !formData.monthlyMaxBudget) && <li>• Rango de presupuesto (mínimo y máximo)</li>}
+              {(formData.paymentType === 'commission' || formData.paymentType === 'fixed_plus_commission') && !formData.showCommissionRange && !formData.commissionPercentage && <li>• Porcentaje de comisión</li>}
+              {(formData.paymentType === 'commission' || formData.paymentType === 'fixed_plus_commission') && formData.showCommissionRange && (!formData.commissionMin || !formData.commissionMax) && <li>• Rango de comisión (mínima y máxima)</li>}
             </ul>
           )}
         </div>

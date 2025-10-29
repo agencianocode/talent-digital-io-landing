@@ -18,17 +18,27 @@ interface MultiStepFormData {
   preferredLanguages: string[];
   
   // Step 2
-  projectType: 'ongoing' | 'one-time';
-  paymentMethod: 'hourly' | 'weekly' | 'monthly';
+  paymentMethod: 'hourly' | 'weekly' | 'monthly' | 'one-time';
+  
+  // Budget fields
+  showBudgetRange: boolean;
+  budget: string;
   hourlyMinRate: string;
   hourlyMaxRate: string;
   weeklyMinBudget: string;
   weeklyMaxBudget: string;
   monthlyMinBudget: string;
   monthlyMaxBudget: string;
+  
+  // Commission fields
+  showCommissionRange: boolean;
+  commissionPercentage: string;
+  commissionMin: string;
+  commissionMax: string;
+  
   maxHoursPerWeek: number;
   maxHoursPerMonth: number;
-  isMaxHoursOptional: boolean;
+  
   // Publicación
   publishToFeed?: boolean;
 }
@@ -88,28 +98,43 @@ const NewOpportunityMultiStep = () => {
       // Convertir los datos del formulario multi-paso al formato de base de datos
       let salaryMin, salaryMax;
       
-      if (formData.projectType === 'one-time') {
-        salaryMin = formData.monthlyMinBudget ? parseInt(formData.monthlyMinBudget) : null;
-        salaryMax = formData.monthlyMaxBudget ? parseInt(formData.monthlyMaxBudget) : null;
-        // salaryPeriod = 'project'; // Se usará cuando se agregue el campo a la DB
-      } else {
-        switch (formData.paymentMethod) {
-          case 'hourly':
+      switch (formData.paymentMethod) {
+        case 'hourly':
+          if (formData.showBudgetRange) {
             salaryMin = formData.hourlyMinRate ? parseInt(formData.hourlyMinRate) : null;
             salaryMax = formData.hourlyMaxRate ? parseInt(formData.hourlyMaxRate) : null;
-            // salaryPeriod = 'hourly'; // Se usará cuando se agregue el campo a la DB
-            break;
-          case 'weekly':
+          } else {
+            salaryMin = formData.hourlyMinRate ? parseInt(formData.hourlyMinRate) : null;
+            salaryMax = null;
+          }
+          break;
+        case 'weekly':
+          if (formData.showBudgetRange) {
             salaryMin = formData.weeklyMinBudget ? parseInt(formData.weeklyMinBudget) : null;
             salaryMax = formData.weeklyMaxBudget ? parseInt(formData.weeklyMaxBudget) : null;
-            // salaryPeriod = 'weekly'; // Se usará cuando se agregue el campo a la DB
-            break;
-          case 'monthly':
+          } else {
+            salaryMin = formData.weeklyMinBudget ? parseInt(formData.weeklyMinBudget) : null;
+            salaryMax = null;
+          }
+          break;
+        case 'monthly':
+          if (formData.showBudgetRange) {
             salaryMin = formData.monthlyMinBudget ? parseInt(formData.monthlyMinBudget) : null;
             salaryMax = formData.monthlyMaxBudget ? parseInt(formData.monthlyMaxBudget) : null;
-            // salaryPeriod = 'monthly'; // Se usará cuando se agregue el campo a la DB
-            break;
-        }
+          } else {
+            salaryMin = formData.monthlyMinBudget ? parseInt(formData.monthlyMinBudget) : null;
+            salaryMax = null;
+          }
+          break;
+        case 'one-time':
+          if (formData.showBudgetRange) {
+            salaryMin = formData.budget ? parseInt(formData.budget) : null;
+            salaryMax = formData.monthlyMaxBudget ? parseInt(formData.monthlyMaxBudget) : null;
+          } else {
+            salaryMin = formData.budget ? parseInt(formData.budget) : null;
+            salaryMax = null;
+          }
+          break;
       }
 
       const selectedCategory: string = (formData.skills && formData.skills.length > 0) ? (formData.skills[0] ?? 'General') : 'General';
@@ -135,7 +160,7 @@ const NewOpportunityMultiStep = () => {
         description: formData.description,
         requirements: requirements.trim(),
         category: selectedCategory,
-        type: formData.projectType === 'ongoing' ? 'Trabajo Continuo' : 'Proyecto Una Vez',
+        type: formData.paymentMethod === 'one-time' ? 'Proyecto Una Vez' : 'Trabajo Continuo',
         location: formData.preferredTimezone || 'Remoto',
         salary_min: salaryMin,
         salary_max: salaryMax,
