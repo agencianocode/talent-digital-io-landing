@@ -63,8 +63,15 @@ const PublicCompany = () => {
       } else {
         setError('Empresa no encontrada');
       }
-    } catch (error) {
-      console.error('Error loading company:', error);
+    } catch (error: any) {
+      console.error('❌ Error loading company:', {
+        error,
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        companyId
+      });
       setError('Error al cargar la empresa');
     } finally {
       setIsLoading(false);

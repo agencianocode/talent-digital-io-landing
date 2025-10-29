@@ -284,6 +284,8 @@ export type Database = {
       companies: {
         Row: {
           annual_revenue_range: string | null
+          benefits: string | null
+          business_impact: string | null
           business_type: string | null
           created_at: string
           description: string | null
@@ -298,12 +300,16 @@ export type Database = {
           size: string | null
           social_links: Json | null
           status: string
+          team_values: string | null
           updated_at: string
           user_id: string
           website: string | null
+          work_culture: string | null
         }
         Insert: {
           annual_revenue_range?: string | null
+          benefits?: string | null
+          business_impact?: string | null
           business_type?: string | null
           created_at?: string
           description?: string | null
@@ -318,12 +324,16 @@ export type Database = {
           size?: string | null
           social_links?: Json | null
           status?: string
+          team_values?: string | null
           updated_at?: string
           user_id: string
           website?: string | null
+          work_culture?: string | null
         }
         Update: {
           annual_revenue_range?: string | null
+          benefits?: string | null
+          business_impact?: string | null
           business_type?: string | null
           created_at?: string
           description?: string | null
@@ -338,9 +348,11 @@ export type Database = {
           size?: string | null
           social_links?: Json | null
           status?: string
+          team_values?: string | null
           updated_at?: string
           user_id?: string
           website?: string | null
+          work_culture?: string | null
         }
         Relationships: [
           {
