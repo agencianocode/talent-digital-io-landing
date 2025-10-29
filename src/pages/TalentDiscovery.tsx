@@ -575,7 +575,7 @@ const TalentDiscovery = () => {
                     </Card>
                   ) : (
                     /* Talent Cards */
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filteredTalents.map((talent) => (
                         <Card key={talent.id} className="hover:shadow-lg transition-shadow cursor-pointer group">
                           <CardContent className="p-6">
