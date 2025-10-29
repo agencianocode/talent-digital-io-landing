@@ -10,6 +10,7 @@ import AdminSystemSettings from '@/components/admin/settings/AdminSystemSettings
 import AdminNotificationSettings from '@/components/admin/settings/AdminNotificationSettings';
 import AdminSecuritySettings from '@/components/admin/settings/AdminSecuritySettings';
 import AdminHelpSettings from '@/components/admin/settings/AdminHelpSettings';
+import AdminCustomizationSettings from '@/components/admin/settings/AdminCustomizationSettings';
 
 const AdminSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("system");

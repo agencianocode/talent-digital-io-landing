@@ -106,6 +106,81 @@ export type Database = {
           },
         ]
       }
+      admin_customization: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          enable_academy_features: boolean | null
+          enable_chat: boolean | null
+          enable_marketplace: boolean | null
+          enable_notifications: boolean | null
+          id: string
+          platform_description: string | null
+          platform_logo_url: string | null
+          platform_name: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          show_activity_feed: boolean | null
+          show_charts: boolean | null
+          show_quick_actions: boolean | null
+          show_registration_links: boolean | null
+          show_stats_cards: boolean | null
+          support_url: string | null
+          updated_at: string
+          updated_by: string | null
+          welcome_message: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          enable_academy_features?: boolean | null
+          enable_chat?: boolean | null
+          enable_marketplace?: boolean | null
+          enable_notifications?: boolean | null
+          id?: string
+          platform_description?: string | null
+          platform_logo_url?: string | null
+          platform_name?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          show_activity_feed?: boolean | null
+          show_charts?: boolean | null
+          show_quick_actions?: boolean | null
+          show_registration_links?: boolean | null
+          show_stats_cards?: boolean | null
+          support_url?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          welcome_message?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          enable_academy_features?: boolean | null
+          enable_chat?: boolean | null
+          enable_marketplace?: boolean | null
+          enable_notifications?: boolean | null
+          id?: string
+          platform_description?: string | null
+          platform_logo_url?: string | null
+          platform_name?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          show_activity_feed?: boolean | null
+          show_charts?: boolean | null
+          show_quick_actions?: boolean | null
+          show_registration_links?: boolean | null
+          show_stats_cards?: boolean | null
+          support_url?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          welcome_message?: string | null
+        }
+        Relationships: []
+      }
       admin_settings: {
         Row: {
           category: string
@@ -289,6 +364,7 @@ export type Database = {
           business_type: string | null
           created_at: string
           description: string | null
+          directory_settings: Json | null
           employee_count_range: string | null
           gallery_urls: Json | null
           id: string
@@ -313,6 +389,7 @@ export type Database = {
           business_type?: string | null
           created_at?: string
           description?: string | null
+          directory_settings?: Json | null
           employee_count_range?: string | null
           gallery_urls?: Json | null
           id?: string
@@ -337,6 +414,7 @@ export type Database = {
           business_type?: string | null
           created_at?: string
           description?: string | null
+          directory_settings?: Json | null
           employee_count_range?: string | null
           gallery_urls?: Json | null
           id?: string
