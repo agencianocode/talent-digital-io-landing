@@ -384,16 +384,17 @@ const CompanyDetails = () => {
                           return;
                         }
                         
-                        const previewUrl = `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/company-share/${activeCompany.id}`;
+                        // Use the Edge Function URL for sharing (better for social media previews)
+                        const shareUrl = `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/company-share/${activeCompany.id}`;
                         
                         try {
                           // Copy to clipboard
                           if (navigator.clipboard && navigator.clipboard.writeText) {
-                            await navigator.clipboard.writeText(previewUrl);
+                            await navigator.clipboard.writeText(shareUrl);
                           } else {
                             // Manual fallback for older browsers
                             const textarea = document.createElement('textarea');
-                            textarea.value = previewUrl;
+                            textarea.value = shareUrl;
                             textarea.style.position = 'fixed';
                             textarea.style.opacity = '0';
                             document.body.appendChild(textarea);
@@ -402,8 +403,9 @@ const CompanyDetails = () => {
                             document.body.removeChild(textarea);
                           }
                           
-                          setShareUrl(previewUrl);
+                          setShareUrl(shareUrl);
                           setShowShareModal(true);
+                          toast.success('Enlace copiado al portapapeles');
                         } catch (error) {
                           console.error('Error sharing profile:', error);
                           toast.error('No se pudo copiar el enlace. Intenta nuevamente.');
