@@ -360,13 +360,13 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
                                 <SelectItem value="admin">
                                   <div className="flex items-center">
                                     <Shield className="h-4 w-4 mr-2 text-blue-600" />
-                                    Admin
+                                    Administrador
                                   </div>
                                 </SelectItem>
                                 <SelectItem value="viewer">
                                   <div className="flex items-center">
                                     <Eye className="h-4 w-4 mr-2 text-green-600" />
-                                    Viewer
+                                    Miembro
                                   </div>
                                 </SelectItem>
                               </SelectContent>
@@ -423,7 +423,9 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ companyId }) => {
                   <Badge className={getRoleBadgeColor(member.role)}>
                     <div className="flex items-center">
                       {getRoleIcon(member.role)}
-                      <span className="ml-1">{member.role}</span>
+                      <span className="ml-1">
+                        {member.role === 'owner' ? 'Propietario' : member.role === 'admin' ? 'Administrador' : 'Miembro'}
+                      </span>
                     </div>
                   </Badge>
                   <Badge className={getStatusBadgeColor(member.status)}>

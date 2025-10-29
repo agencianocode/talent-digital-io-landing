@@ -318,7 +318,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                             <SelectItem value="viewer">
                               <div className="flex items-center gap-2">
                                 <Eye className="h-4 w-4" />
-                                Visualizador
+                                Miembro
                               </div>
                             </SelectItem>
                           </SelectContent>
@@ -388,7 +388,9 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                   className={getRoleColor(member.role)}
                 >
                   {getRoleIcon(member.role)}
-                  <span className="ml-1 capitalize">{member.role}</span>
+                  <span className="ml-1">
+                    {member.role === 'owner' ? 'Propietario' : member.role === 'admin' ? 'Administrador' : 'Miembro'}
+                  </span>
                 </Badge>
                 
                 {member.role !== 'owner' && (
@@ -403,8 +405,8 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="viewer">Viewer</SelectItem>
+                        <SelectItem value="admin">Administrador</SelectItem>
+                        <SelectItem value="viewer">Miembro</SelectItem>
                       </SelectContent>
                     </Select>
                     
