@@ -63,6 +63,7 @@ const AcceptInvitation = lazy(() => import('./pages/AcceptInvitation'));
 const UserTypeSelector = lazy(() => import('./pages/UserTypeSelector'));
 const RegisterBusiness = lazy(() => import('./pages/RegisterBusiness'));
 const RegisterTalent = lazy(() => import('./pages/RegisterTalent'));
+const RegisterAcademy = lazy(() => import('./pages/RegisterAcademy'));
 const CompanyOnboarding = lazy(() => import('./pages/CompanyOnboarding'));
 
 // Lazy load páginas de configuración
@@ -135,6 +136,11 @@ function App() {
                       <Route path="/register-talent" element={
                         <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
                           <RegisterTalent />
+                        </Suspense>
+                      } />
+                      <Route path="/register-academy" element={
+                        <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
+                          <RegisterAcademy />
                         </Suspense>
                       } />
                       <Route path="/company-onboarding" element={
