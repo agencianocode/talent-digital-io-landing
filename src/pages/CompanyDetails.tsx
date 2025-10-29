@@ -352,59 +352,55 @@ const CompanyDetails = () => {
               {/* Right Side - Action Buttons */}
               <div className="flex flex-col gap-3 min-w-[220px]">
                 <Tooltip content="Editar información de la empresa">
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium"
-                      onClick={() => navigate('/business-dashboard/company-profile')}
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Editar Perfil
-                    </Button>
-                  </TooltipTrigger>
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium"
+                    onClick={() => navigate('/business-dashboard/company-profile')}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Editar Perfil
+                  </Button>
                 </Tooltip>
                 
                 <Tooltip content="Compartir perfil de empresa">
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium"
-                      onClick={async () => {
-                        if (!activeCompany?.id) {
-                          toast.error('No se pudo obtener la información de la empresa');
-                          return;
-                        }
-                        
-                        // Use the direct app URL for sharing
-                        const shareUrl = `https://app.talentodigital.io/company/${activeCompany.id}`;
-                        
-                        try {
-                          // Copy to clipboard
-                          if (navigator.clipboard && navigator.clipboard.writeText) {
-                            await navigator.clipboard.writeText(shareUrl);
-                          } else {
-                            // Manual fallback for older browsers
-                            const textarea = document.createElement('textarea');
-                            textarea.value = shareUrl;
-                            textarea.style.position = 'fixed';
-                            textarea.style.opacity = '0';
-                            document.body.appendChild(textarea);
-                            textarea.select();
-                            document.execCommand('copy');
-                            document.body.removeChild(textarea);
-                          }
-                          
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-11 border-gray-300 hover:bg-gray-50 shadow-sm font-medium"
+                    onClick={async () => {
+                      if (!activeCompany?.id) {
+                        toast.error('No se pudo obtener la información de la empresa');
+                        return;
+                      }
+                      
+                      // Use the direct app URL for sharing
+                      const shareUrl = `https://app.talentodigital.io/company/${activeCompany.id}`;
+                      
+                      try {
+                        // Copy to clipboard
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                          await navigator.clipboard.writeText(shareUrl);
                           toast.success('Enlace del perfil copiado al portapapeles');
-                        } catch (error) {
-                          console.error('Error sharing profile:', error);
-                          toast.error('No se pudo copiar el enlace. Intenta nuevamente.');
+                        } else {
+                          // Manual fallback for older browsers
+                          const textarea = document.createElement('textarea');
+                          textarea.value = shareUrl;
+                          textarea.style.position = 'fixed';
+                          textarea.style.opacity = '0';
+                          document.body.appendChild(textarea);
+                          textarea.select();
+                          document.execCommand('copy');
+                          document.body.removeChild(textarea);
+                          toast.success('Enlace del perfil copiado al portapapeles');
                         }
-                      }}
-                    >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Compartir Perfil
-                    </Button>
-                  </TooltipTrigger>
+                      } catch (error) {
+                        console.error('Error sharing profile:', error);
+                        toast.error('No se pudo copiar el enlace. Intenta nuevamente.');
+                      }
+                    }}
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Compartir Perfil
+                  </Button>
                 </Tooltip>
               </div>
             </div>
