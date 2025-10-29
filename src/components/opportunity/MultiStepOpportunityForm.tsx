@@ -167,7 +167,8 @@ const MultiStepOpportunityForm = ({
           formData.locationType?.trim() &&
           formData.skills?.length > 0 &&
           formData.experienceLevels?.length > 0 &&
-          formData.contractorsCount > 0
+          formData.contractorsCount > 0 &&
+          formData.deadlineDate
         );
       case 2:
         const hasDuration = formData.durationType === 'indefinite' || 
@@ -408,6 +409,7 @@ const MultiStepOpportunityForm = ({
             {(!formData.skills || formData.skills.length === 0) && <li>• Al menos 1 habilidad</li>}
             {(!formData.tools || formData.tools.length === 0) && <li>• Al menos 1 herramienta</li>}
             {formData.contractorsCount <= 0 && <li>• Número de contratistas (mínimo 1)</li>}
+            {!formData.deadlineDate && <li>• Fecha límite de postulación</li>}
           </ul>
         </div>
       )}

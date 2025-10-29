@@ -33,6 +33,8 @@ interface SupabaseOpportunity {
   salary_min?: number;
   salary_max?: number;
   currency?: string;
+  status?: string;
+  deadline_date?: string;
   companies?: {
     name: string;
     logo_url?: string;
@@ -63,6 +65,10 @@ const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: A
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
+
+  // Check if opportunity is closed or expired
+  const isOpportunityClosed = opportunity?.status === 'closed';
+  const isOpportunityExpired = opportunity?.deadline_date && new Date(opportunity.deadline_date) < new Date();
 
   const [applicationData, setApplicationData] = useState<ApplicationData>({
     cover_letter: '',
@@ -169,6 +175,46 @@ ${applicationData.cover_letter}
   };
 
   if (!opportunity) return null;
+
+  // Show closed message if opportunity is closed or expired
+  if (isOpportunityClosed || isOpportunityExpired) {
+    return (
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-red-600">
+              Oportunidad no disponible
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-6 text-center">
+            <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {opportunity.title}
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {isOpportunityClosed 
+                ? 'Esta oportunidad ha sido cerrada y ya no acepta aplicaciones.'
+                : 'La fecha límite para aplicar a esta oportunidad ha expirado.'}
+            </p>
+            {opportunity.deadline_date && (
+              <p className="text-sm text-gray-500">
+                Fecha límite: {new Date(opportunity.deadline_date).toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleClose} variant="outline" className="w-full">
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>

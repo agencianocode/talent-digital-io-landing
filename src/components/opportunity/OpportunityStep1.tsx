@@ -1256,7 +1256,7 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
       {/* Deadline Date */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-900">
-          Fecha límite (opcional)
+          Fecha límite *
         </Label>
         <Popover>
           <PopoverTrigger asChild>
@@ -1279,7 +1279,7 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
           </PopoverContent>
         </Popover>
         <div className="text-xs text-gray-500">
-          Máximo 6 meses en adelante
+          La oportunidad se cerrará automáticamente cuando pase esta fecha. Máximo 6 meses en adelante.
         </div>
       </div>
 
