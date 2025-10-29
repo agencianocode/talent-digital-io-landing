@@ -17,7 +17,6 @@ import {
   DollarSign,
   Clock,
   Briefcase,
-  User,
   Calendar
 } from 'lucide-react';
 import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
@@ -49,15 +48,10 @@ interface ApplicationModalProps {
 }
 
 interface ApplicationData {
+  years_experience_category: number | null;
   cover_letter: string;
-  motivation: string;
-  availability: string;
-  expected_salary: number | null;
-  portfolio_url: string;
-  experience_years: number | null;
-  relevant_experience: string;
-  why_interested: string;
-  start_date: string;
+  video_presentation_url: string;
+  start_availability: string;
 }
 
 const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: ApplicationModalProps) => {
@@ -71,28 +65,18 @@ const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: A
   const isOpportunityExpired = opportunity?.deadline_date && new Date(opportunity.deadline_date) < new Date();
 
   const [applicationData, setApplicationData] = useState<ApplicationData>({
+    years_experience_category: null,
     cover_letter: '',
-    motivation: '',
-    availability: '',
-    expected_salary: null,
-    portfolio_url: '',
-    experience_years: null,
-    relevant_experience: '',
-    why_interested: '',
-    start_date: ''
+    video_presentation_url: '',
+    start_availability: ''
   });
 
   const resetForm = () => {
     setApplicationData({
+      years_experience_category: null,
       cover_letter: '',
-      motivation: '',
-      availability: '',
-      expected_salary: null,
-      portfolio_url: '',
-      experience_years: null,
-      relevant_experience: '',
-      why_interested: '',
-      start_date: ''
+      video_presentation_url: '',
+      start_availability: ''
     });
     setCurrentStep(1);
   };
@@ -117,13 +101,11 @@ const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: A
   const validateStep = (step: number) => {
     switch (step) {
       case 1:
-        return applicationData.cover_letter.trim().length > 0 && 
-               applicationData.motivation.trim().length > 0;
+        return applicationData.years_experience_category !== null && 
+               applicationData.years_experience_category >= 0 &&
+               applicationData.cover_letter.trim().length >= 50;
       case 2:
-        return applicationData.relevant_experience.trim().length > 0;
-      case 3:
-        return applicationData.availability.trim().length > 0 && 
-               applicationData.start_date.trim().length > 0;
+        return applicationData.start_availability.trim().length > 0;
       default:
         return true;
     }
@@ -136,29 +118,14 @@ const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: A
     try {
       // Crear la carta de presentación completa
       const fullCoverLetter = `
-MOTIVACIÓN:
-${applicationData.motivation}
+AÑOS DE EXPERIENCIA EN ${opportunity.category?.toUpperCase() || 'ESTA ÁREA'}: ${applicationData.years_experience_category} años
 
-EXPERIENCIA RELEVANTE:
-${applicationData.relevant_experience}
-
-¿POR QUÉ ME INTERESA ESTA POSICIÓN?
-${applicationData.why_interested}
-
-DISPONIBILIDAD:
-${applicationData.availability}
-
-FECHA DE INICIO:
-${applicationData.start_date}
-
-${applicationData.expected_salary ? `EXPECTATIVA SALARIAL: $${applicationData.expected_salary.toLocaleString()} ${opportunity.currency || 'USD'}` : ''}
-
-${applicationData.portfolio_url ? `PORTFOLIO: ${applicationData.portfolio_url}` : ''}
-
-${applicationData.experience_years ? `AÑOS DE EXPERIENCIA: ${applicationData.experience_years}` : ''}
-
----
+CARTA DE PRESENTACIÓN:
 ${applicationData.cover_letter}
+
+${applicationData.video_presentation_url ? `VIDEO DE PRESENTACIÓN: ${applicationData.video_presentation_url}` : ''}
+
+DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
       `.trim();
 
       await applyToOpportunity(opportunity.id, fullCoverLetter);
@@ -284,180 +251,119 @@ ${applicationData.cover_letter}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">
-              Paso {currentStep} de {totalSteps}
+              Paso {currentStep} de 2
             </span>
             <span className="text-sm text-gray-500">
-              {Math.round((currentStep / totalSteps) * 100)}% completado
+              {Math.round((currentStep / 2) * 100)}% completado
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
               className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+              style={{ width: `${(currentStep / 2) * 100}%` }}
             ></div>
           </div>
         </div>
 
         {/* Formulario por pasos */}
         <div className="space-y-6">
-          {/* Paso 1: Información personal y motivación */}
+          {/* Paso 1: Experiencia y Carta de Presentación */}
           {currentStep === 1 && (
             <div className="space-y-4">
               <div className="text-center mb-4">
-                <User className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                <h3 className="text-lg font-semibold">Información Personal</h3>
-                <p className="text-gray-600 text-sm">Cuéntanos sobre ti y tu motivación</p>
+                <Briefcase className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                <h3 className="text-lg font-semibold">Experiencia y Presentación</h3>
+                <p className="text-gray-600 text-sm">Cuéntanos sobre tu experiencia en esta área</p>
               </div>
 
               <div>
-                <Label htmlFor="motivation">¿Por qué te interesa esta oportunidad? *</Label>
-                <Textarea
-                  id="motivation"
-                  value={applicationData.motivation}
-                  onChange={(e) => setApplicationData(prev => ({ ...prev, motivation: e.target.value }))}
-                  placeholder="Describe qué te llama la atención de esta posición y cómo se alinea con tus objetivos profesionales..."
-                  rows={4}
+                <Label htmlFor="years_experience_category">
+                  ¿Cuántos años de experiencia tienes en {opportunity.category || 'esta área'}? *
+                </Label>
+                <Input
+                  id="years_experience_category"
+                  type="number"
+                  value={applicationData.years_experience_category || ''}
+                  onChange={(e) => setApplicationData(prev => ({ 
+                    ...prev, 
+                    years_experience_category: e.target.value ? parseInt(e.target.value) : null 
+                  }))}
+                  placeholder="Ej: 2, 5, 10..."
+                  min="0"
+                  max="50"
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-500 mt-1">Indica cuántos años has trabajado específicamente en esta área</p>
               </div>
 
               <div>
-                <Label htmlFor="cover_letter">Carta de presentación personal *</Label>
+                <Label htmlFor="cover_letter">Carta de Presentación *</Label>
                 <Textarea
                   id="cover_letter"
                   value={applicationData.cover_letter}
                   onChange={(e) => setApplicationData(prev => ({ ...prev, cover_letter: e.target.value }))}
-                  placeholder="Presenta tu perfil profesional, destaca tus fortalezas y explica por qué eres el candidato ideal..."
-                  rows={5}
+                  placeholder="Presenta tu perfil profesional, destaca tus fortalezas y explica por qué eres el candidato ideal para esta posición..."
+                  rows={8}
                   className="mt-1"
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="why_interested">¿Qué te emociona más de trabajar en esta empresa?</Label>
-                <Textarea
-                  id="why_interested"
-                  value={applicationData.why_interested}
-                  onChange={(e) => setApplicationData(prev => ({ ...prev, why_interested: e.target.value }))}
-                  placeholder="Comparte qué sabes sobre la empresa y por qué quieres formar parte de su equipo..."
-                  rows={3}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Paso 2: Experiencia y habilidades */}
-          {currentStep === 2 && (
-            <div className="space-y-4">
-              <div className="text-center mb-4">
-                <Briefcase className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                <h3 className="text-lg font-semibold">Experiencia y Habilidades</h3>
-                <p className="text-gray-600 text-sm">Detalla tu experiencia relevante</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="experience_years">Años de experiencia</Label>
-                  <Input
-                    id="experience_years"
-                    type="number"
-                    value={applicationData.experience_years || ''}
-                    onChange={(e) => setApplicationData(prev => ({ 
-                      ...prev, 
-                      experience_years: e.target.value ? parseInt(e.target.value) : null 
-                    }))}
-                    placeholder="0"
-                    min="0"
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="expected_salary">Expectativa salarial (opcional)</Label>
-                  <Input
-                    id="expected_salary"
-                    type="number"
-                    value={applicationData.expected_salary || ''}
-                    onChange={(e) => setApplicationData(prev => ({ 
-                      ...prev, 
-                      expected_salary: e.target.value ? parseInt(e.target.value) : null 
-                    }))}
-                    placeholder="0"
-                    className="mt-1"
-                  />
+                <div className="flex justify-between items-center mt-1">
+                  <p className={`text-xs ${applicationData.cover_letter.length >= 50 ? 'text-green-600' : 'text-gray-500'}`}>
+                    {applicationData.cover_letter.length >= 50 ? '✓ Mínimo alcanzado' : 'Mínimo 50 caracteres'}
+                  </p>
+                  <span className="text-xs text-gray-400">{applicationData.cover_letter.length} caracteres</span>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="relevant_experience">Experiencia relevante para esta posición *</Label>
-                <Textarea
-                  id="relevant_experience"
-                  value={applicationData.relevant_experience}
-                  onChange={(e) => setApplicationData(prev => ({ ...prev, relevant_experience: e.target.value }))}
-                  placeholder="Describe proyectos, trabajos anteriores o experiencias que demuestren tu capacidad para esta posición..."
-                  rows={5}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="portfolio_url">Portfolio o trabajos anteriores (URL)</Label>
+                <Label htmlFor="video_presentation_url">Video de presentación (Opcional)</Label>
                 <Input
-                  id="portfolio_url"
+                  id="video_presentation_url"
                   type="url"
-                  value={applicationData.portfolio_url}
-                  onChange={(e) => setApplicationData(prev => ({ ...prev, portfolio_url: e.target.value }))}
-                  placeholder="https://mi-portfolio.com"
+                  value={applicationData.video_presentation_url}
+                  onChange={(e) => setApplicationData(prev => ({ ...prev, video_presentation_url: e.target.value }))}
+                  placeholder="https://www.youtube.com/watch?v=..."
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Comparte un video donde te presentes profesionalmente (YouTube, Loom, etc.)
+                </p>
               </div>
             </div>
           )}
 
-          {/* Paso 3: Disponibilidad */}
-          {currentStep === 3 && (
+          {/* Paso 2: Disponibilidad */}
+          {currentStep === 2 && (
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <Calendar className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                 <h3 className="text-lg font-semibold">Disponibilidad</h3>
-                <p className="text-gray-600 text-sm">Información sobre tu disponibilidad</p>
+                <p className="text-gray-600 text-sm">¿Cuándo puedes comenzar?</p>
               </div>
 
               <div>
-                <Label htmlFor="availability">Disponibilidad horaria *</Label>
-                <Textarea
-                  id="availability"
-                  value={applicationData.availability}
-                  onChange={(e) => setApplicationData(prev => ({ ...prev, availability: e.target.value }))}
-                  placeholder="Ej: Tiempo completo, lunes a viernes, 40 horas semanales, disponible para trabajar en horario EST..."
-                  rows={3}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="start_date">¿Cuándo puedes empezar? *</Label>
+                <Label htmlFor="start_availability">¿Cuándo puedes empezar? *</Label>
                 <Input
-                  id="start_date"
-                  value={applicationData.start_date}
-                  onChange={(e) => setApplicationData(prev => ({ ...prev, start_date: e.target.value }))}
+                  id="start_availability"
+                  value={applicationData.start_availability}
+                  onChange={(e) => setApplicationData(prev => ({ ...prev, start_availability: e.target.value }))}
                   placeholder="Ej: Inmediatamente, en 2 semanas, el 1 de marzo..."
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Indica cuándo estarías disponible para comenzar a trabajar
+                </p>
               </div>
 
               {/* Resumen de la aplicación */}
               <div className="bg-gray-50 rounded-lg p-4 mt-6">
                 <h4 className="font-medium text-gray-900 mb-3">Resumen de tu aplicación:</h4>
                 <div className="space-y-2 text-sm text-gray-600">
-                  <div><strong>Motivación:</strong> {applicationData.motivation.substring(0, 100)}...</div>
-                  <div><strong>Experiencia:</strong> {applicationData.experience_years || 'No especificada'} años</div>
-                  <div><strong>Disponibilidad:</strong> {applicationData.availability || 'No especificada'}</div>
-                  <div><strong>Inicio:</strong> {applicationData.start_date || 'No especificado'}</div>
-                  {applicationData.expected_salary && (
-                    <div><strong>Expectativa salarial:</strong> ${applicationData.expected_salary.toLocaleString()}</div>
+                  <div><strong>Años de experiencia en {opportunity.category}:</strong> {applicationData.years_experience_category || 'No especificado'} años</div>
+                  <div><strong>Carta de presentación:</strong> {applicationData.cover_letter.substring(0, 100)}...</div>
+                  {applicationData.video_presentation_url && (
+                    <div><strong>Video:</strong> {applicationData.video_presentation_url}</div>
                   )}
+                  <div><strong>Disponibilidad:</strong> {applicationData.start_availability || 'No especificada'}</div>
                 </div>
               </div>
             </div>

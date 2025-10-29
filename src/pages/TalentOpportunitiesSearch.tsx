@@ -12,7 +12,9 @@ import {
   Bookmark,
   Eye,
   Building,
-  Tag
+  Tag,
+  Users,
+  Award
 } from "lucide-react";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSupabaseAuth, isTalentRole } from "@/contexts/SupabaseAuthContext";
@@ -20,6 +22,8 @@ import { toast } from "sonner";
 import ApplicationModal from "@/components/ApplicationModal";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import FilterBar from "@/components/FilterBar";
+import ProfileCompletenessModal from "@/components/ProfileCompletenessModal";
+import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
 
 interface FilterState {
   category?: string | string[];
@@ -41,12 +45,14 @@ const TalentOpportunitiesSearch = () => {
   } = useSupabaseOpportunities();
   
   const navigate = useNavigate();
+  const { completeness } = useProfileCompleteness();
   
   // Estados para filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<FilterState>({});
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null);
+  const [showCompletenessModal, setShowCompletenessModal] = useState(false);
 
   // Cargar filtros guardados del localStorage al montar
   useEffect(() => {
@@ -206,6 +212,13 @@ const TalentOpportunitiesSearch = () => {
       return;
     }
 
+    // Check profile completeness
+    const minCompleteness = 60;
+    if (completeness < minCompleteness) {
+      setShowCompletenessModal(true);
+      return;
+    }
+
     setSelectedOpportunity(opportunity);
     setShowApplicationModal(true);
   };
@@ -267,11 +280,23 @@ const TalentOpportunitiesSearch = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          🔍 Buscar Oportunidades
+          Aplicá a roles que se ajusten a tus habilidades, intereses y experiencia
         </h1>
         <p className="text-gray-600">
-          Encuentra la oportunidad perfecta para tu perfil profesional
+          Usá los filtros para encontrar el puesto ideal para vos.
         </p>
+      </div>
+
+      {/* Ver Guardados Button */}
+      <div className="mb-4">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/talent-dashboard/saved-opportunities')}
+          className="flex items-center gap-2"
+        >
+          <Bookmark className="h-4 w-4" />
+          Ver Guardados
+        </Button>
       </div>
 
       {/* Filtros con FilterBar */}
@@ -354,6 +379,20 @@ const TalentOpportunitiesSearch = () => {
                             </div>
                           )}
 
+                          {(opportunity as any).experience_levels && (opportunity as any).experience_levels.length > 0 && (
+                            <div className="flex items-center gap-1">
+                              <Award className="h-4 w-4" />
+                              {(opportunity as any).experience_levels.join(', ')}
+                            </div>
+                          )}
+
+                          {(opportunity as any).applications_count !== undefined && (
+                            <div className="flex items-center gap-1 text-blue-600">
+                              <Users className="h-4 w-4" />
+                              {(opportunity as any).applications_count} postulaciones
+                            </div>
+                          )}
+
                           {(opportunity.salary_min || opportunity.salary_max) && (
                             <div className="flex items-center gap-1 text-green-600 font-medium">
                               <DollarSign className="h-4 w-4" />
@@ -424,6 +463,15 @@ const TalentOpportunitiesSearch = () => {
           ))
         )}
       </div>
+
+      {/* Modal de completitud de perfil */}
+      {showCompletenessModal && (
+        <ProfileCompletenessModal
+          isOpen={showCompletenessModal}
+          onClose={() => setShowCompletenessModal(false)}
+          minCompletenessRequired={60}
+        />
+      )}
 
       {/* Modal de aplicación */}
       {showApplicationModal && selectedOpportunity && (
