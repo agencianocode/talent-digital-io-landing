@@ -384,8 +384,8 @@ const CompanyDetails = () => {
                           return;
                         }
                         
-                        // Use the Edge Function URL for sharing (better for social media previews)
-                        const shareUrl = `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/company-share/${activeCompany.id}`;
+                        // Use the direct app URL for sharing
+                        const shareUrl = `https://app.talentodigital.io/company/${activeCompany.id}`;
                         
                         try {
                           // Copy to clipboard
