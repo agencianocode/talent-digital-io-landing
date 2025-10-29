@@ -375,14 +375,44 @@ const CompanyDetails = () => {
                           return;
                         }
                         
-                        const profileUrl = `${window.location.origin}/company/${activeCompany.id}`;
+                        const previewUrl = `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/company-share/${activeCompany.id}`;
                         
                         try {
-                          await navigator.clipboard.writeText(profileUrl);
-                          toast.success('Enlace copiado al portapapeles');
+                          // Try native share first (mobile)
+                          if (navigator.share) {
+                            await navigator.share({
+                              title: `${activeCompany.name} - TalentoDigital`,
+                              text: `Conoce más sobre ${activeCompany.name}`,
+                              url: previewUrl
+                            });
+                            toast.success('Perfil compartido exitosamente');
+                            return;
+                          }
+                          
+                          // Fallback to clipboard
+                          if (navigator.clipboard && navigator.clipboard.writeText) {
+                            await navigator.clipboard.writeText(previewUrl);
+                            toast.success('Enlace copiado al portapapeles');
+                          } else {
+                            // Manual fallback for older browsers
+                            const textarea = document.createElement('textarea');
+                            textarea.value = previewUrl;
+                            textarea.style.position = 'fixed';
+                            textarea.style.opacity = '0';
+                            document.body.appendChild(textarea);
+                            textarea.select();
+                            const success = document.execCommand('copy');
+                            document.body.removeChild(textarea);
+                            
+                            if (success) {
+                              toast.success('Enlace copiado al portapapeles');
+                            } else {
+                              throw new Error('Copy command failed');
+                            }
+                          }
                         } catch (error) {
-                          console.error('Error copying to clipboard:', error);
-                          toast.error('No se pudo copiar el enlace');
+                          console.error('Error sharing profile:', error);
+                          toast.error('No se pudo compartir el perfil. Intenta nuevamente.');
                         }
                       }}
                     >

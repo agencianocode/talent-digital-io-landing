@@ -25,3 +25,6 @@ verify_jwt = false
 
 [functions.opportunity-share]
 verify_jwt = false
+
+[functions.company-share]
+verify_jwt = false

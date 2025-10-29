@@ -81,6 +81,7 @@ const OpportunitiesLanding = lazy(() => import('./pages/OpportunitiesLanding'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const PublicOpportunity = lazy(() => import('./pages/PublicOpportunity'));
+const PublicCompany = lazy(() => import('./pages/PublicCompany'));
 const WelcomePage = lazy(() => import('./pages/WelcomePage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -402,6 +403,13 @@ function App() {
                       <Route path="/opportunity/:opportunityId" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <PublicOpportunity />
+                        </Suspense>
+                      } />
+
+                      {/* Public Company Profile */}
+                      <Route path="/company/:companyId" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <PublicCompany />
                         </Suspense>
                       } />
 
