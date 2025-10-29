@@ -103,6 +103,9 @@ const TalentOpportunitiesSearch = () => {
 
   // Filtrar oportunidades según búsqueda y filtros
   const filteredOpportunities = opportunities?.filter(opportunity => {
+    // CRÍTICO: Solo mostrar oportunidades activas (excluir paused, closed, draft)
+    if (opportunity.status !== 'active') return false;
+
     // Filtro de búsqueda por título, descripción y empresa
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
