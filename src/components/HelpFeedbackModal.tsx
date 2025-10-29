@@ -1,27 +1,70 @@
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { X, HelpCircle, AlertTriangle, Lightbulb } from 'lucide-react';
+import { X, HelpCircle, AlertTriangle, Lightbulb, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HelpFeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface HelpLinks {
+  help_url: string;
+  report_url: string;
+  ideas_url: string;
+}
+
 const HelpFeedbackModal = ({ isOpen, onClose }: HelpFeedbackModalProps) => {
+  const [links, setLinks] = useState<HelpLinks>({
+    help_url: 'mailto:support@talent-digital.io?subject=Solicitud de Ayuda',
+    report_url: 'mailto:support@talent-digital.io?subject=Reporte de Problema',
+    ideas_url: 'mailto:feedback@talent-digital.io?subject=Ideas y Sugerencias'
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadHelpLinks();
+    }
+  }, [isOpen]);
+
+  const loadHelpLinks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('key, value')
+        .eq('category', 'help_links');
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const linksObj: any = {};
+        data.forEach((setting) => {
+          linksObj[setting.key] = setting.value as string;
+        });
+        setLinks(linksObj as HelpLinks);
+      }
+    } catch (error) {
+      console.error('Error loading help links:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOptionClick = (type: 'help' | 'report' | 'ideas') => {
+    let url = '';
     switch (type) {
       case 'help':
-        // Abrir centro de ayuda o contactar soporte
-        window.open('mailto:support@talent-digital.io?subject=Solicitud de Ayuda', '_blank');
+        url = links.help_url;
         break;
       case 'report':
-        // Reportar problema
-        window.open('mailto:support@talent-digital.io?subject=Reporte de Problema', '_blank');
+        url = links.report_url;
         break;
       case 'ideas':
-        // Ideas y sugerencias
-        window.open('mailto:feedback@talent-digital.io?subject=Ideas y Sugerencias', '_blank');
+        url = links.ideas_url;
         break;
     }
+    window.open(url, '_blank', 'noopener,noreferrer');
     onClose();
   };
 
@@ -44,7 +87,12 @@ const HelpFeedbackModal = ({ isOpen, onClose }: HelpFeedbackModalProps) => {
 
         {/* Options Grid */}
         <div className="px-8 pb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Ayuda */}
             <button
               onClick={() => handleOptionClick('help')}
@@ -99,6 +147,7 @@ const HelpFeedbackModal = ({ isOpen, onClose }: HelpFeedbackModalProps) => {
               </div>
             </button>
           </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

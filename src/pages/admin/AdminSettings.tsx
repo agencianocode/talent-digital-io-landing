@@ -3,11 +3,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Bell, 
   Shield, 
-  Cog
+  Cog,
+  HelpCircle
 } from 'lucide-react';
 import AdminSystemSettings from '@/components/admin/settings/AdminSystemSettings';
 import AdminNotificationSettings from '@/components/admin/settings/AdminNotificationSettings';
 import AdminSecuritySettings from '@/components/admin/settings/AdminSecuritySettings';
+import AdminHelpSettings from '@/components/admin/settings/AdminHelpSettings';
 
 const AdminSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("system");
@@ -24,7 +26,7 @@ const AdminSettings: React.FC = () => {
 
       {/* Main Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="system" className="flex items-center gap-2">
             <Cog className="h-4 w-4" />
             Sistema
@@ -36,6 +38,10 @@ const AdminSettings: React.FC = () => {
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Seguridad
+          </TabsTrigger>
+          <TabsTrigger value="help" className="flex items-center gap-2">
+            <HelpCircle className="h-4 w-4" />
+            Ayuda
           </TabsTrigger>
         </TabsList>
 
@@ -52,6 +58,11 @@ const AdminSettings: React.FC = () => {
         {/* Security Settings */}
         <TabsContent value="security" className="mt-6">
           <AdminSecuritySettings />
+        </TabsContent>
+
+        {/* Help Settings */}
+        <TabsContent value="help" className="mt-6">
+          <AdminHelpSettings />
         </TabsContent>
       </Tabs>
     </div>
