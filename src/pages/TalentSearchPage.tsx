@@ -52,6 +52,8 @@ interface TalentWithProfile {
   profile: UserProfile;
   categoryName?: string;
   isFeatured?: boolean;
+  isPremium?: boolean;
+  isCertified?: boolean;
 }
 
 const TalentSearchPage = () => {
@@ -125,9 +127,23 @@ const TalentSearchPage = () => {
             .eq('user_id', talent.user_id)
             .single();
 
+          // Check if user is premium
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', talent.user_id)
+            .single();
+
+          const isPremium = roleData?.role === 'premium_talent';
+
+          // Note: Academy certification check would require user email which is not available in profiles table
+          // For now, we'll set isCertified to false. To enable this, add email field to profiles table
+          // or create a direct relationship between user_id and academy_students
+          const isCertified = false;
+
           const categoryName = categories.find(cat => cat.id === talent.primary_category_id)?.name || 'Sin categoría';
           const profileCompleteness = profileData?.profile_completeness || 0;
-          const isFeatured = profileCompleteness >= 80; // Featured if profile is 80%+ complete
+          const isFeatured = isPremium || isCertified || profileCompleteness >= 80;
           
           return {
             talent,
@@ -144,7 +160,9 @@ const TalentSearchPage = () => {
               updated_at: talent.updated_at
             },
             categoryName,
-            isFeatured
+            isFeatured,
+            isPremium,
+            isCertified
           };
         })
       );
@@ -230,11 +248,23 @@ const TalentSearchPage = () => {
     return matchesSearch && matchesSpecialty && matchesExperience && matchesCountry && matchesAvailability;
   });
 
-  // Sort talents with featured first
+  // Sort talents with premium and certified first, then by featured status
   const sortedTalents = [...filteredTalents].sort((a, b) => {
     if (sortBy === 'featured') {
-      if (a.isFeatured && !b.isFeatured) return -1;
-      if (!a.isFeatured && b.isFeatured) return 1;
+      // Priority order: Premium > Certified > High completeness > Others
+      const getPriority = (t: TalentWithProfile) => {
+        if (t.isPremium) return 3;
+        if (t.isCertified) return 2;
+        if (t.isFeatured) return 1;
+        return 0;
+      };
+      
+      const priorityA = getPriority(a);
+      const priorityB = getPriority(b);
+      
+      if (priorityA !== priorityB) return priorityB - priorityA;
+      
+      // If same priority, sort by profile completeness
       return (b.profile.profile_completeness || 0) - (a.profile.profile_completeness || 0);
     }
     if (sortBy === 'experience') {
@@ -291,76 +321,62 @@ const TalentSearchPage = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8 space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Buscar Talento
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Encuentra el mejor talento digital para tu empresa
+          <h1 className="text-3xl font-bold text-foreground">Descubrir Talento</h1>
+          <p className="text-muted-foreground mt-1">
+            Encuentra y conecta con los mejores profesionales para tu equipo
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            onClick={() => navigate('/business-dashboard/opportunities/new')}
-            variant="outline"
-          >
-            Publicar Oportunidad
-          </Button>
-        </div>
+        <Button 
+          onClick={() => navigate('/business-dashboard/opportunities/new')}
+          className="w-full md:w-auto"
+        >
+          Publicar Oportunidad
+        </Button>
       </div>
 
-      {/* Enhanced Search and Filters */}
-      <div className="space-y-6 mb-8">
-        <FilterBar
-          filters={filters}
-          onFilterChange={setFilters}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          type="talent"
-          resultCount={sortedTalents.length}
-          isLoading={isLoading}
-        />
+      {/* Search and Compact Filters in one row */}
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+        <div className="flex-1 w-full">
+          <FilterBar
+            filters={filters}
+            onFilterChange={setFilters}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            type="talent"
+            resultCount={sortedTalents.length}
+            isLoading={isLoading}
+          />
+        </div>
         
-        {/* View Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Ordenar por:</span>
-              <select 
-                value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value)}
-                className="text-sm border rounded px-2 py-1 bg-background"
-              >
-                <option value="featured">Destacados</option>
-                <option value="experience">Experiencia</option>
-                <option value="name">Nombre</option>
-              </select>
-            </div>
-          </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('grid')}
+          >
+            <Grid3X3 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
           
-          <div className="text-sm text-muted-foreground">
-            {sortedTalents.length} de {talents.length} perfiles
-          </div>
+          <select 
+            value={sortBy} 
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value)}
+            className="text-sm border rounded px-3 py-1.5 bg-background"
+          >
+            <option value="featured">Destacados</option>
+            <option value="experience">Experiencia</option>
+            <option value="name">Nombre</option>
+          </select>
         </div>
       </div>
 
@@ -391,10 +407,10 @@ const TalentSearchPage = () => {
                 talentWithProfile.isFeatured ? 'ring-2 ring-primary/20' : ''
               }`}
             >
-              {talentWithProfile.isFeatured && (
+              {(talentWithProfile.isPremium || talentWithProfile.isCertified) && (
                 <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
                   <Star className="h-3 w-3 fill-current" />
-                  Destacado
+                  {talentWithProfile.isPremium ? 'Premium' : 'Certificado'}
                 </div>
               )}
               
