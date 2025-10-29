@@ -29,7 +29,7 @@ const PublicOpportunity = () => {
   const [opportunity, setOpportunity] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { getPublicOpportunity, shareOpportunity } = useOpportunitySharing();
+  const { shareOpportunity } = useOpportunitySharing();
 
   useEffect(() => {
     if (opportunityId) {
@@ -42,24 +42,44 @@ const PublicOpportunity = () => {
 
     setIsLoading(true);
     try {
-      // For now, we'll use a direct URL since the table isn't created yet
-      const publicUrl = `${window.location.origin}/opportunity/${opportunityId}`;
-      const data = await getPublicOpportunity(publicUrl);
+      // Fetch opportunity directly from database
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            logo_url,
+            description,
+            industry,
+            company_size,
+            website,
+            social_links
+          )
+        `)
+        .eq('id', opportunityId)
+        .eq('is_public', true)
+        .single();
       
+      if (error) throw error;
+
       if (data) {
         setOpportunity(data);
+        
+        // Update page meta tags
+        updateMetaTags(data);
         
         // Registrar vista (solo si hay un usuario autenticado)
         const { data: { user: currentUser } } = await supabase.auth.getUser();
         if (currentUser) {
           try {
-            await (supabase as any)
+            await supabase
               .from('opportunity_views')
               .insert({ 
                 opportunity_id: opportunityId,
                 viewer_id: currentUser.id 
               });
-            console.log('✅ Vista registrada en página pública');
           } catch (viewErr) {
             console.warn('No se pudo registrar vista:', viewErr);
           }
@@ -73,6 +93,42 @@ const PublicOpportunity = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const updateMetaTags = (opportunity: any) => {
+    const title = `${opportunity.title} - ${opportunity.companies?.name || 'Empresa'}`;
+    const description = opportunity.description?.substring(0, 160) || 'Oportunidad laboral disponible';
+    const url = `${window.location.origin}/opportunity/${opportunity.id}`;
+    
+    // Update document title
+    document.title = title;
+    
+    // Update or create meta tags
+    const metaTags = {
+      'description': description,
+      'og:title': title,
+      'og:description': description,
+      'og:url': url,
+      'og:type': 'website',
+      'og:image': opportunity.companies?.logo_url || `${window.location.origin}/og-image.png`,
+      'twitter:card': 'summary_large_image',
+      'twitter:title': title,
+      'twitter:description': description,
+      'twitter:image': opportunity.companies?.logo_url || `${window.location.origin}/og-image.png`
+    };
+
+    Object.entries(metaTags).forEach(([name, content]) => {
+      const property = name.startsWith('og:') || name.startsWith('twitter:') ? 'property' : 'name';
+      let meta = document.querySelector(`meta[${property}="${name}"]`);
+      
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute(property, name);
+        document.head.appendChild(meta);
+      }
+      
+      meta.setAttribute('content', content);
+    });
   };
 
   const handleApply = () => {

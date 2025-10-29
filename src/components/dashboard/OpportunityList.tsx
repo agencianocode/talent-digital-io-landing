@@ -29,7 +29,8 @@ import {
   Users as UsersIcon,
   DollarSign,
   Heart,
-  Mail
+  Mail,
+  Share2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -153,6 +154,17 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
     } catch (error) {
       console.error('Error copying invitation link:', error);
       toast.error('Error al copiar el enlace de invitación');
+    }
+  };
+
+  const handleShareOpportunity = async (opportunity: any) => {
+    try {
+      const publicUrl = `${window.location.origin}/opportunity/${opportunity.id}`;
+      await navigator.clipboard.writeText(publicUrl);
+      toast.success('¡Enlace público copiado al portapapeles!');
+    } catch (error) {
+      console.error('Error copying public link:', error);
+      toast.error('Error al copiar el enlace');
     }
   };
 
@@ -434,6 +446,12 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                             Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem 
+                            onClick={() => handleShareOpportunity(opportunity)}
+                          >
+                            <Share2 className="h-4 w-4 mr-2" />
+                            Compartir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
                             onClick={() => handleToggleStatus(opportunity.id, opportunity.status || 'draft')}
                           >
                             {opportunity.status === 'active' ? (
@@ -514,6 +532,12 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleShareOpportunity(opportunity)}
+                        >
+                          <Share2 className="h-4 w-4 mr-2" />
+                          Compartir
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => handleToggleStatus(opportunity.id, opportunity.status || 'draft')}
