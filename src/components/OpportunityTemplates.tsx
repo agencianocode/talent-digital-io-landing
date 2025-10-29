@@ -170,22 +170,41 @@ El Líder Comercial es el responsable de orquestar todo el proceso comercial de 
   ],
   "Marketing": [
     {
-      id: "marketing-digital",
-      title: "Especialista en Marketing Digital",
+      id: "media-buyer",
+      title: "Media Buyer",
       category: "marketing",
-      description: "Responsable de desarrollar y ejecutar estrategias de marketing digital para incrementar la visibilidad online y generar leads.",
-      skills: ["Marketing Digital", "SEO", "SEM", "Social Media", "Google Analytics", "Content Marketing"],
-      tools: ["Google Ads", "Facebook Ads", "Google Analytics", "SEMrush", "Hootsuite"],
-      requirements: "Experiencia en campañas digitales, conocimiento de Google Ads y Facebook Ads, certificaciones en marketing digital preferibles."
-    },
-    {
-      id: "growth-marketer",
-      title: "Growth Marketer",
-      category: "marketing",
-      description: "Especialista en crecimiento enfocado en identificar y ejecutar estrategias para acelerar el crecimiento del negocio.",
-      skills: ["Growth Hacking", "Analytics", "A/B Testing", "Marketing automation", "Funnel optimization"],
-      tools: ["Mixpanel", "Amplitude", "Optimizely", "HubSpot", "Klaviyo"],
-      requirements: "Experiencia en growth marketing, conocimiento de herramientas de analytics, mentalidad orientada a datos."
+      description: `### **Descripción general del rol**
+
+Buscamos un **Media Buyer con mentalidad estratégica y enfoque en performance**, capaz de planificar, ejecutar y optimizar campañas publicitarias en **Meta Ads, Google Ads o TikTok Ads**.
+
+Tu rol será impulsar la adquisición de leads y ventas rentables para negocios digitales, asegurando que cada dólar invertido genere el máximo retorno (ROAS).
+
+Trabajarás junto al equipo de marketing y ventas para traducir objetivos de negocio en estrategias publicitarias efectivas, analizando datos, testeando creatividades y escalando campañas ganadoras.
+
+---
+
+### ⚙️ **Responsabilidades**
+
+- Diseñar e implementar estrategias de paid media para diferentes objetivos (captación, conversión, retención).
+- Configurar, monitorear y optimizar campañas en Meta Ads, Google Ads y/o TikTok Ads.
+- Analizar métricas clave (CTR, CPC, CPA, ROAS) y tomar decisiones basadas en datos.
+- Coordinar con diseñadores, copywriters y estrategas para crear piezas publicitarias efectivas.
+- Implementar test A/B y estrategias de segmentación avanzada para mejorar el rendimiento.
+- Preparar reportes semanales y proponer mejoras continuas en base a los resultados.
+
+---
+
+### 🧠 **Requisitos**
+
+- Experiencia comprobable en gestión de campañas digitales (mínimo 1 año).
+- Conocimiento profundo de plataformas publicitarias (Meta Ads Manager, Google Ads, TikTok Ads).
+- Dominio de métricas de performance y analítica publicitaria.
+- Capacidad para interpretar datos, detectar patrones y optimizar presupuestos.
+- Proactividad, pensamiento analítico y orientación a resultados.
+- Se valora experiencia en embudos de venta, e-commerce o infoproductos.`,
+      skills: ["paid media", "campañas", "métricas", "ROAS", "segmentación"],
+      tools: ["Meta Ads Manager", "Google Ads", "TikTok Ads"],
+      requirements: "Experiencia comprobable en gestión de campañas digitales (mínimo 1 año). Conocimiento profundo de plataformas publicitarias. Dominio de métricas de performance."
     }
   ],
   "Tecnología y Automatizaciones": [
