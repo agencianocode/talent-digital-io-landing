@@ -19,7 +19,6 @@ import {
   Link,
   Eye as EyeIcon,
   AlertTriangle,
-  Mail,
   Trash2,
   Briefcase,
   Code,
@@ -362,26 +361,6 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span>{applicationCounts[opportunity.id] || 0} Postulantes</span>
-                      </div>
-                      
-                      {(applicationCounts[opportunity.id] || 0) > 0 && (
-                        <div className="flex items-center gap-1 text-orange-600">
-                          <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
-                          <span className="hidden sm:inline">{Math.floor((applicationCounts[opportunity.id] || 0) / 3) + 1} Postulaciones sin revisar</span>
-                          <span className="sm:hidden">{Math.floor((applicationCounts[opportunity.id] || 0) / 3) + 1} sin revisar</span>
-                        </div>
-                      )}
-                      
-                      <div 
-                        className="flex items-center gap-1 text-blue-600 cursor-pointer hover:text-blue-700 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate('/business-dashboard/messages');
-                        }}
-                      >
-                        <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
-                        <span className="hidden sm:inline">{Math.floor(Math.random() * 3) + 1} Mensaje sin leer</span>
-                        <span className="sm:hidden">{Math.floor(Math.random() * 3) + 1} sin leer</span>
                       </div>
                     </div>
 
