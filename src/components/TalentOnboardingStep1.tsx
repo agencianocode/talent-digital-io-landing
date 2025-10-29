@@ -103,13 +103,13 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
     onComplete(profileData);
   };
 
-  const isFormValid = firstName.trim().length > 0 && lastName.trim().length > 0 && country.trim().length > 0 && city.trim().length > 0;
+  const isFormValid = firstName.trim().length > 0 && lastName.trim().length > 0 && country.trim().length > 0;
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900 font-['Inter']">Crea tu perfil</h2>
+        <h2 className="text-2xl font-bold text-gray-900 font-['Inter']">Contanos quién sos</h2>
       </div>
 
       {/* Profile Photo Upload */}
@@ -182,7 +182,7 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
         <div className="space-y-2">
           <Input
             type="text"
-            placeholder="Ciudad"
+            placeholder="Ciudad (opcional)"
             value={city}
             onChange={(e) => setCity(e.target.value)}
             className="h-12 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 bg-white font-['Inter']"
@@ -218,6 +218,9 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
               className="h-12 flex-1 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 bg-white font-['Inter']"
             />
           </div>
+          <p className="text-xs text-gray-500 font-['Inter']">
+            Solo visible para empresas si aplicas a una oportunidad
+          </p>
         </div>
       </div>
 
