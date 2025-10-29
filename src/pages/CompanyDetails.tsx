@@ -378,18 +378,7 @@ const CompanyDetails = () => {
                         const previewUrl = `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/company-share/${activeCompany.id}`;
                         
                         try {
-                          // Try native share first (mobile)
-                          if (navigator.share) {
-                            await navigator.share({
-                              title: `${activeCompany.name} - TalentoDigital`,
-                              text: `Conoce más sobre ${activeCompany.name}`,
-                              url: previewUrl
-                            });
-                            toast.success('Perfil compartido exitosamente');
-                            return;
-                          }
-                          
-                          // Fallback to clipboard
+                          // Copy to clipboard
                           if (navigator.clipboard && navigator.clipboard.writeText) {
                             await navigator.clipboard.writeText(previewUrl);
                             toast.success('Enlace copiado al portapapeles');
