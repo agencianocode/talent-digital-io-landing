@@ -43,10 +43,10 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
 
       if (error) throw error;
 
-      setAcademyData(data);
-      if (data.directory_settings) {
-        setShowLogo(data.directory_settings.show_logo ?? true);
-        setShowDescription(data.directory_settings.show_description ?? true);
+      setAcademyData(data as any);
+      if ((data as any)?.directory_settings) {
+        setShowLogo((data as any).directory_settings.show_logo ?? true);
+        setShowDescription((data as any).directory_settings.show_description ?? true);
       }
     } catch (error) {
       console.error('Error loading academy settings:', error);
@@ -63,7 +63,7 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
             show_logo,
             show_description
           }
-        })
+        } as any)
         .eq('id', academyId);
 
       if (error) throw error;
