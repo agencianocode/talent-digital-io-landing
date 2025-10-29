@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   Share2, 
   ExternalLink, 
   GraduationCap,
   MapPin,
-  Calendar
+  Calendar,
+  Settings2,
+  Image as ImageIcon,
+  FileText
 } from 'lucide-react';
 
 interface PublicDirectoryProps {
@@ -16,6 +23,69 @@ interface PublicDirectoryProps {
 }
 
 export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) => {
+  const [showLogo, setShowLogo] = useState(true);
+  const [showDescription, setShowDescription] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [academyData, setAcademyData] = useState<any>(null);
+
+  // Load academy settings
+  useEffect(() => {
+    loadAcademySettings();
+  }, [academyId]);
+
+  const loadAcademySettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('name, logo_url, description, directory_settings')
+        .eq('id', academyId)
+        .single();
+
+      if (error) throw error;
+
+      setAcademyData(data);
+      if (data.directory_settings) {
+        setShowLogo(data.directory_settings.show_logo ?? true);
+        setShowDescription(data.directory_settings.show_description ?? true);
+      }
+    } catch (error) {
+      console.error('Error loading academy settings:', error);
+    }
+  };
+
+  const updateDirectorySettings = async (show_logo: boolean, show_description: boolean) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('companies')
+        .update({
+          directory_settings: {
+            show_logo,
+            show_description
+          }
+        })
+        .eq('id', academyId);
+
+      if (error) throw error;
+      toast.success('Configuración actualizada');
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      toast.error('Error al actualizar configuración');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleLogo = async (checked: boolean) => {
+    setShowLogo(checked);
+    await updateDirectorySettings(checked, showDescription);
+  };
+
+  const handleToggleDescription = async (checked: boolean) => {
+    setShowDescription(checked);
+    await updateDirectorySettings(showLogo, checked);
+  };
+
   // Mock data for public directory
   const graduates = [
     {
@@ -51,7 +121,7 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicUrl);
-    // TODO: Show toast notification
+    toast.success('Link copiado al portapapeles');
   };
 
   const handleViewPublic = () => {
@@ -80,6 +150,57 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
         </div>
       </div>
 
+      {/* Settings Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings2 className="h-5 w-5" />
+            Configuración del Directorio
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ImageIcon className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <Label htmlFor="show-logo" className="text-sm font-medium">
+                  Mostrar logo de la academia
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  El logo aparecerá en la cabecera del directorio público
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="show-logo"
+              checked={showLogo}
+              onCheckedChange={handleToggleLogo}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FileText className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <Label htmlFor="show-description" className="text-sm font-medium">
+                  Mostrar descripción de la academia
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  La descripción aparecerá debajo del logo en el directorio público
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="show-description"
+              checked={showDescription}
+              onCheckedChange={handleToggleDescription}
+              disabled={loading}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Public URL Info */}
       <Card>
         <CardHeader>
@@ -89,7 +210,7 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
             <code className="flex-1 text-sm">{publicUrl}</code>
             <Button variant="outline" size="sm" onClick={handleCopyLink}>
               Copiar
@@ -100,6 +221,37 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
           </p>
         </CardContent>
       </Card>
+
+      {/* Preview Card */}
+      {academyData && (showLogo || showDescription) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Vista Previa del Directorio</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4 p-6 border rounded-lg bg-card">
+              {showLogo && academyData.logo_url && (
+                <div className="flex justify-center">
+                  <img 
+                    src={academyData.logo_url} 
+                    alt={academyData.name}
+                    className="h-20 w-auto object-contain"
+                  />
+                </div>
+              )}
+              
+              <div className="text-center">
+                <h3 className="text-2xl font-bold">{academyData.name}</h3>
+                {showDescription && academyData.description && (
+                  <p className="text-muted-foreground mt-2">
+                    {academyData.description}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Graduates List */}
       <Card>
