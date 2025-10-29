@@ -613,6 +613,29 @@ const TalentEditProfile = () => {
             </CardContent>
           </Card>
 
+          {/* Social Links */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <LinkIcon className="h-5 w-5" />
+                Redes Sociales
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {SOCIAL_PLATFORMS.map(platform => (
+                <div key={platform.value}>
+                  <Label htmlFor={platform.value}>{platform.label}</Label>
+                  <Input
+                    id={platform.value}
+                    value={socialUrls[platform.value] || ''}
+                    onChange={(e) => handleSocialLinkChange(platform.value, e.target.value)}
+                    placeholder={platform.placeholder}
+                  />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
           {/* Professional Preferences */}
           <Card>
             <CardHeader>
@@ -748,29 +771,6 @@ const TalentEditProfile = () => {
                   Condiciones que no estás dispuesto a aceptar
                 </p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Social Links */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <LinkIcon className="h-5 w-5" />
-                Redes Sociales
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {SOCIAL_PLATFORMS.map(platform => (
-                <div key={platform.value}>
-                  <Label htmlFor={platform.value}>{platform.label}</Label>
-                  <Input
-                    id={platform.value}
-                    value={socialUrls[platform.value] || ''}
-                    onChange={(e) => handleSocialLinkChange(platform.value, e.target.value)}
-                    placeholder={platform.placeholder}
-                  />
-                </div>
-              ))}
             </CardContent>
           </Card>
 
