@@ -13,6 +13,7 @@ import {
   MapPin, 
   Phone, 
   Video,
+  Clock,
   Eye,
   Briefcase,
   GraduationCap,
@@ -84,6 +85,7 @@ const TalentMyProfile = () => {
   const location = profile?.location || '';
   const phone = profile?.phone || '';
   const videoUrl = profile?.video_presentation_url || '';
+  const availability = profile?.availability || '';
 
   const profileCompleteness = getProfileCompleteness();
   const publicUrl = generatePublicUrl();
@@ -196,6 +198,12 @@ const TalentMyProfile = () => {
                         <Badge variant="secondary" className="gap-1">
                           <Phone className="h-3 w-3" />
                           {phone}
+                        </Badge>
+                      )}
+                      {availability && (
+                        <Badge variant="secondary" className="gap-1">
+                          <Clock className="h-3 w-3" />
+                          {availability}
                         </Badge>
                       )}
                     </div>
