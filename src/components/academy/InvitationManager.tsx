@@ -4,20 +4,48 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Mail, 
   Plus, 
-  Send
+  Send,
+  Copy,
+  CheckCircle2,
+  Link as LinkIcon
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface InvitationManagerProps {
   academyId: string;
 }
 
-export const InvitationManager: React.FC<InvitationManagerProps> = () => {
+export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId }) => {
   const [emailList, setEmailList] = useState('');
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [copiedActive, setCopiedActive] = useState(false);
+  const [copiedGraduated, setCopiedGraduated] = useState(false);
+
+  // Generate invitation links
+  const activeInviteLink = `${window.location.origin}/accept-invitation?academy=${academyId}&status=enrolled`;
+  const graduatedInviteLink = `${window.location.origin}/accept-invitation?academy=${academyId}&status=graduated`;
+
+  const copyToClipboard = async (text: string, type: 'active' | 'graduated') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (type === 'active') {
+        setCopiedActive(true);
+        setTimeout(() => setCopiedActive(false), 2000);
+      } else {
+        setCopiedGraduated(true);
+        setTimeout(() => setCopiedGraduated(false), 2000);
+      }
+      toast.success('Link copiado al portapapeles');
+    } catch (error) {
+      toast.error('Error al copiar el link');
+    }
+  };
 
   // Mock data for invitations
   const invitations = [
@@ -80,12 +108,94 @@ export const InvitationManager: React.FC<InvitationManagerProps> = () => {
         </div>
       </div>
 
+      {/* Invitation Links */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <LinkIcon className="h-5 w-5" />
+            Links de Invitación
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="active" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="active">Estudiante Activo</TabsTrigger>
+              <TabsTrigger value="graduated">Graduado</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="active" className="space-y-4">
+              <div className="space-y-2">
+                <Label>Link para Estudiantes Activos</Label>
+                <p className="text-sm text-muted-foreground">
+                  Comparte este link con estudiantes que están cursando actualmente
+                </p>
+                <div className="flex gap-2">
+                  <Input 
+                    value={activeInviteLink} 
+                    readOnly 
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => copyToClipboard(activeInviteLink, 'active')}
+                    className="flex-shrink-0"
+                  >
+                    {copiedActive ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Nota:</strong> Los estudiantes que usen este link serán registrados con el estado "Activo"
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="graduated" className="space-y-4">
+              <div className="space-y-2">
+                <Label>Link para Graduados</Label>
+                <p className="text-sm text-muted-foreground">
+                  Comparte este link con estudiantes que ya se graduaron
+                </p>
+                <div className="flex gap-2">
+                  <Input 
+                    value={graduatedInviteLink} 
+                    readOnly 
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => copyToClipboard(graduatedInviteLink, 'graduated')}
+                    className="flex-shrink-0"
+                  >
+                    {copiedGraduated ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">
+                  <p className="text-sm text-green-800">
+                    <strong>Nota:</strong> Los estudiantes que usen este link serán registrados con el estado "Graduado"
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
       {/* Send Invitations */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            Enviar Invitaciones
+            Enviar Invitaciones por Email
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -100,6 +100,11 @@ const DashboardLayout = () => {
                     >
                       <item.icon className="h-5 w-5" />
                       {item.label}
+                      {item.label === "Mi Academia" && (
+                        <Badge className="ml-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs">
+                          Premium
+                        </Badge>
+                      )}
                     </NavLink>
                   </li>
                 ))}
@@ -171,6 +176,11 @@ const DashboardLayout = () => {
                 >
                   <item.icon className="h-4 w-4" />
                   <span style={{fontSize: '16px'}}>{item.label}</span>
+                  {item.label === "Mi Academia" && (
+                    <Badge className="ml-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs">
+                      Premium
+                    </Badge>
+                  )}
                 </NavLink>
               </li>
             ))}
