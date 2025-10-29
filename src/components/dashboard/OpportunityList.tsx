@@ -351,7 +351,13 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                         </div>
                       )}
                       
-                      <div className="flex items-center gap-1 text-blue-600">
+                      <div 
+                        className="flex items-center gap-1 text-blue-600 cursor-pointer hover:text-blue-700 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/business-dashboard/messages');
+                        }}
+                      >
                         <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span className="hidden sm:inline">{Math.floor(Math.random() * 3) + 1} Mensaje sin leer</span>
                         <span className="sm:hidden">{Math.floor(Math.random() * 3) + 1} sin leer</span>
