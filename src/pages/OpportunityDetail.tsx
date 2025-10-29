@@ -12,6 +12,8 @@ import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLocation } from "react-router-dom";
+import ProfileCompletenessModal from "@/components/ProfileCompletenessModal";
+import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
 
 const OpportunityDetail = () => {
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ const OpportunityDetail = () => {
   const { userRole } = useSupabaseAuth();
   const { applyToOpportunity, hasApplied, getApplicationStatus } = useSupabaseOpportunities();
   const { isOpportunitySaved, saveOpportunity, unsaveOpportunity } = useSavedOpportunities();
+  const { completeness } = useProfileCompleteness();
   
   // Detectar si es una página de invitación
   const isInvitationPage = location.pathname.includes('/opportunity/invite/');
@@ -30,6 +33,7 @@ const OpportunityDetail = () => {
   const [coverLetter, setCoverLetter] = useState("");
   const [isApplying, setIsApplying] = useState(false);
   const [showApplicationDialog, setShowApplicationDialog] = useState(false);
+  const [showCompletenessModal, setShowCompletenessModal] = useState(false);
 
   const jobTypes = [
     { value: 'full-time', label: 'Tiempo Completo' },
@@ -105,6 +109,14 @@ const OpportunityDetail = () => {
 
   const handleApply = async () => {
     if (!opportunity) return;
+    
+    // Verificar completitud del perfil antes de aplicar
+    const minCompleteness = 60;
+    if (completeness < minCompleteness) {
+      setShowCompletenessModal(true);
+      setShowApplicationDialog(false);
+      return;
+    }
     
     setIsApplying(true);
     try {
@@ -472,6 +484,15 @@ const OpportunityDetail = () => {
           )}
         </div>
       </div>
+      
+      {/* Modal de completitud de perfil */}
+      {showCompletenessModal && (
+        <ProfileCompletenessModal
+          isOpen={showCompletenessModal}
+          onClose={() => setShowCompletenessModal(false)}
+          minCompletenessRequired={60}
+        />
+      )}
     </div>
   );
 };
