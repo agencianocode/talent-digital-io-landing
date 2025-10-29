@@ -94,10 +94,11 @@ const EXPERIENCE_LEVELS = [
 ];
 
 const CONTRACT_TYPES = [
-  { value: 'full-time', label: 'Full Time' },
-  { value: 'comision', label: 'Comisión' },
-  { value: 'por-proyecto', label: 'Por Proyecto' },
-  { value: 'part-time', label: 'Part Time' }
+  { value: 'Full Time', label: 'Full Time' },
+  { value: 'Part Time', label: 'Part Time' },
+  { value: 'Freelance', label: 'Freelance' },
+  { value: 'Por Comisión', label: 'Por Comisión' },
+  { value: 'Fijo + Comisión', label: 'Fijo + Comisión' }
 ];
 
 const WORK_MODES = [
