@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Search, Filter, X } from 'lucide-react';
 import { ServiceFilters as ServiceFiltersType } from '@/hooks/useMarketplaceServices';
-import { SERVICE_CATEGORIES, getAllSkills } from '@/lib/marketplace-categories';
+import { SERVICE_CATEGORIES, CATEGORY_SKILLS, getAllSkills } from '@/lib/marketplace-categories';
 
 interface ServiceFiltersProps {
   filters: ServiceFiltersType;
@@ -27,6 +27,14 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
   onClearFilters,
   totalResults
 }) => {
+  // Get available skills based on selected category
+  const availableSkills = useMemo(() => {
+    if (filters.categoryFilter === 'all') {
+      return getAllSkills();
+    }
+    return CATEGORY_SKILLS[filters.categoryFilter] || [];
+  }, [filters.categoryFilter]);
+
   const hasActiveFilters = 
     filters.searchQuery !== '' ||
     filters.categoryFilter !== 'all' ||
@@ -102,7 +110,13 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
             <label className="text-sm font-medium">Categoría</label>
             <Select
               value={filters.categoryFilter}
-              onValueChange={(value) => onFiltersChange({ categoryFilter: value })}
+              onValueChange={(value) => {
+                onFiltersChange({ 
+                  categoryFilter: value,
+                  // Reset skills filter when category changes
+                  skillsFilter: 'all'
+                });
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar categoría" />
@@ -112,6 +126,28 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
                 {SERVICE_CATEGORIES.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Skills Filter - Right next to Category */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Skills</label>
+            <Select
+              value={filters.skillsFilter || 'all'}
+              onValueChange={(value) => onFiltersChange({ skillsFilter: value })}
+              disabled={availableSkills.length === 0}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={availableSkills.length > 0 ? "Todas las skills" : "Selecciona categoría"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las skills</SelectItem>
+                {availableSkills.map((skill) => (
+                  <SelectItem key={skill} value={skill}>
+                    {skill}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -172,27 +208,6 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
                 {availabilityOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Skills Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Skills</label>
-            <Select
-              value={filters.skillsFilter || 'all'}
-              onValueChange={(value) => onFiltersChange({ skillsFilter: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todas las skills" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las skills</SelectItem>
-                {getAllSkills().map((skill) => (
-                  <SelectItem key={skill} value={skill}>
-                    {skill}
                   </SelectItem>
                 ))}
               </SelectContent>
