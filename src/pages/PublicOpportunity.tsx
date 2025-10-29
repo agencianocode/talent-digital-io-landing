@@ -59,8 +59,7 @@ const PublicOpportunity = () => {
           )
         `)
         .eq('id', opportunityId)
-        .eq('is_public', true)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
 
@@ -96,9 +95,11 @@ const PublicOpportunity = () => {
   };
 
   const updateMetaTags = (opportunity: any) => {
-    const title = `${opportunity.title} - ${opportunity.companies?.name || 'Empresa'}`;
+    const companyName = opportunity.companies?.name || 'Empresa';
+    const title = `${opportunity.title} - ${companyName}`;
     const description = opportunity.description?.substring(0, 160) || 'Oportunidad laboral disponible';
     const url = `${window.location.origin}/opportunity/${opportunity.id}`;
+    const logoUrl = opportunity.companies?.logo_url || `${window.location.origin}/og-image.png`;
     
     // Update document title
     document.title = title;
@@ -110,11 +111,11 @@ const PublicOpportunity = () => {
       'og:description': description,
       'og:url': url,
       'og:type': 'website',
-      'og:image': opportunity.companies?.logo_url || `${window.location.origin}/og-image.png`,
+      'og:image': logoUrl,
       'twitter:card': 'summary_large_image',
       'twitter:title': title,
       'twitter:description': description,
-      'twitter:image': opportunity.companies?.logo_url || `${window.location.origin}/og-image.png`
+      'twitter:image': logoUrl
     };
 
     Object.entries(metaTags).forEach(([name, content]) => {
@@ -220,14 +221,14 @@ const PublicOpportunity = () => {
               </Button>
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={opportunity.company?.logo_url} />
+                  <AvatarImage src={opportunity.companies?.logo_url} />
                   <AvatarFallback>
                     <Building2 className="h-6 w-6" />
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">{opportunity.title}</h1>
-                  <p className="text-gray-600">{opportunity.company?.name}</p>
+                  <p className="text-gray-600">{opportunity.companies?.name}</p>
                 </div>
               </div>
             </div>
@@ -359,27 +360,27 @@ const PublicOpportunity = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={opportunity.company?.logo_url} />
+                    <AvatarImage src={opportunity.companies?.logo_url} />
                     <AvatarFallback>
                       <Briefcase className="h-6 w-6" />
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h4 className="font-medium text-lg">{opportunity.company?.name}</h4>
-                    <p className="text-sm text-gray-600">{opportunity.company?.industry}</p>
+                    <h4 className="font-medium text-lg">{opportunity.companies?.name}</h4>
+                    <p className="text-sm text-gray-600">{opportunity.companies?.industry}</p>
                   </div>
                 </div>
 
-                {opportunity.company?.description && (
-                  <p className="text-sm text-gray-600">{opportunity.company.description}</p>
+                {opportunity.companies?.description && (
+                  <p className="text-sm text-gray-600">{opportunity.companies.description}</p>
                 )}
 
                 {/* Social Media Links */}
-                {opportunity.company?.social_links && (
+                {opportunity.companies?.social_links && (
                   <div className="flex items-center gap-3">
-                    {opportunity.company.social_links.linkedin && (
+                    {opportunity.companies.social_links.linkedin && (
                       <a 
-                        href={opportunity.company.social_links.linkedin} 
+                        href={opportunity.companies.social_links.linkedin} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-700 transition-colors"
@@ -388,9 +389,9 @@ const PublicOpportunity = () => {
                         <Linkedin className="h-5 w-5" />
                       </a>
                     )}
-                    {opportunity.company.social_links.instagram && (
+                    {opportunity.companies.social_links.instagram && (
                       <a 
-                        href={opportunity.company.social_links.instagram} 
+                        href={opportunity.companies.social_links.instagram} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-pink-600 hover:text-pink-700 transition-colors"
@@ -399,9 +400,9 @@ const PublicOpportunity = () => {
                         <Instagram className="h-5 w-5" />
                       </a>
                     )}
-                    {opportunity.company.social_links.youtube && (
+                    {opportunity.companies.social_links.youtube && (
                       <a 
-                        href={opportunity.company.social_links.youtube} 
+                        href={opportunity.companies.social_links.youtube} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-red-600 hover:text-red-700 transition-colors"
@@ -410,9 +411,9 @@ const PublicOpportunity = () => {
                         <Youtube className="h-5 w-5" />
                       </a>
                     )}
-                    {opportunity.company.social_links.twitter && (
+                    {opportunity.companies.social_links.twitter && (
                       <a 
-                        href={opportunity.company.social_links.twitter} 
+                        href={opportunity.companies.social_links.twitter} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-blue-400 hover:text-blue-500 transition-colors"
@@ -424,12 +425,12 @@ const PublicOpportunity = () => {
                   </div>
                 )}
                 
-                {opportunity.company?.website && (
+                {opportunity.companies?.website && (
                   <Button 
                     variant="outline" 
                     size="sm" 
                     className="w-full"
-                    onClick={() => window.open(opportunity.company.website, '_blank')}
+                    onClick={() => window.open(opportunity.companies.website, '_blank')}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Visitar Sitio Web
