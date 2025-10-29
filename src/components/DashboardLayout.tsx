@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const DashboardLayout = () => {
-  const { user, signOut, profile } = useSupabaseAuth();
+  const { user, signOut, profile, userRole } = useSupabaseAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
@@ -30,13 +30,17 @@ const DashboardLayout = () => {
     navigate('/');
   };
 
-  const navigationItems = [
+  const baseNavigationItems = [
     { to: "/business-dashboard", icon: Home, label: "Dashboard" },
     { to: "/business-dashboard/opportunities", icon: Briefcase, label: "Mis Oportunidades" },
     { to: "/business-dashboard/talent-discovery", icon: Search, label: "Buscar Talento" },
     { to: "/business-dashboard/marketplace", icon: Store, label: "Marketplace" },
-    { to: "/business-dashboard/academy", icon: GraduationCap, label: "Mi Academia" },
   ];
+
+  // Solo mostrar Mi Academia si el usuario tiene rol premium
+  const navigationItems = userRole === 'premium_business'
+    ? [...baseNavigationItems, { to: "/business-dashboard/academy", icon: GraduationCap, label: "Mi Academia" }]
+    : baseNavigationItems;
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
