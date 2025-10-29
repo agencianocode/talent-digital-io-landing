@@ -8,7 +8,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -451,12 +450,19 @@ export const CompanyProfileWizard: React.FC = () => {
             <CardContent className="space-y-6">
               {/* Logo Upload */}
               <div className="flex items-center gap-6">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={form.watch('logo_url')} alt="Logo de la empresa" />
-                  <AvatarFallback className="text-lg bg-primary/10">
-                    {company?.name?.charAt(0)?.toUpperCase() || <Building className="h-8 w-8" />}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="w-24 h-24 flex-shrink-0">
+                  {form.watch('logo_url') ? (
+                    <img 
+                      src={form.watch('logo_url')} 
+                      alt="Logo de la empresa"
+                      className="w-full h-full object-cover rounded-lg border-2 border-gray-200"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 rounded-lg border-2 border-gray-200 flex items-center justify-center">
+                      {company?.name?.charAt(0)?.toUpperCase() || <Building className="h-8 w-8 text-muted-foreground" />}
+                    </div>
+                  )}
+                </div>
                 <div>
                   <label htmlFor="logo-upload">
                     <Button type="button" variant="outline" asChild disabled={isLoading}>
