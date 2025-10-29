@@ -28,11 +28,13 @@ import {
   Wrench,
   Users as UsersIcon,
   DollarSign,
-  Heart
+  Heart,
+  Mail
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useOpportunityDashboard } from '@/hooks/useOpportunityDashboard';
+import { useOpportunityStats } from '@/hooks/useOpportunityStats';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -62,6 +64,10 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
   const [opportunityToClose, setOpportunityToClose] = useState<any>(null);
   // Usar applicationCounts del hook
   const applicationCounts = hookApplicationCounts;
+  
+  // Obtener estadísticas reales de postulaciones sin revisar y mensajes sin leer
+  const opportunityIds = opportunities.map(opp => opp.id);
+  const { unviewedApplications, unreadMessages } = useOpportunityStats(opportunityIds);
 
 
   const getCategoryIcon = (category: string | null | undefined) => {
@@ -362,6 +368,32 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                         <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span>{applicationCounts[opportunity.id] || 0} Postulantes</span>
                       </div>
+                      
+                      {/* Postulaciones sin revisar */}
+                      {(unviewedApplications[opportunity.id] || 0) > 0 && (
+                        <div className="flex items-center gap-1 text-orange-600">
+                          <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">{unviewedApplications[opportunity.id]} Postulaciones sin revisar</span>
+                          <span className="sm:hidden">{unviewedApplications[opportunity.id]} sin revisar</span>
+                        </div>
+                      )}
+                      
+                      {/* Mensajes sin leer */}
+                      {(unreadMessages[opportunity.id] || 0) > 0 && (
+                        <div 
+                          className="flex items-center gap-1 text-blue-600 cursor-pointer hover:text-blue-700 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('/business-dashboard/messages');
+                          }}
+                        >
+                          <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">
+                            {unreadMessages[opportunity.id]} Mensaje{(unreadMessages[opportunity.id] || 0) > 1 ? 's' : ''} sin leer
+                          </span>
+                          <span className="sm:hidden">{unreadMessages[opportunity.id]} sin leer</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Action Buttons - Mobile */}
