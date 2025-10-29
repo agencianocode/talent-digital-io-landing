@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,12 +15,8 @@ import {
   MessageCircle,
   Play,
   FileText,
-  Filter,
-  Users,
-  Award,
   CheckCircle,
   Clock,
-  TrendingUp,
   Github,
   Plus
 } from 'lucide-react';
@@ -85,7 +80,6 @@ const TalentDiscovery = () => {
   const [remoteFilter, setRemoteFilter] = useState<string>('all');
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
   const [stats, setStats] = useState<TalentStats>({
     total: 0,
     featured: 0,
@@ -329,7 +323,7 @@ const TalentDiscovery = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [searchTerm, categoryFilter, countryFilter, experienceFilter, availabilityFilter, remoteFilter, showFeaturedOnly, activeTab, allTalents]);
+  }, [searchTerm, categoryFilter, countryFilter, experienceFilter, availabilityFilter, remoteFilter, showFeaturedOnly, allTalents]);
 
   useEffect(() => {
     // Update URL params
@@ -359,15 +353,6 @@ const TalentDiscovery = () => {
           (talent.city && talent.city.toLowerCase().includes(searchLower)) ||
           (talent.country && talent.country.toLowerCase().includes(searchLower))
         );
-      }
-      
-      // Tab filter
-      if (activeTab === 'featured') {
-        filtered = filtered.filter(talent => talent.is_featured);
-      } else if (activeTab === 'verified') {
-        filtered = filtered.filter(talent => talent.is_verified);
-      } else if (activeTab === 'premium') {
-        filtered = filtered.filter(talent => talent.is_premium);
       }
       
       // Category filter (using title as category for now)
@@ -402,11 +387,22 @@ const TalentDiscovery = () => {
         filtered = filtered.filter(talent => talent.is_featured);
       }
       
-      // Sort by rating and featured status
+      // Sort: Premium > Certified > Featured > Others
       filtered.sort((a, b) => {
-        if (a.is_featured && !b.is_featured) return -1;
-        if (!a.is_featured && b.is_featured) return 1;
-        return (b.rating || 0) - (a.rating || 0);
+        const getPriority = (t: RealTalent) => {
+          if (t.is_premium) return 3;
+          if (t.is_verified) return 2; // verified can mean certified
+          if (t.is_featured) return 1;
+          return 0;
+        };
+        
+        const priorityA = getPriority(a);
+        const priorityB = getPriority(b);
+        
+        if (priorityA !== priorityB) return priorityB - priorityA;
+        
+        // If same priority, sort by profile completeness
+        return (b.profile_completeness || 0) - (a.profile_completeness || 0);
       });
       
       setFilteredTalents(filtered);
@@ -472,223 +468,135 @@ const TalentDiscovery = () => {
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-900">{stats.total}</div>
-              <div className="text-sm text-blue-600">Talentos Totales</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-purple-50 border-purple-200">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-900">{stats.featured}</div>
-              <div className="text-sm text-purple-600">Destacados</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-green-50 border-green-200">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-900">{stats.verified}</div>
-              <div className="text-sm text-green-600">Verificados</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-orange-50 border-orange-200">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-900">{stats.averageRating.toFixed(1)}</div>
-              <div className="text-sm text-orange-600">Rating Promedio</div>
-            </CardContent>
-          </Card>
+      {/* Search and Compact Filters in one row */}
+      <div className="flex flex-col gap-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            type="text"
+            placeholder="Buscar por nombre, título, skills o categoría..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Horizontal Filters */}
+        <div className="flex flex-wrap gap-3 items-center">
+          {/* Category Filter */}
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las categorías</SelectItem>
+              {stats.categories.map(category => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Country Filter */}
+          <Select value={countryFilter} onValueChange={setCountryFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="País" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los países</SelectItem>
+              {stats.countries.map(country => (
+                <SelectItem key={country} value={country}>
+                  {country}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Experience Filter */}
+          <Select value={experienceFilter} onValueChange={setExperienceFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Experiencia" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los niveles</SelectItem>
+              <SelectItem value="Principiante">Principiante</SelectItem>
+              <SelectItem value="Intermedio">Intermedio</SelectItem>
+              <SelectItem value="Avanzado">Avanzado</SelectItem>
+              <SelectItem value="Experto">Experto</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Availability Filter */}
+          <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Disponibilidad" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Cualquier disponibilidad</SelectItem>
+              <SelectItem value="Inmediata">Inmediata</SelectItem>
+              <SelectItem value="2 semanas">2 semanas</SelectItem>
+              <SelectItem value="1 mes">1 mes</SelectItem>
+              <SelectItem value="2-3 meses">2-3 meses</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Remote Preference Filter */}
+          <Select value={remoteFilter} onValueChange={setRemoteFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Modalidad" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Cualquier modalidad</SelectItem>
+              <SelectItem value="Solo remoto">Solo remoto</SelectItem>
+              <SelectItem value="Solo presencial">Solo presencial</SelectItem>
+              <SelectItem value="Híbrido">Híbrido</SelectItem>
+              <SelectItem value="Indiferente">Indiferente</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Clear Filters */}
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setSearchTerm('');
+              setCategoryFilter('all');
+              setCountryFilter('all');
+              setExperienceFilter('all');
+              setAvailabilityFilter('all');
+              setRemoteFilter('all');
+              setShowFeaturedOnly(false);
+            }}
+          >
+            Limpiar Filtros
+          </Button>
+        </div>
+
+        {/* Results count */}
+        <div className="text-sm text-muted-foreground">
+          {filteredTalents.length} talentos encontrados
+          {searchTerm && ` para "${searchTerm}"`}
         </div>
       </div>
 
-      {/* Search Bar */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-            <Input
-              placeholder="Buscar por nombre, título, skills o categoría..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 text-lg h-14"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 h-auto">
-          <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 py-2 sm:py-3 px-1 sm:px-3 text-xs sm:text-sm">
-            <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">Todos ({allTalents.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="featured" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 py-2 sm:py-3 px-1 sm:px-3 text-xs sm:text-sm">
-            <Award className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">Destacados ({stats.featured})</span>
-          </TabsTrigger>
-          <TabsTrigger value="verified" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 py-2 sm:py-3 px-1 sm:px-3 text-xs sm:text-sm">
-            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">Verificados ({stats.verified})</span>
-          </TabsTrigger>
-          <TabsTrigger value="premium" className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 py-2 sm:py-3 px-1 sm:px-3 text-xs sm:text-sm">
-            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-            <span className="whitespace-nowrap">Premium ({stats.premium})</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value={activeTab} className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Filters Sidebar */}
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filtros
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Category Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Categoría</label>
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas las categorías" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las categorías</SelectItem>
-                      {stats.categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Country Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">País</label>
-                  <Select value={countryFilter} onValueChange={setCountryFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos los países" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los países</SelectItem>
-                      {stats.countries.map(country => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Experience Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Nivel de Experiencia</label>
-                  <Select value={experienceFilter} onValueChange={setExperienceFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos los niveles" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los niveles</SelectItem>
-                      <SelectItem value="Principiante">Principiante</SelectItem>
-                      <SelectItem value="Intermedio">Intermedio</SelectItem>
-                      <SelectItem value="Avanzado">Avanzado</SelectItem>
-                      <SelectItem value="Experto">Experto</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Availability Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Disponibilidad</label>
-                  <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Cualquier disponibilidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Cualquier disponibilidad</SelectItem>
-                      <SelectItem value="Inmediata">Inmediata</SelectItem>
-                      <SelectItem value="2 semanas">2 semanas</SelectItem>
-                      <SelectItem value="1 mes">1 mes</SelectItem>
-                      <SelectItem value="2-3 meses">2-3 meses</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Remote Preference Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Modalidad</label>
-                  <Select value={remoteFilter} onValueChange={setRemoteFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Cualquier modalidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Cualquier modalidad</SelectItem>
-                      <SelectItem value="Solo remoto">Solo remoto</SelectItem>
-                      <SelectItem value="Solo presencial">Solo presencial</SelectItem>
-                      <SelectItem value="Híbrido">Híbrido</SelectItem>
-                      <SelectItem value="Indiferente">Indiferente</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Clear Filters */}
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setCategoryFilter('all');
-                    setCountryFilter('all');
-                    setExperienceFilter('all');
-                    setAvailabilityFilter('all');
-                    setRemoteFilter('all');
-                    setShowFeaturedOnly(false);
-                  }}
-                  className="w-full"
-                >
-                  Limpiar Filtros
-                </Button>
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-24 bg-gray-200 rounded"></div>
               </CardContent>
             </Card>
-
-            {/* Results */}
-            <div className="lg:col-span-3">
-              {/* Results Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {filteredTalents.length} talentos encontrados
-                  </h2>
-                  <p className="text-gray-600 text-sm">
-                    {searchTerm && `Resultados para "${searchTerm}"`}
-                  </p>
-                </div>
-              </div>
-
-              {/* Loading State */}
-              {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <Card key={i} className="animate-pulse">
-                      <CardContent className="p-6">
-                        <div className="h-24 bg-gray-200 rounded"></div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <>
-                  {/* Empty State */}
-                  {filteredTalents.length === 0 ? (
-                    <Card>
-                      <CardContent className="p-12 text-center">
-                        <div className="flex flex-col items-center gap-4">
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* Empty State */}
+          {filteredTalents.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <div className="flex flex-col items-center gap-4">
                           <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center">
                             <Search className="h-8 w-8 text-gray-400" />
                           </div>
@@ -746,19 +654,21 @@ const TalentDiscovery = () => {
                                   </div>
                                   
                                   <div className="flex items-center gap-1">
-                                    {talent.is_featured && (
-                                      <Badge className="bg-purple-100 text-purple-800 text-xs">
-                                        Destacado
-                                      </Badge>
-                                    )}
                                     {talent.is_premium && (
-                                      <Badge className="bg-orange-100 text-orange-800 text-xs">
+                                      <Badge className="bg-primary text-primary-foreground text-xs flex items-center gap-1">
+                                        <Plus className="h-3 w-3" />
                                         Premium
                                       </Badge>
                                     )}
-                        {!talent.is_complete && (
-                          <Badge className="bg-yellow-100 text-yellow-800 text-xs" title={`Completitud: ${talent.profile_completeness ?? 0}%`}>
-                            Perfil incompleto
+                                    {talent.is_verified && !talent.is_premium && (
+                                      <Badge className="bg-green-100 text-green-800 text-xs flex items-center gap-1">
+                                        <CheckCircle className="h-3 w-3" />
+                                        Certificado
+                                      </Badge>
+                                    )}
+                                    {!talent.is_complete && !talent.is_premium && !talent.is_verified && (
+                                      <Badge className="bg-yellow-100 text-yellow-800 text-xs" title={`Completitud: ${talent.profile_completeness ?? 0}%`}>
+                                        Perfil incompleto
                                       </Badge>
                                     )}
                                   </div>
@@ -847,9 +757,6 @@ const TalentDiscovery = () => {
                 </>
               )}
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
 
       {/* Contact Dialog */}
       <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
