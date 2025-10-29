@@ -71,7 +71,7 @@ export const useSupabaseOpportunities = () => {
       });
       
       if (isTalentRole(userRole)) {
-        // Para talentos: solo oportunidades activas (no cerradas)
+        // Para talentos: solo oportunidades activas con conteo de aplicaciones
         const { data, error } = await supabase
           .from('opportunities')
           .select(`
@@ -79,14 +79,23 @@ export const useSupabaseOpportunities = () => {
             companies (
               name,
               logo_url
-            )
+            ),
+            applications (count)
           `)
           .eq('status', 'active')
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        console.log('📊 Talent opportunities loaded:', data?.length || 0);
-        setOpportunities(data || []);
+        
+        // Transformar el conteo de aplicaciones
+        const opportunitiesWithCount = data?.map(opp => ({
+          ...opp,
+          applications_count: opp.applications?.[0]?.count || 0,
+          applications: undefined // Limpiar el objeto applications
+        })) || [];
+        
+        console.log('📊 Talent opportunities loaded:', opportunitiesWithCount.length);
+        setOpportunities(opportunitiesWithCount);
       } else {
         // Para empresas: todas las oportunidades de la empresa
         console.log('🏢 Business user detected, checking company...');

@@ -386,17 +386,21 @@ const TalentOpportunitiesSearch = () => {
                             </div>
                           )}
 
+                          {/* Nivel de experiencia */}
                           {(opportunity as any).experience_levels && (opportunity as any).experience_levels.length > 0 && (
                             <div className="flex items-center gap-1">
                               <Award className="h-4 w-4" />
-                              {(opportunity as any).experience_levels.join(', ')}
+                              {(opportunity as any).experience_levels[0]}
                             </div>
                           )}
 
+                          {/* Cantidad de postulaciones */}
                           {(opportunity as any).applications_count !== undefined && (
                             <div className="flex items-center gap-1 text-blue-600">
                               <Users className="h-4 w-4" />
-                              {(opportunity as any).applications_count} postulaciones
+                              <span className="font-medium">
+                                {(opportunity as any).applications_count} postulante{(opportunity as any).applications_count !== 1 ? 's' : ''}
+                              </span>
                             </div>
                           )}
 
