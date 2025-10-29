@@ -397,20 +397,34 @@ const MultiStepOpportunityForm = ({
         </Tooltip>
       )}
 
-      {/* Validation Message for Step 1 */}
-      {currentStep === 1 && !validateStep(1) && (
+      {/* Validation Message */}
+      {!validateStep(currentStep) && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
           <h4 className="text-sm font-medium text-amber-800 mb-2">
             Completa los siguientes campos obligatorios:
           </h4>
-          <ul className="text-sm text-amber-700 space-y-1">
-            {!formData.title && <li>• Título profesional</li>}
-            {!formData.description && <li>• Descripción del trabajo</li>}
-            {(!formData.skills || formData.skills.length === 0) && <li>• Al menos 1 habilidad</li>}
-            {(!formData.tools || formData.tools.length === 0) && <li>• Al menos 1 herramienta</li>}
-            {formData.contractorsCount <= 0 && <li>• Número de contratistas (mínimo 1)</li>}
-            {!formData.deadlineDate && <li>• Fecha límite de postulación</li>}
-          </ul>
+          {currentStep === 1 && (
+            <ul className="text-sm text-amber-700 space-y-1">
+              {!formData.category && <li>• Categoría</li>}
+              {!formData.title && <li>• Título profesional</li>}
+              {!formData.description && <li>• Descripción del trabajo</li>}
+              {!formData.contractType && <li>• Tipo de contrato</li>}
+              {!formData.locationType && <li>• Modalidad de trabajo</li>}
+              {(!formData.skills || formData.skills.length === 0) && <li>• Al menos 1 habilidad</li>}
+              {(!formData.experienceLevels || formData.experienceLevels.length === 0) && <li>• Al menos 1 nivel de experiencia</li>}
+              {formData.contractorsCount <= 0 && <li>• Número de contratistas (mínimo 1)</li>}
+              {!formData.deadlineDate && <li>• Fecha límite de postulación</li>}
+            </ul>
+          )}
+          {currentStep === 2 && (
+            <ul className="text-sm text-amber-700 space-y-1">
+              {formData.durationType === 'fixed' && formData.durationValue <= 0 && <li>• Duración del proyecto</li>}
+              {formData.paymentType !== 'commission' && !formData.paymentMethod && <li>• Método de pago</li>}
+              {formData.paymentMethod === 'hourly' && !formData.hourlyMinRate && <li>• Rango de tarifa por hora</li>}
+              {formData.paymentMethod === 'weekly' && !formData.weeklyMinBudget && <li>• Presupuesto semanal</li>}
+              {formData.paymentMethod === 'monthly' && !formData.monthlyMinBudget && <li>• Presupuesto mensual</li>}
+            </ul>
+          )}
         </div>
       )}
 
@@ -471,7 +485,7 @@ const MultiStepOpportunityForm = ({
         
         <Button
           onClick={handleNext}
-          disabled={!validateStep(currentStep) || isLoading}
+          disabled={isLoading}
           className="bg-blue-600 hover:bg-blue-700 px-6"
         >
           {isLoading 

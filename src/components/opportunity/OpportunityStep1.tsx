@@ -765,9 +765,6 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
       {/* Category Templates */}
       {data.category && (
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-900">
-            Plantillas disponibles
-          </Label>
           <OpportunityTemplates 
             category={data.category}
             onSelectTemplate={handleTemplateSelect}
