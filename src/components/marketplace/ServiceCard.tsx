@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,14 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   onRequestService
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const category = getCategoryById(service.category);
+
+  // Detect if user is in talent or business context
+  const isTalentContext = location.pathname.startsWith('/talent-dashboard');
+  const serviceDetailPath = isTalentContext 
+    ? `/talent-dashboard/marketplace/service/${service.id}`
+    : `/business-dashboard/marketplace/service/${service.id}`;
 
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('es-ES', {
@@ -49,7 +56,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   return (
     <Card 
       className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-      onClick={() => navigate(`/business-dashboard/marketplace/service/${service.id}`)}
+      onClick={() => navigate(serviceDetailPath)}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -160,7 +167,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/business-dashboard/marketplace/service/${service.id}`);
+              navigate(serviceDetailPath);
             }}
           >
             <ExternalLink className="h-4 w-4" />

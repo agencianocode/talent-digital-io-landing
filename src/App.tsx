@@ -197,6 +197,11 @@ function App() {
                               <TalentMarketplace />
                             </Suspense>
                           } />
+                          <Route path="marketplace/service/:id" element={
+                            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                              <ServiceDetail />
+                            </Suspense>
+                          } />
                           <Route path="my-services" element={
                             <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
                               <TalentMyServices />
