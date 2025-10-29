@@ -37,6 +37,8 @@ const SOCIAL_PLATFORMS = [
   { value: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/in/tu-perfil' },
   { value: 'github', label: 'GitHub', placeholder: 'https://github.com/tu-usuario' },
   { value: 'twitter', label: 'Twitter', placeholder: 'https://twitter.com/tu-usuario' },
+  { value: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/tu-perfil' },
+  { value: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/tu-usuario' },
   { value: 'behance', label: 'Behance', placeholder: 'https://behance.net/tu-perfil' },
   { value: 'dribbble', label: 'Dribbble', placeholder: 'https://dribbble.com/tu-perfil' }
 ];
