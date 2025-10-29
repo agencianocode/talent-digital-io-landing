@@ -123,39 +123,46 @@ const TalentEditProfile = () => {
     const validation = validateProfile(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
+      toast.error('Por favor corrige los errores en el formulario');
       return;
     }
 
     setLoading(true);
     try {
-      // Update profile
+      // Update profile first
       const success = await updateProfile(formData as ProfileEditData);
       
-      // Update social links
-      if (success) {
-        // Delete old links and add new ones
-        for (const platform in socialUrls) {
-          const url = socialUrls[platform];
-          const existingLink = socialLinks.find(l => l.platform === platform);
-          
-          if (url && url.trim()) {
-            if (existingLink) {
-              // Update is not available, so delete and re-add
-              await deleteSocialLink(existingLink.id);
-            }
-            await addSocialLink({
-              platform: platform as any,
-              url: url.trim()
-            });
-          } else if (existingLink) {
-            // Remove if now empty
+      if (!success) {
+        toast.error('Error al actualizar el perfil');
+        return;
+      }
+      
+      // Update social links after profile update
+      for (const platform in socialUrls) {
+        const url = socialUrls[platform];
+        const existingLink = socialLinks.find(l => l.platform === platform);
+        
+        if (url && url.trim()) {
+          if (existingLink) {
+            // Delete and re-add to update
             await deleteSocialLink(existingLink.id);
           }
+          await addSocialLink({
+            platform: platform as any,
+            url: url.trim()
+          });
+        } else if (existingLink) {
+          // Remove if now empty
+          await deleteSocialLink(existingLink.id);
         }
-        
-        toast.success('Perfil actualizado correctamente');
-        navigate('/talent-dashboard/profile');
       }
+      
+      toast.success('Perfil actualizado correctamente');
+      
+      // Small delay to ensure data is saved
+      setTimeout(() => {
+        navigate('/talent-dashboard/profile');
+      }, 500);
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Error al actualizar el perfil');

@@ -37,6 +37,7 @@ import { usePortfolio } from "@/hooks/usePortfolio";
 import { useExperience } from "@/hooks/useExperience";
 import { useEducation } from "@/hooks/useEducation";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
+import { useProfileMetrics } from "@/hooks/useProfileMetrics";
 
 const TalentMyProfile = () => {
   const navigate = useNavigate();
@@ -48,6 +49,7 @@ const TalentMyProfile = () => {
   const { experiences } = useExperience();
   const { education } = useEducation();
   const { socialLinks } = useSocialLinks();
+  const { views, savedCount } = useProfileMetrics();
   
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isImprovementModalOpen, setIsImprovementModalOpen] = useState(false);
@@ -473,14 +475,14 @@ const TalentMyProfile = () => {
                       <Eye className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">Vistas del perfil</span>
                     </div>
-                    <span className="font-semibold">0</span>
+                    <span className="font-semibold">{views}</span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Heart className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">Guardados en favoritos</span>
                     </div>
-                    <span className="font-semibold">0</span>
+                    <span className="font-semibold">{savedCount}</span>
                   </div>
                 </div>
               </CardContent>

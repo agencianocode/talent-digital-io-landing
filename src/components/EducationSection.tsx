@@ -8,7 +8,8 @@ import {
   Trash2, 
   GraduationCap, 
   MoreVertical,
-  Clock
+  Clock,
+  Award
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -18,10 +19,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { EducationModal } from './EducationModal';
 import { useEducation } from '@/hooks/useEducation';
+import { useAcademyInvitation } from '@/hooks/useAcademyInvitation';
 import { toast } from 'sonner';
 
 export const EducationSection: React.FC = () => {
   const { education, deleteEducation } = useEducation();
+  const { isAcademyStudent, academyName } = useAcademyInvitation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEducation, setEditingEducation] = useState<string | undefined>();
   const [showAllEducation, setShowAllEducation] = useState(false);
@@ -124,6 +127,12 @@ export const EducationSection: React.FC = () => {
                         <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-green-100 text-green-700 border-green-200">
                           <Clock className="h-3 w-3 mr-1" />
                           Actual
+                        </Badge>
+                      )}
+                      {isAcademyStudent && academyName && edu.institution.toLowerCase().includes(academyName.toLowerCase()) && (
+                        <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 border-blue-200">
+                          <Award className="h-3 w-3 mr-1" />
+                          Academia Verificada
                         </Badge>
                       )}
                     </div>

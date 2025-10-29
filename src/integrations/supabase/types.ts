@@ -194,12 +194,14 @@ export type Database = {
           created_at: string
           id: string
           internal_rating: number | null
+          is_viewed: boolean | null
           opportunity_id: string
           resume_url: string | null
           status: string
           updated_at: string
           user_id: string
           viewed_at: string | null
+          viewed_by: string | null
         }
         Insert: {
           contact_status?: string | null
@@ -208,12 +210,14 @@ export type Database = {
           created_at?: string
           id?: string
           internal_rating?: number | null
+          is_viewed?: boolean | null
           opportunity_id: string
           resume_url?: string | null
           status?: string
           updated_at?: string
           user_id: string
           viewed_at?: string | null
+          viewed_by?: string | null
         }
         Update: {
           contact_status?: string | null
@@ -222,12 +226,14 @@ export type Database = {
           created_at?: string
           id?: string
           internal_rating?: number | null
+          is_viewed?: boolean | null
           opportunity_id?: string
           resume_url?: string | null
           status?: string
           updated_at?: string
           user_id?: string
           viewed_at?: string | null
+          viewed_by?: string | null
         }
         Relationships: [
           {
@@ -1240,6 +1246,30 @@ export type Database = {
           },
         ]
       }
+      profile_views: {
+        Row: {
+          created_at: string
+          id: string
+          profile_user_id: string
+          viewed_at: string
+          viewer_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_user_id: string
+          viewed_at?: string
+          viewer_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_user_id?: string
+          viewed_at?: string
+          viewer_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1378,6 +1408,27 @@ export type Database = {
           id?: string
           opportunity_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      saved_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          profile_user_id: string
+          saved_by_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_user_id: string
+          saved_by_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_user_id?: string
+          saved_by_user_id?: string
         }
         Relationships: []
       }
