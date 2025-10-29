@@ -190,9 +190,6 @@ export const useProfileData = () => {
           city: data.city,
           phone: data.phone,
           video_presentation_url: data.video_presentation_url,
-          hourly_rate_min: data.hourly_rate_min,
-          hourly_rate_max: data.hourly_rate_max,
-          currency: data.currency,
           availability: data.availability,
           updated_at: new Date().toISOString()
         }
@@ -209,7 +206,6 @@ export const useProfileData = () => {
           phone: data.phone,
           city: data.city,
           country: data.country,
-          video_presentation_url: data.video_presentation_url,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id'
@@ -230,9 +226,6 @@ export const useProfileData = () => {
           country: data.country,
           city: data.city,
           video_presentation_url: data.video_presentation_url,
-          hourly_rate_min: data.hourly_rate_min,
-          hourly_rate_max: data.hourly_rate_max,
-          currency: data.currency,
           availability: data.availability,
           updated_at: new Date().toISOString()
         }, {
@@ -243,6 +236,10 @@ export const useProfileData = () => {
 
       // Refresh profile data
       await fetchProfile();
+      
+      // Dispatch event for other components
+      window.dispatchEvent(new CustomEvent('profileUpdated'));
+      
       toast.success('Perfil actualizado correctamente');
       return true;
     } catch (err: any) {

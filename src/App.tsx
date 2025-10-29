@@ -24,6 +24,7 @@ import TalentDashboardLayout from '@/components/TalentDashboardLayout';
 // Importar componentes directamente para evitar problemas de lazy loading
 import TalentDashboard from './pages/TalentDashboard';
 import TalentMyProfile from './pages/TalentMyProfile';
+import TalentEditProfile from './pages/TalentEditProfile';
 import BusinessDashboard from './pages/BusinessDashboard';
 import BusinessTalentProfile from './pages/BusinessTalentProfile';
 import TalentOnboarding from './pages/TalentOnboarding';
@@ -172,6 +173,7 @@ function App() {
                           <Route index element={<TalentDashboard />} />
                           <Route path="home" element={<TalentDashboard />} />
                           <Route path="profile" element={<TalentMyProfile />} />
+                          <Route path="profile/edit" element={<TalentEditProfile />} />
                           <Route path="explore" element={
                             <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
                               <TalentMarketplace />

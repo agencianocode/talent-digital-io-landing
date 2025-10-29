@@ -16,15 +16,16 @@ import {
   DollarSign,
   Clock,
   Eye,
-  Users,
   Briefcase,
   GraduationCap,
   FolderOpen,
   Link as LinkIcon,
   CheckCircle2
 } from "lucide-react";
-import { EditProfileModal } from "@/components/EditProfileModal";
 import { ShareProfileModal } from "@/components/ShareProfileModal";
+import { ProfileImprovementModal } from "@/components/ProfileImprovementModal";
+import { useNavigate } from 'react-router-dom';
+import { Lightbulb, Heart } from 'lucide-react';
 import VideoThumbnail from "@/components/VideoThumbnail";
 import { PortfolioSection } from "@/components/PortfolioSection";
 import { ExperienceSection } from "@/components/ExperienceSection";
@@ -38,6 +39,7 @@ import { useEducation } from "@/hooks/useEducation";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 
 const TalentMyProfile = () => {
+  const navigate = useNavigate();
   const { user } = useSupabaseAuth();
   const { profile, userProfile, getProfileCompleteness } = useProfileData();
   const { generatePublicUrl, copyToClipboard } = useProfileSharing();
@@ -47,8 +49,8 @@ const TalentMyProfile = () => {
   const { education } = useEducation();
   const { socialLinks } = useSocialLinks();
   
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isImprovementModalOpen, setIsImprovementModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -140,7 +142,7 @@ const TalentMyProfile = () => {
             </Button>
             
             <Button 
-              onClick={() => setIsEditModalOpen(true)}
+              onClick={() => navigate('/talent-dashboard/profile/edit')}
               size="lg"
               className="gap-2"
             >
@@ -232,6 +234,60 @@ const TalentMyProfile = () => {
               </CardContent>
             </Card>
 
+            {/* Video de Presentación - Arriba */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Video className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Video de Presentación</h3>
+                    <Badge variant="outline" className="text-xs">Recomendado</Badge>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => navigate('/talent-dashboard/profile/edit')}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
+                </div>
+                
+                {videoUrl ? (
+                  <div className="w-full h-48 bg-muted rounded-lg relative group overflow-hidden">
+                    <VideoThumbnail url={videoUrl} />
+                    
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button onClick={() => window.open(videoUrl, '_blank')} size="lg" className="gap-2 bg-white text-black hover:bg-gray-100">
+                        <Video className="h-5 w-5" />
+                        Reproducir Video
+                      </Button>
+                    </div>
+                    
+                    <div className="absolute top-2 right-2">
+                      <Badge variant="secondary" className="text-xs bg-black/70 text-white">
+                        {videoUrl.includes('loom.com') ? 'Loom' : 
+                         videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') ? 'YouTube' :
+                         videoUrl.includes('vimeo.com') ? 'Vimeo' : 'Video'}
+                      </Badge>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-48 border-2 border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center gap-3 hover:border-primary/30 hover:bg-muted/50 transition-all">
+                    <div className="p-3 bg-primary/10 rounded-full">
+                      <Video className="h-8 w-8 text-primary" />
+                    </div>
+                    <div className="text-center px-4">
+                      <h4 className="font-semibold text-foreground mb-1">Destaca con un video</h4>
+                      <p className="text-sm text-muted-foreground mb-3 max-w-xs">
+                        Un video de menos de 2 minutos puede aumentar tus chances de ser contratado hasta 3x.
+                      </p>
+                      <Button size="sm" variant="outline" onClick={() => navigate('/talent-dashboard/profile/edit')}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Agregar Video
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Grid de contenido 2x2 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
@@ -299,63 +355,6 @@ const TalentMyProfile = () => {
                 </CardContent>
               </Card>
             </div>
-
-            {/* Video de Presentación - Compacto */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Video className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-semibold">Video de Presentación</h3>
-                    <Badge variant="outline" className="text-xs">Recomendado</Badge>
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => setIsEditModalOpen(true)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Editar
-                  </Button>
-                </div>
-                
-                {videoUrl ? (
-                  <div className="w-full h-48 bg-muted rounded-lg relative group overflow-hidden">
-                    {/* Video thumbnail */}
-                    <VideoThumbnail url={videoUrl} />
-                    
-                    {/* Hover overlay with play button */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button onClick={() => window.open(videoUrl, '_blank')} size="lg" className="gap-2 bg-white text-black hover:bg-gray-100">
-                        <Video className="h-5 w-5" />
-                        Reproducir Video
-                      </Button>
-                    </div>
-                    
-                    {/* Platform badge */}
-                    <div className="absolute top-2 right-2">
-                      <Badge variant="secondary" className="text-xs bg-black/70 text-white">
-                        {videoUrl.includes('loom.com') ? 'Loom' : 
-                         videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') ? 'YouTube' :
-                         videoUrl.includes('vimeo.com') ? 'Vimeo' : 'Video'}
-                      </Badge>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-48 border-2 border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center gap-3 hover:border-primary/30 hover:bg-muted/50 transition-all">
-                    <div className="p-3 bg-primary/10 rounded-full">
-                      <Video className="h-8 w-8 text-primary" />
-                    </div>
-                    <div className="text-center">
-                      <h4 className="font-semibold text-foreground mb-1">Destaca con un video</h4>
-                      <p className="text-sm text-muted-foreground mb-3 max-w-xs">
-                        Un video personal ayuda a conectar mejor con los clientes
-                      </p>
-                      <Button size="sm" variant="outline" onClick={() => setIsEditModalOpen(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Agregar Video
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </div>
 
           {/* Sidebar */}
@@ -398,25 +397,6 @@ const TalentMyProfile = () => {
                   </div>
                 </div>
 
-                {/* Mini métricas */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="text-center p-3 bg-primary/5 rounded-lg">
-                    <div className="text-2xl font-bold text-primary">{portfolios.length}</div>
-                    <div className="text-xs text-muted-foreground">Portfolios</div>
-                  </div>
-                  <div className="text-center p-3 bg-primary/5 rounded-lg">
-                    <div className="text-2xl font-bold text-primary">{experiences.length}</div>
-                    <div className="text-xs text-muted-foreground">Experiencias</div>
-                  </div>
-                  <div className="text-center p-3 bg-primary/5 rounded-lg">
-                    <div className="text-2xl font-bold text-primary">{education.length}</div>
-                    <div className="text-xs text-muted-foreground">Educación</div>
-                  </div>
-                  <div className="text-center p-3 bg-primary/5 rounded-lg">
-                    <div className="text-2xl font-bold text-primary">{socialLinks.length}</div>
-                    <div className="text-xs text-muted-foreground">Redes</div>
-                  </div>
-                </div>
 
                 {/* Próximos pasos */}
                 <div className="space-y-2">
@@ -460,6 +440,29 @@ const TalentMyProfile = () => {
               </CardContent>
             </Card>
 
+            {/* Cómo mejorar mi perfil */}
+            <Card className="border-primary/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Lightbulb className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">¿Cómo mejorar mi perfil?</h3>
+                </div>
+                
+                <p className="text-sm text-muted-foreground mb-3">
+                  Aprende tips y mejores prácticas para destacar ante los reclutadores.
+                </p>
+                
+                <Button 
+                  onClick={() => setIsImprovementModalOpen(true)} 
+                  className="w-full gap-2"
+                  variant="outline"
+                >
+                  <Lightbulb className="h-4 w-4" />
+                  Ver Tips
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Impacto */}
             <Card>
               <CardContent className="p-4">
@@ -470,14 +473,14 @@ const TalentMyProfile = () => {
                       <Eye className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">Vistas del perfil</span>
                     </div>
-                    <span className="font-semibold">-</span>
+                    <span className="font-semibold">0</span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Contactos</span>
+                      <Heart className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Guardados en favoritos</span>
                     </div>
-                    <span className="font-semibold">-</span>
+                    <span className="font-semibold">0</span>
                   </div>
                 </div>
               </CardContent>
@@ -486,14 +489,14 @@ const TalentMyProfile = () => {
         </div>
       </main>
 
-      <EditProfileModal 
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-      />
-      
       <ShareProfileModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
+      />
+      
+      <ProfileImprovementModal
+        isOpen={isImprovementModalOpen}
+        onClose={() => setIsImprovementModalOpen(false)}
       />
     </div>
   );
