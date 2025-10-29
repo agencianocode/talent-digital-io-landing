@@ -50,19 +50,10 @@ Deno.serve(async (req) => {
     const description = company.description?.substring(0, 160) || 'Conoce más sobre esta empresa';
     const appUrl = `https://app.talentodigital.io/company/${companyId}`;
 
-    // Check if the request is from a bot/crawler (for social media previews)
-    const userAgent = req.headers.get('user-agent')?.toLowerCase() || '';
-    const isBot = userAgent.includes('facebookexternalhit') || 
-                  userAgent.includes('twitterbot') || 
-                  userAgent.includes('linkedinbot') || 
-                  userAgent.includes('whatsapp') ||
-                  userAgent.includes('telegrambot') ||
-                  userAgent.includes('slackbot') ||
-                  userAgent.includes('bot');
-
-    // If it's a bot, return HTML with meta tags for preview
-    if (isBot) {
-      const html = `<!DOCTYPE html>
+    // Always return HTML with meta tags and an immediate redirect. This ensures:
+    // - Bots get proper Open Graph/Twitter metadata for rich previews
+    // - Users get redirected reliably even in environments that block 302s
+    const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -75,7 +66,7 @@ Deno.serve(async (req) => {
   <meta property="og:url" content="${appUrl}">
   <meta property="og:title" content="${companyName}">
   <meta property="og:description" content="${description}">
-  ${companyLogo ? `<meta property="og:image" content="${companyLogo}">` : ''}
+  ${companyLogo ? `<meta property=\"og:image\" content=\"${companyLogo}\">` : ''}
   <meta property="og:site_name" content="TalentoDigital">
   
   <!-- Twitter -->
@@ -83,36 +74,34 @@ Deno.serve(async (req) => {
   <meta name="twitter:url" content="${appUrl}">
   <meta name="twitter:title" content="${companyName}">
   <meta name="twitter:description" content="${description}">
-  ${companyLogo ? `<meta name="twitter:image" content="${companyLogo}">` : ''}
+  ${companyLogo ? `<meta name=\"twitter:image\" content=\"${companyLogo}\">` : ''}
+  
+  <!-- Redirect to SPA -->
+  <meta http-equiv="refresh" content="0;url=${appUrl}">
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #0f172a; color: #e2e8f0; }
+    .card { text-align: center; padding: 2rem; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; backdrop-filter: blur(6px); }
+    a { color: #60a5fa; text-decoration: none; font-weight: 600; }
+  </style>
 </head>
 <body>
-  <h1>${companyName}</h1>
-  <p>${description}</p>
-  <p>Ubicación: ${company.location || 'No especificada'}</p>
-  <p>Empleados: ${company.employee_count_range || 'No especificado'}</p>
+  <div class="card">
+    <h1>${companyName}</h1>
+    <p>${description}</p>
+    <p><a href="${appUrl}">Ir al perfil público</a></p>
+  </div>
+  <script>window.location.replace(${JSON.stringify(appUrl)});</script>
 </body>
 </html>`;
 
-      return new Response(html, {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600',
-        },
-      });
-    }
-
-    // If it's a regular browser, redirect to the SPA
-    return new Response(null, {
-      status: 302,
+    return new Response(html, {
+      status: 200,
       headers: {
         ...corsHeaders,
-        'Location': appUrl,
-        'Cache-Control': 'no-cache',
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
       },
     });
-
   } catch (error) {
     console.error('Error in company-share function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
