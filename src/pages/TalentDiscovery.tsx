@@ -577,7 +577,11 @@ const TalentDiscovery = () => {
                     /* Talent Cards */
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filteredTalents.map((talent) => (
-                        <Card key={talent.id} className="hover:shadow-lg transition-shadow cursor-pointer group">
+                        <Card 
+                          key={talent.id} 
+                          className="hover:shadow-lg transition-shadow cursor-pointer group"
+                          onClick={() => handleViewProfile(talent.user_id)}
+                        >
                           <CardContent className="p-6">
                             {/* Header */}
                             <div className="flex items-start gap-4 mb-4">
