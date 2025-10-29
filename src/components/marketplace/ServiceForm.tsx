@@ -291,7 +291,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                     <SelectContent>
                       {SERVICE_CATEGORIES.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
-                          {category.icon} {category.name}
+                          {category.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -508,8 +508,8 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
               <CardContent>
                 <div className="border rounded-lg p-4 bg-muted/50">
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className={selectedCategory.color}>
-                      {selectedCategory.icon} {selectedCategory.name}
+                    <Badge variant="secondary">
+                      {selectedCategory.name}
                     </Badge>
                     <Badge variant="outline">{formData.delivery_time}</Badge>
                   </div>

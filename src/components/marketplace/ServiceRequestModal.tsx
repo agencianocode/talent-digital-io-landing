@@ -210,8 +210,8 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 {category && (
-                  <Badge className={category.color}>
-                    {category.icon} {category.name}
+                  <Badge variant="secondary">
+                    {category.name}
                   </Badge>
                 )}
                 <Badge variant="outline" className="text-xs">

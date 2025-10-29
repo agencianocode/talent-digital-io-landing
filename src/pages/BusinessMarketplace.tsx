@@ -8,10 +8,7 @@ import {
   List,
   ChevronLeft,
   ChevronRight,
-  Package,
-  Users,
-  Star,
-  TrendingUp
+  Package
 } from 'lucide-react';
 import { useMarketplaceServices } from '@/hooks/useMarketplaceServices';
 import ServiceCard from '@/components/marketplace/ServiceCard';
@@ -61,16 +58,9 @@ const BusinessMarketplace: React.FC = () => {
     });
   };
 
+  // Remove unused stats variable
   const handlePublishService = () => {
     setIsPublishModalOpen(true);
-  };
-
-  // Mock stats for the header
-  const stats = {
-    totalServices: allServices.length,
-    activeProviders: new Set(allServices.map(s => s.user_id)).size,
-    averageRating: 4.7,
-    totalRequests: allServices.reduce((sum, s) => sum + s.requests_count, 0)
   };
 
   if (error) {
@@ -96,7 +86,7 @@ const BusinessMarketplace: React.FC = () => {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">Marketplace de Servicios</h1>
             <p className="text-muted-foreground">
@@ -107,62 +97,6 @@ const BusinessMarketplace: React.FC = () => {
             <Plus className="h-4 w-4" />
             Publicar Servicio
           </Button>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Servicios</p>
-                  <p className="text-2xl font-bold">{stats.totalServices}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Users className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Proveedores</p>
-                  <p className="text-2xl font-bold">{stats.activeProviders}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Star className="h-5 w-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Rating Promedio</p>
-                  <p className="text-2xl font-bold">{stats.averageRating}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Solicitudes</p>
-                  <p className="text-2xl font-bold">{stats.totalRequests}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
 

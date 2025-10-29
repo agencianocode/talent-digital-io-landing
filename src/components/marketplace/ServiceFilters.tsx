@@ -110,7 +110,7 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
                 <SelectItem value="all">Todas las categorías</SelectItem>
                 {SERVICE_CATEGORIES.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
-                    {category.icon} {category.name}
+                    {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>

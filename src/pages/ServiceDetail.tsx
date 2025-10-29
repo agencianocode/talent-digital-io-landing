@@ -211,8 +211,8 @@ const ServiceDetail: React.FC = () => {
             <CardHeader>
               <div className="flex items-center gap-2 mb-3">
                 {category && (
-                  <Badge className={category.color}>
-                    {category.icon} {category.name}
+                  <Badge variant="secondary">
+                    {category.name}
                   </Badge>
                 )}
                 <Badge variant="outline" className="text-xs">

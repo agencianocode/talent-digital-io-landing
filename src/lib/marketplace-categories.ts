@@ -1,103 +1,27 @@
 export interface ServiceCategory {
   id: string;
   name: string;
-  description: string;
-  icon: string;
-  color: string;
+  description?: string;
 }
 
+// Using the same categories as opportunities for consistency
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
-  {
-    id: 'diseno-grafico',
-    name: 'Diseño Gráfico',
-    description: 'Logos, branding, material gráfico',
-    icon: '🎨',
-    color: 'bg-purple-100 text-purple-800'
-  },
-  {
-    id: 'desarrollo-web',
-    name: 'Desarrollo Web',
-    description: 'Sitios web, aplicaciones, e-commerce',
-    icon: '💻',
-    color: 'bg-blue-100 text-blue-800'
-  },
-  {
-    id: 'marketing-digital',
-    name: 'Marketing Digital',
-    description: 'Redes sociales, SEO, publicidad',
-    icon: '📱',
-    color: 'bg-green-100 text-green-800'
-  },
-  {
-    id: 'contenido',
-    name: 'Contenido',
-    description: 'Copywriting, blogs, videos',
-    icon: '✍️',
-    color: 'bg-yellow-100 text-yellow-800'
-  },
-  {
-    id: 'consultoria',
-    name: 'Consultoría',
-    description: 'Estrategia, procesos, optimización',
-    icon: '💡',
-    color: 'bg-orange-100 text-orange-800'
-  },
-  {
-    id: 'traduccion',
-    name: 'Traducción',
-    description: 'Idiomas, localización, interpretación',
-    icon: '🌍',
-    color: 'bg-indigo-100 text-indigo-800'
-  },
-  {
-    id: 'fotografia',
-    name: 'Fotografía',
-    description: 'Productos, eventos, retratos',
-    icon: '📸',
-    color: 'bg-pink-100 text-pink-800'
-  },
-  {
-    id: 'video',
-    name: 'Video',
-    description: 'Edición, animación, motion graphics',
-    icon: '🎬',
-    color: 'bg-red-100 text-red-800'
-  },
-  {
-    id: 'audio',
-    name: 'Audio',
-    description: 'Podcasts, música, sonido',
-    icon: '🎵',
-    color: 'bg-teal-100 text-teal-800'
-  },
-  {
-    id: 'ventas',
-    name: 'Ventas',
-    description: 'Closers, telemarketing, CRM',
-    icon: '💰',
-    color: 'bg-emerald-100 text-emerald-800'
-  },
-  {
-    id: 'soporte',
-    name: 'Soporte Técnico',
-    description: 'Help desk, mantenimiento, soporte',
-    icon: '🔧',
-    color: 'bg-gray-100 text-gray-800'
-  },
-  {
-    id: 'otros',
-    name: 'Otros',
-    description: 'Servicios diversos y especializados',
-    icon: '🔮',
-    color: 'bg-slate-100 text-slate-800'
-  }
+  { id: 'ventas', name: 'Ventas', description: 'Closers, telemarketing, CRM' },
+  { id: 'marketing', name: 'Marketing', description: 'Digital, redes sociales, SEO, publicidad' },
+  { id: 'creativo', name: 'Creativo', description: 'Diseño, contenido, video, audio' },
+  { id: 'atencion-cliente', name: 'Atención al Cliente', description: 'Soporte, help desk, servicio' },
+  { id: 'desarrollo', name: 'Desarrollo', description: 'Web, apps, software' },
+  { id: 'datos', name: 'Datos y Análisis', description: 'Análisis, BI, data science' },
+  { id: 'diseno', name: 'Diseño', description: 'Gráfico, UX/UI, branding' },
+  { id: 'contenido', name: 'Contenido', description: 'Copywriting, blogs, redes' },
+  { id: 'traduccion', name: 'Traducción', description: 'Idiomas, localización' },
+  { id: 'consultoria', name: 'Consultoría', description: 'Estrategia, procesos, optimización' },
+  { id: 'video-fotografia', name: 'Video y Fotografía', description: 'Producción, edición, fotografía' },
+  { id: 'audio', name: 'Audio', description: 'Podcasts, música, sonido' },
+  { id: 'soporte-tecnico', name: 'Soporte Técnico', description: 'IT, mantenimiento, infraestructura' },
+  { id: 'otros', name: 'Otros', description: 'Servicios diversos y especializados' }
 ];
 
 export const getCategoryById = (id: string): ServiceCategory | undefined => {
   return SERVICE_CATEGORIES.find(category => category.id === id);
-};
-
-export const getCategoryColor = (id: string): string => {
-  const category = getCategoryById(id);
-  return category?.color || 'bg-gray-100 text-gray-800';
 };
