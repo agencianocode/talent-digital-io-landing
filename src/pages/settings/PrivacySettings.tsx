@@ -15,8 +15,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 const privacySchema = z.object({
   profile_visibility: z.enum(['public', 'companies_only', 'private']),
   location_visibility: z.enum(['full', 'city_only', 'hidden']),
-  contact_visibility: z.enum(['public', 'companies_only', 'hidden']),
-  hide_exact_location: z.boolean(),
+  who_can_contact: z.enum(['verified_companies', 'verified_talent', 'verified_both', 'anyone']),
   allow_direct_messages: z.boolean(),
   show_online_status: z.boolean(),
   profile_searchable: z.boolean(),
@@ -31,10 +30,9 @@ const PrivacySettings = () => {
   const form = useForm<PrivacyFormData>({
     resolver: zodResolver(privacySchema),
     defaultValues: {
-      profile_visibility: 'companies_only',
+      profile_visibility: 'public',
       location_visibility: 'city_only',
-      contact_visibility: 'companies_only',
-      hide_exact_location: true,
+      who_can_contact: 'anyone',
       allow_direct_messages: true,
       show_online_status: false,
       profile_searchable: true,
@@ -197,27 +195,6 @@ const PrivacySettings = () => {
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="hide_exact_location"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Ocultar ubicación exacta</FormLabel>
-                      <FormDescription>
-                        No mostrar tu dirección específica, solo la ciudad
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
             </CardContent>
           </Card>
 
@@ -232,24 +209,25 @@ const PrivacySettings = () => {
             <CardContent className="space-y-6">
               <FormField
                 control={form.control}
-                name="contact_visibility"
+                name="who_can_contact"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Visibilidad de contacto</FormLabel>
+                    <FormLabel>¿Quién puede contactarte?</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="¿Quién puede ver tu información de contacto?" />
+                          <SelectValue placeholder="Selecciona quién puede contactarte" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="public">Público - Todos pueden ver mi contacto</SelectItem>
-                        <SelectItem value="companies_only">Solo Empresas - Solo empresas verificadas</SelectItem>
-                        <SelectItem value="hidden">Oculto - Solo disponible tras contacto inicial</SelectItem>
+                        <SelectItem value="verified_companies">Solo empresas verificadas</SelectItem>
+                        <SelectItem value="verified_talent">Solo talento verificado</SelectItem>
+                        <SelectItem value="verified_both">Empresas y talento verificados</SelectItem>
+                        <SelectItem value="anyone">Cualquier persona</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      Controla quién puede ver tu email y teléfono
+                      Controla quién puede enviarte mensajes y ver tu información de contacto
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

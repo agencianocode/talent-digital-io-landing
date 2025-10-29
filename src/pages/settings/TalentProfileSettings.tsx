@@ -2,10 +2,9 @@ import { startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, Bell, Target } from 'lucide-react';
+import { ArrowLeft, Shield, Bell } from 'lucide-react';
 import PrivacySettings from './PrivacySettings';
 import UserNotificationSettings from '@/components/UserNotificationSettings';
-import ProfessionalPreferences from './ProfessionalPreferences';
 
 const TalentProfileSettings = () => {
   const navigate = useNavigate();
@@ -28,7 +27,7 @@ const TalentProfileSettings = () => {
       </div>
 
       <Tabs defaultValue="privacy" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="privacy" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Privacidad
@@ -36,10 +35,6 @@ const TalentProfileSettings = () => {
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             Notificaciones
-          </TabsTrigger>
-          <TabsTrigger value="preferences" className="flex items-center gap-2">
-            <Target className="h-4 w-4" />
-            Preferencias
           </TabsTrigger>
         </TabsList>
 
@@ -49,10 +44,6 @@ const TalentProfileSettings = () => {
 
         <TabsContent value="notifications" className="mt-6">
           <UserNotificationSettings userType="talent" />
-        </TabsContent>
-
-        <TabsContent value="preferences" className="mt-6">
-          <ProfessionalPreferences />
         </TabsContent>
       </Tabs>
     </div>;

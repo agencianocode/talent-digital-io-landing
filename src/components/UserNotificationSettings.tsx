@@ -10,8 +10,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Bell, 
   Mail, 
-  MessageSquare, 
-  Smartphone,
+  MessageSquare,
   Save,
   RefreshCw,
   CheckCircle,
@@ -98,6 +97,15 @@ const talentNotifications: NotificationType[] = [
     description: 'Notificaciones cuando alguien consulte por tus servicios.',
     enabled: true,
     email: true,
+    sms: false,
+    push: true,
+  },
+  {
+    id: 'marketplace_views',
+    name: 'Vistas en mis publicaciones de marketplace',
+    description: 'Recibe notificaciones cuando alguien vea tus servicios en el marketplace.',
+    enabled: true,
+    email: false,
     sms: false,
     push: true,
   },
@@ -340,7 +348,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
             <CardContent>
               <div className="border rounded-lg overflow-hidden">
                 {/* Table Header */}
-                <div className="grid grid-cols-[40px,1fr,120px,120px,140px] gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
+                <div className="grid grid-cols-[40px,1fr,120px,140px] gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
                   <div></div>
                   <div>Tipo de Notificación</div>
                   <div className="flex items-center justify-center gap-2">
@@ -348,12 +356,8 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                     <span className="hidden sm:inline">Email</span>
                   </div>
                   <div className="flex items-center justify-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    <span className="hidden sm:inline">SMS</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <Smartphone className="h-4 w-4" />
-                    <span className="hidden sm:inline">Push móvil</span>
+                    <Bell className="h-4 w-4" />
+                    <span className="hidden sm:inline">Notificaciones en la app</span>
                   </div>
                 </div>
 
@@ -362,7 +366,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                   {form.watch('notifications').map((notification, index) => (
                     <div 
                       key={notification.id}
-                      className="grid grid-cols-[40px,1fr,120px,120px,140px] gap-4 p-4 hover:bg-muted/30 transition-colors"
+                      className="grid grid-cols-[40px,1fr,120px,140px] gap-4 p-4 hover:bg-muted/30 transition-colors"
                     >
                       {/* Toggle Switch */}
                       <div className="flex items-start pt-1">
@@ -397,25 +401,6 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                         <FormField
                           control={form.control}
                           name={`notifications.${index}.email`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  disabled={!form.watch(`notifications.${index}.enabled`)}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* SMS Checkbox */}
-                      <div className="flex items-start justify-center pt-1">
-                        <FormField
-                          control={form.control}
-                          name={`notifications.${index}.sms`}
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
