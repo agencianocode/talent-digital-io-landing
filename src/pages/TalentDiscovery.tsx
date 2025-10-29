@@ -225,7 +225,7 @@ const TalentDiscovery = () => {
         };
       }) || [];
 
-      // Enhance existing talents with better data and add demo data if needed
+      // Enhance existing talents with better data
       const enhancedTalents = talents.map(talent => {
         // If this is Fabian Segura, enhance his data
         if (talent.full_name === 'Fabian Segura' || talent.user_id === '1c1c3c4f-3587-4e47-958b-9529d0620d26') {
@@ -238,61 +238,16 @@ const TalentDiscovery = () => {
             is_featured: true,
             is_verified: true,
             is_premium: talent.is_premium,
-            rating: 4.8,
-            reviews_count: 12,
-            response_rate: 95,
             video_presentation_url: talent.video_presentation_url || 'https://youtu.be/kcOrTOT7Kko',
             portfolio_url: talent.portfolio_url || 'https://fabiansegura.com/portfolio',
-            profile_completeness: 100, // Set to 100% for Fabian
-            is_complete: true // Mark as complete
+            profile_completeness: 100,
+            is_complete: true
           };
         }
         
-        // For other talents, provide better defaults
-        return {
-          ...talent,
-          title: talent.title || 'Talento Digital',
-          bio: talent.bio || 'Profesional especializado en soluciones digitales innovadoras',
-          is_featured: Math.random() > 0.7, // 30% chance of being featured
-          is_verified: Math.random() > 0.5, // 50% chance of being verified
-          is_premium: Math.random() > 0.8, // 20% chance of being premium
-          rating: Math.random() * 2 + 3, // Random rating between 3-5
-          reviews_count: Math.floor(Math.random() * 20) + 1, // 1-20 reviews
-          response_rate: Math.floor(Math.random() * 30) + 70, // 70-100% response rate
-        };
+        // For other talents, return as-is (real data from DB)
+        return talent;
       });
-
-      // If no talents found, add some demo data for testing
-      if (enhancedTalents.length === 0) {
-        const demoTalents: RealTalent[] = [
-          {
-            id: 'demo-1',
-            user_id: 'demo-user-1',
-            full_name: 'Fabian Segura',
-            title: 'Especialista No Code',
-            bio: 'Industrial Tech Translator | Transformando Plantas Industriales con No Code | Especialista en Automatización',
-            avatar_url: null,
-            city: 'Cali',
-            country: 'Colombia',
-            phone: '3197218217',
-            linkedin: 'https://linkedin.com/in/fabiansegura',
-            portfolio_url: 'https://fabiansegura.com/portfolio',
-            github_url: null,
-            video_presentation_url: 'https://youtu.be/kcOrTOT7Kko',
-            social_links: { linkedin: 'https://linkedin.com/in/fabiansegura', instagram: 'https://instagram.com/fabiansegura', twitter: 'https://twitter.com/fabiansegura' },
-            is_featured: true,
-            is_verified: true,
-            is_premium: false,
-            rating: 4.8,
-            reviews_count: 12,
-            response_rate: 95,
-            last_active: new Date().toISOString(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ];
-        enhancedTalents.push(...(demoTalents as any));
-      }
 
       setAllTalents(enhancedTalents);
       setFilteredTalents(enhancedTalents);
