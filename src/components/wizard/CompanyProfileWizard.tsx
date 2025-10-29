@@ -374,8 +374,11 @@ export const CompanyProfileWizard: React.FC = () => {
         .from('avatars')
         .getPublicUrl(filePath);
       
-      // Set the permanent URL in the form
-      form.setValue('logo_url', data.publicUrl);
+      // Set the permanent URL in the form and mark as dirty
+      form.setValue('logo_url', data.publicUrl, { 
+        shouldDirty: true, 
+        shouldTouch: true 
+      });
       toast.success('Logo subido correctamente');
       
     } catch (error) {
