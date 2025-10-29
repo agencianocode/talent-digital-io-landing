@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Search, 
-  Star, 
   MapPin, 
   Eye,
   MessageCircle,
@@ -447,23 +446,6 @@ const TalentDiscovery = () => {
     navigate(`/business-dashboard/talent-profile/${talentId}`);
   };
 
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`h-3 w-3 ${
-              star <= rating 
-                ? 'fill-yellow-400 text-yellow-400' 
-                : 'text-gray-300'
-            }`}
-          />
-        ))}
-      </div>
-    );
-  };
-
 
   return (
     <div className="p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
@@ -817,20 +799,6 @@ const TalentDiscovery = () => {
                                     <span className="text-xs">GitHub</span>
                                   </div>
                                 )}
-                              </div>
-                            </div>
-
-                            {/* Rating & Response Rate */}
-                            <div className="flex items-center justify-between mb-4 text-sm">
-                              <div className="flex items-center gap-2">
-                                {renderStars(talent.rating || 0)}
-                                <span className="text-gray-600">
-                                  {talent.rating?.toFixed(1) || '0.0'} ({talent.reviews_count || 0} reviews)
-                                </span>
-                              </div>
-                              
-                              <div className="text-gray-600">
-                                {talent.response_rate || 0}% respuesta
                               </div>
                             </div>
 
