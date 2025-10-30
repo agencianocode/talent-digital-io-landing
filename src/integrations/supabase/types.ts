@@ -2119,6 +2119,20 @@ export type Database = {
         Returns: string
       }
       cleanup_expired_typing_indicators: { Args: never; Returns: undefined }
+      get_academy_graduate_applications: {
+        Args: { p_academy_id: string }
+        Returns: {
+          application_id: string
+          application_status: string
+          applied_at: string
+          company_name: string
+          graduate_email: string
+          graduate_name: string
+          graduation_date: string
+          opportunity_title: string
+          program_name: string
+        }[]
+      }
       get_academy_students: {
         Args: { academy_uuid: string }
         Returns: {

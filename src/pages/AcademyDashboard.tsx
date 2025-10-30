@@ -29,6 +29,7 @@ import PublicDirectory from '../components/academy/PublicDirectory';
 import { AcademyBrandingSettings } from '@/components/academy/AcademyBrandingSettings';
 import { BulkInviteModal } from '@/components/academy/BulkInviteModal';
 import { AcademyEmployabilityStats } from '@/components/academy/AcademyEmployabilityStats';
+import { GraduateApplicationsTracking } from '@/components/academy/GraduateApplicationsTracking';
 
 const AcademyDashboard: React.FC = () => {
   const { user, userRole } = useSupabaseAuth();
@@ -241,7 +242,10 @@ const AcademyDashboard: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="activity">
-          <ActivityFeed academyId={academyId} />
+          <div className="space-y-6">
+            <ActivityFeed academyId={academyId} />
+            <GraduateApplicationsTracking academyId={academyId} />
+          </div>
         </TabsContent>
 
         <TabsContent value="opportunities">
