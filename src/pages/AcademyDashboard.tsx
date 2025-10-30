@@ -16,7 +16,9 @@ import {
   Activity,
   Share2,
   Plus,
-  Settings
+  Settings,
+  Palette,
+  FileUp
 } from 'lucide-react';
 import AcademyOverview from '../components/academy/AcademyOverview';
 import StudentDirectory from '../components/academy/StudentDirectory';
@@ -24,12 +26,15 @@ import InvitationManager from '../components/academy/InvitationManager';
 import ActivityFeed from '../components/academy/ActivityFeed';
 import ExclusiveOpportunities from '../components/academy/ExclusiveOpportunities';
 import PublicDirectory from '../components/academy/PublicDirectory';
+import { AcademyBrandingSettings } from '@/components/academy/AcademyBrandingSettings';
+import { BulkInviteModal } from '@/components/academy/BulkInviteModal';
 
 const AcademyDashboard: React.FC = () => {
   const { user, userRole } = useSupabaseAuth();
   const { activeCompany, isLoading: companyLoading } = useCompany();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
 
   // Check if user has academy role
   const isAcademyRole = userRole === 'business' || userRole === 'premium_business' || userRole === 'freemium_business' || userRole === 'admin';
@@ -176,10 +181,14 @@ const AcademyDashboard: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="branding" className="flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            Branding
           </TabsTrigger>
           <TabsTrigger value="students" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -207,8 +216,20 @@ const AcademyDashboard: React.FC = () => {
           <AcademyOverview academyId={academyId} onTabChange={setActiveTab} />
         </TabsContent>
 
+        <TabsContent value="branding">
+          <AcademyBrandingSettings academyId={academyId} />
+        </TabsContent>
+
         <TabsContent value="students">
-          <StudentDirectory academyId={academyId} onInviteClick={() => setActiveTab('invitations')} />
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <Button onClick={() => setBulkInviteOpen(true)}>
+                <FileUp className="mr-2 h-4 w-4" />
+                Importar CSV
+              </Button>
+            </div>
+            <StudentDirectory academyId={academyId} onInviteClick={() => setActiveTab('invitations')} />
+          </div>
         </TabsContent>
 
         <TabsContent value="invitations">
@@ -227,6 +248,16 @@ const AcademyDashboard: React.FC = () => {
           <PublicDirectory academyId={academyId} />
         </TabsContent>
       </Tabs>
+
+      <BulkInviteModal 
+        open={bulkInviteOpen}
+        onOpenChange={setBulkInviteOpen}
+        academyId={academyId}
+        onSuccess={() => {
+          setBulkInviteOpen(false);
+          toast.success('Estudiantes importados exitosamente');
+        }}
+      />
     </div>
   );
 };

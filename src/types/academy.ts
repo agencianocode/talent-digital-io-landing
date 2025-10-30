@@ -5,6 +5,11 @@ export interface Academy {
   website?: string;
   logo_url?: string;
   contact_email?: string;
+  brand_color?: string;
+  secondary_color?: string;
+  academy_tagline?: string;
+  academy_slug?: string;
+  public_directory_enabled?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -17,6 +22,7 @@ export interface AcademyStudent {
   joined_at: string;
   graduation_date?: string;
   certificate_url?: string;
+  premium_until?: string;
   talent_profiles?: {
     full_name: string;
     avatar_url?: string;
@@ -89,4 +95,12 @@ export interface PublicDirectoryStudent {
   certificate_url?: string;
   skills: string[];
   location?: string;
+}
+
+export interface AcademyCertification {
+  academy_id: string;
+  academy_name: string;
+  certification_date: string;
+  program: string;
+  badge_color: string;
 }

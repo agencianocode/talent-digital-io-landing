@@ -55,10 +55,12 @@ export type Database = {
       academy_students: {
         Row: {
           academy_id: string
+          certificate_url: string | null
           created_at: string
           enrollment_date: string | null
           graduation_date: string | null
           id: string
+          premium_until: string | null
           program_name: string | null
           status: string | null
           student_email: string
@@ -67,10 +69,12 @@ export type Database = {
         }
         Insert: {
           academy_id: string
+          certificate_url?: string | null
           created_at?: string
           enrollment_date?: string | null
           graduation_date?: string | null
           id?: string
+          premium_until?: string | null
           program_name?: string | null
           status?: string | null
           student_email: string
@@ -79,10 +83,12 @@ export type Database = {
         }
         Update: {
           academy_id?: string
+          certificate_url?: string | null
           created_at?: string
           enrollment_date?: string | null
           graduation_date?: string | null
           id?: string
+          premium_until?: string | null
           program_name?: string | null
           status?: string | null
           student_email?: string
@@ -382,8 +388,11 @@ export type Database = {
       }
       companies: {
         Row: {
+          academy_slug: string | null
+          academy_tagline: string | null
           annual_revenue_range: string | null
           benefits: string | null
+          brand_color: string | null
           business_impact: string | null
           business_type: string | null
           created_at: string
@@ -397,6 +406,8 @@ export type Database = {
           location: string | null
           logo_url: string | null
           name: string
+          public_directory_enabled: boolean | null
+          secondary_color: string | null
           size: string | null
           social_links: Json | null
           status: string
@@ -407,8 +418,11 @@ export type Database = {
           work_culture: string | null
         }
         Insert: {
+          academy_slug?: string | null
+          academy_tagline?: string | null
           annual_revenue_range?: string | null
           benefits?: string | null
+          brand_color?: string | null
           business_impact?: string | null
           business_type?: string | null
           created_at?: string
@@ -422,6 +436,8 @@ export type Database = {
           location?: string | null
           logo_url?: string | null
           name: string
+          public_directory_enabled?: boolean | null
+          secondary_color?: string | null
           size?: string | null
           social_links?: Json | null
           status?: string
@@ -432,8 +448,11 @@ export type Database = {
           work_culture?: string | null
         }
         Update: {
+          academy_slug?: string | null
+          academy_tagline?: string | null
           annual_revenue_range?: string | null
           benefits?: string | null
+          brand_color?: string | null
           business_impact?: string | null
           business_type?: string | null
           created_at?: string
@@ -447,6 +466,8 @@ export type Database = {
           location?: string | null
           logo_url?: string | null
           name?: string
+          public_directory_enabled?: boolean | null
+          secondary_color?: string | null
           size?: string | null
           social_links?: Json | null
           status?: string
@@ -1748,6 +1769,7 @@ export type Database = {
       }
       talent_profiles: {
         Row: {
+          academy_certifications: Json | null
           availability: string | null
           bio: string | null
           city: string | null
@@ -1774,6 +1796,7 @@ export type Database = {
           years_experience: number | null
         }
         Insert: {
+          academy_certifications?: Json | null
           availability?: string | null
           bio?: string | null
           city?: string | null
@@ -1800,6 +1823,7 @@ export type Database = {
           years_experience?: number | null
         }
         Update: {
+          academy_certifications?: Json | null
           availability?: string | null
           bio?: string | null
           city?: string | null
@@ -2181,6 +2205,7 @@ export type Database = {
           total_users: number
         }[]
       }
+      has_academy_premium: { Args: { user_uuid: string }; Returns: boolean }
       has_company_permission: {
         Args: {
           company_uuid: string
