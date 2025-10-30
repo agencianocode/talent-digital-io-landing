@@ -15,6 +15,10 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const { signIn, signInWithGoogle, resetPassword, updatePassword, isLoading, isAuthenticated, userRole, user, hasCompletedTalentOnboarding } = useSupabaseAuth();
   
+  // Check for invitation parameters
+  const invitationId = searchParams.get('invitation');
+  const invitedEmail = searchParams.get('email');
+  
   // Track if redirect has happened to prevent multiple redirects
   const [hasRedirected, setHasRedirected] = useState(false);
   
@@ -234,6 +238,25 @@ const Auth = () => {
         : 'Error al iniciar sesión. Intenta nuevamente.');
     } else {
       console.log('Auth.tsx: Sign in successful, waiting for auth state update...');
+      
+      // If there's an invitation, link it to the user
+      if (invitationId && user?.id) {
+        try {
+          const { error: linkError } = await supabase
+            .from('company_user_roles')
+            .update({ user_id: user.id, status: 'accepted', accepted_at: new Date().toISOString() })
+            .eq('id', invitationId)
+            .eq('invited_email', formData.email);
+          
+          if (linkError) {
+            console.error('Error linking invitation:', linkError);
+          } else {
+            console.log('Invitation linked successfully');
+          }
+        } catch (err) {
+          console.error('Error linking invitation:', err);
+        }
+      }
     }
     // La redirección se maneja automáticamente en useEffect
     
@@ -248,6 +271,12 @@ const Auth = () => {
     
     if (error) {
       setError('Error al iniciar sesión con Google. Intenta nuevamente.');
+    } else {
+      // If there's an invitation, the linking will happen after redirect
+      // We'll store invitation info in session storage for later use
+      if (invitationId && invitedEmail) {
+        sessionStorage.setItem('pending_invitation', JSON.stringify({ invitationId, invitedEmail }));
+      }
     }
     // La redirección se maneja automáticamente en useEffect
     
@@ -507,10 +536,21 @@ const Auth = () => {
           <CardHeader>
             <CardTitle>Iniciar Sesión</CardTitle>
             <CardDescription>
-              Ingresa tu email y contraseña para continuar
+              {invitationId && invitedEmail ? (
+                <>Has sido invitado a unirte a una empresa. Inicia sesión con <strong>{invitedEmail}</strong> o crea una cuenta con ese correo en la página de inicio.</>
+              ) : (
+                'Ingresa tu email y contraseña para continuar'
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {invitationId && invitedEmail && (
+              <Alert className="mb-4">
+                <AlertDescription>
+                  <strong>Invitación pendiente:</strong> Si no tienes cuenta, crea una en la página de inicio con el email <strong>{invitedEmail}</strong>
+                </AlertDescription>
+              </Alert>
+            )}
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signin-email">Email</Label>
@@ -522,6 +562,7 @@ const Auth = () => {
                   onChange={handleChange}
                   placeholder="tu@email.com"
                   required
+                  readOnly={!!invitedEmail}
                 />
               </div>
               

@@ -64,6 +64,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (updateError) throw updateError;
 
+    const appUrl = 'https://app.talentodigital.io';
+
     return new Response(`
       <!DOCTYPE html>
       <html>
@@ -82,11 +84,11 @@ const handler = async (req: Request): Promise<Response> => {
           <h1>❌ Invitación Rechazada</h1>
           <p>Has rechazado la invitación para unirte a la empresa.</p>
           <p>Si cambias de opinión, contacta directamente a quien te invitó para que te envíe una nueva invitación.</p>
-          <a href="/" class="btn">Ir a TalentFlow</a>
+          <a href="${appUrl}" class="btn">Ir a TalentFlow</a>
         </div>
         <script>
           setTimeout(() => {
-            window.location.href = "/";
+            window.location.href = "${appUrl}";
           }, 5000);
         </script>
       </body>

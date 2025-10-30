@@ -68,7 +68,8 @@ const handler = async (req: Request): Promise<Response> => {
     if (updateError) throw updateError;
 
     // Redirect to signup/login page with invitation data
-    const redirectUrl = `/?invitation=${invitation.id}&action=accept`;
+    const appUrl = 'https://app.talentodigital.io';
+    const redirectUrl = `${appUrl}/auth?invitation=${invitation.id}&email=${encodeURIComponent(invitation.invited_email || '')}`;
 
     return new Response(`
       <!DOCTYPE html>
