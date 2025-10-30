@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -65,51 +65,7 @@ const CompanyOnboarding = () => {
     profilePhoto: null
   });
 
-  // Check and fix user role on component mount
-  useEffect(() => {
-    const ensureBusinessRole = async () => {
-      if (!user) return;
-      
-      try {
-        // Check current role
-        const { data: currentRole } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
-
-        console.log('CompanyOnboarding - Current user role:', currentRole?.role);
-
-        // If user has no role or has talent role, but is in company onboarding, fix it
-        if (!currentRole || (currentRole?.role && currentRole.role.includes('talent'))) {
-          console.log('CompanyOnboarding - Assigning business role to user...');
-          
-          const { error } = await supabase
-            .from('user_roles')
-            .upsert({
-              user_id: user.id,
-              role: 'freemium_business'
-            });
-
-          if (error) {
-            console.error('Error assigning business role:', error);
-          } else {
-            console.log('CompanyOnboarding - Business role assigned successfully');
-            // Reload page to refresh auth context
-            setTimeout(() => {
-              window.location.reload();
-            }, 500);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking/fixing user role:', error);
-      }
-    };
-
-    if (user) {
-      ensureBusinessRole();
-    }
-  }, [user]);
+  // Role is now automatically assigned by database trigger during signup
 
   const handleCompanyNameChange = (name: string) => {
     setCompanyData(prev => ({ ...prev, name }));

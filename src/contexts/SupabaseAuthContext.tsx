@@ -161,54 +161,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
       }
 
-      // If role doesn't exist after retries, create it
+      // Role should be created by database trigger, just log if missing
       if (!roleData) {
-        logger.debug('Role not found after retries, creating role for user:', userId, 'with type:', userType);
-        
-        // Determine the correct role based on userType or existing company
-        let defaultRole: UserRole = 'freemium_talent';
-        
-        // Check if user has a company (indicates business user)
-        const { data: companyCheck } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('user_id', userId)
-          .maybeSingle();
-        
-        if (companyCheck || userType === 'business') {
-          defaultRole = 'freemium_business';
-          logger.debug('User has company or business userType, assigning freemium_business role');
-        }
-        
-        const { data: _newRole, error: createRoleError } = await supabase
-          .from('user_roles')
-          .insert({ user_id: userId, role: defaultRole })
-          .select()
-          .single();
-        
-        if (createRoleError) {
-          logger.error('Error creating role', createRoleError);
-        } else {
-          logger.debug('Role created successfully:', defaultRole);
-          // Refetch role data after creation
-          const { data: refetchedRole } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', userId)
-            .single();
-          
-          if (refetchedRole) {
-            return {
-              profile: profile || null,
-              role: mapDatabaseRoleToUserRole(refetchedRole.role as string),
-              company: companyCheck ? (await supabase
-                .from('companies')
-                .select('*')
-                .eq('user_id', userId)
-                .single()).data : null
-            };
-          }
-        }
+        logger.warn('Role not found for user:', userId, '- should have been created by trigger');
       }
 
       // Fetch company if user is business
