@@ -15,6 +15,14 @@ if (!hookSecret) {
   throw new Error('SEND_EMAIL_HOOK_SECRET is not configured')
 }
 
+// Normalize Supabase Auth Hook secret formats
+// Accepts values like: "Bearer <...>", "v1,whsec_..." or plain "whsec_..."
+const normalizedHookSecret = hookSecret.trim()
+  .replace(/^Bearer\s+/i, '')
+  .replace(/^v\d+,/, '')
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://wyrieetebfzmgffxecpz.supabase.co'
+
 // Use fetch for email sending instead of Resend SDK
 const sendEmail = async (to: string, subject: string, html: string) => {
   const response = await fetch('https://api.resend.com/emails', {
@@ -61,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     const payload = await req.text()
     const headers = Object.fromEntries(req.headers)
-    const wh = new Webhook(hookSecret)
+    const wh = new Webhook(normalizedHookSecret)
     
     console.log('Verifying webhook payload...')
     
@@ -109,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="background: #f8f9fa; padding: 40px; border-radius: 10px; text-align: center;">
                 <h1 style="color: #333;">¡Bienvenido a TalentFlow!</h1>
                 <p>Haz clic en el siguiente enlace para confirmar tu cuenta:</p>
-                <a href="${Deno.env.get('SUPABASE_URL')}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
+                <a href="${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
                    style="background: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
                   Confirmar Cuenta
                 </a>
@@ -133,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="background: #f8f9fa; padding: 40px; border-radius: 10px; text-align: center;">
                 <h1 style="color: #333;">Accede a TalentFlow</h1>
                 <p>Haz clic en el siguiente enlace para acceder a tu cuenta:</p>
-                <a href="${Deno.env.get('SUPABASE_URL')}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
+                <a href="${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
                    style="background: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
                   Acceder
                 </a>
@@ -157,7 +165,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="background: #f8f9fa; padding: 40px; border-radius: 10px; text-align: center;">
                 <h1 style="color: #333;">Restablece tu contraseña</h1>
                 <p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
-                <a href="${Deno.env.get('SUPABASE_URL')}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
+                <a href="${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
                    style="background: #dc3545; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
                   Restablecer Contraseña
                 </a>
@@ -181,7 +189,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="background: #f8f9fa; padding: 40px; border-radius: 10px; text-align: center;">
                 <h1 style="color: #333;">Acceso a TalentFlow</h1>
                 <p>Haz clic en el siguiente enlace:</p>
-                <a href="${Deno.env.get('SUPABASE_URL')}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
+                <a href="${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
                    style="background: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
                   Continuar
                 </a>
