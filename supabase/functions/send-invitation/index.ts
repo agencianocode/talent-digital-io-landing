@@ -27,7 +27,7 @@ const sendEmail = async (to: string, subject: string, html: string) => {
 };
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://app.talentodigital.io",
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
@@ -47,9 +47,23 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Check for RESEND_API_KEY
+    if (!resendApiKey) {
+      console.error("❌ RESEND_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ error: "Missing RESEND_API_KEY configuration" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     const { email, role, company_id, invited_by, invitation_id }: InvitationRequest = await req.json();
 
-    console.log(`Sending invitation to ${email} for role ${role}`);
+    console.log(`📧 Sending invitation to ${email} for role ${role}`);
+    console.log(`📋 Invitation ID: ${invitation_id}`);
+    console.log(`👤 Invited by: ${invited_by}`);
 
     const acceptUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/accept-invitation?id=${invitation_id}`;
     const declineUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/decline-invitation?id=${invitation_id}`;
@@ -113,7 +127,8 @@ const handler = async (req: Request): Promise<Response> => {
       `
     );
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("✅ Email sent successfully via Resend");
+    console.log("📨 Resend response:", JSON.stringify(emailResponse));
 
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
