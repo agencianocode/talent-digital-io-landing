@@ -26,7 +26,6 @@ type NotificationType = {
   description: string;
   enabled: boolean;
   email: boolean;
-  sms: boolean;
   push: boolean;
 };
 
@@ -37,7 +36,6 @@ const notificationSettingsSchema = z.object({
     description: z.string(),
     enabled: z.boolean(),
     email: z.boolean(),
-    sms: z.boolean(),
     push: z.boolean(),
   })),
 });
@@ -52,7 +50,6 @@ const talentNotifications: NotificationType[] = [
     description: 'Recibe notificaciones cuando hay nuevas oportunidades que coinciden con tu perfil.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -61,7 +58,6 @@ const talentNotifications: NotificationType[] = [
     description: 'Notificaciones cuando recibes nuevos mensajes de empresas.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -70,7 +66,6 @@ const talentNotifications: NotificationType[] = [
     description: 'Recibe notificaciones cuando las empresas te envíen invitaciones.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -79,7 +74,6 @@ const talentNotifications: NotificationType[] = [
     description: 'Notificaciones cuando las empresas vean tu perfil.',
     enabled: false,
     email: true,
-    sms: false,
     push: false,
   },
   {
@@ -88,7 +82,6 @@ const talentNotifications: NotificationType[] = [
     description: 'Notificaciones sobre el estado de tus aplicaciones.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -97,7 +90,6 @@ const talentNotifications: NotificationType[] = [
     description: 'Notificaciones cuando alguien consulte por tus servicios.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -106,7 +98,6 @@ const talentNotifications: NotificationType[] = [
     description: 'Recibe notificaciones cuando alguien vea tus servicios en el marketplace.',
     enabled: true,
     email: false,
-    sms: false,
     push: true,
   },
   {
@@ -115,7 +106,6 @@ const talentNotifications: NotificationType[] = [
     description: 'Recibe un resumen semanal de actividad y oportunidades.',
     enabled: true,
     email: true,
-    sms: false,
     push: false,
   },
   {
@@ -124,7 +114,6 @@ const talentNotifications: NotificationType[] = [
     description: 'Notificaciones sobre nuevas funciones y mantenimiento.',
     enabled: true,
     email: true,
-    sms: false,
     push: false,
   },
 ];
@@ -137,7 +126,6 @@ const businessNotifications: NotificationType[] = [
     description: 'Notificaciones cuando candidatos apliquen a tus oportunidades.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -146,7 +134,6 @@ const businessNotifications: NotificationType[] = [
     description: 'Notificaciones cuando recibes nuevos mensajes de candidatos.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -155,7 +142,6 @@ const businessNotifications: NotificationType[] = [
     description: 'Notificaciones cuando alguien solicite unirse a tu equipo.',
     enabled: true,
     email: true,
-    sms: true,
     push: true,
   },
   {
@@ -164,7 +150,6 @@ const businessNotifications: NotificationType[] = [
     description: 'Notificaciones sobre hitos alcanzados (5, 10, 25, 50, 100 aplicantes).',
     enabled: true,
     email: true,
-    sms: false,
     push: false,
   },
   {
@@ -173,7 +158,6 @@ const businessNotifications: NotificationType[] = [
     description: 'Notificaciones cuando tus oportunidades estén por expirar.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -182,7 +166,6 @@ const businessNotifications: NotificationType[] = [
     description: 'Notificaciones sobre consultas de servicios publicados.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -191,7 +174,6 @@ const businessNotifications: NotificationType[] = [
     description: 'Recibe un resumen semanal de actividad de tus oportunidades.',
     enabled: true,
     email: true,
-    sms: false,
     push: false,
   },
   {
@@ -200,7 +182,6 @@ const businessNotifications: NotificationType[] = [
     description: 'Notificaciones sobre nuevas funciones y mantenimiento.',
     enabled: true,
     email: true,
-    sms: false,
     push: false,
   },
 ];
@@ -289,7 +270,6 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
         notification_type: notif.id,
         enabled: notif.enabled,
         email: notif.email,
-        sms: notif.sms,
         push: notif.push,
       }));
 

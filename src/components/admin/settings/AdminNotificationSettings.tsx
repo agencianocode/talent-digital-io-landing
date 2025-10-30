@@ -28,7 +28,6 @@ type NotificationType = {
   description: string;
   enabled: boolean;
   email: boolean;
-  sms: boolean;
   push: boolean;
 };
 
@@ -40,7 +39,6 @@ const notificationSettingsSchema = z.object({
     description: z.string(),
     enabled: z.boolean(),
     email: z.boolean(),
-    sms: z.boolean(),
     push: z.boolean(),
   })),
 });
@@ -54,7 +52,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Recibe una notificación cuando se registre un nuevo usuario en la plataforma.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -63,7 +60,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación cuando un usuario verifique su correo electrónico.',
     enabled: false,
     email: true,
-    sms: false,
     push: false,
   },
   {
@@ -72,7 +68,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación cuando un usuario complete su perfil.',
     enabled: false,
     email: true,
-    sms: false,
     push: false,
   },
   {
@@ -81,7 +76,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Recibe una notificación cuando se registre una nueva empresa.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -90,7 +84,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación cuando una empresa solicite un upgrade de plan.',
     enabled: true,
     email: true,
-    sms: true,
     push: true,
   },
   {
@@ -99,7 +92,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación cuando una empresa complete su verificación.',
     enabled: true,
     email: true,
-    sms: false,
     push: false,
   },
   {
@@ -108,7 +100,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación cuando se reporte contenido en oportunidades.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -117,7 +108,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación cuando se reporte contenido en el marketplace.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -126,7 +116,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación cuando se reporte un usuario.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -135,7 +124,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación cuando haya contenido pendiente de aprobar.',
     enabled: true,
     email: true,
-    sms: false,
     push: false,
   },
   {
@@ -144,7 +132,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación cuando ocurran errores críticos en el sistema.',
     enabled: true,
     email: true,
-    sms: true,
     push: true,
   },
   {
@@ -153,7 +140,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación cuando se detecten problemas de rendimiento.',
     enabled: true,
     email: true,
-    sms: false,
     push: true,
   },
   {
@@ -162,7 +148,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación de alertas de seguridad críticas.',
     enabled: true,
     email: true,
-    sms: true,
     push: true,
   },
   {
@@ -171,7 +156,6 @@ const defaultNotifications: NotificationType[] = [
     description: 'Notificación sobre el estado de los backups automáticos.',
     enabled: false,
     email: true,
-    sms: false,
     push: false,
   },
 ];
@@ -326,16 +310,12 @@ const AdminNotificationSettings: React.FC = () => {
             <CardContent>
               <div className="border rounded-lg overflow-hidden">
                 {/* Table Header */}
-                <div className="grid grid-cols-[40px,1fr,120px,120px,140px] gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
+                <div className="grid grid-cols-[40px,1fr,120px,140px] gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
                   <div></div>
                   <div>Notificación</div>
                   <div className="flex items-center justify-center gap-2">
                     <Mail className="h-4 w-4" />
                     <span className="hidden sm:inline">Email</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    <span className="hidden sm:inline">SMS</span>
                   </div>
                   <div className="flex items-center justify-center gap-2">
                     <Smartphone className="h-4 w-4" />
@@ -348,7 +328,7 @@ const AdminNotificationSettings: React.FC = () => {
                   {form.watch('notifications').map((notification, index) => (
                     <div 
                       key={notification.id}
-                      className="grid grid-cols-[40px,1fr,120px,120px,140px] gap-4 p-4 hover:bg-muted/30 transition-colors"
+                      className="grid grid-cols-[40px,1fr,120px,140px] gap-4 p-4 hover:bg-muted/30 transition-colors"
                     >
                       {/* Toggle Switch */}
                       <div className="flex items-start pt-1">
@@ -383,25 +363,6 @@ const AdminNotificationSettings: React.FC = () => {
                         <FormField
                           control={form.control}
                           name={`notifications.${index}.email`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  disabled={!form.watch(`notifications.${index}.enabled`)}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* SMS Checkbox */}
-                      <div className="flex items-start justify-center pt-1">
-                        <FormField
-                          control={form.control}
-                          name={`notifications.${index}.sms`}
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
