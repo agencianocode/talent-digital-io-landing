@@ -20,9 +20,8 @@ const button = {
   fontWeight: 'bold',
   textDecoration: 'none',
   textAlign: 'center' as const,
-  display: 'block',
-  width: '100%',
-  padding: '14px 20px',
+  display: 'inline-block',
+  padding: '14px 30px',
   marginTop: '20px',
   marginBottom: '20px',
 };
