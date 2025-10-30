@@ -177,6 +177,13 @@ function App() {
                         </Suspense>
                       } />
 
+                      {/* Public Talent Profile - Shared Profile Link */}
+                      <Route path="/profile/:talentId" element={
+                        <Suspense fallback={<LoadingSkeleton type="profile" />}>
+                          <PublicTalentProfile />
+                        </Suspense>
+                      } />
+
                        {/* Talent Dashboard Routes - With Layout */}
                         <Route path="/talent-dashboard" element={<TalentDashboardLayout />}>
                           <Route index element={<TalentDashboard />} />
