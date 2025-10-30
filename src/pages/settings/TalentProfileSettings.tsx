@@ -2,9 +2,10 @@ import { startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, Bell } from 'lucide-react';
+import { ArrowLeft, Shield, Bell, GraduationCap } from 'lucide-react';
 import PrivacySettings from './PrivacySettings';
 import UserNotificationSettings from '@/components/UserNotificationSettings';
+import { GraduatePrivacySettings } from '@/components/academy/GraduatePrivacySettings';
 
 const TalentProfileSettings = () => {
   const navigate = useNavigate();
@@ -27,10 +28,14 @@ const TalentProfileSettings = () => {
       </div>
 
       <Tabs defaultValue="privacy" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="privacy" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Privacidad
+          </TabsTrigger>
+          <TabsTrigger value="academy" className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
+            Academia
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
@@ -40,6 +45,10 @@ const TalentProfileSettings = () => {
 
         <TabsContent value="privacy" className="mt-6">
           <PrivacySettings />
+        </TabsContent>
+
+        <TabsContent value="academy" className="mt-6">
+          <GraduatePrivacySettings />
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-6">

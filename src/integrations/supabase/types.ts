@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_courses: {
+        Row: {
+          academy_id: string
+          category: string
+          created_at: string
+          currency: string
+          description: string
+          duration: string
+          end_date: string | null
+          enrolled_count: number | null
+          enrollment_link: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          level: string
+          max_students: number | null
+          price: number
+          start_date: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          academy_id: string
+          category: string
+          created_at?: string
+          currency?: string
+          description: string
+          duration: string
+          end_date?: string | null
+          enrolled_count?: number | null
+          enrollment_link?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          level: string
+          max_students?: number | null
+          price: number
+          start_date?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          academy_id?: string
+          category?: string
+          created_at?: string
+          currency?: string
+          description?: string
+          duration?: string
+          end_date?: string | null
+          enrolled_count?: number | null
+          enrollment_link?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          level?: string
+          max_students?: number | null
+          price?: number
+          start_date?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_courses_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       academy_student_audit: {
         Row: {
           action: string
@@ -61,6 +138,7 @@ export type Database = {
           graduation_date: string | null
           id: string
           premium_until: string | null
+          privacy_settings: Json | null
           program_name: string | null
           status: string | null
           student_email: string
@@ -75,6 +153,7 @@ export type Database = {
           graduation_date?: string | null
           id?: string
           premium_until?: string | null
+          privacy_settings?: Json | null
           program_name?: string | null
           status?: string | null
           student_email: string
@@ -89,6 +168,7 @@ export type Database = {
           graduation_date?: string | null
           id?: string
           premium_until?: string | null
+          privacy_settings?: Json | null
           program_name?: string | null
           status?: string | null
           student_email?: string
@@ -2167,6 +2247,27 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_featured_academy_courses: {
+        Args: { p_limit?: number }
+        Returns: {
+          academy_id: string
+          academy_logo: string
+          academy_name: string
+          category: string
+          currency: string
+          description: string
+          duration: string
+          enrolled_count: number
+          enrollment_link: string
+          id: string
+          image_url: string
+          level: string
+          price: number
+          start_date: string
+          tags: string[]
+          title: string
+        }[]
+      }
       get_industries: {
         Args: never
         Returns: {
@@ -2218,6 +2319,10 @@ export type Database = {
           role_name: Database["public"]["Enums"]["user_role"]
           total_users: number
         }[]
+      }
+      graduate_shares_data: {
+        Args: { p_data_type: string; p_student_email: string }
+        Returns: boolean
       }
       has_academy_premium: { Args: { user_uuid: string }; Returns: boolean }
       has_company_permission: {

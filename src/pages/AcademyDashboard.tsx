@@ -18,7 +18,8 @@ import {
   Plus,
   Settings,
   Palette,
-  FileUp
+  FileUp,
+  BookOpen
 } from 'lucide-react';
 import AcademyOverview from '../components/academy/AcademyOverview';
 import StudentDirectory from '../components/academy/StudentDirectory';
@@ -30,6 +31,7 @@ import { AcademyBrandingSettings } from '@/components/academy/AcademyBrandingSet
 import { BulkInviteModal } from '@/components/academy/BulkInviteModal';
 import { AcademyEmployabilityStats } from '@/components/academy/AcademyEmployabilityStats';
 import { GraduateApplicationsTracking } from '@/components/academy/GraduateApplicationsTracking';
+import { AcademyCoursesManager } from '@/components/academy/AcademyCoursesManager';
 
 const AcademyDashboard: React.FC = () => {
   const { user, userRole } = useSupabaseAuth();
@@ -183,7 +185,7 @@ const AcademyDashboard: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Dashboard
@@ -207,6 +209,10 @@ const AcademyDashboard: React.FC = () => {
           <TabsTrigger value="opportunities" className="flex items-center gap-2">
             <Briefcase className="h-4 w-4" />
             Oportunidades
+          </TabsTrigger>
+          <TabsTrigger value="courses" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Cursos
           </TabsTrigger>
           <TabsTrigger value="directory" className="flex items-center gap-2">
             <Share2 className="h-4 w-4" />
@@ -250,6 +256,10 @@ const AcademyDashboard: React.FC = () => {
 
         <TabsContent value="opportunities">
           <ExclusiveOpportunities academyId={academyId} />
+        </TabsContent>
+
+        <TabsContent value="courses">
+          <AcademyCoursesManager academyId={academyId} />
         </TabsContent>
 
         <TabsContent value="directory">
