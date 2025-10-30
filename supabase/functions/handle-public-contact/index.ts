@@ -67,19 +67,22 @@ serve(async (req) => {
       );
     }
 
-    // Get talent's profile information
-    const { data: talentProfile } = await supabase
+    // Get talent's profile information (name only; email may not exist in profiles)
+    const { data: talentProfile, error: profileError } = await supabase
       .from('profiles')
-      .select('full_name, email')
+      .select('full_name')
       .eq('user_id', talentUserId)
       .single();
 
-    if (!talentProfile) {
+    if (profileError || !talentProfile) {
+      console.error('Talent profile not found:', profileError, 'for user_id:', talentUserId);
       return new Response(
         JSON.stringify({ error: 'Talent profile not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('Found talent profile:', talentProfile);
 
     // Insert contact request
     const { data: contactRequest, error: insertError } = await supabase
@@ -124,28 +127,8 @@ serve(async (req) => {
       read: false
     });
 
-    // Send email notification to talent
-    try {
-      await supabase.functions.invoke('send-notification-email', {
-        body: {
-          to: talentProfile.email,
-          type: 'public_profile_contact',
-          data: {
-            talentName: talentProfile.full_name,
-            requesterName,
-            requesterEmail,
-            requesterCompany,
-            requesterRole,
-            message,
-            contactType,
-            replyUrl: `mailto:${requesterEmail}`
-          }
-        }
-      });
-    } catch (emailError) {
-      console.error('Error sending email notification:', emailError);
-      // Don't fail the request if email fails
-    }
+    // Optionally send email notification (disabled if email is not available)
+    // Skipped to avoid dependency on auth.users; in-app notification above is enough for now.
 
     return new Response(
       JSON.stringify({ 
