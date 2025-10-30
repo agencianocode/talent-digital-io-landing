@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,11 +24,28 @@ const TalentTopNavigation = () => {
   const location = useLocation();
   const { profile, signOut, userRole } = useSupabaseAuth();
   const isPremium = isPremiumRole(userRole);
-  const { userProfile } = useProfileData();
+  const { userProfile, refreshProfile } = useProfileData();
   const { unreadCount: unreadMessagesCount } = useSupabaseMessages();
   const { unreadCount: unreadNotificationsCount } = useNotifications();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      console.log('🔄 TalentTopNavigation: Profile update detected, refreshing...');
+      refreshProfile();
+    };
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
+  }, [refreshProfile]);
+
+  console.log('🖼️ TalentTopNavigation - Avatar URL:', {
+    userProfileAvatarUrl: userProfile?.avatar_url,
+    userProfileFullName: userProfile?.full_name,
+    profileFullName: profile?.full_name
+  });
 
   const navigationItems = [
     {

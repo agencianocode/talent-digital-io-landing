@@ -335,10 +335,14 @@ export const useProfileData = () => {
           throw new Error(`Error actualizando perfil: ${profileError.message}`);
         }
 
-        // Refresh profile data
-        await fetchProfile();
-        toast.success('Avatar actualizado correctamente');
-        return true;
+      // Refresh profile data
+      await fetchProfile();
+      
+      // Dispatch event for other components
+      window.dispatchEvent(new CustomEvent('profileUpdated'));
+      
+      toast.success('Avatar actualizado correctamente');
+      return true;
       }
 
       // Get public URL
@@ -379,6 +383,10 @@ export const useProfileData = () => {
 
       // Refresh profile data
       await fetchProfile();
+      
+      // Dispatch event for other components  
+      window.dispatchEvent(new CustomEvent('profileUpdated'));
+      
       toast.success('Avatar actualizado correctamente');
       return true;
     } catch (err: any) {
