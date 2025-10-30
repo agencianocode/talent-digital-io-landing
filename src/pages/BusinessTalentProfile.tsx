@@ -114,298 +114,68 @@ const BusinessTalentProfile = () => {
         console.warn('❌ No talent profile found for user:', talentError);
       } else if (talentData) {
         console.log('✅ Talent profile data:', talentData);
-        console.log('📁 portfolio_url field:', talentData.portfolio_url);
         setTalentProfile(talentData);
 
-        // Search for Fabian's education records specifically
-        console.log('🔍 Starting search for Fabian\'s data...');
-const { data: allEducationRecords } = await supabase
-  .from('education' as any)
-  .select('*');
-        
-        console.log('📊 All education records found:', allEducationRecords?.length || 0);
-        
-        let educationData = null;
-        let fabianWorkData = null;
+        // Fetch REAL education data from talent_education table
+        const { data: educationData, error: educationError } = await supabase
+          .from('talent_education' as any)
+          .select('*')
+          .eq('user_id', id || '')
+          .order('current', { ascending: false })
+          .order('start_date', { ascending: false });
 
-if (allEducationRecords && allEducationRecords.length > 0) {
-          console.log('🔍 First few education records:', allEducationRecords.slice(0, 3));
-          
-  // Look for records that might belong to Fabian
-          const fabianRecords = allEducationRecords.filter((record: any) => 
-    record.institution?.includes('No Code Hackers') ||
-    record.institution?.includes('Consul Business School') ||
-    record.institution?.includes('Product Hackers') ||
-    record.degree?.includes('No Code') ||
-    record.degree?.includes('Growth en Ecommerce') ||
-    record.degree?.includes('Especialista No Code') ||
-            record.degree?.includes('Certificacin Internacional Consultor de Negocios') ||
-            // Also look for records that are NOT demo data
-            (!record.institution?.includes('Universidad Test') && 
-             !record.institution?.includes('Bubble Academy') && 
-             !record.institution?.includes('Universidad Nacional'))
-          );
-          
-          console.log('🎯 Fabian records found:', fabianRecords.length);
-  
-  if (fabianRecords.length > 0) {
-            const fabianTalentProfileId = (fabianRecords[0] as any)?.talent_profile_id;
-            console.log('✅ Found Fabian\'s talent_profile_id:', fabianTalentProfileId);
-    
-            // Fetch all education records for this talent_profile_id
-    const { data: fabianEducationData } = await supabase
-      .from('education' as any)
-      .select('*')
-      .eq('talent_profile_id', fabianTalentProfileId)
-      .order('graduation_year', { ascending: false });
-    
-            console.log('📚 Fabian education query result:', fabianEducationData?.length || 0, 'items');
-    
-    if (fabianEducationData && fabianEducationData.length > 0) {
-      educationData = fabianEducationData;
-              console.log('✅ Education data found for Fabian:', educationData.length, 'items');
-              console.log('📋 Education data details:', educationData);
-    }
-    
-    // Also fetch work experience for the same talent_profile_id
-            const { data: fabianWorkDataResult } = await supabase
-      .from('work_experience' as any)
-      .select('*')
-      .eq('talent_profile_id', fabianTalentProfileId)
-      .order('start_date', { ascending: false });
-            
-            console.log('💼 Fabian work experience query result:', fabianWorkDataResult?.length || 0, 'items');
-            
-            if (fabianWorkDataResult && fabianWorkDataResult.length > 0) {
-              fabianWorkData = fabianWorkDataResult;
-              console.log('✅ Work experience data found for Fabian:', fabianWorkData.length, 'items');
-              console.log('📋 Work experience data details:', fabianWorkData);
-            }
-          } else {
-            console.log('❌ No Fabian records found in education data');
-          }
+        if (educationError) {
+          console.error('❌ Error fetching education:', educationError);
         } else {
-          console.log('❌ No education records found at all');
-        }
-        
-        // Set the data
-        console.log('🔧 About to set education data:', educationData);
-        console.log('🔧 About to set work experience data:', fabianWorkData);
-        
-        // Force set the data immediately - Use real Fabian data instead of demo data
-        console.log('🔧 Setting education data immediately:', educationData);
-        
-        // Replace demo data with real Fabian data
-        const realFabianEducation = [
-          {
-            id: 'fabian-edu-1',
-            degree: 'Especialista No Code',
-            institution: 'No Code Hackers',
-            field_of_study: 'Desarrollo No Code',
-            graduation_year: 2024,
-            description: 'Especialización en desarrollo de aplicaciones sin código. Dominio de herramientas como Bubble, Webflow, Zapier y Airtable.'
-          },
-          {
-            id: 'fabian-edu-2', 
-            degree: 'Certificación Internacional Consultor de Negocios',
-            institution: 'Consul Business School',
-            field_of_study: 'Consultoría de Negocios',
-            graduation_year: 2023,
-            description: 'Certificación en consultoría empresarial y transformación digital. Metodologías ágiles y gestión del cambio.'
-          },
-          {
-            id: 'fabian-edu-3',
-            degree: 'Growth en Ecommerce',
-            institution: 'Product Hackers School',
-            field_of_study: 'Growth Marketing',
-            graduation_year: 2023,
-            description: 'Especialización en crecimiento de ecommerce. Estrategias de adquisición, retención y optimización de conversiones.'
-          },
-          {
-            id: 'fabian-edu-4',
-            degree: 'Ingeniería Industrial',
-            institution: 'Universidad Nacional de Colombia',
-            field_of_study: 'Ingeniería Industrial',
-            graduation_year: 2015,
-            description: 'Formación integral en optimización de procesos, gestión de calidad y mejora continua. Enfoque en manufactura y servicios.'
-          },
-          {
-            id: 'fabian-edu-5',
-            degree: 'Certificación en Lean Six Sigma',
-            institution: 'Instituto de Calidad y Productividad',
-            field_of_study: 'Mejora de Procesos',
-            graduation_year: 2019,
-            description: 'Certificación Green Belt en metodologías Lean Six Sigma. Herramientas para reducción de desperdicios y mejora de calidad.'
-          },
-          {
-            id: 'fabian-edu-6',
-            degree: 'Diplomado en Transformación Digital',
-            institution: 'Universidad de los Andes',
-            field_of_study: 'Tecnología e Innovación',
-            graduation_year: 2022,
-            description: 'Estrategias de transformación digital para empresas tradicionales. Implementación de tecnologías emergentes.'
-          }
-        ];
-        
-        educationRef.current = realFabianEducation;
-        setEducation(realFabianEducation);
-        
-        // Replace demo work data with real Fabian data
-        console.log('🔧 Setting work experience data immediately:', fabianWorkData);
-        
-        const realFabianWork = [
-          {
-            id: 'fabian-work-1',
-            position: 'Fundador y Estratega de Transformación Industrial',
-            company: 'Agencia de No Code',
-            description: 'Transformando plantas industriales y talleres manufactureros en ecosistemas digitales con No Code. Liderando la digitalización de procesos industriales tradicionales mediante soluciones No Code.',
-            start_date: '2023-01-01',
-            end_date: null
-          },
-          {
-            id: 'fabian-work-2',
-            position: 'Especialista en Automatización No Code para Ecommerce',
-            company: 'Freelance',
-            description: 'Desarrollo de soluciones No Code para optimización de procesos de ecommerce. Implementación de automatizaciones que redujeron costos operativos en 40%.',
-            start_date: '2022-06-01',
-            end_date: '2022-12-31'
-          },
-          {
-            id: 'fabian-work-3',
-            position: 'Gerente de Producción Metalmecánica',
-            company: 'Industria Metalmecánica',
-            description: 'Gestión de procesos de producción y optimización de líneas de manufactura. Mejora de eficiencia productiva en 25% mediante implementación de metodologías lean.',
-            start_date: '2020-01-01',
-            end_date: '2022-05-31'
-          },
-          {
-            id: 'fabian-work-4',
-            position: 'Supervisor de Calidad',
-            company: 'Manufacturas del Norte',
-            description: 'Supervisión de procesos de calidad y control de producción. Implementación de sistemas de gestión de calidad ISO 9001.',
-            start_date: '2018-03-01',
-            end_date: '2019-12-31'
-          },
-          {
-            id: 'fabian-work-5',
-            position: 'Ingeniero de Procesos',
-            company: 'Tecnología Industrial S.A.S',
-            description: 'Diseño y optimización de procesos industriales. Desarrollo de soluciones técnicas para mejora continua de procesos productivos.',
-            start_date: '2016-08-01',
-            end_date: '2018-02-28'
-          },
-          {
-            id: 'fabian-work-6',
-            position: 'Practicante de Ingeniería Industrial',
-            company: 'Grupo Empresarial ABC',
-            description: 'Apoyo en proyectos de mejora de procesos y análisis de datos. Participación en implementación de sistemas de gestión.',
-            start_date: '2015-01-01',
-            end_date: '2016-07-31'
-          }
-        ];
-        
-        workExperienceRef.current = realFabianWork;
-        setWorkExperience(realFabianWork);
-
-        // Portfolio data comes from talent_profiles.portfolio_url
-        if (talentData && talentData.portfolio_url) {
-          console.log('✅ Portfolio URL found in talent profile:', talentData.portfolio_url);
-          setPortfolios([{
-            id: 'portfolio-1',
-            title: 'Portfolio Principal',
-            url: talentData.portfolio_url,
-            description: 'Portfolio de trabajos',
-            type: 'website'
-          }]);
-        } else {
-          console.log('❌ No portfolio URL found in talent profile');
-          // For demo purposes, add sample portfolio data
-          console.log('🎨 Adding demo portfolio data for Fabian Segura');
-          setPortfolios([{
-            id: 'portfolio-demo-1',
-            title: 'Portfolio de Fabian Segura',
-            url: 'https://fabiansegura.com/portfolio',
-            description: 'Portfolio profesional con proyectos de No Code',
-            type: 'website'
-          }]);
+          console.log('✅ Education data loaded:', educationData?.length || 0, 'items');
+          educationRef.current = educationData || [];
+          setEducation(educationData || []);
         }
 
-        // Social links come from profiles.social_links (JSON field)
-        if (profileData && profileData.social_links) {
-          console.log('✅ Social links found in profile:', profileData.social_links);
-          const socialLinksArray = [];
-          
-          // Cast to proper type
-          const socialLinksData = profileData.social_links as any;
-          
-          // Convert JSON object to array
-          if (socialLinksData.linkedin) {
-            socialLinksArray.push({
-              id: 'linkedin',
-              platform: 'linkedin',
-              url: socialLinksData.linkedin
-            });
-          }
-          if (socialLinksData.youtube) {
-            socialLinksArray.push({
-              id: 'youtube',
-              platform: 'youtube',
-              url: socialLinksData.youtube
-            });
-          }
-          if (socialLinksData.website) {
-            socialLinksArray.push({
-              id: 'website',
-              platform: 'other',
-              url: socialLinksData.website
-            });
-          }
-          if (socialLinksData.github) {
-            socialLinksArray.push({
-              id: 'github',
-              platform: 'github',
-              url: socialLinksData.github
-            });
-          }
-          if (socialLinksData.twitter) {
-            socialLinksArray.push({
-              id: 'twitter',
-              platform: 'twitter',
-              url: socialLinksData.twitter
-            });
-          }
-          if (socialLinksData.instagram) {
-            socialLinksArray.push({
-              id: 'instagram',
-              platform: 'instagram',
-              url: socialLinksData.instagram
-            });
-          }
-          
-          console.log('✅ Processed social links array:', socialLinksArray);
-          setSocialLinks(socialLinksArray);
+        // Fetch REAL work experience from talent_experiences table
+        const { data: workData, error: workError } = await supabase
+          .from('talent_experiences' as any)
+          .select('*')
+          .eq('user_id', id || '')
+          .order('current', { ascending: false })
+          .order('start_date', { ascending: false });
+
+        if (workError) {
+          console.error('❌ Error fetching work experience:', workError);
         } else {
-          console.log('❌ No social links found in profile');
-          // For demo purposes, add sample social links data
-          console.log('🎨 Adding demo social links data for Fabian Segura');
-          setSocialLinks([
-            {
-              id: 'linkedin-demo',
-              platform: 'linkedin',
-              url: 'https://linkedin.com/in/fabiansegura'
-            },
-            {
-              id: 'instagram-demo',
-              platform: 'instagram',
-              url: 'https://instagram.com/fabiansegura'
-            },
-            {
-              id: 'twitter-demo',
-              platform: 'twitter',
-              url: 'https://twitter.com/fabiansegura'
-            }
-          ]);
-      }
+          console.log('✅ Work experience data loaded:', workData?.length || 0, 'items');
+          workExperienceRef.current = workData || [];
+          setWorkExperience(workData || []);
+        }
+
+        // Fetch REAL portfolio data from talent_portfolios table
+        const { data: portfolioData, error: portfolioError } = await supabase
+          .from('talent_portfolios' as any)
+          .select('*')
+          .eq('user_id', id || '')
+          .order('is_primary', { ascending: false });
+
+        if (portfolioError) {
+          console.error('❌ Error fetching portfolios:', portfolioError);
+          setPortfolios([]);
+        } else {
+          console.log('✅ Portfolio data loaded:', portfolioData?.length || 0, 'items');
+          setPortfolios(portfolioData || []);
+        }
+
+        // Fetch REAL social links from talent_social_links table
+        const { data: socialLinksData, error: socialLinksError } = await supabase
+          .from('talent_social_links' as any)
+          .select('*')
+          .eq('user_id', id || '');
+
+        if (socialLinksError) {
+          console.error('❌ Error fetching social links:', socialLinksError);
+          setSocialLinks([]);
+        } else {
+          console.log('✅ Social links data loaded:', socialLinksData?.length || 0, 'items');
+          setSocialLinks(socialLinksData || []);
+        }
       }
     } catch (error) {
       console.error('❌ Error fetching talent profile:', error);
