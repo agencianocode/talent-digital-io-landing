@@ -38,16 +38,17 @@ import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useSupabaseMessages } from "@/contexts/SupabaseMessagesContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useAdminCustomization } from "@/hooks/useAdminCustomization";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
 const navigationItems = [
-  { title: "Dashboard", value: "dashboard", icon: LayoutDashboard },
-  { title: "Solicitudes Upgrade", value: "upgrade-requests", icon: CheckSquare },
-  { title: "Usuarios", value: "users", icon: UserCog },
-  { title: "Empresas", value: "companies", icon: Building2 },
-  { title: "Oportunidades", value: "opportunities", icon: Briefcase },
-  { title: "Marketplace", value: "marketplace", icon: ShoppingBag },
+  { title: "Dashboard", value: "dashboard", icon: LayoutDashboard, showKey: 'show_dashboard' },
+  { title: "Solicitudes Upgrade", value: "upgrade-requests", icon: CheckSquare, showKey: 'show_upgrade_requests' },
+  { title: "Usuarios", value: "users", icon: UserCog, showKey: 'show_users' },
+  { title: "Empresas", value: "companies", icon: Building2, showKey: 'show_companies' },
+  { title: "Oportunidades", value: "opportunities", icon: Briefcase, showKey: 'show_opportunities' },
+  { title: "Marketplace", value: "marketplace", icon: ShoppingBag, showKey: 'show_marketplace_menu' },
 ];
 
 interface AdminSidebarProps {
@@ -61,6 +62,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const { user, profile, signOut } = useSupabaseAuth();
   const { conversations } = useSupabaseMessages();
   const { unreadCount: unreadNotificationsCount } = useNotifications();
+  const { customization } = useAdminCustomization();
   const navigate = useNavigate();
 
   // Calculate unread messages count
@@ -121,26 +123,28 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 px-2">
-              {navigationItems.map((item) => {
-                const isActive = activeTab === item.value;
-                return (
-                  <SidebarMenuItem key={item.value}>
-                    <SidebarMenuButton
-                      onClick={() => onTabChange(item.value)}
-                      isActive={isActive}
-                      className={cn(
-                        "cursor-pointer px-3 py-2.5 rounded-md transition-colors w-full",
-                        isActive
-                          ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300"
-                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4 flex-shrink-0" />
-                      {!collapsed && <span className="truncate">{item.title}</span>}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {navigationItems
+                .filter((item) => customization?.[item.showKey as keyof typeof customization] !== false)
+                .map((item) => {
+                  const isActive = activeTab === item.value;
+                  return (
+                    <SidebarMenuItem key={item.value}>
+                      <SidebarMenuButton
+                        onClick={() => onTabChange(item.value)}
+                        isActive={isActive}
+                        className={cn(
+                          "cursor-pointer px-3 py-2.5 rounded-md transition-colors w-full",
+                          isActive
+                            ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300"
+                            : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        )}
+                      >
+                        <item.icon className="h-4 w-4 flex-shrink-0" />
+                        {!collapsed && <span className="truncate">{item.title}</span>}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -150,51 +154,55 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
       <SidebarFooter className="border-t p-4 bg-background">
         {/* Bottom navigation: Mensajes y Notificaciones */}
         <div className="space-y-2 mb-4">
-          <SidebarMenuButton
-            onClick={() => onTabChange("chat")}
-            isActive={activeTab === "chat"}
-            className={cn(
-              "cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
-              activeTab === "chat"
-                ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300"
-                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
-            )}
-          >
-            <MessageSquare className="h-4 w-4 flex-shrink-0" />
-            {!collapsed && (
-              <>
-                <span className="flex-1 truncate">Mensajes</span>
-                {unreadMessagesCount > 0 && (
-                  <Badge variant="destructive" className="text-xs flex-shrink-0">
-                    {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
-                  </Badge>
-                )}
-              </>
-            )}
-          </SidebarMenuButton>
+          {customization?.show_chat !== false && (
+            <SidebarMenuButton
+              onClick={() => onTabChange("chat")}
+              isActive={activeTab === "chat"}
+              className={cn(
+                "cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
+                activeTab === "chat"
+                  ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300"
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
+              )}
+            >
+              <MessageSquare className="h-4 w-4 flex-shrink-0" />
+              {!collapsed && (
+                <>
+                  <span className="flex-1 truncate">Mensajes</span>
+                  {unreadMessagesCount > 0 && (
+                    <Badge variant="destructive" className="text-xs flex-shrink-0">
+                      {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
+                    </Badge>
+                  )}
+                </>
+              )}
+            </SidebarMenuButton>
+          )}
 
-          <SidebarMenuButton
-            onClick={() => onTabChange("notifications")}
-            isActive={activeTab === "notifications"}
-            className={cn(
-              "cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
-              activeTab === "notifications"
-                ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300"
-                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
-            )}
-          >
-            <Bell className="h-4 w-4 flex-shrink-0" />
-            {!collapsed && (
-              <>
-                <span className="flex-1 truncate">Notificaciones</span>
-                {unreadNotificationsCount > 0 && (
-                  <Badge variant="destructive" className="text-xs flex-shrink-0">
-                    {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
-                  </Badge>
-                )}
-              </>
-            )}
-          </SidebarMenuButton>
+          {customization?.show_notifications !== false && (
+            <SidebarMenuButton
+              onClick={() => onTabChange("notifications")}
+              isActive={activeTab === "notifications"}
+              className={cn(
+                "cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
+                activeTab === "notifications"
+                  ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300"
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
+              )}
+            >
+              <Bell className="h-4 w-4 flex-shrink-0" />
+              {!collapsed && (
+                <>
+                  <span className="flex-1 truncate">Notificaciones</span>
+                  {unreadNotificationsCount > 0 && (
+                    <Badge variant="destructive" className="text-xs flex-shrink-0">
+                      {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
+                    </Badge>
+                  )}
+                </>
+              )}
+            </SidebarMenuButton>
+          )}
         </div>
 
         {/* User Profile Dropdown */}

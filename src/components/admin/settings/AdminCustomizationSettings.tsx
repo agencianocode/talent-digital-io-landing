@@ -1,12 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminCustomization } from '@/hooks/useAdminCustomization';
-import { Loader2, Save, Palette, Layout, Settings, Eye } from 'lucide-react';
+import { Loader2, Save, Layout, Settings } from 'lucide-react';
 import { useState } from 'react';
 
 const AdminCustomizationSettings = () => {
@@ -45,127 +43,30 @@ const AdminCustomizationSettings = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue="visual" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="visual"><Palette className="mr-2 h-4 w-4" />Visual</TabsTrigger>
-          <TabsTrigger value="content"><Eye className="mr-2 h-4 w-4" />Contenido</TabsTrigger>
-          <TabsTrigger value="widgets"><Layout className="mr-2 h-4 w-4" />Widgets</TabsTrigger>
-          <TabsTrigger value="features"><Settings className="mr-2 h-4 w-4" />Funciones</TabsTrigger>
+      <Tabs defaultValue="widgets" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="widgets"><Layout className="mr-2 h-4 w-4" />Widgets Dashboard</TabsTrigger>
+          <TabsTrigger value="sidebar"><Settings className="mr-2 h-4 w-4" />Menú Lateral</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="visual" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Apariencia</CardTitle>
-              <CardDescription>Personaliza los colores y logo de la plataforma</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Nombre de la Plataforma</Label>
-                <Input
-                  value={getValue('platform_name')}
-                  onChange={(e) => setLocalChanges({...localChanges, platform_name: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>URL del Logo</Label>
-                <Input
-                  value={getValue('platform_logo_url') || ''}
-                  onChange={(e) => setLocalChanges({...localChanges, platform_logo_url: e.target.value})}
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Color Primario</Label>
-                  <Input
-                    type="color"
-                    value={getValue('primary_color')}
-                    onChange={(e) => setLocalChanges({...localChanges, primary_color: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Color Secundario</Label>
-                  <Input
-                    type="color"
-                    value={getValue('secondary_color')}
-                    onChange={(e) => setLocalChanges({...localChanges, secondary_color: e.target.value})}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="content" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Información de la Plataforma</CardTitle>
-              <CardDescription>Configura textos y datos de contacto</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Mensaje de Bienvenida</Label>
-                <Textarea
-                  value={getValue('welcome_message') || ''}
-                  onChange={(e) => setLocalChanges({...localChanges, welcome_message: e.target.value})}
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Descripción de la Plataforma</Label>
-                <Textarea
-                  value={getValue('platform_description') || ''}
-                  onChange={(e) => setLocalChanges({...localChanges, platform_description: e.target.value})}
-                  rows={4}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Email de Contacto</Label>
-                  <Input
-                    type="email"
-                    value={getValue('contact_email') || ''}
-                    onChange={(e) => setLocalChanges({...localChanges, contact_email: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Teléfono de Contacto</Label>
-                  <Input
-                    value={getValue('contact_phone') || ''}
-                    onChange={(e) => setLocalChanges({...localChanges, contact_phone: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>URL de Soporte</Label>
-                <Input
-                  value={getValue('support_url') || ''}
-                  onChange={(e) => setLocalChanges({...localChanges, support_url: e.target.value})}
-                  placeholder="https://..."
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="widgets" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Widgets del Dashboard</CardTitle>
-              <CardDescription>Controla qué elementos se muestran</CardDescription>
+              <CardDescription>Controla qué elementos se muestran en el dashboard principal</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { key: 'show_stats_cards', label: 'Tarjetas de Estadísticas', desc: 'Muestra métricas principales' },
-                { key: 'show_charts', label: 'Gráficos', desc: 'Visualizaciones de datos' },
+                { key: 'show_stats_cards', label: 'Tarjetas de Estadísticas', desc: 'Muestra métricas principales del sistema' },
+                { key: 'show_charts', label: 'Gráficos', desc: 'Visualizaciones de datos y tendencias' },
                 { key: 'show_activity_feed', label: 'Feed de Actividad', desc: 'Actividad reciente de la plataforma' },
-                { key: 'show_quick_actions', label: 'Acciones Rápidas', desc: 'Botones de acceso rápido' },
+                { key: 'show_quick_actions', label: 'Acciones Rápidas', desc: 'Botones de acceso rápido a funciones' },
                 { key: 'show_registration_links', label: 'Links de Registro', desc: 'Enlaces de registro para compartir' }
               ].map((widget) => (
-                <div key={widget.key} className="flex items-center justify-between">
+                <div key={widget.key} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/5">
                   <div className="space-y-0.5">
-                    <Label>{widget.label}</Label>
+                    <Label className="cursor-pointer">{widget.label}</Label>
                     <p className="text-sm text-muted-foreground">{widget.desc}</p>
                   </div>
                   <Switch
@@ -178,27 +79,31 @@ const AdminCustomizationSettings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="features" className="space-y-4">
+        <TabsContent value="sidebar" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Funcionalidades</CardTitle>
-              <CardDescription>Activa o desactiva características del sistema</CardDescription>
+              <CardTitle>Elementos del Menú Lateral</CardTitle>
+              <CardDescription>Controla qué opciones aparecen en el sidebar del panel administrativo</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { key: 'enable_marketplace', label: 'Marketplace', desc: 'Sistema de servicios' },
-                { key: 'enable_academy_features', label: 'Características de Academia', desc: 'Gestión de estudiantes' },
-                { key: 'enable_notifications', label: 'Notificaciones', desc: 'Sistema de notificaciones' },
-                { key: 'enable_chat', label: 'Chat', desc: 'Mensajería entre usuarios' }
-              ].map((feature) => (
-                <div key={feature.key} className="flex items-center justify-between">
+                { key: 'show_dashboard', label: '📊 Dashboard', desc: 'Vista general del panel' },
+                { key: 'show_upgrade_requests', label: '✅ Solicitudes Upgrade', desc: 'Gestión de solicitudes de actualización' },
+                { key: 'show_users', label: '👥 Usuarios', desc: 'Gestión de usuarios del sistema' },
+                { key: 'show_companies', label: '🏢 Empresas', desc: 'Gestión de empresas registradas' },
+                { key: 'show_opportunities', label: '💼 Oportunidades', desc: 'Moderación de oportunidades publicadas' },
+                { key: 'show_marketplace_menu', label: '🛍️ Marketplace', desc: 'Gestión del marketplace de servicios' },
+                { key: 'show_chat', label: '💬 Mensajes', desc: 'Sistema de mensajería administrativa' },
+                { key: 'show_notifications', label: '🔔 Notificaciones', desc: 'Centro de notificaciones' }
+              ].map((item) => (
+                <div key={item.key} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/5">
                   <div className="space-y-0.5">
-                    <Label>{feature.label}</Label>
-                    <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                    <Label className="cursor-pointer">{item.label}</Label>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
                   </div>
                   <Switch
-                    checked={getValue(feature.key as any)}
-                    onCheckedChange={(checked) => setLocalChanges({...localChanges, [feature.key]: checked})}
+                    checked={getValue(item.key as any)}
+                    onCheckedChange={(checked) => setLocalChanges({...localChanges, [item.key]: checked})}
                   />
                 </div>
               ))}

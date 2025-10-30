@@ -22,6 +22,15 @@ export interface AdminCustomization {
   enable_academy_features: boolean;
   enable_notifications: boolean;
   enable_chat: boolean;
+  // Sidebar visibility controls
+  show_dashboard: boolean;
+  show_upgrade_requests: boolean;
+  show_users: boolean;
+  show_companies: boolean;
+  show_opportunities: boolean;
+  show_marketplace_menu: boolean;
+  show_chat: boolean;
+  show_notifications: boolean;
 }
 
 export const useAdminCustomization = () => {

@@ -123,9 +123,17 @@ export type Database = {
           secondary_color: string | null
           show_activity_feed: boolean | null
           show_charts: boolean | null
+          show_chat: boolean | null
+          show_companies: boolean | null
+          show_dashboard: boolean | null
+          show_marketplace_menu: boolean | null
+          show_notifications: boolean | null
+          show_opportunities: boolean | null
           show_quick_actions: boolean | null
           show_registration_links: boolean | null
           show_stats_cards: boolean | null
+          show_upgrade_requests: boolean | null
+          show_users: boolean | null
           support_url: string | null
           updated_at: string
           updated_by: string | null
@@ -147,9 +155,17 @@ export type Database = {
           secondary_color?: string | null
           show_activity_feed?: boolean | null
           show_charts?: boolean | null
+          show_chat?: boolean | null
+          show_companies?: boolean | null
+          show_dashboard?: boolean | null
+          show_marketplace_menu?: boolean | null
+          show_notifications?: boolean | null
+          show_opportunities?: boolean | null
           show_quick_actions?: boolean | null
           show_registration_links?: boolean | null
           show_stats_cards?: boolean | null
+          show_upgrade_requests?: boolean | null
+          show_users?: boolean | null
           support_url?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -171,9 +187,17 @@ export type Database = {
           secondary_color?: string | null
           show_activity_feed?: boolean | null
           show_charts?: boolean | null
+          show_chat?: boolean | null
+          show_companies?: boolean | null
+          show_dashboard?: boolean | null
+          show_marketplace_menu?: boolean | null
+          show_notifications?: boolean | null
+          show_opportunities?: boolean | null
           show_quick_actions?: boolean | null
           show_registration_links?: boolean | null
           show_stats_cards?: boolean | null
+          show_upgrade_requests?: boolean | null
+          show_users?: boolean | null
           support_url?: string | null
           updated_at?: string
           updated_by?: string | null
