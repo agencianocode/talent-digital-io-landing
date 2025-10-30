@@ -10,6 +10,7 @@ import { BusinessMetrics } from '@/components/dashboard/BusinessMetrics';
 import { useRealApplications } from '@/hooks/useRealApplications';
 import { supabase } from '@/integrations/supabase/client';
 import RecommendedProfiles from '@/components/dashboard/RecommendedProfiles';
+import { useAdminCustomization } from '@/hooks/useAdminCustomization';
 
 
 const BusinessDashboard = () => {
@@ -27,6 +28,7 @@ const BusinessDashboard = () => {
   
   const { opportunities } = useSupabaseOpportunities();
   const { metrics: applicationMetrics } = useRealApplications();
+  const { customization } = useAdminCustomization();
 
   // Map de postulantes por oportunidad desde métricas reales
   const applicantsByOpportunity = useMemo<Record<string, number>>(() => {
@@ -148,7 +150,7 @@ const BusinessDashboard = () => {
                     Hola {userProfile?.full_name || 'Usuario'}! 👋
                   </h1>
                   <p className="text-sm sm:text-base text-slate-600 mt-1">
-                    Empezá a construir tu equipo en TalentoDigital.io
+                    {customization?.banner_welcome_text || 'Empezá a construir tu equipo en TalentoDigital.io'}
                   </p>
                 </div>
               </div>
@@ -173,31 +175,35 @@ const BusinessDashboard = () => {
             </div>
 
             {/* Right Column - Video Tutorial Real */}
-            <div className="hidden lg:flex justify-center">
-              <div className="relative">
-                {/* Video Tutorial */}
-                <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50 w-80 h-48">
-                  <iframe
-                    className="w-full h-full"
-                    src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                    title="Tutorial TalentoDigital"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+            {customization?.banner_show_video && (
+              <div className="hidden lg:flex justify-center">
+                <div className="relative">
+                  {/* Video Tutorial */}
+                  <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50 w-80 h-48">
+                    <iframe
+                      className="w-full h-full"
+                      src={customization?.banner_video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}
+                      title="Tutorial TalentoDigital"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                  
+                  {/* Botón alternativo para llamada personalizada */}
+                  {customization?.banner_show_call_button && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 w-full text-xs"
+                      onClick={() => window.open(customization?.banner_call_url || 'https://calendly.com/talentodigital', '_blank')}
+                    >
+                      {customization?.banner_call_button_text || '📞 Agendar llamada personalizada'}
+                    </Button>
+                  )}
                 </div>
-                
-                {/* Botón alternativo para llamada personalizada */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3 w-full text-xs"
-                  onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}
-                >
-                  📞 Agendar llamada personalizada
-                </Button>
               </div>
-            </div>
+            )}
           </div>
         </div>
 

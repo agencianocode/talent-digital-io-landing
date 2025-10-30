@@ -5,13 +5,15 @@ import {
   Shield, 
   Cog,
   HelpCircle,
-  Settings
+  Settings,
+  Monitor
 } from 'lucide-react';
 import AdminSystemSettings from '@/components/admin/settings/AdminSystemSettings';
 import AdminNotificationSettings from '@/components/admin/settings/AdminNotificationSettings';
 import AdminSecuritySettings from '@/components/admin/settings/AdminSecuritySettings';
 import AdminHelpSettings from '@/components/admin/settings/AdminHelpSettings';
 import AdminCustomizationSettings from '@/components/admin/settings/AdminCustomizationSettings';
+import AdminBannerSettings from '@/components/admin/settings/AdminBannerSettings';
 
 const AdminSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("system");
@@ -28,7 +30,7 @@ const AdminSettings: React.FC = () => {
 
       {/* Main Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="system" className="flex items-center gap-2">
             <Cog className="h-4 w-4" />
             Sistema
@@ -36,6 +38,10 @@ const AdminSettings: React.FC = () => {
           <TabsTrigger value="customization" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Personalización
+          </TabsTrigger>
+          <TabsTrigger value="banner" className="flex items-center gap-2">
+            <Monitor className="h-4 w-4" />
+            Banner
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
@@ -59,6 +65,11 @@ const AdminSettings: React.FC = () => {
         {/* Customization Settings */}
         <TabsContent value="customization" className="mt-6">
           <AdminCustomizationSettings />
+        </TabsContent>
+
+        {/* Banner Settings */}
+        <TabsContent value="banner" className="mt-6">
+          <AdminBannerSettings />
         </TabsContent>
 
         {/* Notification Settings */}

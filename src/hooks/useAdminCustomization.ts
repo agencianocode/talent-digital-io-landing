@@ -31,6 +31,13 @@ export interface AdminCustomization {
   show_marketplace_menu: boolean;
   show_chat: boolean;
   show_notifications: boolean;
+  // Banner customization
+  banner_video_url: string;
+  banner_call_url: string;
+  banner_welcome_text: string;
+  banner_call_button_text: string;
+  banner_show_video: boolean;
+  banner_show_call_button: boolean;
 }
 
 export const useAdminCustomization = () => {

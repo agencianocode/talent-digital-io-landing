@@ -194,6 +194,12 @@ export type Database = {
       }
       admin_customization: {
         Row: {
+          banner_call_button_text: string | null
+          banner_call_url: string | null
+          banner_show_call_button: boolean | null
+          banner_show_video: boolean | null
+          banner_video_url: string | null
+          banner_welcome_text: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string
@@ -226,6 +232,12 @@ export type Database = {
           welcome_message: string | null
         }
         Insert: {
+          banner_call_button_text?: string | null
+          banner_call_url?: string | null
+          banner_show_call_button?: boolean | null
+          banner_show_video?: boolean | null
+          banner_video_url?: string | null
+          banner_welcome_text?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -258,6 +270,12 @@ export type Database = {
           welcome_message?: string | null
         }
         Update: {
+          banner_call_button_text?: string | null
+          banner_call_url?: string | null
+          banner_show_call_button?: boolean | null
+          banner_show_video?: boolean | null
+          banner_video_url?: string | null
+          banner_welcome_text?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
