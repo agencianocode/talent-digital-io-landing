@@ -484,7 +484,7 @@ const PublicTalentProfile = () => {
 
                 {/* Languages & Certifications */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                  <Card>
+                  <Card className="self-start">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Languages className="h-5 w-5" />
@@ -505,7 +505,7 @@ const PublicTalentProfile = () => {
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="self-start">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Shield className="h-5 w-5" />
