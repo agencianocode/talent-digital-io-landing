@@ -14,9 +14,12 @@ export const useExperience = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchExperiences = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      console.warn('⚠️ fetchExperiences: No user found');
+      return;
+    }
     
-    console.log('🔄 Fetching experiences for user:', user.id);
+    console.log('🔄 Fetching experiences for user:', user.id, user.email);
     setLoading(true);
     try {
       // @ts-ignore - talent_experiences table exists but types not yet generated
@@ -27,8 +30,14 @@ export const useExperience = () => {
         .order('current', { ascending: false })
         .order('start_date', { ascending: false });
 
-      if (error) throw error;
-      console.log('📊 Fetched experiences:', data);
+      if (error) {
+        console.error('❌ Error fetching experiences:', error);
+        throw error;
+      }
+      
+      console.log('📊 Fetched experiences for user', user.id, ':', data?.length || 0, 'items');
+      console.log('📊 Experiences data:', data);
+      
       setExperiences(data as any || []);
     } catch (err: any) {
       console.error('Error fetching experiences:', err);

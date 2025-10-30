@@ -14,9 +14,12 @@ export const useEducation = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchEducation = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      console.warn('⚠️ fetchEducation: No user found');
+      return;
+    }
     
-    console.log('🔄 Fetching education for user:', user.id);
+    console.log('🔄 Fetching education for user:', user.id, user.email);
     setLoading(true);
     try {
       // @ts-ignore - talent_education table exists but types not yet generated
@@ -27,8 +30,14 @@ export const useEducation = () => {
         .order('current', { ascending: false })
         .order('start_date', { ascending: false });
 
-      if (error) throw error;
-      console.log('📊 Fetched education:', data);
+      if (error) {
+        console.error('❌ Error fetching education:', error);
+        throw error;
+      }
+      
+      console.log('📊 Fetched education for user', user.id, ':', data?.length || 0, 'items');
+      console.log('📊 Education data:', data);
+      
       setEducation(data as any || []);
     } catch (err: any) {
       console.error('Error fetching education:', err);
