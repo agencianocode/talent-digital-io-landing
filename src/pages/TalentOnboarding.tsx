@@ -115,7 +115,6 @@ const TalentOnboarding = () => {
             city: talentProfile.city,
             phone: talentProfile.phone,
             phone_country_code: talentProfile.phoneCountryCode,
-            profile_photo_url: talentProfile.profilePhotoUrl,
             category: data.category,
             category2: data.category2 || null,
             title: data.title,
@@ -134,8 +133,9 @@ const TalentOnboarding = () => {
 
         // Upload profile photo if exists
         if (talentProfile.profilePhoto) {
+          console.log('📸 Uploading profile photo...');
           const fileExt = talentProfile.profilePhoto.name.split('.').pop();
-          const fileName = `${session.user.id}-profile.${fileExt}`;
+          const fileName = `${session.user.id}/avatar.${fileExt}`;
           
           const { error: uploadError } = await supabase.storage
             .from('avatars')
@@ -146,13 +146,23 @@ const TalentOnboarding = () => {
               .from('avatars')
               .getPublicUrl(fileName);
             
+            console.log('📸 Photo uploaded successfully:', publicUrl);
+            
+            // Update user metadata with avatar_url
+            await supabase.auth.updateUser({
+              data: {
+                avatar_url: publicUrl,
+                updated_at: new Date().toISOString()
+              }
+            });
+            
             // Update profiles table with comprehensive data
             await supabase
               .from('profiles')
               .upsert({
                 user_id: session.user.id,
                 full_name: `${talentProfile.firstName} ${talentProfile.lastName}`.trim(),
-                profile_photo_url: publicUrl,
+                avatar_url: publicUrl,
                 phone: talentProfile.phone,
                 country: talentProfile.country,
                 city: talentProfile.city,
@@ -160,6 +170,8 @@ const TalentOnboarding = () => {
               });
 
             console.log('✅ Profile photo uploaded and saved');
+          } else {
+            console.error('❌ Photo upload error:', uploadError);
           }
         } else {
           // Update profiles table even without photo
