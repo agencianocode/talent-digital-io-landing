@@ -337,7 +337,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                   </div>
                   <div className="flex items-center justify-center gap-2">
                     <Bell className="h-4 w-4" />
-                    <span className="hidden sm:inline">Notificaciones en la app</span>
+                    <span className="hidden sm:inline">Web App</span>
                   </div>
                 </div>
 

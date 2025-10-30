@@ -319,7 +319,7 @@ const AdminNotificationSettings: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-center gap-2">
                     <Smartphone className="h-4 w-4" />
-                    <span className="hidden sm:inline">Push móvil</span>
+                    <span className="hidden sm:inline">Web App</span>
                   </div>
                 </div>
 

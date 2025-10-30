@@ -359,7 +359,7 @@ const NotificationSettings = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5" />
-                Notificaciones en la App
+                Web App
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -371,7 +371,7 @@ const NotificationSettings = () => {
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Nuevas oportunidades</FormLabel>
                       <FormDescription>
-                        Mostrar notificaciones en la app para nuevas oportunidades
+                        Mostrar notificaciones en la web app para nuevas oportunidades
                       </FormDescription>
                     </div>
                     <FormControl>
