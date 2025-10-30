@@ -37,12 +37,14 @@ import { useExperience } from "@/hooks/useExperience";
 import { useEducation } from "@/hooks/useEducation";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import { useProfileMetrics } from "@/hooks/useProfileMetrics";
+import { useTalentProfileProgress } from "@/hooks/useTalentProfileProgress";
 
 const TalentMyProfile = () => {
   const navigate = useNavigate();
   const { user } = useSupabaseAuth();
-  const { profile, userProfile, getProfileCompleteness } = useProfileData();
+  const { profile, userProfile } = useProfileData();
   const { generatePublicUrl, copyToClipboard } = useProfileSharing();
+  const { getCompletionPercentage, getTasksStatus } = useTalentProfileProgress();
   
   const { portfolios } = usePortfolio();
   const { experiences } = useExperience();
@@ -87,7 +89,8 @@ const TalentMyProfile = () => {
   const videoUrl = profile?.video_presentation_url || '';
   const availability = profile?.availability || '';
 
-  const profileCompleteness = getProfileCompleteness();
+  const profileCompleteness = getCompletionPercentage();
+  const tasks = getTasksStatus();
   const publicUrl = generatePublicUrl();
 
   const handleCopyUrl = async () => {
@@ -109,14 +112,7 @@ const TalentMyProfile = () => {
     { label: 'Redes sociales agregadas', done: socialLinks.length > 0 },
   ];
 
-  const nextSteps = [
-    { label: 'Agregar experiencia', done: experiences.length > 0, icon: Briefcase },
-    { label: 'Agregar educación', done: education.length > 0, icon: GraduationCap },
-    { label: 'Agregar portfolio', done: portfolios.length > 0, icon: FolderOpen },
-    { label: 'Agregar redes sociales', done: socialLinks.length > 0, icon: LinkIcon },
-  ];
-
-  const completedSteps = nextSteps.filter(s => s.done).length;
+  const completedTasks = tasks.filter(t => t.completed).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background">
@@ -393,18 +389,18 @@ const TalentMyProfile = () => {
                 {/* Próximos pasos */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-muted-foreground">Próximos Pasos</h4>
-                  {nextSteps.map((step, index) => (
-                    <div key={index} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className={`h-4 w-4 ${step.done ? 'text-primary' : 'text-muted-foreground/30'}`} />
-                      <span className={step.done ? 'text-muted-foreground line-through' : 'text-foreground'}>
-                        {step.label}
+                  {tasks.map((task) => (
+                    <div key={task.id} className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className={`h-4 w-4 ${task.completed ? 'text-primary' : 'text-muted-foreground/30'}`} />
+                      <span className={task.completed ? 'text-muted-foreground line-through' : 'text-foreground'}>
+                        {task.title}
                       </span>
                     </div>
                   ))}
                   <div className="pt-2">
-                    <Progress value={(completedSteps / nextSteps.length) * 100} className="h-2" />
+                    <Progress value={(completedTasks / tasks.length) * 100} className="h-2" />
                     <p className="text-xs text-muted-foreground mt-1">
-                      {completedSteps} de {nextSteps.length} completados
+                      {completedTasks} de {tasks.length} completados
                     </p>
                   </div>
                 </div>
