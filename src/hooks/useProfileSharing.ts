@@ -11,7 +11,7 @@ export const useProfileSharing = () => {
   // Generate public profile URL
   const generatePublicUrl = useCallback((): string => {
     if (!user?.id) return '';
-    return `https://talentodigital.io/profile/${user.id}`;
+    return `https://app.talentodigital.io/profile/${user.id}`;
   }, [user?.id]);
 
   // Copy URL to clipboard
