@@ -4,7 +4,8 @@ import {
   Bell, 
   Shield, 
   Cog,
-  HelpCircle
+  HelpCircle,
+  Settings
 } from 'lucide-react';
 import AdminSystemSettings from '@/components/admin/settings/AdminSystemSettings';
 import AdminNotificationSettings from '@/components/admin/settings/AdminNotificationSettings';
@@ -27,10 +28,14 @@ const AdminSettings: React.FC = () => {
 
       {/* Main Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="system" className="flex items-center gap-2">
             <Cog className="h-4 w-4" />
             Sistema
+          </TabsTrigger>
+          <TabsTrigger value="customization" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Personalización
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
@@ -49,6 +54,11 @@ const AdminSettings: React.FC = () => {
         {/* System Settings */}
         <TabsContent value="system" className="mt-6">
           <AdminSystemSettings />
+        </TabsContent>
+
+        {/* Customization Settings */}
+        <TabsContent value="customization" className="mt-6">
+          <AdminCustomizationSettings />
         </TabsContent>
 
         {/* Notification Settings */}
