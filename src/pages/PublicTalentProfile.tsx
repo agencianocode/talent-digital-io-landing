@@ -481,6 +481,47 @@ const PublicTalentProfile = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Languages & Certifications */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start md:mt-[10px]">
+                  <Card className="self-start">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Languages className="h-5 w-5" />
+                        Idiomas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span>Español</span>
+                          <Badge variant="secondary">Nativo</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Inglés</span>
+                          <Badge variant="secondary">Intermedio</Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="self-start">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Certificaciones
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-green-500" />
+                          <span className="text-sm">Certificaciones próximamente</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
               <TabsContent value="experience" className="space-y-6">
@@ -742,46 +783,6 @@ const PublicTalentProfile = () => {
                     No hay enlaces disponibles
                   </p>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Languages */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Languages className="h-5 w-5" />
-                  Idiomas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span>Español</span>
-                    <Badge variant="secondary">Nativo</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Inglés</span>
-                    <Badge variant="secondary">Intermedio</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Certifications */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Certificaciones
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Certificaciones próximamente</span>
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
