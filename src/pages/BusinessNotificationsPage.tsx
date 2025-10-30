@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Check, Trash2, MessageCircle, Briefcase, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -163,7 +162,7 @@ const BusinessNotificationsPage = () => {
       </div>
 
       {/* Notifications List */}
-      <ScrollArea className="h-[calc(100vh-200px)]">
+      <div>
         {isLoading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Cargando notificaciones...</p>
@@ -177,7 +176,7 @@ const BusinessNotificationsPage = () => {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 pb-6">
             {notifications.map(notification => (
               <Card
                 key={notification.id}
@@ -249,7 +248,7 @@ const BusinessNotificationsPage = () => {
             ))}
           </div>
         )}
-      </ScrollArea>
+      </div>
     </div>
   );
 };

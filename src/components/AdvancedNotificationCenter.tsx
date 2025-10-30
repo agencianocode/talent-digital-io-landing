@@ -308,7 +308,7 @@ const AdvancedNotificationCenter = () => {
       </div>
 
       {/* Lista de notificaciones */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         {filteredNotifications.length === 0 ? (
           <div className="h-full flex items-center justify-center">
           <div className="text-center">
