@@ -114,7 +114,11 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-muted-foreground">Promedio de Tiempo de Respuesta</div>
-                <div className="text-xl font-bold">{metrics.averageResponseTime || '0h'}</div>
+                <div className="text-xl font-bold">
+                  {typeof metrics.averageResponseTime === 'number' && metrics.averageResponseTime > 0 
+                    ? `${metrics.averageResponseTime}h` 
+                    : 'N/A'}
+                </div>
               </div>
               <TrendingUp className="h-8 w-8 text-muted-foreground/30" />
             </div>
@@ -134,48 +138,8 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
         </Card>
       </div>
 
-      {/* Performance Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <BarChart3 className="h-5 w-5" />
-              Rendimiento por Categoría
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Tecnología</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
-                  </div>
-                  <span className="text-sm font-medium">85%</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Marketing</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: '72%' }}></div>
-                  </div>
-                  <span className="text-sm font-medium">72%</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Diseño</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div className="bg-purple-600 h-2 rounded-full" style={{ width: '68%' }}></div>
-                  </div>
-                  <span className="text-sm font-medium">68%</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+      {/* Tendencias de Aplicaciones - Solo datos reales */}
+      {metrics.totalApplications > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -187,33 +151,29 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm">Esta semana</span>
-                <div className="flex items-center gap-1">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                  <span className="text-sm font-medium text-green-600">+{metrics.thisWeekApplications}%</span>
-                </div>
+                <span className="text-sm font-medium">{metrics.thisWeekApplications} aplicaciones</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm">Mes anterior</span>
-                <div className="flex items-center gap-1">
-                  <TrendingUp className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm font-medium text-blue-600">+8%</span>
-                </div>
+                <span className="text-sm">Este mes</span>
+                <span className="text-sm font-medium">{metrics.applicationsThisMonth} aplicaciones</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm">Promedio mensual</span>
-                <span className="text-sm font-medium">{Math.floor(metrics.totalApplications / 2)} aplicaciones</span>
+                <span className="text-sm">Total</span>
+                <span className="text-sm font-medium">{metrics.totalApplications} aplicaciones</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Tasa de conversión</span>
-                <div className="flex items-center gap-2">
-                  <Progress value={metrics.conversionRate} className="h-2 w-16" />
-                  <span className="text-sm font-medium">{metrics.conversionRate}%</span>
+              {metrics.conversionRate > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Tasa de conversión</span>
+                  <div className="flex items-center gap-2">
+                    <Progress value={metrics.conversionRate} className="h-2 w-16" />
+                    <span className="text-sm font-medium">{metrics.conversionRate}%</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
 
     </div>
   );
