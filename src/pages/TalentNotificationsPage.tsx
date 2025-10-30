@@ -181,8 +181,8 @@ const TalentNotificationsPage = () => {
             {notifications.map(notification => (
               <Card
                 key={notification.id}
-                className={`p-4 cursor-pointer transition-colors hover:bg-accent ${
-                  !notification.read ? 'bg-blue-50 border-blue-200' : ''
+                className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
+                  !notification.read ? 'bg-primary/5 border-primary/20' : ''
                 }`}
                 onClick={() => handleNotificationClick(notification)}
               >

@@ -358,11 +358,11 @@ const MessageCenter = () => {
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-border">
             {filteredConversations.map((conversation: any) => (
               <Card 
                 key={conversation.id} 
-                className="border-0 rounded-none hover:bg-gray-50 cursor-pointer transition-colors"
+                className="border-0 rounded-none hover:bg-muted/50 cursor-pointer transition-colors"
                 onClick={() => handleConversationClick(conversation)}
               >
                 <CardContent className="p-4">
@@ -386,7 +386,7 @@ const MessageCenter = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-900 truncate">
+                          <h3 className="font-semibold text-foreground truncate">
                             {conversation.other_participant.name}
                           </h3>
                           <Badge className={`text-xs ${getTypeBadgeColor(conversation.conversation_type)}`}>

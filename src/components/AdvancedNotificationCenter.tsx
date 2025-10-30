@@ -239,11 +239,11 @@ const AdvancedNotificationCenter = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b bg-white">
+      <div className="p-6 border-b bg-card">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Centro de Notificaciones</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-foreground">Centro de Notificaciones</h1>
+            <p className="text-muted-foreground">
               {filteredNotifications.length} notificaciones
               {unreadCount > 0 && (
                 <span className="ml-2 text-purple-600 font-medium">
@@ -311,23 +311,23 @@ const AdvancedNotificationCenter = () => {
       <div className="flex-1 overflow-y-auto">
         {filteredNotifications.length === 0 ? (
           <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-              <Bell className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="text-center">
+              <Bell className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 No hay notificaciones
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Las notificaciones de actividad aparecerán aquí
               </p>
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-border">
             {filteredNotifications.map((notification) => (
               <Card 
                 key={notification.id} 
-                className={`border-0 rounded-none hover:bg-gray-50 cursor-pointer transition-colors ${
-                  !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                className={`border-0 rounded-none hover:bg-muted/50 cursor-pointer transition-colors ${
+                  !notification.read ? 'bg-primary/5 border-l-4 border-l-primary' : ''
                 }`}
                 onClick={() => handleNotificationClick(notification)}
               >
@@ -342,7 +342,7 @@ const AdvancedNotificationCenter = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-900">
+                          <h3 className="font-semibold text-foreground">
                             {notification.title}
                           </h3>
                           <Badge className={`text-xs ${getPriorityBadgeColor(notification.priority)}`}>
@@ -356,7 +356,7 @@ const AdvancedNotificationCenter = () => {
                         
                         <div className="flex items-center gap-2">
                           {!notification.read && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div className="w-2 h-2 bg-primary rounded-full"></div>
                           )}
                           
                           <DropdownMenu>
@@ -394,7 +394,7 @@ const AdvancedNotificationCenter = () => {
                         </div>
                       </div>
 
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className="text-sm text-muted-foreground mb-3">
                         {notification.message}
                       </p>
 
@@ -420,7 +420,7 @@ const AdvancedNotificationCenter = () => {
                       )}
 
                       {/* Fecha */}
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         <span>
                           {formatDistanceToNow(new Date(notification.created_at), { 
