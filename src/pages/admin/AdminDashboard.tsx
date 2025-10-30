@@ -6,6 +6,7 @@ import AdminStatsCards from '@/components/admin/AdminStatsCards';
 import AdminActivityFeed from '@/components/admin/AdminActivityFeed';
 import AdminCharts from '@/components/admin/AdminCharts';
 import { useAdminData } from '@/hooks/useAdminData';
+import { useAdminCustomization } from '@/hooks/useAdminCustomization';
 import { toast } from 'sonner';
 
 interface AdminDashboardProps {
@@ -14,6 +15,7 @@ interface AdminDashboardProps {
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
   const { stats, activities, chartData, isLoading, error, refetch } = useAdminData();
+  const { customization } = useAdminCustomization();
 
   const handleRefresh = async () => {
     toast.loading('Actualizando datos...', { id: 'refresh' });
@@ -52,9 +54,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Dashboard Administrativo</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            {customization?.platform_name ? `${customization.platform_name} - Admin` : 'Dashboard Administrativo'}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Resumen general de la plataforma
+            {customization?.platform_description || 'Resumen general de la plataforma'}
           </p>
         </div>
         <Button 
@@ -69,23 +73,32 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
       </div>
 
       {/* Stats Cards */}
-      <AdminStatsCards stats={stats} isLoading={isLoading} />
+      {customization?.show_stats_cards !== false && (
+        <AdminStatsCards stats={stats} isLoading={isLoading} />
+      )}
 
       {/* Charts and Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Charts */}
-        <div className="lg:col-span-2">
-          <AdminCharts chartData={chartData} isLoading={isLoading} />
-        </div>
+      {(customization?.show_charts !== false || customization?.show_activity_feed !== false) && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Charts */}
+          {customization?.show_charts !== false && (
+            <div className="lg:col-span-2">
+              <AdminCharts chartData={chartData} isLoading={isLoading} />
+            </div>
+          )}
 
-        {/* Activity Feed */}
-        <div className="lg:col-span-1">
-          <AdminActivityFeed activities={activities} isLoading={isLoading} />
+          {/* Activity Feed */}
+          {customization?.show_activity_feed !== false && (
+            <div className={customization?.show_charts !== false ? "lg:col-span-1" : "lg:col-span-3"}>
+              <AdminActivityFeed activities={activities} isLoading={isLoading} />
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Quick Actions */}
-      <Card>
+      {customization?.show_quick_actions !== false && (
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
@@ -129,9 +142,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Registration Links */}
-      <Card>
+      {customization?.show_registration_links !== false && (
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             📝 Links de Registro
@@ -201,6 +216,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* System Status */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
