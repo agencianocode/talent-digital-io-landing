@@ -56,6 +56,7 @@ const BusinessMessagesPage = lazy(() => import('./pages/BusinessMessagesPage'));
 const BusinessNotificationsPage = lazy(() => import('./pages/BusinessNotificationsPage'));
 const TalentMessagesPage = lazy(() => import('./pages/TalentMessagesPage'));
 const TalentNotificationsPage = lazy(() => import('./pages/TalentNotificationsPage'));
+const PublicContactRequests = lazy(() => import('./pages/PublicContactRequests'));
 const AcademyDashboard = lazy(() => import('./pages/AcademyDashboard'));
 const AcceptInvitation = lazy(() => import('./pages/AcceptInvitation'));
 const AcceptAcademyInvitation = lazy(() => import('./pages/AcceptAcademyInvitation'));
@@ -245,9 +246,9 @@ function App() {
                               <TalentMessagesPage />
                             </Suspense>
                           } />
-                          <Route path="messages/:conversationId" element={
+                          <Route path="contact-requests" element={
                             <Suspense fallback={<LoadingSkeleton type="list" />}>
-                              <TalentMessagesPage />
+                              <PublicContactRequests />
                             </Suspense>
                           } />
                           <Route path="notifications" element={

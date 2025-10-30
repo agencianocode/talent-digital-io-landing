@@ -118,7 +118,7 @@ serve(async (req) => {
       type: 'message',
       title: '📬 Nueva solicitud de contacto',
       message: `${requesterName}${requesterCompany ? ` de ${requesterCompany}` : ''} quiere contactarte desde tu perfil público`,
-      action_url: '/talent-dashboard/messages',
+      action_url: '/talent-dashboard/contact-requests',
       data: {
         contact_request_id: contactRequest.id,
         requester_email: requesterEmail,
