@@ -14,13 +14,18 @@ import {
   Instagram,
   Youtube,
   Twitter,
-  Facebook
+  Facebook,
+  Briefcase,
+  Clock,
+  Calendar
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const PublicCompany = () => {
   const { companyId } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
   const [company, setCompany] = useState<any>(null);
+  const [opportunities, setOpportunities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +65,7 @@ const PublicCompany = () => {
       if (data) {
         setCompany(data);
         updateMetaTags(data);
+        loadOpportunities();
       } else {
         setError('Empresa no encontrada');
       }
@@ -75,6 +81,36 @@ const PublicCompany = () => {
       setError('Error al cargar la empresa');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadOpportunities = async () => {
+    if (!companyId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select(`
+          id,
+          title,
+          description,
+          location,
+          type,
+          category,
+          salary_min,
+          salary_max,
+          currency,
+          created_at,
+          skills
+        `)
+        .eq('company_id', companyId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOpportunities(data || []);
+    } catch (error) {
+      console.error('Error loading opportunities:', error);
     }
   };
 
@@ -149,21 +185,22 @@ const PublicCompany = () => {
 
   const socialLinks = company.social_links || {};
 
+  const formatSalary = (min?: number, max?: number, currency?: string) => {
+    if (!min && !max) return null;
+    const curr = currency || 'USD';
+    if (min && max) {
+      return `${curr} $${min.toLocaleString()} - $${max.toLocaleString()}`;
+    }
+    if (min) return `${curr} $${min.toLocaleString()}+`;
+    if (max) return `Hasta ${curr} $${max.toLocaleString()}`;
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => navigate('/')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver
-          </Button>
-          
           <div className="flex items-start gap-6">
             {/* Square Logo */}
             <div className="flex-shrink-0">
@@ -326,6 +363,86 @@ const PublicCompany = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-700 whitespace-pre-wrap">{company.team_values}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Active Opportunities */}
+          {opportunities.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Oportunidades Activas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {opportunities.map((opp) => (
+                    <div
+                      key={opp.id}
+                      className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => navigate(`/opportunity/${opp.id}`)}
+                    >
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg text-gray-900 mb-1">
+                            {opp.title}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                            {opp.location && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                <span>{opp.location}</span>
+                              </div>
+                            )}
+                            {opp.type && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                <span>{opp.type}</span>
+                              </div>
+                            )}
+                            {formatSalary(opp.salary_min, opp.salary_max, opp.currency) && (
+                              <div className="flex items-center gap-1">
+                                <DollarSign className="h-4 w-4" />
+                                <span>{formatSalary(opp.salary_min, opp.salary_max, opp.currency)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {opp.category && (
+                          <Badge variant="secondary">{opp.category}</Badge>
+                        )}
+                      </div>
+
+                      {opp.description && (
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {opp.description}
+                        </p>
+                      )}
+
+                      {opp.skills && opp.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {opp.skills.slice(0, 5).map((skill: string, index: number) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                          {opp.skills.length > 5 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{opp.skills.length - 5}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
+                        <Calendar className="h-3 w-3" />
+                        <span>Publicado el {new Date(opp.created_at).toLocaleDateString('es-ES')}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
