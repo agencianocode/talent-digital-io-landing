@@ -223,12 +223,17 @@ const AdvancedNotificationCenter = () => {
     }
   };
 
-  // Manejar clic en notificación
+  // Manejar clic en notificación - solo marca como leída
   const handleNotificationClick = (notification: CategorizedNotification) => {
-    markAsRead(notification.id);
-    if (notification.actionUrl) {
-      navigate(notification.actionUrl);
+    if (!notification.read) {
+      markAsRead(notification.id);
     }
+  };
+
+  // Manejar navegación a acción
+  const handleActionClick = (e: React.MouseEvent, actionUrl: string) => {
+    e.stopPropagation();
+    navigate(actionUrl);
   };
 
   // Manejar acción sugerida
@@ -397,6 +402,18 @@ const AdvancedNotificationCenter = () => {
                       <p className="text-sm text-muted-foreground mb-3">
                         {notification.message}
                       </p>
+
+                      {/* Botón Ver detalles si hay actionUrl */}
+                      {notification.actionUrl && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 mb-2 text-primary"
+                          onClick={(e) => handleActionClick(e, notification.actionUrl!)}
+                        >
+                          Ver detalles →
+                        </Button>
+                      )}
 
                       {/* Acciones sugeridas */}
                       {notification.suggestedActions && notification.suggestedActions.length > 0 && (
