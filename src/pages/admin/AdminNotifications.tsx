@@ -125,7 +125,11 @@ const AdminNotifications = () => {
 
     // Navigate to action URL if exists
     if (notification.action_url) {
-      navigate(notification.action_url);
+      if (/^https?:\/\//i.test(notification.action_url)) {
+        window.location.assign(notification.action_url);
+      } else {
+        navigate(notification.action_url);
+      }
     }
   };
 

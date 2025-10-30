@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+
 import ConversationsList from '@/components/ConversationsList';
 import ChatView from '@/components/ChatView';
 import { useMessages } from '@/hooks/useMessages';
@@ -25,31 +25,9 @@ const BusinessMessagesPage = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isResolvingId, setIsResolvingId] = useState(false);
 
-  // Function to resolve conversation_id to conversation_uuid
+  // Accept conversation ID as-is (supports both legacy "chat_*" and UUID)
   const resolveConversationId = async (id: string): Promise<string | null> => {
-    // Si parece un UUID (formato nuevo), lo usamos directamente
-    if (id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      return id;
-    }
-    
-    // Si es el formato antiguo (chat_xxx), buscamos el conversation_uuid
-    try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('conversation_uuid')
-        .eq('conversation_id', id)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Error resolving conversation ID:', error);
-        return null;
-      }
-      
-      return data?.conversation_uuid || null;
-    } catch (error) {
-      console.error('Error resolving conversation ID:', error);
-      return null;
-    }
+    return id;
   };
 
   // Resolve conversationId from URL parameter
