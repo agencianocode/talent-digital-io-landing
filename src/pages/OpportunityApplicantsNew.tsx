@@ -555,7 +555,6 @@ const OpportunityApplicantsNew = () => {
             <ApplicationsEmptyState
               opportunityTitle={opportunity.title}
               opportunityId={opportunityId || ''}
-              companyId={company?.id}
             />
             {opportunityId && (
               <OpportunityRecommendedTalents opportunityId={opportunityId} />

@@ -174,12 +174,6 @@ const ApplicantsList: React.FC<ApplicantsListProps> = ({ opportunityId }) => {
       <ApplicationsEmptyState 
         opportunityTitle={opportunityTitle}
         opportunityId={opportunityId}
-        onInviteTalent={() => {
-          toast({
-            title: "Información",
-            description: "Funcionalidad de invitación próximamente",
-          });
-        }}
         onShareOpportunity={() => {
           toast({
             title: "Información", 

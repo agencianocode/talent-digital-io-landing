@@ -1,89 +1,28 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Users, 
   Share2, 
-  MessageSquare, 
-  Star, 
   TrendingUp,
   Target,
-  ArrowRight,
   Copy,
   Check
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { InviteTalentModal } from '@/components/InviteTalentModal';
-
-interface RecommendedTalent {
-  id: string;
-  name: string;
-  title: string;
-  avatar?: string;
-  skills: string[];
-  experience: string;
-  rating: number;
-  location: string;
-  isAvailable: boolean;
-}
 
 interface ApplicationsEmptyStateProps {
   opportunityTitle: string;
   opportunityId: string;
-  companyId?: string;
-  onInviteTalent?: () => void;
   onShareOpportunity?: () => void;
 }
 
 export const ApplicationsEmptyState = ({ 
   opportunityTitle, 
   opportunityId,
-  companyId,
-  onInviteTalent,
   onShareOpportunity 
 }: ApplicationsEmptyStateProps) => {
   const [copied, setCopied] = useState(false);
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [selectedTalent, setSelectedTalent] = useState<any>(null);
-
-  // Mock data para talentos recomendados
-  const recommendedTalents: RecommendedTalent[] = [
-    {
-      id: '1',
-      name: 'María González',
-      title: 'Desarrolladora Full Stack',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-      skills: ['React', 'Node.js', 'TypeScript'],
-      experience: '3 años',
-      rating: 4.8,
-      location: 'Madrid, España',
-      isAvailable: true
-    },
-    {
-      id: '2',
-      name: 'Carlos Rodríguez',
-      title: 'Diseñador UX/UI',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      skills: ['Figma', 'Adobe XD', 'Prototyping'],
-      experience: '2 años',
-      rating: 4.6,
-      location: 'Barcelona, España',
-      isAvailable: true
-    },
-    {
-      id: '3',
-      name: 'Ana Martínez',
-      title: 'Marketing Digital',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-      skills: ['Google Ads', 'Social Media', 'Analytics'],
-      experience: '4 años',
-      rating: 4.9,
-      location: 'Valencia, España',
-      isAvailable: false
-    }
-  ];
 
   const handleCopyInviteLink = async () => {
     try {
@@ -94,23 +33,6 @@ export const ApplicationsEmptyState = ({
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast.error('Error al copiar el enlace');
-    }
-  };
-
-  const handleInviteTalent = (talent: RecommendedTalent) => {
-    if (companyId) {
-      setSelectedTalent({
-        id: talent.id,
-        user_id: talent.id,
-        full_name: talent.name,
-        avatar_url: talent.avatar,
-        title: talent.title
-      });
-      setShowInviteModal(true);
-    } else if (onInviteTalent) {
-      onInviteTalent();
-    } else {
-      toast.info(`Invitando a talento ${talent.id}`);
     }
   };
 
@@ -172,95 +94,6 @@ export const ApplicationsEmptyState = ({
         </CardContent>
       </Card>
 
-      {/* Recommended Talents Section */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Talentos que podrían interesarte
-            </h3>
-            <p className="text-sm text-gray-600">
-              Perfiles destacados que coinciden con tu oportunidad
-            </p>
-          </div>
-          <Button variant="outline" size="sm">
-            Ver todos
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recommendedTalents.map((talent) => (
-            <Card key={talent.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3 mb-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={talent.avatar} />
-                    <AvatarFallback>
-                      {talent.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-gray-900 truncate">
-                      {talent.name}
-                    </h4>
-                    <p className="text-sm text-gray-600 truncate">
-                      {talent.title}
-                    </p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                      <span className="text-xs text-gray-600">
-                        {talent.rating} • {talent.experience}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex flex-wrap gap-1">
-                    {talent.skills.slice(0, 2).map((skill) => (
-                      <Badge key={skill} variant="secondary" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
-                    {talent.skills.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{talent.skills.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <p className="text-xs text-gray-500">
-                    📍 {talent.location}
-                  </p>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    className="flex-1"
-                    disabled={!talent.isAvailable}
-                    onClick={() => handleInviteTalent(talent)}
-                  >
-                    <MessageSquare className="h-3 w-3 mr-1" />
-                    {talent.isAvailable ? 'Invitar' : 'No disponible'}
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.open(`/business-dashboard/talent-profile/${talent.id}`, '_blank')}
-                  >
-                    Ver perfil
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
       {/* Tips Section */}
       <Card className="bg-blue-50 border-blue-200">
         <CardContent className="p-6">
@@ -296,20 +129,6 @@ export const ApplicationsEmptyState = ({
           </div>
         </CardContent>
       </Card>
-
-      {/* Invite Talent Modal */}
-      {companyId && (
-        <InviteTalentModal
-          isOpen={showInviteModal}
-          onClose={() => {
-            setShowInviteModal(false);
-            setSelectedTalent(null);
-          }}
-          companyId={companyId}
-          preselectedTalent={selectedTalent}
-          preselectedOpportunity={opportunityId}
-        />
-      )}
     </div>
   );
 };
