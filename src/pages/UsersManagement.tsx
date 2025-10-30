@@ -180,27 +180,52 @@ const UsersManagement = () => {
       console.log('Creating invitation...');
       const invitationData = {
         company_id: activeCompany.id,
-        user_id: '00000000-0000-0000-0000-000000000000', // Temporary UUID, will be updated when user accepts invitation
+        user_id: null,
         role: inviteData.role,
         status: 'pending',
-        invited_by: user?.id,
+        invited_by: user?.id || null,
         invited_email: inviteData.email
       };
       
       console.log('Invitation data to insert:', invitationData);
 
-      const { error } = await supabase
+      const { data: created, error: insertError } = await supabase
         .from('company_user_roles')
-        .insert(invitationData);
+        .insert(invitationData)
+        .select('id')
+        .single();
 
-      console.log('Insert result:', { error });
+      console.log('Insert result:', { created, insertError });
 
-      if (error) {
-        console.error('Error creating invitation:', error);
-        throw error;
+      if (insertError || !created?.id) {
+        console.error('Error creating invitation:', insertError);
+        throw insertError || new Error('No se pudo crear la invitación');
       }
 
-      toast.success('Invitación enviada exitosamente');
+      // Send invitation email via edge function
+      console.log('Invoking send-invitation edge function...');
+      const payload = {
+        email: inviteData.email,
+        role: inviteData.role,
+        company_id: activeCompany.id,
+        invited_by: user?.email || 'Administrador',
+        invitation_id: created.id
+      };
+      console.log('[send-invitation] payload:', payload);
+
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-invitation', {
+        body: payload
+      });
+
+      if (emailError) {
+        console.error('send-invitation error:', emailError);
+        const fallbackUrl = `${window.location.origin}/accept-invitation?id=${created.id}`;
+        toast.info(`Invitación creada, pero el correo no se pudo enviar. Enlace: ${fallbackUrl}`);
+      } else {
+        console.log('send-invitation response:', emailData);
+        toast.success('Invitación enviada exitosamente');
+      }
+
       setIsInviteModalOpen(false);
       setInviteData({ email: '', role: 'viewer', message: '' });
       loadTeamMembers();
@@ -592,9 +617,9 @@ const UsersManagement = () => {
                               <SelectTrigger className="w-32">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="z-50 bg-background">
                                 <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="viewer">Viewer</SelectItem>
+                                <SelectItem value="viewer">Miembro</SelectItem>
                               </SelectContent>
                             </Select>
                             <Button
