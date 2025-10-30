@@ -98,6 +98,9 @@ Deno.serve(async (req) => {
       'opportunity': 'opportunity_reports',
       'moderation': 'content_approval',
       'system': 'system_errors',
+      'welcome-talent': 'new_user_registration',
+      'welcome-business': 'new_user_registration',
+      'welcome-academy': 'new_user_registration',
     };
 
     const configId = typeToConfigMap[notification.type] || notification.type;
