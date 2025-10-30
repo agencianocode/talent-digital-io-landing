@@ -246,6 +246,11 @@ function App() {
                               <TalentMessagesPage />
                             </Suspense>
                           } />
+                          <Route path="messages/:conversationId" element={
+                            <Suspense fallback={<LoadingSkeleton type="list" />}>
+                              <TalentMessagesPage />
+                            </Suspense>
+                          } />
                           <Route path="contact-requests" element={
                             <Suspense fallback={<LoadingSkeleton type="list" />}>
                               <PublicContactRequests />

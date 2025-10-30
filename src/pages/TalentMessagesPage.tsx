@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import ConversationsList from '@/components/ConversationsList';
 import ChatView from '@/components/ChatView';
 import { useMessages } from '@/hooks/useMessages';
@@ -21,7 +22,52 @@ const TalentMessagesPage = () => {
     deleteConversation
   } = useMessages();
   
-  const [activeId, setActiveId] = useState<string | null>(conversationId || null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [isResolvingId, setIsResolvingId] = useState(false);
+
+  // Function to resolve conversation_id to conversation_uuid
+  const resolveConversationId = async (id: string): Promise<string | null> => {
+    // Si parece un UUID (formato nuevo), lo usamos directamente
+    if (id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      return id;
+    }
+    
+    // Si es el formato antiguo (chat_xxx), buscamos el conversation_uuid
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('conversation_uuid')
+        .eq('conversation_id', id)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error resolving conversation ID:', error);
+        return null;
+      }
+      
+      return data?.conversation_uuid || null;
+    } catch (error) {
+      console.error('Error resolving conversation ID:', error);
+      return null;
+    }
+  };
+
+  // Resolve conversationId from URL parameter
+  useEffect(() => {
+    if (!conversationId) {
+      setActiveId(null);
+      return;
+    }
+
+    const resolveAndSetId = async () => {
+      setIsResolvingId(true);
+      const resolvedId = await resolveConversationId(conversationId);
+      setActiveId(resolvedId);
+      setIsResolvingId(false);
+    };
+
+    resolveAndSetId();
+  }, [conversationId]);
 
   // Load conversations on mount only if user is authenticated
   useEffect(() => {
@@ -30,13 +76,6 @@ const TalentMessagesPage = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
-
-  // Update activeId when URL changes
-  useEffect(() => {
-    if (conversationId && conversationId !== activeId) {
-      setActiveId(conversationId);
-    }
-  }, [conversationId, activeId]);
 
   const activeConversation = useMemo(() => 
     conversations.find(c => c.id === activeId) || null, 
@@ -84,6 +123,18 @@ const TalentMessagesPage = () => {
       fileType
     );
   };
+
+  // Show loading state while resolving conversation ID
+  if (isResolvingId) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando conversación...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show authentication message if user is not logged in
   if (!user) {
