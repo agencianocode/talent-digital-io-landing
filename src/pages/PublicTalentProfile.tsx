@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  ArrowLeft, 
   MapPin, 
   Briefcase, 
   Mail,
@@ -25,6 +24,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { PublicContactModal } from '@/components/PublicContactModal';
+import { usePublicContact } from '@/hooks/usePublicContact';
 
 // Interfaces para datos reales
 interface TalentProfile {
@@ -112,6 +113,13 @@ const PublicTalentProfile = () => {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  
+  const { 
+    isContactModalOpen, 
+    setIsContactModalOpen, 
+    contactType, 
+    handleContact 
+  } = usePublicContact();
   
   useEffect(() => {
     if (talentId) {
@@ -271,13 +279,15 @@ const PublicTalentProfile = () => {
   };
 
   const handleContactTalent = () => {
-    if (!userProfile) return;
-    toast.success(`Solicitud de contacto enviada a ${userProfile.full_name}`);
+    if (talentId) {
+      handleContact(talentId, 'proposal');
+    }
   };
 
   const handleSendMessage = () => {
-    if (!userProfile) return;
-    toast.success(`Mensaje enviado a ${userProfile.full_name}`);
+    if (talentId) {
+      handleContact(talentId, 'message');
+    }
   };
 
 
@@ -341,17 +351,6 @@ const PublicTalentProfile = () => {
       {/* Cover Image - Optional, can be added later */}
       <div className="h-48 md:h-64 bg-gradient-to-r from-blue-600 to-purple-600 relative">
         <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-        
-        {/* Back Button */}
-        <Button 
-          variant="secondary" 
-          size="sm" 
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver
-        </Button>
       </div>
 
       <div className="container mx-auto px-4 pb-8">
@@ -807,6 +806,15 @@ const PublicTalentProfile = () => {
           </div>
         </div>
       </div>
+
+      {/* Public Contact Modal */}
+      <PublicContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+        talentUserId={talentId || ''}
+        talentName={userProfile?.full_name || 'este talento'}
+        contactType={contactType}
+      />
     </div>
   );
 };

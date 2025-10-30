@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.decline-invitation]
 verify_jwt = false
+
+[functions.handle-public-contact]
+verify_jwt = false

@@ -1566,6 +1566,51 @@ export type Database = {
         }
         Relationships: []
       }
+      public_contact_requests: {
+        Row: {
+          contact_type: string
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          requester_company: string | null
+          requester_email: string
+          requester_name: string
+          requester_role: string | null
+          status: string
+          talent_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          contact_type?: string
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          requester_company?: string | null
+          requester_email: string
+          requester_name: string
+          requester_role?: string | null
+          status?: string
+          talent_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          contact_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          requester_company?: string | null
+          requester_email?: string
+          requester_name?: string
+          requester_role?: string | null
+          status?: string
+          talent_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           created_at: string
