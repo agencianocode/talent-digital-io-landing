@@ -38,8 +38,8 @@ export const WelcomeAcademy = ({ userName }: WelcomeAcademyProps) => (
         ✓ <strong>Conecta con empresas:</strong> Facilita la conexión entre tus estudiantes y empleadores
       </Text>
       <NotificationButton 
-        href="https://app.talentodigital.io/academy/dashboard" 
-        text="Ir a mi academia"
+        href="https://app.talentodigital.io/" 
+        text="Iniciar sesión en mi academia"
       />
       <Text style={text}>
         Estamos aquí para ayudarte a potenciar la empleabilidad de tus estudiantes.

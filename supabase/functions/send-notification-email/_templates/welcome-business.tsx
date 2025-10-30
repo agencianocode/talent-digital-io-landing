@@ -38,8 +38,8 @@ export const WelcomeBusiness = ({ userName }: WelcomeBusinessProps) => (
         ✓ <strong>Accede al marketplace:</strong> Encuentra servicios especializados para tus proyectos
       </Text>
       <NotificationButton 
-        href="https://app.talentodigital.io/business/profile" 
-        text="Completar perfil de empresa"
+        href="https://app.talentodigital.io/" 
+        text="Iniciar sesión y completar perfil"
       />
       <Text style={text}>
         Nuestro equipo está disponible para ayudarte a sacar el máximo provecho de la plataforma.

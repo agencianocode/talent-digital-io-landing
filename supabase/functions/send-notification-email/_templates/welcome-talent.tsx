@@ -35,8 +35,8 @@ export const WelcomeTalent = ({ userName }: WelcomeTalentProps) => (
         ✓ <strong>Publica tus servicios:</strong> Ofrece tus servicios en nuestro marketplace
       </Text>
       <NotificationButton 
-        href="https://app.talentodigital.io/talent/edit-profile" 
-        text="Completar mi perfil"
+        href="https://app.talentodigital.io/" 
+        text="Iniciar sesión y completar perfil"
       />
       <Text style={text}>
         Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.
