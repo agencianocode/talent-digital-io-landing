@@ -254,7 +254,7 @@ const CompanyOnboardingStep3 = ({ onComplete, onCompleteLater, initialData, onDe
         <div className="text-center">
           {logoPreview ? (
             <div className="mb-4 space-y-3">
-              <div className="w-20 h-20 mx-auto rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center">
+              <div className="w-20 h-20 mx-auto rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
                 <img 
                   src={logoPreview} 
                   alt="Logo preview" 
