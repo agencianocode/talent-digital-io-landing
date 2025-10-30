@@ -65,13 +65,13 @@ const CompanyOnboarding = () => {
     profilePhoto: null
   });
 
-  // Check and fix user role on component mount for Google OAuth users
+  // Check and fix user role on component mount
   useEffect(() => {
-    const fixGoogleUserRole = async () => {
+    const ensureBusinessRole = async () => {
       if (!user) return;
       
       try {
-        // Check if user has wrong role (talent role but in business onboarding)
+        // Check current role
         const { data: currentRole } = await supabase
           .from('user_roles')
           .select('role')
@@ -80,9 +80,9 @@ const CompanyOnboarding = () => {
 
         console.log('CompanyOnboarding - Current user role:', currentRole?.role);
 
-        // If user has talent role but is in company onboarding, fix it automatically
-        if (currentRole?.role && currentRole.role.includes('talent')) {
-          console.log('CompanyOnboarding - Fixing Google OAuth user role from talent to business...');
+        // If user has no role or has talent role, but is in company onboarding, fix it
+        if (!currentRole || (currentRole?.role && currentRole.role.includes('talent'))) {
+          console.log('CompanyOnboarding - Assigning business role to user...');
           
           const { error } = await supabase
             .from('user_roles')
@@ -92,14 +92,13 @@ const CompanyOnboarding = () => {
             });
 
           if (error) {
-            console.error('Error fixing Google OAuth user role:', error);
-            // Don't show error to user, just log it
+            console.error('Error assigning business role:', error);
           } else {
-            console.log('CompanyOnboarding - Google OAuth user role fixed successfully');
+            console.log('CompanyOnboarding - Business role assigned successfully');
             // Reload page to refresh auth context
             setTimeout(() => {
               window.location.reload();
-            }, 1000);
+            }, 500);
           }
         }
       } catch (error) {
@@ -108,7 +107,7 @@ const CompanyOnboarding = () => {
     };
 
     if (user) {
-      fixGoogleUserRole();
+      ensureBusinessRole();
     }
   }, [user]);
 
@@ -500,6 +499,20 @@ const CompanyOnboarding = () => {
       
       // Marcar el onboarding como completado
       setIsOnboardingCompleted(true);
+      
+      // Ensure user has business role assigned
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: user.id,
+          role: 'freemium_business'
+        });
+
+      if (roleError) {
+        console.error('Error ensuring business role:', roleError);
+      } else {
+        console.log('Business role assigned successfully');
+      }
       
       toast.success('¡Onboarding completado exitosamente!');
       
