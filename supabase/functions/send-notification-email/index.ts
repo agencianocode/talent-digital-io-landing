@@ -83,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const emailResponse = await resend.emails.send({
-      from: 'TalentoDigital Notificaciones <notificaciones@app.talentodigital.io>',
+      from: 'TalentoDigital Notificaciones <onboarding@resend.dev>',
       to: [to],
       subject: title,
       html,
