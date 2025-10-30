@@ -62,7 +62,7 @@ const RecommendedProfiles: React.FC = () => {
           return;
         }
 
-        // Get user profiles data
+        // Get user profiles data (without completeness filter)
         const userIds = (talentProfiles || []).map(tp => tp.user_id);
         
         if (userIds.length === 0) {
@@ -74,8 +74,7 @@ const RecommendedProfiles: React.FC = () => {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('user_id, full_name, avatar_url, city, country, profile_completeness')
-          .in('user_id', userIds)
-          .gte('profile_completeness', 30);
+          .in('user_id', userIds);
 
         if (profilesError) {
           console.error('Error fetching profiles data:', profilesError);
@@ -224,7 +223,7 @@ const RecommendedProfiles: React.FC = () => {
                   size="sm" 
                   variant="outline" 
                   className="ml-2 flex-shrink-0"
-                  onClick={() => window.open(`/talent/${profile.id}`, '_blank')}
+                  onClick={() => window.open(`/business-dashboard/talent-profile/${profile.id}`, '_blank')}
                 >
                   Ver Perfil
                 </Button>

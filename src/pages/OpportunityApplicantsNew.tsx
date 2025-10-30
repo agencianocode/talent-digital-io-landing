@@ -28,6 +28,7 @@ import { ApplicationRatingDisplay } from '@/components/ApplicationRating/Applica
 import { useApplicationRatings } from '@/hooks/useApplicationRatings';
 import { ApplicationsEmptyState } from '@/components/EmptyStates/ApplicationsEmptyState';
 import ShareOpportunity from '@/components/ShareOpportunity';
+import OpportunityRecommendedTalents from '@/components/opportunity/OpportunityRecommendedTalents';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -550,11 +551,16 @@ const OpportunityApplicantsNew = () => {
 
       <div className="space-y-4 sm:space-y-6">
         {applications.length === 0 ? (
-          <ApplicationsEmptyState
-            opportunityTitle={opportunity.title}
-            opportunityId={opportunityId || ''}
-            companyId={company?.id}
-          />
+          <>
+            <ApplicationsEmptyState
+              opportunityTitle={opportunity.title}
+              opportunityId={opportunityId || ''}
+              companyId={company?.id}
+            />
+            {opportunityId && (
+              <OpportunityRecommendedTalents opportunityId={opportunityId} />
+            )}
+          </>
         ) : filteredApplications.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
