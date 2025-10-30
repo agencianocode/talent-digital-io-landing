@@ -348,7 +348,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
             <CardContent>
               <div className="border rounded-lg overflow-hidden">
                 {/* Table Header */}
-                <div className="grid grid-cols-[40px,1fr,120px,140px] gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
+                <div className="grid grid-cols-[40px,1fr,120px,180px] gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
                   <div></div>
                   <div>Tipo de Notificación</div>
                   <div className="flex items-center justify-center gap-2">
@@ -366,7 +366,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                   {form.watch('notifications').map((notification, index) => (
                     <div 
                       key={notification.id}
-                      className="grid grid-cols-[40px,1fr,120px,140px] gap-4 p-4 hover:bg-muted/30 transition-colors"
+                      className="grid grid-cols-[40px,1fr,120px,180px] gap-4 p-4 hover:bg-muted/30 transition-colors"
                     >
                       {/* Toggle Switch */}
                       <div className="flex items-start pt-1">
