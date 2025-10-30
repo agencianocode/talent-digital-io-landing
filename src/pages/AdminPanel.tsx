@@ -27,6 +27,7 @@ import AdminCompanyManagement from './admin/AdminCompanyManagement';
 import AdminOpportunityModeration from './admin/AdminOpportunityModeration';
 import AdminMarketplaceManagement from './admin/AdminMarketplaceManagement';
 import AdminChatManagement from './admin/AdminChatManagement';
+import AdminNotifications from './admin/AdminNotifications';
 import { AdminProfileSettings } from '@/components/admin/AdminProfileSettings';
 import AdminSettings from './admin/AdminSettings';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -424,10 +425,7 @@ const AdminPanel: React.FC = () => {
             )}
 
             {activeTab === "notifications" && (
-              <div className="p-6">
-                <h2 className="text-2xl font-bold mb-4">Notificaciones</h2>
-                <p className="text-muted-foreground">Panel de notificaciones administrativas</p>
-              </div>
+              <AdminNotifications />
             )}
 
             {activeTab === "settings" && (
