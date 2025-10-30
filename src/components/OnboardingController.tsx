@@ -168,16 +168,25 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({
         lastActivity: Date.now(),
       }));
 
-      // Clear saved state since onboarding is complete
-      if (user?.id) {
-        localStorage.removeItem(`onboarding.step.${user.id}`);
-        localStorage.setItem(`onboarding.completed.${user.id}`, Date.now().toString());
-      }
-
-    } catch (error) {
-      console.error('Error completing onboarding:', error);
+    // Clear saved state since onboarding is complete
+    if (user?.id) {
+      localStorage.removeItem(`onboarding.step.${user.id}`);
+      localStorage.setItem(`onboarding.completed.${user.id}`, Date.now().toString());
     }
-  }, [syncProfile, user?.id]);
+    
+    // Verificar si hay una oportunidad pendiente para redirigir
+    const pendingOpportunity = localStorage.getItem('pending_opportunity');
+    if (pendingOpportunity) {
+      localStorage.removeItem('pending_opportunity');
+      sessionStorage.removeItem('post_onboarding_redirect');
+      navigate(`/talent-dashboard/opportunities/${pendingOpportunity}`);
+      return;
+    }
+
+  } catch (error) {
+    console.error('Error completing onboarding:', error);
+  }
+}, [syncProfile, user?.id, navigate]);
 
   const handleProfileUpdateAction = useCallback(async () => {
     try {

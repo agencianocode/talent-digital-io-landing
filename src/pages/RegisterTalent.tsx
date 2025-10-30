@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,11 @@ import { Loader2, Eye, EyeOff, Users, ArrowLeft } from 'lucide-react';
 
 const RegisterTalent = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signUp, signUpWithGoogle, isLoading, userRole, isAuthenticated } = useSupabaseAuth();
+  
+  // Guardar redirect parameter para usarlo después del onboarding
+  const redirectParam = searchParams.get('redirect');
   
   const [formData, setFormData] = useState({
     email: '',
@@ -76,6 +80,11 @@ const RegisterTalent = () => {
       return;
     }
 
+    // Guardar redirect en sessionStorage para usarlo después del onboarding
+    if (redirectParam) {
+      sessionStorage.setItem('post_onboarding_redirect', redirectParam);
+    }
+
     // Account created successfully - redirect to verification page
     navigate(`/email-verification-pending?type=talent&email=${encodeURIComponent(formData.email)}`);
     return;
@@ -86,6 +95,11 @@ const RegisterTalent = () => {
   const handleGoogleSignUp = async () => {
     setIsSubmitting(true);
     setError('');
+
+    // Guardar redirect en sessionStorage para usarlo después del onboarding
+    if (redirectParam) {
+      sessionStorage.setItem('post_onboarding_redirect', redirectParam);
+    }
 
     const { error } = await signUpWithGoogle('talent');
     

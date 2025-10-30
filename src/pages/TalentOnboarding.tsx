@@ -187,8 +187,28 @@ const TalentOnboarding = () => {
             });
         }
 
-        toast.success('¡Onboarding completado exitosamente!');
-        navigate('/talent-dashboard');
+        // Verificar si hay una oportunidad pendiente para redirigir
+        const pendingOpportunity = localStorage.getItem('pending_opportunity');
+        const postOnboardingRedirect = sessionStorage.getItem('post_onboarding_redirect');
+        
+        if (pendingOpportunity) {
+          // Limpiar el storage
+          localStorage.removeItem('pending_opportunity');
+          sessionStorage.removeItem('post_onboarding_redirect');
+          
+          toast.success('¡Onboarding completado! Te llevamos a la oportunidad que te interesaba.');
+          navigate(`/talent-dashboard/opportunities/${pendingOpportunity}`);
+        } else if (postOnboardingRedirect && postOnboardingRedirect.includes('/opportunity/')) {
+          // Extraer el ID de la URL de redirect
+          const opportunityId = postOnboardingRedirect.split('/opportunity/')[1];
+          sessionStorage.removeItem('post_onboarding_redirect');
+          
+          toast.success('¡Onboarding completado! Te llevamos a la oportunidad que te interesaba.');
+          navigate(`/talent-dashboard/opportunities/${opportunityId}`);
+        } else {
+          toast.success('¡Onboarding completado exitosamente!');
+          navigate('/talent-dashboard');
+        }
       } else {
         console.error('❌ No user session found');
         throw new Error('No user session found');

@@ -136,7 +136,13 @@ const PublicOpportunity = () => {
 
   const handleApply = () => {
     if (!user) {
-      navigate(`/auth?redirect=/opportunity/${opportunityId}`);
+      // Guardar la intención de aplicación para redirección post-onboarding
+      if (opportunityId) {
+        localStorage.setItem('pending_opportunity', opportunityId);
+        navigate(`/auth?redirect=/opportunity/${opportunityId}`);
+      } else {
+        navigate('/auth');
+      }
       return;
     }
     navigate(`/talent-dashboard/opportunities/${opportunityId}`);
