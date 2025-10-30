@@ -8,6 +8,9 @@ import { MessageNotification } from './_templates/message-notification.tsx';
 import { TeamNotification } from './_templates/team-notification.tsx';
 import { MarketplaceNotification } from './_templates/marketplace-notification.tsx';
 import { ModerationNotification } from './_templates/moderation-notification.tsx';
+import { WelcomeTalent } from './_templates/welcome-talent.tsx';
+import { WelcomeBusiness } from './_templates/welcome-business.tsx';
+import { WelcomeAcademy } from './_templates/welcome-academy.tsx';
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
@@ -40,6 +43,12 @@ const getTemplateComponent = (type: string) => {
       return MarketplaceNotification;
     case 'moderation':
       return ModerationNotification;
+    case 'welcome-talent':
+      return WelcomeTalent;
+    case 'welcome-business':
+      return WelcomeBusiness;
+    case 'welcome-academy':
+      return WelcomeAcademy;
     default:
       return ApplicationNotification; // Fallback
   }

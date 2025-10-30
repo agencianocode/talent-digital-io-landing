@@ -63,6 +63,21 @@ Deno.serve(async (req) => {
         message: 'Tu oportunidad "Diseñador UX/UI" está siendo revisada por el equipo de moderación',
         action_url: '/business-dashboard/opportunities',
       },
+      'welcome-talent': {
+        title: '👋 ¡Bienvenido a TalentoDigital!',
+        message: 'Estamos emocionados de tenerte en nuestra plataforma. Completa tu perfil para comenzar.',
+        action_url: '/talent/edit-profile',
+      },
+      'welcome-business': {
+        title: '🏢 ¡Bienvenido a TalentoDigital!',
+        message: 'Tu empresa se unió exitosamente. Completa el perfil y publica tu primera oportunidad.',
+        action_url: '/business/profile',
+      },
+      'welcome-academy': {
+        title: '🎓 ¡Bienvenido a TalentoDigital!',
+        message: 'Tu academia está lista. Invita a tus estudiantes y gestiona tu directorio.',
+        action_url: '/academy/dashboard',
+      },
     };
 
     const testData = testNotifications[notificationType] || testNotifications.application;

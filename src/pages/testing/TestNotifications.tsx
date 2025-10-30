@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-type NotificationType = 'application' | 'opportunity' | 'message' | 'team' | 'marketplace' | 'moderation';
+type NotificationType = 'application' | 'opportunity' | 'message' | 'team' | 'marketplace' | 'moderation' | 'welcome-talent' | 'welcome-business' | 'welcome-academy';
 
 const notificationTypes: { value: NotificationType; label: string; description: string }[] = [
   {
@@ -44,6 +44,21 @@ const notificationTypes: { value: NotificationType; label: string; description: 
     value: 'moderation',
     label: '⚠️ Moderación',
     description: 'Notificación de moderación de contenido',
+  },
+  {
+    value: 'welcome-talent',
+    label: '👋 Bienvenida Talento',
+    description: 'Email de bienvenida para nuevos usuarios talento',
+  },
+  {
+    value: 'welcome-business',
+    label: '🏢 Bienvenida Empresa',
+    description: 'Email de bienvenida para nuevas empresas',
+  },
+  {
+    value: 'welcome-academy',
+    label: '🎓 Bienvenida Academia',
+    description: 'Email de bienvenida para nuevas academias',
   },
 ];
 
