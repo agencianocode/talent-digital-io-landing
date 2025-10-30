@@ -81,6 +81,8 @@ const RegisterBusiness = () => {
       return;
     }
 
+    console.log('✅ Business account created successfully with user_type=business');
+    
     // Account created successfully - redirect to verification page
     navigate(`/email-verification-pending?type=business&email=${encodeURIComponent(formData.email)}`);
     return;

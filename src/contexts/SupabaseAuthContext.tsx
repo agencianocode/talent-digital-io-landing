@@ -164,8 +164,22 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // If role doesn't exist after retries, create it
       if (!roleData) {
         logger.debug('Role not found after retries, creating role for user:', userId, 'with type:', userType);
-        // Use the provided userType or default to 'freemium_talent'
-        const defaultRole: UserRole = userType === 'business' ? 'freemium_business' : 'freemium_talent';
+        
+        // Determine the correct role based on userType or existing company
+        let defaultRole: UserRole = 'freemium_talent';
+        
+        // Check if user has a company (indicates business user)
+        const { data: companyCheck } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (companyCheck || userType === 'business') {
+          defaultRole = 'freemium_business';
+          logger.debug('User has company or business userType, assigning freemium_business role');
+        }
+        
         const { data: _newRole, error: createRoleError } = await supabase
           .from('user_roles')
           .insert({ user_id: userId, role: defaultRole })
@@ -175,7 +189,25 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (createRoleError) {
           logger.error('Error creating role', createRoleError);
         } else {
-          // roleData = newRole; // Commented out to avoid const assignment
+          logger.debug('Role created successfully:', defaultRole);
+          // Refetch role data after creation
+          const { data: refetchedRole } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .single();
+          
+          if (refetchedRole) {
+            return {
+              profile: profile || null,
+              role: mapDatabaseRoleToUserRole(refetchedRole.role as string),
+              company: companyCheck ? (await supabase
+                .from('companies')
+                .select('*')
+                .eq('user_id', userId)
+                .single()).data : null
+            };
+          }
         }
       }
 
