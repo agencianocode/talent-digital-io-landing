@@ -53,11 +53,16 @@ export const useAdminCustomization = () => {
         .select('*')
         .single();
 
-      if (error) throw error;
-      setCustomization(data as any);
+      if (error) {
+        // Silently fail if user doesn't have access - this is expected for non-admin users
+        console.log('Admin customization not available:', error.message);
+        setCustomization(null);
+      } else {
+        setCustomization(data as any);
+      }
     } catch (error) {
-      console.error('Error loading customization:', error);
-      toast.error('Error al cargar la personalización');
+      console.log('Admin customization not available');
+      setCustomization(null);
     } finally {
       setLoading(false);
     }
