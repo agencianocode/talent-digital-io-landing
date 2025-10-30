@@ -51,7 +51,7 @@ export const useMarketplaceServices = (): UseMarketplaceServicesReturn => {
   const [stats, setStats] = useState<MarketplaceStats>({
     totalServices: 0,
     activeProviders: 0,
-    averageRating: 4.7,
+    averageRating: 0,
     totalRequests: 0
   });
   
