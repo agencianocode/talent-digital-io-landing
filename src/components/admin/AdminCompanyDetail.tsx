@@ -309,9 +309,10 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         // Send invitation email
         await supabase.functions.invoke('send-invitation', {
           body: {
-            company_id: companyData.id,
+            email: newUserEmail,
             role: newUserRole,
-            invited_by: (await supabase.auth.getUser()).data.user?.id,
+            company_id: companyData.id,
+            invited_by: (await supabase.auth.getUser()).data.user?.email || 'Administrador',
             invitation_id: invitationToken
           }
         });
