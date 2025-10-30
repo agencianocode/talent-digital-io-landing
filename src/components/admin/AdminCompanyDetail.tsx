@@ -292,7 +292,7 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         const invitationToken = crypto.randomUUID();
         
         const currentUser = await supabase.auth.getUser();
-        const { error: insertError } = await supabase
+        const { data: roleRow, error: insertError } = await supabase
           .from('company_user_roles')
           .insert([{
             company_id: companyData.id,
@@ -302,22 +302,36 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
             status: 'pending',
             invited_by: currentUser.data.user?.id || null,
             invitation_token: invitationToken
-          }]);
+          }])
+          .select('id')
+          .single();
 
         if (insertError) throw insertError;
+        if (!roleRow?.id) throw new Error('No se pudo crear la invitación');
 
         // Send invitation email
-        await supabase.functions.invoke('send-invitation', {
-          body: {
-            email: newUserEmail,
-            role: newUserRole,
-            company_id: companyData.id,
-            invited_by: (await supabase.auth.getUser()).data.user?.email || 'Administrador',
-            invitation_id: invitationToken
-          }
+        const payload = {
+          email: newUserEmail,
+          role: newUserRole,
+          company_id: companyData.id,
+          invited_by: currentUser.data.user?.email || 'Administrador',
+          invitation_id: roleRow.id
+        };
+
+        console.log('[send-invitation] invoking with payload:', payload);
+
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-invitation', {
+          body: payload
         });
 
-        toast.success(`Se envió una invitación a ${newUserEmail}`);
+        if (emailError) {
+          console.error('[send-invitation] error:', emailError);
+          const fallbackUrl = `${window.location.origin}/accept-invitation?id=${roleRow.id}`;
+          toast.info(`Invitación creada, pero el correo no se pudo enviar. Enlace: ${fallbackUrl}`);
+        } else {
+          console.log('[send-invitation] response:', emailData);
+          toast.success(`Se envió una invitación a ${newUserEmail}`);
+        }
       } else {
         // User exists - add directly as accepted
         const { error: insertError } = await supabase
