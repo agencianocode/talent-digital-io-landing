@@ -58,6 +58,7 @@ const TalentMessagesPage = lazy(() => import('./pages/TalentMessagesPage'));
 const TalentNotificationsPage = lazy(() => import('./pages/TalentNotificationsPage'));
 const AcademyDashboard = lazy(() => import('./pages/AcademyDashboard'));
 const AcceptInvitation = lazy(() => import('./pages/AcceptInvitation'));
+const AcceptAcademyInvitation = lazy(() => import('./pages/AcceptAcademyInvitation'));
 
 // Lazy load páginas de registro
 const UserTypeSelector = lazy(() => import('./pages/UserTypeSelector'));
@@ -431,6 +432,13 @@ function App() {
                       <Route path="/academy/:slug" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <PublicAcademyDirectory />
+                        </Suspense>
+                      } />
+
+                      {/* Accept Academy Invitation */}
+                      <Route path="/accept-academy-invitation" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <AcceptAcademyInvitation />
                         </Suspense>
                       } />
 

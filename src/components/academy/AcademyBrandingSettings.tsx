@@ -197,7 +197,7 @@ export const AcademyBrandingSettings = ({ academyId }: AcademyBrandingSettingsPr
             Vista previa del directorio:
             {academySlug && (
               <a 
-                href={`/academy/${academySlug}`}
+                href={`${window.location.origin}/academy/${academySlug}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="ml-2 text-primary hover:underline"

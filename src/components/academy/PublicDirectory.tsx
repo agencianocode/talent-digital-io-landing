@@ -37,7 +37,7 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
     try {
       const { data, error } = await supabase
         .from('companies')
-        .select('name, logo_url, description, directory_settings')
+        .select('name, logo_url, description, directory_settings, academy_slug')
         .eq('id', academyId)
         .single();
 
@@ -86,38 +86,29 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
     await updateDirectorySettings(showLogo, checked);
   };
 
-  // Mock data for public directory
-  const graduates = [
-    {
-      id: '1',
-      full_name: 'María García',
-      avatar_url: null,
-      graduation_date: '2024-01-15T10:00:00Z',
-      certificate_url: 'https://example.com/certificate1.pdf',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      location: 'Madrid, España'
-    },
-    {
-      id: '2',
-      full_name: 'Juan Pérez',
-      avatar_url: null,
-      graduation_date: '2024-01-10T10:00:00Z',
-      certificate_url: 'https://example.com/certificate2.pdf',
-      skills: ['Python', 'Django', 'PostgreSQL'],
-      location: 'Barcelona, España'
-    },
-    {
-      id: '3',
-      full_name: 'Ana López',
-      avatar_url: null,
-      graduation_date: '2023-12-20T10:00:00Z',
-      certificate_url: 'https://example.com/certificate3.pdf',
-      skills: ['Vue.js', 'JavaScript', 'CSS'],
-      location: 'Valencia, España'
-    }
-  ];
+  const [graduates, setGraduates] = useState<any[]>([]);
 
-  const publicUrl = `https://talent-digital.io/academy/${academyId}/directory`;
+  // Load graduates data
+  useEffect(() => {
+    loadGraduates();
+  }, [academyId]);
+
+  const loadGraduates = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_public_academy_directory', {
+        p_academy_id: academyId
+      });
+
+      if (error) throw error;
+      setGraduates(data || []);
+    } catch (error) {
+      console.error('Error loading graduates:', error);
+    }
+  };
+
+  const publicUrl = academyData?.academy_slug 
+    ? `${window.location.origin}/academy/${academyData.academy_slug}`
+    : `${window.location.origin}/academy/${academyId}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicUrl);
@@ -125,6 +116,10 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
   };
 
   const handleViewPublic = () => {
+    if (!academyData?.academy_slug) {
+      toast.error('Configura el slug de la academia en la sección de Branding primero');
+      return;
+    }
     window.open(publicUrl, '_blank');
   };
 
@@ -299,8 +294,8 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
                         </span>
                       </div>
                       
-                      <div className="flex flex-wrap gap-1">
-                        {graduate.skills.map((skill) => (
+                       <div className="flex flex-wrap gap-1">
+                        {graduate.skills?.map((skill: string) => (
                           <Badge key={skill} variant="outline" className="text-xs">
                             {skill}
                           </Badge>

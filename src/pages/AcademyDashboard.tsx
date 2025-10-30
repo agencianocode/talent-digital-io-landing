@@ -32,6 +32,7 @@ import { BulkInviteModal } from '@/components/academy/BulkInviteModal';
 import { AcademyEmployabilityStats } from '@/components/academy/AcademyEmployabilityStats';
 import { GraduateApplicationsTracking } from '@/components/academy/GraduateApplicationsTracking';
 import { AcademyCoursesManager } from '@/components/academy/AcademyCoursesManager';
+import { ShareAcademyModal } from '@/components/academy/ShareAcademyModal';
 
 const AcademyDashboard: React.FC = () => {
   const { user, userRole } = useSupabaseAuth();
@@ -39,6 +40,7 @@ const AcademyDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   // Check if user has academy role
   const isAcademyRole = userRole === 'business' || userRole === 'premium_business' || userRole === 'freemium_business' || userRole === 'admin';
@@ -111,11 +113,11 @@ const AcademyDashboard: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => setShareModalOpen(true)}>
               <Share2 className="h-4 w-4 mr-2" />
               Compartir
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => setActiveTab('branding')}>
               <Settings className="h-4 w-4 mr-2" />
               Configuración
             </Button>
@@ -275,6 +277,14 @@ const AcademyDashboard: React.FC = () => {
           setBulkInviteOpen(false);
           toast.success('Estudiantes importados exitosamente');
         }}
+      />
+
+      <ShareAcademyModal
+        open={shareModalOpen}
+        onOpenChange={setShareModalOpen}
+        academyId={academyId}
+        academySlug={(activeCompany as any).academy_slug || undefined}
+        academyName={activeCompany.name}
       />
     </div>
   );

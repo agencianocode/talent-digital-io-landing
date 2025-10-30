@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,13 +6,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Mail, 
   Plus, 
   Send,
   Copy,
   CheckCircle2,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,10 +28,34 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
   const [isSending, setIsSending] = useState(false);
   const [copiedActive, setCopiedActive] = useState(false);
   const [copiedGraduated, setCopiedGraduated] = useState(false);
+  const [invitations, setInvitations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Generate invitation links
-  const activeInviteLink = `${window.location.origin}/accept-invitation?academy=${academyId}&status=enrolled`;
-  const graduatedInviteLink = `${window.location.origin}/accept-invitation?academy=${academyId}&status=graduated`;
+  const activeInviteLink = `${window.location.origin}/accept-academy-invitation?academy=${academyId}&status=enrolled`;
+  const graduatedInviteLink = `${window.location.origin}/accept-academy-invitation?academy=${academyId}&status=graduated`;
+
+  useEffect(() => {
+    loadInvitations();
+  }, [academyId]);
+
+  const loadInvitations = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('academy_students')
+        .select('*')
+        .eq('academy_id', academyId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setInvitations(data || []);
+    } catch (error) {
+      console.error('Error loading invitations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const copyToClipboard = async (text: string, type: 'active' | 'graduated') => {
     try {
@@ -47,53 +73,65 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
     }
   };
 
-  // Mock data for invitations
-  const invitations = [
-    {
-      id: '1',
-      email: 'estudiante1@example.com',
-      status: 'pending',
-      invited_at: '2024-01-20T10:00:00Z',
-      expires_at: '2024-01-27T10:00:00Z'
-    },
-    {
-      id: '2',
-      email: 'estudiante2@example.com',
-      status: 'accepted',
-      invited_at: '2024-01-18T10:00:00Z',
-      accepted_at: '2024-01-19T14:00:00Z'
-    }
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'accepted': return 'bg-green-100 text-green-800';
-      case 'declined': return 'bg-red-100 text-red-800';
-      case 'expired': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending': return 'Pendiente';
-      case 'accepted': return 'Aceptada';
-      case 'declined': return 'Declinada';
-      case 'expired': return 'Expirada';
-      default: return status;
-    }
-  };
-
   const handleSendInvitations = async () => {
-    setIsSending(true);
-    // TODO: Implement send invitations
-    console.log('Sending invitations to:', emailList);
-    setTimeout(() => {
-      setIsSending(false);
+    if (!emailList.trim()) return;
+
+    try {
+      setIsSending(true);
+      
+      // Parse emails (split by comma, semicolon, or new line)
+      const emails = emailList
+        .split(/[,;\n]/)
+        .map(email => email.trim())
+        .filter(email => email.length > 0);
+
+      if (emails.length === 0) {
+        toast.error('No se encontraron emails válidos');
+        return;
+      }
+
+      // Insert students into academy_students table
+      const studentsToInsert = emails.map(email => ({
+        academy_id: academyId,
+        student_email: email,
+        student_name: email.split('@')[0], // Temporary name
+        status: 'enrolled',
+        enrollment_date: new Date().toISOString().split('T')[0]
+      }));
+
+      const { error } = await supabase
+        .from('academy_students')
+        .insert(studentsToInsert);
+
+      if (error) throw error;
+
+      toast.success(`${emails.length} invitación(es) enviada(s) exitosamente`);
       setEmailList('');
       setMessage('');
-    }, 2000);
+      loadInvitations(); // Reload the list
+    } catch (error: any) {
+      console.error('Error sending invitations:', error);
+      toast.error('Error al enviar invitaciones: ' + error.message);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleCancelInvitation = async (studentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('academy_students')
+        .delete()
+        .eq('id', studentId);
+
+      if (error) throw error;
+
+      toast.success('Invitación cancelada');
+      loadInvitations();
+    } catch (error) {
+      console.error('Error canceling invitation:', error);
+      toast.error('Error al cancelar invitación');
+    }
   };
 
   return (
@@ -240,14 +278,18 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
-            Invitaciones Enviadas
+            Estudiantes Invitados
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {invitations.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : invitations.length === 0 ? (
             <div className="text-center py-8">
               <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No hay invitaciones enviadas</p>
+              <p className="text-muted-foreground">No hay estudiantes invitados</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -256,21 +298,31 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     <div>
-                      <p className="font-medium">{invitation.email}</p>
+                      <p className="font-medium">{invitation.student_email}</p>
                       <p className="text-sm text-muted-foreground">
-                        Enviada: {new Date(invitation.invited_at).toLocaleDateString()}
+                        Agregado: {new Date(invitation.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Badge className={`${getStatusColor(invitation.status)} text-xs`}>
-                      {getStatusText(invitation.status)}
+                    <Badge className={`text-xs ${
+                      invitation.status === 'enrolled' ? 'bg-blue-100 text-blue-800' :
+                      invitation.status === 'graduated' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {invitation.status === 'enrolled' ? 'Activo' : 
+                       invitation.status === 'graduated' ? 'Graduado' : 
+                       invitation.status}
                     </Badge>
                     
-                    {invitation.status === 'pending' && (
-                      <Button variant="outline" size="sm">
-                        Cancelar
+                    {invitation.status === 'enrolled' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleCancelInvitation(invitation.id)}
+                      >
+                        Eliminar
                       </Button>
                     )}
                   </div>
