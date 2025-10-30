@@ -9,6 +9,7 @@ import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
 import { BusinessMetrics } from '@/components/dashboard/BusinessMetrics';
 import { useRealApplications } from '@/hooks/useRealApplications';
 import { supabase } from '@/integrations/supabase/client';
+import RecommendedProfiles from '@/components/dashboard/RecommendedProfiles';
 
 
 const BusinessDashboard = () => {
@@ -347,8 +348,16 @@ const BusinessDashboard = () => {
                       .map((opportunity) => (
                         <div key={opportunity.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 bg-slate-50 rounded-lg">
                           <div className="flex items-start gap-3 flex-1 min-w-0">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <span className="text-slate-600 font-bold text-sm sm:text-base">{opportunity.title.charAt(0).toUpperCase()}</span>
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              {companyData?.logo_url ? (
+                                <img 
+                                  src={companyData.logo_url} 
+                                  alt="Company Logo" 
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <Building className="h-6 w-6 text-slate-400" />
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="font-medium text-slate-900 text-sm sm:text-base truncate">{opportunity.title}</h4>
@@ -384,113 +393,7 @@ const BusinessDashboard = () => {
             </Card>
 
             {/* Recommended Profiles Section */}
-            <Card>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Perfiles recomendados</h3>
-                  <Button 
-                    variant="link" 
-                    className="text-blue-600"
-                    onClick={() => navigate('/business-dashboard/talent-discovery')}
-                  >
-                    Buscar Talento
-                  </Button>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                  {/* Profile 1 */}
-                  <div className="bg-slate-50 rounded-lg p-4 text-center">
-                    <div className="w-16 h-16 bg-slate-300 rounded-full mx-auto mb-3"></div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <span className="text-blue-600 text-sm">✓</span>
-                      <span className="text-xs text-slate-600">SalesXcelerator</span>
-                    </div>
-                    <h4 className="font-medium text-slate-900 text-sm">Jose Lopez</h4>
-                    <p className="text-xs text-slate-600 mb-2">Closer de ventas</p>
-                    <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-2">
-                      <span>Ventas Consultivas</span>
-                      <span>SPSP</span>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-tight">
-                      Experiencia de +3 años en ventas de productos financieros, seguros, inversiones para clientes p...
-                    </p>
-                  </div>
-
-                  {/* Profile 2 */}
-                  <div className="bg-slate-50 rounded-lg p-4 text-center">
-                    <div className="w-16 h-16 bg-slate-300 rounded-full mx-auto mb-3"></div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <span className="text-blue-600 text-sm">✓</span>
-                      <span className="text-xs text-slate-600">SalesXcelerator</span>
-                      <span className="text-xs text-slate-600">+1</span>
-                    </div>
-                    <h4 className="font-medium text-slate-900 text-sm">Chantal Torres Blanco</h4>
-                    <p className="text-xs text-slate-600 mb-2">Closer de ventas</p>
-                    <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-2">
-                      <span>ProSales</span>
-                      <span>B2B</span>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-tight">
-                      Experiencia de +3 años en ventas de productos financieros, seguros, inversiones para clientes p...
-                    </p>
-                  </div>
-
-                  {/* Profile 3 */}
-                  <div className="bg-slate-50 rounded-lg p-4 text-center">
-                    <div className="w-16 h-16 bg-slate-300 rounded-full mx-auto mb-3"></div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <span className="text-blue-600 text-sm">✓</span>
-                      <span className="text-xs text-slate-600">Sales Academy</span>
-                    </div>
-                    <h4 className="font-medium text-slate-900 text-sm">Jose Lopez</h4>
-                    <p className="text-xs text-slate-600 mb-2">Closer de ventas</p>
-                    <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-2">
-                      <span>Ventas Consultivas</span>
-                      <span>SPSP</span>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-tight">
-                      Experiencia de +3 años en ventas de productos financieros, seguros, inversiones para clientes p...
-                    </p>
-                  </div>
-
-                  {/* Profile 4 */}
-                  <div className="bg-slate-50 rounded-lg p-4 text-center">
-                    <div className="w-16 h-16 bg-slate-300 rounded-full mx-auto mb-3"></div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <span className="text-blue-600 text-sm">✓</span>
-                      <span className="text-xs text-slate-600">SalesXcelerator</span>
-                    </div>
-                    <h4 className="font-medium text-slate-900 text-sm">Chantal Torres Blanco</h4>
-                    <p className="text-xs text-slate-600 mb-2">Closer de ventas</p>
-                    <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-2">
-                      <span>Ventas Consultivas</span>
-                      <span>B2B</span>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-tight">
-                      Experiencia de +3 años en ventas de productos financieros, seguros, inversiones para clientes p...
-                    </p>
-                  </div>
-
-                  {/* Profile 5 */}
-                  <div className="bg-slate-50 rounded-lg p-4 text-center">
-                    <div className="w-16 h-16 bg-slate-300 rounded-full mx-auto mb-3"></div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <span className="text-blue-600 text-sm">✓</span>
-                      <span className="text-xs text-slate-600">SalesXcelerator</span>
-                    </div>
-                    <h4 className="font-medium text-slate-900 text-sm">Jose Lopez</h4>
-                    <p className="text-xs text-slate-600 mb-2">Closer de ventas</p>
-                    <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-2">
-                      <span>Ventas Consultivas</span>
-                      <span>B2B</span>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-tight">
-                      Experiencia de +3 años en ventas de productos financieros, seguros, inversiones para clientes p...
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <RecommendedProfiles />
           </div>
         )}
 
