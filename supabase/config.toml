@@ -28,3 +28,6 @@ verify_jwt = false
 
 [functions.company-share]
 verify_jwt = false
+
+[functions.test-notification]
+verify_jwt = false

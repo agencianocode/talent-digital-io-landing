@@ -86,8 +86,8 @@ const PublicCompany = lazy(() => import('./pages/PublicCompany'));
 const WelcomePage = lazy(() => import('./pages/WelcomePage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-// Testing pages - REMOVED FOR PRODUCTION
-// const NotificationsDemo = lazy(() => import('./pages/testing/NotificationsDemo'));
+// Testing pages
+const TestNotifications = lazy(() => import('./pages/testing/TestNotifications'));
 
 function App() {
   return (
@@ -395,6 +395,13 @@ function App() {
                       <Route path="/admin" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <AdminPanel />
+                        </Suspense>
+                      } />
+
+                      {/* Test Notifications */}
+                      <Route path="/test-notifications" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <TestNotifications />
                         </Suspense>
                       } />
 

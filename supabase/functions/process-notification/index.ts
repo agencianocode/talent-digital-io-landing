@@ -149,47 +149,41 @@ Deno.serve(async (req) => {
       try {
         console.log('Sending email notification...');
         
-        // Get admin email for notifications
-        const { data: adminEmailSetting } = await supabase
-          .from('admin_settings')
-          .select('value')
-          .eq('category', 'notifications')
-          .eq('key', 'admin_email')
-          .single();
+        // Get user email from auth.users
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(
+          notification.user_id
+        );
 
-        const adminEmail = adminEmailSetting?.value || 'admin@talentodigital.com';
+        if (userError || !userData?.user?.email) {
+          console.error('Error getting user email:', userError);
+          throw new Error('User email not found');
+        }
 
-        const { error: emailError } = await supabase.functions.invoke('send-notification-email', {
-          body: {
-            to: profile?.email || notification.user_id,
-            subject: notification.title,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #333;">${notification.title}</h2>
-                <p style="color: #666; line-height: 1.6;">${notification.message}</p>
-                ${notification.action_url ? `
-                  <a href="${notification.action_url}" 
-                     style="display: inline-block; padding: 12px 24px; background-color: #0066cc; 
-                            color: white; text-decoration: none; border-radius: 4px; margin-top: 16px;">
-                    Ver detalles
-                  </a>
-                ` : ''}
-                <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;">
-                <p style="color: #999; font-size: 12px;">
-                  Este es un mensaje automático de TalentoDigital. 
-                  Para gestionar tus preferencias de notificaciones, 
-                  <a href="/settings/notifications">haz clic aquí</a>.
-                </p>
-              </div>
-            `,
-          },
-        });
+        const userEmail = userData.user.email;
+        const userName = profile?.full_name || userEmail.split('@')[0];
+
+        console.log('Sending email to:', userEmail);
+
+        const { data: emailData, error: emailError } = await supabase.functions.invoke(
+          'send-notification-email',
+          {
+            body: {
+              to: userEmail,
+              userName: userName,
+              type: notification.type,
+              title: notification.title,
+              message: notification.message,
+              actionUrl: notification.action_url,
+              actionText: 'Ver detalles',
+            },
+          }
+        );
 
         if (emailError) {
           console.error('Error sending email:', emailError);
         } else {
           results.email = true;
-          console.log('Email sent successfully');
+          console.log('Email sent successfully:', emailData);
         }
       } catch (error) {
         console.error('Email notification error:', error);
