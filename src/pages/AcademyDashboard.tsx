@@ -28,6 +28,7 @@ import ExclusiveOpportunities from '../components/academy/ExclusiveOpportunities
 import PublicDirectory from '../components/academy/PublicDirectory';
 import { AcademyBrandingSettings } from '@/components/academy/AcademyBrandingSettings';
 import { BulkInviteModal } from '@/components/academy/BulkInviteModal';
+import { AcademyEmployabilityStats } from '@/components/academy/AcademyEmployabilityStats';
 
 const AcademyDashboard: React.FC = () => {
   const { user, userRole } = useSupabaseAuth();
@@ -213,7 +214,10 @@ const AcademyDashboard: React.FC = () => {
         </TabsList>
 
         <TabsContent value="overview">
-          <AcademyOverview academyId={academyId} onTabChange={setActiveTab} />
+          <div className="space-y-6">
+            <AcademyOverview academyId={academyId} onTabChange={setActiveTab} />
+            <AcademyEmployabilityStats academyId={academyId} />
+          </div>
         </TabsContent>
 
         <TabsContent value="branding">
