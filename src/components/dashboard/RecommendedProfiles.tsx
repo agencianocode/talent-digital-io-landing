@@ -26,169 +26,102 @@ const RecommendedProfiles: React.FC = () => {
 
   useEffect(() => {
     const loadRecommendedProfiles = async () => {
-      if (!activeCompany?.id) {
-        // If no active company, show top general profiles
-        try {
-          const { data: talentProfiles } = await supabase
-            .from('talent_profiles')
-            .select('user_id, title, bio, skills, experience_level')
-            .limit(6);
-
-          const userIds = (talentProfiles || []).map(tp => tp.user_id);
-          const { data: profilesData } = await supabase
-            .from('profiles')
-            .select('user_id, full_name, avatar_url, city, profile_completeness')
-            .in('user_id', userIds)
-            .gte('profile_completeness', 40)
-            .order('profile_completeness', { ascending: false });
-
-          const formattedProfiles = (talentProfiles || [])
-            .map(tp => {
-              const profileData = (profilesData || []).find(p => p.user_id === tp.user_id);
-              if (!profileData) return null;
-              
-              return {
-                id: tp.user_id,
-                full_name: profileData.full_name || 'Usuario',
-                avatar_url: profileData.avatar_url || '',
-                title: tp.title || 'Profesional',
-                bio: tp.bio || '',
-                skills: tp.skills || [],
-                experience_level: tp.experience_level || 'intermedio',
-                location: profileData.city || '',
-                profile_completeness: profileData.profile_completeness || 0
-              };
-            })
-            .filter(Boolean) as RecommendedProfile[];
-
-          setProfiles(formattedProfiles);
-        } catch (error) {
-          console.error('Error loading general profiles:', error);
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
-
       try {
         setLoading(true);
-        
-        // First, get active opportunities for this company to find relevant skills and requirements
+
+        // Get active opportunities for this company to find relevant skills
         const { data: activeOpportunities } = await supabase
           .from('opportunities')
-          .select('skills, category, experience_levels, contract_type')
-          .eq('company_id', activeCompany.id)
+          .select('skills, category, experience_levels')
+          .eq('company_id', activeCompany?.id || '')
           .eq('status', 'active');
 
-        // Extract skills, categories, and experience levels from active opportunities
+        // Extract relevant skills and criteria
         const relevantSkills = new Set<string>();
-        const relevantCategories = new Set<string>();
         const relevantExperienceLevels = new Set<string>();
-        const relevantContractTypes = new Set<string>();
         
         (activeOpportunities || []).forEach(opp => {
           if (opp.skills) {
             opp.skills.forEach((skill: string) => relevantSkills.add(skill.toLowerCase()));
           }
-          if (opp.category) {
-            relevantCategories.add(opp.category);
-          }
           if (opp.experience_levels) {
             opp.experience_levels.forEach((level: string) => relevantExperienceLevels.add(level));
           }
-          if (opp.contract_type) {
-            relevantContractTypes.add(opp.contract_type);
-          }
         });
 
-        // Get talent profiles with enhanced matching
+        // Get all talent profiles
         const { data: talentProfiles, error } = await supabase
           .from('talent_profiles')
-          .select(`
-            id,
-            title,
-            bio,
-            skills,
-            experience_level,
-            user_id,
-            primary_category_id,
-            availability
-          `)
-          .limit(30); // Get more profiles for better matching
+          .select('user_id, title, bio, skills, experience_level, availability')
+          .limit(50);
 
         if (error) {
           console.error('Error fetching talent profiles:', error);
+          setProfiles([]);
+          setLoading(false);
           return;
         }
 
-        // Get profiles data with lower completeness threshold and broader search
+        // Get user profiles data
         const userIds = (talentProfiles || []).map(tp => tp.user_id);
+        
+        if (userIds.length === 0) {
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('user_id, full_name, avatar_url, city, country, profile_completeness')
           .in('user_id', userIds)
-          .gte('profile_completeness', 40); // Further lowered threshold for better recommendations
+          .gte('profile_completeness', 30);
 
         if (profilesError) {
           console.error('Error fetching profiles data:', profilesError);
+          setProfiles([]);
+          setLoading(false);
           return;
         }
 
-        // Enhanced scoring algorithm based on multiple factors
+        // Score and sort profiles
         const scoredProfiles = (talentProfiles || [])
           .map(profile => {
             const profileData = (profilesData || []).find(p => p.user_id === profile.user_id);
             if (!profileData) return null;
             
-            // Calculate comprehensive relevance score
             let relevanceScore = 0;
             
-            // Skills matching (40% weight)
+            // Skills matching
             if (profile.skills && relevantSkills.size > 0) {
               const matchingSkills = profile.skills.filter((skill: string) => 
                 relevantSkills.has(skill.toLowerCase())
               );
               relevanceScore += matchingSkills.length * 15;
-              
-              // Bonus for high skill match percentage
-              const skillMatchPercentage = matchingSkills.length / profile.skills.length;
-              if (skillMatchPercentage > 0.5) relevanceScore += 10;
             }
             
-            // Experience level matching (25% weight)
+            // Experience level matching
             if (profile.experience_level && relevantExperienceLevels.has(profile.experience_level)) {
               relevanceScore += 20;
             }
             
-            // Profile completeness (20% weight)
+            // Profile completeness
             relevanceScore += (profileData.profile_completeness || 0) / 5;
             
-            // Content quality bonuses (15% weight)
+            // Content quality
             if (profile.title && profile.title.length > 10) relevanceScore += 8;
-            if (profile.bio && profile.bio.length > 100) relevanceScore += 7;
-            if (profile.skills && profile.skills.length >= 5) relevanceScore += 5;
-            
-            // Availability bonus
-            if (profile.availability && profile.availability !== 'not_available') {
-              relevanceScore += 5;
-            }
-            
-            // Location preference (if user has location)
-            if (profileData.city && profileData.country) {
-              relevanceScore += 3;
-            }
+            if (profile.bio && profile.bio.length > 50) relevanceScore += 7;
+            if (profile.skills && profile.skills.length >= 3) relevanceScore += 5;
             
             return {
-              id: profile.id,
+              id: profile.user_id,
               full_name: profileData.full_name || 'Candidato',
               avatar_url: profileData.avatar_url || '',
               title: profile.title || 'Profesional',
-              bio: profile.bio || 'Sin descripción disponible',
+              bio: profile.bio || '',
               skills: profile.skills || [],
-              experience_level: profile.experience_level || 'No especificado',
-              location: profileData.city && profileData.country 
-                ? `${profileData.city}, ${profileData.country}`
-                : 'Ubicación no especificada',
+              experience_level: profile.experience_level || 'Sin especificar',
+              location: [profileData.city, profileData.country].filter(Boolean).join(', ') || 'Sin ubicación',
               profile_completeness: profileData.profile_completeness || 0,
               relevanceScore
             };
@@ -197,37 +130,7 @@ const RecommendedProfiles: React.FC = () => {
           .sort((a, b) => (b?.relevanceScore || 0) - (a?.relevanceScore || 0))
           .slice(0, 6) as (RecommendedProfile & { relevanceScore: number })[];
 
-        // If we have fewer than 3 profiles, get some random ones as fallback
-        if (scoredProfiles.length < 3) {
-          const fallbackProfiles = (talentProfiles || [])
-            .filter(tp => !scoredProfiles.find(sp => sp.id === tp.id))
-            .map(profile => {
-              const profileData = (profilesData || []).find(p => p.user_id === profile.user_id);
-              if (!profileData) return null;
-              
-              return {
-                id: profile.id,
-                full_name: profileData.full_name || 'Candidato',
-                avatar_url: profileData.avatar_url || '',
-                title: profile.title || 'Profesional',
-                bio: profile.bio || 'Sin descripción disponible',
-                skills: profile.skills || [],
-                experience_level: profile.experience_level || 'No especificado',
-                location: profileData.city && profileData.country 
-                  ? `${profileData.city}, ${profileData.country}`
-                  : 'Ubicación no especificada',
-                profile_completeness: profileData.profile_completeness || 0,
-                relevanceScore: 0
-              };
-            })
-            .filter(Boolean)
-            .slice(0, 6 - scoredProfiles.length) as (RecommendedProfile & { relevanceScore: number })[];
-            
-          scoredProfiles.push(...fallbackProfiles);
-        }
-        
         const formattedProfiles = scoredProfiles.map(({ relevanceScore, ...profile }) => profile);
-
         setProfiles(formattedProfiles);
       } catch (error) {
         console.error('Error in loadRecommendedProfiles:', error);
@@ -317,7 +220,12 @@ const RecommendedProfiles: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="ml-2 flex-shrink-0">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="ml-2 flex-shrink-0"
+                  onClick={() => window.open(`/talent/${profile.id}`, '_blank')}
+                >
                   Ver Perfil
                 </Button>
               </div>
