@@ -2295,6 +2295,22 @@ export type Database = {
           suggested_title_examples: string[]
         }[]
       }
+      get_public_academy_directory: {
+        Args: { p_academy_id: string }
+        Returns: {
+          avatar_url: string
+          certificate_url: string
+          city: string
+          country: string
+          graduation_date: string
+          program_name: string
+          student_email: string
+          student_id: string
+          student_name: string
+          title: string
+          user_id: string
+        }[]
+      }
       get_talent_phone_if_authorized: {
         Args: { talent_user_uuid: string }
         Returns: string

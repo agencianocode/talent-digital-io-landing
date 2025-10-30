@@ -308,27 +308,24 @@ export const academyService = {
     }
   },
 
-  // Get public directory of graduates
+  // Get public directory of graduates (respects privacy settings)
   async getPublicDirectory(academyId: string): Promise<PublicDirectoryStudent[]> {
     try {
       const { data, error } = await supabase
-        .from('academy_students')
-        .select('*')
-        .eq('academy_id', academyId)
-        .eq('status', 'graduated')
-        .not('graduation_date', 'is', null)
-        .order('graduation_date', { ascending: false });
+        .rpc('get_public_academy_directory', {
+          p_academy_id: academyId
+        });
 
       if (error) throw error;
 
-      return (data || []).map(student => ({
-        id: student.id,
+      return (data || []).map((student: any) => ({
+        id: student.student_id,
         full_name: student.student_name || 'Graduado',
-        avatar_url: undefined,
+        avatar_url: student.avatar_url,
         graduation_date: student.graduation_date!,
-        certificate_url: undefined,
+        certificate_url: student.certificate_url,
         skills: [],
-        location: undefined
+        location: [student.city, student.country].filter(Boolean).join(', ')
       }));
     } catch (error) {
       console.error('Error fetching public directory:', error);

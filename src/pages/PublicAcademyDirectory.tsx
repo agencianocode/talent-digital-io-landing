@@ -8,19 +8,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, GraduationCap, MapPin, Award, ExternalLink } from 'lucide-react';
 
 interface Graduate {
-  id: string;
+  student_id: string;
   student_name: string | null;
   student_email: string;
   graduation_date: string | null;
   program_name: string | null;
   certificate_url?: string | null;
-  user_id?: string;
-  profile?: {
-    avatar_url?: string;
-    city?: string;
-    country?: string;
-    title?: string;
-  };
+  user_id?: string | null;
+  avatar_url?: string | null;
+  city?: string | null;
+  country?: string | null;
+  title?: string | null;
 }
 
 interface AcademyInfo {
@@ -82,18 +80,9 @@ export default function PublicAcademyDirectory() {
 
       // Load graduates with their profiles
       const { data: graduatesData, error: graduatesError } = await supabase
-        .from('academy_students')
-        .select(`
-          id,
-          student_name,
-          student_email,
-          graduation_date,
-          program_name,
-          certificate_url
-        `)
-        .eq('academy_id', academyData.id)
-        .eq('status', 'graduated')
-        .order('graduation_date', { ascending: false });
+        .rpc('get_public_academy_directory', {
+          p_academy_id: academyData.id
+        });
 
       if (graduatesError) throw graduatesError;
 
@@ -175,28 +164,28 @@ export default function PublicAcademyDirectory() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {graduates.map((graduate) => (
-              <Card key={graduate.id} className="hover:shadow-lg transition-shadow">
+              <Card key={graduate.student_id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <Avatar className="h-16 w-16">
-                      <AvatarImage src={graduate.profile?.avatar_url} />
+                      <AvatarImage src={graduate.avatar_url || undefined} />
                       <AvatarFallback>
                         {graduate.student_name?.charAt(0) || 'G'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg truncate">
-                        {graduate.student_name}
+                        {graduate.student_name || 'Graduado'}
                       </h3>
-                      {graduate.profile?.title && (
+                      {graduate.title && (
                         <p className="text-sm text-muted-foreground truncate">
-                          {graduate.profile.title}
+                          {graduate.title}
                         </p>
                       )}
-                      {(graduate.profile?.city || graduate.profile?.country) && (
+                      {(graduate.city || graduate.country) && (
                         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                           <MapPin className="h-3 w-3" />
-                          {[graduate.profile.city, graduate.profile.country]
+                          {[graduate.city, graduate.country]
                             .filter(Boolean)
                             .join(', ')}
                         </div>

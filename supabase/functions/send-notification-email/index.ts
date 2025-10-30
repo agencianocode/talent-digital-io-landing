@@ -11,6 +11,7 @@ import { ModerationNotification } from './_templates/moderation-notification.tsx
 import { WelcomeTalent } from './_templates/welcome-talent.tsx';
 import { WelcomeBusiness } from './_templates/welcome-business.tsx';
 import { WelcomeAcademy } from './_templates/welcome-academy.tsx';
+import { AcademyExclusiveOpportunityEmail } from './_templates/academy-exclusive-opportunity.tsx';
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
@@ -35,6 +36,8 @@ const getTemplateComponent = (type: string) => {
       return ApplicationNotification;
     case 'opportunity':
       return OpportunityNotification;
+    case 'academy-exclusive':
+      return AcademyExclusiveOpportunityEmail;
     case 'message':
       return MessageNotification;
     case 'team':

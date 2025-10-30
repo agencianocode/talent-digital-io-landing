@@ -18,6 +18,7 @@ import ServiceFilters from '@/components/marketplace/ServiceFilters';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import PublishServiceModal from '@/components/marketplace/PublishServiceModal';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
+import { AcademyCoursesSection } from '@/components/marketplace/AcademyCoursesSection';
 
 const TalentMarketplace: React.FC = () => {
   const navigate = useNavigate();
@@ -109,6 +110,11 @@ const TalentMarketplace: React.FC = () => {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Academy Courses Section */}
+      <div className="mb-12">
+        <AcademyCoursesSection />
       </div>
 
       {/* Filters */}
