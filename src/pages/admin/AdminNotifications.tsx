@@ -21,7 +21,11 @@ interface Notification {
   read_at?: string;
 }
 
-const AdminNotifications = () => {
+interface AdminNotificationsProps {
+  onTabChange?: (tab: string) => void;
+}
+
+const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -125,11 +129,22 @@ const AdminNotifications = () => {
 
     // Navigate to action URL if exists
     if (notification.action_url) {
+      // Handle external URLs
       if (/^https?:\/\//i.test(notification.action_url)) {
         window.location.assign(notification.action_url);
-      } else {
-        navigate(notification.action_url);
+        return;
       }
+      
+      // Handle message notifications for admin - redirect to admin chat tab
+      if (notification.action_url.includes('/messages/')) {
+        if (onTabChange) {
+          onTabChange('chat');
+        }
+        return;
+      }
+      
+      // For other internal routes, navigate normally
+      navigate(notification.action_url);
     }
   };
 

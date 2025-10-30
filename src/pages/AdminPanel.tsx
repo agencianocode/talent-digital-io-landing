@@ -425,7 +425,7 @@ const AdminPanel: React.FC = () => {
             )}
 
             {activeTab === "notifications" && (
-              <AdminNotifications />
+              <AdminNotifications onTabChange={setActiveTab} />
             )}
 
             {activeTab === "settings" && (
