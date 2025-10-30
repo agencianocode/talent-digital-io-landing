@@ -175,7 +175,7 @@ const BusinessDashboard = () => {
             </div>
 
             {/* Right Column - Video Tutorial Real */}
-            {customization?.banner_show_video && (
+            {(customization?.banner_show_video !== false) && (
               <div className="hidden lg:flex justify-center">
                 <div className="relative">
                   {/* Video Tutorial */}
@@ -191,7 +191,7 @@ const BusinessDashboard = () => {
                   </div>
                   
                   {/* Botón alternativo para llamada personalizada */}
-                  {customization?.banner_show_call_button && (
+                  {(customization?.banner_show_call_button !== false) && (
                     <Button
                       variant="outline"
                       size="sm"
