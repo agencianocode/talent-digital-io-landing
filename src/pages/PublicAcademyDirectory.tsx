@@ -51,13 +51,22 @@ export default function PublicAcademyDirectory() {
     try {
       setLoading(true);
 
+      // Check if slug is a UUID (ID) or an actual slug
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
       // Load academy info
-      const { data: academyData, error: academyError } = await supabase
+      let query = supabase
         .from('companies')
         .select('id, name, logo_url, description, brand_color, secondary_color, academy_tagline, website, directory_settings, public_directory_enabled')
-        .eq('academy_slug', slug)
-        .eq('business_type', 'academy')
-        .single();
+        .eq('business_type', 'academy');
+
+      if (isUUID) {
+        query = query.eq('id', slug);
+      } else {
+        query = query.eq('academy_slug', slug);
+      }
+
+      const { data: academyData, error: academyError } = await query.single();
 
       if (academyError) throw academyError;
 
