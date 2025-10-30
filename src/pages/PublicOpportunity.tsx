@@ -21,6 +21,7 @@ import {
   Twitter,
   Briefcase
 } from 'lucide-react';
+import { FormattedOpportunityText } from '@/lib/markdown-formatter';
 
 const PublicOpportunity = () => {
   const { opportunityId } = useParams<{ opportunityId: string }>();
@@ -260,9 +261,10 @@ const PublicOpportunity = () => {
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap">
-                    {opportunity.description}
-                  </p>
+                  <FormattedOpportunityText 
+                    text={opportunity.description} 
+                    className="text-gray-700"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -275,18 +277,9 @@ const PublicOpportunity = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="prose max-w-none">
-                    <div 
-                      className="text-gray-700 whitespace-pre-wrap"
-                      dangerouslySetInnerHTML={{
-                        __html: opportunity.requirements
-                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/(Habilidades:)/g, '<strong>$1</strong>')
-                          .replace(/(Herramientas:)/g, '<strong>$1</strong>')
-                          .replace(/(Contratistas requeridos:)/g, '<strong>$1</strong>')
-                          .replace(/(Zona horaria preferida:)/g, '<strong>$1</strong>')
-                          .replace(/(Idiomas preferidos:)/g, '<strong>$1</strong>')
-                          .replace(/\n/g, '<br/>')
-                      }}
+                    <FormattedOpportunityText 
+                      text={opportunity.requirements} 
+                      className="text-gray-700"
                     />
                   </div>
                 </CardContent>

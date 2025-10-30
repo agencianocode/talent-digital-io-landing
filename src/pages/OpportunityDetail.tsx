@@ -13,6 +13,7 @@ import { useLocation } from "react-router-dom";
 import ProfileCompletenessModal from "@/components/ProfileCompletenessModal";
 import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
 import ApplicationModal from "@/components/ApplicationModal";
+import { FormattedOpportunityText } from "@/lib/markdown-formatter";
 
 const OpportunityDetail = () => {
   const navigate = useNavigate();
@@ -276,9 +277,10 @@ const OpportunityDetail = () => {
           <div className="bg-card p-6 rounded-lg border">
             <h2 className="text-xl font-semibold mb-4">Descripción del Trabajo</h2>
             <div className="prose max-w-none">
-              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-                {opportunity.description}
-              </p>
+              <FormattedOpportunityText 
+                text={opportunity.description} 
+                className="text-foreground leading-relaxed"
+              />
             </div>
           </div>
 
@@ -286,18 +288,9 @@ const OpportunityDetail = () => {
             <div className="bg-card p-6 rounded-lg border">
               <h2 className="text-xl font-semibold mb-4">Requisitos</h2>
               <div className="prose max-w-none">
-                <div 
-                  className="text-foreground leading-relaxed whitespace-pre-wrap"
-                  dangerouslySetInnerHTML={{
-                    __html: opportunity.requirements
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/(Habilidades:)/g, '<strong>$1</strong>')
-                      .replace(/(Herramientas:)/g, '<strong>$1</strong>')
-                      .replace(/(Contratistas requeridos:)/g, '<strong>$1</strong>')
-                      .replace(/(Zona horaria preferida:)/g, '<strong>$1</strong>')
-                      .replace(/(Idiomas preferidos:)/g, '<strong>$1</strong>')
-                      .replace(/\n/g, '<br/>')
-                  }}
+                <FormattedOpportunityText 
+                  text={opportunity.requirements} 
+                  className="text-foreground leading-relaxed"
                 />
               </div>
             </div>

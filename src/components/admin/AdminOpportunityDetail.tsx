@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { FormattedOpportunityText } from '@/lib/markdown-formatter';
 
 interface OpportunityDetail {
   id: string;
@@ -482,8 +483,11 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                       className="mt-1 resize-none w-full"
                     />
                   ) : (
-                    <div className="mt-1 p-2 bg-gray-50 rounded text-xs sm:text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto">
-                      {opportunity.description}
+                    <div className="mt-1 p-2 bg-gray-50 rounded text-xs sm:text-sm text-muted-foreground break-words max-h-32 overflow-y-auto">
+                      <FormattedOpportunityText 
+                        text={opportunity.description} 
+                        className=""
+                      />
                     </div>
                   )}
                 </div>
@@ -681,9 +685,16 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                   placeholder="Describe los requisitos para esta oportunidad..."
                 />
               ) : (
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {opportunity.requirements || 'No especificados'}
-                </p>
+                <div className="text-sm text-muted-foreground">
+                  {opportunity.requirements ? (
+                    <FormattedOpportunityText 
+                      text={opportunity.requirements} 
+                      className=""
+                    />
+                  ) : (
+                    'No especificados'
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
