@@ -38,6 +38,7 @@ interface InvitationRequest {
   company_id: string;
   invited_by: string;
   invitation_id: string;
+  redirect_base?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -59,14 +60,16 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, role, company_id, invited_by, invitation_id }: InvitationRequest = await req.json();
+    const { email, role, company_id, invited_by, invitation_id, redirect_base }: InvitationRequest = await req.json();
 
     console.log(`📧 Sending invitation to ${email} for role ${role}`);
     console.log(`📋 Invitation ID: ${invitation_id}`);
     console.log(`👤 Invited by: ${invited_by}`);
+    console.log(`🌐 Redirect base: ${redirect_base || 'not provided'}`);
 
-    const acceptUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/accept-invitation?id=${invitation_id}`;
-    const declineUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/decline-invitation?id=${invitation_id}`;
+    const redirectParam = redirect_base ? `&redirect=${encodeURIComponent(redirect_base)}` : '';
+    const acceptUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/accept-invitation?id=${invitation_id}${redirectParam}`;
+    const declineUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/decline-invitation?id=${invitation_id}${redirectParam}`;
 
     const emailResponse = await sendEmail(
       email,

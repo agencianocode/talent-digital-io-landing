@@ -315,7 +315,8 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
           role: newUserRole,
           company_id: companyData.id,
           invited_by: currentUser.data.user?.email || 'Administrador',
-          invitation_id: roleRow.id
+          invitation_id: roleRow.id,
+          redirect_base: window.location.origin
         };
 
         console.log('[send-invitation] invoking with payload:', payload);

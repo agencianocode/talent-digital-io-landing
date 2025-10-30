@@ -9,6 +9,7 @@ const supabase = createClient(
 const handler = async (req: Request): Promise<Response> => {
   const url = new URL(req.url);
   const invitationId = url.searchParams.get('id');
+  const redirectBase = url.searchParams.get('redirect');
 
   if (!invitationId) {
     return new Response('Invitation ID is required', { status: 400 });
@@ -64,41 +65,23 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (updateError) throw updateError;
 
-    const appUrl = 'https://app.talentodigital.io';
+    // Calculate redirect URL
+    const appUrl = redirectBase || Deno.env.get('APP_BASE_URL') || 'https://talent-digital-io-landing.lovable.app';
 
-    return new Response(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Invitación Rechazada</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-          body { font-family: system-ui, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
-          .container { background: #f8d7da; padding: 40px; border-radius: 10px; border: 1px solid #f5c6cb; color: #721c24; }
-          .btn { background: #6c757d; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1>❌ Invitación Rechazada</h1>
-          <p>Has rechazado la invitación para unirte a la empresa.</p>
-          <p>Si cambias de opinión, contacta directamente a quien te invitó para que te envíe una nueva invitación.</p>
-          <a href="${appUrl}" class="btn">Ir a TalentFlow</a>
-        </div>
-        <script>
-          setTimeout(() => {
-            window.location.href = "${appUrl}";
-          }, 5000);
-        </script>
-      </body>
-      </html>
-    `, { 
-      headers: { 'Content-Type': 'text/html' } 
+    console.log(`❌ Invitation declined, redirecting to: ${appUrl}`);
+
+    // Return HTTP 302 redirect
+    return new Response(null, {
+      status: 302,
+      headers: {
+        'Location': appUrl,
+        'Cache-Control': 'no-cache'
+      }
     });
 
   } catch (error: any) {
     console.error('Error declining invitation:', error);
+    const appUrl = redirectBase || Deno.env.get('APP_BASE_URL') || 'https://talent-digital-io-landing.lovable.app';
     return new Response(`
       <!DOCTYPE html>
       <html>
@@ -114,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
         <div class="error">
           <h1>❌ Error</h1>
           <p>No se pudo procesar la invitación: ${error.message}</p>
-          <p><a href="/">Ir a TalentFlow</a></p>
+          <p><a href="${appUrl}">Ir a TalentFlow</a></p>
         </div>
       </body>
       </html>

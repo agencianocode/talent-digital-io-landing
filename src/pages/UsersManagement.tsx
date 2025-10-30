@@ -209,7 +209,8 @@ const UsersManagement = () => {
         role: inviteData.role,
         company_id: activeCompany.id,
         invited_by: user?.email || 'Administrador',
-        invitation_id: created.id
+        invitation_id: created.id,
+        redirect_base: window.location.origin
       };
       console.log('[send-invitation] payload:', payload);
 
