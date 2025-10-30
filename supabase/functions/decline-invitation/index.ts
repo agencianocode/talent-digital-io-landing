@@ -15,11 +15,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Get invitation details
+    // Get invitation details (support both id and legacy invitation_token)
     const { data: invitation, error: fetchError } = await supabase
       .from('company_user_roles')
       .select('*')
-      .eq('id', invitationId)
+      .or(`id.eq.${invitationId},invitation_token.eq.${invitationId}`)
+      .limit(1)
       .single();
 
     if (fetchError || !invitation) {
@@ -59,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: updateError } = await supabase
       .from('company_user_roles')
       .update({ status: 'declined' })
-      .eq('id', invitationId);
+      .eq('id', invitation.id);
 
     if (updateError) throw updateError;
 

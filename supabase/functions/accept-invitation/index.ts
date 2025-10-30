@@ -15,11 +15,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Get invitation details
+    // Get invitation details (support both id and legacy invitation_token)
     const { data: invitation, error: fetchError } = await supabase
       .from('company_user_roles')
       .select('*')
-      .eq('id', invitationId)
+      .or(`id.eq.${invitationId},invitation_token.eq.${invitationId}`)
+      .limit(1)
       .single();
 
     if (fetchError || !invitation) {
@@ -62,12 +63,12 @@ const handler = async (req: Request): Promise<Response> => {
         status: 'accepted',
         accepted_at: new Date().toISOString()
       })
-      .eq('id', invitationId);
+      .eq('id', invitation.id);
 
     if (updateError) throw updateError;
 
     // Redirect to signup/login page with invitation data
-    const redirectUrl = `/?invitation=${invitationId}&action=accept`;
+    const redirectUrl = `/?invitation=${invitation.id}&action=accept`;
 
     return new Response(`
       <!DOCTYPE html>
