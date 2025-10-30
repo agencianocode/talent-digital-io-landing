@@ -122,30 +122,31 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
   };
 
   const handleNotificationClick = (notification: Notification) => {
-    // Mark as read
+    // Only mark as read, no navigation
     if (!notification.read) {
       markAsRead(notification.id);
     }
+  };
 
-    // Navigate to action URL if exists
-    if (notification.action_url) {
-      // Handle external URLs
-      if (/^https?:\/\//i.test(notification.action_url)) {
-        window.location.assign(notification.action_url);
-        return;
-      }
-      
-      // Handle message notifications for admin - redirect to admin chat tab
-      if (notification.action_url.includes('/messages/')) {
-        if (onTabChange) {
-          onTabChange('chat');
-        }
-        return;
-      }
-      
-      // For other internal routes, navigate normally
-      navigate(notification.action_url);
+  const handleActionClick = (e: React.MouseEvent, actionUrl: string) => {
+    e.stopPropagation();
+    
+    // Handle external URLs
+    if (/^https?:\/\//i.test(actionUrl)) {
+      window.location.assign(actionUrl);
+      return;
     }
+    
+    // Handle message notifications for admin - redirect to admin chat tab
+    if (actionUrl.includes('/messages/')) {
+      if (onTabChange) {
+        onTabChange('chat');
+      }
+      return;
+    }
+    
+    // For other internal routes, navigate normally
+    navigate(actionUrl);
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -225,13 +226,24 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
                         <p className="text-sm text-muted-foreground mt-1">
                           {notification.message}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {formatDistanceToNow(new Date(notification.created_at), {
-                            addSuffix: true,
-                            locale: es,
-                          })}
-                        </p>
-                      </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {formatDistanceToNow(new Date(notification.created_at), {
+                      addSuffix: true,
+                      locale: es,
+                    })}
+                  </p>
+                  
+                  {notification.action_url && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 mt-2 text-primary"
+                      onClick={(e) => handleActionClick(e, notification.action_url!)}
+                    >
+                      Ver detalles →
+                    </Button>
+                  )}
+                </div>
 
                       {/* Actions */}
                       <div className="flex items-center gap-1">
