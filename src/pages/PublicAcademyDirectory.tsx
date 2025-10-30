@@ -26,10 +26,11 @@ interface AcademyInfo {
   name: string;
   logo_url?: string;
   description?: string;
-  brand_color: string;
-  secondary_color: string;
+  brand_color: string | null;
+  secondary_color: string | null;
   academy_tagline?: string;
   website?: string;
+  academy_slug?: string;
 }
 
 export default function PublicAcademyDirectory() {
@@ -54,11 +55,10 @@ export default function PublicAcademyDirectory() {
       // Check if slug is a UUID (ID) or an actual slug
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
 
-      // Load academy info
+      // Load academy info (removed business_type filter to support both academy and company)
       let query = supabase
         .from('companies')
-        .select('id, name, logo_url, description, brand_color, secondary_color, academy_tagline, website, directory_settings, public_directory_enabled')
-        .eq('business_type', 'academy');
+        .select('id, name, logo_url, description, brand_color, secondary_color, academy_tagline, website, directory_settings, public_directory_enabled, academy_slug');
 
       if (isUUID) {
         query = query.eq('id', slug);
@@ -77,6 +77,12 @@ export default function PublicAcademyDirectory() {
 
       if (!academyData.public_directory_enabled) {
         navigate('/404');
+        return;
+      }
+
+      // Canonical redirect: if accessed via UUID but has slug, redirect to slug URL
+      if (isUUID && academyData.academy_slug) {
+        navigate(`/academy/${academyData.academy_slug}`, { replace: true });
         return;
       }
 
@@ -114,13 +120,17 @@ export default function PublicAcademyDirectory() {
 
   if (!academy) return null;
 
+  // Default colors if not set
+  const brandColor = academy.brand_color || '#1E3A8A';
+  const secondaryColor = academy.secondary_color || '#3B82F6';
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div 
         className="py-16 px-4"
         style={{
-          background: `linear-gradient(135deg, ${academy.brand_color} 0%, ${academy.secondary_color} 100%)`,
+          background: `linear-gradient(135deg, ${brandColor} 0%, ${secondaryColor} 100%)`,
         }}
       >
         <div className="container mx-auto max-w-6xl">
@@ -158,7 +168,7 @@ export default function PublicAcademyDirectory() {
       {/* Graduates Section */}
       <div className="container mx-auto max-w-6xl py-12 px-4">
         <div className="flex items-center gap-3 mb-8">
-          <GraduationCap className="h-8 w-8" style={{ color: academy.brand_color }} />
+          <GraduationCap className="h-8 w-8" style={{ color: brandColor }} />
           <h2 className="text-3xl font-bold">
             Nuestros Graduados ({graduates.length})
           </h2>
