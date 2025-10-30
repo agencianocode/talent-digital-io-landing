@@ -20,6 +20,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { FormattedOpportunityText } from '@/lib/markdown-formatter';
 
 const PublicCompany = () => {
   const { companyId } = useParams<{ companyId: string }>();
@@ -416,9 +417,12 @@ const PublicCompany = () => {
                       </div>
 
                       {opp.description && (
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                          {opp.description}
-                        </p>
+                        <div className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          <FormattedOpportunityText 
+                            text={opp.description} 
+                            className=""
+                          />
+                        </div>
                       )}
 
                       {opp.skills && opp.skills.length > 0 && (
