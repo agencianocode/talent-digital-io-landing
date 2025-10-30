@@ -121,15 +121,28 @@ export const useCompanyUserRoles = (companyId?: string) => {
 
       console.log('Invitation created successfully:', data);
 
-      // Generate invitation link
-      const invitationLink = `${window.location.origin}/accept-invitation?id=${data.id}`;
-      
-      // Copy link to clipboard
+      // Send invitation email via edge function
       try {
-        await navigator.clipboard.writeText(invitationLink);
-        toast.success(`Invitación creada para ${inviteData.email}. Link copiado al portapapeles.`);
-      } catch (clipboardError) {
-        toast.success(`Invitación creada para ${inviteData.email}. Link: ${invitationLink}`);
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-invitation', {
+          body: {
+            email: inviteData.email,
+            role: inviteData.role,
+            company_id: inviteData.company_id,
+            invited_by: user.email || 'Un administrador',
+            invitation_id: data.id
+          }
+        });
+
+        if (emailError) {
+          console.error('Error sending invitation email:', emailError);
+          toast.warning(`Invitación creada pero el email no pudo enviarse. Link: ${window.location.origin}/accept-invitation?id=${data.id}`);
+        } else {
+          console.log('Invitation email sent successfully:', emailData);
+          toast.success(`Invitación enviada a ${inviteData.email}`);
+        }
+      } catch (emailError) {
+        console.error('Exception sending invitation email:', emailError);
+        toast.warning(`Invitación creada pero el email no pudo enviarse. Link: ${window.location.origin}/accept-invitation?id=${data.id}`);
       }
 
       // Reload user roles
