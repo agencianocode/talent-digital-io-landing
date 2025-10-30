@@ -86,7 +86,7 @@ const SavedOpportunities = () => {
           title="No tienes oportunidades guardadas"
           description="Guarda oportunidades interesantes para revisarlas más tarde"
           actionText="Explorar Oportunidades"
-          onAction={() => navigate('/talent-dashboard/explore')}
+          onAction={() => navigate('/talent-dashboard/opportunities')}
         />
       </div>
     );

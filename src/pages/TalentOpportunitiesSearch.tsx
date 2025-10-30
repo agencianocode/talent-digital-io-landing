@@ -294,7 +294,7 @@ const TalentOpportunitiesSearch = () => {
       <div className="mb-4">
         <Button
           variant="outline"
-          onClick={() => navigate('/talent-dashboard/saved-opportunities')}
+          onClick={() => navigate('/talent-dashboard/saved')}
           className="flex items-center gap-2"
         >
           <Bookmark className="h-4 w-4" />
