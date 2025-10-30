@@ -483,7 +483,7 @@ const PublicTalentProfile = () => {
                 </Card>
 
                 {/* Languages & Certifications */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start md:mt-[10px]">
                   <Card className="self-start">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
