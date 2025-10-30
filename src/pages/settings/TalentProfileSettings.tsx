@@ -6,9 +6,11 @@ import { ArrowLeft, Shield, Bell, GraduationCap } from 'lucide-react';
 import PrivacySettings from './PrivacySettings';
 import UserNotificationSettings from '@/components/UserNotificationSettings';
 import { GraduatePrivacySettings } from '@/components/academy/GraduatePrivacySettings';
+import { useAcademyInvitation } from '@/hooks/useAcademyInvitation';
 
 const TalentProfileSettings = () => {
   const navigate = useNavigate();
+  const { isAcademyStudent } = useAcademyInvitation();
 
   const handleBackClick = () => {
     startTransition(() => {
@@ -28,15 +30,17 @@ const TalentProfileSettings = () => {
       </div>
 
       <Tabs defaultValue="privacy" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className={`grid w-full ${isAcademyStudent ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <TabsTrigger value="privacy" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Privacidad
           </TabsTrigger>
-          <TabsTrigger value="academy" className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
-            Academia
-          </TabsTrigger>
+          {isAcademyStudent && (
+            <TabsTrigger value="academy" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Academia
+            </TabsTrigger>
+          )}
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             Notificaciones
@@ -47,9 +51,11 @@ const TalentProfileSettings = () => {
           <PrivacySettings />
         </TabsContent>
 
-        <TabsContent value="academy" className="mt-6">
-          <GraduatePrivacySettings />
-        </TabsContent>
+        {isAcademyStudent && (
+          <TabsContent value="academy" className="mt-6">
+            <GraduatePrivacySettings />
+          </TabsContent>
+        )}
 
         <TabsContent value="notifications" className="mt-6">
           <UserNotificationSettings userType="talent" />
