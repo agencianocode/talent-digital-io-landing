@@ -82,6 +82,59 @@ Deno.serve(async (req) => {
 
     const testData = testNotifications[notificationType] || testNotifications.application;
 
+    // Para los tipos de bienvenida, evitamos la inserción en la tabla notifications
+    // debido a la restricción del CHECK constraint sobre el campo "type".
+    if (notificationType.startsWith('welcome-')) {
+      console.log('Sending welcome email directly for user:', user_id, 'type:', notificationType);
+
+      // Obtener email del usuario
+      const { data: userData2, error: userError2 } = await supabase.auth.admin.getUserById(user_id);
+      if (userError2 || !userData2?.user?.email) {
+        throw new Error('User email not found');
+      }
+
+      // Obtener nombre del perfil para personalizar
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', user_id)
+        .single();
+      if (profileError) {
+        console.warn('Profile fetch error (non-blocking):', profileError.message);
+      }
+
+      const userEmail = userData2.user.email as string;
+      const userName = (profile?.full_name as string) || userEmail.split('@')[0];
+
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-notification-email', {
+        body: {
+          to: userEmail,
+          userName,
+          type: notificationType,
+          title: testData.title,
+          message: testData.message,
+          actionUrl: testData.action_url,
+          actionText: 'Ver detalles',
+        },
+      });
+
+      if (emailError) {
+        throw new Error(`Failed to send welcome email: ${emailError.message}`);
+      }
+
+      console.log('Welcome email sent:', emailData);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          type: notificationType,
+          channel: 'email',
+          message: 'Welcome email sent successfully',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log('Creating test notification for user:', user_id, 'type:', notificationType);
 
     // Create notification in database
