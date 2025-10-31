@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, MessageSquare, User, Send, Users, CheckSquare, Square, Briefcase, UserCircle } from 'lucide-react';
+import { Search, MessageSquare, User, Send, Users, CheckSquare, Square, Briefcase, UserCircle, GraduationCap, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -14,6 +14,9 @@ interface UserData {
   full_name: string;
   email: string;
   role: string;
+  company_roles?: string[];
+  is_company_admin?: boolean;
+  has_companies?: boolean;
 }
 
 interface StartNewChatModalProps {
@@ -37,7 +40,8 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
   const [bulkMessage, setBulkMessage] = useState('');
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [isSendingBulk, setIsSendingBulk] = useState(false);
-  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'talent' | 'business'>('all');
+  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'talent' | 'business' | 'academy'>('all');
+  const [companyRoleFilter, setCompanyRoleFilter] = useState<'all' | 'admin_owner' | 'viewer'>('all');
 
   useEffect(() => {
     if (isOpen) {
@@ -47,6 +51,7 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
       setBulkMessage('');
       setIsBulkMode(false);
       setUserTypeFilter('all');
+      setCompanyRoleFilter('all');
     }
   }, [isOpen]);
 
@@ -64,6 +69,17 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
         user.role === 'freemium_business' || 
         user.role === 'premium_business'
       );
+      
+      // Apply company role filter if business is selected
+      if (companyRoleFilter === 'admin_owner') {
+        filtered = filtered.filter(user => user.is_company_admin === true);
+      } else if (companyRoleFilter === 'viewer') {
+        filtered = filtered.filter(user => 
+          user.company_roles?.includes('viewer')
+        );
+      }
+    } else if (userTypeFilter === 'academy') {
+      filtered = filtered.filter(user => user.role === 'academy_premium');
     }
     
     // Apply search query
@@ -76,7 +92,7 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
     }
     
     setFilteredUsers(filtered);
-  }, [searchQuery, users, userTypeFilter]);
+  }, [searchQuery, users, userTypeFilter, companyRoleFilter]);
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -96,6 +112,9 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
           full_name: u.full_name || 'Usuario',
           email: u.email || '',
           role: u.role || 'talent',
+          company_roles: u.company_roles || [],
+          is_company_admin: u.is_company_admin || false,
+          has_companies: u.has_companies || false,
         }));
       setUsers(nonAdminUsers);
       setFilteredUsers(nonAdminUsers);
@@ -155,8 +174,21 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
     switch (role) {
       case 'talent':
         return <Badge variant="outline" className="bg-blue-100 text-blue-800">Talento</Badge>;
+      case 'premium_talent':
+        return <Badge variant="outline" className="bg-cyan-100 text-cyan-800">Talento Premium</Badge>;
       case 'business':
         return <Badge variant="outline" className="bg-purple-100 text-purple-800">Empresa</Badge>;
+      case 'freemium_business':
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800">Empresa Freemium</Badge>;
+      case 'premium_business':
+        return <Badge variant="outline" className="bg-purple-100 text-purple-800">Empresa Premium</Badge>;
+      case 'academy_premium':
+        return (
+          <Badge variant="outline" className="bg-green-100 text-green-800">
+            <GraduationCap className="h-3 w-3 mr-1" />
+            Academia Premium
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
@@ -205,36 +237,83 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
             />
           </div>
 
-          {/* User Type Filter - Only in Bulk Mode */}
-          {isBulkMode && (
-            <div className="flex gap-2">
-              <Button
-                variant={userTypeFilter === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setUserTypeFilter('all')}
-                className="flex-1"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Todos
-              </Button>
-              <Button
-                variant={userTypeFilter === 'talent' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setUserTypeFilter('talent')}
-                className="flex-1"
-              >
-                <UserCircle className="h-4 w-4 mr-2" />
-                Solo Talento
-              </Button>
-              <Button
-                variant={userTypeFilter === 'business' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setUserTypeFilter('business')}
-                className="flex-1"
-              >
-                <Briefcase className="h-4 w-4 mr-2" />
-                Solo Empresas
-              </Button>
+          {/* User Type Filter */}
+          <div className="grid grid-cols-4 gap-2">
+            <Button
+              variant={userTypeFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setUserTypeFilter('all');
+                setCompanyRoleFilter('all');
+              }}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Todos
+            </Button>
+            <Button
+              variant={userTypeFilter === 'talent' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setUserTypeFilter('talent');
+                setCompanyRoleFilter('all');
+              }}
+            >
+              <UserCircle className="h-4 w-4 mr-2" />
+              Solo Talento
+            </Button>
+            <Button
+              variant={userTypeFilter === 'business' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setUserTypeFilter('business');
+              }}
+            >
+              <Briefcase className="h-4 w-4 mr-2" />
+              Solo Empresas
+            </Button>
+            <Button
+              variant={userTypeFilter === 'academy' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setUserTypeFilter('academy');
+                setCompanyRoleFilter('all');
+              }}
+            >
+              <GraduationCap className="h-4 w-4 mr-2" />
+              Solo Academias
+            </Button>
+          </div>
+
+          {/* Conditional Company Role Filter */}
+          {userTypeFilter === 'business' && (
+            <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+              <label className="text-sm font-medium">Filtrar por rol en empresa:</label>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  variant={companyRoleFilter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCompanyRoleFilter('all')}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Todos los miembros
+                </Button>
+                <Button
+                  variant={companyRoleFilter === 'admin_owner' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCompanyRoleFilter('admin_owner')}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Solo Admins
+                </Button>
+                <Button
+                  variant={companyRoleFilter === 'viewer' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCompanyRoleFilter('viewer')}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Solo Miembros
+                </Button>
+              </div>
             </div>
           )}
 
