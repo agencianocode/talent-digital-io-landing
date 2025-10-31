@@ -2304,6 +2304,12 @@ export type Database = {
           student_name: string
         }[]
       }
+      get_admin_user_ids: {
+        Args: never
+        Returns: {
+          user_id: string
+        }[]
+      }
       get_all_users_for_admin: {
         Args: never
         Returns: {
