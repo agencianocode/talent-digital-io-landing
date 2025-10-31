@@ -22,7 +22,7 @@ export const categoryTemplates: Record<string, CategoryTemplate> = {
       'Negociación',
       'Relaciones con clientes'
     ],
-    experienceLevels: ['Intermedio', 'Avanzado', 'Experto'],
+    experienceLevels: ['Mid-level (3-5 años)', 'Senior (6-10 años)', 'Lead (10+ años)'],
     defaultSkills: ['Ventas Consultivas', 'CRM', 'Llamadas en frío'],
     suggestedRequirements: [
       'Experiencia mínima en ventas B2B o B2C',
@@ -48,7 +48,7 @@ export const categoryTemplates: Record<string, CategoryTemplate> = {
       'Social Media',
       'Brand Management'
     ],
-    experienceLevels: ['Principiante', 'Intermedio', 'Avanzado', 'Experto'],
+    experienceLevels: ['Junior (0-2 años)', 'Mid-level (3-5 años)', 'Senior (6-10 años)', 'Lead (10+ años)'],
     defaultSkills: ['Google Ads', 'Facebook Ads', 'Email Marketing'],
     suggestedRequirements: [
       'Conocimiento en plataformas de publicidad digital',
@@ -71,7 +71,7 @@ export const categoryTemplates: Record<string, CategoryTemplate> = {
       'Zendesk',
       'Intercom'
     ],
-    experienceLevels: ['Principiante', 'Intermedio'],
+    experienceLevels: ['Junior (0-2 años)', 'Mid-level (3-5 años)', 'Senior (6-10 años)'],
     defaultSkills: ['Comunicación efectiva', 'Resolución de conflictos', 'CRM'],
     suggestedRequirements: [
       'Excelentes habilidades de comunicación',
@@ -95,7 +95,7 @@ export const categoryTemplates: Record<string, CategoryTemplate> = {
       'Excel Avanzado',
       'Google Workspace'
     ],
-    experienceLevels: ['Principiante', 'Intermedio', 'Avanzado'],
+    experienceLevels: ['Junior (0-2 años)', 'Mid-level (3-5 años)', 'Senior (6-10 años)'],
     defaultSkills: ['Gestión de procesos', 'Análisis de datos', 'Excel Avanzado'],
     suggestedRequirements: [
       'Habilidades organizativas excepcionales',
@@ -120,7 +120,7 @@ export const categoryTemplates: Record<string, CategoryTemplate> = {
       'Canva',
       'After Effects'
     ],
-    experienceLevels: ['Principiante', 'Intermedio', 'Avanzado', 'Experto'],
+    experienceLevels: ['Junior (0-2 años)', 'Mid-level (3-5 años)', 'Senior (6-10 años)', 'Lead (10+ años)'],
     defaultSkills: ['Adobe Creative Suite', 'Figma', 'Diseño Gráfico'],
     suggestedRequirements: [
       'Portfolio sólido de trabajos creativos',
@@ -146,7 +146,7 @@ export const categoryTemplates: Record<string, CategoryTemplate> = {
       'DevOps',
       'Cloud Computing'
     ],
-    experienceLevels: ['Intermedio', 'Avanzado', 'Experto'],
+    experienceLevels: ['Mid-level (3-5 años)', 'Senior (6-10 años)', 'Lead (10+ años)', 'Experto (15+ años)'],
     defaultSkills: ['JavaScript', 'APIs', 'Automatización de procesos'],
     suggestedRequirements: [
       'Experiencia en desarrollo de software',
@@ -170,7 +170,7 @@ export const categoryTemplates: Record<string, CategoryTemplate> = {
       'Gestión de calendarios',
       'Comunicación empresarial'
     ],
-    experienceLevels: ['Principiante', 'Intermedio', 'Avanzado'],
+    experienceLevels: ['Junior (0-2 años)', 'Mid-level (3-5 años)', 'Senior (6-10 años)'],
     defaultSkills: ['Gestión administrativa', 'Comunicación empresarial', 'Coordinación'],
     suggestedRequirements: [
       'Excelentes habilidades organizativas',
@@ -216,10 +216,11 @@ export const salaryPeriods = [
 ];
 
 export const experienceLevelOptions = [
-  { value: 'principiante', label: 'Principiante: 0-1 año' },
-  { value: 'intermedio', label: 'Intermedio: 1-3 años' },
-  { value: 'avanzado', label: 'Avanzado: 3-6 años' },
-  { value: 'experto', label: 'Experto: +6 años' }
+  { value: 'junior', label: 'Junior (0-2 años)' },
+  { value: 'mid_level', label: 'Mid-level (3-5 años)' },
+  { value: 'senior', label: 'Senior (6-10 años)' },
+  { value: 'lead', label: 'Lead (10+ años)' },
+  { value: 'experto', label: 'Experto (15+ años)' }
 ];
 
 export const timezones = [

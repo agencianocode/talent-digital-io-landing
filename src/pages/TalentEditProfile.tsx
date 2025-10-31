@@ -17,10 +17,10 @@ import { supabase } from '@/integrations/supabase/client';
 
 const EXPERIENCE_LEVELS = [
   { value: 'junior', label: 'Junior (0-2 años)' },
-  { value: 'mid', label: 'Mid-level (3-5 años)' },
+  { value: 'mid_level', label: 'Mid-level (3-5 años)' },
   { value: 'senior', label: 'Senior (6-10 años)' },
   { value: 'lead', label: 'Lead (10+ años)' },
-  { value: 'expert', label: 'Experto (15+ años)' }
+  { value: 'experto', label: 'Experto (15+ años)' }
 ];
 
 const PROFESSIONAL_CATEGORIES = [
