@@ -57,12 +57,11 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Update invitation status (we'll handle user linking when they sign up)
+    // Update invitation status to 'invitation_clicked' (user will complete onboarding to accept)
     const { error: updateError } = await supabase
       .from('company_user_roles')
       .update({ 
-        status: 'accepted',
-        accepted_at: new Date().toISOString()
+        status: 'invitation_clicked'
       })
       .eq('id', invitation.id);
 

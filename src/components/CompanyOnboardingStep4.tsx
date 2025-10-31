@@ -18,13 +18,17 @@ interface CompanyOnboardingStep4Props {
   initialData: UserProfile;
   onProfileChange: (profile: UserProfile) => void;
   onProfilePhotoChange: (photo: File | null) => void;
+  isInvitationFlow?: boolean;
+  invitationCompanyName?: string;
 }
 
 const CompanyOnboardingStep4 = ({ 
   onComplete, 
   initialData, 
   onProfileChange, 
-  onProfilePhotoChange 
+  onProfilePhotoChange,
+  isInvitationFlow = false,
+  invitationCompanyName
 }: CompanyOnboardingStep4Props) => {
   const [professionalTitle, setProfessionalTitle] = useState(initialData.professionalTitle || '');
   const [profilePhoto, setProfilePhoto] = useState<File | null>(initialData.profilePhoto || null);
@@ -168,10 +172,13 @@ const CompanyOnboardingStep4 = ({
       {/* Title and Description */}
       <div className="text-center space-y-3">
         <h1 className="font-bold text-gray-900 font-['Inter']" style={{fontSize: '24px'}}>
-          Mostrá quién sos a tu equipo y al talento
+          {isInvitationFlow ? 'Completa tu perfil personal' : 'Mostrá quién sos a tu equipo y al talento'}
         </h1>
         <p className="text-gray-600 font-['Inter']" style={{fontSize: '14px'}}>
-          Tu puesto en la empresa
+          {isInvitationFlow 
+            ? `Para unirte a ${invitationCompanyName || 'la empresa'}, completa tu información personal`
+            : 'Tu puesto en la empresa'
+          }
         </p>
         <p className="text-sm text-gray-500 font-['Inter']">
           Los campos marcados con <span className="text-red-500">*</span> son obligatorios
@@ -318,7 +325,10 @@ const CompanyOnboardingStep4 = ({
             className="w-full h-12 font-medium rounded-lg font-['Inter']"
             style={{fontSize: '14px'}}
           >
-            Comenzar 🚀
+            {isInvitationFlow 
+              ? `Unirme a ${invitationCompanyName || 'la empresa'} 🚀`
+              : 'Comenzar 🚀'
+            }
           </Button>
         </div>
       </div>

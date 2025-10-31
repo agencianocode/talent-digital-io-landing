@@ -151,14 +151,22 @@ const Auth = () => {
       console.log('Auth.tsx: Redirecting user with role:', userRole);
       setHasRedirected(true);
       
+      // Check for invitation parameter
+      const invitationId = searchParams.get('invitation');
       let redirectPath = '/talent-dashboard'; // default
       
       if (isAdminRole(userRole)) {
         redirectPath = '/admin';
         console.log('Auth.tsx: Redirecting admin to:', redirectPath);
       } else if (isBusinessRole(userRole)) {
-        redirectPath = '/business-dashboard';
-        console.log('Auth.tsx: Redirecting business to:', redirectPath);
+        // If there's an invitation, redirect to onboarding with invitation
+        if (invitationId) {
+          redirectPath = `/company-onboarding?invitation=${invitationId}`;
+          console.log('Auth.tsx: Redirecting business to onboarding with invitation:', redirectPath);
+        } else {
+          redirectPath = '/business-dashboard';
+          console.log('Auth.tsx: Redirecting business to:', redirectPath);
+        }
       } else {
         // For talent users, check if they need onboarding first
         const checkTalentOnboarding = async () => {
@@ -184,7 +192,7 @@ const Auth = () => {
         navigate(redirectPath, { replace: true });
       }, 100);
     }
-  }, [isAuthenticated, userRole, hasRedirected, isLoading, navigate, isPasswordReset, isVerifyingRecovery, isResetRoute, recoveryError, user, hasCompletedTalentOnboarding]);
+  }, [isAuthenticated, userRole, hasRedirected, isLoading, navigate, isPasswordReset, isVerifyingRecovery, isResetRoute, recoveryError, user, hasCompletedTalentOnboarding, searchParams]);
   
   // Ensure the reset form is usable if the user is already authenticated via the recovery token
   useEffect(() => {
@@ -239,23 +247,9 @@ const Auth = () => {
     } else {
       console.log('Auth.tsx: Sign in successful, waiting for auth state update...');
       
-      // If there's an invitation, link it to the user
-      if (invitationId && user?.id) {
-        try {
-          const { error: linkError } = await supabase
-            .from('company_user_roles')
-            .update({ user_id: user.id, status: 'accepted', accepted_at: new Date().toISOString() })
-            .eq('id', invitationId)
-            .eq('invited_email', formData.email);
-          
-          if (linkError) {
-            console.error('Error linking invitation:', linkError);
-          } else {
-            console.log('Invitation linked successfully');
-          }
-        } catch (err) {
-          console.error('Error linking invitation:', err);
-        }
+      // Don't link invitation here - it will be handled in the onboarding flow
+      if (invitationId) {
+        console.log('Invitation detected, will be processed in onboarding:', invitationId);
       }
     }
     // La redirección se maneja automáticamente en useEffect
