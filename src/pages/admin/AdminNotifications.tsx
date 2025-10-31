@@ -4,7 +4,8 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Check, Trash2, MessageCircle, Briefcase, AlertCircle } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Bell, Check, Trash2, MessageCircle, Briefcase, AlertCircle, ShoppingBag, Mail } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +31,7 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<'todas' | 'solicitudes' | 'mensajes' | 'oportunidades'>('todas');
 
   const loadNotifications = async () => {
     if (!user) return;
@@ -116,8 +118,21 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
         return <MessageCircle className="h-5 w-5 text-blue-600" />;
       case 'opportunity':
         return <Briefcase className="h-5 w-5 text-green-600" />;
+      case 'marketplace_request':
+        return <ShoppingBag className="h-5 w-5 text-purple-600" />;
       default:
         return <AlertCircle className="h-5 w-5 text-gray-600" />;
+    }
+  };
+
+  const handleContactUser = (notification: Notification) => {
+    // Extract email from message (format: "Usuario X quiere publicar...")
+    const messageMatch = notification.message.match(/Email: ([\w\.-]+@[\w\.-]+\.\w+)/);
+    const email = messageMatch ? messageMatch[1] : '';
+    
+    if (email) {
+      const mailtoLink = `mailto:${email}?subject=Solicitud de publicación de servicio&body=Hola,%0D%0A%0D%0AHemos recibido tu solicitud de publicación en el marketplace.%0D%0A%0D%0ASaludos,%0D%0AEquipo TalentoDigital`;
+      window.location.href = mailtoLink;
     }
   };
 
@@ -151,6 +166,15 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  // Filter notifications based on selected tab
+  const filteredNotifications = notifications.filter(notification => {
+    if (filter === 'todas') return true;
+    if (filter === 'solicitudes') return notification.type === 'marketplace_request';
+    if (filter === 'mensajes') return notification.type === 'message';
+    if (filter === 'oportunidades') return notification.type === 'opportunity';
+    return true;
+  });
+
   if (!user) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -181,23 +205,66 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
         )}
       </div>
 
+      {/* Filter Tabs */}
+      <Tabs value={filter} onValueChange={(value) => setFilter(value as any)} className="mb-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="todas">
+            Todas
+            {notifications.length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {notifications.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="solicitudes">
+            Solicitudes
+            {notifications.filter(n => n.type === 'marketplace_request').length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {notifications.filter(n => n.type === 'marketplace_request').length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="mensajes">
+            Mensajes
+            {notifications.filter(n => n.type === 'message').length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {notifications.filter(n => n.type === 'message').length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="oportunidades">
+            Oportunidades
+            {notifications.filter(n => n.type === 'opportunity').length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {notifications.filter(n => n.type === 'opportunity').length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* Notifications List */}
       <div>
         {isLoading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Cargando notificaciones...</p>
           </div>
-        ) : notifications.length === 0 ? (
+        ) : filteredNotifications.length === 0 ? (
           <div className="text-center py-12">
             <Bell className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">No tienes notificaciones</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              {filter === 'todas' ? 'No tienes notificaciones' : `No hay notificaciones de ${filter}`}
+            </h3>
             <p className="text-muted-foreground">
-              Aquí aparecerán tus nuevas notificaciones
+              {filter === 'todas' 
+                ? 'Aquí aparecerán tus nuevas notificaciones'
+                : 'Prueba con otro filtro para ver más notificaciones'
+              }
             </p>
           </div>
         ) : (
           <div className="space-y-2 pb-6">
-            {notifications.map(notification => (
+            {filteredNotifications.map(notification => (
               <Card
                 key={notification.id}
                 className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
@@ -222,28 +289,48 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
                               Nuevo
                             </Badge>
                           )}
+                          {notification.type === 'marketplace_request' && (
+                            <Badge variant="secondary" className="h-5 px-2 bg-purple-100 text-purple-800">
+                              Solicitud
+                            </Badge>
+                          )}
                         </h3>
                         <p className="text-sm text-muted-foreground mt-1">
                           {notification.message}
                         </p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {formatDistanceToNow(new Date(notification.created_at), {
-                      addSuffix: true,
-                      locale: es,
-                    })}
-                  </p>
-                  
-                  {notification.action_url && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0 mt-2 text-primary"
-                      onClick={(e) => handleActionClick(e, notification.action_url!)}
-                    >
-                      Ver detalles →
-                    </Button>
-                  )}
-                </div>
+                   <p className="text-xs text-muted-foreground mt-2">
+                     {formatDistanceToNow(new Date(notification.created_at), {
+                       addSuffix: true,
+                       locale: es,
+                     })}
+                   </p>
+                   
+                   <div className="flex gap-2 mt-2">
+                     {notification.action_url && (
+                       <Button
+                         variant="link"
+                         size="sm"
+                         className="h-auto p-0 text-primary"
+                         onClick={(e) => handleActionClick(e, notification.action_url!)}
+                       >
+                         Ver detalles →
+                       </Button>
+                     )}
+                     {notification.type === 'marketplace_request' && (
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           handleContactUser(notification);
+                         }}
+                       >
+                         <Mail className="h-4 w-4 mr-2" />
+                         Contactar
+                       </Button>
+                     )}
+                   </div>
+                 </div>
 
                       {/* Actions */}
                       <div className="flex items-center gap-1">

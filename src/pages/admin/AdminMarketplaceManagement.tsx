@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { 
   ShoppingBag, 
   Building, 
@@ -22,14 +14,11 @@ import {
   Eye,
   AlertTriangle,
   Star,
-  User,
-  Mail
+  User
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 import AdminMarketplaceFilters from '@/components/admin/AdminMarketplaceFilters';
 import AdminMarketplaceDetail from '@/components/admin/AdminMarketplaceDetail';
 import { useAdminMarketplace } from '@/hooks/useAdminMarketplace';
@@ -53,20 +42,6 @@ const AdminMarketplaceManagement: React.FC = () => {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Fetch publishing requests
-  const { data: publishingRequests, refetch: refetchRequests } = useQuery({
-    queryKey: ['publishing-requests'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('marketplace_publishing_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
   const handleViewService = (serviceId: string) => {
     setSelectedServiceId(serviceId);
     setIsDetailOpen(true);
@@ -84,13 +59,7 @@ const AdminMarketplaceManagement: React.FC = () => {
   const handleRefresh = async () => {
     toast.loading('Actualizando servicios...', { id: 'refresh-services' });
     await refetch();
-    await refetchRequests();
     toast.success('Servicios actualizados correctamente', { id: 'refresh-services' });
-  };
-
-  const handleContactUser = (request: any) => {
-    const mailtoLink = `mailto:${request.contact_email}?subject=Solicitud de publicación de servicio&body=Hola ${request.contact_name},%0D%0A%0D%0AHemos recibido tu solicitud de publicación del servicio "${request.service_type}".%0D%0A%0D%0ASaludos,%0D%0AEquipo TalentoDigital`;
-    window.location.href = mailtoLink;
   };
 
   const getStatusBadge = (status: string) => {
@@ -186,72 +155,6 @@ const AdminMarketplaceManagement: React.FC = () => {
           Actualizar
         </Button>
       </div>
-
-      {/* Publishing Requests Section */}
-      {publishingRequests && publishingRequests.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Solicitudes de Publicación Pendientes</CardTitle>
-            <CardDescription>
-              Usuarios Freemium que desean publicar servicios en el marketplace
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Empresa</TableHead>
-                    <TableHead>Tipo de Servicio</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {publishingRequests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell className="font-medium">{request.contact_name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          {request.contact_email}
-                        </div>
-                      </TableCell>
-                      <TableCell>{request.company_name}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{request.service_type}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={request.status === 'pending' ? 'default' : 'secondary'}>
-                          {request.status === 'pending' ? 'Pendiente' : request.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {formatDistanceToNow(new Date(request.created_at), { 
-                          addSuffix: true, 
-                          locale: es 
-                        })}
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleContactUser(request)}
-                        >
-                          <Mail className="h-4 w-4 mr-2" />
-                          Contactar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Filters */}
       <AdminMarketplaceFilters
