@@ -68,7 +68,7 @@ const RegisterAcademy = () => {
 
     const signUpResult = await signUp(formData.email, formData.password, {
       full_name: `${formData.firstName} ${formData.lastName}`.trim(),
-      user_type: 'business'
+      user_type: 'academy_premium'
     });
     
     if (signUpResult.error) {
@@ -89,7 +89,7 @@ const RegisterAcademy = () => {
     setIsSubmitting(true);
     setError('');
 
-    const { error } = await signUpWithGoogle('business');
+    const { error } = await signUpWithGoogle('academy_premium');
     
     if (error) {
       setError('Error al registrarse con Google. Intenta nuevamente.');

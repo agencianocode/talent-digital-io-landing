@@ -37,8 +37,8 @@ const DashboardLayout = () => {
     { to: "/business-dashboard/marketplace", icon: Store, label: "Marketplace" },
   ];
 
-  // Solo mostrar Mi Academia si el usuario tiene rol premium
-  const navigationItems = userRole === 'premium_business'
+  // Solo mostrar Mi Academia si el usuario tiene rol academy_premium
+  const navigationItems = userRole === 'academy_premium'
     ? [...baseNavigationItems, { to: "/business-dashboard/academy", icon: GraduationCap, label: "Mi Academia" }]
     : baseNavigationItems;
 

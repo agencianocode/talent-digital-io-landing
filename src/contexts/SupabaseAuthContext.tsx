@@ -3,7 +3,7 @@ import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 
-export type UserRole = 'talent' | 'business' | 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'admin';
+export type UserRole = 'talent' | 'business' | 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'academy_premium' | 'admin';
 
 // Function to map database roles to frontend roles
 const mapDatabaseRoleToUserRole = (dbRole: string): UserRole => {
@@ -12,6 +12,8 @@ const mapDatabaseRoleToUserRole = (dbRole: string): UserRole => {
       return 'freemium_business';
     case 'talent':
       return 'freemium_talent';
+    case 'academy_premium':
+      return 'academy_premium';
     case 'admin':
       return 'admin';
     default:
@@ -25,7 +27,7 @@ export const isTalentRole = (role: UserRole | null): boolean => {
 };
 
 export const isBusinessRole = (role: UserRole | null): boolean => {
-  return role === 'business' || role === 'freemium_business' || role === 'premium_business';
+  return role === 'business' || role === 'freemium_business' || role === 'premium_business' || role === 'academy_premium';
 };
 
 export const isPremiumRole = (role: UserRole | null): boolean => {
@@ -34,6 +36,10 @@ export const isPremiumRole = (role: UserRole | null): boolean => {
 
 export const isAdminRole = (role: UserRole | null): boolean => {
   return role === 'admin';
+};
+
+export const isAcademyRole = (role: UserRole | null): boolean => {
+  return role === 'academy_premium';
 };
 
 // Check if user's company is an academy
@@ -94,7 +100,7 @@ interface AuthContextType extends AuthState {
   signUp: (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
-  signUpWithGoogle: (userType: 'business' | 'talent') => Promise<{ error: Error | null }>;
+  signUpWithGoogle: (userType: 'business' | 'talent' | 'academy_premium') => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
   updateCompany: (data: Partial<Company>) => Promise<{ error: Error | null }>;
@@ -402,9 +408,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
     // Set different redirect URLs based on user type
-    const redirectUrl = metadata?.user_type === 'business' 
-      ? `${window.location.origin}/company-onboarding`
-      : `${window.location.origin}/talent-onboarding`;
+    const redirectUrl = metadata?.user_type === 'academy_premium'
+      ? `${window.location.origin}/business-dashboard`
+      : metadata?.user_type === 'business' 
+        ? `${window.location.origin}/company-onboarding`
+        : `${window.location.origin}/talent-onboarding`;
     
     console.log('SignUp - User type:', metadata?.user_type);
     console.log('SignUp - Redirect URL:', redirectUrl);
@@ -443,15 +451,17 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return { error };
   };
 
-  const signUpWithGoogle = async (userType: 'business' | 'talent') => {
+  const signUpWithGoogle = async (userType: 'business' | 'talent' | 'academy_premium') => {
     // Store the user type in localStorage temporarily for after OAuth redirect
     localStorage.setItem('pending_user_type', userType);
     console.log('Google OAuth: Stored pending_user_type as:', userType);
     
     // For Google OAuth, redirect directly to onboarding since Google verifies email automatically
-    const redirectUrl = userType === 'business' 
-      ? `${window.location.origin}/company-onboarding`
-      : `${window.location.origin}/talent-onboarding`;
+    const redirectUrl = userType === 'academy_premium'
+      ? `${window.location.origin}/business-dashboard`
+      : userType === 'business' 
+        ? `${window.location.origin}/company-onboarding`
+        : `${window.location.origin}/talent-onboarding`;
     
     console.log('Google OAuth: Redirect URL set to:', redirectUrl);
     

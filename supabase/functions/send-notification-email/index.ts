@@ -12,6 +12,7 @@ import { WelcomeTalent } from './_templates/welcome-talent.tsx';
 import { WelcomeBusiness } from './_templates/welcome-business.tsx';
 import { WelcomeAcademy } from './_templates/welcome-academy.tsx';
 import { AcademyExclusiveOpportunityEmail } from './_templates/academy-exclusive-opportunity.tsx';
+import { MarketplaceRequest } from './_templates/marketplace-request.tsx';
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
@@ -44,6 +45,8 @@ const getTemplateComponent = (type: string) => {
       return TeamNotification;
     case 'marketplace':
       return MarketplaceNotification;
+    case 'marketplace_request':
+      return MarketplaceRequest;
     case 'moderation':
       return ModerationNotification;
     case 'welcome-talent':
