@@ -171,6 +171,16 @@ const Auth = () => {
             const onboardingComplete = await hasCompletedBusinessOnboarding(user.id);
             console.log('Auth.tsx: Business onboarding complete?', onboardingComplete);
             
+            // If metadata says complete but verification says no, clean up metadata
+            if (!onboardingComplete && user.user_metadata?.onboarding_completed === true) {
+              console.log('⚠️ Metadata inconsistency detected, cleaning up');
+              await supabase.auth.updateUser({
+                data: {
+                  onboarding_completed: false
+                }
+              });
+            }
+            
             if (onboardingComplete) {
               redirectPath = '/business-dashboard';
               console.log('Auth.tsx: Redirecting business to dashboard:', redirectPath);

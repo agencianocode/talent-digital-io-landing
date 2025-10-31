@@ -767,10 +767,10 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return true;
       }
 
-      // Fallback: check if user created their own company
+      // Fallback: check if user created their own company with minimum data
       const { data: company, error } = await supabase
         .from('companies')
-        .select('id, name')
+        .select('id, name, description, location')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -779,9 +779,18 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return false;
       }
 
-      if (!company) return false;
-      if (!company.name || company.name.trim() === '') return false;
+      if (!company) {
+        console.log('❌ No company found for user');
+        return false;
+      }
 
+      // Validate minimum company data
+      if (!company.name || company.name.trim() === '') {
+        console.log('❌ Company has no name - incomplete onboarding');
+        return false;
+      }
+
+      console.log('✅ User has own company:', company.name);
       return true;
     } catch (error) {
       console.error('Error checking business onboarding:', error);

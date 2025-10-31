@@ -115,37 +115,56 @@ const CompanyOnboarding = () => {
 
         if (error) {
           console.error('Error accepting invitation via RPC:', error);
-        } else if (data && typeof data === 'object' && 'accepted' in data && data.accepted === true) {
-          console.log('✅ Invitation accepted successfully via RPC');
-          setIsInvitationFlow(true);
+        } else if (data && typeof data === 'object' && 'accepted' in data) {
+          if (data.accepted === true) {
+            // Invitation accepted successfully
+            console.log('✅ Invitation accepted successfully via RPC');
+            setIsInvitationFlow(true);
 
-          // Clean up invitation metadata
-          try {
-            await supabase.auth.updateUser({
-              data: {
-                pending_invitation: null,
-                invited_to_company: null,
-                onboarding_completed: true
-              }
-            });
-          } catch (e) {
-            console.warn('Metadata cleanup warning:', e);
+            // Clean up invitation metadata and mark onboarding as complete
+            try {
+              await supabase.auth.updateUser({
+                data: {
+                  pending_invitation: null,
+                  invited_to_company: null,
+                  onboarding_completed: true
+                }
+              });
+            } catch (e) {
+              console.warn('Metadata cleanup warning:', e);
+            }
+
+            // Refresh companies data
+            try {
+              await refreshCompanies();
+            } catch (e) {
+              console.warn('refreshCompanies error:', e);
+            }
+
+            // Navigate directly to business dashboard
+            toast.success('Invitación aceptada. Redirigiendo al panel...');
+            navigate('/business-dashboard');
+            return;
+          } else {
+            // Invitation could not be accepted (invalid, expired, already used)
+            console.log('⚠️ Invitation could not be accepted:', data);
+            toast.error('La invitación no es válida o ya fue usada. Puedes crear tu propia empresa.');
+            
+            // Clean up invitation metadata but do NOT mark onboarding as complete
+            try {
+              await supabase.auth.updateUser({
+                data: {
+                  pending_invitation: null,
+                  invited_to_company: null
+                }
+              });
+            } catch (e) {
+              console.warn('Metadata cleanup warning:', e);
+            }
+            
+            // Continue with normal flow (user can complete onboarding)
           }
-
-          // Refresh companies data
-          try {
-            await refreshCompanies();
-          } catch (e) {
-            console.warn('refreshCompanies error:', e);
-          }
-
-          // Navigate directly to business dashboard
-          toast.success('Invitación aceptada. Redirigiendo al panel...');
-          navigate('/business-dashboard');
-          return;
         }
-
-        // If nothing was accepted, continue with normal flow
       } catch (err) {
         console.error('Error processing invitation:', err);
       }
