@@ -756,29 +756,33 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const hasCompletedBusinessOnboarding = async (userId: string) => {
     try {
-      // Verificar si existe una empresa para el usuario
+      // 1) Considerar completado si el usuario ya es miembro aceptado de alguna empresa
+      const { data: acceptedMemberships, error: membershipError } = await supabase
+        .from('company_user_roles')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('status', 'accepted')
+        .limit(1);
+
+      if (!membershipError && acceptedMemberships && acceptedMemberships.length > 0) {
+        return true;
+      }
+
+      // 2) Fallback: verificar si el usuario creó su propia empresa
       const { data: company, error } = await supabase
         .from('companies')
-        .select('id, name, description')
+        .select('id, name')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error checking company:', error);
         return false;
       }
 
-      // Si no hay empresa, onboarding no está completo
-      if (!company) {
-        return false;
-      }
+      if (!company) return false;
+      if (!company.name || company.name.trim() === '') return false;
 
-      // Si hay empresa pero no tiene nombre, onboarding no está completo
-      if (!company.name || company.name.trim() === '') {
-        return false;
-      }
-
-      // Onboarding está completo si hay empresa con nombre
       return true;
     } catch (error) {
       console.error('Error checking business onboarding:', error);

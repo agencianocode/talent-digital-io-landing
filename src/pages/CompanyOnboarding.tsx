@@ -44,7 +44,7 @@ const CompanyOnboarding = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isInvitationFlow, setIsInvitationFlow] = useState(false);
   const [authInitializing, setAuthInitializing] = useState(false);
-  const [invitationData, setInvitationData] = useState<{
+  const [invitationData] = useState<{
     company_id: string;
     company_name: string;
     role: string;
@@ -70,29 +70,25 @@ const CompanyOnboarding = () => {
     profilePhoto: null
   });
 
-  // Check if this is an invitation flow
+  // Check if this is an invitation flow (UPDATE-only, sin SELECT)
   useEffect(() => {
-    // Get effective invitation ID from URL or user metadata
     const effectiveInvitationId = invitationId || (user?.user_metadata?.pending_invitation ?? null);
 
-    // Check if we're in the middle of a Supabase auth flow
-    const hasSupabaseHash = typeof window !== 'undefined' && 
+    // Detectar si estamos en el flujo de Supabase (hash temporal)
+    const hasSupabaseHash = typeof window !== 'undefined' &&
       (window.location.hash.includes('access_token') || window.location.hash.includes('type=signup'));
 
     if (!user) {
-      // If there's a Supabase hash, wait for the session to establish
       if (hasSupabaseHash) {
         console.log('⏳ Waiting for Supabase session to establish...');
         setAuthInitializing(true);
-        
-        // Set a timeout fallback (8 seconds)
+
         const timeout = setTimeout(() => {
           console.log('⚠️ Session timeout - redirecting to auth');
           setAuthInitializing(false);
           navigate(effectiveInvitationId ? `/auth?invitation=${effectiveInvitationId}` : '/auth');
         }, 8000);
 
-        // Try to get the session
         supabase.auth.getSession().then(({ data: { session } }) => {
           if (session) {
             console.log('✅ Session established');
@@ -103,126 +99,59 @@ const CompanyOnboarding = () => {
 
         return () => clearTimeout(timeout);
       } else {
-        // No hash and no user - redirect to auth
         navigate(effectiveInvitationId ? `/auth?invitation=${effectiveInvitationId}` : '/auth');
         return;
       }
     }
 
-    // Try to resolve invitation by URL id or by user_id fallback
-    const processInvitation = async () => {
+    const acceptInvitation = async () => {
       try {
-        let invitationRecord: any = null;
-        let resolvedInvitationId = effectiveInvitationId;
-
-        // Try by ID first if present
+        // 1) Si tenemos invitationId, vincular el user_id sin hacer SELECT
         if (effectiveInvitationId) {
-          const { data, error } = await supabase
+          await supabase
             .from('company_user_roles')
-            .select(`
-              id,
-              company_id,
-              role,
-              invited_email,
-              status,
-              companies:company_id (
-                name
-              )
-            `)
+            .update({ user_id: user.id })
             .eq('id', effectiveInvitationId)
-            .eq('status', 'pending')
-            .single();
-          if (!error && data) {
-            invitationRecord = data;
-          }
+            .eq('invited_email', user.email as string)
+            .eq('status', 'pending');
         }
 
-        // Fallback: find pending invitation by user_id
-        if (!invitationRecord) {
-          const { data, error } = await supabase
-            .from('company_user_roles')
-            .select(`
-              id,
-              company_id,
-              role,
-              invited_email,
-              status,
-              companies:company_id (
-                name
-              )
-            `)
-            .eq('user_id', user.id)
-            .eq('status', 'pending')
-            .single();
-          if (!error && data) {
-            invitationRecord = data;
-            resolvedInvitationId = data.id;
-            console.log('✅ Found pending invitation by user_id:', resolvedInvitationId);
-          }
-        }
-
-        if (!invitationRecord) {
-          // No invitation - normal flow
-          return;
-        }
-
-        // Validate email matches
-        if (invitationRecord.invited_email !== user.email) {
-          toast.error('Email no coincide', {
-            description: 'Esta invitación fue enviada a otro correo electrónico.'
-          });
-          navigate(resolvedInvitationId ? `/auth?invitation=${resolvedInvitationId}` : '/auth');
-          return;
-        }
-
-        // Check if user needs role assignment (new user from invitation)
-        const { data: userRole } = await supabase
-          .from('user_roles')
-          .select('role')
+        // 2) Aceptar cualquier invitación pendiente para este usuario
+        const { data: updated, error: acceptError } = await supabase
+          .from('company_user_roles')
+          .update({ status: 'accepted', accepted_at: new Date().toISOString() })
           .eq('user_id', user.id)
-          .single();
+          .eq('status', 'pending')
+          .select('id, company_id');
 
-        if (!userRole) {
-          console.log('🆕 New user from invitation - assigning role');
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .insert({
-              user_id: user.id,
-              role: 'freemium_business'
-            });
-          if (roleError) {
-            console.error('Error assigning role to invited user:', roleError);
-          } else {
-            console.log('✅ Role assigned: freemium_business');
-          }
+        if (acceptError) {
+          console.error('Error accepting invitation:', acceptError);
         }
 
-        // Set invitation data and flow
-        setInvitationData({
-          company_id: invitationRecord.company_id,
-          company_name: (invitationRecord as any).companies?.name || 'la empresa',
-          role: invitationRecord.role,
-          invited_email: invitationRecord.invited_email
-        });
-        setIsInvitationFlow(true);
-        setCompanyData(prev => ({
-          ...prev,
-          name: (invitationRecord as any).companies?.name || ''
-        }));
-        setCurrentStep(4);
-        console.log('✅ Invitation validated via', effectiveInvitationId ? 'URL id' : 'user_id fallback');
+        if (updated && updated.length > 0) {
+          setIsInvitationFlow(true);
+          try {
+            await supabase.auth.updateUser({
+              data: { pending_invitation: null, invited_to_company: null }
+            });
+          } catch (e) {
+            console.warn('Metadata cleanup warning:', e);
+          }
+
+          toast.success('Invitación aceptada. Redirigiendo al panel...');
+          try { await refreshCompanies(); } catch (e) { console.warn('refreshCompanies error:', e); }
+          navigate('/business-dashboard');
+          return;
+        }
+
+        // Si no se aceptó nada, continuamos con el flujo normal (sin forzar Step 1)
       } catch (err) {
-        console.error('Error validating invitation:', err);
-        toast.error('Error', {
-          description: 'No se pudo validar la invitación.'
-        });
-        const fallbackId = invitationId || (user?.user_metadata?.pending_invitation ?? null);
-        navigate(fallbackId ? `/auth?invitation=${fallbackId}` : '/auth');
+        console.error('Error processing invitation:', err);
       }
     };
 
-    processInvitation();
-    
+    acceptInvitation();
+
     return undefined;
   }, [user, navigate, invitationId]);
 
