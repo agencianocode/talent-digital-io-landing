@@ -109,12 +109,18 @@ const CompanyOnboarding = () => {
       }
     }
 
-    if (effectiveInvitationId) {
-      const validateInvitation = async () => {
-        try {
-          const { data: invitation, error } = await supabase
+    // Try to resolve invitation by URL id or by user_id fallback
+    const processInvitation = async () => {
+      try {
+        let invitationRecord: any = null;
+        let resolvedInvitationId = effectiveInvitationId;
+
+        // Try by ID first if present
+        if (effectiveInvitationId) {
+          const { data, error } = await supabase
             .from('company_user_roles')
             .select(`
+              id,
               company_id,
               role,
               invited_email,
@@ -126,78 +132,96 @@ const CompanyOnboarding = () => {
             .eq('id', effectiveInvitationId)
             .eq('status', 'pending')
             .single();
-
-          if (error || !invitation) {
-            console.error('Invitation not found or invalid:', error);
-            toast.error('Invitación inválida', {
-              description: 'La invitación no existe o ya fue procesada.'
-            });
-            navigate(effectiveInvitationId ? `/auth?invitation=${effectiveInvitationId}` : '/auth');
-            return;
+          if (!error && data) {
+            invitationRecord = data;
           }
-
-          // Validate email matches
-          if (invitation.invited_email !== user.email) {
-            toast.error('Email no coincide', {
-              description: 'Esta invitación fue enviada a otro correo electrónico.'
-            });
-            navigate(effectiveInvitationId ? `/auth?invitation=${effectiveInvitationId}` : '/auth');
-            return;
-          }
-
-          // Check if user needs role assignment (new user from invitation)
-          const { data: userRole } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
-            .single();
-
-          if (!userRole) {
-            console.log('🆕 New user from invitation - assigning role');
-            // New user from invitation - assign appropriate role
-            const { error: roleError } = await supabase
-              .from('user_roles')
-              .insert({
-                user_id: user.id,
-                role: 'freemium_business'
-              });
-
-            if (roleError) {
-              console.error('Error assigning role to invited user:', roleError);
-            } else {
-              console.log('✅ Role assigned: freemium_business');
-            }
-          }
-
-          // Set invitation data and flow
-          setInvitationData({
-            company_id: invitation.company_id,
-            company_name: (invitation as any).companies?.name || 'la empresa',
-            role: invitation.role,
-            invited_email: invitation.invited_email
-          });
-          setIsInvitationFlow(true);
-          setCompanyData(prev => ({
-            ...prev,
-            name: (invitation as any).companies?.name || ''
-          }));
-          
-          // Skip to Step 4 (personal profile)
-          setCurrentStep(4);
-
-          console.log('✅ Invitation validated, starting invitation flow');
-        } catch (err) {
-          console.error('Error validating invitation:', err);
-          toast.error('Error', {
-            description: 'No se pudo validar la invitación.'
-          });
-          const effectiveInvitationId = invitationId || (user?.user_metadata?.pending_invitation ?? null);
-          navigate(effectiveInvitationId ? `/auth?invitation=${effectiveInvitationId}` : '/auth');
         }
-      };
 
-      validateInvitation();
-    }
+        // Fallback: find pending invitation by user_id
+        if (!invitationRecord) {
+          const { data, error } = await supabase
+            .from('company_user_roles')
+            .select(`
+              id,
+              company_id,
+              role,
+              invited_email,
+              status,
+              companies:company_id (
+                name
+              )
+            `)
+            .eq('user_id', user.id)
+            .eq('status', 'pending')
+            .single();
+          if (!error && data) {
+            invitationRecord = data;
+            resolvedInvitationId = data.id;
+            console.log('✅ Found pending invitation by user_id:', resolvedInvitationId);
+          }
+        }
+
+        if (!invitationRecord) {
+          // No invitation - normal flow
+          return;
+        }
+
+        // Validate email matches
+        if (invitationRecord.invited_email !== user.email) {
+          toast.error('Email no coincide', {
+            description: 'Esta invitación fue enviada a otro correo electrónico.'
+          });
+          navigate(resolvedInvitationId ? `/auth?invitation=${resolvedInvitationId}` : '/auth');
+          return;
+        }
+
+        // Check if user needs role assignment (new user from invitation)
+        const { data: userRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!userRole) {
+          console.log('🆕 New user from invitation - assigning role');
+          const { error: roleError } = await supabase
+            .from('user_roles')
+            .insert({
+              user_id: user.id,
+              role: 'freemium_business'
+            });
+          if (roleError) {
+            console.error('Error assigning role to invited user:', roleError);
+          } else {
+            console.log('✅ Role assigned: freemium_business');
+          }
+        }
+
+        // Set invitation data and flow
+        setInvitationData({
+          company_id: invitationRecord.company_id,
+          company_name: (invitationRecord as any).companies?.name || 'la empresa',
+          role: invitationRecord.role,
+          invited_email: invitationRecord.invited_email
+        });
+        setIsInvitationFlow(true);
+        setCompanyData(prev => ({
+          ...prev,
+          name: (invitationRecord as any).companies?.name || ''
+        }));
+        setCurrentStep(4);
+        console.log('✅ Invitation validated via', effectiveInvitationId ? 'URL id' : 'user_id fallback');
+      } catch (err) {
+        console.error('Error validating invitation:', err);
+        toast.error('Error', {
+          description: 'No se pudo validar la invitación.'
+        });
+        const fallbackId = invitationId || (user?.user_metadata?.pending_invitation ?? null);
+        navigate(fallbackId ? `/auth?invitation=${fallbackId}` : '/auth');
+      }
+    };
+
+    processInvitation();
     
     return undefined;
   }, [user, navigate, invitationId]);
@@ -422,8 +446,9 @@ const CompanyOnboarding = () => {
             status: 'accepted',
             accepted_at: new Date().toISOString()
           })
-          .eq('id', invitationId!)
-          .eq('invited_email', user.email!);
+          .eq('company_id', invitationData.company_id)
+          .eq('user_id', user.id)
+          .eq('status', 'pending');
 
         if (invitationError) {
           console.error('Invitation update error:', invitationError);

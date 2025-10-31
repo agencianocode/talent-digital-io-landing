@@ -412,6 +412,22 @@ const Auth = () => {
 
         if (profileError) console.error('Error creating profile:', profileError);
 
+        // Link invitation to user_id if this is an invitation flow
+        if (isInvitationFlow && invitationId) {
+          const { error: invitationLinkError } = await supabase
+            .from('company_user_roles')
+            .update({ user_id: data.user.id })
+            .eq('id', invitationId)
+            .eq('invited_email', formData.email)
+            .eq('status', 'pending');
+
+          if (invitationLinkError) {
+            console.error('Error linking invitation to user:', invitationLinkError);
+          } else {
+            console.log('✅ Invitation linked to user_id');
+          }
+        }
+
         // Only assign business role if NOT an invitation flow
         // Invited users will get their role assigned when they complete onboarding
         if (!isInvitationFlow) {
