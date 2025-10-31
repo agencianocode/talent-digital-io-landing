@@ -885,6 +885,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          requester_id: string | null
           requirements: string | null
           service_type: string
           status: string
@@ -901,6 +902,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          requester_id?: string | null
           requirements?: string | null
           service_type: string
           status?: string
@@ -917,6 +919,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          requester_id?: string | null
           requirements?: string | null
           service_type?: string
           status?: string

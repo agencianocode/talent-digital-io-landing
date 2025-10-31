@@ -6,21 +6,24 @@ import {
   ServiceFilters, 
   MarketplaceStats,
   ServiceRequestFormData,
-  ServicePublishingFormData
+  ServicePublishingFormData,
+  ServicePublishingRequest
 } from '@/integrations/supabase/marketplace-types';
 
 // Re-export types for backward compatibility
 export type MarketplaceService = TalentServiceWithUser;
-export type { ServiceFilters, ServiceRequestFormData, ServicePublishingFormData, MarketplaceStats } from '@/integrations/supabase/marketplace-types';
+export type { ServiceFilters, ServiceRequestFormData, ServicePublishingFormData, MarketplaceStats, ServicePublishingRequest } from '@/integrations/supabase/marketplace-types';
 
 export interface UseMarketplaceServicesReturn {
   // Data
   services: TalentServiceWithUser[];
   allServices: TalentServiceWithUser[];
   stats: MarketplaceStats;
+  myRequests: ServicePublishingRequest[];
   
   // Loading states
   isLoading: boolean;
+  isLoadingRequests: boolean;
   error: string | null;
   
   // Filters
@@ -41,6 +44,8 @@ export interface UseMarketplaceServicesReturn {
   requestService: (serviceId: string, requestData: ServiceRequestFormData) => Promise<void>;
   publishServiceRequest: (requestData: ServicePublishingFormData) => Promise<void>;
   incrementViews: (serviceId: string) => Promise<void>;
+  loadMyRequests: () => Promise<void>;
+  cancelRequest: (requestId: string) => Promise<void>;
 }
 
 const ITEMS_PER_PAGE = 12;
@@ -54,8 +59,10 @@ export const useMarketplaceServices = (): UseMarketplaceServicesReturn => {
     averageRating: 0,
     totalRequests: 0
   });
+  const [myRequests, setMyRequests] = useState<ServicePublishingRequest[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -213,14 +220,40 @@ export const useMarketplaceServices = (): UseMarketplaceServicesReturn => {
     }
   }, []);
 
+  // Load user's publishing requests
+  const loadMyRequests = useCallback(async () => {
+    setIsLoadingRequests(true);
+    try {
+      const requests = await marketplaceService.getMyPublishingRequests();
+      setMyRequests(requests);
+    } catch (err) {
+      console.error('Error loading my requests:', err);
+    } finally {
+      setIsLoadingRequests(false);
+    }
+  }, []);
+
+  // Cancel a publishing request
+  const cancelRequest = useCallback(async (requestId: string) => {
+    try {
+      await marketplaceService.cancelPublishingRequest(requestId);
+      await loadMyRequests(); // Reload list after canceling
+    } catch (err) {
+      console.error('Error canceling request:', err);
+      throw err;
+    }
+  }, [loadMyRequests]);
+
   return {
     // Data
     services,
     allServices,
     stats,
+    myRequests,
     
     // Loading states
     isLoading,
+    isLoadingRequests,
     error,
     
     // Filters
@@ -240,6 +273,8 @@ export const useMarketplaceServices = (): UseMarketplaceServicesReturn => {
     refreshServices,
     requestService,
     publishServiceRequest,
-    incrementViews
+    incrementViews,
+    loadMyRequests,
+    cancelRequest
   };
 };

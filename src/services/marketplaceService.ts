@@ -318,6 +318,42 @@ class MarketplaceService {
     }
   }
 
+  /**
+   * Get current user's publishing requests
+   */
+  async getMyPublishingRequests(): Promise<ServicePublishingRequest[]> {
+    try {
+      const { data, error } = await supabase
+        .from('marketplace_publishing_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return (data || []) as ServicePublishingRequest[];
+    } catch (error) {
+      console.error('Error fetching my publishing requests:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cancel a pending publishing request
+   */
+  async cancelPublishingRequest(requestId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('marketplace_publishing_requests')
+        .delete()
+        .eq('id', requestId)
+        .eq('status', 'pending');
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error canceling publishing request:', error);
+      throw error;
+    }
+  }
+
   // ==================== STATISTICS ====================
 
   /**
