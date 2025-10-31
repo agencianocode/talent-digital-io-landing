@@ -24,13 +24,16 @@ import {
   MessageSquare,
   Send,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface PublishServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 interface PublishServiceForm {
@@ -47,9 +50,11 @@ interface PublishServiceForm {
 
 const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   isOpen,
-  onClose
+  onClose,
+  onSuccess
 }) => {
   const { toast } = useToast();
+  const { userRole } = useSupabaseAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState<PublishServiceForm>({
@@ -63,6 +68,9 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
     description: '',
     requirements: ''
   });
+
+  // Verificar si es usuario Freemium
+  const isFreemiumUser = userRole === 'freemium_business' || userRole === 'freemium_talent';
 
   const serviceTypes = [
     { value: 'diseno-grafico', label: '🎨 Diseño Gráfico' },
@@ -128,8 +136,12 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
       
       toast({
         title: "Solicitud enviada exitosamente",
-        description: "Tu solicitud de publicación de servicio ha sido enviada. Nos pondremos en contacto contigo pronto.",
+        description: "Tu solicitud de publicación de servicio ha sido enviada. Un administrador se pondrá en contacto contigo para ofrecerte opciones Premium.",
       });
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error('Error sending service publishing request:', error);
       toast({
@@ -175,7 +187,10 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
               Solicitud Enviada
             </DialogTitle>
             <DialogDescription>
-              Tu solicitud de publicación de servicio ha sido enviada exitosamente.
+              {isFreemiumUser 
+                ? 'Tu solicitud ha sido enviada a nuestro equipo.'
+                : 'Tu servicio ha sido publicado exitosamente.'
+              }
             </DialogDescription>
           </DialogHeader>
 
@@ -184,29 +199,37 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
               <div className="text-center space-y-4">
                 <div className="flex justify-center">
                   <div className="p-3 bg-green-100 rounded-full">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
+                    {isFreemiumUser ? (
+                      <Sparkles className="h-8 w-8 text-green-600" />
+                    ) : (
+                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    )}
                   </div>
                 </div>
                 
                 <div>
                   <h3 className="text-lg font-semibold text-green-800 mb-2">
-                    ¡Gracias por tu interés!
+                    {isFreemiumUser ? '¡Gracias por tu interés!' : '¡Servicio publicado!'}
                   </h3>
                   <p className="text-sm text-green-700">
-                    Nuestro equipo revisará tu solicitud y se pondrá en contacto contigo 
-                    en las próximas 24-48 horas para discutir los detalles de tu servicio.
+                    {isFreemiumUser 
+                      ? 'Nuestro equipo revisará tu solicitud y se pondrá en contacto contigo en las próximas 24-48 horas para ofrecerte nuestras opciones Premium y publicar tu servicio.'
+                      : 'Tu servicio ya está visible en el marketplace y los usuarios pueden contactarte.'
+                    }
                   </p>
                 </div>
 
-                <div className="bg-white p-4 rounded-lg border border-green-200">
-                  <h4 className="font-medium text-green-800 mb-2">Próximos pasos:</h4>
-                  <ul className="text-sm text-green-700 space-y-1 text-left">
-                    <li>• Revisión de tu solicitud</li>
-                    <li>• Llamada de confirmación</li>
-                    <li>• Configuración de tu servicio</li>
-                    <li>• Publicación en el marketplace</li>
-                  </ul>
-                </div>
+                {isFreemiumUser && (
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <h4 className="font-medium text-green-800 mb-2">Próximos pasos:</h4>
+                    <ul className="text-sm text-green-700 space-y-1 text-left">
+                      <li>• Revisión de tu solicitud</li>
+                      <li>• Presentación de opciones Premium</li>
+                      <li>• Configuración de tu servicio</li>
+                      <li>• Publicación en el marketplace</li>
+                    </ul>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -227,13 +250,35 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building className="h-6 w-6" />
-            Solicitar Publicación de Servicio
+            {isFreemiumUser 
+              ? 'Solicitar Publicación de Servicio' 
+              : 'Publicar Servicio en Marketplace'
+            }
           </DialogTitle>
           <DialogDescription>
-            Completa el formulario para solicitar la publicación de tu servicio en nuestro marketplace. 
-            Nuestro equipo se pondrá en contacto contigo para confirmar los detalles.
+            {isFreemiumUser 
+              ? 'Completa el formulario para solicitar la publicación de tu servicio. Nuestro equipo te contactará para ofrecerte opciones Premium.'
+              : 'Completa el formulario para publicar tu servicio en el marketplace.'
+            }
           </DialogDescription>
         </DialogHeader>
+
+        {isFreemiumUser && (
+          <Card className="bg-purple-50 border-purple-200">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Sparkles className="h-5 w-5 text-purple-600 mt-0.5" />
+                <div className="space-y-2">
+                  <h4 className="font-medium text-purple-800">¿Quieres publicar servicios?</h4>
+                  <p className="text-sm text-purple-700">
+                    Para publicar servicios en el marketplace, necesitas una cuenta Premium. 
+                    Envía tu solicitud y te contactaremos para ofrecerte nuestras opciones Premium.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Información de Contacto */}

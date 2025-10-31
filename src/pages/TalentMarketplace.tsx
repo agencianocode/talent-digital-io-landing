@@ -259,9 +259,10 @@ const TalentMarketplace: React.FC = () => {
       />
 
       {/* Publish Service Modal */}
-      <PublishServiceModal
-        isOpen={isPublishModalOpen}
+      <PublishServiceModal 
+        isOpen={isPublishModalOpen} 
         onClose={() => setIsPublishModalOpen(false)}
+        onSuccess={refreshServices}
       />
     </div>
   );
