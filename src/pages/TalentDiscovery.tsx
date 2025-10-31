@@ -649,17 +649,16 @@ const TalentDiscovery = () => {
             </PopoverContent>
           </Popover>
 
-          {/* Remote Preference Filter */}
+          {/* Work Mode Filter */}
           <Select value={remoteFilter} onValueChange={setRemoteFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Modalidad" />
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Modalidad de Trabajo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Cualquier modalidad</SelectItem>
-              <SelectItem value="Solo remoto">Solo remoto</SelectItem>
-              <SelectItem value="Solo presencial">Solo presencial</SelectItem>
+              <SelectItem value="all">Modalidad de Trabajo</SelectItem>
+              <SelectItem value="Remoto">Remoto</SelectItem>
+              <SelectItem value="Presencial">Presencial</SelectItem>
               <SelectItem value="Híbrido">Híbrido</SelectItem>
-              <SelectItem value="Indiferente">Indiferente</SelectItem>
             </SelectContent>
           </Select>
 
