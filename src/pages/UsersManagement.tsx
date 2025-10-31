@@ -221,10 +221,13 @@ const UsersManagement = () => {
       if (emailError) {
         console.error('send-invitation error:', emailError);
         const fallbackUrl = `${window.location.origin}/accept-invitation?id=${created.id}`;
-        toast.info(`Invitación creada, pero el correo no se pudo enviar. Enlace: ${fallbackUrl}`);
+        toast.warning(
+          `Invitación creada exitosamente. Nota: El correo no se pudo enviar automáticamente. Enlace de invitación: ${fallbackUrl}`,
+          { duration: 8000 }
+        );
       } else {
         console.log('send-invitation response:', emailData);
-        toast.success('Invitación enviada exitosamente');
+        toast.success('¡Invitación enviada exitosamente! El usuario recibirá un correo con las instrucciones.');
       }
 
       setIsInviteModalOpen(false);

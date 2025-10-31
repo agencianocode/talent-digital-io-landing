@@ -328,10 +328,13 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         if (emailError) {
           console.error('[send-invitation] error:', emailError);
           const fallbackUrl = `${window.location.origin}/accept-invitation?id=${roleRow.id}`;
-          toast.info(`Invitación creada, pero el correo no se pudo enviar. Enlace: ${fallbackUrl}`);
+          toast.warning(
+            `Invitación creada exitosamente. Nota: El correo no se pudo enviar automáticamente. Enlace de invitación: ${fallbackUrl}`,
+            { duration: 8000 }
+          );
         } else {
           console.log('[send-invitation] response:', emailData);
-          toast.success(`Se envió una invitación a ${newUserEmail}`);
+          toast.success(`¡Invitación enviada exitosamente a ${newUserEmail}! El usuario recibirá un correo con las instrucciones.`);
         }
       } else {
         // User exists - add directly as accepted
