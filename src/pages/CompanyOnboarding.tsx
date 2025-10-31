@@ -43,6 +43,7 @@ const CompanyOnboarding = () => {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isInvitationFlow, setIsInvitationFlow] = useState(false);
+  const [authInitializing, setAuthInitializing] = useState(false);
   const [invitationData, setInvitationData] = useState<{
     company_id: string;
     company_name: string;
@@ -71,12 +72,44 @@ const CompanyOnboarding = () => {
 
   // Check if this is an invitation flow
   useEffect(() => {
+    // Get effective invitation ID from URL or user metadata
+    const effectiveInvitationId = invitationId || (user?.user_metadata?.pending_invitation ?? null);
+
+    // Check if we're in the middle of a Supabase auth flow
+    const hasSupabaseHash = typeof window !== 'undefined' && 
+      (window.location.hash.includes('access_token') || window.location.hash.includes('type=signup'));
+
     if (!user) {
-      navigate('/auth');
-      return;
+      // If there's a Supabase hash, wait for the session to establish
+      if (hasSupabaseHash) {
+        console.log('⏳ Waiting for Supabase session to establish...');
+        setAuthInitializing(true);
+        
+        // Set a timeout fallback (8 seconds)
+        const timeout = setTimeout(() => {
+          console.log('⚠️ Session timeout - redirecting to auth');
+          setAuthInitializing(false);
+          navigate(effectiveInvitationId ? `/auth?invitation=${effectiveInvitationId}` : '/auth');
+        }, 8000);
+
+        // Try to get the session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            console.log('✅ Session established');
+            clearTimeout(timeout);
+            setAuthInitializing(false);
+          }
+        });
+
+        return () => clearTimeout(timeout);
+      } else {
+        // No hash and no user - redirect to auth
+        navigate(effectiveInvitationId ? `/auth?invitation=${effectiveInvitationId}` : '/auth');
+        return;
+      }
     }
 
-    if (invitationId) {
+    if (effectiveInvitationId) {
       const validateInvitation = async () => {
         try {
           const { data: invitation, error } = await supabase
@@ -90,7 +123,7 @@ const CompanyOnboarding = () => {
                 name
               )
             `)
-            .eq('id', invitationId)
+            .eq('id', effectiveInvitationId)
             .eq('status', 'pending')
             .single();
 
@@ -99,7 +132,7 @@ const CompanyOnboarding = () => {
             toast.error('Invitación inválida', {
               description: 'La invitación no existe o ya fue procesada.'
             });
-            navigate('/auth');
+            navigate(effectiveInvitationId ? `/auth?invitation=${effectiveInvitationId}` : '/auth');
             return;
           }
 
@@ -108,7 +141,7 @@ const CompanyOnboarding = () => {
             toast.error('Email no coincide', {
               description: 'Esta invitación fue enviada a otro correo electrónico.'
             });
-            navigate('/auth');
+            navigate(effectiveInvitationId ? `/auth?invitation=${effectiveInvitationId}` : '/auth');
             return;
           }
 
@@ -158,12 +191,15 @@ const CompanyOnboarding = () => {
           toast.error('Error', {
             description: 'No se pudo validar la invitación.'
           });
-          navigate('/auth');
+          const effectiveInvitationId = invitationId || (user?.user_metadata?.pending_invitation ?? null);
+          navigate(effectiveInvitationId ? `/auth?invitation=${effectiveInvitationId}` : '/auth');
         }
       };
 
       validateInvitation();
     }
+    
+    return undefined;
   }, [user, navigate, invitationId]);
 
   const handleCompanyNameChange = (name: string) => {
@@ -408,12 +444,14 @@ const CompanyOnboarding = () => {
             .eq('user_id', user.id);
         }
 
-        // Update user metadata
+        // Update user metadata and clean up invitation metadata
         await supabase.auth.updateUser({
           data: {
             ...metadataUpdates,
             onboarding_completed: true,
-            company_id: invitationData.company_id
+            company_id: invitationData.company_id,
+            pending_invitation: null,
+            invited_to_company: null
           }
         });
 
@@ -555,6 +593,19 @@ const CompanyOnboarding = () => {
       setCurrentStep(currentStep - 1);
     }
   };
+
+  // Show loader while waiting for auth to initialize
+  if (authInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-2xl font-semibold mb-2">Verificando tu cuenta...</h2>
+          <p className="text-gray-600">Por favor espera un momento</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
