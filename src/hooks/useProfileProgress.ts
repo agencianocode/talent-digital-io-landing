@@ -48,14 +48,36 @@ export const useProfileProgress = () => {
           .from('companies')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (companyError && companyError.code !== 'PGRST116') {
           console.error('Error fetching company:', companyError);
         } else if (company) {
           setCompanyData(company);
-        }
+        } else {
+          // Fallback: if user is a team member, get the company via accepted membership
+          const { data: membership, error: roleError } = await supabase
+            .from('company_user_roles')
+            .select('company_id, status, accepted_at')
+            .eq('user_id', user.id)
+            .eq('status', 'accepted')
+            .order('accepted_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
+          if (roleError && roleError.code !== 'PGRST116') {
+            console.error('Error fetching membership:', roleError);
+          } else if (membership?.company_id) {
+            const { data: memberCompany, error: companyByIdError } = await supabase
+              .from('companies')
+              .select('*')
+              .eq('id', membership.company_id)
+              .maybeSingle();
+            if (!companyByIdError && memberCompany) {
+              setCompanyData(memberCompany);
+            }
+          }
+        }
         // Obtener datos del perfil desde user_metadata
         setUserProfile({
           professional_title: user.user_metadata?.professional_title || null,

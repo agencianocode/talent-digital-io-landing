@@ -29,7 +29,7 @@ export const useProfileData = () => {
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (userError && userError.code !== 'PGRST116') {
         throw userError;
@@ -40,7 +40,7 @@ export const useProfileData = () => {
         .from('talent_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (talentError && talentError.code !== 'PGRST116') {
         console.warn('No talent profile found:', talentError);

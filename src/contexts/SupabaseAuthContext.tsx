@@ -181,11 +181,35 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         isBusinessRole: isBusinessRole(mappedRole) 
       });
       if (isBusinessRole(mappedRole)) {
-        const { data: companyData } = await supabase
+        // Try to get company owned by the user
+        let companyData = (await supabase
           .from('companies')
           .select('*')
           .eq('user_id', userId)
-          .maybeSingle();
+          .maybeSingle()
+        ).data;
+
+        // Fallback: if no owned company, try membership (accepted) to get company
+        if (!companyData) {
+          const { data: membership } = await supabase
+            .from('company_user_roles')
+            .select('company_id, status, accepted_at')
+            .eq('user_id', userId)
+            .eq('status', 'accepted')
+            .order('accepted_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (membership?.company_id) {
+            companyData = (await supabase
+              .from('companies')
+              .select('*')
+              .eq('id', membership.company_id)
+              .maybeSingle()
+            ).data || null;
+          }
+        }
+
         company = companyData ? {
           ...companyData,
           social_links: (companyData.social_links as Record<string, string>) || {},
