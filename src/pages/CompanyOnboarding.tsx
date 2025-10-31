@@ -204,7 +204,7 @@ const CompanyOnboarding = () => {
         .from('companies')
         .select('id, name')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (checkError && checkError.code !== 'PGRST116') {
         throw checkError;
@@ -430,7 +430,7 @@ const CompanyOnboarding = () => {
         .from('companies')
         .select('id, name')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (checkError && checkError.code !== 'PGRST116') {
         throw checkError;

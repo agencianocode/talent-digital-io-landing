@@ -796,7 +796,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .from('talent_profiles')
         .select('id')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error checking talent onboarding:', error);

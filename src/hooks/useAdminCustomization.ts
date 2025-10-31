@@ -51,7 +51,7 @@ export const useAdminCustomization = () => {
       const { data, error } = await supabase
         .from('admin_customization')
         .select('*')
-        .single();
+        .maybeSingle();
 
       if (error) {
         // Silently fail if user doesn't have access - this is expected for non-admin users
