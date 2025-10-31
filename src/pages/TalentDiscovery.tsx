@@ -86,7 +86,9 @@ const TalentDiscovery = () => {
   const [experienceFilter, setExperienceFilter] = useState<string[]>(
     searchParams.get('experience')?.split(',').filter(Boolean) || []
   );
-  const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
+  const [contractTypeFilter, setContractTypeFilter] = useState<string[]>(
+    searchParams.get('contractType')?.split(',').filter(Boolean) || []
+  );
   const [remoteFilter, setRemoteFilter] = useState<string>('all');
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -284,7 +286,7 @@ const TalentDiscovery = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [searchTerm, categoryFilter, countryFilter, experienceFilter, availabilityFilter, remoteFilter, showFeaturedOnly, allTalents]);
+  }, [searchTerm, categoryFilter, countryFilter, experienceFilter, contractTypeFilter, remoteFilter, showFeaturedOnly, allTalents]);
 
   useEffect(() => {
     // Update URL params
@@ -293,8 +295,9 @@ const TalentDiscovery = () => {
     if (categoryFilter.length > 0) params.set('category', categoryFilter.join(','));
     if (countryFilter.length > 0) params.set('country', countryFilter.join(','));
     if (experienceFilter.length > 0) params.set('experience', experienceFilter.join(','));
+    if (contractTypeFilter.length > 0) params.set('contractType', contractTypeFilter.join(','));
     setSearchParams(params);
-  }, [searchTerm, categoryFilter, countryFilter, experienceFilter, setSearchParams]);
+  }, [searchTerm, categoryFilter, countryFilter, experienceFilter, contractTypeFilter, setSearchParams]);
 
   const applyFilters = () => {
     if (allTalents.length === 0) return;
@@ -596,19 +599,55 @@ const TalentDiscovery = () => {
             </PopoverContent>
           </Popover>
 
-          {/* Availability Filter */}
-          <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Disponibilidad" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Cualquier disponibilidad</SelectItem>
-              <SelectItem value="Inmediata">Inmediata</SelectItem>
-              <SelectItem value="2 semanas">2 semanas</SelectItem>
-              <SelectItem value="1 mes">1 mes</SelectItem>
-              <SelectItem value="2-3 meses">2-3 meses</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Contract Type Filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[200px] justify-between">
+                <span className="truncate">
+                  {contractTypeFilter.length === 0 
+                    ? "Tipo de Contrato" 
+                    : `${contractTypeFilter.length} seleccionado${contractTypeFilter.length > 1 ? 's' : ''}`}
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-0 bg-background z-50" align="start">
+              <div className="max-h-[300px] overflow-y-auto p-4 space-y-2">
+                {contractTypeFilter.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => setContractTypeFilter([])}
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Limpiar selección
+                  </Button>
+                )}
+                {['Tiempo Completo', 'Medio Tiempo', 'Freelance', 'Por Proyecto', 'Consultoría'].map((type) => (
+                  <div key={type} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`contract-${type}`}
+                      checked={contractTypeFilter.includes(type)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setContractTypeFilter([...contractTypeFilter, type]);
+                        } else {
+                          setContractTypeFilter(contractTypeFilter.filter(t => t !== type));
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor={`contract-${type}`}
+                      className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {type}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Remote Preference Filter */}
           <Select value={remoteFilter} onValueChange={setRemoteFilter}>
@@ -632,7 +671,7 @@ const TalentDiscovery = () => {
               setCategoryFilter([]);
               setCountryFilter([]);
               setExperienceFilter([]);
-              setAvailabilityFilter('all');
+              setContractTypeFilter([]);
               setRemoteFilter('all');
               setShowFeaturedOnly(false);
             }}
@@ -682,7 +721,7 @@ const TalentDiscovery = () => {
                               setCategoryFilter([]);
                               setCountryFilter([]);
                               setExperienceFilter([]);
-                              setAvailabilityFilter('all');
+                              setContractTypeFilter([]);
                               setRemoteFilter('all');
                             }}
                           >
