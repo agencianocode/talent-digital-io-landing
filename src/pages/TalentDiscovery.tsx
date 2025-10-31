@@ -549,10 +549,10 @@ const TalentDiscovery = () => {
           {/* Experience Filter */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[200px] justify-between">
+              <Button variant="outline" className="w-[220px] justify-between">
                 <span className="truncate">
                   {experienceFilter.length === 0 
-                    ? "Todos los niveles" 
+                    ? "Nivel de Experiencia" 
                     : `${experienceFilter.length} seleccionado${experienceFilter.length > 1 ? 's' : ''}`}
                 </span>
                 <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -571,7 +571,7 @@ const TalentDiscovery = () => {
                     Limpiar selección
                   </Button>
                 )}
-                {['Principiante', 'Intermedio', 'Avanzado', 'Experto'].map((level) => (
+                {['Junior (0-2 años)', 'Mid-level (3-5 años)', 'Senior (6-10 años)', 'Lead (10+ años)', 'Experto (15+ años)'].map((level) => (
                   <div key={level} className="flex items-center space-x-2">
                     <Checkbox
                       id={`exp-${level}`}
