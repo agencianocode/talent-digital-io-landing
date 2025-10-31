@@ -378,7 +378,10 @@ const Auth = () => {
     }
 
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      // Set redirect URL based on invitation flow
+      const redirectUrl = isInvitationFlow && invitationId
+        ? `${window.location.origin}/company-onboarding?invitation=${invitationId}`
+        : `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -386,7 +389,11 @@ const Auth = () => {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: formData.fullName
+            full_name: formData.fullName,
+            ...(isInvitationFlow && invitationId ? {
+              pending_invitation: invitationId,
+              invited_to_company: true
+            } : {})
           }
         }
       });
@@ -405,15 +412,18 @@ const Auth = () => {
 
         if (profileError) console.error('Error creating profile:', profileError);
 
-        // Assign business role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: data.user.id,
-            role: 'business'
-          });
+        // Only assign business role if NOT an invitation flow
+        // Invited users will get their role assigned when they complete onboarding
+        if (!isInvitationFlow) {
+          const { error: roleError } = await supabase
+            .from('user_roles')
+            .insert({
+              user_id: data.user.id,
+              role: 'business'
+            });
 
-        if (roleError) console.error('Error assigning role:', roleError);
+          if (roleError) console.error('Error assigning role:', roleError);
+        }
 
         toast.success('¡Cuenta creada exitosamente!');
         

@@ -112,6 +112,30 @@ const CompanyOnboarding = () => {
             return;
           }
 
+          // Check if user needs role assignment (new user from invitation)
+          const { data: userRole } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+
+          if (!userRole) {
+            console.log('🆕 New user from invitation - assigning role');
+            // New user from invitation - assign appropriate role
+            const { error: roleError } = await supabase
+              .from('user_roles')
+              .insert({
+                user_id: user.id,
+                role: 'freemium_business'
+              });
+
+            if (roleError) {
+              console.error('Error assigning role to invited user:', roleError);
+            } else {
+              console.log('✅ Role assigned: freemium_business');
+            }
+          }
+
           // Set invitation data and flow
           setInvitationData({
             company_id: invitation.company_id,
