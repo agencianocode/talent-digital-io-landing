@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -36,7 +36,7 @@ interface UserProfile {
 
 const CompanyOnboarding = () => {
   const navigate = useNavigate();
-  const { user } = useSupabaseAuth();
+  const { user, updateProfile } = useSupabaseAuth();
   const { refreshCompanies } = useCompany();
   const [searchParams] = useSearchParams();
   const invitationId = searchParams.get('invitation');
@@ -69,6 +69,9 @@ const CompanyOnboarding = () => {
     countryCode: '+57',
     profilePhoto: null
   });
+
+  // Protection against double invitation processing
+  const invitationProcessedRef = useRef(false);
 
   // Check if this is an invitation flow (UPDATE-only, sin SELECT)
   useEffect(() => {
@@ -105,6 +108,22 @@ const CompanyOnboarding = () => {
     }
 
     const acceptInvitation = async () => {
+      // Check if already a member to avoid double RPC calls
+      const { data: memberCheck } = await supabase
+        .from('company_user_roles')
+        .select('id, status, company_id')
+        .eq('user_id', user.id)
+        .eq('status', 'accepted')
+        .maybeSingle();
+
+      if (memberCheck) {
+        console.log('✅ User already accepted invitation, skipping RPC');
+        invitationProcessedRef.current = true;
+        setIsInvitationFlow(true);
+        setCurrentStep(4);
+        return;
+      }
+
       try {
         // Use RPC to accept invitation (bypasses RLS restrictions)
         const { data, error } = await supabase.rpc('accept_company_invitation', {
@@ -119,52 +138,54 @@ const CompanyOnboarding = () => {
           if (data.accepted === true) {
             // Invitation accepted successfully
             console.log('✅ Invitation accepted successfully via RPC');
+            invitationProcessedRef.current = true;
             setIsInvitationFlow(true);
 
-            // Clean up invitation metadata but DON'T mark onboarding as complete yet
-            // User must complete Steps 3 and 4 first
-            try {
+            // Store company_id for later use
+            if (data.company_id) {
               await supabase.auth.updateUser({
                 data: {
                   pending_invitation: null,
                   invited_to_company: null,
-                  company_id: data.company_id // Store for later use
+                  company_id: data.company_id
                 }
               });
-            } catch (e) {
-              console.warn('Metadata cleanup warning:', e);
             }
-
-            // Fetch company details to pre-populate Step 3 (removed - going directly to Step 4)
 
             // Move directly to Step 4 (personal profile)
             setCurrentStep(4);
             toast.success('Invitación aceptada. Completa tu perfil para continuar.');
             return;
           } else {
-            // Invitation could not be accepted (invalid, expired, already used)
+            // Invitation could not be accepted
             console.log('⚠️ Invitation could not be accepted:', data);
+            invitationProcessedRef.current = true;
             toast.error('La invitación no es válida o ya fue usada. Puedes crear tu propia empresa.');
             
-            // Clean up invitation metadata but do NOT mark onboarding as complete
-            try {
-              await supabase.auth.updateUser({
-                data: {
-                  pending_invitation: null,
-                  invited_to_company: null
-                }
-              });
-            } catch (e) {
-              console.warn('Metadata cleanup warning:', e);
-            }
-            
-            // Continue with normal flow (user can complete onboarding)
+            await supabase.auth.updateUser({
+              data: {
+                pending_invitation: null,
+                invited_to_company: null
+              }
+            });
           }
         }
       } catch (err) {
         console.error('Error processing invitation:', err);
+        invitationProcessedRef.current = true;
       }
     };
+
+    if (!effectiveInvitationId || invitationProcessedRef.current) {
+      return;
+    }
+
+    if (user.user_metadata?.onboarding_completed) {
+      const timeout = setTimeout(() => {
+        navigate('/business-dashboard');
+      }, 100);
+      return () => clearTimeout(timeout);
+    }
 
     acceptInvitation();
 
@@ -317,92 +338,51 @@ const CompanyOnboarding = () => {
         }
       }
 
-      // Update user profile
-      const profileUpdates: any = {
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+      // Prepare profile data
+      const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario';
+      
+      const profileData: any = {
+        full_name: fullName,
         phone: data.phoneNumber || null,
-        country: data.country || null,
-        updated_at: new Date().toISOString()
+        country: data.country || null
       };
 
       if (profilePhotoUrl) {
-        profileUpdates.avatar_url = profilePhotoUrl;
+        profileData.avatar_url = profilePhotoUrl;
       }
 
-      const { error: profileUpdateError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          ...profileUpdates
-        });
+      // Use updateProfile from context to save everything at once and refresh state
+      const { error: updateError } = await updateProfile(profileData);
 
-      if (profileUpdateError) {
-        console.warn('Warning updating profiles table:', profileUpdateError);
+      if (updateError) {
+        throw updateError;
       }
 
-      // Update user metadata
-      const metadataUpdates: any = {
-        ...user.user_metadata,
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
-        updated_at: new Date().toISOString()
-      };
-      
-      if (data.professionalTitle) {
-        metadataUpdates.professional_title = data.professionalTitle;
-      }
-      
-      if (data.linkedinUrl) {
-        metadataUpdates.linkedin_url = data.linkedinUrl;
-      }
-      
-      if (data.phoneNumber) {
-        metadataUpdates.phone = data.phoneNumber;
-      }
-      
-      if (data.country) {
-        metadataUpdates.country = data.country;
-      }
-      
-      if (data.countryCode) {
-        metadataUpdates.country_code = data.countryCode;
-      }
-
-      if (profilePhotoUrl) {
-        metadataUpdates.avatar_url = profilePhotoUrl;
-        
-        // Also update profiles table so avatar shows in sidebar
-        const { error: profileAvatarError } = await supabase
-          .from('profiles')
-          .update({ avatar_url: profilePhotoUrl })
-          .eq('id', user.id);
-
-        if (profileAvatarError) {
-          console.warn('Warning updating profile avatar:', profileAvatarError);
-        } else {
-          console.log('✅ Profile avatar updated in profiles table');
-        }
-      }
-      
-      const { error: metadataError } = await supabase.auth.updateUser({
-        data: metadataUpdates
-      });
-      
-      if (metadataError) {
-        throw metadataError;
-      }
+      console.log('✅ Profile updated successfully via context');
 
       // INVITATION FLOW: User is joining an existing company
       if (isInvitationFlow) {
         console.log('Invitation flow: Completing user profile for existing company');
 
         // Get company_id from user metadata (stored when invitation was accepted)
-        const companyId = user.user_metadata?.company_id;
+        let companyId = user.user_metadata?.company_id;
+        
+        // Fallback: query company_user_roles if company_id not in metadata
+        if (!companyId) {
+          const { data: membershipData } = await supabase
+            .from('company_user_roles')
+            .select('company_id')
+            .eq('user_id', user.id)
+            .eq('status', 'accepted')
+            .maybeSingle();
+          
+          companyId = membershipData?.company_id;
+        }
         
         if (companyId) {
-          // Update user metadata and mark onboarding as complete
+          // Mark onboarding as complete
           await supabase.auth.updateUser({
             data: {
-              ...metadataUpdates,
               onboarding_completed: true,
               company_id: companyId
             }
@@ -419,17 +399,12 @@ const CompanyOnboarding = () => {
 
           toast.success(`¡Te has unido exitosamente a ${companyInfo?.name || 'la empresa'}!`);
 
-          // Refresh companies and redirect
-          try {
-            await refreshCompanies();
-          } catch (refreshError) {
-            console.error('Error refreshing company context:', refreshError);
-          }
-
+          // Refresh companies and redirect once
+          await refreshCompanies();
           navigate('/business-dashboard');
           return;
         } else {
-          console.error('No company_id found in metadata for invitation flow');
+          console.error('No company_id found for invitation flow');
           toast.error('Error al completar el onboarding. Por favor, intenta nuevamente.');
           return;
         }

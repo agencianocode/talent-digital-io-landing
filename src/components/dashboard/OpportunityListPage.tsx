@@ -4,10 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Star } from 'lucide-react';
 import { OpportunityList } from './OpportunityList';
 import { useProfileProgress } from '@/hooks/useProfileProgress';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export const OpportunityListPage = () => {
   const navigate = useNavigate();
   const { getCompletionPercentage } = useProfileProgress();
+  const { canCreateOpportunities } = useCompany();
 
   const handleApplicationsView = (opportunityId: string) => {
     console.log('🔍 Navigating to applicants for opportunity:', opportunityId);
@@ -31,12 +33,14 @@ export const OpportunityListPage = () => {
           </p>
         </div>
         
-        <div className="flex gap-3">
-          <Button onClick={handleCreateOpportunity} variant="default">
-            <Plus className="h-4 w-4 mr-2" />
-            Publicar Oportunidad
-          </Button>
-        </div>
+        {canCreateOpportunities() && (
+          <div className="flex gap-3">
+            <Button onClick={handleCreateOpportunity} variant="default">
+              <Plus className="h-4 w-4 mr-2" />
+              Publicar Oportunidad
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Quick Stats Banner - Only show if profile is not 100% complete */}

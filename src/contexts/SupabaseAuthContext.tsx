@@ -151,19 +151,17 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return fetchUserData(userId, userType, retryCount + 1);
       }
 
-      // If profile doesn't exist after retries, create it
+      // If profile doesn't exist after retries, create it with upsert to avoid 409
       if (!profile) {
         logger.debug('Profile not found after retries, creating new profile for user:', userId);
-        const { data: _newProfile, error: createError } = await supabase
+        const { error: createError } = await supabase
           .from('profiles')
-          .insert({ user_id: userId })
+          .upsert({ user_id: userId }, { onConflict: 'user_id' })
           .select()
           .single();
         
         if (createError) {
           logger.error('Error creating profile', createError);
-        } else {
-          // profile = newProfile; // Commented out to avoid const assignment
         }
       }
 
