@@ -11,7 +11,7 @@ const sendEmail = async (to: string, subject: string, html: string) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'TalentoDigital Invitaciones <onboarding@resend.dev>',
+      from: 'TalentoDigital Invitaciones <invitaciones@talentodigital.io>',
       to: [to],
       subject,
       html,
