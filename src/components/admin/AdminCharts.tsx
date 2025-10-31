@@ -36,28 +36,48 @@ const AdminCharts: React.FC<AdminChartsProps> = ({ chartData, isLoading = false 
 
   // Simple chart implementation (in a real app, you'd use a charting library like recharts)
   const renderSimpleChart = (data: ChartData[], key: keyof Omit<ChartData, 'date'>, title: string, color: string) => {
-    const maxValue = Math.max(...data.map(d => d[key] as number));
+    const values = data.map(d => d[key] as number);
+    const maxValue = Math.max(...values, 1); // Ensure at least 1 to avoid division by 0
+    const totalValue = values.reduce((sum, v) => sum + v, 0);
     
     return (
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium">{title}</h4>
-        <div className="flex items-end gap-1 h-32">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium">{title}</h4>
+          <span className="text-xl font-bold" style={{ color }}>
+            {totalValue}
+          </span>
+        </div>
+        <div className="flex items-end gap-1 h-32 bg-muted/20 p-2 rounded-lg">
           {data.slice(-7).map((item, index) => {
             const value = item[key] as number;
-            const height = (value / maxValue) * 100;
+            const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
+            const displayHeight = height > 0 ? Math.max(height, 8) : 0; // Ensure visible bars
+            
             return (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div 
-                  className="w-full rounded-t"
-                  style={{ 
-                    height: `${height}%`, 
-                    backgroundColor: color,
-                    minHeight: '4px'
-                  }}
-                  title={`${new Date(item.date).toLocaleDateString()}: ${value}`}
-                />
-                <span className="text-xs text-muted-foreground mt-1">
-                  {new Date(item.date).toLocaleDateString('es', { month: 'short', day: 'numeric' })}
+              <div key={index} className="flex-1 flex flex-col items-center gap-1 relative group">
+                <div className="relative w-full flex items-end justify-center h-24">
+                  {value > 0 && (
+                    <>
+                      <div 
+                        className="w-full rounded-t transition-all duration-200 group-hover:opacity-80"
+                        style={{ 
+                          height: `${displayHeight}%`, 
+                          backgroundColor: color,
+                          minHeight: '8px'
+                        }}
+                      />
+                      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                        {value} {value === 1 ? title.slice(0, -1) : title}
+                      </div>
+                    </>
+                  )}
+                  {value === 0 && (
+                    <div className="w-full h-1 bg-muted rounded" />
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(item.date).toLocaleDateString('es', { day: 'numeric', month: 'short' })}
                 </span>
               </div>
             );
