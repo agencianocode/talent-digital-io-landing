@@ -6,7 +6,6 @@ import {
   ShoppingBag, 
   MessageSquare, 
   User,
-  CheckSquare,
   Bell,
   LogOut,
   Settings,
@@ -46,7 +45,6 @@ import { useNavigate } from "react-router-dom";
 
   const navigationItems = [
     { title: "Dashboard", value: "dashboard", icon: LayoutDashboard, showKey: 'show_dashboard' },
-    { title: "Solicitudes Upgrade", value: "upgrade-requests", icon: CheckSquare, showKey: 'show_upgrade_requests' },
     { title: "Usuarios", value: "users", icon: UserCog, showKey: 'show_users' },
     { title: "Empresas", value: "companies", icon: Building2, showKey: 'show_companies' },
     { title: "Oportunidades", value: "opportunities", icon: Briefcase, showKey: 'show_opportunities' },
