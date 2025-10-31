@@ -287,16 +287,13 @@ class MarketplaceService {
   /**
    * Create a service publishing request
    */
-  async createPublishingRequest(requestData: ServicePublishingFormData): Promise<ServicePublishingRequest> {
+  async createPublishingRequest(requestData: ServicePublishingFormData): Promise<void> {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('marketplace_publishing_requests')
-        .insert(requestData)
-        .select()
-        .single();
+        .insert(requestData);
 
       if (error) throw error;
-      return data as ServicePublishingRequest;
     } catch (error) {
       console.error('Error creating publishing request:', error);
       throw error;
