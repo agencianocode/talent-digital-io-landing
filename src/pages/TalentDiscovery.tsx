@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Search, 
   MapPin, 
@@ -18,7 +20,9 @@ import {
   CheckCircle,
   Clock,
   Github,
-  Plus
+  Plus,
+  ChevronDown,
+  X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -73,9 +77,15 @@ const TalentDiscovery = () => {
   const [filteredTalents, setFilteredTalents] = useState<RealTalent[]>([]);
   const { getOrCreateConversation, sendMessage } = useMessages();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
-  const [categoryFilter, setCategoryFilter] = useState<string>(searchParams.get('category') || 'all');
-  const [countryFilter, setCountryFilter] = useState<string>(searchParams.get('country') || 'all');
-  const [experienceFilter, setExperienceFilter] = useState<string>(searchParams.get('experience') || 'all');
+  const [categoryFilter, setCategoryFilter] = useState<string[]>(
+    searchParams.get('category')?.split(',').filter(Boolean) || []
+  );
+  const [countryFilter, setCountryFilter] = useState<string[]>(
+    searchParams.get('country')?.split(',').filter(Boolean) || []
+  );
+  const [experienceFilter, setExperienceFilter] = useState<string[]>(
+    searchParams.get('experience')?.split(',').filter(Boolean) || []
+  );
   const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
   const [remoteFilter, setRemoteFilter] = useState<string>('all');
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
@@ -280,9 +290,9 @@ const TalentDiscovery = () => {
     // Update URL params
     const params = new URLSearchParams();
     if (searchTerm) params.set('q', searchTerm);
-    if (categoryFilter !== 'all') params.set('category', categoryFilter);
-    if (countryFilter !== 'all') params.set('country', countryFilter);
-    if (experienceFilter !== 'all') params.set('experience', experienceFilter);
+    if (categoryFilter.length > 0) params.set('category', categoryFilter.join(','));
+    if (countryFilter.length > 0) params.set('country', countryFilter.join(','));
+    if (experienceFilter.length > 0) params.set('experience', experienceFilter.join(','));
     setSearchParams(params);
   }, [searchTerm, categoryFilter, countryFilter, experienceFilter, setSearchParams]);
 
@@ -307,20 +317,22 @@ const TalentDiscovery = () => {
       }
       
       // Category filter (using title as category for now)
-      if (categoryFilter !== 'all') {
+      if (categoryFilter.length > 0) {
         filtered = filtered.filter(talent => 
-          talent.title.toLowerCase().includes(categoryFilter.toLowerCase())
+          categoryFilter.some(cat => talent.title.toLowerCase().includes(cat.toLowerCase()))
         );
       }
       
       // Country filter
-      if (countryFilter !== 'all') {
-        filtered = filtered.filter(talent => talent.country === countryFilter);
+      if (countryFilter.length > 0) {
+        filtered = filtered.filter(talent => 
+          talent.country && countryFilter.includes(talent.country)
+        );
       }
       
       // Experience filter (not available in real data yet, skip for now)
-      // if (experienceFilter !== 'all') {
-      //   filtered = filtered.filter(talent => talent.experience_level === experienceFilter);
+      // if (experienceFilter.length > 0) {
+      //   filtered = filtered.filter(talent => talent.experience_level && experienceFilter.includes(talent.experience_level));
       // }
       
       // Availability filter (not available in real data yet, skip for now)
@@ -435,48 +447,154 @@ const TalentDiscovery = () => {
         {/* Horizontal Filters */}
         <div className="flex flex-wrap gap-3 items-center">
           {/* Category Filter */}
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Categoría" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las categorías</SelectItem>
-              {stats.categories.map(category => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[220px] justify-between">
+                <span className="truncate">
+                  {categoryFilter.length === 0 
+                    ? "Todas las categorías" 
+                    : `${categoryFilter.length} seleccionada${categoryFilter.length > 1 ? 's' : ''}`}
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-0 bg-background z-50" align="start">
+              <div className="max-h-[300px] overflow-y-auto p-4 space-y-2">
+                {categoryFilter.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => setCategoryFilter([])}
+                  >
+                    <X className="mr-2 h-3 w-3" />
+                    Limpiar selección
+                  </Button>
+                )}
+                {stats.categories.map((category) => (
+                  <div key={category} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`cat-${category}`}
+                      checked={categoryFilter.includes(category)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setCategoryFilter([...categoryFilter, category]);
+                        } else {
+                          setCategoryFilter(categoryFilter.filter(c => c !== category));
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor={`cat-${category}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {category}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Country Filter */}
-          <Select value={countryFilter} onValueChange={setCountryFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="País" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los países</SelectItem>
-              {stats.countries.map(country => (
-                <SelectItem key={country} value={country}>
-                  {country}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[200px] justify-between">
+                <span className="truncate">
+                  {countryFilter.length === 0 
+                    ? "Todos los países" 
+                    : `${countryFilter.length} seleccionado${countryFilter.length > 1 ? 's' : ''}`}
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-0 bg-background z-50" align="start">
+              <div className="max-h-[300px] overflow-y-auto p-4 space-y-2">
+                {countryFilter.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => setCountryFilter([])}
+                  >
+                    <X className="mr-2 h-3 w-3" />
+                    Limpiar selección
+                  </Button>
+                )}
+                {stats.countries.map((country) => (
+                  <div key={country} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`country-${country}`}
+                      checked={countryFilter.includes(country)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setCountryFilter([...countryFilter, country]);
+                        } else {
+                          setCountryFilter(countryFilter.filter(c => c !== country));
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor={`country-${country}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {country}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Experience Filter */}
-          <Select value={experienceFilter} onValueChange={setExperienceFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Experiencia" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los niveles</SelectItem>
-              <SelectItem value="Principiante">Principiante</SelectItem>
-              <SelectItem value="Intermedio">Intermedio</SelectItem>
-              <SelectItem value="Avanzado">Avanzado</SelectItem>
-              <SelectItem value="Experto">Experto</SelectItem>
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[200px] justify-between">
+                <span className="truncate">
+                  {experienceFilter.length === 0 
+                    ? "Todos los niveles" 
+                    : `${experienceFilter.length} seleccionado${experienceFilter.length > 1 ? 's' : ''}`}
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-0 bg-background z-50" align="start">
+              <div className="max-h-[300px] overflow-y-auto p-4 space-y-2">
+                {experienceFilter.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => setExperienceFilter([])}
+                  >
+                    <X className="mr-2 h-3 w-3" />
+                    Limpiar selección
+                  </Button>
+                )}
+                {['Principiante', 'Intermedio', 'Avanzado', 'Experto'].map((level) => (
+                  <div key={level} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`exp-${level}`}
+                      checked={experienceFilter.includes(level)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setExperienceFilter([...experienceFilter, level]);
+                        } else {
+                          setExperienceFilter(experienceFilter.filter(e => e !== level));
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor={`exp-${level}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {level}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Availability Filter */}
           <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
@@ -511,9 +629,9 @@ const TalentDiscovery = () => {
             variant="outline" 
             onClick={() => {
               setSearchTerm('');
-              setCategoryFilter('all');
-              setCountryFilter('all');
-              setExperienceFilter('all');
+              setCategoryFilter([]);
+              setCountryFilter([]);
+              setExperienceFilter([]);
               setAvailabilityFilter('all');
               setRemoteFilter('all');
               setShowFeaturedOnly(false);
@@ -561,9 +679,9 @@ const TalentDiscovery = () => {
                             variant="outline"
                             onClick={() => {
                               setSearchTerm('');
-                              setCategoryFilter('all');
-                              setCountryFilter('all');
-                              setExperienceFilter('all');
+                              setCategoryFilter([]);
+                              setCountryFilter([]);
+                              setExperienceFilter([]);
                               setAvailabilityFilter('all');
                               setRemoteFilter('all');
                             }}
