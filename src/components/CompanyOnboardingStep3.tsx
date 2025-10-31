@@ -203,7 +203,7 @@ const CompanyOnboardingStep3 = ({ onComplete, onCompleteLater, initialData, onDe
 
   const handleCompleteLater = async () => {
     try {
-      // Guardar los datos actuales y navegar al dashboard
+      // For invitation flow, move to Step 4 to complete personal profile
       const companyData = {
         description: initialData.description || '',
         url: website,
@@ -214,7 +214,7 @@ const CompanyOnboardingStep3 = ({ onComplete, onCompleteLater, initialData, onDe
       
       console.log('Step3 - handleCompleteLater - companyData:', companyData);
       
-      // Llamar a onCompleteLater para guardar los datos y navegar al dashboard
+      // Call onCompleteLater to move to Step 4
       await onCompleteLater(companyData);
     } catch (error) {
       console.error('Error in handleCompleteLater:', error);

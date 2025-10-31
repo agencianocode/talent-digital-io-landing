@@ -454,19 +454,46 @@ const Auth = () => {
           }
         }
 
-        // Only assign business role if NOT an invitation flow
-        // Invited users will get their role assigned when they complete onboarding
-        if (!isInvitationFlow) {
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .insert({
-              user_id: data.user.id,
-              role: 'business'
-            });
-
-          if (roleError) console.error('Error assigning role:', roleError);
+        // Assign business role based on company status (invitation or regular)
+        let userRole: 'freemium_business' | 'premium_business' = 'freemium_business'; // Default for non-invitation
+        
+        if (isInvitationFlow && invitationId) {
+          // Get invitation details to determine company tier
+          const { data: invitation } = await supabase
+            .from('company_user_roles')
+            .select('company_id, companies(status)')
+            .eq('id', invitationId)
+            .eq('invited_email', formData.email)
+            .single();
+          
+          if (invitation?.companies?.status === 'premium') {
+            userRole = 'premium_business';
+          } else {
+            userRole = 'freemium_business';
+          }
         }
 
+        // Always assign role (invitation or not)
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert([{
+            user_id: data.user.id,
+            role: userRole
+          }]);
+
+        if (roleError) console.error('Error assigning role:', roleError);
+
+        // Check if email confirmation is required
+        if (!data.user.email_confirmed_at) {
+          // Email needs confirmation
+          toast.success('¡Cuenta creada! Revisa tu email para confirmar tu cuenta.');
+          setMessage('Hemos enviado un correo de confirmación a tu email. Por favor revisa tu bandeja de entrada (y spam) y haz clic en el enlace para activar tu cuenta.');
+          setAuthTab('login'); // Switch to login tab
+          setIsSubmitting(false);
+          return; // Don't redirect yet
+        }
+
+        // Email already confirmed (auto-confirm is ON)
         toast.success('¡Cuenta creada exitosamente!');
         
         // Redirect to onboarding with invitation

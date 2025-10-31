@@ -121,29 +121,44 @@ const CompanyOnboarding = () => {
             console.log('✅ Invitation accepted successfully via RPC');
             setIsInvitationFlow(true);
 
-            // Clean up invitation metadata and mark onboarding as complete
+            // Clean up invitation metadata but DON'T mark onboarding as complete yet
+            // User must complete Steps 3 and 4 first
             try {
               await supabase.auth.updateUser({
                 data: {
                   pending_invitation: null,
                   invited_to_company: null,
-                  onboarding_completed: true
+                  company_id: data.company_id // Store for later use
                 }
               });
             } catch (e) {
               console.warn('Metadata cleanup warning:', e);
             }
 
-            // Refresh companies data
-            try {
-              await refreshCompanies();
-            } catch (e) {
-              console.warn('refreshCompanies error:', e);
+            // Fetch company details to pre-populate Step 3
+            const companyIdToFetch = typeof data.company_id === 'string' ? data.company_id : String(data.company_id || '');
+            const { data: companyInfo } = await supabase
+              .from('companies')
+              .select('name, description, website, location, logo_url')
+              .eq('id', companyIdToFetch)
+              .maybeSingle();
+
+            if (companyInfo) {
+              setCompanyData({ 
+                name: (typeof companyInfo.name === 'string' ? companyInfo.name : '') || '', 
+                isIndividual: false 
+              });
+              setCompanyDetails({
+                description: (typeof companyInfo.description === 'string' ? companyInfo.description : '') || '',
+                url: (typeof companyInfo.website === 'string' ? companyInfo.website : '') || '',
+                location: (typeof companyInfo.location === 'string' ? companyInfo.location : '') || '',
+                logo: null
+              });
             }
 
-            // Navigate directly to business dashboard
-            toast.success('Invitación aceptada. Redirigiendo al panel...');
-            navigate('/business-dashboard');
+            // Move to Step 3 (company details review) instead of dashboard
+            setCurrentStep(3);
+            toast.success('Invitación aceptada. Completa tu perfil para continuar.');
             return;
           } else {
             // Invitation could not be accepted (invalid, expired, already used)
@@ -383,65 +398,48 @@ const CompanyOnboarding = () => {
         throw metadataError;
       }
 
-      // INVITATION FLOW: Just link user to company, don't create a new company
-      if (isInvitationFlow && invitationData) {
-        console.log('Invitation flow: Linking user to existing company');
+      // INVITATION FLOW: User is joining an existing company
+      if (isInvitationFlow) {
+        console.log('Invitation flow: Completing user profile for existing company');
 
-        // Update invitation to accepted
-        const { error: invitationError } = await supabase
-          .from('company_user_roles')
-          .update({
-            user_id: user.id,
-            status: 'accepted',
-            accepted_at: new Date().toISOString()
-          })
-          .eq('company_id', invitationData.company_id)
-          .eq('user_id', user.id)
-          .eq('status', 'pending');
+        // Get company_id from user metadata (stored when invitation was accepted)
+        const companyId = user.user_metadata?.company_id;
+        
+        if (companyId) {
+          // Update user metadata and mark onboarding as complete
+          await supabase.auth.updateUser({
+            data: {
+              ...metadataUpdates,
+              onboarding_completed: true,
+              company_id: companyId
+            }
+          });
 
-        if (invitationError) {
-          console.error('Invitation update error:', invitationError);
-          throw invitationError;
-        }
+          console.log('✅ User profile completed for invitation flow');
 
-        // Update user role to business if needed
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
+          // Get company name for success message
+          const { data: companyInfo } = await supabase
+            .from('companies')
+            .select('name')
+            .eq('id', companyId)
+            .maybeSingle();
 
-        if (roleData && roleData.role === 'talent') {
-          await supabase
-            .from('user_roles')
-            .update({ role: 'freemium_business' })
-            .eq('user_id', user.id);
-        }
+          toast.success(`¡Te has unido exitosamente a ${companyInfo?.name || 'la empresa'}!`);
 
-        // Update user metadata and clean up invitation metadata
-        await supabase.auth.updateUser({
-          data: {
-            ...metadataUpdates,
-            onboarding_completed: true,
-            company_id: invitationData.company_id,
-            pending_invitation: null,
-            invited_to_company: null
+          // Refresh companies and redirect
+          try {
+            await refreshCompanies();
+          } catch (refreshError) {
+            console.error('Error refreshing company context:', refreshError);
           }
-        });
 
-        console.log('✅ User successfully joined company via invitation');
-
-        toast.success(`¡Te has unido exitosamente a ${invitationData.company_name}!`);
-
-        // Refresh companies and redirect
-        try {
-          await refreshCompanies();
-        } catch (refreshError) {
-          console.error('Error refreshing company context:', refreshError);
+          navigate('/business-dashboard');
+          return;
+        } else {
+          console.error('No company_id found in metadata for invitation flow');
+          toast.error('Error al completar el onboarding. Por favor, intenta nuevamente.');
+          return;
         }
-
-        navigate('/business-dashboard');
-        return;
       }
 
       // NORMAL FLOW: Create or update company
