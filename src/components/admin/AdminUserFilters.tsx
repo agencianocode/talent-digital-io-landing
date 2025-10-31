@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X, Users, Building, User } from 'lucide-react';
+import { Search, Filter, X, Users, Building, User, GraduationCap, Shield } from 'lucide-react';
 
 interface UserFilters {
   searchQuery: string;
@@ -12,6 +12,7 @@ interface UserFilters {
   statusFilter: string;
   countryFilter: string;
   dateRange: string;
+  companyRoleFilter: string;
 }
 
 interface AdminUserFiltersProps {
@@ -42,9 +43,13 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
       roleFilter: 'all',
       statusFilter: 'all',
       countryFilter: 'all',
-      dateRange: 'all'
+      dateRange: 'all',
+      companyRoleFilter: 'all'
     });
   };
+
+  // Check if selected role is business role (for conditional company role filter)
+  const isBusinessRole = ['freemium_business', 'premium_business', 'academy_premium'].includes(filters.roleFilter);
 
   const hasActiveFilters = Object.values(filters).some(value => 
     value !== '' && value !== 'all'
@@ -77,7 +82,7 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
           {/* Búsqueda */}
           <div className="lg:col-span-2">
             <div className="relative">
@@ -134,6 +139,12 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
                     Talento Freemium
                   </div>
                 </SelectItem>
+                <SelectItem value="academy_premium">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4" />
+                    Academia Premium
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -184,6 +195,38 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
             </Select>
           </div>
         </div>
+
+        {/* Conditional Company Role Filter */}
+        {isBusinessRole && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-1">
+              <Select
+                value={filters.companyRoleFilter}
+                onValueChange={(value) => handleFilterChange('companyRoleFilter', value)}
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Rol en empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los miembros</SelectItem>
+                  <SelectItem value="admin_owner">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Solo Admins/Owners
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="viewer">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Solo Viewers
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
 
         {/* Filtro por Rango de Fechas */}
         <div className="mt-4">
@@ -251,6 +294,15 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
                 <X 
                   className="h-3 w-3 cursor-pointer" 
                   onClick={() => handleFilterChange('dateRange', 'all')}
+                />
+              </Badge>
+            )}
+            {filters.companyRoleFilter !== 'all' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Rol empresa: {filters.companyRoleFilter === 'admin_owner' ? 'Admin/Owner' : 'Viewer'}
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => handleFilterChange('companyRoleFilter', 'all')}
                 />
               </Badge>
             )}

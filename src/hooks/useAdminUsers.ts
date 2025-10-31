@@ -7,6 +7,7 @@ interface UserFilters {
   statusFilter: string;
   countryFilter: string;
   dateRange: string;
+  companyRoleFilter: string;
 }
 
 interface UserData {
@@ -21,6 +22,9 @@ interface UserData {
   country?: string;
   companies_count: number;
   avatar_url?: string;
+  company_roles?: string[];
+  is_company_admin?: boolean;
+  has_companies?: boolean;
 }
 
 export const useAdminUsers = () => {
@@ -32,7 +36,8 @@ export const useAdminUsers = () => {
     roleFilter: 'all',
     statusFilter: 'all',
     countryFilter: 'all',
-    dateRange: 'all'
+    dateRange: 'all',
+    companyRoleFilter: 'all'
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(20);
@@ -75,7 +80,10 @@ export const useAdminUsers = () => {
         is_active: user.is_active,
         country: user.country,
         companies_count: user.companies_count,
-        avatar_url: user.avatar_url
+        avatar_url: user.avatar_url,
+        company_roles: user.company_roles || [],
+        is_company_admin: user.is_company_admin || false,
+        has_companies: user.has_companies || false
       }));
 
       setUsers(usersData);
@@ -102,6 +110,18 @@ export const useAdminUsers = () => {
     // Role filter
     if (filters.roleFilter !== 'all') {
       filtered = filtered.filter(user => user.role === filters.roleFilter);
+      
+      // Company role filter (only applies to business roles)
+      const isBusinessRole = ['freemium_business', 'premium_business', 'academy_premium'].includes(filters.roleFilter);
+      if (isBusinessRole && filters.companyRoleFilter !== 'all') {
+        if (filters.companyRoleFilter === 'admin_owner') {
+          filtered = filtered.filter(user => user.is_company_admin === true);
+        } else if (filters.companyRoleFilter === 'viewer') {
+          filtered = filtered.filter(user => 
+            user.company_roles?.includes('viewer') && !user.is_company_admin
+          );
+        }
+      }
     }
 
     // Status filter

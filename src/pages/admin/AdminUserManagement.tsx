@@ -14,7 +14,8 @@ import {
   ChevronRight,
   RefreshCw,
   Eye,
-  AlertTriangle
+  AlertTriangle,
+  GraduationCap
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -73,6 +74,8 @@ const AdminUserManagement: React.FC = () => {
         return <Star className="h-4 w-4 text-orange-600" />;
       case 'freemium_talent':
         return <User className="h-4 w-4 text-green-600" />;
+      case 'academy_premium':
+        return <GraduationCap className="h-4 w-4 text-indigo-600" />;
       default:
         return <User className="h-4 w-4 text-gray-600" />;
     }
@@ -90,6 +93,8 @@ const AdminUserManagement: React.FC = () => {
         return <Badge variant="secondary" className="bg-orange-100 text-orange-800">Talento Premium</Badge>;
       case 'freemium_talent':
         return <Badge variant="secondary" className="bg-green-100 text-green-800">Talento Freemium</Badge>;
+      case 'academy_premium':
+        return <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">Academia Premium</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }

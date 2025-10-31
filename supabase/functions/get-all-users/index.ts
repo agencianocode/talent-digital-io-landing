@@ -72,6 +72,16 @@ serve(async (req) => {
       console.error('Company counts error:', companyError);
     }
 
+    // Get company user roles (for admin/owner/viewer detection)
+    const { data: companyRolesData, error: companyRolesError } = await supabaseAdmin
+      .from('company_user_roles')
+      .select('user_id, role')
+      .eq('status', 'accepted');
+
+    if (companyRolesError) {
+      console.error('Company roles error:', companyRolesError);
+    }
+
     // Build company counts map
     const companyCountsMap = new Map<string, number>();
     companyCounts?.forEach(c => {
@@ -86,6 +96,12 @@ serve(async (req) => {
       const role = roles?.find(r => r.user_id === user.id);
       const companies_count = companyCountsMap.get(user.id) || 0;
 
+      // Get company roles for this user
+      const userCompanyRoles = companyRolesData?.filter(cr => cr.user_id === user.id) || [];
+      const companyRoles = userCompanyRoles.map(cr => cr.role);
+      const isCompanyAdmin = companyRoles.some(r => r === 'owner' || r === 'admin');
+      const hasCompanies = companies_count > 0;
+
       return {
         id: user.id,
         email: user.email,
@@ -98,7 +114,10 @@ serve(async (req) => {
         email_confirmed_at: user.email_confirmed_at,
         is_active: !user.banned_until,
         country: profile?.country || talentProfile?.country || null,
-        companies_count
+        companies_count,
+        company_roles: companyRoles,
+        is_company_admin: isCompanyAdmin,
+        has_companies: hasCompanies
       };
     }) || [];
 
