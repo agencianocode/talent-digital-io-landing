@@ -68,7 +68,8 @@ const CONTRACT_TYPE_OPTIONS = [
   { value: 'full_time', label: 'Tiempo Completo' },
   { value: 'part_time', label: 'Medio Tiempo' },
   { value: 'freelance', label: 'Freelance' },
-  { value: 'contract', label: 'Por Contrato' }
+  { value: 'project_based', label: 'Por Proyecto' },
+  { value: 'consulting', label: 'Consultoría' }
 ];
 
 const COMPANY_SIZE_OPTIONS = [

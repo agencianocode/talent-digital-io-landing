@@ -22,7 +22,7 @@ const preferencesSchema = z.object({
   salary_min: z.string().optional(),
   salary_max: z.string().optional(),
   salary_currency: z.enum(['USD', 'EUR', 'MXN', 'ARS', 'COP', 'CLP']),
-  contract_types: z.array(z.enum(['full_time', 'part_time', 'freelance', 'contract'])),
+  contract_types: z.array(z.enum(['full_time', 'part_time', 'freelance', 'project_based', 'consulting'])),
   notice_period: z.enum(['immediate', '2_weeks', '1_month', '2_months', '3_months']),
   auto_apply_enabled: z.boolean(),
   auto_apply_criteria: z.string().optional(),
@@ -44,7 +44,8 @@ const contractTypeOptions = [
   { value: 'full_time', label: 'Tiempo Completo' },
   { value: 'part_time', label: 'Medio Tiempo' },
   { value: 'freelance', label: 'Freelance' },
-  { value: 'contract', label: 'Por Contrato' },
+  { value: 'project_based', label: 'Por Proyecto' },
+  { value: 'consulting', label: 'Consultoría' },
 ];
 
 const companySizeOptions = [

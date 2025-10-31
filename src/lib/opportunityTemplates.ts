@@ -183,11 +183,11 @@ export const categoryTemplates: Record<string, CategoryTemplate> = {
 };
 
 export const contractTypes = [
-  'Full Time',
-  'Part Time',
+  'Tiempo Completo',
+  'Medio Tiempo',
   'Freelance',
-  'Por Comisión',
-  'Fijo + Comisión'
+  'Por Proyecto',
+  'Consultoría'
 ];
 
 export const durationUnits = [
