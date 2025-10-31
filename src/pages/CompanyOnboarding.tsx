@@ -91,7 +91,7 @@ const CompanyOnboarding = () => {
               )
             `)
             .eq('id', invitationId)
-            .in('status', ['pending', 'invitation_clicked'])
+            .eq('status', 'pending')
             .single();
 
           if (error || !invitation) {

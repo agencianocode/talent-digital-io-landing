@@ -57,16 +57,8 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Update invitation status to 'accepted'
-    const { error: updateError } = await supabase
-      .from('company_user_roles')
-      .update({ 
-        status: 'accepted',
-        accepted_at: new Date().toISOString()
-      })
-      .eq('id', invitation.id);
-
-    if (updateError) throw updateError;
+    // Keep invitation as 'pending' - it will be accepted after user completes registration/login
+    // No need to update status here, just validate and redirect
 
     // Calculate redirect URL
     const appUrl = redirectBase || Deno.env.get('APP_BASE_URL') || 'https://talent-digital-io-landing.lovable.app';

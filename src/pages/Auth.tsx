@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSupabaseAuth, isBusinessRole, isAdminRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import AuthDebugInfo from '@/components/AuthDebugInfo';
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from 'sonner';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -18,9 +20,13 @@ const Auth = () => {
   // Check for invitation parameters
   const invitationId = searchParams.get('invitation');
   const invitedEmail = searchParams.get('email');
+  const isInvitationFlow = !!(invitationId && invitedEmail);
   
   // Track if redirect has happened to prevent multiple redirects
   const [hasRedirected, setHasRedirected] = useState(false);
+  
+  // Tab state for invitation flow
+  const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
   
   // Derive initial reset state synchronously to avoid race conditions
   const initialResetRoute = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reset') === 'true';
@@ -202,8 +208,9 @@ const Auth = () => {
   }, [isAuthenticated, isPasswordReset, isSessionReady]);
   
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: invitedEmail || '',
+    password: '',
+    fullName: ''
   });
   
   const [newPassword, setNewPassword] = useState('');
@@ -351,6 +358,78 @@ const Auth = () => {
     }
     
     setIsSubmitting(false);
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+
+    if (formData.password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.password !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: formData.fullName
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: data.user.id,
+            full_name: formData.fullName,
+            email: formData.email
+          });
+
+        if (profileError) console.error('Error creating profile:', profileError);
+
+        // Assign business role
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: data.user.id,
+            role: 'business'
+          });
+
+        if (roleError) console.error('Error assigning role:', roleError);
+
+        toast.success('¡Cuenta creada exitosamente!');
+        
+        // Redirect to onboarding with invitation
+        if (isInvitationFlow) {
+          navigate(`/company-onboarding?invitation=${invitationId}`);
+        } else {
+          navigate('/company-onboarding');
+        }
+      }
+    } catch (error: any) {
+      console.error('Error en registro:', error);
+      setError(error.message || 'Error al crear la cuenta. Por favor, intente nuevamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -509,6 +588,205 @@ const Auth = () => {
               Volver al inicio de sesión
             </Button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Invitation flow with tabs
+  if (isInvitationFlow) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Talento Digital
+            </h1>
+            <p className="text-muted-foreground">
+              Has sido invitado a unirte a una empresa
+            </p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Invitación a Empresa</CardTitle>
+              <CardDescription>
+                Por favor, inicia sesión o crea una cuenta para continuar
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={authTab} onValueChange={(v) => setAuthTab(v as 'login' | 'register')} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
+                  <TabsTrigger value="register">Crear Cuenta</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="login">
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    {error && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email-login">Email</Label>
+                      <Input
+                        id="email-login"
+                        type="email"
+                        value={formData.email}
+                        disabled
+                        className="bg-muted"
+                      />
+                      <p className="text-xs text-muted-foreground">Email de la invitación (no editable)</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password-login">Contraseña</Label>
+                      <div className="relative">
+                        <Input
+                          id="password-login"
+                          type={showPassword ? "text" : "password"}
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          required
+                          disabled={isSubmitting}
+                          placeholder="Ingresa tu contraseña"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                          disabled={isSubmitting}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Iniciando sesión...
+                        </>
+                      ) : (
+                        'Iniciar Sesión'
+                      )}
+                    </Button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm text-primary hover:underline w-full text-center"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="register">
+                  <form onSubmit={handleRegister} className="space-y-4">
+                    {error && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="fullname-register">Nombre Completo</Label>
+                      <Input
+                        id="fullname-register"
+                        type="text"
+                        value={formData.fullName}
+                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        required
+                        disabled={isSubmitting}
+                        placeholder="Tu nombre completo"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email-register">Email</Label>
+                      <Input
+                        id="email-register"
+                        type="email"
+                        value={formData.email}
+                        disabled
+                        className="bg-muted"
+                      />
+                      <p className="text-xs text-muted-foreground">Email de la invitación (no editable)</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password-register">Contraseña</Label>
+                      <div className="relative">
+                        <Input
+                          id="password-register"
+                          type={showPassword ? "text" : "password"}
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          required
+                          minLength={6}
+                          disabled={isSubmitting}
+                          placeholder="Mínimo 6 caracteres"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                          disabled={isSubmitting}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password-register">Confirmar Contraseña</Label>
+                      <div className="relative">
+                        <Input
+                          id="confirm-password-register"
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          minLength={6}
+                          disabled={isSubmitting}
+                          placeholder="Repite tu contraseña"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          disabled={isSubmitting}
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creando cuenta...
+                        </>
+                      ) : (
+                        'Crear Cuenta y Aceptar Invitación'
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
