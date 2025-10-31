@@ -11,7 +11,8 @@ import {
   LogOut,
   Settings,
   ChevronDown,
-  RefreshCw
+  RefreshCw,
+  FileText
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,17 +40,19 @@ import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useSupabaseMessages } from "@/contexts/SupabaseMessagesContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAdminCustomization } from "@/hooks/useAdminCustomization";
+import { usePublishingRequests } from "@/hooks/usePublishingRequests";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
-const navigationItems = [
-  { title: "Dashboard", value: "dashboard", icon: LayoutDashboard, showKey: 'show_dashboard' },
-  { title: "Solicitudes Upgrade", value: "upgrade-requests", icon: CheckSquare, showKey: 'show_upgrade_requests' },
-  { title: "Usuarios", value: "users", icon: UserCog, showKey: 'show_users' },
-  { title: "Empresas", value: "companies", icon: Building2, showKey: 'show_companies' },
-  { title: "Oportunidades", value: "opportunities", icon: Briefcase, showKey: 'show_opportunities' },
-  { title: "Marketplace", value: "marketplace", icon: ShoppingBag, showKey: 'show_marketplace_menu' },
-];
+  const navigationItems = [
+    { title: "Dashboard", value: "dashboard", icon: LayoutDashboard, showKey: 'show_dashboard' },
+    { title: "Solicitudes Upgrade", value: "upgrade-requests", icon: CheckSquare, showKey: 'show_upgrade_requests' },
+    { title: "Usuarios", value: "users", icon: UserCog, showKey: 'show_users' },
+    { title: "Empresas", value: "companies", icon: Building2, showKey: 'show_companies' },
+    { title: "Oportunidades", value: "opportunities", icon: Briefcase, showKey: 'show_opportunities' },
+    { title: "Marketplace", value: "marketplace", icon: ShoppingBag, showKey: 'show_marketplace_menu' },
+    { title: "Solicitudes Publicación", value: "publishing-requests", icon: FileText, showKey: 'show_marketplace_menu' },
+  ];
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -63,6 +66,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const { conversations } = useSupabaseMessages();
   const { unreadCount: unreadNotificationsCount } = useNotifications();
   const { customization } = useAdminCustomization();
+  const { pendingCount } = usePublishingRequests();
   const navigate = useNavigate();
 
   // Calculate unread messages count
@@ -141,6 +145,11 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
                       >
                         <item.icon className="h-4 w-4 flex-shrink-0" />
                         {!collapsed && <span className="truncate">{item.title}</span>}
+                        {!collapsed && item.value === 'publishing-requests' && pendingCount > 0 && (
+                          <Badge variant="destructive" className="ml-auto text-xs">
+                            {pendingCount}
+                          </Badge>
+                        )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );

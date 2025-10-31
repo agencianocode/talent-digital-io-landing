@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Eye, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { usePublishingRequests, PublishingRequest } from '@/hooks/usePublishingRequests';
 import { AdminPublishingRequestDetail } from '@/components/admin/AdminPublishingRequestDetail';
-import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import LoadingSkeleton from '@/components/LoadingSkeleton';
 
 export const AdminPublishingRequests = () => {
   const { requests, loading, updateRequestStatus } = usePublishingRequests();
@@ -63,7 +63,7 @@ export const AdminPublishingRequests = () => {
   };
 
   if (loading) {
-    return <LoadingSkeleton />;
+    return <LoadingSkeleton type="table" />;
   }
 
   return (

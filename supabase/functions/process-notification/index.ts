@@ -178,6 +178,17 @@ Deno.serve(async (req) => {
               message: notification.message,
               actionUrl: notification.action_url,
               actionText: 'Ver detalles',
+              // Include marketplace request data if present
+              ...(notification.type === 'marketplace' && notification.data ? {
+                contactName: notification.data.contact_name,
+                contactEmail: notification.data.contact_email,
+                contactPhone: notification.data.contact_phone,
+                companyName: notification.data.company_name,
+                serviceType: notification.data.service_type,
+                description: notification.data.description,
+                budget: notification.data.budget,
+                timeline: notification.data.timeline,
+              } : {})
             },
           }
         );

@@ -30,6 +30,7 @@ import AdminChatManagement from './admin/AdminChatManagement';
 import AdminNotifications from './admin/AdminNotifications';
 import { AdminProfileSettings } from '@/components/admin/AdminProfileSettings';
 import AdminSettings from './admin/AdminSettings';
+import { AdminPublishingRequests } from './admin/AdminPublishingRequests';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
@@ -418,6 +419,10 @@ const AdminPanel: React.FC = () => {
 
             {activeTab === "marketplace" && (
               <AdminMarketplaceManagement />
+            )}
+
+            {activeTab === "publishing-requests" && (
+              <AdminPublishingRequests />
             )}
 
             {activeTab === "chat" && (

@@ -34,7 +34,7 @@ export const usePublishingRequests = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+      setRequests((data || []) as PublishingRequest[]);
       setPendingCount(data?.filter(r => r.status === 'pending').length || 0);
     } catch (error: any) {
       console.error('Error loading publishing requests:', error);

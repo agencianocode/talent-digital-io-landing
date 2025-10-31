@@ -118,6 +118,7 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
         return <MessageCircle className="h-5 w-5 text-blue-600" />;
       case 'opportunity':
         return <Briefcase className="h-5 w-5 text-green-600" />;
+      case 'marketplace':
       case 'marketplace_request':
         return <ShoppingBag className="h-5 w-5 text-purple-600" />;
       default:
@@ -152,6 +153,12 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
       return;
     }
     
+    // Handle marketplace notifications - redirect to publishing requests tab
+    if (actionUrl.includes('/admin') && onTabChange) {
+      onTabChange('publishing-requests');
+      return;
+    }
+    
     // Handle message notifications for admin - redirect to admin chat tab
     if (actionUrl.includes('/messages/')) {
       if (onTabChange) {
@@ -169,7 +176,7 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
   // Filter notifications based on selected tab
   const filteredNotifications = notifications.filter(notification => {
     if (filter === 'todas') return true;
-    if (filter === 'solicitudes') return notification.type === 'marketplace_request';
+    if (filter === 'solicitudes') return notification.type === 'marketplace' || notification.type === 'marketplace_request';
     if (filter === 'mensajes') return notification.type === 'message';
     if (filter === 'oportunidades') return notification.type === 'opportunity';
     return true;
@@ -218,9 +225,9 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
           </TabsTrigger>
           <TabsTrigger value="solicitudes">
             Solicitudes
-            {notifications.filter(n => n.type === 'marketplace_request').length > 0 && (
+            {notifications.filter(n => n.type === 'marketplace' || n.type === 'marketplace_request').length > 0 && (
               <Badge variant="secondary" className="ml-2">
-                {notifications.filter(n => n.type === 'marketplace_request').length}
+                {notifications.filter(n => n.type === 'marketplace' || n.type === 'marketplace_request').length}
               </Badge>
             )}
           </TabsTrigger>
@@ -289,7 +296,7 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
                               Nuevo
                             </Badge>
                           )}
-                          {notification.type === 'marketplace_request' && (
+                          {(notification.type === 'marketplace' || notification.type === 'marketplace_request') && (
                             <Badge variant="secondary" className="h-5 px-2 bg-purple-100 text-purple-800">
                               Solicitud
                             </Badge>
@@ -298,12 +305,31 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
                         <p className="text-sm text-muted-foreground mt-1">
                           {notification.message}
                         </p>
+                        
+                        {/* Display marketplace request details if available */}
+                        {(notification.type === 'marketplace' || notification.type === 'marketplace_request') && (notification as any).data && (
+                          <div className="mt-2 p-2 bg-muted/30 rounded-md space-y-1 text-xs">
+                            {(notification as any).data.contact_name && (
+                              <p><span className="font-medium">Contacto:</span> {(notification as any).data.contact_name}</p>
+                            )}
+                            {(notification as any).data.contact_email && (
+                              <p><span className="font-medium">Email:</span> {(notification as any).data.contact_email}</p>
+                            )}
+                            {(notification as any).data.company_name && (
+                              <p><span className="font-medium">Empresa:</span> {(notification as any).data.company_name}</p>
+                            )}
+                            {(notification as any).data.service_type && (
+                              <p><span className="font-medium">Servicio:</span> {(notification as any).data.service_type}</p>
+                            )}
+                          </div>
+                        )}
+                        
                    <p className="text-xs text-muted-foreground mt-2">
-                     {formatDistanceToNow(new Date(notification.created_at), {
-                       addSuffix: true,
-                       locale: es,
-                     })}
-                   </p>
+                      {formatDistanceToNow(new Date(notification.created_at), {
+                        addSuffix: true,
+                        locale: es,
+                      })}
+                    </p>
                    
                    <div className="flex gap-2 mt-2">
                      {notification.action_url && (
@@ -316,7 +342,7 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
                          Ver detalles →
                        </Button>
                      )}
-                     {notification.type === 'marketplace_request' && (
+                      {notification.type === 'marketplace_request' && (
                        <Button
                          variant="outline"
                          size="sm"
