@@ -67,6 +67,7 @@ interface CompanyContextType {
   // Helper functions
   hasPermission: (permission: 'owner' | 'admin' | 'viewer') => boolean;
   canManageUsers: () => boolean;
+  canViewOpportunities: () => boolean;
   canCreateOpportunities: () => boolean;
   canManageApplications: () => boolean;
   canEditCompany: () => boolean;
@@ -295,7 +296,8 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
 
   // Helper functions
   const canManageUsers = () => hasPermission('admin');
-  const canCreateOpportunities = () => hasPermission('admin');
+  const canViewOpportunities = () => hasPermission('viewer'); // All roles can view
+  const canCreateOpportunities = () => hasPermission('admin'); // Only admin and owner can create
   const canManageApplications = () => hasPermission('viewer'); // All roles can view applications
   const canEditCompany = () => hasPermission('admin');
   const canDeleteOpportunities = () => hasPermission('owner'); // Only owners can delete
@@ -330,6 +332,7 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
     switchCompany,
     hasPermission,
     canManageUsers,
+    canViewOpportunities,
     canCreateOpportunities,
     canManageApplications,
     canEditCompany,

@@ -113,9 +113,17 @@ const DashboardLayout = () => {
 
             <div className="p-4 border-t mt-auto">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                  {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
-                </div>
+                {profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt={profile?.full_name || 'Usuario'}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+                    {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
+                  </div>
+                )}
                 <div>
                   <p className="text-sm font-medium">{profile?.full_name || 'Usuario'}</p>
                   <p className="text-xs text-muted-foreground">{user?.email}</p>
@@ -234,9 +242,17 @@ const DashboardLayout = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start p-2.5 h-auto">
                 <div className="flex items-center gap-3 w-full">
-                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                    {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
-                  </div>
+                  {profile?.avatar_url ? (
+                    <img 
+                      src={profile.avatar_url} 
+                      alt={profile?.full_name || 'Usuario'}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+                      {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
+                    </div>
+                  )}
                   <div className="flex-1 text-left">
                     <p className="font-medium" style={{fontSize: '16px'}}>{profile?.full_name || 'Usuario'}</p>
                   </div>

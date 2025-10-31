@@ -39,6 +39,8 @@ const Auth = () => {
   const [isSessionReady, setIsSessionReady] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [isResetRoute, setIsResetRoute] = useState(initialResetRoute);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
   
   // Allow submission if session is ready OR user is authenticated (token-based sign-in)
   const canSubmitReset = isAuthenticated || isSessionReady;
@@ -344,6 +346,25 @@ const Auth = () => {
     setIsSubmitting(false);
   };
 
+  const handleResendConfirmation = async () => {
+    if (!verificationEmail) return;
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: verificationEmail
+      });
+      
+      if (error) {
+        toast.error('Error al reenviar el email');
+      } else {
+        toast.success('Email de confirmación reenviado');
+      }
+    } catch (error) {
+      toast.error('Error inesperado al reenviar email');
+    }
+  };
+
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -486,9 +507,8 @@ const Auth = () => {
         // Check if email confirmation is required
         if (!data.user.email_confirmed_at) {
           // Email needs confirmation
-          toast.success('¡Cuenta creada! Revisa tu email para confirmar tu cuenta.');
-          setMessage('Hemos enviado un correo de confirmación a tu email. Por favor revisa tu bandeja de entrada (y spam) y haz clic en el enlace para activar tu cuenta.');
-          setAuthTab('login'); // Switch to login tab
+          setVerificationEmail(formData.email);
+          setShowEmailVerification(true);
           setIsSubmitting(false);
           return; // Don't redirect yet
         }
@@ -526,6 +546,71 @@ const Auth = () => {
           <Loader2 className="h-8 w-8 animate-spin" />
           <p className="text-muted-foreground">Validando enlace de recuperación...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Email Verification Screen
+  if (showEmailVerification) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center text-center space-y-6">
+              {/* Email Icon */}
+              <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center">
+                <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+
+              {/* Title */}
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Verifica tu cuenta
+                </h2>
+                <p className="text-gray-600">
+                  Hemos enviado un correo de confirmación a:
+                </p>
+                <p className="text-purple-600 font-semibold mt-1">
+                  {verificationEmail}
+                </p>
+              </div>
+
+              {/* Instructions */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 w-full">
+                <p className="text-sm text-gray-700">
+                  Por favor revisa tu bandeja de entrada (y carpeta de spam) y haz clic en el enlace para activar tu cuenta.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-3 w-full">
+                <Button 
+                  onClick={handleResendConfirmation}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Reenviar email de confirmación
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowEmailVerification(false);
+                    setAuthTab('login');
+                  }}
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                >
+                  Ir a iniciar sesión
+                </Button>
+              </div>
+
+              {/* Help text */}
+              <p className="text-xs text-gray-500">
+                Si no solicitaste esta cuenta, puedes ignorar este mensaje.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

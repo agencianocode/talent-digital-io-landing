@@ -135,29 +135,10 @@ const CompanyOnboarding = () => {
               console.warn('Metadata cleanup warning:', e);
             }
 
-            // Fetch company details to pre-populate Step 3
-            const companyIdToFetch = typeof data.company_id === 'string' ? data.company_id : String(data.company_id || '');
-            const { data: companyInfo } = await supabase
-              .from('companies')
-              .select('name, description, website, location, logo_url')
-              .eq('id', companyIdToFetch)
-              .maybeSingle();
+            // Fetch company details to pre-populate Step 3 (removed - going directly to Step 4)
 
-            if (companyInfo) {
-              setCompanyData({ 
-                name: (typeof companyInfo.name === 'string' ? companyInfo.name : '') || '', 
-                isIndividual: false 
-              });
-              setCompanyDetails({
-                description: (typeof companyInfo.description === 'string' ? companyInfo.description : '') || '',
-                url: (typeof companyInfo.website === 'string' ? companyInfo.website : '') || '',
-                location: (typeof companyInfo.location === 'string' ? companyInfo.location : '') || '',
-                logo: null
-              });
-            }
-
-            // Move to Step 3 (company details review) instead of dashboard
-            setCurrentStep(3);
+            // Move directly to Step 4 (personal profile)
+            setCurrentStep(4);
             toast.success('Invitación aceptada. Completa tu perfil para continuar.');
             return;
           } else {
@@ -388,6 +369,18 @@ const CompanyOnboarding = () => {
 
       if (profilePhotoUrl) {
         metadataUpdates.avatar_url = profilePhotoUrl;
+        
+        // Also update profiles table so avatar shows in sidebar
+        const { error: profileAvatarError } = await supabase
+          .from('profiles')
+          .update({ avatar_url: profilePhotoUrl })
+          .eq('id', user.id);
+
+        if (profileAvatarError) {
+          console.warn('Warning updating profile avatar:', profileAvatarError);
+        } else {
+          console.log('✅ Profile avatar updated in profiles table');
+        }
       }
       
       const { error: metadataError } = await supabase.auth.updateUser({

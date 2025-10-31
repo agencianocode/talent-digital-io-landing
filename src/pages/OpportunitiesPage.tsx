@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 const OpportunitiesPage = () => {
   const { userRole, user } = useSupabaseAuth();
-  const { activeCompany, canCreateOpportunities } = useCompany();
+  const { activeCompany, canViewOpportunities } = useCompany();
 
   // Función para corregir el rol del usuario
   const handleFixUserRole = async () => {
@@ -94,7 +94,7 @@ const OpportunitiesPage = () => {
     );
   }
 
-  if (!canCreateOpportunities()) {
+  if (!canViewOpportunities()) {
     return (
       <div className="p-8">
         <Card className="max-w-md mx-auto">
@@ -120,6 +120,7 @@ const OpportunitiesPage = () => {
   }
 
   // Renderizar la página de oportunidades simplificada
+  // OpportunityListPage internally uses canCreateOpportunities() to control create buttons
   return (
     <div className="p-8">
       <OpportunityListPage />
