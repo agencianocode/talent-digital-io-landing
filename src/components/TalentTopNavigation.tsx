@@ -17,7 +17,6 @@ import { useSupabaseAuth, isPremiumRole } from '@/contexts/SupabaseAuthContext';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useSupabaseMessages } from '@/contexts/SupabaseMessagesContext';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useTalentPublishingRequests } from '@/hooks/useTalentPublishingRequests';
 import PremiumBadge from '@/components/PremiumBadge';
 
 const TalentTopNavigation = () => {
@@ -28,7 +27,6 @@ const TalentTopNavigation = () => {
   const { userProfile, refreshProfile } = useProfileData();
   const { unreadCount: unreadMessagesCount } = useSupabaseMessages();
   const { unreadCount: unreadNotificationsCount } = useNotifications();
-  const { pendingCount: pendingRequestsCount } = useTalentPublishingRequests();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -70,14 +68,6 @@ const TalentTopNavigation = () => {
       icon: Store,
       path: '/talent-dashboard/marketplace',
       isActive: location.pathname === '/talent-dashboard/marketplace'
-    },
-    {
-      id: 'my-requests',
-      label: '📋 Mis Solicitudes',
-      icon: CheckSquare,
-      path: '/talent-dashboard/my-publishing-requests',
-      isActive: location.pathname === '/talent-dashboard/my-publishing-requests',
-      badge: pendingRequestsCount
     }
   ];
 
@@ -110,26 +100,20 @@ const TalentTopNavigation = () => {
           {navigationItems.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.id} className="relative">
-                  <Button
-                    variant={item.isActive ? "default" : "ghost"}
-                    size="sm"
-                    className={`flex items-center gap-2 ${
-                      item.isActive 
-                        ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                        : 'text-foreground hover:bg-muted hover:text-foreground'
-                    }`}
-                    onClick={() => navigate(item.path)}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="hidden xl:inline">{item.label}</span>
-                  </Button>
-                  {item.badge && item.badge > 0 && (
-                    <Badge className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs h-4 w-4 flex items-center justify-center p-0">
-                      {item.badge > 9 ? '9+' : item.badge}
-                    </Badge>
-                  )}
-                </div>
+                <Button
+                  key={item.id}
+                  variant={item.isActive ? "default" : "ghost"}
+                  size="sm"
+                  className={`flex items-center gap-2 ${
+                    item.isActive 
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                      : 'text-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                  onClick={() => navigate(item.path)}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden xl:inline">{item.label}</span>
+                </Button>
               );
             })}
           </nav>
@@ -267,11 +251,6 @@ const TalentTopNavigation = () => {
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
-                    {item.badge && item.badge > 0 && (
-                      <Badge className="ml-auto bg-primary text-primary-foreground text-xs">
-                        {item.badge}
-                      </Badge>
-                    )}
                   </Button>
                 );
               })}
