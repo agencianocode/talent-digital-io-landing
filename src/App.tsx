@@ -35,6 +35,7 @@ const TalentOpportunitiesSearch = lazy(() => import('./pages/TalentOpportunities
 const ApplicationDetail = lazy(() => import('./pages/ApplicationDetail'));
 const TalentMarketplace = lazy(() => import('./pages/TalentMarketplace'));
 const TalentMyServices = lazy(() => import('./pages/TalentMyServices'));
+const TalentMyPublishingRequests = lazy(() => import('./pages/TalentMyPublishingRequests'));
 const SavedOpportunities = lazy(() => import('./pages/SavedOpportunities'));
 const OpportunityDetail = lazy(() => import('./pages/OpportunityDetail'));
 
@@ -221,12 +222,17 @@ function App() {
                               <ServiceDetail />
                             </Suspense>
                           } />
-                          <Route path="my-services" element={
-                            <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
-                              <TalentMyServices />
-                            </Suspense>
-                          } />
-                          <Route path="saved" element={
+                        <Route path="my-services" element={
+                          <Suspense fallback={<LoadingSkeleton type="opportunities" />}>
+                            <TalentMyServices />
+                          </Suspense>
+                        } />
+                        <Route path="my-publishing-requests" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <TalentMyPublishingRequests />
+                          </Suspense>
+                        } />
+                        <Route path="saved" element={
                             <Suspense fallback={<LoadingSkeleton type="list" />}>
                               <SavedOpportunities />
                             </Suspense>

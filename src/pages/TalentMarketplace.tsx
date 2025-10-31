@@ -10,9 +10,11 @@ import {
   List,
   ChevronLeft,
   ChevronRight,
-  Package
+  Package,
+  CheckSquare
 } from 'lucide-react';
 import { useMarketplaceServices } from '@/hooks/useMarketplaceServices';
+import { useTalentPublishingRequests } from '@/hooks/useTalentPublishingRequests';
 import ServiceCard from '@/components/marketplace/ServiceCard';
 import ServiceFilters from '@/components/marketplace/ServiceFilters';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
@@ -22,6 +24,7 @@ import { AcademyCoursesSection } from '@/components/marketplace/AcademyCoursesSe
 
 const TalentMarketplace: React.FC = () => {
   const navigate = useNavigate();
+  const { pendingCount: pendingRequestsCount } = useTalentPublishingRequests();
   const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -69,6 +72,10 @@ const TalentMarketplace: React.FC = () => {
     navigate('/talent-dashboard/my-services');
   };
 
+  const handleViewMyRequests = () => {
+    navigate('/talent-dashboard/my-publishing-requests');
+  };
+
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -100,6 +107,17 @@ const TalentMarketplace: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <div className="relative">
+              <Button onClick={handleViewMyRequests} variant="outline" className="flex items-center gap-2">
+                <CheckSquare className="h-4 w-4" />
+                Mis Solicitudes
+              </Button>
+              {pendingRequestsCount > 0 && (
+                <Badge className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs h-5 w-5 flex items-center justify-center p-0">
+                  {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
+                </Badge>
+              )}
+            </div>
             <Button onClick={handleManageServices} variant="outline" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Mis Servicios

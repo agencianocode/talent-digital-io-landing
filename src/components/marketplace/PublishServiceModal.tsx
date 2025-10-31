@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -62,6 +63,7 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   onClose,
   onSuccess
 }) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { userRole } = useSupabaseAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -286,8 +288,20 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
             </CardContent>
           </Card>
 
-          <DialogFooter>
-            <Button onClick={handleClose} className="w-full">
+          <DialogFooter className="flex gap-2">
+            {isFreemiumUser && (
+              <Button 
+                onClick={() => {
+                  handleClose();
+                  navigate('/talent-dashboard/my-publishing-requests');
+                }} 
+                variant="outline"
+                className="flex-1"
+              >
+                Ver Mis Solicitudes
+              </Button>
+            )}
+            <Button onClick={handleClose} className="flex-1">
               Cerrar
             </Button>
           </DialogFooter>
