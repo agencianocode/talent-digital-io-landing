@@ -213,13 +213,13 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
                   <SelectItem value="admin_owner">
                     <div className="flex items-center gap-2">
                       <Shield className="h-4 w-4" />
-                      Solo Admins/Owners
+                      Solo Admins
                     </div>
                   </SelectItem>
                   <SelectItem value="viewer">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      Solo Viewers
+                      Solo Miembros
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -299,7 +299,7 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
             )}
             {filters.companyRoleFilter !== 'all' && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Rol empresa: {filters.companyRoleFilter === 'admin_owner' ? 'Admin/Owner' : 'Viewer'}
+                Rol empresa: {filters.companyRoleFilter === 'admin_owner' ? 'Admin' : 'Miembro'}
                 <X 
                   className="h-3 w-3 cursor-pointer" 
                   onClick={() => handleFilterChange('companyRoleFilter', 'all')}
