@@ -2247,6 +2247,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_company_invitation: {
+        Args: { p_email: string; p_invitation_id: string; p_user_id: string }
+        Returns: Json
+      }
       add_company_to_directory: {
         Args: {
           company_industry_id?: string
@@ -2413,6 +2417,10 @@ export type Database = {
         Returns: boolean
       }
       has_academy_premium: { Args: { user_uuid: string }; Returns: boolean }
+      has_accepted_company_membership: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       has_company_permission: {
         Args: {
           company_uuid: string

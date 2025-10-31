@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn, signInWithGoogle, resetPassword, updatePassword, isLoading, isAuthenticated, userRole, user, hasCompletedTalentOnboarding } = useSupabaseAuth();
+  const { signIn, signInWithGoogle, resetPassword, updatePassword, isLoading, isAuthenticated, userRole, user, hasCompletedTalentOnboarding, hasCompletedBusinessOnboarding } = useSupabaseAuth();
   
   // Check for invitation parameters
   const invitationId = searchParams.get('invitation');
@@ -165,14 +165,30 @@ const Auth = () => {
         redirectPath = '/admin';
         console.log('Auth.tsx: Redirecting admin to:', redirectPath);
       } else if (isBusinessRole(userRole)) {
-        // If there's an invitation, redirect to onboarding with invitation
-        if (invitationId) {
-          redirectPath = `/company-onboarding?invitation=${invitationId}`;
-          console.log('Auth.tsx: Redirecting business to onboarding with invitation:', redirectPath);
-        } else {
-          redirectPath = '/business-dashboard';
-          console.log('Auth.tsx: Redirecting business to:', redirectPath);
-        }
+        // Check if onboarding is already complete
+        const checkBusinessOnboarding = async () => {
+          if (user?.id) {
+            const onboardingComplete = await hasCompletedBusinessOnboarding(user.id);
+            console.log('Auth.tsx: Business onboarding complete?', onboardingComplete);
+            
+            if (onboardingComplete) {
+              redirectPath = '/business-dashboard';
+              console.log('Auth.tsx: Redirecting business to dashboard:', redirectPath);
+            } else if (invitationId) {
+              redirectPath = `/company-onboarding?invitation=${invitationId}`;
+              console.log('Auth.tsx: Redirecting business to onboarding with invitation:', redirectPath);
+            } else {
+              redirectPath = '/company-onboarding';
+              console.log('Auth.tsx: Redirecting business to onboarding:', redirectPath);
+            }
+            
+            setTimeout(() => {
+              navigate(redirectPath, { replace: true });
+            }, 100);
+          }
+        };
+        checkBusinessOnboarding();
+        return; // Exit early to avoid the setTimeout below
       } else {
         // For talent users, check if they need onboarding first
         const checkTalentOnboarding = async () => {

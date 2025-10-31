@@ -106,45 +106,46 @@ const CompanyOnboarding = () => {
 
     const acceptInvitation = async () => {
       try {
-        // 1) Si tenemos invitationId, vincular el user_id sin hacer SELECT
-        if (effectiveInvitationId) {
-          await supabase
-            .from('company_user_roles')
-            .update({ user_id: user.id })
-            .eq('id', effectiveInvitationId)
-            .eq('invited_email', user.email as string)
-            .eq('status', 'pending');
-        }
+        // Use RPC to accept invitation (bypasses RLS restrictions)
+        const { data, error } = await supabase.rpc('accept_company_invitation', {
+          p_invitation_id: effectiveInvitationId,
+          p_user_id: user.id,
+          p_email: user.email as string
+        });
 
-        // 2) Aceptar cualquier invitación pendiente para este usuario
-        const { data: updated, error: acceptError } = await supabase
-          .from('company_user_roles')
-          .update({ status: 'accepted', accepted_at: new Date().toISOString() })
-          .eq('user_id', user.id)
-          .eq('status', 'pending')
-          .select('id, company_id');
-
-        if (acceptError) {
-          console.error('Error accepting invitation:', acceptError);
-        }
-
-        if (updated && updated.length > 0) {
+        if (error) {
+          console.error('Error accepting invitation via RPC:', error);
+        } else if (data && typeof data === 'object' && 'accepted' in data && data.accepted === true) {
+          console.log('✅ Invitation accepted successfully via RPC');
           setIsInvitationFlow(true);
+
+          // Clean up invitation metadata
           try {
             await supabase.auth.updateUser({
-              data: { pending_invitation: null, invited_to_company: null }
+              data: {
+                pending_invitation: null,
+                invited_to_company: null,
+                onboarding_completed: true
+              }
             });
           } catch (e) {
             console.warn('Metadata cleanup warning:', e);
           }
 
+          // Refresh companies data
+          try {
+            await refreshCompanies();
+          } catch (e) {
+            console.warn('refreshCompanies error:', e);
+          }
+
+          // Navigate directly to business dashboard
           toast.success('Invitación aceptada. Redirigiendo al panel...');
-          try { await refreshCompanies(); } catch (e) { console.warn('refreshCompanies error:', e); }
           navigate('/business-dashboard');
           return;
         }
 
-        // Si no se aceptó nada, continuamos con el flujo normal (sin forzar Step 1)
+        // If nothing was accepted, continue with normal flow
       } catch (err) {
         console.error('Error processing invitation:', err);
       }

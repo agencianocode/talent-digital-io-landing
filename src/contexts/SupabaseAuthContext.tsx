@@ -185,7 +185,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           .from('companies')
           .select('*')
           .eq('user_id', userId)
-          .single();
+          .maybeSingle();
         company = companyData ? {
           ...companyData,
           social_links: (companyData.social_links as Record<string, string>) || {},
@@ -756,19 +756,18 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const hasCompletedBusinessOnboarding = async (userId: string) => {
     try {
-      // 1) Considerar completado si el usuario ya es miembro aceptado de alguna empresa
-      const { data: acceptedMemberships, error: membershipError } = await supabase
-        .from('company_user_roles')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('status', 'accepted')
-        .limit(1);
+      // Use RPC to check membership (bypasses RLS restrictions)
+      const { data: hasMembership, error: rpcError } = await supabase.rpc(
+        'has_accepted_company_membership',
+        { p_user_id: userId }
+      );
 
-      if (!membershipError && acceptedMemberships && acceptedMemberships.length > 0) {
+      if (!rpcError && hasMembership === true) {
+        console.log('✅ User has accepted company membership (via RPC)');
         return true;
       }
 
-      // 2) Fallback: verificar si el usuario creó su propia empresa
+      // Fallback: check if user created their own company
       const { data: company, error } = await supabase
         .from('companies')
         .select('id, name')
