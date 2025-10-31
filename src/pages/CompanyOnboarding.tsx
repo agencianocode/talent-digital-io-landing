@@ -36,7 +36,7 @@ interface UserProfile {
 
 const CompanyOnboarding = () => {
   const navigate = useNavigate();
-  const { user, createCompany } = useSupabaseAuth();
+  const { user } = useSupabaseAuth();
   const { refreshCompanies } = useCompany();
   const [searchParams] = useSearchParams();
   const invitationId = searchParams.get('invitation');
@@ -49,7 +49,6 @@ const CompanyOnboarding = () => {
     role: string;
     invited_email: string;
   } | null>(null);
-  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(false);
   const [companyData, setCompanyData] = useState<CompanyData>({
     name: '',
     isIndividual: false
@@ -228,6 +227,7 @@ const CompanyOnboarding = () => {
       } else {
         // Create new company
         const newCompanyData: any = {
+          user_id: user.id,
           name: companyData.name,
           business_type: companyData.isIndividual ? null : 'company',
           description: data.description || '',
@@ -235,7 +235,9 @@ const CompanyOnboarding = () => {
           location: data.location || ''
         };
 
-        const { error: createError } = await createCompany(newCompanyData);
+        const { error: createError } = await supabase
+          .from('companies')
+          .insert([newCompanyData]);
 
         if (createError) {
           throw createError;
@@ -463,7 +465,8 @@ const CompanyOnboarding = () => {
         }
       } else {
         // Create new company
-        const newCompanyData: any = {
+        const newCompanyInsert: any = {
+          user_id: user.id,
           name: companyData.name,
           business_type: companyData.isIndividual ? null : 'company',
           description: companyDetails.description || '',
@@ -483,11 +486,13 @@ const CompanyOnboarding = () => {
             const { data: { publicUrl } } = supabase.storage
               .from('avatars')
               .getPublicUrl(fileName);
-            newCompanyData.logo_url = publicUrl;
+            newCompanyInsert.logo_url = publicUrl;
           }
         }
 
-        const { error: createError } = await createCompany(newCompanyData);
+        const { error: createError } = await supabase
+          .from('companies')
+          .insert([newCompanyInsert]);
 
         if (createError) {
           throw createError;
@@ -616,6 +621,8 @@ const CompanyOnboarding = () => {
           <CompanyOnboardingStep1
             onComplete={handleStep1Complete}
             initialData={companyData}
+            onCompanyNameChange={handleCompanyNameChange}
+            onIndividualChange={handleIndividualChange}
           />
         )}
 
@@ -632,8 +639,9 @@ const CompanyOnboarding = () => {
           <CompanyOnboardingStep3
             onComplete={handleStep3Continue}
             onCompleteLater={handleStep3CompleteLater}
-            companyName={companyData.name}
             initialData={companyDetails}
+            onDetailsChange={handleCompanyDetailsChange}
+            onLogoChange={handleLogoChange}
           />
         )}
 
