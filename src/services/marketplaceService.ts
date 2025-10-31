@@ -289,9 +289,15 @@ class MarketplaceService {
    */
   async createPublishingRequest(requestData: ServicePublishingFormData): Promise<void> {
     try {
+      // Get current user ID if authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { error } = await supabase
         .from('marketplace_publishing_requests')
-        .insert(requestData);
+        .insert({
+          ...requestData,
+          requester_id: user?.id
+        });
 
       if (error) throw error;
     } catch (error) {
