@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
-import { useIsMounted } from '@/hooks/useIsMounted';
 
 export type UserRole = 'talent' | 'business' | 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'academy_premium' | 'admin';
 
@@ -116,7 +115,6 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const isMountedRef = useIsMounted();
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     session: null,
@@ -259,8 +257,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         });
 
         // Update basic auth state immediately
-        if (!isMounted) return;
-        
         setAuthState(prev => ({ 
           ...prev, 
           session, 
@@ -347,7 +343,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }
         } else {
           console.log('SupabaseAuth: No session, clearing state');
-          if (!isMounted) return;
           setAuthState(prev => ({
             ...prev,
             profile: null,
@@ -390,48 +385,37 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const setupRealtimeListener = async () => {
-      if (!isMountedRef.current) return;
-      
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session?.user?.id || !isMountedRef.current) return;
+      if (!session?.user?.id) return;
       
       const userId = session.user.id;
       console.log('🔄 Setting up realtime listener for user role changes:', userId);
 
-      // Create channel first but don't subscribe yet
-      const roleChannel = supabase.channel('user-role-changes');
-      
-      roleChannel.on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'user_roles',
-          filter: `user_id=eq.${userId}`
-        },
-        async (payload) => {
-          if (!isMountedRef.current) return;
-          
-          console.log('🔔 Role change detected:', payload);
-          const newRole = payload.new?.role;
-          if (newRole && isMountedRef.current) {
-            const mappedRole = mapDatabaseRoleToUserRole(newRole as string);
-            console.log('✅ Updating role in real-time:', mappedRole);
-            setAuthState(prev => ({
-              ...prev,
-              userRole: mappedRole
-            }));
+      channel = supabase
+        .channel('user-role-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'user_roles',
+            filter: `user_id=eq.${userId}`
+          },
+          async (payload) => {
+            console.log('🔔 Role change detected:', payload);
+            const newRole = payload.new?.role;
+            if (newRole) {
+              const mappedRole = mapDatabaseRoleToUserRole(newRole as string);
+              console.log('✅ Updating role in real-time:', mappedRole);
+              setAuthState(prev => ({
+                ...prev,
+                userRole: mappedRole
+              }));
+            }
           }
-        }
-      );
-      
-      // Only subscribe if still mounted
-      if (isMountedRef.current) {
-        roleChannel.subscribe();
-      }
-      
-      channel = roleChannel;
+        )
+        .subscribe();
     };
 
     setupRealtimeListener();
@@ -668,8 +652,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // 3. Recargar los datos del perfil desde la base de datos
       try {
         const userData = await fetchUserData(authState.user.id);
-        if (!isMountedRef.current) return { error: null };
-        
         setAuthState(prev => ({
           ...prev,
           profile: userData.profile as UserProfile | null,
@@ -679,8 +661,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.log('Perfil actualizado y recargado:', userData.profile);
       } catch (fetchError) {
         console.error('Error recargando datos del perfil:', fetchError);
-        if (!isMountedRef.current) return { error: null };
-        
         // Si falla la recarga, actualizar con los datos proporcionados
         if (authState.profile) {
           setAuthState(prev => ({
@@ -707,7 +687,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const { error } = await updateQuery;
 
-    if (!error && authState.company && isMountedRef.current) {
+    if (!error && authState.company) {
       setAuthState(prev => ({
         ...prev,
         company: { ...prev.company!, ...data } as Company
@@ -726,8 +706,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.log(`Profile/role missing, retrying company creation (attempt ${retryCount + 1})`);
         try {
           const userData = await fetchUserData(authState.user.id, undefined, 0);
-          if (!isMountedRef.current) return { error: new Error('Component unmounted') };
-          
           setAuthState(prev => ({
             ...prev,
             profile: userData.profile as UserProfile | null,
@@ -750,7 +728,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       .select()
       .single();
 
-    if (!error && company && isMountedRef.current) {
+    if (!error && company) {
       setAuthState(prev => ({
         ...prev,
         company: company ? {
@@ -779,7 +757,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       new_role: newRole 
     });
 
-    if (!error && data && isMountedRef.current) {
+    if (!error && data) {
       // Update the local state immediately
       setAuthState(prev => ({
         ...prev,

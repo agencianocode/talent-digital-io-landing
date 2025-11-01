@@ -6,8 +6,7 @@ import { ToastProvider } from '@/contexts/ToastContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { OpportunitiesProvider } from '@/contexts/OpportunitiesContext';
 import { MessagingProvider } from '@/contexts/MessagingContext';
-// TEMPORAL: Deshabilitado para probar si causa Error #300
-// import { SupabaseMessagesProvider } from '@/contexts/SupabaseMessagesContext';
+import { SupabaseMessagesProvider } from '@/contexts/SupabaseMessagesContext';
 import { NavigationFlowProvider } from '@/components/NavigationFlowProvider';
 import { ProfileManagerProvider } from '@/contexts/ProfileManagerContext';
 import ToastContainer from '@/components/ToastContainer';
@@ -105,8 +104,7 @@ function App() {
       <ProfileManagerProvider>
         <NotificationsProvider>
           <OpportunitiesProvider>
-            {/* TEMPORAL: Deshabilitado para probar si causa Error #300 */}
-            {/* <SupabaseMessagesProvider> */}
+            <SupabaseMessagesProvider>
               <MessagingProvider>
                 <ToastProvider>
                   <BrowserRouter>
@@ -485,7 +483,7 @@ function App() {
                   </BrowserRouter>
                 </ToastProvider>
               </MessagingProvider>
-            {/* </SupabaseMessagesProvider> */}
+            </SupabaseMessagesProvider>
           </OpportunitiesProvider>
         </NotificationsProvider>
       </ProfileManagerProvider>

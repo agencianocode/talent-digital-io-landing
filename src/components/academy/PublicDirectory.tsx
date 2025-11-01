@@ -7,7 +7,6 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useIsMounted } from '@/hooks/useIsMounted';
 import { 
   Share2, 
   ExternalLink, 
@@ -24,7 +23,6 @@ interface PublicDirectoryProps {
 }
 
 export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) => {
-  const isMountedRef = useIsMounted();
   const [showLogo, setShowLogo] = useState(true);
   const [showDescription, setShowDescription] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -36,8 +34,6 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
   }, [academyId]);
 
   const loadAcademySettings = async () => {
-    if (!isMountedRef.current) return;
-    
     try {
       const { data, error } = await supabase
         .from('companies')
@@ -47,12 +43,10 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
 
       if (error) throw error;
 
-      if (isMountedRef.current) {
-        setAcademyData(data as any);
-        if ((data as any)?.directory_settings) {
-          setShowLogo((data as any).directory_settings.show_logo ?? true);
-          setShowDescription((data as any).directory_settings.show_description ?? true);
-        }
+      setAcademyData(data as any);
+      if ((data as any)?.directory_settings) {
+        setShowLogo((data as any).directory_settings.show_logo ?? true);
+        setShowDescription((data as any).directory_settings.show_description ?? true);
       }
     } catch (error) {
       console.error('Error loading academy settings:', error);
@@ -60,13 +54,8 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
   };
 
   const updateDirectorySettings = async (show_logo: boolean, show_description: boolean) => {
-    if (!isMountedRef.current) return;
-    
     try {
-      if (isMountedRef.current) {
-        setLoading(true);
-      }
-      
+      setLoading(true);
       const { error } = await supabase
         .from('companies')
         .update({
@@ -78,30 +67,21 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
         .eq('id', academyId);
 
       if (error) throw error;
-      
-      if (isMountedRef.current) {
-        toast.success('Configuración actualizada');
-      }
+      toast.success('Configuración actualizada');
     } catch (error) {
       console.error('Error updating settings:', error);
-      if (isMountedRef.current) {
-        toast.error('Error al actualizar configuración');
-      }
+      toast.error('Error al actualizar configuración');
     } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
   const handleToggleLogo = async (checked: boolean) => {
-    if (!isMountedRef.current) return;
     setShowLogo(checked);
     await updateDirectorySettings(checked, showDescription);
   };
 
   const handleToggleDescription = async (checked: boolean) => {
-    if (!isMountedRef.current) return;
     setShowDescription(checked);
     await updateDirectorySettings(showLogo, checked);
   };
@@ -110,24 +90,17 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
 
   // Load graduates data
   useEffect(() => {
-    if (isMountedRef.current) {
-      loadGraduates();
-    }
+    loadGraduates();
   }, [academyId]);
 
   const loadGraduates = async () => {
-    if (!isMountedRef.current) return;
-    
     try {
       const { data, error } = await supabase.rpc('get_public_academy_directory', {
         p_academy_id: academyId
       });
 
       if (error) throw error;
-      
-      if (isMountedRef.current) {
-        setGraduates(data || []);
-      }
+      setGraduates(data || []);
     } catch (error) {
       console.error('Error loading graduates:', error);
     }

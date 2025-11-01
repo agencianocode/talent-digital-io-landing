@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { ExclusiveOpportunityBadge } from '@/components/opportunity/ExclusiveOpportunityBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { useIsMounted } from '@/hooks/useIsMounted';
 import { 
   Briefcase, 
   Plus, 
@@ -39,7 +38,6 @@ interface Opportunity {
 
 export const ExclusiveOpportunities: React.FC<ExclusiveOpportunitiesProps> = ({ academyId }) => {
   const navigate = useNavigate();
-  const isMountedRef = useIsMounted();
   const [loading, setLoading] = useState(true);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
 
@@ -48,13 +46,8 @@ export const ExclusiveOpportunities: React.FC<ExclusiveOpportunitiesProps> = ({ 
   }, [academyId]);
 
   const loadExclusiveOpportunities = async () => {
-    if (!isMountedRef.current) return;
-    
     try {
-      if (isMountedRef.current) {
-        setLoading(true);
-      }
-      
+      setLoading(true);
       const { data, error } = await supabase
         .from('opportunities')
         .select(`
@@ -93,15 +86,11 @@ export const ExclusiveOpportunities: React.FC<ExclusiveOpportunitiesProps> = ({ 
         })
       );
 
-      if (isMountedRef.current) {
-        setOpportunities(opportunitiesWithCounts as Opportunity[]);
-      }
+      setOpportunities(opportunitiesWithCounts as Opportunity[]);
     } catch (error) {
       console.error('Error loading exclusive opportunities:', error);
     } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 

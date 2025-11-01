@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { useIsMounted } from '@/hooks/useIsMounted';
 import { 
   Mail, 
   Plus, 
@@ -24,7 +23,6 @@ interface InvitationManagerProps {
 }
 
 export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId }) => {
-  const isMountedRef = useIsMounted();
   const [emailList, setEmailList] = useState('');
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -42,13 +40,8 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
   }, [academyId]);
 
   const loadInvitations = async () => {
-    if (!isMountedRef.current) return;
-    
     try {
-      if (isMountedRef.current) {
-        setLoading(true);
-      }
-      
+      setLoading(true);
       const { data, error } = await supabase
         .from('academy_students')
         .select('*')
@@ -56,52 +49,35 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      if (isMountedRef.current) {
-        setInvitations(data || []);
-      }
+      setInvitations(data || []);
     } catch (error) {
       console.error('Error loading invitations:', error);
     } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
   const copyToClipboard = async (text: string, type: 'active' | 'graduated') => {
-    if (!isMountedRef.current) return;
-    
     try {
       await navigator.clipboard.writeText(text);
-      if (isMountedRef.current) {
-        if (type === 'active') {
-          setCopiedActive(true);
-          setTimeout(() => {
-            if (isMountedRef.current) setCopiedActive(false);
-          }, 2000);
-        } else {
-          setCopiedGraduated(true);
-          setTimeout(() => {
-            if (isMountedRef.current) setCopiedGraduated(false);
-          }, 2000);
-        }
-        toast.success('Link copiado al portapapeles');
+      if (type === 'active') {
+        setCopiedActive(true);
+        setTimeout(() => setCopiedActive(false), 2000);
+      } else {
+        setCopiedGraduated(true);
+        setTimeout(() => setCopiedGraduated(false), 2000);
       }
+      toast.success('Link copiado al portapapeles');
     } catch (error) {
-      if (isMountedRef.current) {
-        toast.error('Error al copiar el link');
-      }
+      toast.error('Error al copiar el link');
     }
   };
 
   const handleSendInvitations = async () => {
-    if (!emailList.trim() || !isMountedRef.current) return;
+    if (!emailList.trim()) return;
 
     try {
-      if (isMountedRef.current) {
-        setIsSending(true);
-      }
+      setIsSending(true);
       
       // Parse emails (split by comma, semicolon, or new line)
       const emails = emailList
@@ -110,9 +86,7 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         .filter(email => email.length > 0);
 
       if (emails.length === 0) {
-        if (isMountedRef.current) {
-          toast.error('No se encontraron emails válidos');
-        }
+        toast.error('No se encontraron emails válidos');
         return;
       }
 
@@ -131,21 +105,15 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
 
       if (error) throw error;
 
-      if (isMountedRef.current) {
-        toast.success(`${emails.length} invitación(es) enviada(s) exitosamente`);
-        setEmailList('');
-        setMessage('');
-        loadInvitations(); // Reload the list
-      }
+      toast.success(`${emails.length} invitación(es) enviada(s) exitosamente`);
+      setEmailList('');
+      setMessage('');
+      loadInvitations(); // Reload the list
     } catch (error: any) {
       console.error('Error sending invitations:', error);
-      if (isMountedRef.current) {
-        toast.error('Error al enviar invitaciones: ' + error.message);
-      }
+      toast.error('Error al enviar invitaciones: ' + error.message);
     } finally {
-      if (isMountedRef.current) {
-        setIsSending(false);
-      }
+      setIsSending(false);
     }
   };
 

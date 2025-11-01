@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useIsMounted } from './useIsMounted';
 
 export interface Message {
   id: string;
@@ -58,7 +57,6 @@ export interface SendMessageData {
 }
 
 export const useMessages = () => {
-  const isMountedRef = useIsMounted();
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -83,13 +81,8 @@ export const useMessages = () => {
     
     // Setup Realtime subscription for new messages
     console.log('[useMessages] Setting up Realtime subscription for messages');
-    
-    // Create channels first but don't subscribe yet
-    const messagesChannel = supabase.channel('messages_channel');
-    const overridesChannel = supabase.channel('conversation_overrides_channel');
-    
-    // Configure listeners
-    messagesChannel
+    const messagesSubscription = supabase
+      .channel('messages_channel')
       .on(
         'postgres_changes',
         {
@@ -99,7 +92,6 @@ export const useMessages = () => {
           filter: `recipient_id=eq.${user.id}`
         },
         (payload) => {
-          if (!isMountedRef.current) return;
           console.log('[useMessages] New message received via Realtime:', payload);
           loadConversations();
           loadUnreadCount();
@@ -114,14 +106,16 @@ export const useMessages = () => {
           filter: `recipient_id=eq.${user.id}`
         },
         (payload) => {
-          if (!isMountedRef.current) return;
           console.log('[useMessages] Message updated via Realtime (recipient):', payload);
           loadConversations();
           loadUnreadCount();
         }
-      );
+      )
+      .subscribe();
 
-    overridesChannel
+    // Setup Realtime subscription for conversation overrides
+    const overridesSubscription = supabase
+      .channel('conversation_overrides_channel')
       .on(
         'postgres_changes',
         {
@@ -131,25 +125,15 @@ export const useMessages = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          if (!isMountedRef.current) return;
           console.log('[useMessages] Conversation override changed:', payload);
           loadConversations();
           loadUnreadCount();
         }
-      );
-    
-    // Only subscribe if still mounted
-    if (isMountedRef.current) {
-      messagesChannel.subscribe();
-      overridesChannel.subscribe();
-    }
-    
-    const messagesSubscription = messagesChannel;
-    const overridesSubscription = overridesChannel;
+      )
+      .subscribe();
     
     // Reload when window regains focus
     const handleFocus = () => {
-      if (!isMountedRef.current) return;
       console.log('[useMessages] Window focused, reloading counts');
       loadUnreadCount();
     };
@@ -158,7 +142,6 @@ export const useMessages = () => {
     
     // Poll unread count every 30 seconds as fallback
     const interval = setInterval(() => {
-      if (!isMountedRef.current) return;
       loadUnreadCount();
     }, 30000);
     
@@ -170,7 +153,7 @@ export const useMessages = () => {
       clearInterval(interval);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]); // Solo depende del ID, no del objeto user completo
+  }, [user]);
 
 
   // Fetch messages for a conversation
@@ -632,18 +615,16 @@ export const useMessages = () => {
     
     try {
       const convs = await fetchConversations();
-      if (!isMountedRef.current) return;
       setConversations(convs);
     } catch (error) {
       console.error('Error loading conversations:', error);
     }
-  }, [user, fetchConversations, isMountedRef]);
+  }, [user, fetchConversations]);
 
   // Load messages for a conversation
   const loadMessages = useCallback(async (conversationId: string) => {
     try {
       const messages = await fetchMessages(conversationId);
-      if (!isMountedRef.current) return;
       setMessagesByConversation(prev => ({
         ...prev,
         [conversationId]: messages
@@ -651,18 +632,17 @@ export const useMessages = () => {
     } catch (error) {
       console.error('Error loading messages:', error);
     }
-  }, [fetchMessages, isMountedRef]);
+  }, [fetchMessages]);
 
   // Load unread count
   const loadUnreadCount = useCallback(async () => {
     try {
       const count = await getUnreadCount();
-      if (!isMountedRef.current) return;
       setUnreadCount(count);
     } catch (error) {
       console.error('Error loading unread count:', error);
     }
-  }, [getUnreadCount, isMountedRef]);
+  }, [getUnreadCount]);
 
   // Mark as read
   const markAsRead = useCallback(async (conversationId: string) => {
@@ -747,7 +727,7 @@ export const useMessages = () => {
       };
 
       const newMessage = await sendMessage(messageData);
-      if (newMessage && isMountedRef.current) {
+      if (newMessage) {
         // Update local state
         setMessagesByConversation(prev => ({
           ...prev,
@@ -799,7 +779,7 @@ export const useMessages = () => {
     } catch (error) {
       console.error('Error sending message:', error);
     }
-  }, [user, conversations, sendMessage, loadConversations, isMountedRef]);
+  }, [user, conversations, sendMessage, loadConversations]);
 
   // Mark conversation as unread
   const markAsUnread = useCallback(async (conversationId: string) => {
@@ -839,22 +819,20 @@ export const useMessages = () => {
       }
 
       // Update local state
-      if (isMountedRef.current) {
-        setConversations(prev => 
-          prev.map(conv => 
-            conv.id === conversationId 
-              ? { ...conv, unread_count: Math.max(1, conv.unread_count) }
-              : conv
-          )
-        );
-        
-        setUnreadCount(prev => prev + 1);
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, unread_count: Math.max(1, conv.unread_count) }
+            : conv
+        )
+      );
+      
+      setUnreadCount(prev => prev + 1);
 
-        toast({
-          title: "Marcado como no leído",
-          description: "La conversación ha sido marcada como no leída",
-        });
-      }
+      toast({
+        title: "Marcado como no leído",
+        description: "La conversación ha sido marcada como no leída",
+      });
     } catch (error) {
       console.error('[markAsUnread] Error:', error);
       toast({
@@ -863,7 +841,7 @@ export const useMessages = () => {
         variant: "destructive",
       });
     }
-  }, [user, toast, isMountedRef]);
+  }, [user, toast]);
 
   // Archive conversation
   const archiveConversation = useCallback(async (conversationId: string) => {
@@ -896,20 +874,18 @@ export const useMessages = () => {
       console.log('[archiveConversation] Successfully archived in DB');
       
       // Update local state
-      if (isMountedRef.current) {
-        setConversations(prev => 
-          prev.map(conv => 
-            conv.id === conversationId 
-              ? { ...conv, archived: true }
-              : conv
-          )
-        );
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, archived: true }
+            : conv
+        )
+      );
 
-        toast({
-          title: "Conversación archivada",
-          description: "La conversación ha sido archivada correctamente",
-        });
-      }
+      toast({
+        title: "Conversación archivada",
+        description: "La conversación ha sido archivada correctamente",
+      });
     } catch (error) {
       console.error('Error archiving conversation:', error);
       toast({
@@ -918,7 +894,7 @@ export const useMessages = () => {
         variant: "destructive",
       });
     }
-  }, [user, toast, isMountedRef]);
+  }, [user, toast]);
 
   // Unarchive conversation
   const unarchiveConversation = useCallback(async (conversationId: string) => {
@@ -951,20 +927,18 @@ export const useMessages = () => {
       console.log('[unarchiveConversation] Successfully unarchived in DB');
       
       // Update local state
-      if (isMountedRef.current) {
-        setConversations(prev => 
-          prev.map(conv => 
-            conv.id === conversationId 
-              ? { ...conv, archived: false }
-              : conv
-          )
-        );
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, archived: false }
+            : conv
+        )
+      );
 
-        toast({
-          title: "Conversación desarchivada",
-          description: "La conversación ha sido restaurada",
-        });
-      }
+      toast({
+        title: "Conversación desarchivada",
+        description: "La conversación ha sido restaurada",
+      });
     } catch (error) {
       console.error('Error unarchiving conversation:', error);
       toast({
@@ -973,7 +947,7 @@ export const useMessages = () => {
         variant: "destructive",
       });
     }
-  }, [user, toast, loadConversations, isMountedRef]);
+  }, [user, toast, loadConversations]);
 
   // Delete conversation
   const deleteConversation = useCallback(async (conversationId: string) => {
@@ -994,24 +968,22 @@ export const useMessages = () => {
       console.log('[deleteConversation] Successfully deleted conversation');
 
       // Update local state immediately
-      if (isMountedRef.current) {
-        setConversations(prev => {
-          const updated = prev.filter(conv => conv.id !== conversationId);
-          return updated;
-        });
+      setConversations(prev => {
+        const updated = prev.filter(conv => conv.id !== conversationId);
+        return updated;
+      });
 
-        // Clear messages for this conversation
-        setMessagesByConversation(prev => {
-          const updated = { ...prev };
-          delete updated[conversationId];
-          return updated;
-        });
+      // Clear messages for this conversation
+      setMessagesByConversation(prev => {
+        const updated = { ...prev };
+        delete updated[conversationId];
+        return updated;
+      });
 
-        toast({
-          title: "Conversación eliminada",
-          description: "La conversación ha sido eliminada permanentemente",
-        });
-      }
+      toast({
+        title: "Conversación eliminada",
+        description: "La conversación ha sido eliminada permanentemente",
+      });
     } catch (error) {
       console.error('[deleteConversation] Error:', error);
       toast({
@@ -1020,7 +992,7 @@ export const useMessages = () => {
         variant: "destructive",
       });
     }
-  }, [user, toast, isMountedRef]);
+  }, [user, toast]);
 
   return {
     isLoading,

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { academyService } from '@/services/academyService';
-import { useIsMounted } from './useIsMounted';
 import { 
   Academy, 
   AcademyStudent, 
@@ -29,7 +28,6 @@ interface UseAcademyDataReturn {
 }
 
 export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
-  const isMountedRef = useIsMounted();
   const [academy, setAcademy] = useState<Academy | null>(null);
   const [stats, setStats] = useState<AcademyStats>({
     total_students: 0,
@@ -49,118 +47,88 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   const [error, setError] = useState<string | null>(null);
 
   const loadAcademyData = async () => {
-    if (!academyId || !isMountedRef.current) return;
+    if (!academyId) return;
 
     try {
-      if (isMountedRef.current) {
-        setIsLoading(true);
-        setError(null);
-      }
+      setIsLoading(true);
+      setError(null);
 
       const [academyData, statsData] = await Promise.all([
         academyService.getAcademy(academyId),
         academyService.getAcademyStats(academyId)
       ]);
 
-      if (isMountedRef.current) {
-        setAcademy(academyData);
-        setStats(statsData);
-      }
+      setAcademy(academyData);
+      setStats(statsData);
     } catch (err) {
       console.error('Error loading academy data:', err);
-      if (isMountedRef.current) {
-        setError('Error al cargar datos de la academia');
-      }
+      setError('Error al cargar datos de la academia');
     } finally {
-      if (isMountedRef.current) {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
   };
 
   const loadStudents = async (filters?: { status?: string; search?: string }) => {
-    if (!academyId || !isMountedRef.current) return;
+    if (!academyId) return;
 
     try {
       const studentsData = await academyService.getStudents(academyId, filters);
-      if (isMountedRef.current) {
-        setStudents(studentsData);
-      }
+      setStudents(studentsData);
     } catch (err) {
       console.error('Error loading students:', err);
-      if (isMountedRef.current) {
-        setError('Error al cargar estudiantes');
-      }
+      setError('Error al cargar estudiantes');
     }
   };
 
   const loadInvitations = async () => {
-    if (!academyId || !isMountedRef.current) return;
+    if (!academyId) return;
 
     try {
       const invitationsData = await academyService.getInvitations(academyId);
-      if (isMountedRef.current) {
-        setInvitations(invitationsData);
-      }
+      setInvitations(invitationsData);
     } catch (err) {
       console.error('Error loading invitations:', err);
-      if (isMountedRef.current) {
-        setError('Error al cargar invitaciones');
-      }
+      setError('Error al cargar invitaciones');
     }
   };
 
   const loadActivity = async () => {
-    if (!academyId || !isMountedRef.current) return;
+    if (!academyId) return;
 
     try {
       const activityData = await academyService.getActivity(academyId);
-      if (isMountedRef.current) {
-        setActivity(activityData);
-      }
+      setActivity(activityData);
     } catch (err) {
       console.error('Error loading activity:', err);
-      if (isMountedRef.current) {
-        setError('Error al cargar actividad');
-      }
+      setError('Error al cargar actividad');
     }
   };
 
   const loadExclusiveOpportunities = async () => {
-    if (!academyId || !isMountedRef.current) return;
+    if (!academyId) return;
 
     try {
       const opportunitiesData = await academyService.getExclusiveOpportunities(academyId);
-      if (isMountedRef.current) {
-        setExclusiveOpportunities(opportunitiesData);
-      }
+      setExclusiveOpportunities(opportunitiesData);
     } catch (err) {
       console.error('Error loading exclusive opportunities:', err);
-      if (isMountedRef.current) {
-        setError('Error al cargar oportunidades exclusivas');
-      }
+      setError('Error al cargar oportunidades exclusivas');
     }
   };
 
   const loadPublicDirectory = async () => {
-    if (!academyId || !isMountedRef.current) return;
+    if (!academyId) return;
 
     try {
       const directoryData = await academyService.getPublicDirectory(academyId);
-      if (isMountedRef.current) {
-        setPublicDirectory(directoryData);
-      }
+      setPublicDirectory(directoryData);
     } catch (err) {
       console.error('Error loading public directory:', err);
-      if (isMountedRef.current) {
-        setError('Error al cargar directorio público');
-      }
+      setError('Error al cargar directorio público');
     }
   };
 
   const refreshData = async () => {
-    if (!isMountedRef.current) return;
-    
     await Promise.all([
       loadAcademyData(),
       loadStudents(),
@@ -214,10 +182,9 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   };
 
   useEffect(() => {
-    if (academyId && isMountedRef.current) {
+    if (academyId) {
       refreshData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [academyId]);
 
   return {

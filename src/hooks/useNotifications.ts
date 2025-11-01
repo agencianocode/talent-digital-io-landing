@@ -1,25 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useIsMounted } from './useIsMounted';
 
 export const useNotifications = () => {
-  const isMountedRef = useIsMounted();
   const { user } = useSupabaseAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch unread count from Supabase
   const fetchUnreadCount = useCallback(async () => {
-    if (!user || !isMountedRef.current) {
-      if (isMountedRef.current) setUnreadCount(0);
+    if (!user) {
+      setUnreadCount(0);
       return;
     }
 
     try {
-      if (isMountedRef.current) {
-        setIsLoading(true);
-      }
+      setIsLoading(true);
       
       // Check if notifications table exists and has data
       const { count, error } = await supabase
@@ -30,40 +26,30 @@ export const useNotifications = () => {
 
       if (error) {
         console.log('[useNotifications] Error fetching notifications:', error.message);
-        if (isMountedRef.current) setUnreadCount(0);
+        setUnreadCount(0);
         return;
       }
       
-      if (isMountedRef.current) {
-        setUnreadCount(count || 0);
-        console.log('[useNotifications] Unread count:', count || 0);
-      }
+      setUnreadCount(count || 0);
+      console.log('[useNotifications] Unread count:', count || 0);
     } catch (error) {
       console.error('[useNotifications] Error fetching unread count:', error);
-      if (isMountedRef.current) setUnreadCount(0);
+      setUnreadCount(0);
     } finally {
-      if (isMountedRef.current) {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
-  }, [user, isMountedRef]);
+  }, [user]);
 
   // Load unread count on mount and setup realtime subscription
   useEffect(() => {
-    if (isMountedRef.current) {
-      fetchUnreadCount();
-    }
+    fetchUnreadCount();
     
     if (!user) return;
     
     // Setup Realtime subscription for new notifications
     console.log('[useNotifications] Setting up Realtime subscription for notifications');
-    
-    // Create channel first but don't subscribe yet
-    const notificationsChannel = supabase.channel('notifications_channel');
-    
-    // Configure listeners
-    notificationsChannel
+    const notificationsSubscription = supabase
+      .channel('notifications_channel')
       .on(
         'postgres_changes',
         {
@@ -73,12 +59,11 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`
         },
         async (payload) => {
-          if (!isMountedRef.current) return;
           console.log('[useNotifications] New notification received via Realtime:', payload);
           
           // Automatically process the notification to send emails
           const notificationId = payload.new?.id;
-          if (notificationId && isMountedRef.current) {
+          if (notificationId) {
             try {
               console.log('[useNotifications] Auto-processing notification:', notificationId);
               const { error } = await supabase.functions.invoke('process-notification', {
@@ -95,9 +80,7 @@ export const useNotifications = () => {
             }
           }
           
-          if (isMountedRef.current) {
-            fetchUnreadCount();
-          }
+          fetchUnreadCount();
         }
       )
       .on(
@@ -109,7 +92,6 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          if (!isMountedRef.current) return;
           console.log('[useNotifications] Notification updated via Realtime:', payload);
           fetchUnreadCount();
         }
@@ -123,22 +105,14 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          if (!isMountedRef.current) return;
           console.log('[useNotifications] Notification deleted via Realtime:', payload);
           fetchUnreadCount();
         }
-      );
-    
-    // Only subscribe if still mounted
-    if (isMountedRef.current) {
-      notificationsChannel.subscribe();
-    }
-    
-    const notificationsSubscription = notificationsChannel;
+      )
+      .subscribe();
     
     // Reload when window regains focus
     const handleFocus = () => {
-      if (!isMountedRef.current) return;
       console.log('[useNotifications] Window focused, reloading count');
       fetchUnreadCount();
     };
@@ -147,7 +121,6 @@ export const useNotifications = () => {
     
     // Poll every 30 seconds as fallback
     const interval = setInterval(() => {
-      if (!isMountedRef.current) return;
       fetchUnreadCount();
     }, 30000);
     
@@ -157,8 +130,7 @@ export const useNotifications = () => {
       window.removeEventListener('focus', handleFocus);
       clearInterval(interval);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]); // Solo depende del ID, no del objeto user completo
+  }, [fetchUnreadCount, user]);
 
   // Reload unread count (can be called externally)
   const reload = useCallback(() => {

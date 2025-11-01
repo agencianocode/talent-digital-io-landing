@@ -10,8 +10,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import CompanySwitcher from "@/components/CompanySwitcher";
 import HelpFeedbackModal from "@/components/HelpFeedbackModal";
 import NotificationCenter from "@/components/NotificationCenter";
-// TEMPORAL: Deshabilitado para diagnosticar Error #300
-// import { useSupabaseMessages } from "@/contexts/SupabaseMessagesContext";
+import { useSupabaseMessages } from "@/contexts/SupabaseMessagesContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,9 +24,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-  // TEMPORAL: Deshabilitado para diagnosticar Error #300
-  // const { unreadCount } = useSupabaseMessages();
-  const unreadCount = 0; // Fallback temporal
+  const { unreadCount } = useSupabaseMessages();
   const handleLogout = async () => {
     await signOut();
     navigate('/');

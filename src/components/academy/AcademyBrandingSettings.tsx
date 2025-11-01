@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useIsMounted } from '@/hooks/useIsMounted';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -14,7 +13,6 @@ interface AcademyBrandingSettingsProps {
 }
 
 export const AcademyBrandingSettings = ({ academyId }: AcademyBrandingSettingsProps) => {
-  const isMountedRef = useIsMounted();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -30,13 +28,8 @@ export const AcademyBrandingSettings = ({ academyId }: AcademyBrandingSettingsPr
   }, [academyId]);
 
   const loadSettings = async () => {
-    if (!isMountedRef.current) return;
-    
     try {
-      if (isMountedRef.current) {
-        setLoading(true);
-      }
-      
+      setLoading(true);
       const { data, error } = await supabase
         .from('companies')
         .select('brand_color, secondary_color, academy_tagline, academy_slug, public_directory_enabled')
@@ -45,7 +38,7 @@ export const AcademyBrandingSettings = ({ academyId }: AcademyBrandingSettingsPr
 
       if (error) throw error;
 
-      if (data && isMountedRef.current) {
+      if (data) {
         setBrandColor(data.brand_color || '#1976d2');
         setSecondaryColor(data.secondary_color || '#42a5f5');
         setTagline(data.academy_tagline || '');
@@ -54,28 +47,19 @@ export const AcademyBrandingSettings = ({ academyId }: AcademyBrandingSettingsPr
       }
     } catch (error) {
       console.error('Error loading settings:', error);
-      if (isMountedRef.current) {
-        toast({
-          title: 'Error',
-          description: 'No se pudieron cargar las configuraciones',
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar las configuraciones',
+        variant: 'destructive',
+      });
     } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
   const handleSave = async () => {
-    if (!isMountedRef.current) return;
-    
     try {
-      if (isMountedRef.current) {
-        setSaving(true);
-      }
-      
+      setSaving(true);
       const { error } = await supabase
         .from('companies')
         .update({
@@ -89,25 +73,19 @@ export const AcademyBrandingSettings = ({ academyId }: AcademyBrandingSettingsPr
 
       if (error) throw error;
 
-      if (isMountedRef.current) {
-        toast({
-          title: 'Guardado exitoso',
-          description: 'La configuración de branding se ha actualizado',
-        });
-      }
+      toast({
+        title: 'Guardado exitoso',
+        description: 'La configuración de branding se ha actualizado',
+      });
     } catch (error) {
       console.error('Error saving settings:', error);
-      if (isMountedRef.current) {
-        toast({
-          title: 'Error',
-          description: 'No se pudo guardar la configuración',
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'Error',
+        description: 'No se pudo guardar la configuración',
+        variant: 'destructive',
+      });
     } finally {
-      if (isMountedRef.current) {
-        setSaving(false);
-      }
+      setSaving(false);
     }
   };
 
