@@ -170,7 +170,7 @@ export const useMessages = () => {
       clearInterval(interval);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user?.id]); // Solo depende del ID, no del objeto user completo
 
 
   // Fetch messages for a conversation

@@ -157,7 +157,8 @@ export const useNotifications = () => {
       window.removeEventListener('focus', handleFocus);
       clearInterval(interval);
     };
-  }, [fetchUnreadCount, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // Solo depende del ID, no del objeto user completo
 
   // Reload unread count (can be called externally)
   const reload = useCallback(() => {
