@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Briefcase, TrendingUp, Calendar } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -22,6 +23,7 @@ interface GraduateApplicationsTrackingProps {
 }
 
 export const GraduateApplicationsTracking = ({ academyId }: GraduateApplicationsTrackingProps) => {
+  const isMountedRef = useIsMounted();
   const [loading, setLoading] = useState(true);
   const [applications, setApplications] = useState<GraduateApplication[]>([]);
 
@@ -30,18 +32,28 @@ export const GraduateApplicationsTracking = ({ academyId }: GraduateApplications
   }, [academyId]);
 
   const loadApplications = async () => {
+    if (!isMountedRef.current) return;
+    
     try {
-      setLoading(true);
+      if (isMountedRef.current) {
+        setLoading(true);
+      }
+      
       const { data, error } = await supabase.rpc('get_academy_graduate_applications', {
         p_academy_id: academyId
       });
 
       if (error) throw error;
-      setApplications(data || []);
+      
+      if (isMountedRef.current) {
+        setApplications(data || []);
+      }
     } catch (error) {
       console.error('Error loading applications:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
