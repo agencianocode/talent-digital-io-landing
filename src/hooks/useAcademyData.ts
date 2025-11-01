@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { academyService } from '@/services/academyService';
+import { useIsMounted } from './useIsMounted';
 import { 
   Academy, 
   AcademyStudent, 
@@ -28,7 +29,7 @@ interface UseAcademyDataReturn {
 }
 
 export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
-  const isMountedRef = useRef(true);
+  const isMountedRef = useIsMounted();
   const [academy, setAcademy] = useState<Academy | null>(null);
   const [stats, setStats] = useState<AcademyStats>({
     total_students: 0,
@@ -211,15 +212,9 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   };
 
   useEffect(() => {
-    isMountedRef.current = true;
-    
     if (academyId) {
       refreshData();
     }
-
-    return () => {
-      isMountedRef.current = false;
-    };
   }, [academyId]);
 
   return {

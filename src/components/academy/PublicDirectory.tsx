@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { 
   Share2, 
   ExternalLink, 
@@ -23,20 +24,15 @@ interface PublicDirectoryProps {
 }
 
 export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) => {
+  const isMountedRef = useIsMounted();
   const [showLogo, setShowLogo] = useState(true);
   const [showDescription, setShowDescription] = useState(true);
   const [loading, setLoading] = useState(false);
   const [academyData, setAcademyData] = useState<any>(null);
-  const isMountedRef = React.useRef(true);
 
   // Load academy settings
   useEffect(() => {
-    isMountedRef.current = true;
     loadAcademySettings();
-    
-    return () => {
-      isMountedRef.current = false;
-    };
   }, [academyId]);
 
   const loadAcademySettings = async () => {
