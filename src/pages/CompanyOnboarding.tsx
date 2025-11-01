@@ -69,6 +69,8 @@ const CompanyOnboarding = () => {
     countryCode: '+57',
     profilePhoto: null
   });
+  // Store accepted company id from RPC to avoid relying solely on metadata
+  const [acceptedCompanyId, setAcceptedCompanyId] = useState<string | null>(null);
 
   // Protection against double invitation processing
   const invitationProcessedRef = useRef(false);
@@ -141,13 +143,14 @@ const CompanyOnboarding = () => {
             invitationProcessedRef.current = true;
             setIsInvitationFlow(true);
 
-            // Store company_id for later use
-            if (data.company_id) {
+            // Store company_id for immediate use
+            setAcceptedCompanyId((data as any).company_id ?? null);
+            if ((data as any).company_id) {
               await supabase.auth.updateUser({
                 data: {
                   pending_invitation: null,
                   invited_to_company: null,
-                  company_id: data.company_id
+                  company_id: (data as any).company_id
                 }
               });
             }
@@ -364,16 +367,18 @@ const CompanyOnboarding = () => {
       if (isInvitationFlow) {
         console.log('Invitation flow: Completing user profile for existing company');
 
-        // Get company_id from user metadata (stored when invitation was accepted)
-        let companyId = user.user_metadata?.company_id;
+        // Get company_id from local state first, then metadata
+        let companyId = acceptedCompanyId || user.user_metadata?.company_id;
         
         // Fallback: query company_user_roles if company_id not in metadata
         if (!companyId) {
           const { data: membershipData } = await supabase
             .from('company_user_roles')
-            .select('company_id')
+            .select('company_id, accepted_at')
             .eq('user_id', user.id)
             .eq('status', 'accepted')
+            .order('accepted_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
           
           companyId = membershipData?.company_id;

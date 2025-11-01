@@ -10,6 +10,7 @@ import { BusinessMetrics } from '@/components/dashboard/BusinessMetrics';
 import { useRealApplications } from '@/hooks/useRealApplications';
 import { supabase } from '@/integrations/supabase/client';
 import RecommendedProfiles from '@/components/dashboard/RecommendedProfiles';
+import { useCompany } from '@/contexts/CompanyContext';
 import { useAdminCustomization } from '@/hooks/useAdminCustomization';
 
 
@@ -157,13 +158,15 @@ const BusinessDashboard = () => {
               
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <Button 
-                  variant="default"
-                  className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base"
-                  onClick={() => navigate('/business-dashboard/opportunities/new')}
-                >
-                  Publicar Oportunidad
-                </Button>
+                {useCompany().canCreateOpportunities() && (
+                  <Button 
+                    variant="default"
+                    className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base"
+                    onClick={() => navigate('/business-dashboard/opportunities/new')}
+                  >
+                    Publicar Oportunidad
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base"
@@ -282,12 +285,14 @@ const BusinessDashboard = () => {
                     <li>• Oportunidades activas</li>
                     <li>• Tiempo promedio de respuesta</li>
                   </ul>
-                  <Button 
-                    className="mt-2 sm:mt-3 bg-black hover:bg-gray-800 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
-                    onClick={() => navigate('/business-dashboard/opportunities/new')}
-                  >
-                    Publicar Oportunidad
-                  </Button>
+                  {useCompany().canCreateOpportunities() && (
+                    <Button 
+                      className="mt-2 sm:mt-3 bg-black hover:bg-gray-800 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
+                      onClick={() => navigate('/business-dashboard/opportunities/new')}
+                    >
+                      Publicar Oportunidad
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             </div>

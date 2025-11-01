@@ -8,6 +8,7 @@ import { Plus, TrendingUp, Users, Briefcase, Star, TestTube } from 'lucide-react
 import { OpportunityMetrics } from './OpportunityMetrics';
 import { OpportunityList } from './OpportunityList';
 import { useProfileProgress } from '@/hooks/useProfileProgress';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export const OpportunityDashboard = () => {
   const navigate = useNavigate();
@@ -47,10 +48,12 @@ export const OpportunityDashboard = () => {
             <TestTube className="h-4 w-4 mr-2" />
             {useMockData ? 'Datos de Prueba' : 'Datos Reales'}
           </Button>
-          <Button onClick={handleCreateOpportunity} variant="default">
-            <Plus className="h-4 w-4 mr-2" />
-            Publicar Oportunidad
-          </Button>
+          {useCompany().canCreateOpportunities() && (
+            <Button onClick={handleCreateOpportunity} variant="default">
+              <Plus className="h-4 w-4 mr-2" />
+              Publicar Oportunidad
+            </Button>
+          )}
         </div>
       </div>
 

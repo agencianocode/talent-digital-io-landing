@@ -448,16 +448,15 @@ const Auth = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Create profile
+        // Ensure profile exists without conflicts (avoid 409)
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             user_id: data.user.id,
             full_name: formData.fullName,
-            email: formData.email
-          });
+          }, { onConflict: 'user_id' });
 
-        if (profileError) console.error('Error creating profile:', profileError);
+        if (profileError) console.error('Error creating/updating profile:', profileError);
 
         // Link invitation to user_id if this is an invitation flow
         if (isInvitationFlow && invitationId) {

@@ -172,12 +172,14 @@ const DashboardHome = () => {
             onConfigChange={setDashboardConfig}
             metrics={metrics}
           />
-          <Button 
-            onClick={() => navigate('/business-dashboard/opportunities/new')}
-            className="font-semibold"
-          >
-            Publicar Oportunidad
-          </Button>
+          {useCompany().canCreateOpportunities() && (
+            <Button 
+              onClick={() => navigate('/business-dashboard/opportunities/new')}
+              className="font-semibold"
+            >
+              Publicar Oportunidad
+            </Button>
+          )}
         </div>
       </div>
 
