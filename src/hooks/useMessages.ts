@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useIsMounted } from './useIsMounted';
 
 export interface Message {
   id: string;
@@ -57,6 +58,7 @@ export interface SendMessageData {
 }
 
 export const useMessages = () => {
+  const isMountedRef = useIsMounted();
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -92,6 +94,7 @@ export const useMessages = () => {
           filter: `recipient_id=eq.${user.id}`
         },
         (payload) => {
+          if (!isMountedRef.current) return;
           console.log('[useMessages] New message received via Realtime:', payload);
           loadConversations();
           loadUnreadCount();
@@ -106,6 +109,7 @@ export const useMessages = () => {
           filter: `recipient_id=eq.${user.id}`
         },
         (payload) => {
+          if (!isMountedRef.current) return;
           console.log('[useMessages] Message updated via Realtime (recipient):', payload);
           loadConversations();
           loadUnreadCount();
@@ -125,6 +129,7 @@ export const useMessages = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
+          if (!isMountedRef.current) return;
           console.log('[useMessages] Conversation override changed:', payload);
           loadConversations();
           loadUnreadCount();
@@ -134,6 +139,7 @@ export const useMessages = () => {
     
     // Reload when window regains focus
     const handleFocus = () => {
+      if (!isMountedRef.current) return;
       console.log('[useMessages] Window focused, reloading counts');
       loadUnreadCount();
     };
@@ -142,6 +148,7 @@ export const useMessages = () => {
     
     // Poll unread count every 30 seconds as fallback
     const interval = setInterval(() => {
+      if (!isMountedRef.current) return;
       loadUnreadCount();
     }, 30000);
     
