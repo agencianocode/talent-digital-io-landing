@@ -85,35 +85,36 @@ const UsersManagement = () => {
 
       if (error) throw error;
 
-      // Get user information for each team member from profiles table
-      const membersWithUserInfo = (teamData || []).map((member) => {
-        console.log('Processing member:', member);
-        console.log('Current user from context:', user);
-        console.log('Member user_id:', member.user_id);
-        console.log('User id from context:', user?.id);
-        console.log('Are they the same?', user && member.user_id === user.id);
+      // Get unique user IDs to fetch profiles (filter out null/invalid IDs)
+      const userIds = (teamData || [])
+        .map((role) => role.user_id)
+        .filter((id): id is string => id !== null && typeof id === 'string' && id.length === 36); // Filter valid UUIDs
+
+      // Fetch profiles for all team members
+      let profiles: any[] = [];
+      if (userIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url, email')
+          .in('user_id', userIds);
         
-        // For the current user, use context data, for others use fallback
-        let userEmail = member.invited_email || 'usuario@ejemplo.com';
-        let fullName = 'Usuario';
-        let avatarUrl = undefined;
-        
-        if (user && member.user_id === user.id) {
-          userEmail = user.email || userEmail;
-          fullName = user.user_metadata?.full_name || user.user_metadata?.name || 'Usuario';
-          avatarUrl = user.user_metadata?.avatar_url;
-          console.log('Current user email from context:', user.email);
-          console.log('Current user full_name from context:', fullName);
-          console.log('Current user avatar_url from context:', avatarUrl);
+        if (profilesError) {
+          console.warn('Error fetching profiles:', profilesError);
+        } else {
+          profiles = profilesData || [];
         }
+      }
+
+      // Map team members with their profile information
+      const membersWithUserInfo = (teamData || []).map((member) => {
+        const userProfile = profiles.find(p => p.user_id === member.user_id);
         
         const userInfo = {
           id: member.user_id,
-          email: userEmail,
-          full_name: fullName,
-          avatar_url: avatarUrl
+          email: userProfile?.email || member.invited_email || 'usuario@ejemplo.com',
+          full_name: userProfile?.full_name || member.invited_email?.split('@')[0] || 'Usuario',
+          avatar_url: userProfile?.avatar_url || null
         };
-        console.log('Final user info:', userInfo);
         
         return {
           ...member,
