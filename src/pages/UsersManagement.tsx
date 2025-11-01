@@ -75,38 +75,116 @@ const UsersManagement = () => {
     message: ''
   });
 
-  // Load team members using secure RPC
+  // Load team members using secure RPC with safe fallback
   const loadTeamMembers = async () => {
     if (!activeCompany?.id) return;
 
     setIsLoading(true);
     try {
-      // Use the secure RPC function to get team members with profiles
-      const { data, error } = await supabase
-        .rpc('get_company_team_members', { company_uuid: activeCompany.id });
+      // 1) Try secure RPC first
+      const { data, error } = await supabase.rpc('get_company_team_members', { company_uuid: activeCompany.id });
 
-      if (error) throw error;
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const membersWithUserInfo: TeamMember[] = data.map((member: any) => ({
+          id: member.id,
+          user_id: member.user_id,
+          company_id: member.company_id,
+          role: member.role,
+          status: member.status,
+          invited_email: member.invited_email,
+          invited_by: member.invited_by,
+          created_at: member.created_at,
+          updated_at: member.updated_at,
+          user: {
+            id: member.user_id || '',
+            email: member.email || member.invited_email || 'usuario@ejemplo.com',
+            full_name: member.full_name || member.email?.split('@')[0] || 'Miembro',
+            avatar_url: member.avatar_url || null,
+          },
+        }));
 
-      // Map RPC results to TeamMember structure
-      const membersWithUserInfo: TeamMember[] = (data || []).map((member: any) => ({
-        id: member.id,
-        user_id: member.user_id,
-        company_id: member.company_id,
-        role: member.role,
-        status: member.status,
-        invited_email: member.invited_email,
-        invited_by: member.invited_by,
-        created_at: member.created_at,
-        updated_at: member.updated_at,
-        user: {
-          id: member.user_id || '',
-          email: member.email || member.invited_email || 'usuario@ejemplo.com',
-          full_name: member.full_name || member.email?.split('@')[0] || 'Miembro',
-          avatar_url: member.avatar_url || null
+        setTeamMembers(membersWithUserInfo);
+        return;
+      }
+
+      console.warn('[UsersManagement] RPC vacío o con error, usando fallback...', { error, data });
+
+      // 2) Fallback: consultas directas (como antes)
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('user_id, name, created_at, updated_at, id')
+        .eq('id', activeCompany.id)
+        .maybeSingle();
+
+      if (companyError) throw companyError;
+
+      const { data: teamData, error: rolesError } = await supabase
+        .from('company_user_roles')
+        .select('*')
+        .eq('company_id', activeCompany.id)
+        .order('created_at', { ascending: true });
+
+      if (rolesError) throw rolesError;
+
+      const userIds = [
+        ...(companyData?.user_id ? [companyData.user_id] : []),
+        ...(teamData || [])
+          .map((r) => r.user_id)
+          .filter((id): id is string => id !== null && typeof id === 'string' && id.length === 36),
+      ];
+      const uniqueUserIds = [...new Set(userIds)];
+
+      let profiles: any[] = [];
+      if (uniqueUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url, email')
+          .in('user_id', uniqueUserIds);
+        profiles = profilesData || [];
+      }
+
+      const allMembers: TeamMember[] = [];
+
+      if (companyData?.user_id) {
+        const ownerInRoles = (teamData || []).find(
+          (m) => m.user_id === companyData.user_id && m.role === 'owner'
+        );
+        if (!ownerInRoles) {
+          const ownerProfile = profiles.find((p) => p.user_id === companyData.user_id);
+          allMembers.push({
+            id: `owner-${companyData.user_id}`,
+            user_id: companyData.user_id,
+            company_id: activeCompany.id,
+            role: 'owner',
+            status: 'accepted',
+            invited_by: null,
+            created_at: companyData.created_at || new Date().toISOString(),
+            updated_at: companyData.updated_at || new Date().toISOString(),
+            invited_email: ownerProfile?.email || null,
+            user: {
+              id: companyData.user_id,
+              email: ownerProfile?.email || 'usuario@ejemplo.com',
+              full_name: ownerProfile?.full_name || 'Propietario',
+              avatar_url: ownerProfile?.avatar_url || null,
+            },
+          });
         }
-      }));
+      }
 
-      setTeamMembers(membersWithUserInfo);
+      const membersWithUserInfo = (teamData || []).map((member) => {
+        const userProfile = profiles.find((p) => p.user_id === member.user_id);
+        return {
+          ...member,
+          user: {
+            id: member.user_id || '',
+            email: userProfile?.email || member.invited_email || 'usuario@ejemplo.com',
+            full_name: userProfile?.full_name || member.invited_email?.split('@')[0] || 'Usuario',
+            avatar_url: userProfile?.avatar_url || null,
+          },
+        } as TeamMember;
+      });
+
+      setTeamMembers([...allMembers, ...membersWithUserInfo]);
     } catch (error) {
       console.error('Error loading team members:', error);
       toast.error('Error al cargar los miembros del equipo');
@@ -114,7 +192,6 @@ const UsersManagement = () => {
       setIsLoading(false);
     }
   };
-
   // Send invitation
   const handleSendInvitation = async () => {
     if (!inviteData.email.trim()) {
