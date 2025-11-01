@@ -399,32 +399,39 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const userId = session.user.id;
       console.log('🔄 Setting up realtime listener for user role changes:', userId);
 
-      channel = supabase
-        .channel('user-role-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'user_roles',
-            filter: `user_id=eq.${userId}`
-          },
-          async (payload) => {
-            if (!isMountedRef.current) return;
-            
-            console.log('🔔 Role change detected:', payload);
-            const newRole = payload.new?.role;
-            if (newRole && isMountedRef.current) {
-              const mappedRole = mapDatabaseRoleToUserRole(newRole as string);
-              console.log('✅ Updating role in real-time:', mappedRole);
-              setAuthState(prev => ({
-                ...prev,
-                userRole: mappedRole
-              }));
-            }
+      // Create channel first but don't subscribe yet
+      const roleChannel = supabase.channel('user-role-changes');
+      
+      roleChannel.on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_roles',
+          filter: `user_id=eq.${userId}`
+        },
+        async (payload) => {
+          if (!isMountedRef.current) return;
+          
+          console.log('🔔 Role change detected:', payload);
+          const newRole = payload.new?.role;
+          if (newRole && isMountedRef.current) {
+            const mappedRole = mapDatabaseRoleToUserRole(newRole as string);
+            console.log('✅ Updating role in real-time:', mappedRole);
+            setAuthState(prev => ({
+              ...prev,
+              userRole: mappedRole
+            }));
           }
-        )
-        .subscribe();
+        }
+      );
+      
+      // Only subscribe if still mounted
+      if (isMountedRef.current) {
+        roleChannel.subscribe();
+      }
+      
+      channel = roleChannel;
     };
 
     setupRealtimeListener();
