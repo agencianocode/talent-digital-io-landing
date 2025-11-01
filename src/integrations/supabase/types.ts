@@ -2269,6 +2269,10 @@ export type Database = {
         Returns: string
       }
       cleanup_expired_typing_indicators: { Args: never; Returns: undefined }
+      ensure_premium_academy_role: {
+        Args: { user_id_param: string }
+        Returns: Json
+      }
       get_academy_graduate_applications: {
         Args: { p_academy_id: string }
         Returns: {

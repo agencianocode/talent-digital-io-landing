@@ -429,6 +429,16 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, [authState.user?.id]);
 
   const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
+    // For academy registrations, normalize to 'business' for compatibility
+    // but keep the original intent in metadata
+    const actualUserType = metadata?.user_type === 'academy_premium' ? 'business' : metadata?.user_type;
+    const metadataToSend = {
+      ...metadata,
+      user_type: actualUserType,
+      // Keep original intent for logging and future use
+      original_user_type: metadata?.user_type
+    };
+    
     // Set different redirect URLs based on user type
     const redirectUrl = metadata?.user_type === 'academy_premium'
       ? `${window.location.origin}/business-dashboard`
@@ -436,16 +446,16 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         ? `${window.location.origin}/company-onboarding`
         : `${window.location.origin}/talent-onboarding`;
     
-    console.log('SignUp - User type:', metadata?.user_type);
+    console.log('SignUp - Original user type:', metadata?.user_type);
+    console.log('SignUp - Normalized user type:', actualUserType);
     console.log('SignUp - Redirect URL:', redirectUrl);
-    console.log('SignUp - Window origin:', window.location.origin);
     
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: metadata
+        data: metadataToSend
       }
     });
 
