@@ -159,6 +159,8 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   };
 
   const refreshData = async () => {
+    if (!isMountedRef.current) return;
+    
     await Promise.all([
       loadAcademyData(),
       loadStudents(),
@@ -212,9 +214,10 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   };
 
   useEffect(() => {
-    if (academyId) {
+    if (academyId && isMountedRef.current) {
       refreshData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [academyId]);
 
   return {
