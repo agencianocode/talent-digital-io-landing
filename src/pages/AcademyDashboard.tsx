@@ -41,7 +41,7 @@ const AcademyDashboard: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
   // Check if user has academy role
-  const isAcademyRole = userRole === 'business' || userRole === 'premium_business' || userRole === 'freemium_business' || userRole === 'admin';
+  const isAcademyRole = userRole === 'business' || userRole === 'premium_business' || userRole === 'freemium_business' || userRole === 'academy_premium' || userRole === 'admin';
 
   useEffect(() => {
     if (!user) {
