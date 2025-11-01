@@ -50,7 +50,9 @@ export const useNotifications = () => {
 
   // Load unread count on mount and setup realtime subscription
   useEffect(() => {
-    fetchUnreadCount();
+    if (isMountedRef.current) {
+      fetchUnreadCount();
+    }
     
     if (!user) return;
     
