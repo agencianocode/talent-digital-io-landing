@@ -62,14 +62,11 @@ const LogoEditModal = ({ isOpen, onClose, onSave, imageUrl }: LogoEditModalProps
         // Limpiar canvas con fondo transparente
         ctx.clearRect(0, 0, 300, 300);
         
-        // Crear máscara circular
+        // Crear recorte cuadrado (sin máscara circular)
         ctx.save();
-        ctx.beginPath();
-        ctx.arc(150, 150, 150, 0, 2 * Math.PI);
-        ctx.clip();
         
-        // Calcular el tamaño para que la imagen quepa completamente en el círculo
-        const maxSize = 280; // Tamaño máximo para que quepa en el círculo
+        // Calcular el tamaño manteniendo aspecto original
+        const maxSize = 280; // Tamaño máximo para el cuadrado
         const imgAspect = img.width / img.height;
         let drawWidth, drawHeight;
         
@@ -168,7 +165,7 @@ const LogoEditModal = ({ isOpen, onClose, onSave, imageUrl }: LogoEditModalProps
         {/* Instructions */}
         <p className="text-sm text-slate-600 mb-6">
           Recomendado: Imagen PNG, JPG o GIF de al menos 300 x 300 px con el logotipo centrado. 
-          Las imágenes con fondos blancos o transparentes suelen funcionar mejor.
+          El logo se guardará en formato cuadrado. Las imágenes con fondos blancos o transparentes suelen funcionar mejor.
         </p>
 
         {/* Image Preview Area */}
@@ -196,10 +193,10 @@ const LogoEditModal = ({ isOpen, onClose, onSave, imageUrl }: LogoEditModalProps
               draggable={false}
             />
             
-            {/* Circular crop indicator */}
+            {/* Square crop indicator */}
             <div className="absolute inset-0 pointer-events-none">
               <div className="w-full h-full flex items-center justify-center">
-                <div className="w-[280px] h-[280px] border-2 border-white border-dashed rounded-full opacity-50"></div>
+                <div className="w-[280px] h-[280px] border-2 border-white border-dashed rounded-lg opacity-50"></div>
               </div>
             </div>
           </div>
