@@ -97,7 +97,7 @@ const UsersManagement = () => {
           updated_at: member.updated_at,
           user: {
             id: member.user_id || '',
-            email: member.email || member.invited_email || '',
+            email: member.email || member.invited_email || 'usuario@ejemplo.com',
             full_name: member.full_name || member.email?.split('@')[0] || 'Miembro',
             avatar_url: member.avatar_url || null,
           },
@@ -120,29 +120,27 @@ const UsersManagement = () => {
 
       const { data: teamData, error: rolesError } = await supabase
         .from('company_user_roles')
-        .select(`
-          *,
-          profiles!company_user_roles_user_id_fkey (
-            user_id,
-            full_name,
-            avatar_url,
-            email
-          )
-        `)
+        .select('*')
         .eq('company_id', activeCompany.id)
         .order('created_at', { ascending: true });
 
       if (rolesError) throw rolesError;
 
-      // Get owner profile
-      let ownerProfile: any = null;
-      if (companyData?.user_id) {
-        const { data: ownerData } = await supabase
+      const userIds = [
+        ...(companyData?.user_id ? [companyData.user_id] : []),
+        ...(teamData || [])
+          .map((r) => r.user_id)
+          .filter((id): id is string => id !== null && typeof id === 'string' && id.length === 36),
+      ];
+      const uniqueUserIds = [...new Set(userIds)];
+
+      let profiles: any[] = [];
+      if (uniqueUserIds.length > 0) {
+        const { data: profilesData } = await supabase
           .from('profiles')
           .select('user_id, full_name, avatar_url, email')
-          .eq('user_id', companyData.user_id)
-          .maybeSingle();
-        ownerProfile = ownerData;
+          .in('user_id', uniqueUserIds);
+        profiles = profilesData || [];
       }
 
       const allMembers: TeamMember[] = [];
@@ -151,7 +149,8 @@ const UsersManagement = () => {
         const ownerInRoles = (teamData || []).find(
           (m) => m.user_id === companyData.user_id && m.role === 'owner'
         );
-        if (!ownerInRoles && ownerProfile) {
+        if (!ownerInRoles) {
+          const ownerProfile = profiles.find((p) => p.user_id === companyData.user_id);
           allMembers.push({
             id: `owner-${companyData.user_id}`,
             user_id: companyData.user_id,
@@ -164,7 +163,7 @@ const UsersManagement = () => {
             invited_email: ownerProfile?.email || null,
             user: {
               id: companyData.user_id,
-              email: ownerProfile?.email || '',
+              email: ownerProfile?.email || 'usuario@ejemplo.com',
               full_name: ownerProfile?.full_name || 'Propietario',
               avatar_url: ownerProfile?.avatar_url || null,
             },
@@ -173,16 +172,14 @@ const UsersManagement = () => {
       }
 
       const membersWithUserInfo = (teamData || []).map((member) => {
-        // Get profile from the join
-        const profile = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles;
-        
+        const userProfile = profiles.find((p) => p.user_id === member.user_id);
         return {
           ...member,
           user: {
             id: member.user_id || '',
-            email: profile?.email || member.invited_email || '',
-            full_name: profile?.full_name || member.invited_email?.split('@')[0] || 'Usuario',
-            avatar_url: profile?.avatar_url || null,
+            email: userProfile?.email || member.invited_email || 'usuario@ejemplo.com',
+            full_name: userProfile?.full_name || member.invited_email?.split('@')[0] || 'Usuario',
+            avatar_url: userProfile?.avatar_url || null,
           },
         } as TeamMember;
       });
