@@ -622,16 +622,18 @@ export const useMessages = () => {
     
     try {
       const convs = await fetchConversations();
+      if (!isMountedRef.current) return;
       setConversations(convs);
     } catch (error) {
       console.error('Error loading conversations:', error);
     }
-  }, [user, fetchConversations]);
+  }, [user, fetchConversations, isMountedRef]);
 
   // Load messages for a conversation
   const loadMessages = useCallback(async (conversationId: string) => {
     try {
       const messages = await fetchMessages(conversationId);
+      if (!isMountedRef.current) return;
       setMessagesByConversation(prev => ({
         ...prev,
         [conversationId]: messages
@@ -639,17 +641,18 @@ export const useMessages = () => {
     } catch (error) {
       console.error('Error loading messages:', error);
     }
-  }, [fetchMessages]);
+  }, [fetchMessages, isMountedRef]);
 
   // Load unread count
   const loadUnreadCount = useCallback(async () => {
     try {
       const count = await getUnreadCount();
+      if (!isMountedRef.current) return;
       setUnreadCount(count);
     } catch (error) {
       console.error('Error loading unread count:', error);
     }
-  }, [getUnreadCount]);
+  }, [getUnreadCount, isMountedRef]);
 
   // Mark as read
   const markAsRead = useCallback(async (conversationId: string) => {
@@ -734,7 +737,7 @@ export const useMessages = () => {
       };
 
       const newMessage = await sendMessage(messageData);
-      if (newMessage) {
+      if (newMessage && isMountedRef.current) {
         // Update local state
         setMessagesByConversation(prev => ({
           ...prev,
@@ -786,7 +789,7 @@ export const useMessages = () => {
     } catch (error) {
       console.error('Error sending message:', error);
     }
-  }, [user, conversations, sendMessage, loadConversations]);
+  }, [user, conversations, sendMessage, loadConversations, isMountedRef]);
 
   // Mark conversation as unread
   const markAsUnread = useCallback(async (conversationId: string) => {
@@ -826,20 +829,22 @@ export const useMessages = () => {
       }
 
       // Update local state
-      setConversations(prev => 
-        prev.map(conv => 
-          conv.id === conversationId 
-            ? { ...conv, unread_count: Math.max(1, conv.unread_count) }
-            : conv
-        )
-      );
-      
-      setUnreadCount(prev => prev + 1);
+      if (isMountedRef.current) {
+        setConversations(prev => 
+          prev.map(conv => 
+            conv.id === conversationId 
+              ? { ...conv, unread_count: Math.max(1, conv.unread_count) }
+              : conv
+          )
+        );
+        
+        setUnreadCount(prev => prev + 1);
 
-      toast({
-        title: "Marcado como no leído",
-        description: "La conversación ha sido marcada como no leída",
-      });
+        toast({
+          title: "Marcado como no leído",
+          description: "La conversación ha sido marcada como no leída",
+        });
+      }
     } catch (error) {
       console.error('[markAsUnread] Error:', error);
       toast({
@@ -848,7 +853,7 @@ export const useMessages = () => {
         variant: "destructive",
       });
     }
-  }, [user, toast]);
+  }, [user, toast, isMountedRef]);
 
   // Archive conversation
   const archiveConversation = useCallback(async (conversationId: string) => {
@@ -881,18 +886,20 @@ export const useMessages = () => {
       console.log('[archiveConversation] Successfully archived in DB');
       
       // Update local state
-      setConversations(prev => 
-        prev.map(conv => 
-          conv.id === conversationId 
-            ? { ...conv, archived: true }
-            : conv
-        )
-      );
+      if (isMountedRef.current) {
+        setConversations(prev => 
+          prev.map(conv => 
+            conv.id === conversationId 
+              ? { ...conv, archived: true }
+              : conv
+          )
+        );
 
-      toast({
-        title: "Conversación archivada",
-        description: "La conversación ha sido archivada correctamente",
-      });
+        toast({
+          title: "Conversación archivada",
+          description: "La conversación ha sido archivada correctamente",
+        });
+      }
     } catch (error) {
       console.error('Error archiving conversation:', error);
       toast({
@@ -901,7 +908,7 @@ export const useMessages = () => {
         variant: "destructive",
       });
     }
-  }, [user, toast]);
+  }, [user, toast, isMountedRef]);
 
   // Unarchive conversation
   const unarchiveConversation = useCallback(async (conversationId: string) => {
@@ -934,18 +941,20 @@ export const useMessages = () => {
       console.log('[unarchiveConversation] Successfully unarchived in DB');
       
       // Update local state
-      setConversations(prev => 
-        prev.map(conv => 
-          conv.id === conversationId 
-            ? { ...conv, archived: false }
-            : conv
-        )
-      );
+      if (isMountedRef.current) {
+        setConversations(prev => 
+          prev.map(conv => 
+            conv.id === conversationId 
+              ? { ...conv, archived: false }
+              : conv
+          )
+        );
 
-      toast({
-        title: "Conversación desarchivada",
-        description: "La conversación ha sido restaurada",
-      });
+        toast({
+          title: "Conversación desarchivada",
+          description: "La conversación ha sido restaurada",
+        });
+      }
     } catch (error) {
       console.error('Error unarchiving conversation:', error);
       toast({
@@ -954,7 +963,7 @@ export const useMessages = () => {
         variant: "destructive",
       });
     }
-  }, [user, toast, loadConversations]);
+  }, [user, toast, loadConversations, isMountedRef]);
 
   // Delete conversation
   const deleteConversation = useCallback(async (conversationId: string) => {
@@ -975,22 +984,24 @@ export const useMessages = () => {
       console.log('[deleteConversation] Successfully deleted conversation');
 
       // Update local state immediately
-      setConversations(prev => {
-        const updated = prev.filter(conv => conv.id !== conversationId);
-        return updated;
-      });
+      if (isMountedRef.current) {
+        setConversations(prev => {
+          const updated = prev.filter(conv => conv.id !== conversationId);
+          return updated;
+        });
 
-      // Clear messages for this conversation
-      setMessagesByConversation(prev => {
-        const updated = { ...prev };
-        delete updated[conversationId];
-        return updated;
-      });
+        // Clear messages for this conversation
+        setMessagesByConversation(prev => {
+          const updated = { ...prev };
+          delete updated[conversationId];
+          return updated;
+        });
 
-      toast({
-        title: "Conversación eliminada",
-        description: "La conversación ha sido eliminada permanentemente",
-      });
+        toast({
+          title: "Conversación eliminada",
+          description: "La conversación ha sido eliminada permanentemente",
+        });
+      }
     } catch (error) {
       console.error('[deleteConversation] Error:', error);
       toast({
@@ -999,7 +1010,7 @@ export const useMessages = () => {
         variant: "destructive",
       });
     }
-  }, [user, toast]);
+  }, [user, toast, isMountedRef]);
 
   return {
     isLoading,
