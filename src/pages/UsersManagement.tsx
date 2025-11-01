@@ -112,11 +112,33 @@ const UsersManagement = () => {
       if (uniqueUserIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
-          .select('user_id, full_name, avatar_url, email')
+          .select('user_id, full_name, avatar_url')
           .in('user_id', uniqueUserIds);
         
         console.log('[UsersManagement] Profiles query:', { uniqueUserIds, profilesData, profilesError });
         profiles = profilesData || [];
+      }
+      
+      // Get emails and names from auth context
+      const emailsMap: Record<string, string> = {};
+      const namesMap: Record<string, string> = {};
+      
+      // For current user, we already have the email and name from context
+      if (user?.id && user?.email) {
+        emailsMap[user.id] = user.email;
+        
+        // Try to get full name from user metadata (Google Auth, etc)
+        const fullName = user.user_metadata?.full_name || user.user_metadata?.name;
+        if (fullName) {
+          namesMap[user.id] = fullName;
+        }
+        
+        console.log('[UsersManagement] Current user data:', { 
+          userId: user.id, 
+          email: user.email, 
+          fullName,
+          metadata: user.user_metadata 
+        });
       }
 
       const allMembers: TeamMember[] = [];
@@ -127,7 +149,15 @@ const UsersManagement = () => {
         );
         if (!ownerInRoles) {
           const ownerProfile = profiles.find((p) => p.user_id === companyData.user_id);
-          console.log('[UsersManagement] Owner profile found:', ownerProfile);
+          const ownerEmail = emailsMap[companyData.user_id] || '';
+          const ownerName = namesMap[companyData.user_id] || ownerProfile?.full_name || 'Propietario';
+          
+          console.log('[UsersManagement] Owner profile found:', { 
+            ownerProfile, 
+            ownerEmail, 
+            ownerName,
+            fromMetadata: namesMap[companyData.user_id]
+          });
           
           allMembers.push({
             id: `owner-${companyData.user_id}`,
@@ -138,11 +168,11 @@ const UsersManagement = () => {
             invited_by: null,
             created_at: companyData.created_at || new Date().toISOString(),
             updated_at: companyData.updated_at || new Date().toISOString(),
-            invited_email: ownerProfile?.email || null,
+            invited_email: ownerEmail || null,
             user: {
               id: companyData.user_id,
-              email: ownerProfile?.email || '',
-              full_name: ownerProfile?.full_name || 'Propietario',
+              email: ownerEmail,
+              full_name: ownerName,
               avatar_url: ownerProfile?.avatar_url || null,
             },
           });
@@ -151,14 +181,26 @@ const UsersManagement = () => {
 
       const membersWithUserInfo = (teamData || []).map((member) => {
         const userProfile = profiles.find((p) => p.user_id === member.user_id);
-        console.log('[UsersManagement] Processing member:', { member, userProfile });
+        const memberEmail = member.user_id ? (emailsMap[member.user_id] || member.invited_email || '') : (member.invited_email || '');
+        const memberName = member.user_id 
+          ? (namesMap[member.user_id] || userProfile?.full_name || member.invited_email?.split('@')[0] || 'Usuario')
+          : (member.invited_email?.split('@')[0] || 'Usuario');
+        
+        console.log('[UsersManagement] Processing member:', { 
+          member, 
+          userProfile, 
+          memberEmail,
+          memberName,
+          fromEmailsMap: member.user_id ? emailsMap[member.user_id] : 'N/A',
+          fromNamesMap: member.user_id ? namesMap[member.user_id] : 'N/A'
+        });
         
         return {
           ...member,
           user: {
             id: member.user_id || '',
-            email: userProfile?.email || member.invited_email || '',
-            full_name: userProfile?.full_name || member.invited_email?.split('@')[0] || 'Usuario',
+            email: memberEmail,
+            full_name: memberName,
             avatar_url: userProfile?.avatar_url || null,
           },
         } as TeamMember;
