@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { TrendingUp, Users, Clock, Briefcase, Loader2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -19,6 +20,7 @@ interface AcademyEmployabilityStatsProps {
 }
 
 export const AcademyEmployabilityStats = ({ academyId }: AcademyEmployabilityStatsProps) => {
+  const isMountedRef = useIsMounted();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<EmployabilityStats>({
     total_graduates: 0,
@@ -35,8 +37,12 @@ export const AcademyEmployabilityStats = ({ academyId }: AcademyEmployabilitySta
   }, [academyId]);
 
   const loadStats = async () => {
+    if (!isMountedRef.current) return;
+    
     try {
-      setLoading(true);
+      if (isMountedRef.current) {
+        setLoading(true);
+      }
 
       // Get total graduates
       const { data: graduates, error: gradError } = await supabase
@@ -101,19 +107,23 @@ export const AcademyEmployabilityStats = ({ academyId }: AcademyEmployabilitySta
         .sort((a, b) => b.hires - a.hires)
         .slice(0, 5);
 
-      setStats({
-        total_graduates: totalGraduates,
-        employed_graduates: employedCount,
-        employment_rate: employmentRate,
-        avg_days_to_hire: 30, // Placeholder
-        total_applications: applications?.length || 0,
-        top_companies: topCompanies,
-        top_roles: [],
-      });
+      if (isMountedRef.current) {
+        setStats({
+          total_graduates: totalGraduates,
+          employed_graduates: employedCount,
+          employment_rate: employmentRate,
+          avg_days_to_hire: 30, // Placeholder
+          total_applications: applications?.length || 0,
+          top_companies: topCompanies,
+          top_roles: [],
+        });
+      }
     } catch (error) {
       console.error('Error loading stats:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
