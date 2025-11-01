@@ -310,15 +310,25 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="admin">
-                              <div className="flex items-center gap-2">
-                                <Shield className="h-4 w-4" />
-                                Administrador
+                              <div className="flex flex-col items-start gap-1">
+                                <div className="flex items-center gap-2">
+                                  <Shield className="h-4 w-4" />
+                                  <span className="font-medium">Administrador</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  Tiene acceso completo, incluyendo remover miembros del equipo y editar permisos
+                                </span>
                               </div>
                             </SelectItem>
                             <SelectItem value="viewer">
-                              <div className="flex items-center gap-2">
-                                <Eye className="h-4 w-4" />
-                                Miembro
+                              <div className="flex flex-col items-start gap-1">
+                                <div className="flex items-center gap-2">
+                                  <Eye className="h-4 w-4" />
+                                  <span className="font-medium">Miembro</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  Tiene acceso completo, pero no puede remover miembros del equipo ni editar permisos
+                                </span>
                               </div>
                             </SelectItem>
                           </SelectContent>

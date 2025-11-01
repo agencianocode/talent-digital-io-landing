@@ -605,7 +605,7 @@ const UsersManagement = () => {
                         <Badge className={`flex items-center gap-1 ${getRoleColor(member.role)}`}>
                           {getRoleIcon(member.role)}
                           {member.role === 'owner' ? 'Propietario' : 
-                           member.role === 'admin' ? 'Administrador' : 'Visualizador'}
+                           member.role === 'admin' ? 'Administrador' : 'Miembro'}
                         </Badge>
                         <Badge className={`flex items-center gap-1 ${getStatusColor(member.status)}`}>
                           {getStatusIcon(member.status)}

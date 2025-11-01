@@ -233,13 +233,13 @@ const UserManagement = () => {
                           <SelectItem value="admin">
                             <div className="flex items-center gap-2">
                               <Shield className="h-4 w-4" />
-                              Admin - Puede crear oportunidades y gestionar aplicaciones
+                              Administrador - Tiene acceso completo, incluyendo remover miembros del equipo y editar permisos
                             </div>
                           </SelectItem>
                           <SelectItem value="viewer">
                             <div className="flex items-center gap-2">
                               <Eye className="h-4 w-4" />
-                              Viewer - Solo puede ver aplicaciones y reportes
+                              Miembro - Tiene acceso completo, pero no puede remover miembros del equipo ni editar permisos
                             </div>
                           </SelectItem>
                         </SelectContent>
@@ -391,7 +391,7 @@ const UserManagement = () => {
               onClick={() => handleUpdateRole('admin')}
             >
               <Shield className="h-4 w-4 mr-2" />
-              Admin - Puede crear oportunidades y gestionar aplicaciones
+              Administrador - Tiene acceso completo, incluyendo remover miembros del equipo y editar permisos
             </Button>
             <Button
               variant="outline"
@@ -399,7 +399,7 @@ const UserManagement = () => {
               onClick={() => handleUpdateRole('viewer')}
             >
               <Eye className="h-4 w-4 mr-2" />
-              Viewer - Solo puede ver aplicaciones y reportes
+              Miembro - Tiene acceso completo, pero no puede remover miembros del equipo ni editar permisos
             </Button>
             {hasPermission('owner') && selectedUser?.role !== 'owner' && (
               <Button

@@ -73,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await sendEmail(
       email,
-      `Invitación para unirte a la empresa como ${role}`,
+      `Invitación para unirte a la empresa como ${role === 'admin' ? 'Administrador' : 'Miembro'}`,
       `
         <!DOCTYPE html>
         <html>
@@ -89,26 +89,31 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           
           <div style="background: white; padding: 40px 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h2 style="color: #333; margin-top: 0;">Invitación para unirte como ${role.toUpperCase()}</h2>
+            <h2 style="color: #333; margin-top: 0;">Invitación para unirte como ${role === 'admin' ? 'ADMINISTRADOR' : 'MIEMBRO'}</h2>
             
             <p>Hola,</p>
-            <p><strong>${invited_by}</strong> te ha invitado a unirte a su empresa en TalentFlow con el rol de <strong>${role}</strong>.</p>
+            <p><strong>${invited_by}</strong> te ha invitado a unirte a su empresa en TalentFlow con el rol de <strong>${role === 'admin' ? 'Administrador' : 'Miembro'}</strong>.</p>
             
             <div style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
-              <h3 style="margin-top: 0; color: #333;">¿Qué puedes hacer como ${role}?</h3>
+              <h3 style="margin-top: 0; color: #333;">¿Qué puedes hacer como ${role === 'admin' ? 'Administrador' : 'Miembro'}?</h3>
               ${role === 'admin' ? `
-                <ul style="margin: 0; padding-left: 20px;">
+                <p style="margin: 0; color: #555;">Tendrás acceso completo, incluyendo:</p>
+                <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #555;">
                   <li>Crear y gestionar oportunidades de trabajo</li>
                   <li>Revisar y gestionar aplicaciones</li>
-                  <li>Acceder a reportes y análisis</li>
+                  <li>Remover miembros del equipo</li>
+                  <li>Editar permisos de otros usuarios</li>
                   <li>Gestionar configuraciones de la empresa</li>
+                  <li>Acceder a reportes y análisis</li>
                 </ul>
               ` : `
-                <ul style="margin: 0; padding-left: 20px;">
-                  <li>Ver oportunidades de trabajo publicadas</li>
-                  <li>Revisar aplicaciones recibidas</li>
-                  <li>Acceder a reportes básicos</li>
+                <p style="margin: 0; color: #555;">Tendrás acceso completo para ver y gestionar aplicaciones, pero no podrás:</p>
+                <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #555;">
+                  <li>Remover miembros del equipo</li>
+                  <li>Editar permisos de otros usuarios</li>
+                  <li>Crear nuevas oportunidades de trabajo</li>
                 </ul>
+                <p style="margin-top: 10px; color: #555;"><strong>Sí podrás:</strong> Ver oportunidades, revisar aplicaciones y acceder a reportes.</p>
               `}
             </div>
             
