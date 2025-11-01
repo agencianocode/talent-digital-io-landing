@@ -56,8 +56,12 @@ export const useNotifications = () => {
     
     // Setup Realtime subscription for new notifications
     console.log('[useNotifications] Setting up Realtime subscription for notifications');
-    const notificationsSubscription = supabase
-      .channel('notifications_channel')
+    
+    // Create channel first but don't subscribe yet
+    const notificationsChannel = supabase.channel('notifications_channel');
+    
+    // Configure listeners
+    notificationsChannel
       .on(
         'postgres_changes',
         {
@@ -121,8 +125,14 @@ export const useNotifications = () => {
           console.log('[useNotifications] Notification deleted via Realtime:', payload);
           fetchUnreadCount();
         }
-      )
-      .subscribe();
+      );
+    
+    // Only subscribe if still mounted
+    if (isMountedRef.current) {
+      notificationsChannel.subscribe();
+    }
+    
+    const notificationsSubscription = notificationsChannel;
     
     // Reload when window regains focus
     const handleFocus = () => {

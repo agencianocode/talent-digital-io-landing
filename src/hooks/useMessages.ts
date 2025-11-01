@@ -83,8 +83,13 @@ export const useMessages = () => {
     
     // Setup Realtime subscription for new messages
     console.log('[useMessages] Setting up Realtime subscription for messages');
-    const messagesSubscription = supabase
-      .channel('messages_channel')
+    
+    // Create channels first but don't subscribe yet
+    const messagesChannel = supabase.channel('messages_channel');
+    const overridesChannel = supabase.channel('conversation_overrides_channel');
+    
+    // Configure listeners
+    messagesChannel
       .on(
         'postgres_changes',
         {
@@ -114,12 +119,9 @@ export const useMessages = () => {
           loadConversations();
           loadUnreadCount();
         }
-      )
-      .subscribe();
+      );
 
-    // Setup Realtime subscription for conversation overrides
-    const overridesSubscription = supabase
-      .channel('conversation_overrides_channel')
+    overridesChannel
       .on(
         'postgres_changes',
         {
@@ -134,8 +136,16 @@ export const useMessages = () => {
           loadConversations();
           loadUnreadCount();
         }
-      )
-      .subscribe();
+      );
+    
+    // Only subscribe if still mounted
+    if (isMountedRef.current) {
+      messagesChannel.subscribe();
+      overridesChannel.subscribe();
+    }
+    
+    const messagesSubscription = messagesChannel;
+    const overridesSubscription = overridesChannel;
     
     // Reload when window regains focus
     const handleFocus = () => {
