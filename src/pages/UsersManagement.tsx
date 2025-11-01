@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { 
@@ -19,12 +18,22 @@ import {
   User,
   Check,
   X,
-  Clock
+  Clock,
+  MoreVertical,
+  UserMinus,
+  UserCog
 } from 'lucide-react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import PermissionDenied from '@/components/PermissionDenied';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface TeamMember {
   id: string;
@@ -51,7 +60,7 @@ interface InviteData {
 }
 
 const UsersManagement = () => {
-  const { activeCompany } = useCompany();
+  const { activeCompany, canManageUsers, refreshCompanies } = useCompany();
   const { user } = useSupabaseAuth();
   
   console.log('UsersManagement component mounted');
@@ -66,109 +75,38 @@ const UsersManagement = () => {
     message: ''
   });
 
-  // Load team members
+  // Load team members using secure RPC
   const loadTeamMembers = async () => {
-    console.log('loadTeamMembers called');
-    console.log('activeCompany:', activeCompany);
-    if (!activeCompany?.id) {
-      console.log('No active company ID, returning');
-      return;
-    }
+    if (!activeCompany?.id) return;
 
     setIsLoading(true);
     try {
-      // Fetch company owner data
-      const { data: companyData, error: companyError } = await supabase
-        .from('companies')
-        .select('user_id, name')
-        .eq('id', activeCompany.id)
-        .maybeSingle();
-
-      if (companyError) {
-        console.error('Error fetching company:', companyError);
-        throw companyError;
-      }
-
-      // Fetch team members from company_user_roles
-      const { data: teamData, error } = await supabase
-        .from('company_user_roles')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .order('created_at', { ascending: false });
+      // Use the secure RPC function to get team members with profiles
+      const { data, error } = await supabase
+        .rpc('get_company_team_members', { company_uuid: activeCompany.id });
 
       if (error) throw error;
 
-      // Get unique user IDs to fetch profiles (include company owner)
-      const userIds = [
-        ...(companyData?.user_id ? [companyData.user_id] : []),
-        ...(teamData || [])
-          .map((role) => role.user_id)
-          .filter((id): id is string => id !== null && typeof id === 'string' && id.length === 36)
-      ];
-
-      // Remove duplicates
-      const uniqueUserIds = [...new Set(userIds)];
-
-      // Fetch profiles for all team members
-      let profiles: any[] = [];
-      if (uniqueUserIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, avatar_url, email')
-          .in('user_id', uniqueUserIds);
-        
-        if (profilesError) {
-          console.warn('Error fetching profiles:', profilesError);
-        } else {
-          profiles = profilesData || [];
+      // Map RPC results to TeamMember structure
+      const membersWithUserInfo: TeamMember[] = (data || []).map((member: any) => ({
+        id: member.id,
+        user_id: member.user_id,
+        company_id: member.company_id,
+        role: member.role,
+        status: member.status,
+        invited_email: member.invited_email,
+        invited_by: member.invited_by,
+        created_at: member.created_at,
+        updated_at: member.updated_at,
+        user: {
+          id: member.user_id || '',
+          email: member.email || member.invited_email || 'usuario@ejemplo.com',
+          full_name: member.full_name || member.email?.split('@')[0] || 'Miembro',
+          avatar_url: member.avatar_url || null
         }
-      }
+      }));
 
-      const allMembers: TeamMember[] = [];
-
-      // Add company owner if not already in company_user_roles
-      if (companyData?.user_id) {
-        const ownerInRoles = teamData?.find(m => m.user_id === companyData.user_id && m.role === 'owner');
-        if (!ownerInRoles) {
-          const ownerProfile = profiles.find(p => p.user_id === companyData.user_id);
-          allMembers.push({
-            id: `owner-${companyData.user_id}`,
-            user_id: companyData.user_id,
-            company_id: activeCompany.id,
-            role: 'owner',
-            status: 'accepted',
-            invited_by: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            invited_email: ownerProfile?.email || null,
-            user: {
-              id: companyData.user_id,
-              email: ownerProfile?.email || 'usuario@ejemplo.com',
-              full_name: ownerProfile?.full_name || 'Propietario',
-              avatar_url: ownerProfile?.avatar_url || null
-            }
-          });
-        }
-      }
-
-      // Add members from company_user_roles
-      const membersWithUserInfo = (teamData || []).map((member) => {
-        const userProfile = profiles.find(p => p.user_id === member.user_id);
-        
-        const userInfo = {
-          id: member.user_id,
-          email: userProfile?.email || member.invited_email || 'usuario@ejemplo.com',
-          full_name: userProfile?.full_name || member.invited_email?.split('@')[0] || 'Usuario',
-          avatar_url: userProfile?.avatar_url || null
-        };
-        
-        return {
-          ...member,
-          user: userInfo
-        };
-      });
-
-      setTeamMembers([...allMembers, ...membersWithUserInfo]);
+      setTeamMembers(membersWithUserInfo);
     } catch (error) {
       console.error('Error loading team members:', error);
       toast.error('Error al cargar los miembros del equipo');
@@ -279,7 +217,8 @@ const UsersManagement = () => {
 
       setIsInviteModalOpen(false);
       setInviteData({ email: '', role: 'viewer', message: '' });
-      loadTeamMembers();
+      await loadTeamMembers();
+      await refreshCompanies();
     } catch (error) {
       console.error('Error sending invitation:', error);
       toast.error('Error al enviar la invitación');
@@ -304,7 +243,8 @@ const UsersManagement = () => {
       if (error) throw error;
 
       toast.success('Miembro removido exitosamente');
-      loadTeamMembers();
+      await loadTeamMembers();
+      await refreshCompanies();
     } catch (error) {
       console.error('Error removing member:', error);
       toast.error('Error al remover el miembro');
@@ -325,7 +265,8 @@ const UsersManagement = () => {
       if (error) throw error;
 
       toast.success('Rol actualizado exitosamente');
-      loadTeamMembers();
+      await loadTeamMembers();
+      await refreshCompanies();
     } catch (error) {
       console.error('Error updating role:', error);
       toast.error('Error al actualizar el rol');
@@ -381,6 +322,42 @@ const UsersManagement = () => {
       default: return null;
     }
   };
+
+  // Check if user has access
+  if (!activeCompany) {
+    return (
+      <TooltipProvider>
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-6xl mx-auto px-4 py-6">
+            <Card>
+              <CardContent className="p-12 text-center">
+                <p className="text-muted-foreground">
+                  Selecciona una empresa para gestionar su equipo
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </TooltipProvider>
+    );
+  }
+
+  // Check permissions
+  if (!canManageUsers()) {
+    return (
+      <TooltipProvider>
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-6xl mx-auto px-4 py-6">
+            <PermissionDenied
+              title="Acceso Denegado"
+              message="No tienes permisos para gestionar usuarios. Solo los propietarios y administradores pueden acceder a esta página."
+              requiredRole="admin"
+            />
+          </div>
+        </div>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <TooltipProvider>
@@ -659,29 +636,35 @@ const UsersManagement = () => {
                           {member.status === 'accepted' ? 'Activo' :
                            member.status === 'pending' ? 'Pendiente' : 'Rechazado'}
                         </Badge>
-                        {member.role !== 'owner' && (
-                          <div className="flex items-center gap-2">
-                            <Select 
-                              value={member.role} 
-                              onValueChange={(value: 'admin' | 'viewer') => handleUpdateRole(member.id, value)}
-                            >
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="z-50 bg-background">
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="viewer">Miembro</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveMember(member.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
+                        {member.role !== 'owner' && canManageUsers() && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {member.role !== 'admin' && (
+                                <DropdownMenuItem onClick={() => handleUpdateRole(member.id, 'admin')}>
+                                  <UserCog className="mr-2 h-4 w-4" />
+                                  Hacer Administrador
+                                </DropdownMenuItem>
+                              )}
+                              {member.role !== 'viewer' && (
+                                <DropdownMenuItem onClick={() => handleUpdateRole(member.id, 'viewer')}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Hacer Miembro
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => handleRemoveMember(member.id)}
+                                className="text-destructive"
+                              >
+                                <UserMinus className="mr-2 h-4 w-4" />
+                                Eliminar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </div>
                     </div>

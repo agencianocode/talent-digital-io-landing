@@ -2323,6 +2323,23 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_company_team_members: {
+        Args: { company_uuid: string }
+        Returns: {
+          avatar_url: string
+          company_id: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          invited_by: string
+          invited_email: string
+          role: Database["public"]["Enums"]["company_role"]
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_featured_academy_courses: {
         Args: { p_limit?: number }
         Returns: {
