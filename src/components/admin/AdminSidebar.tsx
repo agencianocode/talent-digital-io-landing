@@ -36,7 +36,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
-import { useSupabaseMessages } from "@/contexts/SupabaseMessagesContext";
+// TEMPORAL: Deshabilitado para diagnosticar Error #300
+// import { useSupabaseMessages } from "@/contexts/SupabaseMessagesContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAdminCustomization } from "@/hooks/useAdminCustomization";
 import { usePublishingRequests } from "@/hooks/usePublishingRequests";
@@ -61,7 +62,9 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { user, profile, signOut } = useSupabaseAuth();
-  const { conversations } = useSupabaseMessages();
+  // TEMPORAL: Deshabilitado para diagnosticar Error #300
+  // const { conversations } = useSupabaseMessages();
+  const conversations = []; // Fallback temporal
   const { unreadCount: unreadNotificationsCount } = useNotifications();
   const { customization } = useAdminCustomization();
   const { pendingCount } = usePublishingRequests();
