@@ -259,6 +259,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         });
 
         // Update basic auth state immediately
+        if (!isMounted) return;
+        
         setAuthState(prev => ({ 
           ...prev, 
           session, 
