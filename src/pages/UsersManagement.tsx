@@ -75,41 +75,15 @@ const UsersManagement = () => {
     message: ''
   });
 
-  // Load team members using secure RPC with safe fallback
+  // Load team members using direct queries with profiles
   const loadTeamMembers = async () => {
     if (!activeCompany?.id) return;
 
     setIsLoading(true);
     try {
-      // 1) Try secure RPC first
-      const { data, error } = await supabase.rpc('get_company_team_members', { company_uuid: activeCompany.id });
+      console.log('[UsersManagement] Loading team members for company:', activeCompany.id);
 
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const membersWithUserInfo: TeamMember[] = data.map((member: any) => ({
-          id: member.id,
-          user_id: member.user_id,
-          company_id: member.company_id,
-          role: member.role,
-          status: member.status,
-          invited_email: member.invited_email,
-          invited_by: member.invited_by,
-          created_at: member.created_at,
-          updated_at: member.updated_at,
-          user: {
-            id: member.user_id || '',
-            email: member.email || member.invited_email || 'usuario@ejemplo.com',
-            full_name: member.full_name || member.email?.split('@')[0] || 'Miembro',
-            avatar_url: member.avatar_url || null,
-          },
-        }));
-
-        setTeamMembers(membersWithUserInfo);
-        return;
-      }
-
-      console.warn('[UsersManagement] RPC vacío o con error, usando fallback...', { error, data });
-
-      // 2) Fallback: consultas directas (como antes)
+      // Get company data
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('user_id, name, created_at, updated_at, id')
@@ -136,10 +110,12 @@ const UsersManagement = () => {
 
       let profiles: any[] = [];
       if (uniqueUserIds.length > 0) {
-        const { data: profilesData } = await supabase
+        const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('user_id, full_name, avatar_url, email')
           .in('user_id', uniqueUserIds);
+        
+        console.log('[UsersManagement] Profiles query:', { uniqueUserIds, profilesData, profilesError });
         profiles = profilesData || [];
       }
 
@@ -151,6 +127,8 @@ const UsersManagement = () => {
         );
         if (!ownerInRoles) {
           const ownerProfile = profiles.find((p) => p.user_id === companyData.user_id);
+          console.log('[UsersManagement] Owner profile found:', ownerProfile);
+          
           allMembers.push({
             id: `owner-${companyData.user_id}`,
             user_id: companyData.user_id,
@@ -163,7 +141,7 @@ const UsersManagement = () => {
             invited_email: ownerProfile?.email || null,
             user: {
               id: companyData.user_id,
-              email: ownerProfile?.email || 'usuario@ejemplo.com',
+              email: ownerProfile?.email || '',
               full_name: ownerProfile?.full_name || 'Propietario',
               avatar_url: ownerProfile?.avatar_url || null,
             },
@@ -173,20 +151,24 @@ const UsersManagement = () => {
 
       const membersWithUserInfo = (teamData || []).map((member) => {
         const userProfile = profiles.find((p) => p.user_id === member.user_id);
+        console.log('[UsersManagement] Processing member:', { member, userProfile });
+        
         return {
           ...member,
           user: {
             id: member.user_id || '',
-            email: userProfile?.email || member.invited_email || 'usuario@ejemplo.com',
+            email: userProfile?.email || member.invited_email || '',
             full_name: userProfile?.full_name || member.invited_email?.split('@')[0] || 'Usuario',
             avatar_url: userProfile?.avatar_url || null,
           },
         } as TeamMember;
       });
 
-      setTeamMembers([...allMembers, ...membersWithUserInfo]);
+      const finalMembers = [...allMembers, ...membersWithUserInfo];
+      console.log('[UsersManagement] Final members to display:', finalMembers);
+      setTeamMembers(finalMembers);
     } catch (error) {
-      console.error('Error loading team members:', error);
+      console.error('[UsersManagement] Error loading team members:', error);
       toast.error('Error al cargar los miembros del equipo');
     } finally {
       setIsLoading(false);
