@@ -77,6 +77,19 @@ const UsersManagement = () => {
 
     setIsLoading(true);
     try {
+      // Fetch company owner data
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('user_id, name')
+        .eq('id', activeCompany.id)
+        .maybeSingle();
+
+      if (companyError) {
+        console.error('Error fetching company:', companyError);
+        throw companyError;
+      }
+
+      // Fetch team members from company_user_roles
       const { data: teamData, error } = await supabase
         .from('company_user_roles')
         .select('*')
@@ -85,18 +98,24 @@ const UsersManagement = () => {
 
       if (error) throw error;
 
-      // Get unique user IDs to fetch profiles (filter out null/invalid IDs)
-      const userIds = (teamData || [])
-        .map((role) => role.user_id)
-        .filter((id): id is string => id !== null && typeof id === 'string' && id.length === 36); // Filter valid UUIDs
+      // Get unique user IDs to fetch profiles (include company owner)
+      const userIds = [
+        ...(companyData?.user_id ? [companyData.user_id] : []),
+        ...(teamData || [])
+          .map((role) => role.user_id)
+          .filter((id): id is string => id !== null && typeof id === 'string' && id.length === 36)
+      ];
+
+      // Remove duplicates
+      const uniqueUserIds = [...new Set(userIds)];
 
       // Fetch profiles for all team members
       let profiles: any[] = [];
-      if (userIds.length > 0) {
+      if (uniqueUserIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('user_id, full_name, avatar_url, email')
-          .in('user_id', userIds);
+          .in('user_id', uniqueUserIds);
         
         if (profilesError) {
           console.warn('Error fetching profiles:', profilesError);
@@ -105,7 +124,34 @@ const UsersManagement = () => {
         }
       }
 
-      // Map team members with their profile information
+      const allMembers: TeamMember[] = [];
+
+      // Add company owner if not already in company_user_roles
+      if (companyData?.user_id) {
+        const ownerInRoles = teamData?.find(m => m.user_id === companyData.user_id && m.role === 'owner');
+        if (!ownerInRoles) {
+          const ownerProfile = profiles.find(p => p.user_id === companyData.user_id);
+          allMembers.push({
+            id: `owner-${companyData.user_id}`,
+            user_id: companyData.user_id,
+            company_id: activeCompany.id,
+            role: 'owner',
+            status: 'accepted',
+            invited_by: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            invited_email: ownerProfile?.email || null,
+            user: {
+              id: companyData.user_id,
+              email: ownerProfile?.email || 'usuario@ejemplo.com',
+              full_name: ownerProfile?.full_name || 'Propietario',
+              avatar_url: ownerProfile?.avatar_url || null
+            }
+          });
+        }
+      }
+
+      // Add members from company_user_roles
       const membersWithUserInfo = (teamData || []).map((member) => {
         const userProfile = profiles.find(p => p.user_id === member.user_id);
         
@@ -122,7 +168,7 @@ const UsersManagement = () => {
         };
       });
 
-      setTeamMembers(membersWithUserInfo);
+      setTeamMembers([...allMembers, ...membersWithUserInfo]);
     } catch (error) {
       console.error('Error loading team members:', error);
       toast.error('Error al cargar los miembros del equipo');
