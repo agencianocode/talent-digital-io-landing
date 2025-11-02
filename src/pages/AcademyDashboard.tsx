@@ -33,7 +33,7 @@ import { GraduateApplicationsTracking } from '@/components/academy/GraduateAppli
 import { ShareAcademyModal } from '@/components/academy/ShareAcademyModal';
 
 const AcademyDashboard: React.FC = () => {
-  const { user, userRole } = useSupabaseAuth();
+  const { user, userRole, isLoading: authLoading } = useSupabaseAuth();
   const { activeCompany, isLoading: companyLoading } = useCompany();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
@@ -60,8 +60,8 @@ const AcademyDashboard: React.FC = () => {
     }
   }, [user, userRole, navigate, isAcademyRole, activeCompany, companyLoading]);
 
-  // Show loading while getting company
-  if (companyLoading || !activeCompany) {
+  // Show loading while auth or company are loading
+  if (authLoading || companyLoading || !user || !activeCompany) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>
@@ -74,7 +74,8 @@ const AcademyDashboard: React.FC = () => {
     );
   }
 
-  const academyId = activeCompany.id;
+  // Only initialize useAcademyData when we have a valid company
+  const academyId = activeCompany?.id || '';
   const { stats } = useAcademyData(academyId);
 
   if (!isAcademyRole) {
