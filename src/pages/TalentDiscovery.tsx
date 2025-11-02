@@ -22,7 +22,8 @@ import {
   Github,
   Plus,
   ChevronDown,
-  X
+  X,
+  GraduationCap
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
