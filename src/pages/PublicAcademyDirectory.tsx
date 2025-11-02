@@ -88,15 +88,18 @@ export default function PublicAcademyDirectory() {
 
       setAcademy(academyData as AcademyInfo);
       const settings = typeof academyData.directory_settings === 'object' && academyData.directory_settings !== null
-        ? academyData.directory_settings as { show_logo?: boolean; show_description?: boolean }
+        ? academyData.directory_settings as { show_logo?: boolean; show_description?: boolean; students_filter?: string }
         : {};
       setShowLogo(settings.show_logo ?? true);
       setShowDescription(settings.show_description ?? true);
+      
+      const studentsFilter = settings.students_filter || 'all';
 
       // Load graduates with their profiles
       const { data: graduatesData, error: graduatesError } = await supabase
         .rpc('get_public_academy_directory', {
-          p_academy_id: academyData.id
+          p_academy_id: academyData.id,
+          p_status_filter: studentsFilter
         });
 
       if (graduatesError) throw graduatesError;

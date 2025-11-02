@@ -25,6 +25,7 @@ interface PublicDirectoryProps {
 export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) => {
   const [showLogo, setShowLogo] = useState(true);
   const [showDescription, setShowDescription] = useState(true);
+  const [studentsFilter, setStudentsFilter] = useState<'all' | 'graduated' | 'enrolled'>('all');
   const [loading, setLoading] = useState(false);
   const [academyData, setAcademyData] = useState<any>(null);
 
@@ -47,13 +48,18 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
       if ((data as any)?.directory_settings) {
         setShowLogo((data as any).directory_settings.show_logo ?? true);
         setShowDescription((data as any).directory_settings.show_description ?? true);
+        setStudentsFilter((data as any).directory_settings.students_filter ?? 'all');
       }
     } catch (error) {
       console.error('Error loading academy settings:', error);
     }
   };
 
-  const updateDirectorySettings = async (show_logo: boolean, show_description: boolean) => {
+  const updateDirectorySettings = async (
+    show_logo: boolean, 
+    show_description: boolean, 
+    students_filter: 'all' | 'graduated' | 'enrolled'
+  ) => {
     try {
       setLoading(true);
       const { error } = await supabase
@@ -61,7 +67,8 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
         .update({
           directory_settings: {
             show_logo,
-            show_description
+            show_description,
+            students_filter
           }
         } as any)
         .eq('id', academyId);
@@ -78,12 +85,17 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
 
   const handleToggleLogo = async (checked: boolean) => {
     setShowLogo(checked);
-    await updateDirectorySettings(checked, showDescription);
+    await updateDirectorySettings(checked, showDescription, studentsFilter);
   };
 
   const handleToggleDescription = async (checked: boolean) => {
     setShowDescription(checked);
-    await updateDirectorySettings(showLogo, checked);
+    await updateDirectorySettings(showLogo, checked, studentsFilter);
+  };
+
+  const handleStudentsFilterChange = async (filter: 'all' | 'graduated' | 'enrolled') => {
+    setStudentsFilter(filter);
+    await updateDirectorySettings(showLogo, showDescription, filter);
   };
 
   const [graduates, setGraduates] = useState<any[]>([]);
@@ -192,6 +204,47 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
               onCheckedChange={handleToggleDescription}
               disabled={loading}
             />
+          </div>
+
+          {/* Students Filter Setting */}
+          <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex items-start gap-3 flex-1">
+              <GraduationCap className="h-5 w-5 text-muted-foreground" />
+              <div className="flex-1">
+                <Label className="text-sm font-medium">
+                  Estudiantes a mostrar
+                </Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Selecciona qué estudiantes mostrar en el directorio público
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    size="sm"
+                    variant={studentsFilter === 'all' ? 'default' : 'outline'}
+                    onClick={() => handleStudentsFilterChange('all')}
+                    disabled={loading}
+                  >
+                    Todos
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={studentsFilter === 'graduated' ? 'default' : 'outline'}
+                    onClick={() => handleStudentsFilterChange('graduated')}
+                    disabled={loading}
+                  >
+                    Solo Graduados
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={studentsFilter === 'enrolled' ? 'default' : 'outline'}
+                    onClick={() => handleStudentsFilterChange('enrolled')}
+                    disabled={loading}
+                  >
+                    Solo Activos
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
