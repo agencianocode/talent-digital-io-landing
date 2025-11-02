@@ -174,6 +174,56 @@ const TalentDiscovery = () => {
 
       console.log('👥 Roles de usuario encontrados:', talentRoles?.length || 0);
 
+      // Get emails for the user IDs to check academy membership
+      const { data: authUsers } = await supabase.rpc('get_users_emails', {
+        user_ids: talentUserIds
+      }).then(res => {
+        // If RPC doesn't exist, fallback to empty
+        if (res.error) {
+          console.warn('get_users_emails RPC not available, skipping academy verification');
+          return { data: null };
+        }
+        return res;
+      });
+
+      // Get academy students to mark verified talents
+      const userEmailsMap = new Map<string, string>(); // user_id -> email
+      if (authUsers) {
+        authUsers.forEach((u: any) => userEmailsMap.set(u.id, u.email));
+      }
+      
+      const emails = Array.from(userEmailsMap.values());
+      const { data: academyStudents } = emails.length > 0 ? await supabase
+        .from('academy_students')
+        .select('student_email, academy_id, status')
+        .in('student_email', emails) : { data: null };
+      
+      console.log('🎓 Estudiantes de academias encontrados:', academyStudents?.length || 0);
+
+      // Create a map of verified users (students from academies)
+      const verifiedUsersMap = new Map();
+      if (academyStudents && academyStudents.length > 0) {
+        // Get academy names for verified users
+        const academyIds = [...new Set(academyStudents.map(s => s.academy_id))];
+        const { data: academies } = await supabase
+          .from('companies')
+          .select('id, name')
+          .in('id', academyIds);
+        
+        const academyMap = new Map(academies?.map(a => [a.id, a.name]) || []);
+        
+        // Map by user_id instead of email
+        academyStudents.forEach(student => {
+          const userId = Array.from(userEmailsMap.entries()).find(([_, email]) => email === student.student_email)?.[0];
+          if (userId) {
+            verifiedUsersMap.set(userId, {
+              academyName: academyMap.get(student.academy_id),
+              status: student.status
+            });
+          }
+        });
+      }
+
       // Combine profiles and talent_profiles data
       const meetsMinimums = (params: {
         bio?: string | null;
@@ -196,6 +246,7 @@ const TalentDiscovery = () => {
       const talents: RealTalent[] = profiles?.map(profile => {
         const talentProfile = (talentProfiles as any)?.find((tp: any) => tp.user_id === profile.user_id);
         const userRole = talentRoles?.find(r => r.user_id === profile.user_id);
+        const academyInfo = verifiedUsersMap.get(profile.user_id);
         
         return {
           id: profile.id,
@@ -222,15 +273,17 @@ const TalentDiscovery = () => {
             social: profile.social_links,
           }),
           is_featured: false, // Column doesn't exist in talent_profiles table
-          is_verified: false, // Column doesn't exist in talent_profiles table
+          is_verified: !!academyInfo, // Verified if belongs to any academy
           is_premium: userRole?.role === 'premium_talent', // Usar el rol real del usuario
           rating: 0, // Column doesn't exist in talent_profiles table
           reviews_count: 0, // Column doesn't exist in talent_profiles table
           response_rate: 0, // Column doesn't exist in talent_profiles table
           last_active: profile.updated_at, // Use profile updated_at as fallback
           created_at: profile.created_at,
-          updated_at: profile.updated_at
-        };
+          updated_at: profile.updated_at,
+          academy_name: academyInfo?.academyName,
+          academy_status: academyInfo?.status
+        } as any;
       }) || [];
 
       // Enhance existing talents with better data

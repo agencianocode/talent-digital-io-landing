@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
 import { useTalentProfileProgress } from '@/hooks/useTalentProfileProgress';
+import { AcademyAffiliationCard } from '@/components/talent/AcademyAffiliationCard';
 
 const TalentDashboard = () => {
   const navigate = useNavigate();
@@ -103,6 +104,9 @@ const TalentDashboard = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Academy Affiliation Section */}
+        <AcademyAffiliationCard />
 
         {/* Search Section */}
         <Card className="bg-white">
