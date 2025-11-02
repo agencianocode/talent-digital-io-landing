@@ -52,31 +52,40 @@ export const AcademyEmployabilityStats = ({ academyId }: AcademyEmployabilitySta
       // Get applications from graduates
       const graduateEmails = graduates?.map(g => g.student_email) || [];
       
-      const { data: users } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .in('email', graduateEmails);
+      // Guard: only query if we have emails to avoid malformed query (400 error)
+      let userIds: string[] = [];
+      if (graduateEmails.length > 0) {
+        const { data: users } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .in('email', graduateEmails);
 
-      const userIds = users?.map(u => u.user_id) || [];
+        userIds = users?.map(u => u.user_id) || [];
+      }
 
-      const { data: applications, error: appError } = await supabase
-        .from('applications')
-        .select(`
-          id,
-          user_id,
-          status,
-          created_at,
-          opportunities (
+      // Guard: only query applications if we have user IDs
+      let applications: any[] = [];
+      if (userIds.length > 0) {
+        const { data: applicationsData, error: appError } = await supabase
+          .from('applications')
+          .select(`
             id,
-            title,
-            companies (
-              name
+            user_id,
+            status,
+            created_at,
+            opportunities (
+              id,
+              title,
+              companies (
+                name
+              )
             )
-          )
-        `)
-        .in('user_id', userIds);
+          `)
+          .in('user_id', userIds);
 
-      if (appError) throw appError;
+        if (appError) throw appError;
+        applications = applicationsData || [];
+      }
 
       // Calculate employment stats
       const employedCount = applications?.filter(a => 

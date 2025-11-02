@@ -47,7 +47,11 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   const [error, setError] = useState<string | null>(null);
 
   const loadAcademyData = async () => {
-    if (!academyId) return;
+    // Guard: don't make API calls with empty/invalid academyId
+    if (!academyId || academyId === '') {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -69,7 +73,7 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   };
 
   const loadStudents = async (filters?: { status?: string; search?: string }) => {
-    if (!academyId) return;
+    if (!academyId || academyId === '') return;
 
     try {
       const studentsData = await academyService.getStudents(academyId, filters);
@@ -81,7 +85,7 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   };
 
   const loadInvitations = async () => {
-    if (!academyId) return;
+    if (!academyId || academyId === '') return;
 
     try {
       const invitationsData = await academyService.getInvitations(academyId);
@@ -93,7 +97,7 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   };
 
   const loadActivity = async () => {
-    if (!academyId) return;
+    if (!academyId || academyId === '') return;
 
     try {
       const activityData = await academyService.getActivity(academyId);
@@ -105,7 +109,7 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   };
 
   const loadExclusiveOpportunities = async () => {
-    if (!academyId) return;
+    if (!academyId || academyId === '') return;
 
     try {
       const opportunitiesData = await academyService.getExclusiveOpportunities(academyId);
@@ -117,7 +121,7 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   };
 
   const loadPublicDirectory = async () => {
-    if (!academyId) return;
+    if (!academyId || academyId === '') return;
 
     try {
       const directoryData = await academyService.getPublicDirectory(academyId);
@@ -182,7 +186,8 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
   };
 
   useEffect(() => {
-    if (academyId) {
+    // Only load data if we have a valid academyId
+    if (academyId && academyId !== '') {
       refreshData();
     }
   }, [academyId]);

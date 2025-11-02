@@ -833,6 +833,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const hasCompletedTalentOnboarding = async (userId: string): Promise<boolean> => {
     try {
       // Check if user has a record in talent_profiles table (marks onboarding completion)
+      // Note: 406 errors for business users are expected and handled silently
       const { data, error } = await supabase
         .from('talent_profiles')
         .select('id')
@@ -840,6 +841,10 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .maybeSingle();
 
       if (error) {
+        // Silently handle 406 errors (expected for non-talent users)
+        if (error.code === 'PGRST116') {
+          return false;
+        }
         console.error('Error checking talent onboarding:', error);
         return false;
       }

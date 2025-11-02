@@ -43,6 +43,11 @@ const AcademyDashboard: React.FC = () => {
   // Check if user has academy role
   const isAcademyRole = userRole === 'business' || userRole === 'premium_business' || userRole === 'freemium_business' || userRole === 'academy_premium' || userRole === 'admin';
 
+  // Initialize useAcademyData BEFORE any conditional returns (React Hook rules)
+  // Pass activeCompany?.id safely, hook will handle empty/invalid values
+  const academyId = activeCompany?.id || '';
+  const { stats } = useAcademyData(academyId);
+
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -73,10 +78,6 @@ const AcademyDashboard: React.FC = () => {
       </div>
     );
   }
-
-  // Only initialize useAcademyData when we have a valid company
-  const academyId = activeCompany?.id || '';
-  const { stats } = useAcademyData(academyId);
 
   if (!isAcademyRole) {
     return (
