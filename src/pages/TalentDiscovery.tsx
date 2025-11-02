@@ -298,7 +298,7 @@ const TalentDiscovery = () => {
             city: talent.city || 'Cali',
             country: talent.country || 'Colombia',
             is_featured: true,
-            is_verified: true,
+            // is_verified: usar el valor real calculado desde academy_students
             is_premium: talent.is_premium,
             video_presentation_url: talent.video_presentation_url || 'https://youtu.be/kcOrTOT7Kko',
             portfolio_url: talent.portfolio_url || 'https://fabiansegura.com/portfolio',
