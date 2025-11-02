@@ -818,40 +818,40 @@ const TalentDiscovery = () => {
                                     <p className="text-gray-600 text-sm">{talent.title}</p>
                                   </div>
                                   
-                                  <div className="flex items-center gap-1">
-                                    {talent.is_premium && (
-                                      <Badge className="bg-primary text-primary-foreground text-xs flex items-center gap-1">
-                                        <Plus className="h-3 w-3" />
-                                        Premium
-                                      </Badge>
-                                    )}
-                                    {talent.is_verified && !talent.is_premium && (
-                                      <Badge className="bg-green-100 text-green-800 text-xs flex items-center gap-1">
-                                        <CheckCircle className="h-3 w-3" />
-                                        Certificado
-                                      </Badge>
-                                    )}
-                                    {!talent.is_complete && !talent.is_premium && !talent.is_verified && (
-                                      <Badge className="bg-yellow-100 text-yellow-800 text-xs" title={`Completitud: ${talent.profile_completeness ?? 0}%`}>
-                                        Perfil incompleto
-                                      </Badge>
+                                  <div className="flex flex-col items-end gap-1">
+                                    <div className="flex items-center gap-1">
+                                      {talent.is_premium && (
+                                        <Badge className="bg-primary text-primary-foreground text-xs flex items-center gap-1">
+                                          <Plus className="h-3 w-3" />
+                                          Premium
+                                        </Badge>
+                                      )}
+                                      {talent.is_verified && !talent.is_premium && (
+                                        <Badge className="bg-green-100 text-green-800 text-xs flex items-center gap-1">
+                                          <CheckCircle className="h-3 w-3" />
+                                          Certificado
+                                        </Badge>
+                                      )}
+                                      {!talent.is_complete && !talent.is_premium && !talent.is_verified && (
+                                        <Badge className="bg-yellow-100 text-yellow-800 text-xs" title={`Completitud: ${talent.profile_completeness ?? 0}%`}>
+                                          Perfil incompleto
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Academy affiliation below badge for verified talents */}
+                                    {talent.is_verified && (talent as any).academy_name && (
+                                      <div className="flex items-center gap-1 text-xs text-green-700">
+                                        <GraduationCap className="h-3 w-3" />
+                                        <span className="font-medium">{(talent as any).academy_name}</span>
+                                      </div>
                                     )}
                                   </div>
                                 </div>
                                 
-                                <div className="flex flex-col gap-1 mt-2">
-                                  <div className="flex items-center gap-1 text-sm text-gray-600">
-                                    <MapPin className="h-3 w-3" />
-                                    <span>{talent.city && talent.country ? `${talent.city}, ${talent.country}` : 'Ubicación no especificada'}</span>
-                                  </div>
-                                  
-                                  {/* Academy affiliation for verified talents */}
-                                  {talent.is_verified && (talent as any).academy_name && (
-                                    <div className="flex items-center gap-1 text-xs text-green-700">
-                                      <GraduationCap className="h-3 w-3" />
-                                      <span className="font-medium">{(talent as any).academy_name}</span>
-                                    </div>
-                                  )}
+                                <div className="flex items-center gap-1 text-sm text-gray-600 mt-2">
+                                  <MapPin className="h-3 w-3" />
+                                  <span>{talent.city && talent.country ? `${talent.city}, ${talent.country}` : 'Ubicación no especificada'}</span>
                                 </div>
                               </div>
                             </div>
