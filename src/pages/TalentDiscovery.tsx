@@ -838,11 +838,19 @@ const TalentDiscovery = () => {
                                   </div>
                                 </div>
                                 
-                                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                                  <div className="flex items-center gap-1">
+                                <div className="flex flex-col gap-1 mt-2">
+                                  <div className="flex items-center gap-1 text-sm text-gray-600">
                                     <MapPin className="h-3 w-3" />
                                     <span>{talent.city && talent.country ? `${talent.city}, ${talent.country}` : 'Ubicación no especificada'}</span>
                                   </div>
+                                  
+                                  {/* Academy affiliation for verified talents */}
+                                  {talent.is_verified && (talent as any).academy_name && (
+                                    <div className="flex items-center gap-1 text-xs text-green-700">
+                                      <GraduationCap className="h-3 w-3" />
+                                      <span className="font-medium">{(talent as any).academy_name}</span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
