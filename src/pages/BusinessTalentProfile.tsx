@@ -46,6 +46,7 @@ const BusinessTalentProfile = () => {
   const [showAllWorkExperience, setShowAllWorkExperience] = useState(false);
   const [videoPresentationUrl, setVideoPresentationUrl] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [academyInfo, setAcademyInfo] = useState<{ name: string; logo_url: string | null } | null>(null);
   const { toast } = useToast();
   
   // Use refs to store data that won't be lost
@@ -175,6 +176,32 @@ const BusinessTalentProfile = () => {
         } else {
           console.log('✅ Social links data loaded:', socialLinksData?.length || 0, 'items');
           setSocialLinks(socialLinksData || []);
+        }
+        
+        // Fetch academy affiliation if talent is verified by an academy
+        const { data: userData } = await supabase.auth.admin.getUserById(id || '').catch(() => ({ data: null }));
+        
+        if (userData?.user?.email) {
+          const { data: academyStudent } = await supabase
+            .from('academy_students')
+            .select(`
+              academy_id,
+              status,
+              academy:companies!academy_students_academy_id_fkey(
+                name,
+                logo_url
+              )
+            `)
+            .eq('student_email', userData.user.email)
+            .maybeSingle();
+          
+          if (academyStudent && (academyStudent as any).academy) {
+            setAcademyInfo({
+              name: (academyStudent as any).academy.name,
+              logo_url: (academyStudent as any).academy.logo_url
+            });
+            console.log('🎓 Talent verified by academy:', (academyStudent as any).academy.name);
+          }
         }
       }
     } catch (error) {
@@ -307,6 +334,25 @@ const BusinessTalentProfile = () => {
                   
                     <div>
                     <h2 className="text-2xl font-bold text-gray-900">{userProfile.full_name}</h2>
+                    
+                    {/* Academy verification badge */}
+                    {academyInfo && (
+                      <div className="flex items-center gap-2 mt-1 mb-2">
+                        {academyInfo.logo_url ? (
+                          <img 
+                            src={academyInfo.logo_url} 
+                            alt={academyInfo.name}
+                            className="h-5 w-5 object-contain"
+                          />
+                        ) : (
+                          <GraduationCap className="h-4 w-4 text-green-600" />
+                        )}
+                        <span className="text-xs text-green-700 font-medium">
+                          Verificado por {academyInfo.name}
+                        </span>
+                      </div>
+                    )}
+                    
                     <p className="text-gray-600">{talentProfile?.title || 'Talento Digital'}</p>
                     <p className="text-sm text-gray-500">
                       {userProfile?.city && userProfile?.country 
