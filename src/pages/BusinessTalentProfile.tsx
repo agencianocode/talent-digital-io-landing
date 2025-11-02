@@ -179,9 +179,14 @@ const BusinessTalentProfile = () => {
         }
         
         // Fetch academy affiliation if talent is verified by an academy
-        const { data: userData } = await supabase.auth.admin.getUserById(id || '').catch(() => ({ data: null }));
+        // Use the RPC to get user email
+        const { data: userEmails } = await supabase.rpc('get_users_emails', {
+          user_ids: [id]
+        });
         
-        if (userData?.user?.email) {
+        const userEmail = userEmails?.[0]?.email;
+        
+        if (userEmail) {
           const { data: academyStudent } = await supabase
             .from('academy_students')
             .select(`
@@ -192,7 +197,7 @@ const BusinessTalentProfile = () => {
                 logo_url
               )
             `)
-            .eq('student_email', userData.user.email)
+            .eq('student_email', userEmail)
             .maybeSingle();
           
           if (academyStudent && (academyStudent as any).academy) {
