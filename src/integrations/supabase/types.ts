@@ -2393,14 +2393,18 @@ export type Database = {
         }[]
       }
       get_public_academy_directory: {
-        Args: { p_academy_id: string }
+        Args: { p_academy_id: string; p_status_filter?: string }
         Returns: {
           avatar_url: string
+          bio: string
           certificate_url: string
           city: string
           country: string
+          enrollment_date: string
           graduation_date: string
+          linkedin: string
           program_name: string
+          status: string
           student_email: string
           student_id: string
           student_name: string

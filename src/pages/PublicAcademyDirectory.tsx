@@ -12,13 +12,17 @@ interface Graduate {
   student_name: string | null;
   student_email: string;
   graduation_date: string | null;
+  enrollment_date: string | null;
   program_name: string | null;
   certificate_url?: string | null;
+  status?: string;
   user_id?: string | null;
   avatar_url?: string | null;
   city?: string | null;
   country?: string | null;
   title?: string | null;
+  bio?: string | null;
+  linkedin?: string | null;
 }
 
 interface AcademyInfo {
@@ -41,6 +45,7 @@ export default function PublicAcademyDirectory() {
   const [graduates, setGraduates] = useState<Graduate[]>([]);
   const [showLogo, setShowLogo] = useState(true);
   const [showDescription, setShowDescription] = useState(true);
+  const [studentsFilter, setStudentsFilter] = useState<'all' | 'enrolled' | 'graduated'>('all');
 
   useEffect(() => {
     loadAcademyData();
@@ -93,13 +98,14 @@ export default function PublicAcademyDirectory() {
       setShowLogo(settings.show_logo ?? true);
       setShowDescription(settings.show_description ?? true);
       
-      const studentsFilter = settings.students_filter || 'all';
+      const filter = (settings.students_filter || 'all') as 'all' | 'enrolled' | 'graduated';
+      setStudentsFilter(filter);
 
-      // Load graduates with their profiles
+      // Load students/graduates with their profiles
       const { data: graduatesData, error: graduatesError } = await supabase
         .rpc('get_public_academy_directory', {
           p_academy_id: academyData.id,
-          p_status_filter: studentsFilter
+          p_status_filter: filter
         });
 
       if (graduatesError) throw graduatesError;
@@ -168,22 +174,139 @@ export default function PublicAcademyDirectory() {
         </div>
       </div>
 
-      {/* Graduates Section */}
+      {/* Students Section */}
       <div className="container mx-auto max-w-6xl py-12 px-4">
-        <div className="flex items-center gap-3 mb-8">
-          <GraduationCap className="h-8 w-8" style={{ color: brandColor }} />
-          <h2 className="text-3xl font-bold">
-            Nuestros Graduados ({graduates.length})
-          </h2>
-        </div>
+        {studentsFilter === 'all' ? (
+          // Mostrar 2 columnas: Activos a la izquierda, Graduados a la derecha
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Estudiantes Activos */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <GraduationCap className="h-6 w-6" style={{ color: brandColor }} />
+                <h2 className="text-2xl font-bold">
+                  Estudiantes Activos ({graduates.filter(g => g.status === 'enrolled').length})
+                </h2>
+              </div>
+              {graduates.filter(g => g.status === 'enrolled').length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                    No hay estudiantes activos
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {graduates.filter(g => g.status === 'enrolled').map((graduate) => (
+                    <Card key={graduate.student_id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={graduate.avatar_url || undefined} />
+                            <AvatarFallback>
+                              {graduate.student_name?.charAt(0) || 'E'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold truncate">
+                              {graduate.student_name || 'Estudiante'}
+                            </h3>
+                            {graduate.title && (
+                              <p className="text-sm text-muted-foreground truncate">
+                                {graduate.title}
+                              </p>
+                            )}
+                            {(graduate.city || graduate.country) && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                <MapPin className="h-3 w-3" />
+                                {[graduate.city, graduate.country].filter(Boolean).join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
 
-        {graduates.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              Aún no hay graduados registrados en el directorio público.
-            </CardContent>
-          </Card>
+            {/* Graduados */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <Award className="h-6 w-6" style={{ color: brandColor }} />
+                <h2 className="text-2xl font-bold">
+                  Graduados ({graduates.filter(g => g.status === 'graduated').length})
+                </h2>
+              </div>
+              {graduates.filter(g => g.status === 'graduated').length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                    No hay graduados aún
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {graduates.filter(g => g.status === 'graduated').map((graduate) => (
+                    <Card key={graduate.student_id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={graduate.avatar_url || undefined} />
+                            <AvatarFallback>
+                              {graduate.student_name?.charAt(0) || 'G'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold truncate">
+                              {graduate.student_name || 'Graduado'}
+                            </h3>
+                            {graduate.title && (
+                              <p className="text-sm text-muted-foreground truncate">
+                                {graduate.title}
+                              </p>
+                            )}
+                            {(graduate.city || graduate.country) && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                <MapPin className="h-3 w-3" />
+                                {[graduate.city, graduate.country].filter(Boolean).join(', ')}
+                              </div>
+                            )}
+                            {graduate.graduation_date && (
+                              <Badge variant="secondary" className="mt-2 text-xs">
+                                {new Date(graduate.graduation_date).toLocaleDateString()}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         ) : (
+          // Mostrar solo el filtro seleccionado
+          <>
+            <div className="flex items-center gap-3 mb-8">
+              <GraduationCap className="h-8 w-8" style={{ color: brandColor }} />
+              <h2 className="text-3xl font-bold">
+                {studentsFilter === 'enrolled' 
+                  ? `Nuestros Estudiantes Activos (${graduates.length})`
+                  : `Nuestros Graduados (${graduates.length})`
+                }
+              </h2>
+            </div>
+
+            {graduates.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  {studentsFilter === 'enrolled' 
+                    ? 'Aún no hay estudiantes activos registrados.'
+                    : 'Aún no hay graduados registrados en el directorio público.'
+                  }
+                </CardContent>
+              </Card>
+            ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {graduates.map((graduate) => (
               <Card key={graduate.student_id} className="hover:shadow-lg transition-shadow">
@@ -249,6 +372,8 @@ export default function PublicAcademyDirectory() {
               </Card>
             ))}
           </div>
+            )}
+          </>
         )}
       </div>
 

@@ -309,11 +309,12 @@ export const academyService = {
   },
 
   // Get public directory of graduates (respects privacy settings)
-  async getPublicDirectory(academyId: string): Promise<PublicDirectoryStudent[]> {
+  async getPublicDirectory(academyId: string, statusFilter: 'all' | 'enrolled' | 'graduated' = 'all'): Promise<PublicDirectoryStudent[]> {
     try {
       const { data, error } = await supabase
         .rpc('get_public_academy_directory', {
-          p_academy_id: academyId
+          p_academy_id: academyId,
+          p_status_filter: statusFilter
         });
 
       if (error) throw error;

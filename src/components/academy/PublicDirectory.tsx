@@ -103,12 +103,13 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
   // Load graduates data
   useEffect(() => {
     loadGraduates();
-  }, [academyId]);
+  }, [academyId, studentsFilter]);
 
   const loadGraduates = async () => {
     try {
       const { data, error } = await supabase.rpc('get_public_academy_directory', {
-        p_academy_id: academyId
+        p_academy_id: academyId,
+        p_status_filter: studentsFilter
       });
 
       if (error) throw error;
@@ -306,14 +307,20 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="h-5 w-5" />
-            Graduados ({graduates.length})
+            {studentsFilter === 'all' && `Estudiantes (${graduates.length})`}
+            {studentsFilter === 'graduated' && `Graduados (${graduates.length})`}
+            {studentsFilter === 'enrolled' && `Estudiantes Activos (${graduates.length})`}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {graduates.length === 0 ? (
             <div className="text-center py-8">
               <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No hay graduados en el directorio público</p>
+              <p className="text-muted-foreground">
+                {studentsFilter === 'all' && 'No hay estudiantes en el directorio público'}
+                {studentsFilter === 'graduated' && 'No hay graduados en el directorio público'}
+                {studentsFilter === 'enrolled' && 'No hay estudiantes activos en el directorio público'}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
