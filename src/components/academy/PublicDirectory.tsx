@@ -32,6 +32,7 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
   // Load academy settings
   useEffect(() => {
     loadAcademySettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [academyId]);
 
   const loadAcademySettings = async () => {
@@ -103,6 +104,7 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
   // Load graduates data
   useEffect(() => {
     loadGraduates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [academyId, studentsFilter]);
 
   const loadGraduates = async () => {
@@ -331,13 +333,13 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
                       <Avatar className="w-16 h-16">
                         <AvatarImage src={graduate.avatar_url || undefined} />
                         <AvatarFallback>
-                          {(graduate.full_name || graduate.student_name || 'E')?.charAt(0) || 'E'}
+                          {graduate.full_name?.charAt(0) || 'E'}
                         </AvatarFallback>
                       </Avatar>
                       
                       <div>
                         <h3 className="font-semibold text-gray-900">
-                          {graduate.full_name || graduate.student_name || 'Estudiante'}
+                          {graduate.full_name || 'Estudiante'}
                         </h3>
                         {graduate.location && (
                           <p className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">

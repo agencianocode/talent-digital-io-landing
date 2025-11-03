@@ -124,7 +124,7 @@ export const useAcademyData = (academyId: string): UseAcademyDataReturn => {
     if (!academyId || academyId === '') return;
 
     try {
-      const directoryData = await academyService.getPublicDirectory(academyId);
+      const directoryData = await academyService.getPublicDirectory(academyId, 'all');
       setPublicDirectory(directoryData);
     } catch (err) {
       console.error('Error loading public directory:', err);

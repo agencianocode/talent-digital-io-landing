@@ -49,6 +49,7 @@ export default function PublicAcademyDirectory() {
 
   useEffect(() => {
     loadAcademyData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   const loadAcademyData = async () => {
