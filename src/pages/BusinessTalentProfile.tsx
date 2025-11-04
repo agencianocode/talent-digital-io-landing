@@ -15,6 +15,8 @@ import { ShareProfileModal } from '@/components/ShareProfileModal';
 import { ArrowLeft, MessageCircle, Share2, ExternalLink, Calendar, Briefcase, GraduationCap, Play, Linkedin, Youtube, Github, Instagram, Facebook } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useAcademyAffiliations } from '@/hooks/useAcademyAffiliations';
+import { AcademyCertificationBadge } from '@/components/academy/AcademyCertificationBadge';
 
 // Custom X (Twitter) icon component
 const XIcon = ({ className }: { className?: string }) => (
@@ -46,8 +48,16 @@ const BusinessTalentProfile = () => {
   const [showAllWorkExperience, setShowAllWorkExperience] = useState(false);
   const [videoPresentationUrl, setVideoPresentationUrl] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+<<<<<<< HEAD
   // const [academyInfo, setAcademyInfo] = useState<{ name: string; logo_url: string | null } | null>(null);
+=======
+>>>>>>> 8769bab (feat: Implementar sistema de badges de Academia para estudiantes)
   const { toast } = useToast();
+  
+  // Hook para obtener afiliaciones de Academia
+  const { affiliations } = useAcademyAffiliations(
+    userProfile?.email
+  );
   
   // Use refs to store data that won't be lost
   const educationRef = useRef<any[]>([]);
@@ -178,9 +188,13 @@ const BusinessTalentProfile = () => {
           setSocialLinks(socialLinksData || []);
         }
         
+<<<<<<< HEAD
         // Fetch academy affiliation if talent is verified by an academy
         // Note: Skipping academy check as email is not directly available
         // This would require an RPC function or alternative approach
+=======
+        // Academy affiliations are now loaded via useAcademyAffiliations hook
+>>>>>>> 8769bab (feat: Implementar sistema de badges de Academia para estudiantes)
       }
     } catch (error) {
       console.error('❌ Error fetching talent profile:', error);
@@ -313,6 +327,7 @@ const BusinessTalentProfile = () => {
                     <div>
                     <h2 className="text-2xl font-bold text-gray-900">{userProfile.full_name}</h2>
                     
+<<<<<<< HEAD
                     {/* Academy verification badge - temporarily disabled */}
                     {/* {academyInfo && (
                       <div className="flex items-center gap-2 mt-1 mb-2">
@@ -321,17 +336,35 @@ const BusinessTalentProfile = () => {
                             src={academyInfo.logo_url} 
                             alt={academyInfo.name}
                             className="h-5 w-5 object-contain"
+=======
+                    <p className="text-gray-600">{talentProfile?.title || 'Talento Digital'}</p>
+                    
+                    {/* Academy Badges */}
+                    {affiliations.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3 justify-center">
+                        {affiliations.map((affiliation, index) => (
+                          <AcademyCertificationBadge
+                            key={`${affiliation.academy_id}-${index}`}
+                            certification={{
+                              academy_id: affiliation.academy_id,
+                              academy_name: affiliation.academy_name,
+                              certification_date: affiliation.graduation_date || '',
+                              program: affiliation.program_name || '',
+                              badge_color: affiliation.brand_color || '#3b82f6',
+                            }}
+                            size="sm"
+                            showProgram={false}
+>>>>>>> 8769bab (feat: Implementar sistema de badges de Academia para estudiantes)
                           />
-                        ) : (
-                          <GraduationCap className="h-4 w-4 text-green-600" />
-                        )}
-                        <span className="text-xs text-green-700 font-medium">
-                          Verificado por {academyInfo.name}
-                        </span>
+                        ))}
                       </div>
+<<<<<<< HEAD
                     )} */}
                     
                     <p className="text-gray-600">{talentProfile?.title || 'Talento Digital'}</p>
+=======
+                    )}
+>>>>>>> 8769bab (feat: Implementar sistema de badges de Academia para estudiantes)
                     <p className="text-sm text-gray-500">
                       {userProfile?.city && userProfile?.country 
                         ? `${userProfile.city}, ${userProfile.country}` 

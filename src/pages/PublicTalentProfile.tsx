@@ -26,6 +26,8 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PublicContactModal } from '@/components/PublicContactModal';
 import { usePublicContact } from '@/hooks/usePublicContact';
+import { useAcademyAffiliations } from '@/hooks/useAcademyAffiliations';
+import { AcademyCertificationBadge } from '@/components/academy/AcademyCertificationBadge';
 
 // Interfaces para datos reales
 interface TalentProfile {
@@ -120,6 +122,11 @@ const PublicTalentProfile = () => {
     contactType, 
     handleContact 
   } = usePublicContact();
+  
+  // Hook para obtener afiliaciones de Academia
+  const { affiliations } = useAcademyAffiliations(
+    (userProfile as any)?.email
+  );
   
   useEffect(() => {
     if (talentId) {
@@ -379,6 +386,26 @@ const PublicTalentProfile = () => {
                             {userProfile.full_name}
                           </h1>
                           <p className="text-xl text-gray-600">{talentProfile?.title || userProfile.position || 'Talento Digital'}</p>
+                          
+                          {/* Academy Badges */}
+                          {affiliations.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              {affiliations.map((affiliation, index) => (
+                                <AcademyCertificationBadge
+                                  key={`${affiliation.academy_id}-${index}`}
+                                  certification={{
+                                    academy_id: affiliation.academy_id,
+                                    academy_name: affiliation.academy_name,
+                                    certification_date: affiliation.graduation_date || '',
+                                    program: affiliation.program_name || '',
+                                    badge_color: affiliation.brand_color || '#3b82f6',
+                                  }}
+                                  size="md"
+                                  showProgram={!!affiliation.program_name}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
                         
                         <div className="flex gap-2">

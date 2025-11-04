@@ -22,14 +22,14 @@ import {
   Github,
   Plus,
   ChevronDown,
-  X,
-  GraduationCap
+  X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useMessages } from '@/hooks/useMessages';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 
 // Real talent interfaces based on Supabase tables
 interface RealTalent {
@@ -837,13 +837,11 @@ const TalentDiscovery = () => {
                                       )}
                                     </div>
                                     
-                                    {/* Academy affiliation below badge for verified talents */}
-                                    {talent.is_verified && (talent as any).academy_name && (
-                                      <div className="flex items-center gap-1 text-xs text-green-700">
-                                        <GraduationCap className="h-3 w-3" />
-                                        <span className="font-medium">{(talent as any).academy_name}</span>
-                                      </div>
-                                    )}
+                                    {/* Academy affiliation badge */}
+                                    <TalentCardAcademyBadge 
+                                      userId={talent.user_id} 
+                                      compact={true}
+                                    />
                                   </div>
                                 </div>
                                 
