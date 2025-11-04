@@ -46,7 +46,7 @@ const BusinessTalentProfile = () => {
   const [showAllWorkExperience, setShowAllWorkExperience] = useState(false);
   const [videoPresentationUrl, setVideoPresentationUrl] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [academyInfo, setAcademyInfo] = useState<{ name: string; logo_url: string | null } | null>(null);
+  // const [academyInfo, setAcademyInfo] = useState<{ name: string; logo_url: string | null } | null>(null);
   const { toast } = useToast();
   
   // Use refs to store data that won't be lost
@@ -179,35 +179,8 @@ const BusinessTalentProfile = () => {
         }
         
         // Fetch academy affiliation if talent is verified by an academy
-        // Use the RPC to get user email
-        const { data: userEmails } = await supabase.rpc('get_users_emails', {
-          user_ids: [id]
-        });
-        
-        const userEmail = userEmails?.[0]?.email;
-        
-        if (userEmail) {
-          const { data: academyStudent } = await supabase
-            .from('academy_students')
-            .select(`
-              academy_id,
-              status,
-              academy:companies!academy_students_academy_id_fkey(
-                name,
-                logo_url
-              )
-            `)
-            .eq('student_email', userEmail)
-            .maybeSingle();
-          
-          if (academyStudent && (academyStudent as any).academy) {
-            setAcademyInfo({
-              name: (academyStudent as any).academy.name,
-              logo_url: (academyStudent as any).academy.logo_url
-            });
-            console.log('🎓 Talent verified by academy:', (academyStudent as any).academy.name);
-          }
-        }
+        // Note: Skipping academy check as email is not directly available
+        // This would require an RPC function or alternative approach
       }
     } catch (error) {
       console.error('❌ Error fetching talent profile:', error);
@@ -340,8 +313,8 @@ const BusinessTalentProfile = () => {
                     <div>
                     <h2 className="text-2xl font-bold text-gray-900">{userProfile.full_name}</h2>
                     
-                    {/* Academy verification badge */}
-                    {academyInfo && (
+                    {/* Academy verification badge - temporarily disabled */}
+                    {/* {academyInfo && (
                       <div className="flex items-center gap-2 mt-1 mb-2">
                         {academyInfo.logo_url ? (
                           <img 
@@ -356,7 +329,7 @@ const BusinessTalentProfile = () => {
                           Verificado por {academyInfo.name}
                         </span>
                       </div>
-                    )}
+                    )} */}
                     
                     <p className="text-gray-600">{talentProfile?.title || 'Talento Digital'}</p>
                     <p className="text-sm text-gray-500">

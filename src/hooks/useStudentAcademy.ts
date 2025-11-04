@@ -59,9 +59,9 @@ export const useStudentAcademy = () => {
         setAcademy({
           academyId: studentData.academy_id,
           academyName: academyInfo.name,
-          academyLogoUrl: academyInfo.logo_url,
+          academyLogoUrl: academyInfo.logo_url || null,
           status: studentData.status as any,
-          enrollmentDate: studentData.enrollment_date,
+          enrollmentDate: studentData.enrollment_date || '',
           graduationDate: studentData.graduation_date
         });
       } else {

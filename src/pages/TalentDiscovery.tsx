@@ -175,22 +175,20 @@ const TalentDiscovery = () => {
 
       console.log('👥 Roles de usuario encontrados:', talentRoles?.length || 0);
 
-      // Get emails for the user IDs to check academy membership
-      const { data: authUsers } = await supabase.rpc('get_users_emails', {
-        user_ids: talentUserIds
-      }).then(res => {
-        // If RPC doesn't exist, fallback to empty
-        if (res.error) {
-          console.warn('get_users_emails RPC not available, skipping academy verification');
-          return { data: null };
-        }
-        return res;
-      });
+      // Get talent profiles with their emails for academy membership check
+      const { data: talentProfilesForAcademy } = await supabase
+        .from('talent_profiles')
+        .select('user_id, email')
+        .in('user_id', talentUserIds);
 
       // Get academy students to mark verified talents
       const userEmailsMap = new Map<string, string>(); // user_id -> email
-      if (authUsers) {
-        authUsers.forEach((u: any) => userEmailsMap.set(u.id, u.email));
+      if (talentProfilesForAcademy) {
+        talentProfilesForAcademy.forEach((p: any) => {
+          if (p.email) {
+            userEmailsMap.set(p.user_id, p.email);
+          }
+        });
       }
       
       const emails = Array.from(userEmailsMap.values());

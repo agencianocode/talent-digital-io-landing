@@ -135,19 +135,28 @@ export const academyService = {
       if (error) throw error;
 
       // Transform data to match AcademyStudent type
-      const students: AcademyStudent[] = (data || []).map(student => ({
-        id: student.id,
-        academy_id: student.academy_id,
-        user_id: student.student_email,
-        status: (student.status || 'enrolled') as 'active' | 'graduated' | 'paused' | 'suspended',
-        joined_at: student.enrollment_date || student.created_at,
-        graduation_date: student.graduation_date || undefined,
-        certificate_url: undefined,
-        talent_profiles: {
-          full_name: student.student_name || 'Estudiante',
-          email: student.student_email
-        }
-      }));
+      const students: AcademyStudent[] = (data || []).map(student => {
+        // Map 'enrolled' to 'active' for type compatibility
+        let mappedStatus: 'active' | 'graduated' | 'paused' | 'suspended' = 'active';
+        if (student.status === 'graduated') mappedStatus = 'graduated';
+        else if (student.status === 'paused') mappedStatus = 'paused';
+        else if (student.status === 'suspended') mappedStatus = 'suspended';
+        else mappedStatus = 'active'; // 'enrolled' maps to 'active'
+        
+        return {
+          id: student.id,
+          academy_id: student.academy_id,
+          user_id: student.student_email,
+          status: mappedStatus,
+          joined_at: student.enrollment_date || student.created_at,
+          graduation_date: student.graduation_date || undefined,
+          certificate_url: undefined,
+          talent_profiles: {
+            full_name: student.student_name || 'Estudiante',
+            email: student.student_email
+          }
+        };
+      });
 
       // Apply search filter
       if (filters?.search) {
