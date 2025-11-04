@@ -132,6 +132,15 @@ const AcceptAcademyInvitation = () => {
     navigate('/register-talent');
   };
 
+  const handleLogin = () => {
+    localStorage.setItem('pendingAcademyInvitation', JSON.stringify({
+      academyId,
+      status,
+      timestamp: Date.now()
+    }));
+    navigate('/auth');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -238,7 +247,7 @@ const AcceptAcademyInvitation = () => {
               </Button>
               <Button 
                 variant="outline"
-                onClick={() => navigate('/auth')}
+                onClick={handleLogin}
                 className="w-full"
               >
                 Ya tengo cuenta - Iniciar Sesión
