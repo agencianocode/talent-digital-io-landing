@@ -88,17 +88,7 @@ const AcceptAcademyInvitation = () => {
         return;
       }
 
-      // Get user's talent profile info
-      const { data: profile } = await supabase
-        .from('talent_profiles')
-        .select('id, user_id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!profile) {
-        setError('Debes tener un perfil de talento para unirte a una academia');
-        return;
-      }
+      // Proceed without requiring a talent profile; only authentication is needed
 
       // Insert into academy_students
       const { error: insertError } = await supabase

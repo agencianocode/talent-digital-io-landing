@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
@@ -124,6 +124,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     isAuthenticated: false,
     isLoading: true
   });
+  const pendingInviteProcessedRef = useRef(false);
 
   // Fetch user profile and role with retry mechanism
   const fetchUserData = async (userId: string, userType?: string, retryCount = 0) => {
@@ -427,6 +428,48 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     };
   }, [authState.user?.id]);
+
+  // Process pending academy invitation after auth
+  useEffect(() => {
+    if (!authState.isAuthenticated || !authState.user?.email) return;
+    if (pendingInviteProcessedRef.current) return;
+    const raw = localStorage.getItem('pendingAcademyInvitation');
+    if (!raw) return;
+    const pending = JSON.parse(raw);
+    const academyId = pending?.academyId as string | undefined;
+    const status = pending?.status as string | undefined;
+    if (!academyId) {
+      localStorage.removeItem('pendingAcademyInvitation');
+      pendingInviteProcessedRef.current = true;
+      return;
+    }
+    (async () => {
+      try {
+        // Check if already exists
+        const { data: existing } = await supabase
+          .from('academy_students')
+          .select('id')
+          .eq('academy_id', academyId)
+          .eq('student_email', authState.user!.email as string)
+          .maybeSingle();
+        if (!existing) {
+          await supabase.from('academy_students').insert({
+            academy_id: academyId,
+            student_email: authState.user!.email as string,
+            student_name: (authState.user!.user_metadata as any)?.full_name || (authState.user!.email as string),
+            status: status === 'graduated' ? 'graduated' : 'enrolled',
+            enrollment_date: new Date().toISOString().split('T')[0],
+            ...(status === 'graduated' ? { graduation_date: new Date().toISOString().split('T')[0] } : {})
+          });
+        }
+        localStorage.removeItem('pendingAcademyInvitation');
+      } catch (e) {
+        console.error('Error processing pending academy invitation:', e);
+      } finally {
+        pendingInviteProcessedRef.current = true;
+      }
+    })();
+  }, [authState.isAuthenticated, authState.user?.email]);
 
   const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
     // For academy registrations, normalize to 'business' for compatibility
