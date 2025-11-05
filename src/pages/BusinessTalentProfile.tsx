@@ -314,7 +314,7 @@ const BusinessTalentProfile = () => {
                     <AvatarFallback>{userProfile.full_name?.charAt(0)}</AvatarFallback>
                 </Avatar>
                   
-                    <div>
+                  <div>
                     <h2 className="text-2xl font-bold text-gray-900">{userProfile.full_name}</h2>
                     
                     <p className="text-gray-600">{talentProfile?.title || 'Talento Digital'}</p>

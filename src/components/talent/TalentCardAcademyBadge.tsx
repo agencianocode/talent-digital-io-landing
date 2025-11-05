@@ -6,7 +6,7 @@ import { GraduationCap } from 'lucide-react';
 interface AcademyAffiliation {
   academy_id: string;
   academy_name: string;
-  status: string;
+  status: 'enrolled' | 'graduated';
   graduation_date?: string;
   program_name?: string;
   brand_color?: string;
@@ -14,6 +14,7 @@ interface AcademyAffiliation {
 
 interface TalentCardAcademyBadgeProps {
   userId: string;
+  userEmail?: string; // Email opcional para buscar afiliaciones
   size?: 'sm' | 'md' | 'lg';
   compact?: boolean; // Si es true, muestra solo un icono pequeño
 }
@@ -23,7 +24,8 @@ interface TalentCardAcademyBadgeProps {
  * Carga las afiliaciones basándose en el user_id
  */
 export const TalentCardAcademyBadge = ({ 
-  userId, 
+  userId: _userId, // Mantener por compatibilidad, usar userEmail en su lugar
+  userEmail,
   size = 'sm',
   compact = false 
 }: TalentCardAcademyBadgeProps) => {
@@ -31,21 +33,15 @@ export const TalentCardAcademyBadge = ({
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // Si no hay email, no podemos buscar afiliaciones
+    if (!userEmail) {
+      setAffiliations([]);
+      return;
+    }
+
     const fetchAffiliations = async () => {
       try {
         setIsLoading(true);
-
-        // Primero obtener el email del usuario
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('user_id', userId)
-          .single();
-
-        if (!profileData?.email) {
-          setAffiliations([]);
-          return;
-        }
 
         // Buscar en academy_students por email
         const { data, error } = await supabase
@@ -60,7 +56,7 @@ export const TalentCardAcademyBadge = ({
               brand_color
             )
           `)
-          .eq('student_email', profileData.email);
+          .eq('student_email', userEmail);
 
         if (error) {
           console.error('Error fetching academy affiliations:', error);
@@ -71,7 +67,7 @@ export const TalentCardAcademyBadge = ({
           const formatted: AcademyAffiliation[] = data.map(item => ({
             academy_id: item.academy_id,
             academy_name: (item.companies as any)?.name || 'Academia',
-            status: item.status,
+            status: (item.status as 'enrolled' | 'graduated') || 'enrolled',
             graduation_date: item.graduation_date || undefined,
             program_name: item.program_name || undefined,
             brand_color: (item.companies as any)?.brand_color || undefined,
@@ -90,21 +86,21 @@ export const TalentCardAcademyBadge = ({
     };
 
     fetchAffiliations();
-  }, [userId]);
+  }, [userEmail]);
 
   if (isLoading || affiliations.length === 0) {
     return null;
   }
 
   // Modo compacto: solo muestra un icono pequeño con el nombre de la primera academia
-  if (compact) {
+  if (compact && affiliations.length > 0) {
     const firstAffiliation = affiliations[0];
     return (
       <div className="flex items-center gap-1 text-xs" style={{ 
-        color: firstAffiliation.brand_color || '#10b981' 
+        color: firstAffiliation?.brand_color || '#10b981' 
       }}>
         <GraduationCap className="h-3 w-3" />
-        <span className="font-medium">{firstAffiliation.academy_name}</span>
+        <span className="font-medium">{firstAffiliation?.academy_name}</span>
         {affiliations.length > 1 && <span className="text-gray-500">+{affiliations.length - 1}</span>}
       </div>
     );
