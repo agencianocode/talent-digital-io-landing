@@ -134,7 +134,7 @@ export const academyService = {
 
       if (error) throw error;
 
-      // Obtener nombres reales para estudiantes que tienen email en student_name
+      // Obtener nombres reales y avatares para estudiantes que tienen email en student_name
       const isEmail = (str: string | null) => {
         if (!str) return false;
         return str.includes('@') && str.includes('.');
@@ -142,20 +142,32 @@ export const academyService = {
       
       const studentsNeedingNames = (data || []).filter(s => !s.student_name || isEmail(s.student_name));
       let namesMap = new Map<string, string>();
+      let avatarsMap = new Map<string, string | null>();
       
       if (studentsNeedingNames.length > 0) {
-        console.log('🔍 Getting real names for', studentsNeedingNames.length, 'students');
+        console.log('🔍 Getting real names and avatars for', studentsNeedingNames.length, 'students');
         const { data: userProfiles } = await supabase
           .rpc('get_user_ids_by_emails', { 
             user_emails: studentsNeedingNames.map(s => s.student_email) 
           }) as { 
-            data: Array<{ email: string; user_id: string; full_name: string | null }> | null 
+            data: Array<{ 
+              email: string; 
+              user_id: string; 
+              full_name: string | null;
+              avatar_url: string | null;
+            }> | null 
           };
         
         namesMap = new Map(
           userProfiles?.map(p => [p.email, p.full_name || p.email]) || []
         );
+        
+        avatarsMap = new Map(
+          userProfiles?.map(p => [p.email, p.avatar_url]) || []
+        );
+        
         console.log('✅ Names obtained:', Array.from(namesMap.entries()));
+        console.log('✅ Avatars obtained:', Array.from(avatarsMap.entries()));
       }
 
       // Transform data to match AcademyStudent type
@@ -183,7 +195,8 @@ export const academyService = {
           certificate_url: undefined,
           talent_profiles: {
             full_name: displayName,
-            email: student.student_email
+            email: student.student_email,
+            avatar_url: avatarsMap.get(student.student_email) || null
           }
         };
       });
