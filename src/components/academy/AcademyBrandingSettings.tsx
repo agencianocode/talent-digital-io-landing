@@ -65,8 +65,8 @@ export const AcademyBrandingSettings = ({ academyId }: AcademyBrandingSettingsPr
         .update({
           brand_color: brandColor,
           secondary_color: secondaryColor,
-          academy_tagline: tagline,
-          academy_slug: academySlug,
+          academy_tagline: tagline.trim() || null,
+          academy_slug: academySlug.trim() || null,
           public_directory_enabled: publicDirectoryEnabled,
         })
         .eq('id', academyId);
