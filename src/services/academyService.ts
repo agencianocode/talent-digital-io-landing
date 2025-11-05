@@ -134,23 +134,24 @@ export const academyService = {
 
       if (error) throw error;
 
-      // Obtener nombres reales y avatares para estudiantes que tienen email en student_name
+      // Obtener nombres reales y avatares para TODOS los estudiantes
       const isEmail = (str: string | null) => {
         if (!str) return false;
         return str.includes('@') && str.includes('.');
       };
       
       const studentsNeedingNames = (data || []).filter(s => !s.student_name || isEmail(s.student_name));
+      const allStudentEmails = (data || []).map(s => s.student_email);
       let namesMap = new Map<string, string>();
       let avatarsMap = new Map<string, string | null>();
       
-      if (studentsNeedingNames.length > 0) {
-        console.log('🔍 Getting real names and avatars for', studentsNeedingNames.length, 'students');
-        console.log('📧 Emails to query:', studentsNeedingNames.map(s => s.student_email));
+      if (allStudentEmails.length > 0) {
+        console.log('🔍 Getting data for ALL students:', allStudentEmails.length);
+        console.log('📧 All student emails:', allStudentEmails);
         
         const { data: userProfiles, error: rpcError } = await supabase
           .rpc('get_user_ids_by_emails', { 
-            user_emails: studentsNeedingNames.map(s => s.student_email) 
+            user_emails: allStudentEmails
           }) as { 
             data: Array<{ 
               email: string; 
@@ -165,12 +166,15 @@ export const academyService = {
           console.error('❌ Error calling get_user_ids_by_emails:', rpcError);
         }
         
-        console.log('📊 RPC Response:', userProfiles);
+        console.log('📊 RPC Response for all students:', userProfiles);
         
+        // Mapa de nombres solo para los que necesitan reemplazo
         namesMap = new Map(
-          userProfiles?.map(p => [p.email, p.full_name || p.email]) || []
+          userProfiles?.filter(p => p.full_name)
+            .map(p => [p.email, p.full_name || p.email]) || []
         );
         
+        // Mapa de avatares para TODOS
         avatarsMap = new Map(
           userProfiles?.map(p => [p.email, p.avatar_url]) || []
         );
