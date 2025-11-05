@@ -145,7 +145,6 @@ const TalentDiscovery = () => {
           id,
           user_id,
           full_name,
-          email,
           avatar_url,
           city,
           country,
@@ -177,14 +176,9 @@ const TalentDiscovery = () => {
       console.log('👥 Roles de usuario encontrados:', talentRoles?.length || 0);
 
       // Get academy students to mark verified talents
+      // NOTE: No podemos obtener emails aquí porque profiles no tiene email
+      // y auth.users no es accesible desde el cliente
       const userEmailsMap = new Map<string, string>(); // user_id -> email
-      if (profiles) {
-        profiles.forEach((p: any) => {
-          if (p.email) {
-            userEmailsMap.set(p.user_id, p.email);
-          }
-        });
-      }
       
       const emails = Array.from(userEmailsMap.values());
       const { data: academyStudents } = emails.length > 0 ? await supabase
@@ -275,7 +269,7 @@ const TalentDiscovery = () => {
           last_active: profile.updated_at, // Use profile updated_at as fallback
           created_at: profile.created_at,
           updated_at: profile.updated_at,
-          email: (profile as any).email, // Email para el badge de Academia
+          email: null, // Email no disponible (necesita función RPC en Supabase)
           academy_name: academyInfo?.academyName,
           academy_status: academyInfo?.status
         } as any;
