@@ -33,8 +33,11 @@ export const TalentCardAcademyBadge = ({
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 TalentCardAcademyBadge - userEmail:', userEmail);
+    
     // Si no hay email, no podemos buscar afiliaciones
     if (!userEmail) {
+      console.log('❌ No userEmail provided');
       setAffiliations([]);
       return;
     }
@@ -58,6 +61,13 @@ export const TalentCardAcademyBadge = ({
           `)
           .eq('student_email', userEmail);
 
+        console.log('📊 Academy students query result:', { 
+          email: userEmail, 
+          found: data?.length || 0, 
+          data, 
+          error 
+        });
+
         if (error) {
           console.error('Error fetching academy affiliations:', error);
           return;
@@ -73,8 +83,10 @@ export const TalentCardAcademyBadge = ({
             brand_color: (item.companies as any)?.brand_color || undefined,
           }));
 
+          console.log('✅ Affiliations formatted:', formatted);
           setAffiliations(formatted);
         } else {
+          console.log('⚠️ No academy affiliations found for:', userEmail);
           setAffiliations([]);
         }
       } catch (error) {

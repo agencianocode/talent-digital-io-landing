@@ -180,6 +180,8 @@ const TalentDiscovery = () => {
         .from('talent_profiles')
         .select('user_id, email')
         .in('user_id', talentUserIds);
+      
+      console.log('📧 Talent profiles with emails:', talentProfilesForAcademy);
 
       // Get academy students to mark verified talents
       const userEmailsMap = new Map<string, string>(); // user_id -> email
@@ -249,6 +251,12 @@ const TalentDiscovery = () => {
         
         // Obtener el email del talent profile para el badge de Academia
         const talentProfileEmail = talentProfilesForAcademy?.find((tp: any) => tp.user_id === profile.user_id)?.email;
+        
+        if (profile.user_id && talentProfileEmail) {
+          console.log('✉️ Email found for talent:', profile.full_name, talentProfileEmail);
+        } else if (profile.user_id && !talentProfileEmail) {
+          console.log('⚠️ NO email found for talent:', profile.full_name, profile.user_id);
+        }
         
         return {
           id: profile.id,
