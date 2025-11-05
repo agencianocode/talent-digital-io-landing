@@ -33,7 +33,11 @@ const TalentDashboard = () => {
   const nextTask = getNextIncompleteTask();
 
   const handleSearch = () => {
-    navigate('/talent-dashboard/explore');
+    // Guardar búsqueda en localStorage para que TalentOpportunitiesSearch la use
+    if (searchQuery.trim()) {
+      localStorage.setItem('talent-opportunity-search', searchQuery.trim());
+    }
+    navigate('/talent-dashboard/opportunities');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
