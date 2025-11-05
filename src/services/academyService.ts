@@ -146,7 +146,9 @@ export const academyService = {
       
       if (studentsNeedingNames.length > 0) {
         console.log('🔍 Getting real names and avatars for', studentsNeedingNames.length, 'students');
-        const { data: userProfiles } = await supabase
+        console.log('📧 Emails to query:', studentsNeedingNames.map(s => s.student_email));
+        
+        const { data: userProfiles, error: rpcError } = await supabase
           .rpc('get_user_ids_by_emails', { 
             user_emails: studentsNeedingNames.map(s => s.student_email) 
           }) as { 
@@ -155,8 +157,15 @@ export const academyService = {
               user_id: string; 
               full_name: string | null;
               avatar_url: string | null;
-            }> | null 
+            }> | null;
+            error: any;
           };
+        
+        if (rpcError) {
+          console.error('❌ Error calling get_user_ids_by_emails:', rpcError);
+        }
+        
+        console.log('📊 RPC Response:', userProfiles);
         
         namesMap = new Map(
           userProfiles?.map(p => [p.email, p.full_name || p.email]) || []
@@ -166,8 +175,8 @@ export const academyService = {
           userProfiles?.map(p => [p.email, p.avatar_url]) || []
         );
         
-        console.log('✅ Names obtained:', Array.from(namesMap.entries()));
-        console.log('✅ Avatars obtained:', Array.from(avatarsMap.entries()));
+        console.log('✅ Names Map:', Array.from(namesMap.entries()));
+        console.log('✅ Avatars Map:', Array.from(avatarsMap.entries()));
       }
 
       // Transform data to match AcademyStudent type
@@ -185,6 +194,15 @@ export const academyService = {
           displayName = namesMap.get(student.student_email) || student.student_email;
         }
         
+        const avatarUrl = avatarsMap.get(student.student_email) || null;
+        
+        console.log(`👤 Student ${student.student_email}:`, {
+          student_name: student.student_name,
+          displayName,
+          avatarUrl,
+          foundInMap: namesMap.has(student.student_email)
+        });
+        
         return {
           id: student.id,
           academy_id: student.academy_id,
@@ -196,7 +214,7 @@ export const academyService = {
           talent_profiles: {
             full_name: displayName,
             email: student.student_email,
-            avatar_url: avatarsMap.get(student.student_email) || null
+            avatar_url: avatarUrl
           }
         };
       });
