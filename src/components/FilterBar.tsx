@@ -95,11 +95,8 @@ const EXPERIENCE_LEVELS = [
 ];
 
 const CONTRACT_TYPES = [
-  { value: 'Tiempo Completo', label: 'Tiempo Completo' },
-  { value: 'Medio Tiempo', label: 'Medio Tiempo' },
-  { value: 'Freelance', label: 'Freelance' },
-  { value: 'Por Proyecto', label: 'Por Proyecto' },
-  { value: 'Consultoría', label: 'Consultoría' }
+  { value: 'Contrato', label: 'Contrato' },
+  { value: 'Trabajo Continuo', label: 'Trabajo Continuo' }
 ];
 
 const WORK_MODES = [
