@@ -21,9 +21,12 @@ export const useAcademyAffiliations = (userEmail: string | undefined) => {
 
   useEffect(() => {
     if (!userEmail) {
+      console.log('⚠️ useAcademyAffiliations: No email provided');
       setAffiliations([]);
       return;
     }
+
+    console.log('🔍 useAcademyAffiliations: Fetching for email:', userEmail);
 
     const fetchAffiliations = async () => {
       try {
@@ -37,7 +40,7 @@ export const useAcademyAffiliations = (userEmail: string | undefined) => {
             status,
             graduation_date,
             program_name,
-            companies:academy_id (
+            companies!academy_students_academy_id_fkey (
               name,
               logo_url,
               brand_color
@@ -46,9 +49,11 @@ export const useAcademyAffiliations = (userEmail: string | undefined) => {
           .eq('student_email', userEmail);
 
         if (error) {
-          console.error('Error fetching academy affiliations:', error);
+          console.error('❌ useAcademyAffiliations error:', error);
           return;
         }
+
+        console.log('✅ useAcademyAffiliations data:', data);
 
         if (data && data.length > 0) {
           const formatted: AcademyAffiliation[] = data.map(item => ({
@@ -61,12 +66,14 @@ export const useAcademyAffiliations = (userEmail: string | undefined) => {
             brand_color: (item.companies as any)?.brand_color || undefined,
           }));
 
+          console.log('🎓 useAcademyAffiliations formatted:', formatted);
           setAffiliations(formatted);
         } else {
+          console.log('⚠️ useAcademyAffiliations: No affiliations found');
           setAffiliations([]);
         }
       } catch (error) {
-        console.error('Error in useAcademyAffiliations:', error);
+        console.error('❌ Error in useAcademyAffiliations:', error);
         setAffiliations([]);
       } finally {
         setIsLoading(false);
