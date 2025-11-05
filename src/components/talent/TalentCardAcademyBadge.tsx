@@ -103,12 +103,17 @@ export const TalentCardAcademyBadge = ({
   if (compact && affiliations.length > 0) {
     const firstAffiliation = affiliations[0];
     return (
-      <div className="flex items-center gap-1 text-xs whitespace-nowrap" style={{ 
-        color: firstAffiliation?.brand_color || '#10b981' 
-      }}>
+      <div 
+        className="flex items-center gap-1 text-xs whitespace-nowrap px-2 py-1 rounded-md font-medium flex-shrink-0" 
+        style={{ 
+          backgroundColor: '#f6efff',
+          color: firstAffiliation?.brand_color || '#7c3aed',
+          border: `1px solid ${firstAffiliation?.brand_color || '#e9d5ff'}`
+        }}
+      >
         <GraduationCap className="h-3 w-3 flex-shrink-0" />
-        <span className="font-medium">{firstAffiliation?.academy_name}</span>
-        {affiliations.length > 1 && <span className="text-gray-500">+{affiliations.length - 1}</span>}
+        <span>{firstAffiliation?.academy_name}</span>
+        {affiliations.length > 1 && <span className="opacity-60">+{affiliations.length - 1}</span>}
       </div>
     );
   }
@@ -124,7 +129,7 @@ export const TalentCardAcademyBadge = ({
             academy_name: affiliation.academy_name,
             certification_date: affiliation.graduation_date || '',
             program: affiliation.program_name || '',
-            badge_color: affiliation.brand_color || '#3b82f6',
+            badge_color: affiliation.brand_color || '#7c3aed',
           }}
           size={size}
           showProgram={false}
