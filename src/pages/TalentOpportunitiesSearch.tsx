@@ -165,10 +165,15 @@ const TalentOpportunitiesSearch = () => {
       if (!oppLocation.includes(filterLocation)) return false;
     }
 
-    // Filtro de nivel de experiencia
-    if (filters.experience) {
-      // Aquí puedes implementar la lógica de experiencia cuando esté disponible en la BD
-      // Por ahora, permitimos todas las oportunidades
+    // Filtro de nivel de experiencia (multi-selección)
+    if (filters.experience && Array.isArray(filters.experience) && filters.experience.length > 0) {
+      const oppExperiences = opportunity.experience_levels || [];
+      const hasMatch = filters.experience.some(exp => 
+        oppExperiences.some(oppExp => 
+          normalize(oppExp).includes(normalize(exp))
+        )
+      );
+      if (!hasMatch) return false;
     }
 
     // Filtro de rango salarial

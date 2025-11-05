@@ -237,7 +237,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
             label = `Modalidad: ${WORK_MODES.find(m => m.value === value)?.label || value}`;
             break;
           case 'experience':
-            label = `Experiencia: ${EXPERIENCE_LEVELS.find(e => e.value === value)?.label || value}`;
+            if (Array.isArray(value)) {
+              const expLabels = value.map(v => EXPERIENCE_LEVELS.find(e => e.value === v)?.label || v);
+              label = expLabels.length > 1 ? `${expLabels.length} niveles` : `Experiencia: ${expLabels[0]}`;
+            } else {
+              label = `Experiencia: ${EXPERIENCE_LEVELS.find(e => e.value === value)?.label || value}`;
+            }
             break;
           case 'location':
             label = `Ubicación: ${LOCATIONS.find(l => l.value === value)?.label || value}`;
@@ -401,24 +406,42 @@ const FilterBar: React.FC<FilterBarProps> = ({
                     </Select>
                   </div>
 
-                  {/* Experience Level */}
+                  {/* Experience Level (multi-select) */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Experiencia</label>
-                    <Select
-                      value={filters.experience || ''}
-                      onValueChange={(value) => handleFilterChange('experience', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todos los niveles" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        {EXPERIENCE_LEVELS.map((level) => (
-                          <SelectItem key={level.value} value={level.value}>
-                            {level.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          {Array.isArray(filters.experience) && filters.experience.length > 0 
+                            ? `${filters.experience.length} seleccionado${filters.experience.length > 1 ? 's' : ''}` 
+                            : 'Todos los niveles'}
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[280px] p-3" align="start">
+                        <div className="space-y-2">
+                          {EXPERIENCE_LEVELS.map((level) => (
+                            <div key={level.value} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`exp-${level.value}`}
+                                checked={(filters.experience || []).includes(level.value)}
+                                onCheckedChange={(checked) => {
+                                  const currentExp = Array.isArray(filters.experience) ? filters.experience : [];
+                                  if (checked) {
+                                    handleFilterChange('experience', [...currentExp, level.value]);
+                                  } else {
+                                    handleFilterChange('experience', currentExp.filter((e: string) => e !== level.value));
+                                  }
+                                }}
+                              />
+                              <label htmlFor={`exp-${level.value}`} className="text-sm cursor-pointer">
+                                {level.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {/* Location */}
