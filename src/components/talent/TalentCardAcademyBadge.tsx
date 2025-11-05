@@ -103,10 +103,10 @@ export const TalentCardAcademyBadge = ({
   if (compact && affiliations.length > 0) {
     const firstAffiliation = affiliations[0];
     return (
-      <div className="flex items-center gap-1 text-xs" style={{ 
+      <div className="flex items-center gap-1 text-xs whitespace-nowrap" style={{ 
         color: firstAffiliation?.brand_color || '#10b981' 
       }}>
-        <GraduationCap className="h-3 w-3" />
+        <GraduationCap className="h-3 w-3 flex-shrink-0" />
         <span className="font-medium">{firstAffiliation?.academy_name}</span>
         {affiliations.length > 1 && <span className="text-gray-500">+{affiliations.length - 1}</span>}
       </div>
