@@ -17,7 +17,10 @@ En `/business-dashboard/academy`:
 ### Paso 2: Ejecutar este SQL
 
 ```sql
--- Función RPC para obtener user_id, full_name y avatar_url por emails
+-- Primero eliminar la función existente (si ya existe)
+DROP FUNCTION IF EXISTS get_user_ids_by_emails(TEXT[]);
+
+-- Crear la función con el nuevo tipo de retorno
 CREATE OR REPLACE FUNCTION get_user_ids_by_emails(user_emails TEXT[])
 RETURNS TABLE (
   email VARCHAR,
