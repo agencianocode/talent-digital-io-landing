@@ -168,6 +168,10 @@ const TalentOpportunitiesSearch = () => {
     // Filtro de nivel de experiencia (multi-selección)
     if (filters.experience && Array.isArray(filters.experience) && filters.experience.length > 0) {
       const oppExperiences = opportunity.experience_levels || [];
+      
+      // Si la oportunidad no tiene experience_levels definido, no filtrar
+      if (oppExperiences.length === 0) return false;
+      
       const hasMatch = filters.experience.some(exp => 
         oppExperiences.some(oppExp => 
           normalize(oppExp).includes(normalize(exp))
