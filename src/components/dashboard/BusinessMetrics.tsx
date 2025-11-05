@@ -138,43 +138,6 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
         </Card>
       </div>
 
-      {/* Tendencias de Aplicaciones - Solo datos reales */}
-      {metrics.totalApplications > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="h-5 w-5" />
-              Tendencias de Aplicaciones
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Esta semana</span>
-                <span className="text-sm font-medium">{metrics.thisWeekApplications} aplicaciones</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Este mes</span>
-                <span className="text-sm font-medium">{metrics.applicationsThisMonth} aplicaciones</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Total</span>
-                <span className="text-sm font-medium">{metrics.totalApplications} aplicaciones</span>
-              </div>
-              {metrics.conversionRate > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Tasa de conversión</span>
-                  <div className="flex items-center gap-2">
-                    <Progress value={metrics.conversionRate} className="h-2 w-16" />
-                    <span className="text-sm font-medium">{metrics.conversionRate}%</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
     </div>
   );
 };
