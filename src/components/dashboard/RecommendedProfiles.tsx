@@ -197,68 +197,73 @@ const RecommendedProfiles: React.FC = () => {
               {profiles.map((profile) => (
                 <div 
                   key={profile.id} 
-                  className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white"
+                  className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px]"
                 >
-                  {/* Avatar y Badge */}
-                  <div className="flex items-start justify-between mb-3">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
-                      <AvatarFallback className="text-lg">
-                        {profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Badge variant="secondary" className="text-xs">
-                      <Star className="h-3 w-3 mr-1" />
-                      {profile.profile_completeness}%
-                    </Badge>
-                  </div>
-
-                  {/* Nombre y Título */}
-                  <div className="mb-3">
-                    <h4 className="font-semibold text-base mb-1 truncate">{profile.full_name}</h4>
-                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-                      {profile.title}
-                    </p>
-                  </div>
-
-                  {/* Ubicación y Experiencia */}
-                  <div className="space-y-1.5 mb-3 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3 flex-shrink-0" />
-                      <span className="truncate">{profile.location}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3 flex-shrink-0" />
-                      <span className="truncate">{profile.experience_level}</span>
-                    </div>
-                  </div>
-
-                  {/* Skills */}
-                  <div className="flex flex-wrap gap-1 mb-4 min-h-[2rem]">
-                    {profile.skills.slice(0, 3).map((skill, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {skill}
+                  {/* Contenido que crece */}
+                  <div className="flex-1 flex flex-col">
+                    {/* Avatar y Badge */}
+                    <div className="flex items-start justify-between mb-3">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
+                        <AvatarFallback className="text-lg">
+                          {profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Badge variant="secondary" className="text-xs">
+                        <Star className="h-3 w-3 mr-1" />
+                        {profile.profile_completeness}%
                       </Badge>
-                    ))}
-                    {profile.skills.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{profile.skills.length - 3}
-                      </Badge>
-                    )}
+                    </div>
+
+                    {/* Nombre y Título */}
+                    <div className="mb-3">
+                      <h4 className="font-semibold text-base mb-1 truncate">{profile.full_name}</h4>
+                      <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                        {profile.title}
+                      </p>
+                    </div>
+
+                    {/* Ubicación y Experiencia */}
+                    <div className="space-y-1.5 mb-3 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">{profile.location}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">{profile.experience_level}</span>
+                      </div>
+                    </div>
+
+                    {/* Skills */}
+                    <div className="flex flex-wrap gap-1 mb-3 min-h-[2rem]">
+                      {profile.skills.slice(0, 3).map((skill, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {skill}
+                        </Badge>
+                      ))}
+                      {profile.skills.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{profile.skills.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Bio (opcional) - Crece para llenar espacio */}
+                    <div className="flex-1 mb-3">
+                      {profile.bio && (
+                        <p className="text-xs text-muted-foreground line-clamp-3">
+                          {profile.bio}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Bio (opcional) */}
-                  {profile.bio && (
-                    <p className="text-xs text-muted-foreground mb-4 line-clamp-3">
-                      {profile.bio}
-                    </p>
-                  )}
-
-                  {/* Botón */}
+                  {/* Botón - Siempre al final */}
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="w-full"
+                    className="w-full mt-auto"
                     onClick={() => window.open(`/business-dashboard/talent-profile/${profile.id}`, '_blank')}
                   >
                     Ver Perfil
