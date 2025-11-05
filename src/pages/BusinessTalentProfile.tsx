@@ -48,11 +48,12 @@ const BusinessTalentProfile = () => {
   const [showAllWorkExperience, setShowAllWorkExperience] = useState(false);
   const [videoPresentationUrl, setVideoPresentationUrl] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const { toast } = useToast();
   
   // Hook para obtener afiliaciones de Academia
   const { affiliations } = useAcademyAffiliations(
-    userProfile?.email
+    userEmail
   );
   
   // Use refs to store data that won't be lost
@@ -100,6 +101,17 @@ const BusinessTalentProfile = () => {
       console.log('🎥 Expected URL: https://youtu.be/kcOrTOT7Kko');
       console.log('🎥 URLs match:', profileData.video_presentation_url === 'https://youtu.be/kcOrTOT7Kko');
       setUserProfile(profileData);
+      
+      // Get user email using RPC function for academy affiliations
+      if (id) {
+        const { data: emailData } = await supabase
+          .rpc('get_user_emails_by_ids', { user_ids: [id] });
+        
+        if (emailData && emailData.length > 0) {
+          console.log('📧 User email obtained:', emailData[0].email);
+          setUserEmail(emailData[0].email);
+        }
+      }
       
       // Set video presentation URL if available
       if (profileData.video_presentation_url) {
