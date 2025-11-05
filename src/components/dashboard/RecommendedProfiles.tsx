@@ -220,18 +220,29 @@ const RecommendedProfiles: React.FC = () => {
                 >
                   {/* Contenido que crece */}
                   <div className="flex-1 flex flex-col">
-                    {/* Avatar y Badge */}
-                    <div className="flex items-start justify-between mb-3">
-                      <Avatar className="h-16 w-16">
+                    {/* Avatar y Badges */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <Avatar className="h-16 w-16 flex-shrink-0">
                         <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
                         <AvatarFallback className="text-lg">
                           {profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <Badge variant="secondary" className="text-xs">
-                        <Star className="h-3 w-3 mr-1" />
-                        {profile.profile_completeness}%
-                      </Badge>
+                      <div className="flex flex-col gap-2 flex-1 min-w-0">
+                        <Badge variant="secondary" className="text-xs w-fit">
+                          <Star className="h-3 w-3 mr-1" />
+                          {profile.profile_completeness}%
+                        </Badge>
+                        {/* Badge de Academia */}
+                        {profile.email && (
+                          <TalentCardAcademyBadge 
+                            userId={profile.id} 
+                            userEmail={profile.email}
+                            size="sm"
+                            compact={false}
+                          />
+                        )}
+                      </div>
                     </div>
 
                     {/* Nombre y Título */}
@@ -241,18 +252,6 @@ const RecommendedProfiles: React.FC = () => {
                         {profile.title}
                       </p>
                     </div>
-
-                    {/* Badge de Academia */}
-                    {profile.email && (
-                      <div className="mb-3">
-                        <TalentCardAcademyBadge 
-                          userId={profile.id} 
-                          userEmail={profile.email}
-                          size="sm"
-                          compact={false}
-                        />
-                      </div>
-                    )}
 
                     {/* Ubicación y Experiencia */}
                     <div className="space-y-1.5 mb-3 text-xs text-muted-foreground">
