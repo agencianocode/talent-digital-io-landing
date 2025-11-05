@@ -31,7 +31,7 @@ interface FilterState {
   contractType?: string;
   workMode?: string;
   location?: string;
-  experience?: string;
+  experience?: string | string[];
   salaryRange?: number[];
   skills?: string[];
 }
@@ -59,7 +59,18 @@ const TalentOpportunitiesSearch = () => {
     const savedFilters = localStorage.getItem('talent-opportunity-filters');
     if (savedFilters) {
       try {
-        setFilters(JSON.parse(savedFilters));
+        const parsed = JSON.parse(savedFilters);
+        
+        // Migrar valores antiguos de experience con mayúscula a minúscula
+        if (parsed.experience) {
+          if (Array.isArray(parsed.experience)) {
+            parsed.experience = parsed.experience.map((exp: string) => exp.toLowerCase());
+          } else if (typeof parsed.experience === 'string') {
+            parsed.experience = [parsed.experience.toLowerCase()];
+          }
+        }
+        
+        setFilters(parsed);
       } catch (error) {
         console.error('Error loading saved filters:', error);
       }
@@ -172,11 +183,25 @@ const TalentOpportunitiesSearch = () => {
       // Si la oportunidad no tiene experience_levels definido, no filtrar
       if (oppExperiences.length === 0) return false;
       
-      const hasMatch = filters.experience.some(exp => 
-        oppExperiences.some(oppExp => 
-          normalize(oppExp).includes(normalize(exp))
-        )
+      // Normalizar y comparar exactamente (sin includes)
+      const normalizedOppExp = oppExperiences.map(e => normalize(e));
+      const normalizedFilterExp = filters.experience.map(e => normalize(e));
+      
+      // Debug log (temporal)
+      if (opportunity.title === 'Closer de Ventas') {
+        console.log('🔍 Debug Filtro Experiencia:', {
+          title: opportunity.title,
+          oppExperiences,
+          normalizedOppExp,
+          filterExp: filters.experience,
+          normalizedFilterExp
+        });
+      }
+      
+      const hasMatch = normalizedFilterExp.some(filterExp => 
+        normalizedOppExp.includes(filterExp)
       );
+      
       if (!hasMatch) return false;
     }
 
