@@ -175,10 +175,21 @@ const TalentDiscovery = () => {
 
       console.log('👥 Roles de usuario encontrados:', talentRoles?.length || 0);
 
+      // Get user emails using RPC function (accesses auth.users securely)
+      const { data: userEmails } = await supabase
+        .rpc('get_user_emails_by_ids', { user_ids: talentUserIds });
+      
+      console.log('📧 User emails obtained:', userEmails?.length || 0);
+
       // Get academy students to mark verified talents
-      // NOTE: No podemos obtener emails aquí porque profiles no tiene email
-      // y auth.users no es accesible desde el cliente
       const userEmailsMap = new Map<string, string>(); // user_id -> email
+      if (userEmails) {
+        userEmails.forEach((item: any) => {
+          if (item.email) {
+            userEmailsMap.set(item.user_id, item.email);
+          }
+        });
+      }
       
       const emails = Array.from(userEmailsMap.values());
       const { data: academyStudents } = emails.length > 0 ? await supabase
@@ -235,6 +246,7 @@ const TalentDiscovery = () => {
         const talentProfile = (talentProfiles as any)?.find((tp: any) => tp.user_id === profile.user_id);
         const userRole = talentRoles?.find(r => r.user_id === profile.user_id);
         const academyInfo = verifiedUsersMap.get(profile.user_id);
+        const userEmail = userEmailsMap.get(profile.user_id);
         
         return {
           id: profile.id,
@@ -269,7 +281,7 @@ const TalentDiscovery = () => {
           last_active: profile.updated_at, // Use profile updated_at as fallback
           created_at: profile.created_at,
           updated_at: profile.updated_at,
-          email: null, // Email no disponible (necesita función RPC en Supabase)
+          email: userEmail || null, // Email desde auth.users via RPC
           academy_name: academyInfo?.academyName,
           academy_status: academyInfo?.status
         } as any;
