@@ -331,6 +331,12 @@ const BusinessTalentProfile = () => {
                     
                     <p className="text-gray-600">{talentProfile?.title || 'Talento Digital'}</p>
                     
+                    <p className="text-sm text-gray-500 mt-2">
+                      {userProfile?.city && userProfile?.country 
+                        ? `${userProfile.city}, ${userProfile.country}` 
+                        : 'Cali, Colombia'}
+                    </p>
+                    
                     {/* Academy Badges */}
                     {affiliations.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3 justify-center">
@@ -350,11 +356,6 @@ const BusinessTalentProfile = () => {
                         ))}
                       </div>
                     )}
-                    <p className="text-sm text-gray-500">
-                      {userProfile?.city && userProfile?.country 
-                        ? `${userProfile.city}, ${userProfile.country}` 
-                        : 'Cali, Colombia'}
-                    </p>
                     </div>
                   
                   <div className="flex flex-wrap gap-2 justify-center">
