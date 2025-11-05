@@ -145,6 +145,7 @@ const TalentDiscovery = () => {
           id,
           user_id,
           full_name,
+          email,
           avatar_url,
           city,
           country,
@@ -175,18 +176,10 @@ const TalentDiscovery = () => {
 
       console.log('👥 Roles de usuario encontrados:', talentRoles?.length || 0);
 
-      // Get talent profiles with their emails for academy membership check
-      const { data: talentProfilesForAcademy } = await supabase
-        .from('talent_profiles')
-        .select('user_id, email')
-        .in('user_id', talentUserIds);
-      
-      console.log('📧 Talent profiles with emails:', talentProfilesForAcademy);
-
       // Get academy students to mark verified talents
       const userEmailsMap = new Map<string, string>(); // user_id -> email
-      if (talentProfilesForAcademy) {
-        talentProfilesForAcademy.forEach((p: any) => {
+      if (profiles) {
+        profiles.forEach((p: any) => {
           if (p.email) {
             userEmailsMap.set(p.user_id, p.email);
           }
@@ -249,15 +242,6 @@ const TalentDiscovery = () => {
         const userRole = talentRoles?.find(r => r.user_id === profile.user_id);
         const academyInfo = verifiedUsersMap.get(profile.user_id);
         
-        // Obtener el email del talent profile para el badge de Academia
-        const talentProfileEmail = talentProfilesForAcademy?.find((tp: any) => tp.user_id === profile.user_id)?.email;
-        
-        if (profile.user_id && talentProfileEmail) {
-          console.log('✉️ Email found for talent:', profile.full_name, talentProfileEmail);
-        } else if (profile.user_id && !talentProfileEmail) {
-          console.log('⚠️ NO email found for talent:', profile.full_name, profile.user_id);
-        }
-        
         return {
           id: profile.id,
           user_id: profile.user_id,
@@ -291,7 +275,7 @@ const TalentDiscovery = () => {
           last_active: profile.updated_at, // Use profile updated_at as fallback
           created_at: profile.created_at,
           updated_at: profile.updated_at,
-          email: talentProfileEmail, // Email para el badge de Academia
+          email: (profile as any).email, // Email para el badge de Academia
           academy_name: academyInfo?.academyName,
           academy_status: academyInfo?.status
         } as any;

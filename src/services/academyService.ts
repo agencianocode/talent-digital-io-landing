@@ -252,7 +252,6 @@ export const academyService = {
 
       // Obtener los nombres completos desde profiles para estudiantes sin student_name
       const studentsWithoutName = students?.filter(s => !s.student_name) || [];
-      console.log('📝 Students without name:', studentsWithoutName.length);
       let profilesMap = new Map<string, string>();
       
       if (studentsWithoutName.length > 0) {
@@ -261,25 +260,23 @@ export const academyService = {
           .select('email, full_name')
           .in('email', studentsWithoutName.map(s => s.student_email));
         
-        console.log('👤 Profiles found:', profiles);
         profilesMap = new Map(profiles?.map(p => [p.email, p.full_name]) || []);
       }
 
       const activities: AcademyActivity[] = (students || []).map(student => {
         // Usar el nombre del perfil si student_name está vacío
         const displayName = student.student_name || profilesMap.get(student.student_email) || student.student_email;
-        console.log('🎭 Display name for', student.student_email, ':', displayName, '(from student_name:', student.student_name, ', from profile:', profilesMap.get(student.student_email), ')');
         
         return {
-          id: student.id,
-          academy_id: academyId,
-          type: student.graduation_date ? 'graduation' : 'new_member',
-          description: student.graduation_date 
+        id: student.id,
+        academy_id: academyId,
+        type: student.graduation_date ? 'graduation' : 'new_member',
+        description: student.graduation_date 
             ? `${displayName} completó su programa`
             : `${displayName} se unió a la academia`,
-          user_id: student.student_email,
-          created_at: student.graduation_date || student.created_at,
-          metadata: { status: student.status }
+        user_id: student.student_email,
+        created_at: student.graduation_date || student.created_at,
+        metadata: { status: student.status }
         };
       });
 
