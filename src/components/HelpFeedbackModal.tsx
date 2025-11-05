@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { X, HelpCircle, AlertTriangle, Lightbulb, Loader2 } from 'lucide-react';
+import { HelpCircle, AlertTriangle, Lightbulb, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface HelpFeedbackModalProps {
@@ -73,13 +73,6 @@ const HelpFeedbackModal = ({ isOpen, onClose }: HelpFeedbackModalProps) => {
       <DialogContent className="max-w-2xl p-0 bg-white rounded-2xl shadow-2xl border-0">
         {/* Header */}
         <div className="relative p-8 pb-6">
-          <button
-            onClick={onClose}
-            className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-          
           <h2 className="text-2xl font-semibold text-gray-900 text-center">
             ¿En qué podemos ayudarte?
           </h2>
