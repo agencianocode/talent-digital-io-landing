@@ -177,12 +177,17 @@ const TalentDiscovery = () => {
       console.log('👥 Roles de usuario encontrados:', talentRoles?.length || 0);
 
       // Get user emails using RPC function (accesses auth.users securely)
-      const { data: userEmails } = await supabase
+      console.log('🔍 Calling get_user_emails_by_ids with:', talentUserIds.length, 'user IDs');
+      const { data: userEmails, error: emailsError } = await supabase
         .rpc('get_user_emails_by_ids', { user_ids: talentUserIds }) as { 
-          data: Array<{ user_id: string; email: string }> | null 
+          data: Array<{ user_id: string; email: string }> | null;
+          error: any;
         };
       
-      console.log('📧 User emails obtained:', userEmails?.length || 0);
+      if (emailsError) {
+        console.error('❌ Error getting user emails:', emailsError);
+      }
+      console.log('📧 User emails obtained:', userEmails?.length || 0, userEmails);
 
       // Get academy students to mark verified talents
       const userEmailsMap = new Map<string, string>(); // user_id -> email

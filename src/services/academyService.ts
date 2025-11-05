@@ -134,6 +134,30 @@ export const academyService = {
 
       if (error) throw error;
 
+      // Obtener nombres reales para estudiantes que tienen email en student_name
+      const isEmail = (str: string | null) => {
+        if (!str) return false;
+        return str.includes('@') && str.includes('.');
+      };
+      
+      const studentsNeedingNames = (data || []).filter(s => !s.student_name || isEmail(s.student_name));
+      let namesMap = new Map<string, string>();
+      
+      if (studentsNeedingNames.length > 0) {
+        console.log('🔍 Getting real names for', studentsNeedingNames.length, 'students');
+        const { data: userProfiles } = await supabase
+          .rpc('get_user_ids_by_emails', { 
+            user_emails: studentsNeedingNames.map(s => s.student_email) 
+          }) as { 
+            data: Array<{ email: string; user_id: string; full_name: string | null }> | null 
+          };
+        
+        namesMap = new Map(
+          userProfiles?.map(p => [p.email, p.full_name || p.email]) || []
+        );
+        console.log('✅ Names obtained:', Array.from(namesMap.entries()));
+      }
+
       // Transform data to match AcademyStudent type
       const students: AcademyStudent[] = (data || []).map(student => {
         // Map 'enrolled' to 'active' for type compatibility
@@ -142,6 +166,12 @@ export const academyService = {
         else if (student.status === 'paused') mappedStatus = 'paused';
         else if (student.status === 'suspended') mappedStatus = 'suspended';
         else mappedStatus = 'active'; // 'enrolled' maps to 'active'
+        
+        // Usar nombre real si student_name es un email
+        let displayName = student.student_name;
+        if (!displayName || isEmail(displayName)) {
+          displayName = namesMap.get(student.student_email) || student.student_email;
+        }
         
         return {
           id: student.id,
@@ -152,7 +182,7 @@ export const academyService = {
           graduation_date: student.graduation_date || undefined,
           certificate_url: undefined,
           talent_profiles: {
-            full_name: student.student_name || 'Estudiante',
+            full_name: displayName,
             email: student.student_email
           }
         };
@@ -252,24 +282,44 @@ export const academyService = {
 
       // Obtener los nombres completos desde profiles usando RPC para estudiantes sin student_name
       const studentsWithoutName = students?.filter(s => !s.student_name) || [];
+      console.log('🔍 Students without name:', studentsWithoutName.length);
       let profilesMap = new Map<string, string>();
       
       if (studentsWithoutName.length > 0) {
-        const { data: userProfiles } = await supabase
+        console.log('📧 Fetching names for emails:', studentsWithoutName.map(s => s.student_email));
+        const { data: userProfiles, error: profilesError } = await supabase
           .rpc('get_user_ids_by_emails', { 
             user_emails: studentsWithoutName.map(s => s.student_email) 
           }) as { 
-            data: Array<{ email: string; user_id: string; full_name: string | null }> | null 
+            data: Array<{ email: string; user_id: string; full_name: string | null }> | null;
+            error: any;
           };
+        
+        if (profilesError) {
+          console.error('❌ Error getting user profiles:', profilesError);
+        }
+        console.log('✅ User profiles obtained:', userProfiles);
         
         profilesMap = new Map(
           userProfiles?.map(p => [p.email, p.full_name || p.email]) || []
         );
+        console.log('📋 Profiles map:', Array.from(profilesMap.entries()));
       }
 
       const activities: AcademyActivity[] = (students || []).map(student => {
-        // Usar el nombre del perfil si student_name está vacío
-        const displayName = student.student_name || profilesMap.get(student.student_email) || student.student_email;
+        // Función auxiliar para detectar si un string es un email
+        const isEmail = (str: string | null) => {
+          if (!str) return false;
+          return str.includes('@') && str.includes('.');
+        };
+        
+        // Si student_name es un email, usar el nombre del perfil
+        let displayName = student.student_name;
+        if (!displayName || isEmail(displayName)) {
+          displayName = profilesMap.get(student.student_email) || student.student_email;
+        }
+        
+        console.log(`👤 Student: ${student.student_email} -> Display name: ${displayName}`);
         
         return {
         id: student.id,

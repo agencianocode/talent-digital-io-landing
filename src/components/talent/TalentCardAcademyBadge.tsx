@@ -35,9 +35,12 @@ export const TalentCardAcademyBadge = ({
   useEffect(() => {
     // Si no hay email, no podemos buscar afiliaciones
     if (!userEmail) {
+      console.log('🔴 TalentCardAcademyBadge: No userEmail provided');
       setAffiliations([]);
       return;
     }
+
+    console.log('🔍 TalentCardAcademyBadge: Buscando afiliaciones para email:', userEmail);
 
     const fetchAffiliations = async () => {
       try {
@@ -59,9 +62,11 @@ export const TalentCardAcademyBadge = ({
           .eq('student_email', userEmail);
 
         if (error) {
-          console.error('Error fetching academy affiliations:', error);
+          console.error('❌ Error fetching academy affiliations:', error);
           return;
         }
+
+        console.log('✅ Academy affiliations data:', data);
 
         if (data && data.length > 0) {
           const formatted: AcademyAffiliation[] = data.map(item => ({
@@ -73,12 +78,14 @@ export const TalentCardAcademyBadge = ({
             brand_color: (item.companies as any)?.brand_color || undefined,
           }));
 
+          console.log('🎓 Formatted affiliations:', formatted);
           setAffiliations(formatted);
         } else {
+          console.log('⚠️ No academy affiliations found for:', userEmail);
           setAffiliations([]);
         }
       } catch (error) {
-        console.error('Error in TalentCardAcademyBadge:', error);
+        console.error('❌ Error in TalentCardAcademyBadge:', error);
         setAffiliations([]);
       } finally {
         setIsLoading(false);
