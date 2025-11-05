@@ -110,49 +110,49 @@ export const useTalentProfileProgress = () => {
         id: 'basic-info',
         title: 'Información Básica',
         completed: !!(userProfile.full_name && userProfile.country),
-        route: '/talent-dashboard/my-profile',
+        route: '/talent-dashboard/profile',
         description: 'Completa tu nombre y ubicación'
       },
       {
         id: 'profile-photo',
         title: 'Foto de Perfil',
         completed: !!userProfile.avatar_url,
-        route: '/talent-dashboard/my-profile',
+        route: '/talent-dashboard/profile',
         description: 'Agrega una foto profesional'
       },
       {
         id: 'title-bio',
         title: 'Título y Biografía',
         completed: !!(talentProfile.title && talentProfile.bio && talentProfile.bio.length >= 50),
-        route: '/talent-dashboard/my-profile',
+        route: '/talent-dashboard/profile',
         description: 'Define tu título profesional y escribe tu biografía (mín. 50 caracteres)'
       },
       {
         id: 'skills',
         title: 'Habilidades',
         completed: !!(talentProfile.skills && talentProfile.skills.length >= 3),
-        route: '/talent-dashboard/my-profile',
+        route: '/talent-dashboard/profile',
         description: 'Agrega al menos 3 habilidades'
       },
       {
         id: 'experience',
         title: 'Experiencia Laboral',
         completed: hasExperience,
-        route: '/talent-dashboard/my-profile',
+        route: '/talent-dashboard/profile',
         description: 'Agrega al menos una experiencia laboral'
       },
       {
         id: 'education',
         title: 'Formación Académica',
         completed: hasEducation,
-        route: '/talent-dashboard/my-profile',
+        route: '/talent-dashboard/profile',
         description: 'Agrega al menos un título o certificación'
       },
       {
         id: 'video',
         title: 'Video de Presentación',
         completed: !!talentProfile.video_presentation_url,
-        route: '/talent-dashboard/my-profile',
+        route: '/talent-dashboard/profile',
         description: 'Agrega un video para destacar tu perfil'
       }
     ];
