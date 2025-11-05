@@ -99,13 +99,43 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         enrollment_date: new Date().toISOString().split('T')[0]
       }));
 
-      const { error } = await supabase
+      const { error: dbError } = await supabase
         .from('academy_students')
         .insert(studentsToInsert);
 
-      if (error) throw error;
+      if (dbError) throw dbError;
 
-      toast.success(`${emails.length} invitación(es) enviada(s) exitosamente`);
+      // Get academy name for the email
+      const { data: academyData } = await supabase
+        .from('companies')
+        .select('name')
+        .eq('id', academyId)
+        .single();
+
+      // Send invitation emails via Edge Function
+      const { data, error: emailError } = await supabase.functions.invoke(
+        'send-academy-invitations',
+        {
+          body: {
+            emails,
+            academyId,
+            academyName: academyData?.name || 'Tu Academia',
+            customMessage: message.trim() || undefined
+          }
+        }
+      );
+
+      if (emailError) {
+        console.error('Error sending emails:', emailError);
+        toast.warning(
+          `Estudiantes agregados a la base de datos, pero hubo un error al enviar los emails: ${emailError.message}`
+        );
+      } else {
+        toast.success(
+          `✅ ${emails.length} invitación(es) enviada(s) exitosamente por email`
+        );
+      }
+
       setEmailList('');
       setMessage('');
       loadInvitations(); // Reload the list
