@@ -92,8 +92,8 @@ const TalentOpportunitiesSearch = () => {
   // Normalización y sinónimos para categorías
   const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const CATEGORY_SYNONYMS: Record<string, string[]> = {
-    'ventas': ['ventas', 'comercial', 'sales'],
-    'marketing': ['marketing'],
+    'ventas': ['ventas', 'comercial', 'sales', 'closer'],
+    'marketing': ['marketing', 'media buyer', 'paid ads', 'performance marketing', 'digital marketing'],
     'creativo': ['creativo', 'diseño', 'design', 'creative'],
     'atencion-cliente': ['atencion al cliente', 'customer success', 'customer support', 'soporte al cliente'],
     'operaciones': ['operaciones', 'operations'],
