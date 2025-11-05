@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ interface RecommendedProfile {
 
 const RecommendedProfiles: React.FC = () => {
   const { activeCompany } = useCompany();
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState<RecommendedProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -216,7 +218,8 @@ const RecommendedProfiles: React.FC = () => {
               {profiles.map((profile) => (
                 <div 
                   key={profile.id} 
-                  className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px]"
+                  className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer"
+                  onClick={() => navigate(`/business-dashboard/talent-profile/${profile.id}`)}
                 >
                   {/* Contenido que crece */}
                   <div className="flex-1 flex flex-col">
@@ -290,7 +293,10 @@ const RecommendedProfiles: React.FC = () => {
                     size="sm" 
                     variant="outline" 
                     className="w-full mt-auto"
-                    onClick={() => window.open(`/business-dashboard/talent-profile/${profile.id}`, '_blank')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(`/business-dashboard/talent-profile/${profile.id}`, '_blank');
+                    }}
                   >
                     Ver Perfil
                   </Button>
