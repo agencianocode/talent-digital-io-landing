@@ -316,15 +316,13 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
                        invitation.status}
                     </Badge>
                     
-                    {invitation.status === 'enrolled' && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleCancelInvitation(invitation.id)}
-                      >
-                        Eliminar
-                      </Button>
-                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleCancelInvitation(invitation.id)}
+                    >
+                      Eliminar
+                    </Button>
                   </div>
                 </div>
               ))}
