@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Users, Star, MapPin, Clock } from 'lucide-react';
+import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 
 interface RecommendedProfile {
   id: string;
@@ -17,6 +18,7 @@ interface RecommendedProfile {
   experience_level: string;
   location: string;
   profile_completeness: number;
+  email: string;
 }
 
 const RecommendedProfiles: React.FC = () => {
@@ -73,7 +75,7 @@ const RecommendedProfiles: React.FC = () => {
 
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
-          .select('user_id, full_name, avatar_url, city, country, profile_completeness')
+          .select('user_id, full_name, avatar_url, city, country, profile_completeness, email')
           .in('user_id', userIds);
 
         if (profilesError) {
@@ -81,6 +83,22 @@ const RecommendedProfiles: React.FC = () => {
           setProfiles([]);
           setLoading(false);
           return;
+        }
+
+        // Obtener emails de auth.users usando RPC
+        const { data: userEmails, error: emailsError } = await supabase
+          .rpc('get_user_emails_by_ids', { user_ids: userIds });
+
+        if (emailsError) {
+          console.error('Error fetching user emails:', emailsError);
+        }
+
+        // Crear un mapa de user_id a email
+        const emailMap: Record<string, string> = {};
+        if (userEmails) {
+          userEmails.forEach((item: any) => {
+            emailMap[item.user_id] = item.email;
+          });
         }
 
         // Score and sort profiles
@@ -122,6 +140,7 @@ const RecommendedProfiles: React.FC = () => {
               experience_level: profile.experience_level || 'Sin especificar',
               location: [profileData.city, profileData.country].filter(Boolean).join(', ') || 'Sin ubicación',
               profile_completeness: profileData.profile_completeness || 0,
+              email: emailMap[profile.user_id] || '',
               relevanceScore
             };
           })
@@ -222,6 +241,18 @@ const RecommendedProfiles: React.FC = () => {
                         {profile.title}
                       </p>
                     </div>
+
+                    {/* Badge de Academia */}
+                    {profile.email && (
+                      <div className="mb-3">
+                        <TalentCardAcademyBadge 
+                          userId={profile.id} 
+                          userEmail={profile.email}
+                          size="sm"
+                          compact={false}
+                        />
+                      </div>
+                    )}
 
                     {/* Ubicación y Experiencia */}
                     <div className="space-y-1.5 mb-3 text-xs text-muted-foreground">
