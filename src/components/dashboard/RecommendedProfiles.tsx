@@ -220,7 +220,7 @@ const RecommendedProfiles: React.FC = () => {
                 >
                   {/* Contenido que crece */}
                   <div className="flex-1 flex flex-col">
-                    {/* Avatar y Badges */}
+                    {/* Avatar y Badge de Academia */}
                     <div className="flex items-start gap-3 mb-3">
                       <Avatar className="h-16 w-16 flex-shrink-0">
                         <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
@@ -228,21 +228,17 @@ const RecommendedProfiles: React.FC = () => {
                           {profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex flex-col gap-2 flex-1 min-w-0">
-                        <Badge variant="secondary" className="text-xs w-fit">
-                          <Star className="h-3 w-3 mr-1" />
-                          {profile.profile_completeness}%
-                        </Badge>
-                        {/* Badge de Academia */}
-                        {profile.email && (
+                      {/* Badge de Academia */}
+                      {profile.email && (
+                        <div className="flex-1 min-w-0">
                           <TalentCardAcademyBadge 
                             userId={profile.id} 
                             userEmail={profile.email}
                             size="sm"
                             compact={false}
                           />
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Nombre y Título */}
