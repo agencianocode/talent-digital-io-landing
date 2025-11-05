@@ -250,17 +250,35 @@ export const academyService = {
 
       if (error) throw error;
 
-      const activities: AcademyActivity[] = (students || []).map(student => ({
-        id: student.id,
-        academy_id: academyId,
-        type: student.graduation_date ? 'graduation' : 'new_member',
-        description: student.graduation_date 
-          ? `${student.student_name || student.student_email} completó su programa`
-          : `${student.student_name || student.student_email} se unió a la academia`,
-        user_id: student.student_email,
-        created_at: student.graduation_date || student.created_at,
-        metadata: { status: student.status }
-      }));
+      // Obtener los nombres completos desde profiles para estudiantes sin student_name
+      const studentsWithoutName = students?.filter(s => !s.student_name) || [];
+      let profilesMap = new Map<string, string>();
+      
+      if (studentsWithoutName.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('email, full_name')
+          .in('email', studentsWithoutName.map(s => s.student_email));
+        
+        profilesMap = new Map(profiles?.map(p => [p.email, p.full_name]) || []);
+      }
+
+      const activities: AcademyActivity[] = (students || []).map(student => {
+        // Usar el nombre del perfil si student_name está vacío
+        const displayName = student.student_name || profilesMap.get(student.student_email) || student.student_email;
+        
+        return {
+          id: student.id,
+          academy_id: academyId,
+          type: student.graduation_date ? 'graduation' : 'new_member',
+          description: student.graduation_date 
+            ? `${displayName} completó su programa`
+            : `${displayName} se unió a la academia`,
+          user_id: student.student_email,
+          created_at: student.graduation_date || student.created_at,
+          metadata: { status: student.status }
+        };
+      });
 
       return activities;
     } catch (error) {

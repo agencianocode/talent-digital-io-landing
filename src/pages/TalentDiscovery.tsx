@@ -247,6 +247,9 @@ const TalentDiscovery = () => {
         const userRole = talentRoles?.find(r => r.user_id === profile.user_id);
         const academyInfo = verifiedUsersMap.get(profile.user_id);
         
+        // Obtener el email del talent profile para el badge de Academia
+        const talentProfileEmail = talentProfilesForAcademy?.find((tp: any) => tp.user_id === profile.user_id)?.email;
+        
         return {
           id: profile.id,
           user_id: profile.user_id,
@@ -280,6 +283,7 @@ const TalentDiscovery = () => {
           last_active: profile.updated_at, // Use profile updated_at as fallback
           created_at: profile.created_at,
           updated_at: profile.updated_at,
+          email: talentProfileEmail, // Email para el badge de Academia
           academy_name: academyInfo?.academyName,
           academy_status: academyInfo?.status
         } as any;
@@ -839,7 +843,8 @@ const TalentDiscovery = () => {
                                     
                                     {/* Academy affiliation badge */}
                                     <TalentCardAcademyBadge 
-                                      userId={talent.user_id} 
+                                      userId={talent.user_id}
+                                      userEmail={(talent as any).email}
                                       compact={true}
                                     />
                                   </div>
