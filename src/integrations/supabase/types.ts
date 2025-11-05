@@ -2421,6 +2421,21 @@ export type Database = {
         Args: { company_uuid: string; user_uuid: string }
         Returns: Database["public"]["Enums"]["company_role"]
       }
+      get_user_emails_by_ids: {
+        Args: { user_ids: string[] }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
+      get_user_ids_by_emails: {
+        Args: { user_emails: string[] }
+        Returns: {
+          email: string
+          full_name: string
+          user_id: string
+        }[]
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["user_role"]
@@ -2435,6 +2450,13 @@ export type Database = {
           role_count: number
           role_name: Database["public"]["Enums"]["user_role"]
           total_users: number
+        }[]
+      }
+      get_users_emails: {
+        Args: { user_ids: string[] }
+        Returns: {
+          email: string
+          id: string
         }[]
       }
       graduate_shares_data: {

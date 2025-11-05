@@ -250,17 +250,21 @@ export const academyService = {
 
       if (error) throw error;
 
-      // Obtener los nombres completos desde profiles para estudiantes sin student_name
+      // Obtener los nombres completos desde profiles usando RPC para estudiantes sin student_name
       const studentsWithoutName = students?.filter(s => !s.student_name) || [];
       let profilesMap = new Map<string, string>();
       
       if (studentsWithoutName.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('email, full_name')
-          .in('email', studentsWithoutName.map(s => s.student_email));
+        const { data: userProfiles } = await supabase
+          .rpc('get_user_ids_by_emails', { 
+            user_emails: studentsWithoutName.map(s => s.student_email) 
+          }) as { 
+            data: Array<{ email: string; user_id: string; full_name: string | null }> | null 
+          };
         
-        profilesMap = new Map(profiles?.map(p => [p.email, p.full_name]) || []);
+        profilesMap = new Map(
+          userProfiles?.map(p => [p.email, p.full_name || p.email]) || []
+        );
       }
 
       const activities: AcademyActivity[] = (students || []).map(student => {

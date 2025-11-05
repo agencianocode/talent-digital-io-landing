@@ -35,6 +35,7 @@ import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBad
 interface RealTalent {
   id: string;
   user_id: string;
+  email?: string | null;
   full_name: string;
   title: string;
   bio: string;
@@ -177,14 +178,16 @@ const TalentDiscovery = () => {
 
       // Get user emails using RPC function (accesses auth.users securely)
       const { data: userEmails } = await supabase
-        .rpc('get_user_emails_by_ids', { user_ids: talentUserIds });
+        .rpc('get_user_emails_by_ids', { user_ids: talentUserIds }) as { 
+          data: Array<{ user_id: string; email: string }> | null 
+        };
       
       console.log('📧 User emails obtained:', userEmails?.length || 0);
 
       // Get academy students to mark verified talents
       const userEmailsMap = new Map<string, string>(); // user_id -> email
-      if (userEmails) {
-        userEmails.forEach((item: any) => {
+      if (userEmails && Array.isArray(userEmails)) {
+        userEmails.forEach((item) => {
           if (item.email) {
             userEmailsMap.set(item.user_id, item.email);
           }
@@ -251,6 +254,7 @@ const TalentDiscovery = () => {
         return {
           id: profile.id,
           user_id: profile.user_id,
+          email: userEmail,
           full_name: profile.full_name || 'Sin nombre',
           title: talentProfile?.title || 'Talento Digital',
           bio: talentProfile?.bio || 'Sin descripción',
@@ -281,7 +285,6 @@ const TalentDiscovery = () => {
           last_active: profile.updated_at, // Use profile updated_at as fallback
           created_at: profile.created_at,
           updated_at: profile.updated_at,
-          email: userEmail || null, // Email desde auth.users via RPC
           academy_name: academyInfo?.academyName,
           academy_status: academyInfo?.status
         } as any;
@@ -839,12 +842,12 @@ const TalentDiscovery = () => {
                                       )}
                                     </div>
                                     
-                                    {/* Academy affiliation badge */}
-                                    <TalentCardAcademyBadge 
-                                      userId={talent.user_id}
-                                      userEmail={(talent as any).email}
-                                      compact={true}
-                                    />
+                    {/* Academy affiliation badge */}
+                    <TalentCardAcademyBadge 
+                      userId={talent.user_id}
+                      userEmail={talent.email || undefined}
+                      compact={true}
+                    />
                                   </div>
                                 </div>
                                 
