@@ -107,8 +107,7 @@ export const TalentCardAcademyBadge = ({
         className="flex items-center gap-1 text-xs whitespace-nowrap px-2 py-1 rounded-md font-medium flex-shrink-0" 
         style={{ 
           backgroundColor: '#f6efff',
-          color: firstAffiliation?.brand_color || '#7c3aed',
-          border: `1px solid ${firstAffiliation?.brand_color || '#e9d5ff'}`
+          color: firstAffiliation?.brand_color || '#7c3aed'
         }}
       >
         <GraduationCap className="h-3 w-3 flex-shrink-0" />

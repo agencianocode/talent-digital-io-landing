@@ -31,13 +31,12 @@ export const AcademyCertificationBadge = ({
     <div className="flex flex-col gap-1">
       <Badge 
         className={cn(
-          'flex items-center gap-1.5 w-fit font-medium whitespace-nowrap',
+          'flex items-center gap-1.5 w-fit font-medium whitespace-nowrap border-0',
           sizeClasses[size]
         )}
         style={{
           backgroundColor: '#f6efff',
           color: certification.badge_color || '#7c3aed',
-          borderColor: certification.badge_color || '#e9d5ff',
         }}
       >
         <GraduationCap className={cn(
