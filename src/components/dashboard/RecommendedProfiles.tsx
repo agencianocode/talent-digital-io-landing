@@ -75,7 +75,7 @@ const RecommendedProfiles: React.FC = () => {
 
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
-          .select('user_id, full_name, avatar_url, city, country, profile_completeness, email')
+          .select('user_id, full_name, avatar_url, city, country, profile_completeness')
           .in('user_id', userIds);
 
         if (profilesError) {
