@@ -103,7 +103,10 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
     onComplete(profileData);
   };
 
-  const isFormValid = firstName.trim().length > 0 && lastName.trim().length > 0 && country.trim().length > 0;
+  const isFormValid = firstName.trim().length > 0 && 
+                      lastName.trim().length > 0 && 
+                      country.trim().length > 0 &&
+                      profilePhoto !== null;
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
@@ -113,10 +116,10 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
       </div>
 
       {/* Profile Photo Upload */}
-      <div className="flex justify-center">
+      <div className="flex flex-col items-center space-y-2">
         <div
           onClick={() => setShowPhotoModal(true)}
-          className="w-24 h-24 border-2 border-dashed border-gray-300 hover:border-gray-400 bg-white rounded-full cursor-pointer overflow-hidden relative"
+          className={`w-24 h-24 border-2 border-dashed ${profilePhoto ? 'border-green-400' : 'border-red-400'} hover:border-gray-400 bg-white rounded-full cursor-pointer overflow-hidden relative`}
         >
           {profilePhotoUrl ? (
             <div className="w-full h-full flex items-center justify-center">
@@ -130,12 +133,20 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full space-y-2">
-              <Camera className="w-6 h-6 text-gray-400" />
-              <span className="text-sm text-gray-600 font-['Inter']">Sube tu Foto perfil</span>
+            <div className="flex flex-col items-center justify-center h-full space-y-1">
+              <Camera className="w-6 h-6 text-red-400" />
+              <span className="text-xs text-red-600 font-['Inter'] font-medium">Requerido</span>
             </div>
           )}
         </div>
+        <p className="text-sm text-gray-600 text-center">
+          Foto de perfil <span className="text-red-600">*</span>
+        </p>
+        {!profilePhoto && (
+          <p className="text-xs text-red-600 text-center">
+            La foto de perfil es obligatoria para continuar
+          </p>
+        )}
       </div>
 
       {/* Form Fields */}
@@ -225,7 +236,7 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
       </div>
 
       {/* Continue Button */}
-      <div className="flex justify-center pt-10">
+      <div className="flex flex-col items-center pt-10 space-y-2">
         <Button
           onClick={handleContinue}
           disabled={!isFormValid}
@@ -234,6 +245,13 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
         >
           Siguiente
         </Button>
+        {!isFormValid && (
+          <p className="text-xs text-gray-500 text-center">
+            {!profilePhoto && "Por favor sube tu foto de perfil"}
+            {profilePhoto && (!firstName.trim() || !lastName.trim()) && "Por favor completa tu nombre"}
+            {profilePhoto && firstName.trim() && lastName.trim() && !country.trim() && "Por favor selecciona tu país"}
+          </p>
+        )}
       </div>
 
       {/* Photo Edit Modal */}
