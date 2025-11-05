@@ -54,7 +54,7 @@ export const TalentCardAcademyBadge = ({
             status,
             graduation_date,
             program_name,
-            companies:academy_id (
+            companies!academy_students_academy_id_fkey (
               name,
               brand_color
             )
