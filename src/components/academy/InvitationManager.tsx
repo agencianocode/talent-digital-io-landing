@@ -148,13 +148,21 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
 
       if (emailError) {
         console.error('❌ Error sending emails:', emailError);
-        toast.warning(
-          `Estudiantes agregados a la base de datos, pero hubo un error al enviar los emails: ${emailError.message}`
+        toast.error(
+          `Error al enviar emails: ${emailError.message}`,
+          {
+            description: 'Los estudiantes fueron agregados a la base de datos, pero no se enviaron los emails de invitación.',
+            duration: 6000
+          }
         );
       } else {
         console.log('✅ Emails sent successfully:', data);
         toast.success(
-          `✅ ${emails.length} invitación(es) enviada(s) exitosamente por email`
+          `🎉 ¡Invitaciones enviadas correctamente!`,
+          {
+            description: `Se enviaron ${emails.length} email(s) de invitación a: ${emails.slice(0, 3).join(', ')}${emails.length > 3 ? '...' : ''}`,
+            duration: 5000
+          }
         );
       }
 
@@ -163,7 +171,13 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
       loadInvitations(); // Reload the list
     } catch (error: any) {
       console.error('Error sending invitations:', error);
-      toast.error('Error al enviar invitaciones: ' + error.message);
+      toast.error(
+        'Error al enviar invitaciones',
+        {
+          description: error.message || 'Ocurrió un error al procesar las invitaciones. Por favor, intenta de nuevo.',
+          duration: 6000
+        }
+      );
     } finally {
       setIsSending(false);
     }
@@ -192,13 +206,25 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
       }
 
       console.log('✅ Student deleted successfully');
-      toast.success(`Estudiante ${studentToDelete.email} eliminado correctamente`);
+      toast.success(
+        `🗑️ Estudiante eliminado`,
+        {
+          description: `${studentToDelete.email} ha sido eliminado de tu academia correctamente.`,
+          duration: 4000
+        }
+      );
       loadInvitations();
       setDeleteDialogOpen(false);
       setStudentToDelete(null);
     } catch (error: any) {
       console.error('❌ Error al eliminar estudiante:', error);
-      toast.error(`Error al eliminar estudiante: ${error.message || 'Error desconocido'}`);
+      toast.error(
+        'Error al eliminar estudiante',
+        {
+          description: error.message || 'No se pudo eliminar el estudiante. Por favor, intenta de nuevo.',
+          duration: 5000
+        }
+      );
     } finally {
       setIsDeleting(false);
     }
