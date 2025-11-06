@@ -6,6 +6,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Mail, 
@@ -30,6 +40,9 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
   const [copiedGraduated, setCopiedGraduated] = useState(false);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<{ id: string; email: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Generate invitation links
   const activeInviteLink = `${window.location.origin}/accept-academy-invitation?academy=${academyId}&status=enrolled`;
@@ -113,6 +126,12 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         .single();
 
       // Send invitation emails via Edge Function
+      console.log('📧 Calling send-academy-invitations edge function...', {
+        emails,
+        academyId,
+        academyName: academyData?.name
+      });
+
       const { data, error: emailError } = await supabase.functions.invoke(
         'send-academy-invitations',
         {
@@ -125,12 +144,15 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         }
       );
 
+      console.log('📧 Edge function response:', { data, emailError });
+
       if (emailError) {
-        console.error('Error sending emails:', emailError);
+        console.error('❌ Error sending emails:', emailError);
         toast.warning(
           `Estudiantes agregados a la base de datos, pero hubo un error al enviar los emails: ${emailError.message}`
         );
       } else {
+        console.log('✅ Emails sent successfully:', data);
         toast.success(
           `✅ ${emails.length} invitación(es) enviada(s) exitosamente por email`
         );
@@ -147,20 +169,38 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
     }
   };
 
-  const handleCancelInvitation = async (studentId: string) => {
+  const openDeleteDialog = (id: string, email: string) => {
+    setStudentToDelete({ id, email });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!studentToDelete) return;
+
     try {
+      setIsDeleting(true);
+      console.log('🗑️ Deleting student:', studentToDelete.id);
+      
       const { error } = await supabase
         .from('academy_students')
         .delete()
-        .eq('id', studentId);
+        .eq('id', studentToDelete.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error deleting student:', error);
+        throw error;
+      }
 
-      toast.success('Invitación cancelada');
+      console.log('✅ Student deleted successfully');
+      toast.success(`Estudiante ${studentToDelete.email} eliminado correctamente`);
       loadInvitations();
-    } catch (error) {
-      console.error('Error canceling invitation:', error);
-      toast.error('Error al cancelar invitación');
+      setDeleteDialogOpen(false);
+      setStudentToDelete(null);
+    } catch (error: any) {
+      console.error('❌ Error al eliminar estudiante:', error);
+      toast.error(`Error al eliminar estudiante: ${error.message || 'Error desconocido'}`);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -349,9 +389,10 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => handleCancelInvitation(invitation.id)}
+                      onClick={() => openDeleteDialog(invitation.id, invitation.student_email)}
+                      disabled={isDeleting}
                     >
-                      Eliminar
+                      {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar'}
                     </Button>
                   </div>
                 </div>
@@ -360,6 +401,36 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar estudiante?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar a <strong>{studentToDelete?.email}</strong> de tu academia?
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                'Eliminar'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

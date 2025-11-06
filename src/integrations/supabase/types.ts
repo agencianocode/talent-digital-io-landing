@@ -2431,6 +2431,7 @@ export type Database = {
       get_user_ids_by_emails: {
         Args: { user_emails: string[] }
         Returns: {
+          avatar_url: string
           email: string
           full_name: string
           user_id: string
