@@ -53,7 +53,7 @@ const BusinessTalentProfile = () => {
   
   // Hook para obtener afiliaciones de Academia
   const { affiliations } = useAcademyAffiliations(
-    userEmail
+    userEmail || undefined
   );
   
   // Use refs to store data that won't be lost
@@ -107,9 +107,9 @@ const BusinessTalentProfile = () => {
         const { data: emailData } = await supabase
           .rpc('get_user_emails_by_ids', { user_ids: [id] });
         
-        if (emailData && emailData.length > 0) {
+        if (emailData && emailData.length > 0 && emailData[0]) {
           console.log('📧 User email obtained:', emailData[0].email);
-          setUserEmail(emailData[0].email);
+          setUserEmail(emailData[0].email || null);
         }
       }
       

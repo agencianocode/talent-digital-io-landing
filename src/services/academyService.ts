@@ -140,7 +140,6 @@ export const academyService = {
         return str.includes('@') && str.includes('.');
       };
       
-      const studentsNeedingNames = (data || []).filter(s => !s.student_name || isEmail(s.student_name));
       const allStudentEmails = (data || []).map(s => s.student_email);
       let namesMap = new Map<string, string>();
       let avatarsMap = new Map<string, string | null>();
@@ -198,7 +197,7 @@ export const academyService = {
           displayName = namesMap.get(student.student_email) || student.student_email;
         }
         
-        const avatarUrl = avatarsMap.get(student.student_email) || null;
+        const avatarUrl = avatarsMap.get(student.student_email);
         
         console.log(`👤 Student ${student.student_email}:`, {
           student_name: student.student_name,
@@ -218,7 +217,7 @@ export const academyService = {
           talent_profiles: {
             full_name: displayName,
             email: student.student_email,
-            avatar_url: avatarUrl
+            avatar_url: avatarUrl === null ? undefined : avatarUrl
           }
         };
       });

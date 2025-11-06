@@ -178,14 +178,14 @@ const TalentOpportunitiesSearch = () => {
 
     // Filtro de nivel de experiencia (multi-selección)
     if (filters.experience && Array.isArray(filters.experience) && filters.experience.length > 0) {
-      const oppExperiences = opportunity.experience_levels || [];
+      const oppExperiences = (opportunity as any).experience_levels || [];
       
       // Si la oportunidad no tiene experience_levels definido, no filtrar
       if (oppExperiences.length === 0) return false;
       
       // Normalizar y comparar exactamente (sin includes)
-      const normalizedOppExp = oppExperiences.map(e => normalize(e));
-      const normalizedFilterExp = filters.experience.map(e => normalize(e));
+      const normalizedOppExp = oppExperiences.map((e: string) => normalize(e));
+      const normalizedFilterExp = filters.experience.map((e: string) => normalize(e));
       
       // Debug log (temporal)
       if (opportunity.title === 'Closer de Ventas') {
