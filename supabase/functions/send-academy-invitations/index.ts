@@ -137,7 +137,7 @@ serve(async (req) => {
           'Authorization': `Bearer ${RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: 'TalentoDigital <invitaciones@talentodigital.io>',
+          from: 'TalentoDigital <invitaciones@app.talentodigital.io>',
           to: [email],
           subject: `🎓 Invitación a ${academy?.name || academyName}`,
           html: htmlContent
