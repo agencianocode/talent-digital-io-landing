@@ -243,9 +243,10 @@ export const CompanyProfileWizard: React.FC = () => {
       });
 
       // Load gallery items from company
-      if (company.gallery_urls && company.gallery_urls.length > 0) {
-        setMediaItems(company.gallery_urls);
-        setInitialMediaItemsCount(company.gallery_urls.length);
+      const galleryData = (company as any).media_gallery || (company as any).gallery_urls || [];
+      if (galleryData && galleryData.length > 0) {
+        setMediaItems(galleryData);
+        setInitialMediaItemsCount(galleryData.length);
       } else {
         setMediaItems([]);
         setInitialMediaItemsCount(0);
@@ -267,12 +268,12 @@ export const CompanyProfileWizard: React.FC = () => {
   const onSubmit = async (data: CompanyFormData) => {
     setIsLoading(true);
     try {
-      // Convert media items to gallery URLs format
-      const gallery_urls = mediaItems;
+      // Convert media items to gallery format
+      const media_gallery = mediaItems;
 
       const companyData = {
         ...data,
-        gallery_urls,
+        media_gallery,
       };
 
       console.log('Submitting company data:', companyData);
@@ -304,7 +305,7 @@ export const CompanyProfileWizard: React.FC = () => {
           annual_revenue_range: data.annual_revenue_range,
           website: data.website,
           social_links: data.social_links,
-          gallery_urls,
+          media_gallery,
         });
         if (result.error) {
           throw result.error;
