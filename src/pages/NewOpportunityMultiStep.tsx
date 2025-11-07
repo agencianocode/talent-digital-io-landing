@@ -177,7 +177,7 @@ const NewOpportunityMultiStep = () => {
         // payment_type: formData.paymentMethod === 'hourly' ? 'hourly' : 'fixed',
         // commission_percentage: null,
         // salary_is_public: true,
-        // is_academy_exclusive: false,
+        is_academy_exclusive: (formData as any).isAcademyExclusive || false,
         company_id: activeCompany.id,
         status: formData.publishToFeed ? 'active' : ((formData as any).status === 'draft' ? 'draft' : 'active') as 'active'
         // Campos de restricción de país se agregarán cuando se ejecute la migración

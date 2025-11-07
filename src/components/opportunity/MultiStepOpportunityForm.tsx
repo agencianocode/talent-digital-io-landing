@@ -32,6 +32,7 @@ interface FormData {
   preferredTimezone: string;
   preferredLanguages: string[];
   deadlineDate: Date | null;
+  isAcademyExclusive?: boolean;
   
   // Step 2 - Presupuesto y duración
   durationType: 'indefinite' | 'fixed';
@@ -111,6 +112,7 @@ const MultiStepOpportunityForm = ({
     preferredTimezone: '',
     preferredLanguages: [],
     deadlineDate: null,
+    isAcademyExclusive: false,
     
     // Step 2 defaults
     durationType: 'indefinite',

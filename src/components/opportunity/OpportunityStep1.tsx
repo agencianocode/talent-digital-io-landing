@@ -34,6 +34,7 @@ interface OpportunityStep1Data {
   preferredTimezone: string;
   preferredLanguages: string[];
   deadlineDate: Date | null;
+  isAcademyExclusive?: boolean;
 }
 
 interface OpportunityStep1Props {
@@ -1277,6 +1278,32 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
         </Popover>
         <div className="text-xs text-gray-500">
           La oportunidad se cerrará automáticamente cuando pase esta fecha. Máximo 6 meses en adelante.
+        </div>
+      </div>
+
+      {/* Academy Exclusive Checkbox */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-gray-900">
+          Visibilidad de la oportunidad
+        </Label>
+        <div className="flex items-start space-x-2 p-4 border rounded-lg bg-purple-50/30 border-purple-200">
+          <Checkbox
+            id="academy_exclusive"
+            checked={data.isAcademyExclusive || false}
+            onCheckedChange={(checked) => onChange({ isAcademyExclusive: checked as boolean })}
+            className="mt-0.5"
+          />
+          <div className="flex-1">
+            <label 
+              htmlFor="academy_exclusive" 
+              className="text-sm font-medium leading-none cursor-pointer block mb-1"
+            >
+              🎓 Exclusiva para estudiantes de mi academia
+            </label>
+            <p className="text-xs text-gray-600">
+              Solo tus estudiantes y graduados podrán ver y aplicar a esta oportunidad
+            </p>
+          </div>
         </div>
       </div>
 
