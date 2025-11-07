@@ -404,7 +404,11 @@ const TalentDiscovery = () => {
       // Experience filter - mapear years_experience a niveles
       if (experienceFilter.length > 0) {
         filtered = filtered.filter(talent => {
-          const years = (talent as any).years_experience || 0;
+          const years = (talent as any).years_experience;
+          
+          // Si no tiene years_experience definido, no filtrar (mostrar todos)
+          if (years === null || years === undefined) return true;
+          
           return experienceFilter.some(level => {
             if (level.includes('Junior') || level.includes('0-2')) return years >= 0 && years <= 2;
             if (level.includes('Mid') || level.includes('3-5')) return years >= 3 && years <= 5;
@@ -420,25 +424,53 @@ const TalentDiscovery = () => {
       if (contractTypeFilter.length > 0) {
         filtered = filtered.filter(talent => {
           const avail = ((talent as any).availability || '').toLowerCase();
-          if (!avail) return false;
+          
+          // Si no tiene availability, mostrar todos
+          if (!avail) return true;
+          
           return contractTypeFilter.some(type => {
             const typeLower = type.toLowerCase();
-            return avail.includes(typeLower) || 
-                   (typeLower.includes('completo') && avail.includes('full')) ||
-                   (typeLower.includes('medio') && avail.includes('part')) ||
-                   (typeLower.includes('freelance') && avail.includes('freelance')) ||
-                   (typeLower.includes('proyecto') && avail.includes('project'));
+            // Mapeo flexible de availability a tipos de contrato
+            if (typeLower.includes('completo') || typeLower.includes('tiempo completo')) {
+              return avail.includes('full') || avail.includes('completo') || avail.includes('tiempo completo');
+            }
+            if (typeLower.includes('medio') || typeLower.includes('medio tiempo')) {
+              return avail.includes('part') || avail.includes('medio') || avail.includes('half');
+            }
+            if (typeLower.includes('freelance')) {
+              return avail.includes('freelance') || avail.includes('independiente');
+            }
+            if (typeLower.includes('proyecto')) {
+              return avail.includes('project') || avail.includes('proyecto');
+            }
+            if (typeLower.includes('consultoría')) {
+              return avail.includes('consultoria') || avail.includes('consulting');
+            }
+            // Fallback: búsqueda general
+            return avail.includes(typeLower);
           });
         });
       }
       
-      // Remote filter - sin campo específico, usar búsqueda en bio/título
+      // Remote filter - sin campo específico, usar búsqueda en bio/título/availability
       if (remoteFilter !== 'all') {
         filtered = filtered.filter(talent => {
-          const searchText = `${talent.title} ${talent.bio}`.toLowerCase();
-          if (remoteFilter === 'Remoto') return searchText.includes('remoto') || searchText.includes('remote');
-          if (remoteFilter === 'Presencial') return searchText.includes('presencial') || searchText.includes('onsite') || searchText.includes('oficina');
-          if (remoteFilter === 'Híbrido') return searchText.includes('híbrido') || searchText.includes('hybrid');
+          const searchText = `${talent.title || ''} ${talent.bio || ''} ${(talent as any).availability || ''}`.toLowerCase();
+          
+          // Si no hay información suficiente, mostrar el talento (no excluir)
+          if (!searchText.trim() || searchText.length < 10) return true;
+          
+          if (remoteFilter === 'Remoto') {
+            return searchText.includes('remoto') || searchText.includes('remote') || searchText.includes('distancia');
+          }
+          if (remoteFilter === 'Presencial') {
+            return searchText.includes('presencial') || searchText.includes('onsite') || 
+                   searchText.includes('oficina') || searchText.includes('in-person');
+          }
+          if (remoteFilter === 'Híbrido') {
+            return searchText.includes('híbrido') || searchText.includes('hybrid') || 
+                   searchText.includes('mixto');
+          }
           return true;
         });
       }
