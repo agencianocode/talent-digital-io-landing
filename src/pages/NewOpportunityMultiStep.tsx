@@ -237,7 +237,7 @@ const NewOpportunityMultiStep = () => {
 
   const initialData = {
     title: '',
-    description: activeCompany.description || '',
+    description: activeCompany?.description || '',
   };
 
   const handleInvitationModalClose = () => {
