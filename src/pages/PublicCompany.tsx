@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Building2, 
@@ -17,7 +18,10 @@ import {
   Facebook,
   Briefcase,
   Clock,
-  Calendar
+  Calendar,
+  Image as ImageIcon,
+  Play,
+  ExternalLink
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { FormattedOpportunityText } from '@/lib/markdown-formatter';
@@ -56,7 +60,8 @@ const PublicCompany = () => {
           benefits,
           work_culture,
           business_impact,
-          team_values
+          team_values,
+          media_gallery
         `)
         .eq('id', companyId)
         .maybeSingle();
@@ -364,6 +369,95 @@ const PublicCompany = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-700 whitespace-pre-wrap">{company.team_values}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Media Gallery */}
+          {company.media_gallery && Array.isArray(company.media_gallery) && company.media_gallery.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Galería Multimedia</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {company.media_gallery.map((item: any, index: number) => (
+                    <div key={item.id || index} className="relative group">
+                      <Card className="overflow-hidden hover:shadow-md transition-shadow">
+                        <div className="relative">
+                          <div className="aspect-square bg-muted flex items-center justify-center">
+                            {item.type === 'image' ? (
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <img 
+                                    src={item.url} 
+                                    alt={item.title}
+                                    className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                  />
+                                </DialogTrigger>
+                                <DialogContent className="max-w-4xl">
+                                  <img 
+                                    src={item.url} 
+                                    alt={item.title}
+                                    className="w-full h-auto"
+                                  />
+                                </DialogContent>
+                              </Dialog>
+                            ) : item.type === 'video' ? (
+                              <div 
+                                className="relative w-full h-full cursor-pointer group"
+                                onClick={() => window.open(item.url, '_blank')}
+                              >
+                                {item.thumbnail ? (
+                                  <img 
+                                    src={item.thumbnail} 
+                                    alt={item.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center text-muted-foreground h-full">
+                                    <Play className="h-12 w-12 mb-2" />
+                                    <span className="text-xs text-center px-2">Video</span>
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Play className="h-10 w-10 text-white" />
+                                </div>
+                              </div>
+                            ) : item.type === 'link' ? (
+                              <div 
+                                className="flex flex-col items-center justify-center text-muted-foreground h-full cursor-pointer hover:bg-accent transition-colors p-4"
+                                onClick={() => window.open(item.url, '_blank')}
+                              >
+                                <ExternalLink className="h-8 w-8 mb-2" />
+                                <span className="text-xs text-center font-medium line-clamp-2">
+                                  {item.title}
+                                </span>
+                              </div>
+                            ) : null}
+                          </div>
+
+                          {/* Type Badge */}
+                          <div className="absolute bottom-2 left-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {item.type === 'image' && <ImageIcon className="h-3 w-3 mr-1" />}
+                              {item.type === 'video' && <Play className="h-3 w-3 mr-1" />}
+                              {item.type === 'link' && <ExternalLink className="h-3 w-3 mr-1" />}
+                              <span className="capitalize">{item.type}</span>
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Title */}
+                        {item.title && (
+                          <div className="p-3 bg-white">
+                            <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                          </div>
+                        )}
+                      </Card>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
