@@ -49,6 +49,8 @@ interface RealTalent {
   video_presentation_url?: string | null;
   social_links?: any;
   profile_completeness?: number | null;
+  years_experience?: number;
+  availability?: string | null;
   is_complete?: boolean;
   is_featured?: boolean;
   is_verified?: boolean;
@@ -117,7 +119,9 @@ const TalentDiscovery = () => {
           user_id,
           title,
           bio,
-          portfolio_url
+          portfolio_url,
+          years_experience,
+          availability
         `);
 
       if (talentProfilesError) {
@@ -273,6 +277,8 @@ const TalentDiscovery = () => {
           video_presentation_url: profile.video_presentation_url,
           social_links: profile.social_links,
           profile_completeness: (profile as any)?.profile_completeness ?? null,
+          years_experience: talentProfile?.years_experience || 0,
+          availability: talentProfile?.availability || null,
           is_complete: (((profile as any)?.profile_completeness ?? 0) >= 70) || meetsMinimums({
             bio: talentProfile?.bio,
             city: profile.city,
@@ -395,20 +401,47 @@ const TalentDiscovery = () => {
         );
       }
       
-      // Experience filter (not available in real data yet, skip for now)
-      // if (experienceFilter.length > 0) {
-      //   filtered = filtered.filter(talent => talent.experience_level && experienceFilter.includes(talent.experience_level));
-      // }
+      // Experience filter - mapear years_experience a niveles
+      if (experienceFilter.length > 0) {
+        filtered = filtered.filter(talent => {
+          const years = (talent as any).years_experience || 0;
+          return experienceFilter.some(level => {
+            if (level.includes('Junior') || level.includes('0-2')) return years >= 0 && years <= 2;
+            if (level.includes('Mid') || level.includes('3-5')) return years >= 3 && years <= 5;
+            if (level.includes('Senior') || level.includes('6-10')) return years >= 6 && years <= 10;
+            if (level.includes('Lead') || level.includes('10+')) return years >= 10 && years <= 14;
+            if (level.includes('Experto') || level.includes('15+')) return years >= 15;
+            return false;
+          });
+        });
+      }
       
-      // Availability filter (not available in real data yet, skip for now)
-      // if (availabilityFilter !== 'all') {
-      //   filtered = filtered.filter(talent => talent.availability === availabilityFilter);
-      // }
+      // Contract type filter - mapear availability a tipos de contrato
+      if (contractTypeFilter.length > 0) {
+        filtered = filtered.filter(talent => {
+          const avail = ((talent as any).availability || '').toLowerCase();
+          if (!avail) return false;
+          return contractTypeFilter.some(type => {
+            const typeLower = type.toLowerCase();
+            return avail.includes(typeLower) || 
+                   (typeLower.includes('completo') && avail.includes('full')) ||
+                   (typeLower.includes('medio') && avail.includes('part')) ||
+                   (typeLower.includes('freelance') && avail.includes('freelance')) ||
+                   (typeLower.includes('proyecto') && avail.includes('project'));
+          });
+        });
+      }
       
-      // Remote preference filter (not available in real data yet, skip for now)
-      // if (remoteFilter !== 'all') {
-      //   filtered = filtered.filter(talent => talent.remote_preference === remoteFilter);
-      // }
+      // Remote filter - sin campo específico, usar búsqueda en bio/título
+      if (remoteFilter !== 'all') {
+        filtered = filtered.filter(talent => {
+          const searchText = `${talent.title} ${talent.bio}`.toLowerCase();
+          if (remoteFilter === 'Remoto') return searchText.includes('remoto') || searchText.includes('remote');
+          if (remoteFilter === 'Presencial') return searchText.includes('presencial') || searchText.includes('onsite') || searchText.includes('oficina');
+          if (remoteFilter === 'Híbrido') return searchText.includes('híbrido') || searchText.includes('hybrid');
+          return true;
+        });
+      }
       
       // Featured only filter
       if (showFeaturedOnly) {
