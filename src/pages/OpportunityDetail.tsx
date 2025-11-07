@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, DollarSign, Briefcase, Clock, Heart, Mail, Linkedin, Instagram, Youtube, Twitter, ExternalLink } from "lucide-react";
+import { ArrowLeft, MapPin, DollarSign, Briefcase, Clock, Heart, Mail, Linkedin, Instagram, Youtube, Twitter, ExternalLink, GraduationCap } from "lucide-react";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import { useSupabaseAuth, isTalentRole } from "@/contexts/SupabaseAuthContext";
+import { useAcademyAffiliations } from "@/hooks/useAcademyAffiliations";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
@@ -14,15 +15,20 @@ import ProfileCompletenessModal from "@/components/ProfileCompletenessModal";
 import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
 import ApplicationModal from "@/components/ApplicationModal";
 import { FormattedOpportunityText } from "@/lib/markdown-formatter";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const OpportunityDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
-  const { userRole } = useSupabaseAuth();
+  const { user, userRole } = useSupabaseAuth();
   const { hasApplied, getApplicationStatus } = useSupabaseOpportunities();
   const { isOpportunitySaved, saveOpportunity, unsaveOpportunity } = useSavedOpportunities();
   const { completeness } = useProfileCompleteness();
+  
+  // Obtener afiliaciones de academia del talento
+  const { affiliations } = useAcademyAffiliations(user?.email);
+  const academyIds = affiliations.map(a => a.academy_id);
   
   // Detectar si es una página de invitación
   const isInvitationPage = location.pathname.includes('/opportunity/invite/');
@@ -159,6 +165,51 @@ const OpportunityDetail = () => {
           <Button onClick={() => navigate(-1)}>
             Volver
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Validar acceso a oportunidades exclusivas de academia
+  const isExclusiveOpportunity = opportunity.is_academy_exclusive;
+  const isStudentOfAcademy = academyIds.includes(opportunity.company_id);
+  const hasAccessToExclusive = !isExclusiveOpportunity || isStudentOfAcademy;
+
+  // Si es una oportunidad exclusiva y el talento NO es estudiante, mostrar mensaje
+  if (isTalentRole(userRole) && isExclusiveOpportunity && !isStudentOfAcademy) {
+    return (
+      <div className="p-8">
+        <Button 
+          onClick={() => navigate('/talent-dashboard/opportunities')}
+          variant="ghost"
+          className="mb-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Volver
+        </Button>
+        
+        <div className="max-w-2xl mx-auto">
+          <Alert className="border-purple-200 bg-gradient-to-br from-purple-50/50 to-blue-50/50">
+            <GraduationCap className="h-5 w-5 text-purple-600" />
+            <AlertTitle className="text-lg font-semibold text-purple-900">
+              Oportunidad Exclusiva para Estudiantes
+            </AlertTitle>
+            <AlertDescription className="text-purple-800 mt-2">
+              Esta oportunidad es exclusiva para estudiantes y graduados de <strong>{company?.name}</strong>.
+              <br /><br />
+              Si deseas acceder a oportunidades exclusivas de esta academia, ponte en contacto con ellos 
+              para obtener información sobre inscripciones y programas disponibles.
+            </AlertDescription>
+          </Alert>
+          
+          <div className="mt-6 text-center">
+            <Button 
+              onClick={() => navigate('/talent-dashboard/opportunities')}
+              className="w-full sm:w-auto"
+            >
+              Ver Otras Oportunidades
+            </Button>
+          </div>
         </div>
       </div>
     );

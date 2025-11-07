@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSupabaseAuth, isTalentRole } from "@/contexts/SupabaseAuthContext";
+import { useAcademyAffiliations } from "@/hooks/useAcademyAffiliations";
 import { toast } from "sonner";
 import ApplicationModal from "@/components/ApplicationModal";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
@@ -43,6 +44,10 @@ const TalentOpportunitiesSearch = () => {
     isLoading, 
     hasApplied
   } = useSupabaseOpportunities();
+  
+  // Obtener afiliaciones de academia del talento
+  const { affiliations } = useAcademyAffiliations(user?.email);
+  const academyIds = affiliations.map(a => a.academy_id);
   
   const navigate = useNavigate();
   const { completeness } = useProfileCompleteness();
@@ -116,6 +121,16 @@ const TalentOpportunitiesSearch = () => {
   const filteredOpportunities = opportunities?.filter(opportunity => {
     // CRÍTICO: Solo mostrar oportunidades activas (excluir paused, closed, draft)
     if (opportunity.status !== 'active') return false;
+
+    // FILTRO DE OPORTUNIDADES EXCLUSIVAS DE ACADEMIA
+    // Si la oportunidad es exclusiva de una academia, solo mostrar si el talento
+    // es estudiante/graduado de ESA academia específica
+    if (opportunity.is_academy_exclusive) {
+      const isStudentOfThisAcademy = academyIds.includes(opportunity.company_id);
+      if (!isStudentOfThisAcademy) {
+        return false; // Ocultar oportunidades exclusivas de otras academias
+      }
+    }
 
     // Filtro de búsqueda por título, descripción y empresa
     if (searchTerm) {

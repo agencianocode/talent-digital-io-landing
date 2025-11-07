@@ -22,6 +22,8 @@ interface SupabaseOpportunity {
   // Campos para restricción de país
   country_restriction_enabled?: boolean | null;
   allowed_country?: string | null;
+  // Campo para oportunidades exclusivas de academia
+  is_academy_exclusive?: boolean | null;
   companies?: {
     name: string;
     logo_url?: string | null;
