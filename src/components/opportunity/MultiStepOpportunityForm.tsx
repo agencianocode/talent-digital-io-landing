@@ -312,7 +312,8 @@ const MultiStepOpportunityForm = ({
               contractorsCount: formData.contractorsCount,
               preferredTimezone: formData.preferredTimezone,
               preferredLanguages: formData.preferredLanguages,
-              deadlineDate: formData.deadlineDate
+              deadlineDate: formData.deadlineDate,
+              isAcademyExclusive: formData.isAcademyExclusive
             }}
             onChange={updateFormData}
             company={company}
