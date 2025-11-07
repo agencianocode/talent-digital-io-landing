@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -6,47 +6,58 @@ import {
   Users, 
   Briefcase, 
   GraduationCap,
-  Mail
+  Mail,
+  Loader2
 } from 'lucide-react';
+import { academyService } from '@/services/academyService';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface ActivityFeedProps {
   academyId: string;
 }
 
-export const ActivityFeed: React.FC<ActivityFeedProps> = () => {
-  // Mock data for activity feed
-  const activities = [
-    {
-      id: '1',
-      type: 'application',
-      description: 'María García aplicó a Desarrollador Frontend en TechCorp',
-      timestamp: 'Hace 2 horas',
-      user_name: 'María García',
-      opportunity_title: 'Desarrollador Frontend'
-    },
-    {
-      id: '2',
-      type: 'new_member',
-      description: 'Juan Pérez se unió a la academia',
-      timestamp: 'Hace 4 horas',
-      user_name: 'Juan Pérez'
-    },
-    {
-      id: '3',
-      type: 'graduation',
-      description: 'Ana López completó el curso de Desarrollo Web',
-      timestamp: 'Hace 1 día',
-      user_name: 'Ana López',
-      course_name: 'Desarrollo Web'
-    },
-    {
-      id: '4',
-      type: 'invitation_sent',
-      description: 'Invitación enviada a estudiante@example.com',
-      timestamp: 'Hace 2 días',
-      email: 'estudiante@example.com'
+interface ActivityItem {
+  id: string;
+  type: 'application' | 'new_member' | 'graduation' | 'invitation_sent';
+  description: string;
+  timestamp: string;
+  created_at: string;
+}
+
+export const ActivityFeed: React.FC<ActivityFeedProps> = ({ academyId }) => {
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadActivity();
+  }, [academyId]);
+
+  const loadActivity = async () => {
+    try {
+      setLoading(true);
+      const activityData = await academyService.getActivity(academyId, 20);
+      
+      // Transform to match expected format
+      const formattedActivities = activityData.map(activity => ({
+        id: activity.id,
+        type: activity.type,
+        description: activity.description,
+        timestamp: formatDistanceToNow(new Date(activity.created_at), { 
+          addSuffix: true,
+          locale: es 
+        }),
+        created_at: activity.created_at
+      }));
+      
+      setActivities(formattedActivities);
+    } catch (error) {
+      console.error('Error loading activity:', error);
+      setActivities([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -78,6 +89,26 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Feed de Actividad</h2>
+            <p className="text-muted-foreground">
+              Mantente al día con la actividad de tus estudiantes
+            </p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -103,6 +134,9 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = () => {
             <div className="text-center py-8">
               <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No hay actividad reciente</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                La actividad aparecerá cuando los estudiantes se unan o se gradúen
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
