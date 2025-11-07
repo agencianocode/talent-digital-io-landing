@@ -238,7 +238,7 @@ const RecommendedProfiles: React.FC = () => {
                             userId={profile.id} 
                             userEmail={profile.email}
                             size="sm"
-                            compact={false}
+                            compact={true}
                           />
                         </div>
                       )}
