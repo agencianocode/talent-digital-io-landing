@@ -1281,33 +1281,35 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
         </div>
       </div>
 
-      {/* Academy Exclusive Checkbox */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-gray-900">
-          Visibilidad de la oportunidad
-        </Label>
-        <div className="flex items-start space-x-2 p-4 border rounded-lg bg-purple-50/30 border-purple-200">
-          <Checkbox
-            id="academy_exclusive"
-            checked={!!data.isAcademyExclusive}
-            onCheckedChange={(checked) => {
-              onChange({ isAcademyExclusive: checked === true });
-            }}
-            className="mt-0.5"
-          />
-          <div className="flex-1">
-            <label 
-              htmlFor="academy_exclusive" 
-              className="text-sm font-medium leading-none cursor-pointer block mb-1"
-            >
-              🎓 Exclusiva para estudiantes de mi academia
-            </label>
-            <p className="text-xs text-gray-600">
-              Solo tus estudiantes y graduados podrán ver y aplicar a esta oportunidad
-            </p>
+      {/* Academy Exclusive Checkbox - Solo para Academias */}
+      {company?.business_type === 'academy' && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">
+            Visibilidad de la oportunidad
+          </Label>
+          <div className="flex items-start space-x-2 p-4 border rounded-lg bg-purple-50/30 border-purple-200">
+            <Checkbox
+              id="academy_exclusive"
+              checked={!!data.isAcademyExclusive}
+              onCheckedChange={(checked) => {
+                onChange({ isAcademyExclusive: checked === true });
+              }}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <label 
+                htmlFor="academy_exclusive" 
+                className="text-sm font-medium leading-none cursor-pointer block mb-1"
+              >
+                🎓 Exclusiva para estudiantes de mi academia
+              </label>
+              <p className="text-xs text-gray-600">
+                Solo tus estudiantes y graduados podrán ver y aplicar a esta oportunidad
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
     </div>
   );
