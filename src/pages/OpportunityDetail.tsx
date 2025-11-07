@@ -173,7 +173,6 @@ const OpportunityDetail = () => {
   // Validar acceso a oportunidades exclusivas de academia
   const isExclusiveOpportunity = opportunity.is_academy_exclusive;
   const isStudentOfAcademy = academyIds.includes(opportunity.company_id);
-  const hasAccessToExclusive = !isExclusiveOpportunity || isStudentOfAcademy;
 
   // Si es una oportunidad exclusiva y el talento NO es estudiante, mostrar mensaje
   if (isTalentRole(userRole) && isExclusiveOpportunity && !isStudentOfAcademy) {

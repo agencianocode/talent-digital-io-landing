@@ -19,7 +19,7 @@ interface ActivityFeedProps {
 
 interface ActivityItem {
   id: string;
-  type: 'application' | 'new_member' | 'graduation' | 'invitation_sent';
+  type: 'application' | 'new_member' | 'graduation' | 'invitation_sent' | 'profile_update';
   description: string;
   timestamp: string;
   created_at: string;

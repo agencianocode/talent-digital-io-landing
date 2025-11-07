@@ -313,8 +313,7 @@ export const CompanyProfileWizard: React.FC = () => {
           annual_revenue_range: data.annual_revenue_range,
           website: data.website,
           social_links: data.social_links,
-          media_gallery,
-        });
+        } as any);
         if (result.error) {
           throw result.error;
         }
@@ -358,7 +357,7 @@ export const CompanyProfileWizard: React.FC = () => {
   // Función helper para comprimir imágenes
   const compressImage = async (blob: Blob, quality: number = 0.7): Promise<Blob> => {
     return new Promise((resolve, reject) => {
-      const img = new Image();
+      const img = new window.Image() as HTMLImageElement;
       const url = URL.createObjectURL(blob);
       
       img.onload = () => {
