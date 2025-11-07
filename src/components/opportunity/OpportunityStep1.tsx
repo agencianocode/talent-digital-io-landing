@@ -1289,8 +1289,10 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
         <div className="flex items-start space-x-2 p-4 border rounded-lg bg-purple-50/30 border-purple-200">
           <Checkbox
             id="academy_exclusive"
-            checked={data.isAcademyExclusive || false}
-            onCheckedChange={(checked) => onChange({ isAcademyExclusive: checked as boolean })}
+            checked={!!data.isAcademyExclusive}
+            onCheckedChange={(checked) => {
+              onChange({ isAcademyExclusive: checked === true });
+            }}
             className="mt-0.5"
           />
           <div className="flex-1">
