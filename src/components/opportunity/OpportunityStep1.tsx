@@ -487,6 +487,11 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
   const [toolInput, setToolInput] = useState('');
   const [showToolSuggestions, setShowToolSuggestions] = useState(false);
 
+  // Debug: Log company info
+  console.log('🏢 OpportunityStep1 - Company:', company);
+  console.log('🏢 OpportunityStep1 - business_type:', company?.business_type);
+  console.log('🏢 OpportunityStep1 - Is Academy?:', company?.business_type === 'academy');
+
   const getToolIcon = (toolName: string): string => {
     // First try exact match
     let toolData = professionalTools.find((tool: ProfessionalTool) => 
