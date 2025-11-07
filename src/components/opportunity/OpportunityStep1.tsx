@@ -1282,7 +1282,7 @@ const OpportunityStep1 = ({ data, onChange }: OpportunityStep1Props) => {
       </div>
 
       {/* Academy Exclusive Checkbox - Solo para Academias */}
-      {company?.business_type === 'academy' && (
+      {company && company.business_type === 'academy' && (
         <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-900">
             Visibilidad de la oportunidad
