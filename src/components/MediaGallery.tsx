@@ -77,6 +77,59 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   };
 
 
+  // Función helper para comprimir imágenes
+  const compressImage = async (blob: Blob, quality: number = 0.7): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(blob);
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Redimensionar si es muy grande (máx 1600px para galería)
+        let width = img.width;
+        let height = img.height;
+        const maxSize = 1600;
+        
+        if (width > maxSize || height > maxSize) {
+          if (width > height) {
+            height = (height / width) * maxSize;
+            width = maxSize;
+          } else {
+            width = (width / height) * maxSize;
+            height = maxSize;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob(
+          (compressedBlob) => {
+            URL.revokeObjectURL(url);
+            if (compressedBlob) {
+              resolve(compressedBlob);
+            } else {
+              reject(new Error('Error al comprimir imagen'));
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Error al cargar imagen'));
+      };
+      
+      img.src = url;
+    });
+  };
+
   const handleCropComplete = async (croppedImageUrl: string) => {
     if (!user?.id) {
       toast.error('Usuario no autenticado');
@@ -89,8 +142,21 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
       const response = await fetch(croppedImageUrl);
       const blob = await response.blob();
       
-      // Crear archivo desde blob
-      const file = new File([blob], 'company-image.jpg', { type: 'image/jpeg' });
+      console.log('📊 Tamaño original:', (blob.size / 1024).toFixed(2), 'KB');
+      
+      // Comprimir la imagen antes de subir
+      const compressedBlob = await compressImage(blob, 0.7); // 70% calidad
+      
+      console.log('📊 Tamaño comprimido:', (compressedBlob.size / 1024).toFixed(2), 'KB');
+      
+      // Verificar que no exceda el límite después de comprimir
+      if (compressedBlob.size > 2 * 1024 * 1024) {
+        toast.error('La imagen es demasiado grande incluso después de comprimir. Usa una imagen más pequeña.');
+        return;
+      }
+      
+      // Crear archivo desde blob comprimido
+      const file = new File([compressedBlob], 'company-image.jpg', { type: 'image/jpeg' });
       
       // Crear nombre único para el archivo
       const timestamp = Date.now();
