@@ -57,6 +57,7 @@ const companySchema = z.object({
       return `https://${val}`;
     })
     .pipe(z.string().url('Debe ser una URL válida').optional().or(z.literal(''))),
+  media_gallery: z.array(z.any()).optional(),
   social_links: z.object({
     linkedin: z.string()
       .optional()
@@ -177,9 +178,12 @@ export const CompanyProfileWizard: React.FC = () => {
       throw new Error('No company ID available');
     }
 
+    console.log('=== UPDATING COMPANY IN DATABASE ===');
     console.log('Updating company with ID:', company.id);
     console.log('Data being sent to database:', data);
     console.log('Social links in data:', data.social_links);
+    console.log('Media gallery in data:', data.media_gallery);
+    console.log('Media gallery items count:', data.media_gallery?.length || 0);
 
     const { error } = await supabase
       .from('companies')
@@ -187,11 +191,11 @@ export const CompanyProfileWizard: React.FC = () => {
       .eq('id', company.id);
 
     if (error) {
-      console.error('Error updating company:', error);
+      console.error('❌ Error updating company:', error);
       throw error;
     }
 
-    console.log('Company updated successfully');
+    console.log('✅ Company updated successfully');
     return { error: null };
   };
 
@@ -276,10 +280,14 @@ export const CompanyProfileWizard: React.FC = () => {
         media_gallery,
       };
 
+      console.log('=== SUBMITTING COMPANY DATA ===');
       console.log('Submitting company data:', companyData);
       console.log('Social links data:', data.social_links);
+      console.log('Media gallery:', media_gallery);
+      console.log('Media items count:', mediaItems.length);
       console.log('Form is dirty:', form.formState.isDirty);
       console.log('Has social links changes:', hasSocialLinksChanges);
+      console.log('Has gallery changes:', hasGalleryChanges);
 
       if (company?.id) {
         // Update existing company directly
