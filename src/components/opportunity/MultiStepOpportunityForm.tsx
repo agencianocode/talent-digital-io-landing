@@ -97,6 +97,11 @@ const MultiStepOpportunityForm = ({
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Debug: Log company info
+  console.log('📋 MultiStepOpportunityForm - company:', company);
+  console.log('📋 MultiStepOpportunityForm - business_type:', company?.business_type);
+  console.log('📋 MultiStepOpportunityForm - Is Academy?:', company?.business_type === 'academy');
   const [formData, setFormData] = useState<FormData>({
     // Step 1 defaults
     category: '',

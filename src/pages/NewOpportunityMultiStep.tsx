@@ -52,6 +52,11 @@ const NewOpportunityMultiStep = () => {
   const [invitationLink, setInvitationLink] = useState('');
   const [opportunityTitle, setOpportunityTitle] = useState('');
 
+  // Debug: Log company info
+  console.log('🏢 NewOpportunityMultiStep - activeCompany:', activeCompany);
+  console.log('🏢 NewOpportunityMultiStep - business_type:', activeCompany?.business_type);
+  console.log('🏢 NewOpportunityMultiStep - Is Academy?:', activeCompany?.business_type === 'academy');
+
   // Función para generar un enlace único de invitación
   const generateInvitationLink = (opportunityId: string) => {
     return `${window.location.origin}/opportunity/invite/${opportunityId}`;
