@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Search, 
   MapPin, 
@@ -906,9 +907,18 @@ const TalentDiscovery = () => {
                                         </Badge>
                                       )}
                                       {!talent.is_complete && !talent.is_premium && !talent.is_verified && (
-                                        <Badge className="bg-yellow-100 text-yellow-800 text-xs" title={`Completitud: ${talent.profile_completeness ?? 0}%`}>
-                                          Perfil incompleto
-                                        </Badge>
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Badge className="bg-yellow-100 text-yellow-800 text-xs cursor-help">
+                                                Perfil incompleto
+                                              </Badge>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="bg-gray-900 text-white border-gray-700">
+                                              <p>Completitud: {talent.profile_completeness ?? 0}%</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
                                       )}
                                     </div>
                                     
