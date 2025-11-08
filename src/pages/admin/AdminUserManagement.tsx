@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import AdminUserFilters from '@/components/admin/AdminUserFilters';
 import AdminUserDetail from '@/components/admin/AdminUserDetail';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 
 const AdminUserManagement: React.FC = () => {
   const {
@@ -224,6 +225,18 @@ const AdminUserManagement: React.FC = () => {
                         </div>
                       </div>
                       <p className="text-xs sm:text-sm text-muted-foreground truncate mb-1">{user.email}</p>
+                      
+                      {/* Badge de Academia */}
+                      {user.email && (
+                        <div className="mt-1">
+                          <TalentCardAcademyBadge 
+                            userId={user.id} 
+                            userEmail={user.email}
+                            size="sm"
+                            compact={true}
+                          />
+                        </div>
+                      )}
                       
                       {/* Mobile: Stack info vertically, Desktop: horizontal */}
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-muted-foreground">
