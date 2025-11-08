@@ -21,7 +21,7 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
   if (isLoading) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-3 sm:p-4">
@@ -37,7 +37,7 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Main Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
         <Card 
           className="cursor-pointer hover:shadow-md transition-shadow duration-200"
           onClick={() => navigate('/business-dashboard/opportunities')}
