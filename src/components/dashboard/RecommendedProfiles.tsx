@@ -236,7 +236,7 @@ const RecommendedProfiles: React.FC = () => {
   }
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -257,7 +257,7 @@ const RecommendedProfiles: React.FC = () => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-x-hidden">
         {profiles.length > 0 ? (
           <div className="relative">
             {/* Botón Izquierda */}
