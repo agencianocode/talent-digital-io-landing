@@ -31,13 +31,17 @@ const RecommendedProfiles: React.FC = () => {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
 
-  // Funciones de scroll suave
+  // Funciones de scroll suave - scrollea exactamente una card
   const scrollLeft = () => {
-    scrollContainerRef.current?.scrollBy({ left: -400, behavior: 'smooth' });
+    const cardWidth = 288; // w-72 = 288px
+    const gap = 16; // gap-4 = 16px
+    scrollContainerRef.current?.scrollBy({ left: -(cardWidth + gap), behavior: 'smooth' });
   };
 
   const scrollRight = () => {
-    scrollContainerRef.current?.scrollBy({ left: 400, behavior: 'smooth' });
+    const cardWidth = 288; // w-72 = 288px
+    const gap = 16; // gap-4 = 16px
+    scrollContainerRef.current?.scrollBy({ left: cardWidth + gap, behavior: 'smooth' });
   };
 
   // Detectar si hay overflow y actualizar flechas
@@ -251,6 +255,7 @@ const RecommendedProfiles: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm"
+            className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
             onClick={() => window.open('/business-dashboard/talent-discovery', '_self')}
           >
             Buscar Talento
@@ -275,7 +280,7 @@ const RecommendedProfiles: React.FC = () => {
             {/* Flex horizontal con scroll controlado por flechas - contenido en esta sección */}
             <div 
               ref={scrollContainerRef}
-              className="flex gap-4 overflow-x-auto pb-4"
+              className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory"
               style={{ 
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
@@ -289,7 +294,7 @@ const RecommendedProfiles: React.FC = () => {
               {profiles.map((profile) => (
                 <div 
                   key={profile.id} 
-                  className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer"
+                  className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer snap-start"
                   onClick={() => navigate(`/business-dashboard/talent-profile/${profile.id}`)}
                 >
                   {/* Contenido que crece */}
