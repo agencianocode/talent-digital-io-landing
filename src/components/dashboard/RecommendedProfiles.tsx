@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
-import { Users, MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, MapPin, Clock } from 'lucide-react';
 import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 
 interface RecommendedProfile {
@@ -27,44 +27,6 @@ const RecommendedProfiles: React.FC = () => {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<RecommendedProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
-
-  // Funciones de navegación con scroll suave
-  const scrollLeft = () => {
-    scrollContainerRef.current?.scrollBy({ left: -320, behavior: 'smooth' });
-  };
-
-  const scrollRight = () => {
-    scrollContainerRef.current?.scrollBy({ left: 320, behavior: 'smooth' });
-  };
-
-  // Detectar si hay scroll disponible
-  const checkScrollButtons = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    setShowLeftArrow(container.scrollLeft > 0);
-    setShowRightArrow(
-      container.scrollLeft < container.scrollWidth - container.clientWidth - 10
-    );
-  };
-
-  // Actualizar botones al hacer scroll o cargar
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    checkScrollButtons();
-    container.addEventListener('scroll', checkScrollButtons);
-    window.addEventListener('resize', checkScrollButtons);
-
-    return () => {
-      container.removeEventListener('scroll', checkScrollButtons);
-      window.removeEventListener('resize', checkScrollButtons);
-    };
-  }, [profiles]);
 
   useEffect(() => {
     const loadRecommendedProfiles = async () => {
@@ -251,24 +213,8 @@ const RecommendedProfiles: React.FC = () => {
       <CardContent>
         {profiles.length > 0 ? (
           <div className="relative">
-            {/* Botón Izquierda */}
-            {showLeftArrow && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 shadow-lg bg-white hover:bg-gray-50 rounded-full"
-                onClick={scrollLeft}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            )}
-
-            {/* Contenedor con scroll horizontal y flechas */}
-            <div 
-              ref={scrollContainerRef}
-              className="flex gap-4 overflow-x-auto pb-4 px-8 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 scroll-smooth"
-              style={{ scrollbarWidth: 'thin' }}
-            >
+            {/* Contenedor horizontal con scroll */}
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
               {profiles.map((profile) => (
                 <div 
                   key={profile.id} 
@@ -357,18 +303,6 @@ const RecommendedProfiles: React.FC = () => {
                 </div>
               ))}
             </div>
-
-            {/* Botón Derecha */}
-            {showRightArrow && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 shadow-lg bg-white hover:bg-gray-50 rounded-full"
-                onClick={scrollRight}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
