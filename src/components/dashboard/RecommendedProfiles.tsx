@@ -236,7 +236,7 @@ const RecommendedProfiles: React.FC = () => {
   }
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -257,7 +257,7 @@ const RecommendedProfiles: React.FC = () => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-hidden">
         {profiles.length > 0 ? (
           <div className="relative">
             {/* Botón Izquierda */}
@@ -272,24 +272,24 @@ const RecommendedProfiles: React.FC = () => {
               </Button>
             )}
 
-            {/* Grid responsive con scroll controlado por flechas */}
+            {/* Flex horizontal con scroll controlado por flechas - contenido en esta sección */}
             <div 
               ref={scrollContainerRef}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-4 overflow-x-auto px-8"
+              className="flex gap-4 overflow-x-auto pb-4 px-8 -mx-8"
               style={{ 
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
               }}
             >
               <style>{`
-                .hide-scrollbar::-webkit-scrollbar {
+                .overflow-x-auto::-webkit-scrollbar {
                   display: none;
                 }
               `}</style>
               {profiles.map((profile) => (
                 <div 
                   key={profile.id} 
-                  className="w-full border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer"
+                  className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer"
                   onClick={() => navigate(`/business-dashboard/talent-profile/${profile.id}`)}
                 >
                   {/* Contenido que crece */}
