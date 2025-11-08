@@ -933,21 +933,9 @@ const TalentDiscovery = () => {
                               {talent.bio}
                             </p>
 
-                            {/* Indicators */}
+                            {/* Indicators - Video y Portfolio removidos */}
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-3">
-                                {talent.video_presentation_url && (
-                                  <div className="flex items-center gap-1 text-blue-600">
-                                    <Play className="h-3 w-3" />
-                                    <span className="text-xs">Video</span>
-                                  </div>
-                                )}
-                                {talent.portfolio_url && (
-                                  <div className="flex items-center gap-1 text-purple-600">
-                                    <FileText className="h-3 w-3" />
-                                    <span className="text-xs">Portfolio</span>
-                                  </div>
-                                )}
                                 {talent.github_url && (
                                   <div className="flex items-center gap-1 text-gray-600">
                                     <Github className="h-3 w-3" />
