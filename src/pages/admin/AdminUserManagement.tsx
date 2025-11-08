@@ -102,13 +102,15 @@ const AdminUserManagement: React.FC = () => {
   };
 
   const getStatusBadge = (user: any) => {
+    // Solo mostrar badge cuando hay un problema o estado especial
     if (!user.is_active) {
       return <Badge variant="destructive">Suspendido</Badge>;
     }
     if (!user.email_confirmed_at) {
       return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pendiente</Badge>;
     }
-    return <Badge variant="default" className="bg-green-100 text-green-800">Activo</Badge>;
+    // Si está activo y confirmado, no mostrar badge (es el estado normal)
+    return null;
   };
 
   if (error) {
