@@ -47,7 +47,7 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col lg:flex-row overflow-x-hidden max-w-full">
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
       {/* Mobile Header */}
       <header className="lg:hidden border-b bg-card p-4">
         <div className="flex items-center justify-between">
