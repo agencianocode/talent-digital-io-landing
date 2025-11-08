@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
   Plus, 
   Settings,
@@ -11,7 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
-  CheckSquare
+  CheckSquare,
+  Info
 } from 'lucide-react';
 import { useMarketplaceServices } from '@/hooks/useMarketplaceServices';
 import { useTalentPublishingRequests } from '@/hooks/useTalentPublishingRequests';
@@ -21,14 +23,17 @@ import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import PublishServiceModal from '@/components/marketplace/PublishServiceModal';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { AcademyCoursesSection } from '@/components/marketplace/AcademyCoursesSection';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const TalentMarketplace: React.FC = () => {
   const navigate = useNavigate();
+  const { userRole } = useSupabaseAuth();
   const { pendingCount: pendingRequestsCount } = useTalentPublishingRequests();
   const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showPendingAlert, setShowPendingAlert] = useState(false);
 
   const {
     services,
@@ -69,7 +74,11 @@ const TalentMarketplace: React.FC = () => {
   };
 
   const handleManageServices = () => {
-    navigate('/talent-dashboard/my-services');
+    if (userRole === 'freemium_talent') {
+      setShowPendingAlert(true);
+    } else {
+      navigate('/talent-dashboard/my-services');
+    }
   };
 
   const handleViewMyRequests = () => {
@@ -118,6 +127,26 @@ const TalentMarketplace: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Alert de solicitud pendiente para Freemium */}
+      {showPendingAlert && (
+        <Alert className="mb-6 bg-blue-50 border-blue-200">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-900 font-semibold">Solicitud en Revisión ⏳</AlertTitle>
+          <AlertDescription className="text-blue-700 mt-2">
+            Tu solicitud para acceder al Marketplace de Servicios está siendo revisada por nuestro equipo. 
+            Te notificaremos por email cuando sea aprobada y puedas empezar a publicar tus servicios.
+          </AlertDescription>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-3"
+            onClick={() => setShowPendingAlert(false)}
+          >
+            Entendido
+          </Button>
+        </Alert>
+      )}
 
       {/* Academy Courses Section */}
       <div className="mb-12">
