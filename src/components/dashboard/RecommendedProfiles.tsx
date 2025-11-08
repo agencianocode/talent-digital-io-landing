@@ -255,10 +255,11 @@ const RecommendedProfiles: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm"
-            className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+            className="text-[10px] sm:text-sm px-1.5 sm:px-3 py-1 sm:py-2 h-auto whitespace-nowrap shrink-0"
             onClick={() => window.open('/business-dashboard/talent-discovery', '_self')}
           >
-            Buscar Talento
+            <span className="hidden sm:inline">Buscar Talento</span>
+            <span className="sm:hidden">Buscar</span>
           </Button>
         </div>
       </CardHeader>
