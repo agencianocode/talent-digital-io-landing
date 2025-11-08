@@ -272,10 +272,10 @@ const RecommendedProfiles: React.FC = () => {
               </Button>
             )}
 
-            {/* Grid responsive con scroll controlado por flechas */}
+            {/* Flex horizontal con scroll controlado por flechas - sin scrollbar visible */}
             <div 
               ref={scrollContainerRef}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-4 overflow-x-auto px-8"
+              className="flex gap-4 overflow-x-auto pb-4 px-8 hide-scrollbar"
               style={{ 
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
@@ -289,7 +289,7 @@ const RecommendedProfiles: React.FC = () => {
               {profiles.map((profile) => (
                 <div 
                   key={profile.id} 
-                  className="w-full border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer"
+                  className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer"
                   onClick={() => navigate(`/business-dashboard/talent-profile/${profile.id}`)}
                 >
                   {/* Contenido que crece */}
