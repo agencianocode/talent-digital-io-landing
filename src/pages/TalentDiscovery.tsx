@@ -906,7 +906,7 @@ const TalentDiscovery = () => {
                                         </Badge>
                                       )}
                                       {!talent.is_complete && !talent.is_premium && !talent.is_verified && (
-                                        <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                        <Badge className="bg-yellow-100 text-yellow-800 text-xs whitespace-nowrap">
                                           Perfil incompleto
                                         </Badge>
                                       )}
