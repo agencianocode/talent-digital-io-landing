@@ -236,7 +236,7 @@ const RecommendedProfiles: React.FC = () => {
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -257,7 +257,7 @@ const RecommendedProfiles: React.FC = () => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="overflow-hidden">
+      <CardContent>
         {profiles.length > 0 ? (
           <div className="relative">
             {/* Botón Izquierda */}
@@ -275,7 +275,7 @@ const RecommendedProfiles: React.FC = () => {
             {/* Flex horizontal con scroll controlado por flechas - contenido en esta sección */}
             <div 
               ref={scrollContainerRef}
-              className="flex gap-4 overflow-x-auto pb-4 px-8 -mx-8"
+              className="flex gap-4 overflow-x-auto pb-4"
               style={{ 
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
