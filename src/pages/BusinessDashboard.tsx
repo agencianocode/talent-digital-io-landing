@@ -126,7 +126,7 @@ const BusinessDashboard = () => {
   }
 
   return (
-      <div className="space-y-3 sm:space-y-4 p-2 sm:p-4 lg:p-6">
+      <div className="space-y-3 sm:space-y-4 w-full max-w-full overflow-hidden">
         {/* Welcome Banner - 2 Column Design */}
         <div className="bg-gradient-to-r from-purple-100 via-blue-50 to-green-50 rounded-xl p-3 sm:p-4 lg:p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 items-center">
