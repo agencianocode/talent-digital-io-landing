@@ -90,22 +90,22 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
     <div className="space-y-4 sm:space-y-6 w-full">
       {/* Main Metrics */}
       <div className="relative">
-        {/* Botón Izquierda */}
+        {/* Botón Izquierda - solo en pantallas pequeñas */}
         {showLeftArrow && (
           <Button
             variant="outline"
             size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2 xl:hidden"
             onClick={scrollLeft}
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
         )}
 
-        {/* Flex horizontal con scroll */}
+        {/* Flex horizontal con scroll en pantallas pequeñas, Grid en pantallas grandes */}
         <div 
           ref={scrollContainerRef}
-          className="flex gap-3 sm:gap-4 overflow-x-auto pb-2"
+          className="flex xl:grid xl:grid-cols-4 gap-3 sm:gap-4 overflow-x-auto xl:overflow-x-visible pb-2"
           style={{ 
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -117,7 +117,7 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
             }
           `}</style>
           <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow duration-200 flex-shrink-0 w-64 sm:w-72"
+            className="cursor-pointer hover:shadow-md transition-shadow duration-200 flex-shrink-0 w-64 sm:w-72 xl:w-auto xl:w-auto"
             onClick={() => navigate('/business-dashboard/opportunities')}
           >
             <CardContent className="p-3 sm:p-4 text-center">
@@ -130,7 +130,7 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow duration-200 flex-shrink-0 w-64 sm:w-72"
+            className="cursor-pointer hover:shadow-md transition-shadow duration-200 flex-shrink-0 w-64 sm:w-72 xl:w-auto"
             onClick={() => navigate('/business-dashboard/applications')}
           >
             <CardContent className="p-3 sm:p-4 text-center">
@@ -146,7 +146,7 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow duration-200 flex-shrink-0 w-64 sm:w-72"
+            className="cursor-pointer hover:shadow-md transition-shadow duration-200 flex-shrink-0 w-64 sm:w-72 xl:w-auto"
             onClick={() => navigate('/business-dashboard/applications?filter=pending')}
           >
             <CardContent className="p-3 sm:p-4 text-center">
@@ -159,7 +159,7 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow duration-200 flex-shrink-0 w-64 sm:w-72"
+            className="cursor-pointer hover:shadow-md transition-shadow duration-200 flex-shrink-0 w-64 sm:w-72 xl:w-auto"
             onClick={() => navigate('/business-dashboard/messages')}
           >
             <CardContent className="p-3 sm:p-4 text-center">
@@ -172,12 +172,12 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
           </Card>
         </div>
 
-        {/* Botón Derecha */}
+        {/* Botón Derecha - solo en pantallas pequeñas */}
         {showRightArrow && (
           <Button
             variant="outline"
             size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2 xl:hidden"
             onClick={scrollRight}
           >
             <ChevronRight className="h-5 w-5" />
