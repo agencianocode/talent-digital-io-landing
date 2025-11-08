@@ -20,8 +20,8 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
 
   if (isLoading) {
     return (
-      <div className="space-y-4 sm:space-y-6 w-full max-w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 w-full">
+      <div className="space-y-4 sm:space-y-6 w-full">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3 sm:gap-4 w-full">
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-3 sm:p-4">
@@ -35,67 +35,67 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 w-full max-w-full">
+    <div className="space-y-4 sm:space-y-6 w-full">
       {/* Main Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 w-full">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3 sm:gap-4 w-full">
         <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow duration-200"
+          className="cursor-pointer hover:shadow-md transition-shadow duration-200 min-w-0"
           onClick={() => navigate('/business-dashboard/opportunities')}
         >
-          <CardContent className="p-3 sm:p-4 text-center">
+          <CardContent className="p-3 sm:p-4 text-center min-w-0">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
               <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Oportunidades Activas</div>
+            <div className="text-xs sm:text-sm text-muted-foreground truncate">Oportunidades Activas</div>
             <div className="text-xl sm:text-2xl font-bold">{metrics.activeOpportunities}</div>
           </CardContent>
         </Card>
 
         <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow duration-200"
+          className="cursor-pointer hover:shadow-md transition-shadow duration-200 min-w-0"
           onClick={() => navigate('/business-dashboard/applications')}
         >
-          <CardContent className="p-3 sm:p-4 text-center">
+          <CardContent className="p-3 sm:p-4 text-center min-w-0">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
               <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground line-clamp-2">Postulaciones en Oportunidades Activas</div>
             <div className="text-xl sm:text-2xl font-bold">{metrics.applicationsInActiveOpportunities || 0}</div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xs text-muted-foreground mt-1 truncate">
               {metrics.unreviewedApplications || 0} sin revisar / {metrics.applicationsInActiveOpportunities || 0} totales
             </div>
           </CardContent>
         </Card>
 
         <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow duration-200"
+          className="cursor-pointer hover:shadow-md transition-shadow duration-200 min-w-0"
           onClick={() => navigate('/business-dashboard/applications?filter=pending')}
         >
-          <CardContent className="p-3 sm:p-4 text-center">
+          <CardContent className="p-3 sm:p-4 text-center min-w-0">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2">
               <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-destructive" />
             </div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Candidatos en Evaluación</div>
+            <div className="text-xs sm:text-sm text-muted-foreground truncate">Candidatos en Evaluación</div>
             <div className="text-xl sm:text-2xl font-bold">{metrics.candidatesInEvaluation || 0}</div>
           </CardContent>
         </Card>
 
         <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow duration-200"
+          className="cursor-pointer hover:shadow-md transition-shadow duration-200 min-w-0"
           onClick={() => navigate('/business-dashboard/messages')}
         >
-          <CardContent className="p-3 sm:p-4 text-center">
+          <CardContent className="p-3 sm:p-4 text-center min-w-0">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
               <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Candidatos Contactados</div>
+            <div className="text-xs sm:text-sm text-muted-foreground truncate">Candidatos Contactados</div>
             <div className="text-xl sm:text-2xl font-bold">{metrics.candidatesContacted || 0}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Secondary Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3 sm:gap-4 w-full">
         <Card>
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
