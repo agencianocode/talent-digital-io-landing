@@ -51,63 +51,75 @@ const TalentDashboard = () => {
         <div className="space-y-8">
         
         {/* Profile Completion Section */}
-        <Card className="bg-white">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-900 font-['Inter']">
-              Tu perfil está al {profileCompleteness}%
-            </CardTitle>
-            <p className="text-gray-600 font-['Inter']">
-              Complétalo para atraer más talento y generar confianza.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Progress value={profileCompleteness} className="h-2" />
-            
-            <div className="space-y-3">
-              {tasks.map((task) => {
-                const isCurrentStep = !task.completed && nextTask?.id === task.id;
-                
-                return (
-                  <div 
-                    key={task.id}
-                    className={`flex items-center justify-between p-3 rounded-lg transition-all ${
-                      isCurrentStep 
-                        ? 'bg-blue-50 border-l-4 border-blue-500' 
-                        : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      {task.completed ? (
-                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                      ) : (
-                        <Circle className={`w-5 h-5 flex-shrink-0 ${isCurrentStep ? 'text-blue-500' : 'text-gray-400'}`} />
-                      )}
-                      <div className="flex-1">
-                        <span className={`text-gray-700 font-['Inter'] ${isCurrentStep ? 'font-semibold' : ''}`}>
-                          {task.title}
-                        </span>
-                        {!task.completed && task.description && (
-                          <p className="text-xs text-gray-500 mt-1">{task.description}</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {!task.completed && task.route && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-blue-600 hover:text-blue-700 font-['Inter'] flex-shrink-0"
-                        onClick={() => task.route && navigate(task.route)}
-                      >
-                        Completar <ArrowRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
+        {profileCompleteness === 100 ? (
+          // Perfil completo - Badge compacto con celebración
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
+            <CheckCircle className="text-green-600 h-6 w-6 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-green-900 font-['Inter']">¡Perfil completo! 🎉</p>
+              <p className="text-sm text-green-700 font-['Inter']">Tu perfil está optimizado para recibir las mejores oportunidades.</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        ) : (
+          // Perfil incompleto - Card completa con tareas
+          <Card className="bg-white">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-gray-900 font-['Inter']">
+                Tu perfil está al {profileCompleteness}%
+              </CardTitle>
+              <p className="text-gray-600 font-['Inter']">
+                Complétalo para atraer más talento y generar confianza.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Progress value={profileCompleteness} className="h-2" />
+              
+              <div className="space-y-3">
+                {tasks.map((task) => {
+                  const isCurrentStep = !task.completed && nextTask?.id === task.id;
+                  
+                  return (
+                    <div 
+                      key={task.id}
+                      className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                        isCurrentStep 
+                          ? 'bg-blue-50 border-l-4 border-blue-500' 
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        {task.completed ? (
+                          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        ) : (
+                          <Circle className={`w-5 h-5 flex-shrink-0 ${isCurrentStep ? 'text-blue-500' : 'text-gray-400'}`} />
+                        )}
+                        <div className="flex-1">
+                          <span className={`text-gray-700 font-['Inter'] ${isCurrentStep ? 'font-semibold' : ''}`}>
+                            {task.title}
+                          </span>
+                          {!task.completed && task.description && (
+                            <p className="text-xs text-gray-500 mt-1">{task.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {!task.completed && task.route && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-blue-600 hover:text-blue-700 font-['Inter'] flex-shrink-0"
+                          onClick={() => task.route && navigate(task.route)}
+                        >
+                          Completar <ArrowRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Academy Affiliation Section */}
         <AcademyAffiliationCard />
