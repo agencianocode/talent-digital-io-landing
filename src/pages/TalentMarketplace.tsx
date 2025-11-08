@@ -107,17 +107,6 @@ const TalentMarketplace: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Button onClick={handleViewMyRequests} variant="outline" className="flex items-center gap-2">
-                <CheckSquare className="h-4 w-4" />
-                Mis Solicitudes
-              </Button>
-              {pendingRequestsCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs h-5 w-5 flex items-center justify-center p-0">
-                  {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
-                </Badge>
-              )}
-            </div>
             <Button onClick={handleManageServices} variant="outline" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Mis Servicios
