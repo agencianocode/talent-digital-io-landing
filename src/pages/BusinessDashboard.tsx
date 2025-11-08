@@ -180,9 +180,9 @@ const BusinessDashboard = () => {
             {/* Right Column - Video Tutorial Real */}
             {(customization?.banner_show_video !== false) && (
               <div className="hidden lg:flex justify-center">
-                <div className="relative">
+                <div className="relative w-full max-w-sm">
                   {/* Video Tutorial */}
-                  <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50 w-80 h-48">
+                  <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50 w-full h-48">
                     <iframe
                       className="w-full h-full"
                       src={customization?.banner_video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}
@@ -213,7 +213,7 @@ const BusinessDashboard = () => {
         {/* Main Content - Conditional based on profile completion */}
         {getCompletionPercentage() < 100 ? (
           // Incomplete Profile View
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             <div className="lg:col-span-2 space-y-3 sm:space-y-4">
               {/* Profile Completion */}
               <Card>
