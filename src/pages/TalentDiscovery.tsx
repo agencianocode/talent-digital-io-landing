@@ -862,10 +862,10 @@ const TalentDiscovery = () => {
                       {filteredTalents.map((talent) => (
                         <Card 
                           key={talent.id} 
-                          className="hover:shadow-lg transition-shadow cursor-pointer group"
+                          className="hover:shadow-lg transition-shadow cursor-pointer group flex flex-col"
                           onClick={() => handleViewProfile(talent.user_id)}
                         >
-                          <CardContent className="p-6">
+                          <CardContent className="p-6 flex flex-col flex-1">
                             {/* Header */}
                             <div className="flex items-start gap-4 mb-4">
                               <div className="relative">
@@ -934,19 +934,17 @@ const TalentDiscovery = () => {
                             </p>
 
                             {/* Indicators - Video y Portfolio removidos */}
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                {talent.github_url && (
-                                  <div className="flex items-center gap-1 text-gray-600">
-                                    <Github className="h-3 w-3" />
-                                    <span className="text-xs">GitHub</span>
-                                  </div>
-                                )}
+                            {talent.github_url && (
+                              <div className="flex items-center gap-3 mb-4">
+                                <div className="flex items-center gap-1 text-gray-600">
+                                  <Github className="h-3 w-3" />
+                                  <span className="text-xs">GitHub</span>
+                                </div>
                               </div>
-                            </div>
+                            )}
 
-                            {/* Actions */}
-                            <div className="flex gap-2">
+                            {/* Actions - empujado al final de la card */}
+                            <div className="flex gap-2 mt-auto pt-4">
                               <Button 
                                 size="sm" 
                                 className="flex-1"
