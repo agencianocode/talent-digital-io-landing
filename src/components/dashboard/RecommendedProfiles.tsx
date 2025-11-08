@@ -213,12 +213,12 @@ const RecommendedProfiles: React.FC = () => {
       <CardContent>
         {profiles.length > 0 ? (
           <div className="relative">
-            {/* Contenedor horizontal con scroll */}
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            {/* Grid responsive - sin scroll horizontal */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-4">
               {profiles.map((profile) => (
                 <div 
                   key={profile.id} 
-                  className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer"
+                  className="w-full border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer"
                   onClick={() => navigate(`/business-dashboard/talent-profile/${profile.id}`)}
                 >
                   {/* Contenido que crece */}
