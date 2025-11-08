@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
-import { Users, MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, MapPin, Clock } from 'lucide-react';
 import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 
 interface RecommendedProfile {
@@ -27,8 +27,6 @@ const RecommendedProfiles: React.FC = () => {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<RecommendedProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [cardsPerPage, setCardsPerPage] = useState(3);
 
   useEffect(() => {
     const loadRecommendedProfiles = async () => {
@@ -164,54 +162,6 @@ const RecommendedProfiles: React.FC = () => {
     loadRecommendedProfiles();
   }, [activeCompany]);
 
-  // Calcular cards por página según espacio real disponible
-  useEffect(() => {
-    const calculateCardsPerPage = () => {
-      const containerWidth = window.innerWidth;
-      const cardWidth = 288;        // w-72 en Tailwind (18rem = 288px)
-      const gapWidth = 16;          // gap-4 en Tailwind (1rem = 16px)
-      const paddingHorizontal = 96; // px-12 en contenedor (3rem * 2 = 96px)
-      const arrowSpace = 80;        // Espacio reservado para botones de navegación
-      
-      // Espacio disponible para cards
-      const availableWidth = containerWidth - paddingHorizontal - arrowSpace;
-      
-      // Calcular cuántas cards caben sin overflow
-      // Fórmula: (espacio + gap) / (card + gap) porque el último no necesita gap
-      let cards = Math.floor((availableWidth + gapWidth) / (cardWidth + gapWidth));
-      
-      // Mínimo 1, máximo 5 para mantener legibilidad
-      return Math.max(1, Math.min(5, cards));
-    };
-    
-    const updateCardsPerPage = () => {
-      const newCardsPerPage = calculateCardsPerPage();
-      setCardsPerPage(newCardsPerPage);
-      // Ajustar página actual si es necesario
-      const maxPage = Math.ceil(profiles.length / newCardsPerPage) - 1;
-      if (currentPage > maxPage) {
-        setCurrentPage(Math.max(0, maxPage));
-      }
-    };
-
-    updateCardsPerPage();
-    window.addEventListener('resize', updateCardsPerPage);
-    return () => window.removeEventListener('resize', updateCardsPerPage);
-  }, [profiles.length, currentPage]);
-
-  // Calcular perfiles visibles en la página actual
-  const startIndex = currentPage * cardsPerPage;
-  const visibleProfiles = profiles.slice(startIndex, startIndex + cardsPerPage);
-  const totalPages = Math.ceil(profiles.length / cardsPerPage);
-
-  const handlePrevPage = () => {
-    setCurrentPage(prev => Math.max(0, prev - 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(totalPages - 1, prev + 1));
-  };
-
   if (loading) {
     return (
       <Card>
@@ -263,21 +213,9 @@ const RecommendedProfiles: React.FC = () => {
       <CardContent>
         {profiles.length > 0 ? (
           <div className="relative">
-            {/* Botón Anterior */}
-            {currentPage > 0 && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 shadow-lg bg-white hover:bg-gray-50"
-                onClick={handlePrevPage}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            )}
-
-            {/* Contenedor de cards con navegación por carrusel */}
-            <div className="flex gap-4 justify-start px-12 pb-4 transition-all duration-300">
-              {visibleProfiles.map((profile) => (
+            {/* Contenedor horizontal con scroll */}
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              {profiles.map((profile) => (
                 <div 
                   key={profile.id} 
                   className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer"
@@ -365,25 +303,6 @@ const RecommendedProfiles: React.FC = () => {
                 </div>
               ))}
             </div>
-
-            {/* Botón Siguiente */}
-            {currentPage < totalPages - 1 && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 shadow-lg bg-white hover:bg-gray-50"
-                onClick={handleNextPage}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            )}
-
-            {/* Indicador de página */}
-            {totalPages > 1 && (
-              <div className="text-center mt-2 text-sm text-muted-foreground">
-                Página {currentPage + 1} de {totalPages}
-              </div>
-            )}
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
