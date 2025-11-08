@@ -164,15 +164,24 @@ const RecommendedProfiles: React.FC = () => {
     loadRecommendedProfiles();
   }, [activeCompany]);
 
-  // Calcular cards por página según ancho de pantalla
+  // Calcular cards por página según espacio real disponible
   useEffect(() => {
     const calculateCardsPerPage = () => {
-      const width = window.innerWidth;
-      if (width < 768) return 1;        // Mobile: 1 card
-      if (width < 1024) return 2;       // Tablet: 2 cards
-      if (width < 1280) return 3;       // 13" laptop: 3 cards
-      if (width < 1536) return 4;       // Desktop: 4 cards
-      return 5;                          // XL screen: 5 cards
+      const containerWidth = window.innerWidth;
+      const cardWidth = 288;        // w-72 en Tailwind (18rem = 288px)
+      const gapWidth = 16;          // gap-4 en Tailwind (1rem = 16px)
+      const paddingHorizontal = 96; // px-12 en contenedor (3rem * 2 = 96px)
+      const arrowSpace = 80;        // Espacio reservado para botones de navegación
+      
+      // Espacio disponible para cards
+      const availableWidth = containerWidth - paddingHorizontal - arrowSpace;
+      
+      // Calcular cuántas cards caben sin overflow
+      // Fórmula: (espacio + gap) / (card + gap) porque el último no necesita gap
+      let cards = Math.floor((availableWidth + gapWidth) / (cardWidth + gapWidth));
+      
+      // Mínimo 1, máximo 5 para mantener legibilidad
+      return Math.max(1, Math.min(5, cards));
     };
     
     const updateCardsPerPage = () => {
@@ -267,7 +276,7 @@ const RecommendedProfiles: React.FC = () => {
             )}
 
             {/* Contenedor de cards con navegación por carrusel */}
-            <div className="flex gap-4 justify-center px-12 pb-4">
+            <div className="flex gap-4 justify-start px-12 pb-4 transition-all duration-300">
               {visibleProfiles.map((profile) => (
                 <div 
                   key={profile.id} 
