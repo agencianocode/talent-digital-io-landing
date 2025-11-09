@@ -61,64 +61,110 @@ const TalentDashboard = () => {
             </div>
           </div>
         ) : (
-          // Perfil incompleto - Card completa con tareas
-          <Card className="bg-white">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-gray-900 font-['Inter']">
-                Tu perfil está al {profileCompleteness}%
-              </CardTitle>
-              <p className="text-gray-600 font-['Inter']">
-                Complétalo para atraer más talento y generar confianza.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Progress value={profileCompleteness} className="h-2" />
-              
-              <div className="space-y-3">
-                {tasks.map((task) => {
-                  const isCurrentStep = !task.completed && nextTask?.id === task.id;
-                  
-                  return (
-                    <div 
-                      key={task.id}
-                      className={`flex items-center justify-between p-3 rounded-lg transition-all ${
-                        isCurrentStep 
-                          ? 'bg-blue-50 border-l-4 border-blue-500' 
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 flex-1">
-                        {task.completed ? (
-                          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+          // Perfil incompleto - Layout de 2 columnas compacto
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Columna izquierda - Completitud (2 columnas) */}
+            <div className="lg:col-span-2">
+              <Card className="bg-white">
+                <CardContent className="p-4 lg:p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-semibold text-gray-900 font-['Inter']">
+                      Tu perfil está al {profileCompleteness}%
+                    </h2>
+                    {/* Indicadores visuales compactos */}
+                    <div className="flex items-center gap-1">
+                      {tasks.map((task) => (
+                        task.completed ? (
+                          <CheckCircle key={task.id} className="w-4 h-4 text-green-500" />
                         ) : (
-                          <Circle className={`w-5 h-5 flex-shrink-0 ${isCurrentStep ? 'text-blue-500' : 'text-gray-400'}`} />
-                        )}
-                        <div className="flex-1">
-                          <span className={`text-gray-700 font-['Inter'] ${isCurrentStep ? 'font-semibold' : ''}`}>
-                            {task.title}
-                          </span>
-                          {!task.completed && task.description && (
-                            <p className="text-xs text-gray-500 mt-1">{task.description}</p>
+                          <Circle key={task.id} className="w-4 h-4 text-gray-300" />
+                        )
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3 font-['Inter']">
+                    Complétalo para recibir mejores oportunidades
+                  </p>
+                  
+                  <Progress value={profileCompleteness} className="h-2 mb-4" />
+                  
+                  {/* Solo mostrar tareas INCOMPLETAS */}
+                  <div className="space-y-2">
+                    {tasks.filter(task => !task.completed).map((task) => {
+                      const isCurrentStep = nextTask?.id === task.id;
+                      
+                      return (
+                        <div 
+                          key={task.id}
+                          className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                            isCurrentStep 
+                              ? 'bg-blue-50 border-l-4 border-blue-500' 
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <Circle className={`w-5 h-5 flex-shrink-0 ${isCurrentStep ? 'text-blue-500' : 'text-gray-400'}`} />
+                            <div className="flex-1">
+                              <span className={`text-gray-700 font-['Inter'] ${isCurrentStep ? 'font-semibold' : ''}`}>
+                                {task.title}
+                              </span>
+                              {task.description && (
+                                <p className="text-xs text-gray-500 mt-1">{task.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {task.route && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-blue-600 hover:text-blue-700 font-['Inter'] flex-shrink-0"
+                              onClick={() => task.route && navigate(task.route)}
+                            >
+                              Completar <ArrowRight className="w-4 h-4 ml-1" />
+                            </Button>
                           )}
                         </div>
-                      </div>
-                      
-                      {!task.completed && task.route && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-blue-600 hover:text-blue-700 font-['Inter'] flex-shrink-0"
-                          onClick={() => task.route && navigate(task.route)}
-                        >
-                          Completar <ArrowRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Columna derecha - Tips para destacar */}
+            <div>
+              <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
+                <CardContent className="p-4 lg:p-6">
+                  <h3 className="text-lg font-semibold mb-3 text-purple-900 font-['Inter']">💡 Tips para destacar</h3>
+                  <ul className="space-y-2 text-sm text-purple-800 font-['Inter']">
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 font-bold">•</span>
+                      <span>Un perfil completo recibe <strong>3x más vistas</strong></span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 font-bold">•</span>
+                      <span>El video de presentación aumenta tus posibilidades en <strong>70%</strong></span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 font-bold">•</span>
+                      <span>Mantén tu experiencia actualizada</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 font-bold">•</span>
+                      <span>Añade tus mejores proyectos</span>
+                    </li>
+                  </ul>
+                  <Button 
+                    className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+                    onClick={() => nextTask?.route && navigate(nextTask.route)}
+                  >
+                    Continuar ahora →
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         )}
 
         {/* Academy Affiliation Section */}
