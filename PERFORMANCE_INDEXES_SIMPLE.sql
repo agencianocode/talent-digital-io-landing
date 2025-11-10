@@ -60,7 +60,7 @@ CREATE INDEX IF NOT EXISTS idx_opportunities_academy_exclusive ON opportunities(
 -- ============================================================================
 CREATE INDEX IF NOT EXISTS idx_opportunity_views_opportunity_id ON opportunity_views(opportunity_id);
 CREATE INDEX IF NOT EXISTS idx_opportunity_views_viewer_id ON opportunity_views(viewer_id);
-CREATE INDEX IF NOT EXISTS idx_opportunity_views_opp_viewed ON opportunity_views(opportunity_id, viewed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_opportunity_views_opp_created ON opportunity_views(opportunity_id, created_at DESC);
 
 -- ============================================================================
 -- COMPANIES
@@ -83,7 +83,7 @@ CREATE INDEX IF NOT EXISTS idx_academy_students_academy_status ON academy_studen
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX IF NOT EXISTS idx_messages_recipient_id ON messages(recipient_id);
-CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(recipient_id, read) WHERE read = false;
+CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(recipient_id, is_read) WHERE is_read = false;
 
 -- ============================================================================
 -- SAVED OPPORTUNITIES
