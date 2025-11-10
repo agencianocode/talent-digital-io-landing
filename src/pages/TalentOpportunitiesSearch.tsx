@@ -415,27 +415,12 @@ const TalentOpportunitiesSearch = () => {
                           </p>
                         </div>
 
-                        {/* Metadatos */}
+                        {/* Metadatos compactos */}
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
                             {getTimeAgo(opportunity.created_at)}
                           </div>
-                          
-                          {opportunity.location && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              {opportunity.location}
-                            </div>
-                          )}
-
-                          {/* Nivel de experiencia */}
-                          {(opportunity as any).experience_levels && (opportunity as any).experience_levels.length > 0 && (
-                            <div className="flex items-center gap-1">
-                              <Award className="h-4 w-4" />
-                              {(opportunity as any).experience_levels[0]}
-                            </div>
-                          )}
 
                           {/* Cantidad de postulaciones */}
                           {(opportunity as any).applications_count !== undefined && (
@@ -460,7 +445,7 @@ const TalentOpportunitiesSearch = () => {
                           )}
                         </div>
 
-                        {/* Badges de categoría, tipo de contrato y exclusividad */}
+                        {/* Badges de categoría, tipo de contrato, ubicación y exclusividad */}
                         <div className="flex flex-wrap gap-2">
                           {/* Badge de categoría */}
                           {opportunity.category && (
@@ -475,6 +460,17 @@ const TalentOpportunitiesSearch = () => {
                             <Badge className="bg-blue-100 text-blue-800 border-blue-200 flex items-center gap-1">
                               <Eye className="h-3 w-3" />
                               {opportunity.type}
+                            </Badge>
+                          )}
+                          
+                          {/* Badge de ubicación simplificada */}
+                          {opportunity.location && (
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {opportunity.location.includes('Remoto') || opportunity.location.includes('Remote') 
+                                ? 'Remoto' 
+                                : opportunity.location.split(',').pop()?.trim() || opportunity.location.split('-').pop()?.trim() || 'Presencial'
+                              }
                             </Badge>
                           )}
                           
