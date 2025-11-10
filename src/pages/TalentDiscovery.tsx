@@ -143,24 +143,46 @@ const TalentDiscovery = () => {
         return;
       }
 
-      // Get profiles data (without phone - use secure function when needed)
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          user_id,
-          full_name,
-          avatar_url,
-          city,
-          country,
-          linkedin,
-          video_presentation_url,
-          social_links,
-          profile_completeness,
-          created_at,
-          updated_at
-        `)
-        .in('user_id', talentUserIds);
+      // 🚀 OPTIMIZACIÓN: Ejecutar queries en paralelo para mejorar velocidad
+      console.log('⚡ Fetching profiles, roles, and emails in parallel...');
+      const [
+        { data: profiles, error: profilesError },
+        { data: talentRoles },
+        { data: userEmails, error: emailsError }
+      ] = await Promise.all([
+        // Get profiles data (without phone - use secure function when needed)
+        supabase
+          .from('profiles')
+          .select(`
+            id,
+            user_id,
+            full_name,
+            avatar_url,
+            city,
+            country,
+            linkedin,
+            video_presentation_url,
+            social_links,
+            profile_completeness,
+            created_at,
+            updated_at
+          `)
+          .in('user_id', talentUserIds),
+        
+        // Get user roles for premium status (optional, won't block if fails)
+        supabase
+          .from('user_roles')
+          .select('user_id, role')
+          .in('role', ['talent', 'freemium_talent', 'premium_talent'])
+          .in('user_id', talentUserIds),
+        
+        // Get user emails using RPC function (accesses auth.users securely)
+        supabase
+          .rpc('get_user_emails_by_ids', { user_ids: talentUserIds }) as Promise<{ 
+            data: Array<{ user_id: string; email: string }> | null;
+            error: any;
+          }>
+      ]);
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
@@ -170,23 +192,7 @@ const TalentDiscovery = () => {
       }
 
       console.log('📋 Perfiles encontrados:', profiles?.length || 0);
-
-      // Get user roles for premium status (optional, won't block if fails)
-      const { data: talentRoles } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('role', ['talent', 'freemium_talent', 'premium_talent'])
-        .in('user_id', talentUserIds);
-
       console.log('👥 Roles de usuario encontrados:', talentRoles?.length || 0);
-
-      // Get user emails using RPC function (accesses auth.users securely)
-      console.log('🔍 Calling get_user_emails_by_ids with:', talentUserIds.length, 'user IDs');
-      const { data: userEmails, error: emailsError } = await supabase
-        .rpc('get_user_emails_by_ids', { user_ids: talentUserIds }) as { 
-          data: Array<{ user_id: string; email: string }> | null;
-          error: any;
-        };
       
       if (emailsError) {
         console.error('❌ Error getting user emails:', emailsError);

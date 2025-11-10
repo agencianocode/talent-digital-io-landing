@@ -82,6 +82,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({ url }) => {
         <img
           src={thumbnailUrl}
           alt={`Video thumbnail - ${platform}`}
+          loading="lazy"
           className="w-full h-full object-cover"
           onError={() => {
             // Si falla la carga de la imagen, mostrar placeholder

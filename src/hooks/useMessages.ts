@@ -169,21 +169,33 @@ export const useMessages = () => {
 
       if (error) throw error;
       
-      // Fetch sender and recipient info separately
-      const messagesWithUsers = await Promise.all(
-        (data || []).map(async (message: any) => {
-          const [senderResult, recipientResult] = await Promise.all([
-            supabase.from('profiles').select('full_name, avatar_url').eq('user_id', message.sender_id).single(),
-            supabase.from('profiles').select('full_name, avatar_url').eq('user_id', message.recipient_id).single()
-          ]);
-
-          return {
-            ...message,
-            sender: senderResult.data || { full_name: 'Usuario', avatar_url: null },
-            recipient: recipientResult.data || { full_name: 'Usuario', avatar_url: null }
-          };
-        })
+      // 🚀 OPTIMIZACIÓN: Batch query para obtener todos los usuarios de una vez
+      const messages = data || [];
+      
+      // Recolectar todos los user IDs únicos
+      const userIds = new Set<string>();
+      messages.forEach((message: any) => {
+        if (message.sender_id) userIds.add(message.sender_id);
+        if (message.recipient_id) userIds.add(message.recipient_id);
+      });
+      
+      // Single batch query para obtener todos los perfiles
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', Array.from(userIds));
+      
+      // Crear un mapa para búsqueda rápida
+      const profilesMap = new Map(
+        (profiles || []).map(p => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }])
       );
+      
+      // Mapear mensajes con info de usuarios
+      const messagesWithUsers = messages.map((message: any) => ({
+        ...message,
+        sender: profilesMap.get(message.sender_id) || { full_name: 'Usuario', avatar_url: null },
+        recipient: profilesMap.get(message.recipient_id) || { full_name: 'Usuario', avatar_url: null }
+      }));
       
       return messagesWithUsers;
     } catch (error) {

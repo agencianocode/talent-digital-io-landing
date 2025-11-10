@@ -285,6 +285,7 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
             <img 
               src={fileUrl} 
               alt={fileName}
+              loading="lazy"
               className="max-w-xs rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
               onError={async (e) => {
                 // If image fails to load, try with signed URL

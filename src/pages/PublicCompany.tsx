@@ -392,6 +392,7 @@ const PublicCompany = () => {
                                   <img 
                                     src={item.url} 
                                     alt={item.title}
+                                    loading="lazy"
                                     className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                                   />
                                 </DialogTrigger>
@@ -399,6 +400,7 @@ const PublicCompany = () => {
                                   <img 
                                     src={item.url} 
                                     alt={item.title}
+                                    loading="lazy"
                                     className="w-full h-auto"
                                   />
                                 </DialogContent>
@@ -412,6 +414,7 @@ const PublicCompany = () => {
                                   <img 
                                     src={item.thumbnail} 
                                     alt={item.title}
+                                    loading="lazy"
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
