@@ -67,48 +67,134 @@ export const AdminPublishingRequests = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Solicitudes de Publicación</h2>
-          <p className="text-muted-foreground">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-0">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Solicitudes de Publicación</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gestiona las solicitudes de publicación de servicios en el marketplace
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <FileText className="h-8 w-8 text-primary" />
+        <div className="flex items-center gap-2 shrink-0">
+          <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
           <div className="text-right">
-            <p className="text-2xl font-bold">{requests.length}</p>
+            <p className="text-xl sm:text-2xl font-bold">{requests.length}</p>
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
         </div>
       </div>
 
-      <Card className="p-6">
+      <Card className="p-3 sm:p-6">
         <div className="space-y-4">
-          {/* Filtros */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
+          {/* Filtros - Responsive */}
+          <div className="flex flex-col gap-3">
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Buscar por nombre, email, empresa o servicio..."
+                placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full"
               />
             </div>
-            <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-              <TabsList>
-                <TabsTrigger value="all">Todas</TabsTrigger>
-                <TabsTrigger value="pending">Pendientes</TabsTrigger>
-                <TabsTrigger value="approved">Aprobadas</TabsTrigger>
-                <TabsTrigger value="rejected">Rechazadas</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="all" className="flex-1 sm:flex-none">Todas</TabsTrigger>
+                  <TabsTrigger value="pending" className="flex-1 sm:flex-none whitespace-nowrap">Pendientes</TabsTrigger>
+                  <TabsTrigger value="approved" className="flex-1 sm:flex-none whitespace-nowrap">Aprobadas</TabsTrigger>
+                  <TabsTrigger value="rejected" className="flex-1 sm:flex-none whitespace-nowrap">Rechazadas</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
 
-          {/* Tabla */}
-          <div className="rounded-md border">
+          {/* Vista Mobile: Cards */}
+          <div className="block lg:hidden space-y-3">
+            {filteredRequests.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No se encontraron solicitudes
+              </div>
+            ) : (
+              filteredRequests.map((request) => (
+                <Card key={request.id} className="p-4">
+                  <div className="space-y-3">
+                    {/* Nombre y Tipo */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">
+                          {request.requester_role === 'freemium_talent' || request.requester_role === 'premium_talent'
+                            ? request.contact_name
+                            : request.company_name
+                          }
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {request.requester_role === 'freemium_talent' || request.requester_role === 'premium_talent' ? 'Talento' : 'Empresa'}
+                        </p>
+                      </div>
+                      {getStatusBadge(request.status)}
+                    </div>
+
+                    {/* Email */}
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground break-all">{request.contact_email}</p>
+                    </div>
+
+                    {/* Servicio y Fecha */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <Badge variant="outline">{request.service_type}</Badge>
+                      <span className="text-muted-foreground">
+                        {new Date(request.created_at).toLocaleDateString('es-ES', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    </div>
+
+                    {/* Acciones */}
+                    <div className="flex gap-2 pt-2 border-t">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetails(request)}
+                        className="flex-1"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver
+                      </Button>
+                      {request.status === 'pending' && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleApprove(request.id)}
+                            className="flex-1 text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Aprobar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReject(request.id)}
+                            className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                          >
+                            <XCircle className="h-4 w-4 mr-2" />
+                            Rechazar
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Vista Desktop: Tabla */}
+          <div className="hidden lg:block rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -131,7 +217,6 @@ export const AdminPublishingRequests = () => {
                   filteredRequests.map((request) => (
                     <TableRow key={request.id}>
                       <TableCell>
-                        {/* Mostrar nombre de persona si es talento, empresa si es empresa */}
                         <div>
                           <p className="font-medium">
                             {request.requester_role === 'freemium_talent' || request.requester_role === 'premium_talent'
