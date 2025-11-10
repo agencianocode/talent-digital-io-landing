@@ -14,7 +14,8 @@ import {
   Building,
   Tag,
   Users,
-  Award
+  Award,
+  GraduationCap
 } from "lucide-react";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSupabaseAuth, isTalentRole } from "@/contexts/SupabaseAuthContext";
@@ -428,13 +429,6 @@ const TalentOpportunitiesSearch = () => {
                             </div>
                           )}
 
-                          {opportunity.type && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              {opportunity.type}
-                            </div>
-                          )}
-
                           {/* Nivel de experiencia */}
                           {(opportunity as any).experience_levels && (opportunity as any).experience_levels.length > 0 && (
                             <div className="flex items-center gap-1">
@@ -466,17 +460,29 @@ const TalentOpportunitiesSearch = () => {
                           )}
                         </div>
 
-                        {/* Badges de categoría y skills */}
+                        {/* Badges de categoría, tipo de contrato y exclusividad */}
                         <div className="flex flex-wrap gap-2">
+                          {/* Badge de categoría */}
                           {opportunity.category && (
                             <Badge variant="secondary" className="flex items-center gap-1">
                               <Tag className="h-3 w-3" />
                               {opportunity.category}
                             </Badge>
                           )}
+                          
+                          {/* Badge de tipo de contrato - más visible */}
                           {opportunity.type && (
-                            <Badge variant="outline">
+                            <Badge className="bg-blue-100 text-blue-800 border-blue-200 flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
                               {opportunity.type}
+                            </Badge>
+                          )}
+                          
+                          {/* Badge de exclusividad de academia */}
+                          {opportunity.is_academy_exclusive && (
+                            <Badge className="bg-purple-100 text-purple-800 border-purple-200 flex items-center gap-1">
+                              <GraduationCap className="h-3 w-3" />
+                              Exclusiva
                             </Badge>
                           )}
                         </div>
