@@ -219,7 +219,7 @@ const OpportunityDetail = () => {
   const applicationStatus = getApplicationStatus(opportunity.id);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-6">
       {/* Banner de invitación */}
       {isInvitationPage && (
         <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
@@ -321,8 +321,7 @@ const OpportunityDetail = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Job Details */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-card p-6 rounded-lg border">
@@ -500,7 +499,6 @@ const OpportunityDetail = () => {
               </div>
             </div>
           )}
-        </div>
         </div>
       </div>
       
