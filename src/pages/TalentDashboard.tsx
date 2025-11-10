@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,9 +18,12 @@ import {
 import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
 import { useTalentProfileProgress } from '@/hooks/useTalentProfileProgress';
 import { AcademyAffiliationCard } from '@/components/talent/AcademyAffiliationCard';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useAcademyAffiliations } from '@/hooks/useAcademyAffiliations';
 
 const TalentDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useSupabaseAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [showCompleteDisclaimer, setShowCompleteDisclaimer] = useState(true);
   const { opportunities, isLoading: opportunitiesLoading } = useSupabaseOpportunities();
@@ -29,6 +32,22 @@ const TalentDashboard = () => {
     getCompletionPercentage, 
     getNextIncompleteTask
   } = useTalentProfileProgress();
+  
+  // 🎓 Obtener afiliaciones de academia para filtrar oportunidades exclusivas
+  const { affiliations } = useAcademyAffiliations(user?.email);
+  const academyIds = useMemo(() => affiliations.map(a => a.academy_id), [affiliations]);
+  
+  // 🚀 Filtrar oportunidades exclusivas de academias
+  const filteredOpportunities = useMemo(() => {
+    return opportunities.filter(opp => {
+      // Si es exclusiva de academia, solo mostrar si el usuario pertenece a esa academia
+      if (opp.is_academy_exclusive) {
+        return academyIds.includes(opp.company_id);
+      }
+      // Si NO es exclusiva, mostrar siempre
+      return true;
+    });
+  }, [opportunities, academyIds]);
   
   // Cargar estado del disclaimer desde localStorage
   useEffect(() => {
@@ -247,8 +266,8 @@ const TalentDashboard = () => {
             <div className="text-center py-8">
               <p className="text-gray-500 font-['Inter']">Cargando oportunidades...</p>
             </div>
-          ) : opportunities && opportunities.length > 0 ? (
-            opportunities.slice(0, 3).map((opportunity, index) => (
+          ) : filteredOpportunities && filteredOpportunities.length > 0 ? (
+            filteredOpportunities.slice(0, 3).map((opportunity, index) => (
               <Card key={opportunity.id || index} className="bg-white hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">

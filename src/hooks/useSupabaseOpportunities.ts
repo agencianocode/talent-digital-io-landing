@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
 import { logger } from '@/lib/logger';
 import { filterOpportunitiesForTalent } from '@/lib/country-restrictions';
-import { useAcademyAffiliations } from './useAcademyAffiliations';
 
 interface SupabaseOpportunity {
   id: string;
@@ -48,10 +47,6 @@ export const useSupabaseOpportunities = () => {
   const [applications, setApplications] = useState<SupabaseApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // 🎓 Obtener afiliaciones de academia del talento para filtrar oportunidades exclusivas
-  const { affiliations } = useAcademyAffiliations(user?.email);
-  const academyIds = affiliations.map(a => a.academy_id);
 
   // Obtener la ubicación del talento para filtrado
   const talentLocation = useMemo(() => {
@@ -95,27 +90,13 @@ export const useSupabaseOpportunities = () => {
         if (error) throw error;
         
         // Transformar el conteo de aplicaciones
-        let opportunitiesWithCount = data?.map(opp => ({
+        const opportunitiesWithCount = data?.map(opp => ({
           ...opp,
           applications_count: opp.applications?.[0]?.count || 0,
           applications: undefined // Limpiar el objeto applications
         })) || [];
         
-        // 🚀 FILTRO: Ocultar oportunidades exclusivas de academias a las que el usuario NO pertenece
-        opportunitiesWithCount = opportunitiesWithCount.filter(opp => {
-          // Si la oportunidad es exclusiva de una academia
-          if (opp.is_academy_exclusive) {
-            // Solo mostrar si el talento es estudiante/graduado de ESA academia específica
-            const isStudentOfThisAcademy = academyIds.includes(opp.company_id);
-            return isStudentOfThisAcademy;
-          }
-          // Si NO es exclusiva, mostrar siempre
-          return true;
-        });
-        
         console.log('📊 Talent opportunities loaded:', opportunitiesWithCount.length);
-        console.log('🎓 Academy affiliations:', academyIds);
-        console.log('🔒 Filtered exclusive opportunities from other academies');
         setOpportunities(opportunitiesWithCount);
       } else {
         // Para empresas: todas las oportunidades de la empresa
@@ -193,7 +174,7 @@ export const useSupabaseOpportunities = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [userRole, company?.id, academyIds]);
+  }, [userRole, company?.id]);
 
   // Fetch user applications
   const fetchUserApplications = useCallback(async () => {
