@@ -384,7 +384,18 @@ const OpportunityDetail = () => {
 
           {/* Company Info */}
           {company && (
-            <div className="bg-card p-6 rounded-lg border">
+            <div 
+              className="bg-card p-6 rounded-lg border cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all duration-200 group"
+              onClick={() => navigate(`/company/${opportunity.company_id}`)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(`/company/${opportunity.company_id}`);
+                }
+              }}
+            >
               <h3 className="text-lg font-semibold mb-4">Acerca de la Empresa</h3>
               <div className="space-y-4">
                 {/* Company Logo and Name */}
@@ -394,13 +405,17 @@ const OpportunityDetail = () => {
                       src={company.logo_url} 
                       alt={`Logo de ${company.name}`}
                       className="w-12 h-12 rounded-lg object-cover border"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
                       <Briefcase className="h-6 w-6 text-gray-500" />
                     </div>
                   )}
-                  <h4 className="font-medium text-lg">{company.name}</h4>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-lg group-hover:text-primary transition-colors">{company.name}</h4>
+                    <p className="text-xs text-muted-foreground">Click para ver perfil completo</p>
+                  </div>
                 </div>
 
                 {company.description && (
@@ -421,6 +436,7 @@ const OpportunityDetail = () => {
                         href={company.social_links.linkedin} 
                         target="_blank" 
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="text-blue-600 hover:text-blue-700 transition-colors"
                         title="LinkedIn"
                       >
@@ -432,6 +448,7 @@ const OpportunityDetail = () => {
                         href={company.social_links.instagram} 
                         target="_blank" 
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="text-pink-600 hover:text-pink-700 transition-colors"
                         title="Instagram"
                       >
@@ -443,6 +460,7 @@ const OpportunityDetail = () => {
                         href={company.social_links.youtube} 
                         target="_blank" 
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="text-red-600 hover:text-red-700 transition-colors"
                         title="YouTube"
                       >
@@ -454,6 +472,7 @@ const OpportunityDetail = () => {
                         href={company.social_links.twitter} 
                         target="_blank" 
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="text-blue-400 hover:text-blue-500 transition-colors"
                         title="Twitter"
                       >
@@ -469,6 +488,7 @@ const OpportunityDetail = () => {
                       href={company.website} 
                       target="_blank" 
                       rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="text-primary hover:underline flex items-center gap-1"
                     >
                       <ExternalLink className="h-4 w-4" />
