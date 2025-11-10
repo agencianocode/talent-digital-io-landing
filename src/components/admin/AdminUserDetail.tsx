@@ -503,6 +503,7 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="admin">Administrador</SelectItem>
+                        <SelectItem value="academy_premium">Academia Premium</SelectItem>
                         <SelectItem value="premium_business">Empresa Premium</SelectItem>
                         <SelectItem value="freemium_business">Empresa Freemium</SelectItem>
                         <SelectItem value="premium_talent">Talento Premium</SelectItem>
