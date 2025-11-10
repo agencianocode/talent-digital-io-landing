@@ -158,12 +158,12 @@ export const TalentServices = ({
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-bold text-foreground">
+                      <h3 className="text-lg font-bold text-foreground">
                         {service.title}
                       </h3>
                       {getAvailabilityBadge(service.is_available)}
                     </div>
-                    <Badge variant="secondary" className="mb-3">
+                    <Badge variant="secondary" className="mb-3 text-xs">
                       {service.category}
                     </Badge>
                   </div>
@@ -174,7 +174,7 @@ export const TalentServices = ({
                   <h4 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
                     Descripción del servicio
                   </h4>
-                  <p className="text-foreground leading-relaxed whitespace-pre-line">
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
                     {service.description}
                   </p>
                 </div>
@@ -189,7 +189,7 @@ export const TalentServices = ({
                       <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1">
                         Precio
                       </p>
-                      <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                      <p className="text-base font-bold text-green-700 dark:text-green-300">
                         ${service.price.toLocaleString()} {service.currency}
                       </p>
                     </div>
@@ -203,7 +203,7 @@ export const TalentServices = ({
                       <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
                         Tiempo de entrega
                       </p>
-                      <p className="font-semibold text-blue-700 dark:text-blue-300">
+                      <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
                         {service.delivery_time}
                       </p>
                     </div>
@@ -217,7 +217,7 @@ export const TalentServices = ({
                       <p className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1">
                         Publicado
                       </p>
-                      <p className="font-semibold text-purple-700 dark:text-purple-300">
+                      <p className="text-sm font-semibold text-purple-700 dark:text-purple-300">
                         {new Date(service.created_at).toLocaleDateString('es-ES', {
                           day: 'numeric',
                           month: 'short',
@@ -241,7 +241,7 @@ export const TalentServices = ({
                       <p className="text-xs text-muted-foreground">
                         Ofrecido por
                       </p>
-                      <p className="font-semibold text-foreground">
+                      <p className="text-sm font-semibold text-foreground">
                         {talentName}
                       </p>
                     </div>
