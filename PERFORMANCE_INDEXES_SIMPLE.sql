@@ -75,7 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_companies_name_trgm ON companies USING gin(name g
 CREATE INDEX IF NOT EXISTS idx_academy_students_email ON academy_students(student_email);
 CREATE INDEX IF NOT EXISTS idx_academy_students_academy_id ON academy_students(academy_id);
 CREATE INDEX IF NOT EXISTS idx_academy_students_status ON academy_students(status);
-CREATE INDEX IF NOT EXISTS idx_academy_students_academy_status ON academy_students(academy_id, status, enrolled_at DESC);
+CREATE INDEX IF NOT EXISTS idx_academy_students_academy_status ON academy_students(academy_id, status, enrollment_date DESC);
 
 -- ============================================================================
 -- MESSAGES
