@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,8 @@ import {
   DollarSign,
   Users,
   Clock,
-  Building
+  Building,
+  X
 } from 'lucide-react';
 import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
 import { useTalentProfileProgress } from '@/hooks/useTalentProfileProgress';
@@ -21,12 +22,27 @@ import { AcademyAffiliationCard } from '@/components/talent/AcademyAffiliationCa
 const TalentDashboard = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCompleteDisclaimer, setShowCompleteDisclaimer] = useState(true);
   const { opportunities, isLoading: opportunitiesLoading } = useSupabaseOpportunities();
   const { 
     getTasksStatus, 
     getCompletionPercentage, 
     getNextIncompleteTask
   } = useTalentProfileProgress();
+  
+  // Cargar estado del disclaimer desde localStorage
+  useEffect(() => {
+    const disclaimerClosed = localStorage.getItem('talent-profile-complete-disclaimer-closed');
+    if (disclaimerClosed === 'true') {
+      setShowCompleteDisclaimer(false);
+    }
+  }, []);
+  
+  // Función para cerrar el disclaimer
+  const handleCloseDisclaimer = () => {
+    setShowCompleteDisclaimer(false);
+    localStorage.setItem('talent-profile-complete-disclaimer-closed', 'true');
+  };
   
   const profileCompleteness = getCompletionPercentage();
   const tasks = getTasksStatus();
@@ -52,14 +68,25 @@ const TalentDashboard = () => {
         
         {/* Profile Completion Section */}
         {profileCompleteness === 100 ? (
-          // Perfil completo - Badge compacto con celebración
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-            <CheckCircle className="text-green-600 h-6 w-6 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="font-semibold text-green-900 font-['Inter']">¡Perfil completo! 🎉</p>
-              <p className="text-sm text-green-700 font-['Inter']">Tu perfil está optimizado para recibir las mejores oportunidades.</p>
+          // Perfil completo - Badge compacto con celebración y botón de cerrar
+          showCompleteDisclaimer && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
+              <CheckCircle className="text-green-600 h-6 w-6 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-semibold text-green-900 font-['Inter']">¡Perfil completo! 🎉</p>
+                <p className="text-sm text-green-700 font-['Inter']">Tu perfil está optimizado para recibir las mejores oportunidades.</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCloseDisclaimer}
+                className="text-green-700 hover:text-green-900 hover:bg-green-100 h-8 w-8 p-0 flex-shrink-0"
+                aria-label="Cerrar mensaje"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
-          </div>
+          )
         ) : (
           // Perfil incompleto - Layout de 2 columnas compacto
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
