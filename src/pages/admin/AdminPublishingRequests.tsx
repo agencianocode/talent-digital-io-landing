@@ -113,7 +113,7 @@ export const AdminPublishingRequests = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Contacto</TableHead>
-                  <TableHead>Empresa</TableHead>
+                  <TableHead>Empresa / Talento</TableHead>
                   <TableHead>Servicio</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Estado</TableHead>
@@ -136,7 +136,13 @@ export const AdminPublishingRequests = () => {
                           <p className="text-sm text-muted-foreground">{request.contact_email}</p>
                         </div>
                       </TableCell>
-                      <TableCell>{request.company_name}</TableCell>
+                      <TableCell>
+                        {/* Mostrar nombre de persona si es talento, empresa si es empresa */}
+                        {request.requester_role === 'freemium_talent' || request.requester_role === 'premium_talent'
+                          ? <span className="text-sm text-muted-foreground italic">{request.contact_name}</span>
+                          : request.company_name
+                        }
+                      </TableCell>
                       <TableCell>{request.service_type}</TableCell>
                       <TableCell>
                         {new Date(request.created_at).toLocaleDateString('es-ES', {

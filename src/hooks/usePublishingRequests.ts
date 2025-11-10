@@ -18,6 +18,7 @@ export interface PublishingRequest {
   requirements: string | null;
   status: 'pending' | 'approved' | 'rejected';
   admin_notes: string | null;
+  requester_role?: string | null;
 }
 
 export const usePublishingRequests = () => {
@@ -28,14 +29,35 @@ export const usePublishingRequests = () => {
 
   const loadRequests = async () => {
     try {
-      const { data, error } = await supabase
+      // Cargar solicitudes con rol del usuario
+      const { data: requestsData, error } = await supabase
         .from('marketplace_publishing_requests')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests((data || []) as PublishingRequest[]);
-      setPendingCount(data?.filter(r => r.status === 'pending').length || 0);
+
+      // Enriquecer con rol del usuario
+      const enrichedRequests = await Promise.all(
+        (requestsData || []).map(async (request) => {
+          if (request.requester_id) {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', request.requester_id)
+              .single();
+            
+            return {
+              ...request,
+              requester_role: roleData?.role || null
+            } as PublishingRequest;
+          }
+          return { ...request, requester_role: null } as PublishingRequest;
+        })
+      );
+
+      setRequests(enrichedRequests);
+      setPendingCount(enrichedRequests.filter(r => r.status === 'pending').length || 0);
     } catch (error: any) {
       console.error('Error loading publishing requests:', error);
       toast({
