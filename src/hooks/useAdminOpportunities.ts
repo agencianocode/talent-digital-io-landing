@@ -91,19 +91,31 @@ export const useAdminOpportunities = () => {
         .from('applications')
         .select('opportunity_id');
 
-      if (applicationsError) throw applicationsError;
+      if (applicationsError) {
+        console.error('❌ Error loading applications:', applicationsError);
+      } else {
+        console.log('✅ Applications loaded:', applicationsData?.length || 0);
+      }
 
       // Load views count for each opportunity
       const { data: viewsData, error: viewsError } = await supabase
         .from('opportunity_views')
         .select('opportunity_id');
 
-      if (viewsError) console.error('Error loading views:', viewsError);
+      if (viewsError) {
+        console.error('❌ Error loading views:', viewsError);
+      } else {
+        console.log('✅ Views loaded:', viewsData?.length || 0);
+      }
 
       // Combine all data
       const opportunitiesWithStats: OpportunityData[] = opportunitiesData?.map(opportunity => {
         const applicationsCount = applicationsData?.filter(a => a.opportunity_id === opportunity.id).length || 0;
         const viewsCount = viewsData?.filter(v => v.opportunity_id === opportunity.id).length || 0;
+        
+        if (applicationsCount > 0 || viewsCount > 0) {
+          console.log(`📊 ${opportunity.title}: ${applicationsCount} postulaciones, ${viewsCount} vistas`);
+        }
 
         return {
           id: opportunity.id,
