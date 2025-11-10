@@ -82,27 +82,27 @@ const TalentDashboard = () => {
   };
 
   return (
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="space-y-4 sm:space-y-6 lg:space-y-8">
         
         {/* Profile Completion Section */}
         {profileCompleteness === 100 ? (
           // Perfil completo - Badge compacto con celebración y botón de cerrar
           showCompleteDisclaimer && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-              <CheckCircle className="text-green-600 h-6 w-6 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-semibold text-green-900 font-['Inter']">¡Perfil completo! 🎉</p>
-                <p className="text-sm text-green-700 font-['Inter']">Tu perfil está optimizado para recibir las mejores oportunidades.</p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 flex items-start sm:items-center gap-2 sm:gap-3">
+              <CheckCircle className="text-green-600 h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base font-semibold text-green-900 font-['Inter']">¡Perfil completo! 🎉</p>
+                <p className="text-xs sm:text-sm text-green-700 font-['Inter']">Tu perfil está optimizado para recibir las mejores oportunidades.</p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleCloseDisclaimer}
-                className="text-green-700 hover:text-green-900 hover:bg-green-100 h-8 w-8 p-0 flex-shrink-0"
+                className="text-green-700 hover:text-green-900 hover:bg-green-100 h-7 w-7 sm:h-8 sm:w-8 p-0 flex-shrink-0"
                 aria-label="Cerrar mensaje"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
           )
@@ -219,35 +219,35 @@ const TalentDashboard = () => {
         {/* Search Section */}
         <Card className="bg-white">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-900 font-['Inter']">
+            <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 font-['Inter']">
               Busca
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3 mb-4">
-              <Button variant="outline" size="sm" className="font-['Inter']">
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <Button variant="outline" size="sm" className="font-['Inter'] text-xs sm:text-sm">
                 Categoría
               </Button>
-              <Button variant="outline" size="sm" className="font-['Inter']">
+              <Button variant="outline" size="sm" className="font-['Inter'] text-xs sm:text-sm">
                 Skills
               </Button>
-              <Button variant="outline" size="sm" className="font-['Inter']">
+              <Button variant="outline" size="sm" className="font-['Inter'] text-xs sm:text-sm">
                 Tipo de Contrato
               </Button>
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <Input
                 placeholder="Busca"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="flex-1 font-['Inter']"
+                className="flex-1 font-['Inter'] text-sm"
               />
               <Button 
                 onClick={handleSearch}
                 variant="default"
-                className="font-['Inter']"
+                className="font-['Inter'] whitespace-nowrap px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
               >
                 Buscar
               </Button>
@@ -256,8 +256,8 @@ const TalentDashboard = () => {
         </Card>
 
         {/* Job Listings */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 font-['Inter']">
+        <div className="space-y-3 sm:space-y-4">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 font-['Inter']">
             Oportunidades Recientes
           </h2>
           
@@ -269,15 +269,16 @@ const TalentDashboard = () => {
           ) : filteredOpportunities && filteredOpportunities.length > 0 ? (
             filteredOpportunities.slice(0, 3).map((opportunity, index) => (
               <Card key={opportunity.id || index} className="bg-white hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
+                <CardContent className="p-3 sm:p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                     {/* Company Logo */}
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                       {opportunity.companies?.logo_url ? (
                         <img 
                           src={opportunity.companies.logo_url} 
                           alt={`Logo de ${opportunity.companies.name}`}
                           className="w-full h-full object-cover rounded-lg"
+                          loading="lazy"
                           onError={(e) => {
                             // Fallback a icono si la imagen falla
                             e.currentTarget.style.display = 'none';
@@ -292,30 +293,32 @@ const TalentDashboard = () => {
                         className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center"
                         style={{ display: opportunity.companies?.logo_url ? 'none' : 'flex' }}
                       >
-                        <Building className="w-8 h-8 text-gray-400" />
+                        <Building className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                       </div>
                     </div>
                     
                     {/* Job Info */}
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-lg font-semibold text-gray-900 font-['Inter']">
-                              {opportunity.title || 'Título no disponible'}
-                            </h3>
-                            <Badge className="bg-green-100 text-green-800 border-green-200">
-                              {opportunity.status === 'active' ? 'Activa' : opportunity.status || 'Activa'}
-                            </Badge>
-                          </div>
-                          
-                          <p className="text-gray-600 font-['Inter'] mb-2">
-                            {opportunity.companies?.name || 'Empresa no especificada'}
-                          </p>
-                          
-                          <div className="flex items-center gap-4 text-sm text-gray-500 font-['Inter']">
-                            <span className="flex items-center gap-1">
-                              <DollarSign className="w-4 h-4" />
+                    <div className="flex-1 min-w-0 w-full">
+                      <div className="flex flex-col gap-3">
+                        {/* Título y Badge */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 font-['Inter'] break-words">
+                            {opportunity.title || 'Título no disponible'}
+                          </h3>
+                          <Badge className="bg-green-100 text-green-800 border-green-200 text-xs whitespace-nowrap">
+                            {opportunity.status === 'active' ? 'Activa' : opportunity.status || 'Activa'}
+                          </Badge>
+                        </div>
+                        
+                        <p className="text-sm sm:text-base text-gray-600 font-['Inter'] truncate">
+                          {opportunity.companies?.name || 'Empresa no especificada'}
+                        </p>
+                        
+                        {/* Metadatos - Columna en móvil, fila en desktop */}
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 font-['Inter']">
+                          <span className="flex items-center gap-1 whitespace-nowrap">
+                            <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                            <span className="truncate">
                               {opportunity.salary_min && opportunity.salary_max
                                 ? `$${opportunity.salary_min}-${opportunity.salary_max} ${opportunity.currency || 'USD'}`
                                 : opportunity.salary_min
@@ -323,31 +326,31 @@ const TalentDashboard = () => {
                                 : 'A Convenir'
                               }
                             </span>
-                            <span className="flex items-center gap-1">
-                              <Users className="w-4 h-4" />
-                              Ver postulantes
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {opportunity.created_at 
-                                ? `Hace ${Math.floor((new Date().getTime() - new Date(opportunity.created_at).getTime()) / (1000 * 60 * 60 * 24))} días`
-                                : 'Fecha no disponible'
-                              }
-                            </span>
-                          </div>
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                            Ver postulantes
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                            {opportunity.created_at 
+                              ? `Hace ${Math.floor((new Date().getTime() - new Date(opportunity.created_at).getTime()) / (1000 * 60 * 60 * 24))} días`
+                              : 'Fecha no disponible'
+                            }
+                          </span>
                         </div>
                         
-                        {/* Actions */}
-                        <div className="flex items-center gap-2">
+                        {/* Actions - Ancho completo en móvil */}
+                        <div className="flex items-center gap-2 pt-2 border-t sm:border-t-0 sm:pt-0">
                           <Button 
                             size="sm"
                             variant="default"
-                            className="font-['Inter']"
+                            className="font-['Inter'] flex-1 sm:flex-none text-xs sm:text-sm"
                             onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
                           >
                             Ver Detalles
                           </Button>
-                          <Button variant="ghost" size="sm" className="p-2">
+                          <Button variant="ghost" size="sm" className="p-2 flex-shrink-0">
                             <div className="flex flex-col gap-0.5">
                               <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
                               <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
