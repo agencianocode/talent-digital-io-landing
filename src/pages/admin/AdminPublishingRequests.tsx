@@ -112,8 +112,8 @@ export const AdminPublishingRequests = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Contacto</TableHead>
                   <TableHead>Empresa / Talento</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Servicio</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Estado</TableHead>
@@ -131,17 +131,23 @@ export const AdminPublishingRequests = () => {
                   filteredRequests.map((request) => (
                     <TableRow key={request.id}>
                       <TableCell>
+                        {/* Mostrar nombre de persona si es talento, empresa si es empresa */}
                         <div>
-                          <p className="font-medium">{request.contact_name}</p>
-                          <p className="text-sm text-muted-foreground">{request.contact_email}</p>
+                          <p className="font-medium">
+                            {request.requester_role === 'freemium_talent' || request.requester_role === 'premium_talent'
+                              ? request.contact_name
+                              : request.company_name
+                            }
+                          </p>
+                          {request.requester_role === 'freemium_talent' || request.requester_role === 'premium_talent' ? (
+                            <p className="text-xs text-muted-foreground">Talento</p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">Empresa</p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        {/* Mostrar nombre de persona si es talento, empresa si es empresa */}
-                        {request.requester_role === 'freemium_talent' || request.requester_role === 'premium_talent'
-                          ? <span className="text-sm text-muted-foreground italic">{request.contact_name}</span>
-                          : request.company_name
-                        }
+                        <p className="text-sm text-muted-foreground">{request.contact_email}</p>
                       </TableCell>
                       <TableCell>{request.service_type}</TableCell>
                       <TableCell>
