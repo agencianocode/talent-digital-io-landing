@@ -12,11 +12,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
-  CheckSquare,
   Info
 } from 'lucide-react';
 import { useMarketplaceServices } from '@/hooks/useMarketplaceServices';
-import { useTalentPublishingRequests } from '@/hooks/useTalentPublishingRequests';
 import ServiceCard from '@/components/marketplace/ServiceCard';
 import ServiceFilters from '@/components/marketplace/ServiceFilters';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
@@ -28,7 +26,6 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 const TalentMarketplace: React.FC = () => {
   const navigate = useNavigate();
   const { userRole } = useSupabaseAuth();
-  const { pendingCount: pendingRequestsCount } = useTalentPublishingRequests();
   const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -79,10 +76,6 @@ const TalentMarketplace: React.FC = () => {
     } else {
       navigate('/talent-dashboard/my-services');
     }
-  };
-
-  const handleViewMyRequests = () => {
-    navigate('/talent-dashboard/my-publishing-requests');
   };
 
   if (error) {

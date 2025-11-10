@@ -7,14 +7,12 @@ import {
   MapPin, 
   Calendar, 
   DollarSign, 
-  Clock, 
   Search,
   Bookmark,
   Eye,
   Building,
   Tag,
   Users,
-  Award,
   GraduationCap
 } from "lucide-react";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";

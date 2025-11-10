@@ -219,7 +219,7 @@ const OpportunityDetail = () => {
   const applicationStatus = getApplicationStatus(opportunity.id);
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <div className="w-full mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 py-4 sm:py-6">
       {/* Banner de invitación */}
       {isInvitationPage && (
         <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">

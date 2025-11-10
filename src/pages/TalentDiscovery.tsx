@@ -15,8 +15,6 @@ import {
   MapPin, 
   Eye,
   MessageCircle,
-  Play,
-  FileText,
   CheckCircle,
   Clock,
   Github,
@@ -178,7 +176,7 @@ const TalentDiscovery = () => {
         
         // Get user emails using RPC function (accesses auth.users securely)
         supabase
-          .rpc('get_user_emails_by_ids', { user_ids: talentUserIds }) as Promise<{ 
+          .rpc('get_user_emails_by_ids', { user_ids: talentUserIds }) as unknown as Promise<{ 
             data: Array<{ user_id: string; email: string }> | null;
             error: any;
           }>
