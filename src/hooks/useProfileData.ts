@@ -171,6 +171,56 @@ export const useProfileData = () => {
     }
   }, [user?.id]);
 
+  // Recalculate profile completeness
+  const recalculateProfileCompleteness = async (userId: string) => {
+    try {
+      // Fetch current data
+      const [{ data: profileData }, { data: talentData }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('user_id', userId).single(),
+        supabase.from('talent_profiles').select('*').eq('user_id', userId).single()
+      ]);
+      
+      if (!profileData) return;
+      
+      // Calculate completeness based on actual fields
+      let score = 0;
+      
+      // Basic Info (40%)
+      if (profileData.full_name) score += 10;
+      if (profileData.avatar_url) score += 5;
+      if (profileData.phone) score += 5;
+      if (profileData.country) score += 5;
+      if (profileData.city) score += 5;
+      if (profileData.social_links && Object.keys(profileData.social_links || {}).length > 0) score += 10;
+      
+      // Professional Info (30%)
+      if (talentData?.primary_category_id) score += 15;
+      if (talentData?.title) score += 8;
+      if (talentData?.experience_level) score += 4;
+      if (talentData?.bio) score += 3;
+      
+      // Skills (20%)
+      if (talentData?.skills && talentData.skills.length > 0) score += 15;
+      if (talentData?.industries_of_interest && talentData.industries_of_interest.length > 0) score += 5;
+      
+      // Multimedia (10%)
+      if (profileData.video_presentation_url) score += 5;
+      if (talentData?.portfolio_url) score += 5;
+      
+      const finalScore = Math.min(score, 100);
+      
+      // Update profile_completeness
+      await supabase
+        .from('profiles')
+        .update({ profile_completeness: finalScore })
+        .eq('user_id', userId);
+      
+      console.log(`✅ Profile completeness recalculated: ${finalScore}%`);
+    } catch (error) {
+      console.error('Error recalculating profile completeness:', error);
+    }
+  };
+
   // Update profile data
   const updateProfile = useCallback(async (data: Partial<ProfileEditData>): Promise<boolean> => {
     if (!user?.id) return false;
@@ -198,41 +248,82 @@ export const useProfileData = () => {
       if (metadataError) throw metadataError;
 
       // Update profiles table
+      const profileUpdatesData: any = {
+        user_id: user.id,
+        full_name: data.full_name,
+        phone: data.phone,
+        city: data.city,
+        country: data.country,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Agregar campos opcionales si existen
+      if (data.social_links) {
+        profileUpdatesData.social_links = data.social_links;
+      }
+      if (data.video_presentation_url) {
+        profileUpdatesData.video_presentation_url = data.video_presentation_url;
+      }
+      
       const { error: profileError } = await supabase
         .from('profiles')
-        .upsert({
-          user_id: user.id,
-          full_name: data.full_name,
-          phone: data.phone,
-          city: data.city,
-          country: data.country,
-          updated_at: new Date().toISOString()
-        }, {
+        .upsert(profileUpdatesData, {
           onConflict: 'user_id'
         });
 
       if (profileError) throw profileError;
 
-      // Update talent_profiles table
+      // Update talent_profiles table - INCLUYENDO TODOS LOS CAMPOS CRÍTICOS
+      const talentProfileData: any = {
+        user_id: user.id,
+        title: data.title,
+        bio: data.bio,
+        skills: data.skills,
+        location: data.location,
+        phone: data.phone,
+        country: data.country,
+        city: data.city,
+        video_presentation_url: data.video_presentation_url,
+        availability: data.availability,
+        updated_at: new Date().toISOString()
+      };
+      
+      // 🚀 AGREGAR CAMPOS FALTANTES CRÍTICOS
+      if (data.primary_category_id) {
+        talentProfileData.primary_category_id = data.primary_category_id;
+      }
+      if (data.secondary_category_id) {
+        talentProfileData.secondary_category_id = data.secondary_category_id;
+      }
+      if (data.experience_level) {
+        talentProfileData.experience_level = data.experience_level;
+      }
+      if (data.industries_of_interest) {
+        talentProfileData.industries_of_interest = data.industries_of_interest;
+      }
+      if (data.portfolio_url) {
+        talentProfileData.portfolio_url = data.portfolio_url;
+      }
+      if (data.hourly_rate_min !== undefined) {
+        talentProfileData.hourly_rate_min = data.hourly_rate_min;
+      }
+      if (data.hourly_rate_max !== undefined) {
+        talentProfileData.hourly_rate_max = data.hourly_rate_max;
+      }
+      if (data.currency) {
+        talentProfileData.currency = data.currency;
+      }
+      
       const { error: talentError } = await supabase
         .from('talent_profiles')
-        .upsert({
-          user_id: user.id,
-          title: data.title,
-          bio: data.bio,
-          skills: data.skills,
-          location: data.location,
-          phone: data.phone,
-          country: data.country,
-          city: data.city,
-          video_presentation_url: data.video_presentation_url,
-          availability: data.availability,
-          updated_at: new Date().toISOString()
-        }, {
+        .upsert(talentProfileData, {
           onConflict: 'user_id'
         });
 
       if (talentError) throw talentError;
+
+      // 🚀 RECALCULAR Y ACTUALIZAR PROFILE_COMPLETENESS
+      await recalculateProfileCompleteness(user.id);
 
       // Refresh profile data
       await fetchProfile();
