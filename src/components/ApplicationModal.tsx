@@ -58,7 +58,7 @@ const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: A
   const { applyToOpportunity } = useSupabaseOpportunities();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 3;
+  const totalSteps = 2;
 
   // Check if opportunity is closed or expired
   const isOpportunityClosed = opportunity?.status === 'closed';

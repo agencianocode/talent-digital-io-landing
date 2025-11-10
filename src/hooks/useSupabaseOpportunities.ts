@@ -228,6 +228,18 @@ export const useSupabaseOpportunities = () => {
         throw new Error('Esta oportunidad no está disponible para aplicaciones en este momento');
       }
 
+      // 🚀 VERIFICAR SI YA APLICÓ ANTES (evitar error 400 de duplicate key)
+      const { data: existingApplication } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('opportunity_id', opportunityId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingApplication) {
+        throw new Error('Ya has aplicado a esta oportunidad anteriormente');
+      }
+
       const { error } = await supabase
         .from('applications')
         .insert({
