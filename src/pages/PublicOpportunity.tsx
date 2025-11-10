@@ -178,7 +178,7 @@ const PublicOpportunity = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-pulse space-y-4 w-full max-w-4xl p-8">
+        <div className="animate-pulse space-y-4 w-full px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-24 p-8">
           <div className="h-8 bg-gray-200 rounded w-1/3"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
@@ -213,7 +213,7 @@ const PublicOpportunity = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-24 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button 
@@ -256,7 +256,7 @@ const PublicOpportunity = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-24 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
