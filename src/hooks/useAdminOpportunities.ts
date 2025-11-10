@@ -93,9 +93,17 @@ export const useAdminOpportunities = () => {
 
       if (applicationsError) throw applicationsError;
 
+      // Load views count for each opportunity
+      const { data: viewsData, error: viewsError } = await supabase
+        .from('opportunity_views')
+        .select('opportunity_id');
+
+      if (viewsError) console.error('Error loading views:', viewsError);
+
       // Combine all data
       const opportunitiesWithStats: OpportunityData[] = opportunitiesData?.map(opportunity => {
         const applicationsCount = applicationsData?.filter(a => a.opportunity_id === opportunity.id).length || 0;
+        const viewsCount = viewsData?.filter(v => v.opportunity_id === opportunity.id).length || 0;
 
         return {
           id: opportunity.id,
@@ -122,7 +130,7 @@ export const useAdminOpportunities = () => {
           company_name: (opportunity.companies as any)?.name || 'Empresa desconocida',
           company_logo: (opportunity.companies as any)?.logo_url,
           applications_count: applicationsCount,
-          views_count: 0, // TODO: Implement views tracking
+          views_count: viewsCount,
           priority: (opportunity as any).priority || 'medium',
           admin_notes: (opportunity as any).admin_notes
         };

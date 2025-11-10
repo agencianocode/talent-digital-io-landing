@@ -123,15 +123,33 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
   const getContractTypeBadge = (contractType: string) => {
     const contractColors: Record<string, string> = {
       'full-time': 'bg-blue-100 text-blue-800',
+      'Tiempo Completo': 'bg-blue-100 text-blue-800',
+      'Trabajo Continuo': 'bg-blue-100 text-blue-800',
       'part-time': 'bg-green-100 text-green-800',
+      'Medio Tiempo': 'bg-green-100 text-green-800',
       'freelance': 'bg-purple-100 text-purple-800',
+      'Freelance': 'bg-purple-100 text-purple-800',
       'commission': 'bg-orange-100 text-orange-800',
+      'Por Comisión': 'bg-orange-100 text-orange-800',
+      'A Comisión': 'bg-orange-100 text-orange-800',
+      'Contrato': 'bg-teal-100 text-teal-800',
       'fixed-commission': 'bg-pink-100 text-pink-800'
     };
 
+    // Traducir tipos de contrato en inglés
+    const contractLabels: Record<string, string> = {
+      'full-time': 'Tiempo Completo',
+      'part-time': 'Medio Tiempo',
+      'freelance': 'Freelance',
+      'commission': 'Por Comisión',
+      'fixed-commission': 'Por Comisión Fija'
+    };
+
+    const displayLabel = contractLabels[contractType] || contractType;
+
     return (
-      <Badge variant="outline" className={contractColors[contractType] || 'bg-gray-100 text-gray-800'}>
-        {contractType}
+      <Badge variant="outline" className={contractColors[contractType] || contractColors[displayLabel] || 'bg-gray-100 text-gray-800'}>
+        {displayLabel}
       </Badge>
     );
   };
@@ -253,7 +271,6 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
                         <h3 className="font-medium text-sm md:text-base">{opportunity.title}</h3>
                         <div className="flex flex-wrap items-center gap-1.5">
                           {getStatusBadge(opportunity.status)}
-                          {getPriorityBadge(opportunity.priority)}
                           {getCategoryBadge(opportunity.category)}
                           {getContractTypeBadge(opportunity.contract_type)}
                         </div>
