@@ -42,6 +42,7 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
   const [isSendingBulk, setIsSendingBulk] = useState(false);
   const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'talent' | 'business' | 'academy'>('all');
   const [companyRoleFilter, setCompanyRoleFilter] = useState<'all' | 'admin_owner' | 'viewer'>('all');
+  const [academyRoleFilter, setAcademyRoleFilter] = useState<'all' | 'admin_owner' | 'viewer'>('all');
 
   useEffect(() => {
     if (isOpen) {
@@ -80,6 +81,15 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
       }
     } else if (userTypeFilter === 'academy') {
       filtered = filtered.filter(user => user.role === 'academy_premium');
+      
+      // Apply academy role filter if academy is selected
+      if (academyRoleFilter === 'admin_owner') {
+        filtered = filtered.filter(user => user.is_company_admin === true);
+      } else if (academyRoleFilter === 'viewer') {
+        filtered = filtered.filter(user => 
+          user.company_roles?.includes('viewer')
+        );
+      }
     }
     
     // Apply search query
@@ -92,7 +102,7 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
     }
     
     setFilteredUsers(filtered);
-  }, [searchQuery, users, userTypeFilter, companyRoleFilter]);
+  }, [searchQuery, users, userTypeFilter, companyRoleFilter, academyRoleFilter]);
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -245,6 +255,7 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
               onClick={() => {
                 setUserTypeFilter('all');
                 setCompanyRoleFilter('all');
+                setAcademyRoleFilter('all');
               }}
             >
               <Users className="h-4 w-4 mr-2" />
@@ -256,6 +267,7 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
               onClick={() => {
                 setUserTypeFilter('talent');
                 setCompanyRoleFilter('all');
+                setAcademyRoleFilter('all');
               }}
             >
               <UserCircle className="h-4 w-4 mr-2" />
@@ -266,6 +278,8 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
               size="sm"
               onClick={() => {
                 setUserTypeFilter('business');
+                setCompanyRoleFilter('all');
+                setAcademyRoleFilter('all');
               }}
             >
               <Briefcase className="h-4 w-4 mr-2" />
@@ -277,6 +291,7 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
               onClick={() => {
                 setUserTypeFilter('academy');
                 setCompanyRoleFilter('all');
+                setAcademyRoleFilter('all');
               }}
             >
               <GraduationCap className="h-4 w-4 mr-2" />
@@ -309,6 +324,39 @@ const StartNewChatModal: React.FC<StartNewChatModalProps> = ({
                   variant={companyRoleFilter === 'viewer' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setCompanyRoleFilter('viewer')}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Solo Miembros
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Conditional Academy Role Filter */}
+          {userTypeFilter === 'academy' && (
+            <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+              <label className="text-sm font-medium">Filtrar por rol en academia:</label>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  variant={academyRoleFilter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setAcademyRoleFilter('all')}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Todos los miembros
+                </Button>
+                <Button
+                  variant={academyRoleFilter === 'admin_owner' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setAcademyRoleFilter('admin_owner')}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Solo Admins
+                </Button>
+                <Button
+                  variant={academyRoleFilter === 'viewer' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setAcademyRoleFilter('viewer')}
                 >
                   <User className="h-4 w-4 mr-2" />
                   Solo Miembros
