@@ -59,7 +59,7 @@ CREATE INDEX IF NOT EXISTS idx_opportunities_academy_exclusive ON opportunities(
 -- OPPORTUNITY VIEWS
 -- ============================================================================
 CREATE INDEX IF NOT EXISTS idx_opportunity_views_opportunity_id ON opportunity_views(opportunity_id);
-CREATE INDEX IF NOT EXISTS idx_opportunity_views_user_id ON opportunity_views(user_id);
+CREATE INDEX IF NOT EXISTS idx_opportunity_views_viewer_id ON opportunity_views(viewer_id);
 CREATE INDEX IF NOT EXISTS idx_opportunity_views_opp_viewed ON opportunity_views(opportunity_id, viewed_at DESC);
 
 -- ============================================================================
