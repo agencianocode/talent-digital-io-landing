@@ -26,6 +26,7 @@ import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import FilterBar from "@/components/FilterBar";
 import ProfileCompletenessModal from "@/components/ProfileCompletenessModal";
 import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface FilterState {
   category?: string | string[];
@@ -59,6 +60,9 @@ const TalentOpportunitiesSearch = () => {
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null);
   const [showCompletenessModal, setShowCompletenessModal] = useState(false);
+  
+  // 🚀 OPTIMIZACIÓN: Debounce del término de búsqueda para evitar filtrados en cada tecla
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // Cargar filtros guardados del localStorage al montar
   useEffect(() => {
@@ -133,9 +137,9 @@ const TalentOpportunitiesSearch = () => {
       }
     }
 
-    // Filtro de búsqueda por título, descripción y empresa
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
+    // Filtro de búsqueda por título, descripción y empresa (con debounce)
+    if (debouncedSearchTerm) {
+      const searchLower = debouncedSearchTerm.toLowerCase();
       const matchesSearch = 
         opportunity.title?.toLowerCase().includes(searchLower) ||
         opportunity.description?.toLowerCase().includes(searchLower) ||
