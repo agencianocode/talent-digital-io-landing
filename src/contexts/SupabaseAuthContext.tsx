@@ -6,19 +6,11 @@ import { logger } from '@/lib/logger';
 export type UserRole = 'talent' | 'business' | 'freemium_talent' | 'premium_talent' | 'freemium_business' | 'premium_business' | 'academy_premium' | 'admin';
 
 // Function to map database roles to frontend roles
+// NOTA: Ya no se hace mapeo de 'talent' -> 'freemium_talent' 
+// Todos los roles ahora coinciden directamente con la BD
 const mapDatabaseRoleToUserRole = (dbRole: string): UserRole => {
-  switch (dbRole) {
-    case 'business':
-      return 'freemium_business';
-    case 'talent':
-      return 'freemium_talent';
-    case 'academy_premium':
-      return 'academy_premium';
-    case 'admin':
-      return 'admin';
-    default:
-      return dbRole as UserRole;
-  }
+  // Retornar directamente el rol de la BD sin conversiones
+  return dbRole as UserRole;
 };
 
 // Utility functions to check user types

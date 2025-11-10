@@ -23,17 +23,17 @@ BEGIN
   -- Use ON CONFLICT to handle cases where role might already exist
   IF user_type = 'business' THEN
     INSERT INTO public.user_roles (user_id, role)
-    VALUES (NEW.id, 'business'::user_role)
-    ON CONFLICT (user_id) DO UPDATE SET role = 'business'::user_role;
+    VALUES (NEW.id, 'freemium_business'::user_role)
+    ON CONFLICT (user_id) DO UPDATE SET role = 'freemium_business'::user_role;
     
-    RAISE NOTICE 'Assigned business role to user: %', NEW.id;
+    RAISE NOTICE 'Assigned freemium_business role to user: %', NEW.id;
   ELSE
-    -- Default to talent for any other case
+    -- Default to freemium_talent for any other case (talentos)
     INSERT INTO public.user_roles (user_id, role)
-    VALUES (NEW.id, 'talent'::user_role)
-    ON CONFLICT (user_id) DO UPDATE SET role = 'talent'::user_role;
+    VALUES (NEW.id, 'freemium_talent'::user_role)
+    ON CONFLICT (user_id) DO UPDATE SET role = 'freemium_talent'::user_role;
     
-    RAISE NOTICE 'Assigned talent role to user: %', NEW.id;
+    RAISE NOTICE 'Assigned freemium_talent role to user: %', NEW.id;
   END IF;
   
   RETURN NEW;
