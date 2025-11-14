@@ -437,6 +437,8 @@ const Auth = () => {
           emailRedirectTo: redirectUrl,
           data: {
             full_name: formData.fullName,
+            // CRITICAL: When user comes from company invitation, register as business
+            user_type: isInvitationFlow && invitationId ? 'business' : undefined,
             ...(isInvitationFlow && invitationId ? {
               pending_invitation: invitationId,
               invited_to_company: true
