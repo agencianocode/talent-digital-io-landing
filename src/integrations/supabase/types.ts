@@ -119,15 +119,7 @@ export type Database = {
           performed_by?: string | null
           student_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "academy_student_audit_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "academy_students"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       academy_students: {
         Row: {
@@ -503,6 +495,7 @@ export type Database = {
           industry_id: string | null
           location: string | null
           logo_url: string | null
+          media_gallery: Json | null
           name: string
           public_directory_enabled: boolean | null
           secondary_color: string | null
@@ -533,6 +526,7 @@ export type Database = {
           industry_id?: string | null
           location?: string | null
           logo_url?: string | null
+          media_gallery?: Json | null
           name: string
           public_directory_enabled?: boolean | null
           secondary_color?: string | null
@@ -563,6 +557,7 @@ export type Database = {
           industry_id?: string | null
           location?: string | null
           logo_url?: string | null
+          media_gallery?: Json | null
           name?: string
           public_directory_enabled?: boolean | null
           secondary_color?: string | null
@@ -2571,6 +2566,8 @@ export type Database = {
         Args: { channel?: string; notification_type: string }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       start_conversation: {
         Args: {
           p_company_id: string
