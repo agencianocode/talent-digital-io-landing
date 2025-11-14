@@ -136,6 +136,12 @@ export interface ProfileEditData {
   hourly_rate_max: number;
   currency: string;
   availability: string;
+  social_links?: any;
+  primary_category_id?: string;
+  secondary_category_id?: string;
+  experience_level?: string;
+  industries_of_interest?: string[];
+  portfolio_url?: string;
 }
 
 // Video Presentation Types

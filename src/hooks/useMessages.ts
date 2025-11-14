@@ -723,10 +723,28 @@ export const useMessages = () => {
     try {
       // Get the other participant from the conversation
       const conversation = conversations.find(c => c.id === conversationId);
-      if (!conversation) return;
-
-      const otherParticipantId = conversation.participants.find(id => id !== user.id);
-      if (!otherParticipantId) return;
+      
+      let otherParticipantId: string | undefined;
+      
+      if (conversation) {
+        // If conversation exists in local state, get participant from it
+        otherParticipantId = conversation.participants.find(id => id !== user.id);
+      } else {
+        // If conversation doesn't exist yet (new conversation), extract recipient from conversationId
+        // conversationId format: conv_senderId_recipientId_type_timestamp
+        console.log('[sendMessageToConversation] Conversation not found in local state, extracting from ID:', conversationId);
+        const parts = conversationId.split('_');
+        if (parts.length >= 3) {
+          // parts[1] is sender, parts[2] is recipient
+          otherParticipantId = parts[1] === user.id ? parts[2] : parts[1];
+          console.log('[sendMessageToConversation] Extracted recipient ID:', otherParticipantId);
+        }
+      }
+      
+      if (!otherParticipantId) {
+        console.error('[sendMessageToConversation] Could not determine recipient ID');
+        return;
+      }
 
       const messageData: SendMessageData = {
         conversation_id: conversationId,
