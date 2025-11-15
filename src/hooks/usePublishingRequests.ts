@@ -76,79 +76,105 @@ export const usePublishingRequests = () => {
     adminNotes?: string
   ) => {
     try {
-      console.log('Starting updateRequestStatus:', { requestId, status, adminNotes });
-      
-      // Si se aprueba, primero obtener los datos directamente de la base de datos
-      if (status === 'approved') {
-        // Obtener la solicitud directamente de la BD
-        const { data: request, error: fetchError } = await supabase
-          .from('marketplace_publishing_requests')
-          .select('*')
-          .eq('id', requestId)
-          .single();
+      // Primero obtener la solicitud para tener todos los datos
+      const { data: request, error: fetchError } = await supabase
+        .from('marketplace_publishing_requests')
+        .select('*')
+        .eq('id', requestId)
+        .single();
 
-        console.log('Request fetched:', request, fetchError);
+      if (fetchError) throw fetchError;
+      if (!request) throw new Error('Solicitud no encontrada');
 
-        if (fetchError || !request) {
-          throw new Error('No se pudo obtener la información de la solicitud');
-        }
-
-        if (!request.requester_id) {
-          throw new Error('La solicitud no tiene un usuario asociado');
-        }
-
-        // Crear el servicio en marketplace_services
-        console.log('Creating service for user:', request.requester_id);
-        const { data: serviceData, error: serviceError } = await supabase
-          .from('marketplace_services')
-          .insert({
-            user_id: request.requester_id,
-            title: request.service_type,
-            description: request.description,
-            category: 'otros',
-            price: 0,
-            currency: 'USD',
-            delivery_time: request.timeline || '1-2 semanas',
-            location: 'Remoto',
-            is_available: false,
-            status: 'draft',
-            tags: [],
-          })
-          .select()
-          .single();
-
-        console.log('Service creation result:', serviceData, serviceError);
-
-        if (serviceError) {
-          console.error('Error creating service:', serviceError);
-          throw new Error(`No se pudo crear el servicio: ${serviceError.message}`);
-        }
-
-        // Actualizar el rol del usuario a premium_talent si es necesario
-        const { data: currentRole, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', request.requester_id)
-          .single();
-
-        console.log('Current user role:', currentRole, roleError);
-
-        if (currentRole && currentRole.role === 'freemium_talent') {
-          const { error: updateRoleError } = await supabase
-            .from('user_roles')
-            .update({ role: 'premium_talent' })
-            .eq('user_id', request.requester_id);
-
-          console.log('Role update result:', updateRoleError);
-
-          if (updateRoleError) {
-            console.error('Error updating user role:', updateRoleError);
+      // Si se aprueba y tiene requester_id, crear el servicio en el marketplace
+      if (status === 'approved' && request.requester_id) {
+        try {
+          // Convertir el budget a número si es posible
+          let price = 0;
+          if (request.budget) {
+            // Intentar extraer un número del budget (ej: "500-1000" -> 750, "10000+" -> 10000)
+            const budgetStr = request.budget.replace(/[^0-9+-]/g, '');
+            if (budgetStr.includes('+')) {
+              price = parseFloat(budgetStr.replace('+', '')) || 0;
+            } else if (budgetStr.includes('-')) {
+              const parts = budgetStr.split('-').filter(p => p).map(Number);
+              if (parts.length === 2) {
+                price = (parts[0] + parts[1]) / 2;
+              } else if (parts.length === 1) {
+                price = parts[0];
+              }
+            } else {
+              price = parseFloat(budgetStr) || 0;
+            }
           }
+
+          // Convertir timeline a delivery_time
+          let deliveryTime = '2-3 semanas';
+          if (request.timeline) {
+            const timelineMap: Record<string, string> = {
+              'urgent': '1-2 semanas',
+              'fast': '1 mes',
+              'normal': '2-3 meses',
+              'flexible': '3-6 meses'
+            };
+            deliveryTime = timelineMap[request.timeline] || request.timeline;
+          }
+
+          // Crear un título más descriptivo
+          const serviceTitle = request.company_name 
+            ? `${request.company_name} - ${request.service_type}`
+            : `${request.contact_name} - ${request.service_type}`;
+
+          // Crear el servicio en marketplace_services
+          const { error: serviceError, data: serviceData } = await supabase
+            .from('marketplace_services')
+            .insert({
+              user_id: request.requester_id,
+              title: serviceTitle,
+              description: request.description,
+              category: request.service_type,
+              price: price || 0,
+              currency: 'USD',
+              delivery_time: deliveryTime,
+              location: 'Remoto', // Valor por defecto, puede ajustarse después
+              is_available: true,
+              status: 'active',
+              tags: [],
+              views_count: 0,
+              requests_count: 0,
+              rating: 0,
+              reviews_count: 0
+            })
+            .select()
+            .single();
+
+          if (serviceError) {
+            console.error('Error creando servicio:', serviceError);
+            // No lanzar error aquí, solo loguear, porque la solicitud ya se actualizará
+          } else {
+            console.log('Servicio creado exitosamente:', serviceData);
+          }
+
+          // Actualizar el rol del usuario a premium_talent si es freemium_talent
+          const { data: currentRole } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', request.requester_id)
+            .single();
+
+          if (currentRole && currentRole.role === 'freemium_talent') {
+            await supabase
+              .from('user_roles')
+              .update({ role: 'premium_talent' })
+              .eq('user_id', request.requester_id);
+          }
+        } catch (serviceError: any) {
+          console.error('Error al crear servicio o actualizar rol:', serviceError);
+          // Continuar con la actualización del estado aunque falle la creación del servicio
         }
       }
 
       // Actualizar el estado de la solicitud
-      console.log('Updating request status to:', status);
       const { error: updateError } = await supabase
         .from('marketplace_publishing_requests')
         .update({
@@ -158,23 +184,33 @@ export const usePublishingRequests = () => {
         })
         .eq('id', requestId);
 
-      console.log('Status update result:', updateError);
+      if (updateError) throw updateError;
 
-      if (updateError) {
-        throw new Error(`Error al actualizar el estado: ${updateError.message}`);
+      // Mostrar mensaje de éxito
+      if (status === 'approved') {
+        if (!request.requester_id) {
+          toast({
+            title: 'Advertencia',
+            description: 'Solicitud aprobada, pero no se pudo crear el servicio porque falta el ID del solicitante. Por favor, créalo manualmente.',
+            variant: 'default',
+          });
+        } else {
+          toast({
+            title: 'Éxito',
+            description: 'Solicitud aprobada y servicio creado correctamente en el marketplace',
+          });
+        }
+      } else {
+        toast({
+          title: 'Éxito',
+          description: 'Solicitud rechazada correctamente',
+        });
       }
-
-      toast({
-        title: 'Éxito',
-        description: status === 'approved' 
-          ? 'Solicitud aprobada y servicio creado. El usuario puede completar la información desde su dashboard.'
-          : 'Solicitud rechazada correctamente',
-      });
 
       // Recargar las solicitudes
       await loadRequests();
     } catch (error: any) {
-      console.error('Error in updateRequestStatus:', error);
+      console.error('Error updating request:', error);
       toast({
         title: 'Error',
         description: error.message || 'No se pudo actualizar la solicitud',
