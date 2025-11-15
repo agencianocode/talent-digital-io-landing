@@ -29,7 +29,7 @@ import {
   Send
 } from 'lucide-react';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
-import { getCategoryById } from '@/lib/marketplace-categories';
+import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
 import { useToast } from '@/hooks/use-toast';
 
 interface ServiceRequestModalProps {
@@ -57,6 +57,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   onRequestSent
 }) => {
   const { toast } = useToast();
+  const { categories: opportunityCategories } = useOpportunityCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ServiceRequestForm>({
     contactName: '',
@@ -69,7 +70,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
     projectType: ''
   });
 
-  const category = service ? getCategoryById(service.category) : null;
+  const category = service ? opportunityCategories.find(cat => cat.id === service.category) : null;
 
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('es-ES', {

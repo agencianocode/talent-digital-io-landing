@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/select';
 import { Search, Filter, X } from 'lucide-react';
 import { ServiceFilters as ServiceFiltersType } from '@/hooks/useMarketplaceServices';
-import { SERVICE_CATEGORIES, CATEGORY_SKILLS, getAllSkills } from '@/lib/marketplace-categories';
+import { CATEGORY_SKILLS, getAllSkills } from '@/lib/marketplace-categories';
+import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
 
 interface ServiceFiltersProps {
   filters: ServiceFiltersType;
@@ -27,6 +28,8 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
   onClearFilters,
   totalResults
 }) => {
+  const { categories: opportunityCategories } = useOpportunityCategories();
+  
   // Get available skills based on selected category
   const availableSkills = useMemo(() => {
     if (filters.categoryFilter === 'all') {
@@ -123,7 +126,7 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las categorías</SelectItem>
-                {SERVICE_CATEGORIES.map((category) => (
+                {opportunityCategories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
                   </SelectItem>
@@ -226,7 +229,7 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
             )}
             {filters.categoryFilter !== 'all' && (
               <Badge variant="secondary" className="text-xs">
-                Categoría: {SERVICE_CATEGORIES.find(c => c.id === filters.categoryFilter)?.name}
+                Categoría: {opportunityCategories.find(c => c.id === filters.categoryFilter)?.name || filters.categoryFilter}
               </Badge>
             )}
             {filters.priceRange !== 'all' && (

@@ -4,19 +4,28 @@ export interface ServiceCategory {
   description?: string;
 }
 
-// Using the same categories as opportunities for consistency
-export const SERVICE_CATEGORIES: ServiceCategory[] = [
+// Note: Categories are now loaded from opportunity_categories table via useOpportunityCategories hook
+// This is kept for backward compatibility and type definitions
+// Use useOpportunityCategories hook in components instead
+
+// Fallback categories if database is not available
+export const FALLBACK_CATEGORIES: ServiceCategory[] = [
   { id: 'ventas', name: 'Ventas', description: 'Closers, SDR, appointment setter, CRM' },
   { id: 'marketing', name: 'Marketing', description: 'Media buyer, content, SEO, SEM, publicidad digital' },
   { id: 'atencion-cliente', name: 'Atención al Cliente', description: 'Customer success, soporte, chat' },
   { id: 'operaciones', name: 'Operaciones', description: 'Asistente operativo, project manager, coordinación' },
   { id: 'creativo', name: 'Creativo', description: 'Diseño gráfico, UX/UI, video, branding' },
-  { id: 'tecnologia', name: 'Tecnología y Automatizaciones', description: 'Desarrollo web, automatización, APIs' },
+  { id: 'tecnologia-automatizaciones', name: 'Tecnología y Automatizaciones', description: 'Desarrollo web, automatización, APIs' },
   { id: 'soporte-profesional', name: 'Soporte Profesional', description: 'Asistente virtual, gestión administrativa' }
 ];
 
-export const getCategoryById = (id: string): ServiceCategory | undefined => {
-  return SERVICE_CATEGORIES.find(category => category.id === id);
+// Legacy function for backward compatibility
+// Use useOpportunityCategories hook in new components
+export const getCategoryById = (id: string, categories?: ServiceCategory[]): ServiceCategory | undefined => {
+  if (categories) {
+    return categories.find(category => category.id === id);
+  }
+  return FALLBACK_CATEGORIES.find(category => category.id === id);
 };
 
 // Skills by category - aligned with opportunity templates

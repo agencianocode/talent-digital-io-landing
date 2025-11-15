@@ -29,9 +29,9 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react';
-import { SERVICE_CATEGORIES } from '@/lib/marketplace-categories';
 import { ServiceFormData } from '@/hooks/useTalentServices';
 import { useToast } from '@/hooks/use-toast';
+import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
 
 interface ServiceFormProps {
   isOpen: boolean;
@@ -51,6 +51,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
   mode = 'create'
 }) => {
   const { toast } = useToast();
+  const { categories: opportunityCategories } = useOpportunityCategories();
   const [formData, setFormData] = useState<ServiceFormData>({
     title: '',
     description: '',
@@ -210,7 +211,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     onClose();
   };
 
-  const selectedCategory = SERVICE_CATEGORIES.find(cat => cat.id === formData.category);
+  const selectedCategory = opportunityCategories.find(cat => cat.id === formData.category);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -292,7 +293,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                       <SelectValue placeholder="Seleccionar categoría" />
                     </SelectTrigger>
                     <SelectContent>
-                      {SERVICE_CATEGORIES.map((category) => (
+                      {opportunityCategories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
                           {category.name}
                         </SelectItem>

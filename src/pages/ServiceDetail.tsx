@@ -17,7 +17,7 @@ import {
   Package
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { getCategoryById } from '@/lib/marketplace-categories';
+import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import { ServiceReviews } from '@/components/marketplace/ServiceReviews';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -189,7 +189,8 @@ const ServiceDetail: React.FC = () => {
     );
   }
 
-  const category = getCategoryById(service.category);
+  const { categories: opportunityCategories } = useOpportunityCategories();
+  const category = opportunityCategories.find(cat => cat.id === service.category);
 
   return (
     <div className="container mx-auto px-4 py-8">

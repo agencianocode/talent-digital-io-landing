@@ -13,7 +13,6 @@ import {
   Database, 
   Users, 
   Briefcase, 
-  ShoppingBag, 
   Globe,
   Save,
   RefreshCw,
@@ -63,7 +62,7 @@ const AdminSystemSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [categories, setCategories] = useState<Array<{id: string, name: string, type: 'opportunity' | 'marketplace'}>>([]);
+  const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
   const [newCategory, setNewCategory] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
@@ -137,24 +136,13 @@ const AdminSystemSettings: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      // Load opportunity categories
+      // Load only opportunity categories (marketplace will use the same)
       const { data: oppCategories } = await supabase
         .from('opportunity_categories')
         .select('id, name')
         .order('name');
 
-      // Load marketplace categories
-      const { data: marketCategories } = await supabase
-        .from('marketplace_categories')
-        .select('id, name')
-        .order('name');
-
-      const allCategories = [
-        ...(oppCategories || []).map(cat => ({ ...cat, type: 'opportunity' as const })),
-        ...(marketCategories || []).map(cat => ({ ...cat, type: 'marketplace' as const }))
-      ];
-
-      setCategories(allCategories);
+      setCategories(oppCategories || []);
     } catch (error) {
       console.error('Error loading categories:', error);
     }
@@ -211,13 +199,12 @@ const AdminSystemSettings: React.FC = () => {
     }
   };
 
-  const addCategory = async (type: 'opportunity' | 'marketplace') => {
+  const addCategory = async () => {
     if (!newCategory.trim()) return;
 
     try {
-      const tableName = type === 'opportunity' ? 'opportunity_categories' : 'marketplace_categories';
       const { error } = await supabase
-        .from(tableName)
+        .from('opportunity_categories')
         .insert({ name: newCategory.trim() });
 
       if (error) throw error;
@@ -231,11 +218,10 @@ const AdminSystemSettings: React.FC = () => {
     }
   };
 
-  const deleteCategory = async (id: string, type: 'opportunity' | 'marketplace') => {
+  const deleteCategory = async (id: string) => {
     try {
-      const tableName = type === 'opportunity' ? 'opportunity_categories' : 'marketplace_categories';
       const { error } = await supabase
-        .from(tableName)
+        .from('opportunity_categories')
         .delete()
         .eq('id', id);
 
@@ -694,20 +680,22 @@ const AdminSystemSettings: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Opportunity Categories */}
               <div>
                 <h4 className="font-medium mb-3 flex items-center gap-2">
                   <Briefcase className="h-4 w-4" />
                   Categorías de Oportunidades
                 </h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Estas categorías se usan tanto para oportunidades como para servicios del marketplace.
+                </p>
                 <div className="space-y-2">
-                  {categories.filter(cat => cat.type === 'opportunity').map(category => (
+                  {categories.map(category => (
                     <div key={category.id} className="flex items-center justify-between p-2 border rounded">
                       <span>{category.name}</span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => deleteCategory(category.id, 'opportunity')}
+                        onClick={() => deleteCategory(category.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -715,49 +703,19 @@ const AdminSystemSettings: React.FC = () => {
                   ))}
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Nueva categoría de oportunidad"
+                      placeholder="Nueva categoría"
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newCategory.trim()) {
+                          e.preventDefault();
+                          addCategory();
+                        }
+                      }}
                     />
                     <Button
                       type="button"
-                      onClick={() => addCategory('opportunity')}
-                      disabled={!newCategory.trim()}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Marketplace Categories */}
-              <div>
-                <h4 className="font-medium mb-3 flex items-center gap-2">
-                  <ShoppingBag className="h-4 w-4" />
-                  Categorías del Marketplace
-                </h4>
-                <div className="space-y-2">
-                  {categories.filter(cat => cat.type === 'marketplace').map(category => (
-                    <div key={category.id} className="flex items-center justify-between p-2 border rounded">
-                      <span>{category.name}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteCategory(category.id, 'marketplace')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Nueva categoría del marketplace"
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => addCategory('marketplace')}
+                      onClick={addCategory}
                       disabled={!newCategory.trim()}
                     >
                       <Plus className="h-4 w-4" />

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
 
 interface PublishServiceModalProps {
   isOpen: boolean;
@@ -66,6 +67,7 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userRole } = useSupabaseAuth();
+  const { categories: opportunityCategories, loading: categoriesLoading } = useOpportunityCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState<PublishServiceForm>({
@@ -93,20 +95,11 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const isFreemiumBusiness = userRole === 'freemium_business';
   const isPremiumUser = userRole === 'premium_business' || userRole === 'premium_talent' || userRole === 'academy_premium';
 
-  const serviceTypes = [
-    { value: 'diseno-grafico', label: '🎨 Diseño Gráfico' },
-    { value: 'desarrollo-web', label: '💻 Desarrollo Web' },
-    { value: 'marketing-digital', label: '📱 Marketing Digital' },
-    { value: 'contenido', label: '✍️ Contenido' },
-    { value: 'consultoria', label: '💡 Consultoría' },
-    { value: 'traduccion', label: '🌍 Traducción' },
-    { value: 'fotografia', label: '📸 Fotografía' },
-    { value: 'video', label: '🎬 Video' },
-    { value: 'audio', label: '🎵 Audio' },
-    { value: 'ventas', label: '💰 Ventas' },
-    { value: 'soporte', label: '🔧 Soporte Técnico' },
-    { value: 'otros', label: '🔮 Otros' }
-  ];
+  // Map opportunity categories to service types format
+  const serviceTypes = opportunityCategories.map(cat => ({
+    value: cat.id,
+    label: cat.name
+  }));
 
   const budgetRanges = [
     { value: '500-1000', label: '$500 - $1,000' },
