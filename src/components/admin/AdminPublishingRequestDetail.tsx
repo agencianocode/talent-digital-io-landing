@@ -18,6 +18,7 @@ interface AdminPublishingRequestDetailProps {
   onOpenChange: (open: boolean) => void;
   onApprove: (requestId: string, notes?: string) => void;
   onReject: (requestId: string, notes?: string) => void;
+  onCreateService?: (requestId: string) => void;
 }
 
 export const AdminPublishingRequestDetail: React.FC<AdminPublishingRequestDetailProps> = ({
@@ -26,6 +27,7 @@ export const AdminPublishingRequestDetail: React.FC<AdminPublishingRequestDetail
   onOpenChange,
   onApprove,
   onReject,
+  onCreateService,
 }) => {
   const [adminNotes, setAdminNotes] = useState('');
 
@@ -202,6 +204,22 @@ export const AdminPublishingRequestDetail: React.FC<AdminPublishingRequestDetail
               >
                 <CheckCircle className="h-4 w-4" />
                 Aprobar
+              </Button>
+            </div>
+          )}
+
+          {/* Botón para crear servicio si la solicitud está aprobada */}
+          {request.status === 'approved' && onCreateService && (
+            <div className="flex gap-3 justify-end pt-4 border-t">
+              <Button
+                onClick={() => {
+                  onCreateService(request.id);
+                  onOpenChange(false);
+                }}
+                className="gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                Crear Servicio
               </Button>
             </div>
           )}

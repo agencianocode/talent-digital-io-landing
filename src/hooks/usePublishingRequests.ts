@@ -178,11 +178,71 @@ export const usePublishingRequests = () => {
     };
   }, []);
 
+  const createServiceForApprovedRequest = async (requestId: string) => {
+    try {
+      const request = requests.find(r => r.id === requestId);
+      if (!request || !request.requester_id) {
+        throw new Error('No se pudo obtener la información de la solicitud');
+      }
+
+      if (request.status !== 'approved') {
+        throw new Error('La solicitud debe estar aprobada');
+      }
+
+      // Verificar si ya existe un servicio para este usuario con el mismo título
+      const { data: existingService } = await supabase
+        .from('marketplace_services')
+        .select('id')
+        .eq('user_id', request.requester_id)
+        .eq('title', request.service_type)
+        .single();
+
+      if (existingService) {
+        throw new Error('Ya existe un servicio con este título para este usuario');
+      }
+
+      // Crear el servicio
+      const { error: serviceError } = await supabase
+        .from('marketplace_services')
+        .insert({
+          user_id: request.requester_id,
+          title: request.service_type,
+          description: request.description,
+          category: 'consultoria',
+          price: 0,
+          currency: 'USD',
+          delivery_time: request.timeline || '1-2 semanas',
+          location: 'Remoto',
+          is_available: false,
+          status: 'draft',
+          tags: [],
+        });
+
+      if (serviceError) throw serviceError;
+
+      toast({
+        title: 'Éxito',
+        description: 'Servicio creado correctamente. El usuario puede completar la información desde su dashboard.',
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error('Error creating service:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'No se pudo crear el servicio',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   return {
     requests,
     loading,
     pendingCount,
     loadRequests,
     updateRequestStatus,
+    createServiceForApprovedRequest,
   };
 };

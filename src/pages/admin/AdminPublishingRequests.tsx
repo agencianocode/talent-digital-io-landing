@@ -18,7 +18,7 @@ import { AdminPublishingRequestDetail } from '@/components/admin/AdminPublishing
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 
 export const AdminPublishingRequests = () => {
-  const { requests, loading, updateRequestStatus } = usePublishingRequests();
+  const { requests, loading, updateRequestStatus, createServiceForApprovedRequest } = usePublishingRequests();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [selectedRequest, setSelectedRequest] = useState<PublishingRequest | null>(null);
@@ -60,6 +60,10 @@ export const AdminPublishingRequests = () => {
 
   const handleReject = async (requestId: string, notes?: string) => {
     await updateRequestStatus(requestId, 'rejected', notes);
+  };
+
+  const handleCreateService = async (requestId: string) => {
+    await createServiceForApprovedRequest(requestId);
   };
 
   if (loading) {
@@ -289,6 +293,7 @@ export const AdminPublishingRequests = () => {
         onOpenChange={setDetailOpen}
         onApprove={handleApprove}
         onReject={handleReject}
+        onCreateService={handleCreateService}
       />
     </div>
   );
