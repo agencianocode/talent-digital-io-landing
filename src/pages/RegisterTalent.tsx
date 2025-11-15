@@ -69,7 +69,7 @@ const RegisterTalent = () => {
     }
 
     const signUpResult = await signUp(formData.email, formData.password, {
-      user_type: 'talent'
+      user_type: 'freemium_talent'
     });
     
     if (signUpResult.error) {
@@ -101,7 +101,7 @@ const RegisterTalent = () => {
       sessionStorage.setItem('post_onboarding_redirect', redirectParam);
     }
 
-    const { error } = await signUpWithGoogle('talent');
+    const { error } = await signUpWithGoogle('freemium_talent');
     
     if (error) {
       setError('Error al registrarse con Google. Intenta nuevamente.');

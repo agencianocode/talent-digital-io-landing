@@ -92,7 +92,7 @@ interface AuthContextType extends AuthState {
   signUp: (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
-  signUpWithGoogle: (userType: 'business' | 'talent' | 'academy_premium') => Promise<{ error: Error | null }>;
+  signUpWithGoogle: (userType: 'business' | 'talent' | 'freemium_talent' | 'academy_premium') => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
   updateCompany: (data: Partial<Company>) => Promise<{ error: Error | null }>;
@@ -518,7 +518,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return { error };
   };
 
-  const signUpWithGoogle = async (userType: 'business' | 'talent' | 'academy_premium') => {
+  const signUpWithGoogle = async (userType: 'business' | 'talent' | 'freemium_talent' | 'academy_premium') => {
     // Store the user type in localStorage temporarily for after OAuth redirect
     localStorage.setItem('pending_user_type', userType);
     console.log('Google OAuth: Stored pending_user_type as:', userType);
@@ -546,7 +546,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const fixUserRoleForGoogleAuth = async (userId: string, targetUserType: string) => {
     try {
       // Use database role values, not frontend mapped values
-      const targetRole = targetUserType === 'business' ? 'business' : 'talent';
+      const targetRole = targetUserType === 'business' 
+        ? 'business' 
+        : targetUserType === 'freemium_talent'
+        ? 'freemium_talent'
+        : 'talent';
       
       console.log(`Fixing Google OAuth user role: ${userId} -> ${targetRole}`);
       
