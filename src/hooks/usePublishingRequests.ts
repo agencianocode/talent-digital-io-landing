@@ -120,12 +120,28 @@ export const usePublishingRequests = () => {
             deliveryTime = timelineMap[request.timeline] || request.timeline;
           }
 
-          // Crear un título más descriptivo
-          const serviceTitle = request.company_name 
-            ? `${request.company_name} - ${request.service_type}`
-            : `${request.contact_name} - ${request.service_type}`;
+          // Función para capitalizar primera letra
+          const capitalizeFirst = (str: string) => {
+            if (!str) return str;
+            return str.charAt(0).toUpperCase() + str.slice(1);
+          };
+
+          // Crear un título más descriptivo con categoría capitalizada
+          const categoryCapitalized = capitalizeFirst(request.service_type);
+          const serviceTitle = request.company_name && request.company_name !== request.contact_name
+            ? `${request.company_name} - ${categoryCapitalized}`
+            : `${request.contact_name} - ${categoryCapitalized}`;
 
           // Crear el servicio en marketplace_services
+          console.log('🔧 Creando servicio con datos:', {
+            user_id: request.requester_id,
+            title: serviceTitle,
+            category: request.service_type,
+            price: price || 0,
+            status: 'active',
+            is_available: true
+          });
+
           const { error: serviceError, data: serviceData } = await supabase
             .from('marketplace_services')
             .insert({
@@ -149,10 +165,17 @@ export const usePublishingRequests = () => {
             .single();
 
           if (serviceError) {
-            console.error('Error creando servicio:', serviceError);
-            // No lanzar error aquí, solo loguear, porque la solicitud ya se actualizará
+            console.error('❌ Error creando servicio:', serviceError);
+            console.error('Error details:', {
+              message: serviceError.message,
+              details: serviceError.details,
+              hint: serviceError.hint,
+              code: serviceError.code
+            });
+            // Lanzar error para que se muestre al usuario
+            throw new Error(`Error al crear el servicio: ${serviceError.message}`);
           } else {
-            console.log('Servicio creado exitosamente:', serviceData);
+            console.log('✅ Servicio creado exitosamente:', serviceData);
           }
 
           // Actualizar el rol del usuario a premium_talent si es freemium_talent
@@ -169,8 +192,13 @@ export const usePublishingRequests = () => {
               .eq('user_id', request.requester_id);
           }
         } catch (serviceError: any) {
-          console.error('Error al crear servicio o actualizar rol:', serviceError);
-          // Continuar con la actualización del estado aunque falle la creación del servicio
+          console.error('❌ Error al crear servicio o actualizar rol:', serviceError);
+          // Mostrar error al usuario pero continuar con la actualización del estado
+          toast({
+            title: 'Error al crear servicio',
+            description: serviceError.message || 'Hubo un problema al crear el servicio. Por favor, contacta al administrador.',
+            variant: 'destructive',
+          });
         }
       }
 

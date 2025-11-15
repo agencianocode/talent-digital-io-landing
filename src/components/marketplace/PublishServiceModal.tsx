@@ -89,6 +89,8 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
 
   // Verificar si es usuario Freemium o Premium
   const isFreemiumUser = userRole === 'freemium_business' || userRole === 'freemium_talent';
+  const isFreemiumTalent = userRole === 'freemium_talent';
+  const isFreemiumBusiness = userRole === 'freemium_business';
   const isPremiumUser = userRole === 'premium_business' || userRole === 'premium_talent' || userRole === 'academy_premium';
 
   const serviceTypes = [
@@ -167,7 +169,7 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
           contact_name: formData.contactName,
           contact_email: formData.contactEmail,
           contact_phone: formData.contactPhone,
-          company_name: formData.companyName,
+          company_name: isFreemiumBusiness ? formData.companyName : formData.contactName, // Para talentos usar el nombre en lugar de empresa
           service_type: formData.serviceType,
           budget: formData.budget,
           timeline: formData.timeline,
@@ -225,9 +227,9 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
       formData.deliveryTime !== '' &&
       formData.location.trim() !== '' &&
       formData.description.trim() !== ''
-    : formData.contactName.trim() !== '' &&
+    :       formData.contactName.trim() !== '' &&
       formData.contactEmail.trim() !== '' &&
-      formData.companyName.trim() !== '' &&
+      (isFreemiumBusiness ? formData.companyName.trim() !== '' : true) &&
       formData.serviceType !== '' &&
       formData.description.trim() !== '';
 
@@ -475,16 +477,18 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                       placeholder="+1 (555) 123-4567"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName">Empresa *</Label>
-                    <Input
-                      id="companyName"
-                      value={formData.companyName}
-                      onChange={(e) => handleInputChange('companyName', e.target.value)}
-                      placeholder="Nombre de tu empresa"
-                      required
-                    />
-                  </div>
+                  {isFreemiumBusiness && (
+                    <div className="space-y-2">
+                      <Label htmlFor="companyName">Empresa *</Label>
+                      <Input
+                        id="companyName"
+                        value={formData.companyName}
+                        onChange={(e) => handleInputChange('companyName', e.target.value)}
+                        placeholder="Nombre de tu empresa"
+                        required
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 

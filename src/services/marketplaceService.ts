@@ -20,7 +20,7 @@ class MarketplaceService {
    */
   async getActiveServices(filters?: ServiceFilters, page = 1, limit = 12): Promise<PaginatedResponse<TalentServiceWithUser>> {
     try {
-      // Build query
+      // Build query - first get services
       let query = supabase
         .from('marketplace_services')
         .select('*', { count: 'exact' })
@@ -69,13 +69,35 @@ class MarketplaceService {
 
       if (error) throw error;
 
+      // Get unique user IDs
+      const userIds = [...new Set((data || []).map((service: any) => service.user_id).filter(Boolean))];
+      
+      // Fetch profiles for all users
+      let profilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', userIds);
+        
+        if (profilesData) {
+          profilesMap = new Map(
+            profilesData.map((p: any) => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }])
+          );
+        }
+      }
+
       // Transform data to include user info
-      const servicesWithUser: TalentServiceWithUser[] = (data || []).map((service: any) => ({
-        ...service,
-        tags: Array.isArray(service.tags) ? service.tags : [],
-        user_name: service.profiles?.full_name || 'Usuario',
-        user_avatar: service.profiles?.avatar_url
-      }));
+      const servicesWithUser: TalentServiceWithUser[] = (data || []).map((service: any) => {
+        const profile = profilesMap.get(service.user_id);
+        
+        return {
+          ...service,
+          tags: Array.isArray(service.tags) ? service.tags : [],
+          user_name: profile?.full_name || 'Usuario',
+          user_avatar: profile?.avatar_url || null
+        };
+      });
 
       return {
         data: servicesWithUser,
