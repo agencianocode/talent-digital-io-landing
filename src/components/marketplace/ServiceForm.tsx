@@ -257,10 +257,13 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Describe detalladamente tu servicio, qué incluye, proceso de trabajo, etc."
+                  placeholder="Describe detalladamente tu servicio, qué incluye, proceso de trabajo, etc. Puedes usar viñetas (•, -, *) y se mantendrán al publicar."
                   rows={4}
-                  className={errors.description ? 'border-red-500' : ''}
+                  className={`whitespace-pre-wrap ${errors.description ? 'border-red-500' : ''}`}
                 />
+                <p className="text-xs text-muted-foreground">
+                  💡 Puedes copiar y pegar texto con viñetas desde Word, Google Docs, etc. El formato se mantendrá.
+                </p>
                 <div className="flex justify-between items-center">
                   {errors.description ? (
                     <p className="text-sm text-red-500 flex items-center gap-1">

@@ -113,7 +113,7 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
             <h3 className="font-semibold text-lg line-clamp-2 mb-2">
               {service.title}
             </h3>
-            <p className="text-sm text-muted-foreground line-clamp-3">
+            <p className="text-sm text-muted-foreground line-clamp-3 whitespace-pre-line">
               {service.description}
             </p>
           </div>

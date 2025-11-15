@@ -174,7 +174,7 @@ export const TalentServices = ({
                   <h4 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
                     Descripción del servicio
                   </h4>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                     {service.description}
                   </p>
                 </div>

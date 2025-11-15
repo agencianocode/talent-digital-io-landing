@@ -431,10 +431,14 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                     id="description"
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Describe en detalle tu servicio, qué incluye, tu experiencia..."
+                    placeholder="Describe en detalle tu servicio, qué incluye, tu experiencia... Puedes usar viñetas (•, -, *) y se mantendrán al publicar."
                     rows={6}
                     required
+                    className="whitespace-pre-wrap"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    💡 Puedes copiar y pegar texto con viñetas desde Word, Google Docs, etc. El formato se mantendrá.
+                  </p>
                 </div>
               </div>
             </>
@@ -562,10 +566,14 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                     id="description"
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Describe detalladamente el servicio que quieres publicar..."
+                    placeholder="Describe detalladamente el servicio que quieres publicar... Puedes usar viñetas (•, -, *) y se mantendrán al publicar."
                     rows={4}
                     required
+                    className="whitespace-pre-wrap"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    💡 Puedes copiar y pegar texto con viñetas desde Word, Google Docs, etc. El formato se mantendrá.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="requirements">Requisitos específicos</Label>

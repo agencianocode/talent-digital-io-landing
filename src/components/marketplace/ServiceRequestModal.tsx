@@ -219,7 +219,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
                 </Badge>
               </div>
               <h3 className="font-semibold text-lg mb-2">{service.title}</h3>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-2 whitespace-pre-line">
                 {service.description}
               </p>
               
