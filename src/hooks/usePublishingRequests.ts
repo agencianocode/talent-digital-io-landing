@@ -128,9 +128,17 @@ export const usePublishingRequests = () => {
 
           // Crear un título más descriptivo con categoría capitalizada
           const categoryCapitalized = capitalizeFirst(request.service_type);
-          const serviceTitle = request.company_name && request.company_name !== request.contact_name
-            ? `${request.company_name} - ${categoryCapitalized}`
-            : `${request.contact_name} - ${categoryCapitalized}`;
+          
+          // Validar company_name - ignorar "NA", vacíos, o igual al contact_name
+          const isValidCompanyName = request.company_name 
+            && request.company_name.trim() !== '' 
+            && request.company_name.trim().toUpperCase() !== 'NA'
+            && request.company_name !== request.contact_name;
+          
+          // Si no hay empresa válida, usar solo la categoría capitalizada
+          const serviceTitle = isValidCompanyName
+            ? `${request.company_name.trim()} - ${categoryCapitalized}`
+            : categoryCapitalized;
 
           // Crear el servicio en marketplace_services
           console.log('🔧 Creando servicio con datos:', {
