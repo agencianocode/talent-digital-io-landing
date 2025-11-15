@@ -132,6 +132,7 @@ const TalentOnboarding = () => {
         }
 
         // Upload profile photo if exists
+        let avatarUrl = null;
         if (talentProfile.profilePhoto) {
           console.log('📸 Uploading profile photo...');
           const fileExt = talentProfile.profilePhoto.name.split('.').pop();
@@ -146,45 +147,40 @@ const TalentOnboarding = () => {
               .from('avatars')
               .getPublicUrl(fileName);
             
+            avatarUrl = publicUrl;
             console.log('📸 Photo uploaded successfully:', publicUrl);
-            
-            // Update user metadata with avatar_url
-            await supabase.auth.updateUser({
-              data: {
-                avatar_url: publicUrl,
-                updated_at: new Date().toISOString()
-              }
-            });
-            
-            // Update profiles table with comprehensive data
-            await supabase
-              .from('profiles')
-              .upsert({
-                user_id: session.user.id,
-                full_name: `${talentProfile.firstName} ${talentProfile.lastName}`.trim(),
-                avatar_url: publicUrl,
-                phone: talentProfile.phone,
-                country: talentProfile.country,
-                city: talentProfile.city,
-                updated_at: new Date().toISOString()
-              });
-
-            console.log('✅ Profile photo uploaded and saved');
           } else {
             console.error('❌ Photo upload error:', uploadError);
           }
+        }
+        
+        // Always update profiles table with ALL data (including avatar if uploaded)
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            user_id: session.user.id,
+            full_name: `${talentProfile.firstName} ${talentProfile.lastName}`.trim(),
+            avatar_url: avatarUrl,
+            phone: talentProfile.phone,
+            country: talentProfile.country,
+            city: talentProfile.city,
+            updated_at: new Date().toISOString()
+          });
+
+        if (profileError) {
+          console.error('❌ Error updating profile:', profileError);
         } else {
-          // Update profiles table even without photo
-          await supabase
-            .from('profiles')
-            .upsert({
-              user_id: session.user.id,
-              full_name: `${talentProfile.firstName} ${talentProfile.lastName}`.trim(),
-              phone: talentProfile.phone,
-              country: talentProfile.country,
-              city: talentProfile.city,
+          console.log('✅ Profile updated successfully', avatarUrl ? 'with photo' : 'without photo');
+        }
+        
+        // Update user metadata with avatar_url if photo was uploaded
+        if (avatarUrl) {
+          await supabase.auth.updateUser({
+            data: {
+              avatar_url: avatarUrl,
               updated_at: new Date().toISOString()
-            });
+            }
+          });
         }
 
         // Verificar si hay una oportunidad pendiente para redirigir
