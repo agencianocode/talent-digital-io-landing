@@ -76,6 +76,55 @@ export const usePublishingRequests = () => {
     adminNotes?: string
   ) => {
     try {
+      // Si se aprueba, primero obtener los datos de la solicitud
+      if (status === 'approved') {
+        const request = requests.find(r => r.id === requestId);
+        if (!request || !request.requester_id) {
+          throw new Error('No se pudo obtener la información de la solicitud');
+        }
+
+        // Crear el servicio en marketplace_services
+        const { error: serviceError } = await supabase
+          .from('marketplace_services')
+          .insert({
+            user_id: request.requester_id,
+            title: request.service_type,
+            description: request.description,
+            category: 'otros', // Categoría por defecto, el usuario puede editarla después
+            price: 0, // Precio inicial, el usuario debe configurarlo
+            currency: 'USD',
+            delivery_time: request.timeline || '1-2 semanas',
+            location: 'Remoto',
+            is_available: false, // Inicialmente no disponible hasta que el usuario complete la información
+            status: 'draft', // Estado draft hasta que el usuario complete todos los campos
+            tags: [],
+          });
+
+        if (serviceError) {
+          console.error('Error creating service:', serviceError);
+          throw new Error('No se pudo crear el servicio en el marketplace');
+        }
+
+        // Actualizar el rol del usuario a premium_talent si es necesario
+        const { data: currentRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', request.requester_id)
+          .single();
+
+        if (currentRole && currentRole.role === 'freemium_talent') {
+          const { error: roleError } = await supabase
+            .from('user_roles')
+            .update({ role: 'premium_talent' })
+            .eq('user_id', request.requester_id);
+
+          if (roleError) {
+            console.error('Error updating user role:', roleError);
+          }
+        }
+      }
+
+      // Actualizar el estado de la solicitud
       const { error } = await supabase
         .from('marketplace_publishing_requests')
         .update({
@@ -89,7 +138,9 @@ export const usePublishingRequests = () => {
 
       toast({
         title: 'Éxito',
-        description: `Solicitud ${status === 'approved' ? 'aprobada' : 'rechazada'} correctamente`,
+        description: status === 'approved' 
+          ? 'Solicitud aprobada y servicio creado. El usuario puede completar la información desde su dashboard.'
+          : 'Solicitud rechazada correctamente',
       });
 
       loadRequests();
@@ -97,7 +148,7 @@ export const usePublishingRequests = () => {
       console.error('Error updating request:', error);
       toast({
         title: 'Error',
-        description: 'No se pudo actualizar la solicitud',
+        description: error.message || 'No se pudo actualizar la solicitud',
         variant: 'destructive',
       });
     }
