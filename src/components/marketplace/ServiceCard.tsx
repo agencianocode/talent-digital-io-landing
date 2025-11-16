@@ -14,7 +14,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
-import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
+import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 
 interface ServiceCardProps {
   service: MarketplaceService;
@@ -27,8 +27,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { categories: opportunityCategories } = useOpportunityCategories();
-  const category = opportunityCategories.find(cat => cat.id === service.category);
+  const { categories: marketplaceCategories } = useMarketplaceCategories();
+  const category = marketplaceCategories.find(cat => cat.name === service.category);
 
   // Detect if user is in talent or business context
   const isTalentContext = location.pathname.startsWith('/talent-dashboard');
