@@ -14,6 +14,7 @@ import { Search, Filter, X } from 'lucide-react';
 import { ServiceFilters as ServiceFiltersType } from '@/hooks/useMarketplaceServices';
 import { CATEGORY_SKILLS, getAllSkills } from '@/lib/marketplace-categories';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
+import { NEW_MARKETPLACE_CATEGORIES } from '@/lib/marketplace-constants';
 
 interface ServiceFiltersProps {
   filters: ServiceFiltersType;
@@ -126,9 +127,9 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las categorías</SelectItem>
-                {marketplaceCategories.map((category) => (
-                  <SelectItem key={category.id} value={category.name}>
-                    {category.name}
+                {NEW_MARKETPLACE_CATEGORIES.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name}
                   </SelectItem>
                 ))}
               </SelectContent>

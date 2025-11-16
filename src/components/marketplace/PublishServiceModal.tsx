@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
+import { NEW_MARKETPLACE_CATEGORIES } from '@/lib/marketplace-constants';
 
 interface PublishServiceModalProps {
   isOpen: boolean;
@@ -67,7 +67,6 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userRole } = useSupabaseAuth();
-  const { categories: opportunityCategories } = useOpportunityCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState<PublishServiceForm>({
@@ -94,10 +93,9 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const isFreemiumBusiness = userRole === 'freemium_business';
   const isPremiumUser = userRole === 'premium_business' || userRole === 'premium_talent' || userRole === 'academy_premium';
 
-  // Map opportunity categories to service types format
-  const serviceTypes = opportunityCategories.map(cat => ({
-    value: cat.id,
-    label: cat.name
+  const serviceTypes = NEW_MARKETPLACE_CATEGORIES.map(name => ({
+    value: name,
+    label: name
   }));
 
   const budgetRanges = [

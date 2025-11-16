@@ -45,8 +45,8 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
   onToggleStatus,
   onViewPortfolio
 }) => {
-  const { categories: opportunityCategories } = useOpportunityCategories();
-  const category = opportunityCategories.find(cat => cat.id === service.category);
+  const { categories: marketplaceCategories } = useMarketplaceCategories();
+  const category = marketplaceCategories.find(cat => cat.name === service.category);
 
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('es-ES', {
