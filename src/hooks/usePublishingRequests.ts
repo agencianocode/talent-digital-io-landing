@@ -98,9 +98,9 @@ export const usePublishingRequests = () => {
               price = parseFloat(budgetStr.replace('+', '')) || 0;
             } else if (budgetStr.includes('-')) {
               const parts = budgetStr.split('-').filter(p => p).map(Number);
-              if (parts.length === 2) {
+              if (parts.length === 2 && parts[0] !== undefined && parts[1] !== undefined) {
                 price = (parts[0] + parts[1]) / 2;
-              } else if (parts.length === 1) {
+              } else if (parts.length === 1 && parts[0] !== undefined) {
                 price = parts[0];
               }
             } else {
