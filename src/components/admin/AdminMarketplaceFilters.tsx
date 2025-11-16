@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, X, ShoppingBag, User, Tag, AlertTriangle } from 'lucide-react';
+import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
 
 interface MarketplaceFilters {
   searchQuery: string;
@@ -32,6 +33,8 @@ const AdminMarketplaceFilters: React.FC<AdminMarketplaceFiltersProps> = ({
   isLoading = false,
   users = []
 }) => {
+  const { categories: opportunityCategories } = useOpportunityCategories();
+
   const handleFilterChange = (key: keyof MarketplaceFilters, value: string) => {
     onFiltersChange({
       ...filters,
@@ -132,54 +135,14 @@ const AdminMarketplaceFilters: React.FC<AdminMarketplaceFiltersProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las categorías</SelectItem>
-                <SelectItem value="diseno-grafico">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Diseño Gráfico
-                  </div>
-                </SelectItem>
-                <SelectItem value="desarrollo-web">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Desarrollo Web
-                  </div>
-                </SelectItem>
-                <SelectItem value="marketing-digital">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Marketing Digital
-                  </div>
-                </SelectItem>
-                <SelectItem value="consultoria">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Consultoría
-                  </div>
-                </SelectItem>
-                <SelectItem value="redaccion">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Redacción
-                  </div>
-                </SelectItem>
-                <SelectItem value="traduccion">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Traducción
-                  </div>
-                </SelectItem>
-                <SelectItem value="video-edicion">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Video y Edición
-                  </div>
-                </SelectItem>
-                <SelectItem value="otros">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Otros
-                  </div>
-                </SelectItem>
+                {opportunityCategories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4" />
+                      {category.name}
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -290,7 +253,7 @@ const AdminMarketplaceFilters: React.FC<AdminMarketplaceFiltersProps> = ({
             )}
             {filters.categoryFilter !== 'all' && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Categoría: {filters.categoryFilter}
+                Categoría: {opportunityCategories.find(c => c.id === filters.categoryFilter)?.name || filters.categoryFilter}
                 <X 
                   className="h-3 w-3 cursor-pointer" 
                   onClick={() => handleFilterChange('categoryFilter', 'all')}

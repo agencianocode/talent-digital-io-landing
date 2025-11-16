@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
 
 interface MarketplaceDetail {
   id: string;
@@ -70,6 +71,7 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
   onClose,
   onServiceUpdate
 }) => {
+  const { categories: opportunityCategories } = useOpportunityCategories();
   const [service, setService] = useState<MarketplaceDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -424,14 +426,11 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                         <SelectValue placeholder="Seleccionar categoría" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="diseno-grafico">Diseño Gráfico</SelectItem>
-                        <SelectItem value="desarrollo-web">Desarrollo Web</SelectItem>
-                        <SelectItem value="marketing-digital">Marketing Digital</SelectItem>
-                        <SelectItem value="consultoria">Consultoría</SelectItem>
-                        <SelectItem value="redaccion">Redacción</SelectItem>
-                        <SelectItem value="traduccion">Traducción</SelectItem>
-                        <SelectItem value="video-edicion">Video y Edición</SelectItem>
-                        <SelectItem value="otros">Otros</SelectItem>
+                        {opportunityCategories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   ) : (
