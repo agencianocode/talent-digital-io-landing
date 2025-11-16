@@ -17,7 +17,7 @@ import {
   Package
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
+import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import { ServiceReviews } from '@/components/marketplace/ServiceReviews';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -52,7 +52,8 @@ const ServiceDetail: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-  const [canReview, setCanReview] = useState(false);
+const [canReview, setCanReview] = useState(false);
+  const { categories: marketplaceCategories } = useMarketplaceCategories();
 
   useEffect(() => {
     if (id) {
@@ -189,8 +190,7 @@ const ServiceDetail: React.FC = () => {
     );
   }
 
-  const { categories: opportunityCategories } = useOpportunityCategories();
-  const category = opportunityCategories.find(cat => cat.id === service.category);
+  const category = marketplaceCategories.find(cat => cat.name === service.category);
 
   return (
     <div className="container mx-auto px-4 py-8">

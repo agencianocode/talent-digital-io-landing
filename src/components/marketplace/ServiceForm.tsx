@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { ServiceFormData } from '@/hooks/useTalentServices';
 import { useToast } from '@/hooks/use-toast';
-import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
+import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 
 interface ServiceFormProps {
   isOpen: boolean;
@@ -51,7 +51,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
   mode = 'create'
 }) => {
   const { toast } = useToast();
-  const { categories: opportunityCategories } = useOpportunityCategories();
+  const { categories: marketplaceCategories } = useMarketplaceCategories();
   const [formData, setFormData] = useState<ServiceFormData>({
     title: '',
     description: '',
@@ -293,11 +293,22 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                       <SelectValue placeholder="Seleccionar categoría" />
                     </SelectTrigger>
                     <SelectContent>
-                      {opportunityCategories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
+                      {marketplaceCategories.length > 0 ? (
+                        marketplaceCategories
+                          .filter((c) => ['Atención al Cliente','Creativo','Marketing','Operaciones','Soporte Profesional','Tecnología y Automatizaciones','Ventas'].includes(c.name))
+                          .sort((a,b) => ['Atención al Cliente','Creativo','Marketing','Operaciones','Soporte Profesional','Tecnología y Automatizaciones','Ventas'].indexOf(a.name) - ['Atención al Cliente','Creativo','Marketing','Operaciones','Soporte Profesional','Tecnología y Automatizaciones','Ventas'].indexOf(b.name))
+                          .map((category) => (
+                            <SelectItem key={category.id} value={category.name}>
+                              {category.name}
+                            </SelectItem>
+                          ))
+                      ) : (
+                        ['Atención al Cliente','Creativo','Marketing','Operaciones','Soporte Profesional','Tecnología y Automatizaciones','Ventas'].map((name) => (
+                          <SelectItem key={name} value={name}>
+                            {name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   {errors.category && (
