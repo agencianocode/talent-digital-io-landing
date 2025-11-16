@@ -229,7 +229,7 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
             )}
             {filters.categoryFilter !== 'all' && (
               <Badge variant="secondary" className="text-xs">
-                Categoría: {opportunityCategories.find(c => c.id === filters.categoryFilter)?.name || filters.categoryFilter}
+                Categoría: {marketplaceCategories.find(c => c.name === filters.categoryFilter)?.name || filters.categoryFilter}
               </Badge>
             )}
             {filters.priceRange !== 'all' && (
