@@ -30,7 +30,13 @@ export const useOpportunityCategories = () => {
 
       if (fetchError) throw fetchError;
 
-      setCategories(data || []);
+      setCategories((data || []).map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        description: cat.description ?? undefined,
+        created_at: cat.created_at ?? undefined,
+        updated_at: cat.updated_at ?? undefined
+      })));
     } catch (err: any) {
       console.error('Error fetching opportunity categories:', err);
       setError(err.message);

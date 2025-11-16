@@ -13,7 +13,7 @@ import {
 import { Search, Filter, X } from 'lucide-react';
 import { ServiceFilters as ServiceFiltersType } from '@/hooks/useMarketplaceServices';
 import { CATEGORY_SKILLS, getAllSkills } from '@/lib/marketplace-categories';
-import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
+import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 
 interface ServiceFiltersProps {
   filters: ServiceFiltersType;
@@ -28,7 +28,7 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
   onClearFilters,
   totalResults
 }) => {
-  const { categories: opportunityCategories } = useOpportunityCategories();
+  const { categories: marketplaceCategories } = useMarketplaceCategories();
   
   // Get available skills based on selected category
   const availableSkills = useMemo(() => {
@@ -126,8 +126,8 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las categorías</SelectItem>
-                {opportunityCategories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                {marketplaceCategories.map((category) => (
+                  <SelectItem key={category.id} value={category.name}>
                     {category.name}
                   </SelectItem>
                 ))}

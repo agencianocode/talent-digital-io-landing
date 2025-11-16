@@ -20,8 +20,7 @@ import {
   Instagram, 
   Facebook,
   MapPin,
-  Clock,
-  Mail
+  Clock
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -527,7 +526,7 @@ const PublicTalentProfile = () => {
                   <Button 
                     variant="outline" 
                     className="w-full border-black text-black hover:bg-black hover:text-white transition-colors"
-                    onClick={() => window.open(portfolios[0].url, '_blank')}
+                    onClick={() => portfolios[0]?.url && window.open(portfolios[0].url, '_blank')}
                   >
                     Ver Portfolio
                     <ExternalLink className="h-4 w-4 ml-2" />
@@ -638,7 +637,7 @@ const PublicTalentProfile = () => {
                     .slice(0, showAllWorkExperience ? undefined : 3)
                     .map((exp, index) => (
                       <div key={index} className="border-l-4 border-blue-500 pl-4">
-                        <h4 className="font-semibold text-gray-900">{exp.position || exp.title || 'Puesto'}</h4>
+                        <h4 className="font-semibold text-gray-900">{exp.position || 'Puesto'}</h4>
                         <p className="text-gray-600">{exp.company || 'Empresa'}</p>
                         {exp.description && (
                           <p className="text-sm text-gray-500 mb-2 whitespace-pre-line">{exp.description}</p>

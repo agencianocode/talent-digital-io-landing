@@ -67,7 +67,7 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userRole } = useSupabaseAuth();
-  const { categories: opportunityCategories, loading: categoriesLoading } = useOpportunityCategories();
+  const { categories: opportunityCategories } = useOpportunityCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState<PublishServiceForm>({
@@ -91,7 +91,6 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
 
   // Verificar si es usuario Freemium o Premium
   const isFreemiumUser = userRole === 'freemium_business' || userRole === 'freemium_talent';
-  const isFreemiumTalent = userRole === 'freemium_talent';
   const isFreemiumBusiness = userRole === 'freemium_business';
   const isPremiumUser = userRole === 'premium_business' || userRole === 'premium_talent' || userRole === 'academy_premium';
 
