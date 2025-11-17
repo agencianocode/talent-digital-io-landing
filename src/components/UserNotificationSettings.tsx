@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { PushNotificationToggle } from '@/components/notifications/PushNotificationToggle';
 
 type NotificationType = {
   id: string;
@@ -317,6 +318,25 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Push Notifications Toggle */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Activar Notificaciones Push
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Activa las notificaciones push de tu navegador para recibir alertas en tiempo real
+                incluso cuando no estés dentro de la aplicación. Este control gestiona la
+                suscripción del dispositivo; más abajo puedes decidir qué tipos de alertas quieres
+                recibir.
+              </p>
+              <PushNotificationToggle />
+            </CardContent>
+          </Card>
+
           {/* Notifications Table */}
           <Card>
             <CardHeader>

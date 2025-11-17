@@ -2,10 +2,11 @@ import { startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, Bell, Building, Settings } from 'lucide-react';
+import { ArrowLeft, Shield, Bell, Building, Settings, BellRing } from 'lucide-react';
 import PrivacySettings from './PrivacySettings';
 import UserNotificationSettings from '@/components/UserNotificationSettings';
 import { CompanyProfileWizard } from '@/components/wizard/CompanyProfileWizard';
+import { PushNotificationToggle } from '@/components/notifications/PushNotificationToggle';
 
 const BusinessProfileSettings = () => {
   const navigate = useNavigate();
@@ -32,6 +33,20 @@ const BusinessProfileSettings = () => {
           <p className="text-muted-foreground">Gestiona tu perfil corporativo y configuración</p>
         </div>
       </div>
+
+      <section className="space-y-3 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
+        <div className="flex items-start gap-3">
+          <BellRing className="h-5 w-5 text-primary mt-1" />
+          <div className="space-y-1">
+            <p className="font-semibold text-foreground">Activa tus notificaciones push</p>
+            <p className="text-sm text-muted-foreground">
+              Autoriza tu navegador para recibir alertas inmediatas. Luego utiliza la pestaña
+              <strong> Notificaciones</strong> para decidir qué eventos envían email, web o push.
+            </p>
+          </div>
+        </div>
+        <PushNotificationToggle />
+      </section>
 
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full grid-cols-4">

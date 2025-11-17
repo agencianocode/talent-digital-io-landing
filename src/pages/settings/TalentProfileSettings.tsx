@@ -2,11 +2,12 @@ import { startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, Bell, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Shield, Bell, GraduationCap, BellRing } from 'lucide-react';
 import PrivacySettings from './PrivacySettings';
 import UserNotificationSettings from '@/components/UserNotificationSettings';
 import { GraduatePrivacySettings } from '@/components/academy/GraduatePrivacySettings';
 import { useAcademyInvitation } from '@/hooks/useAcademyInvitation';
+import { PushNotificationToggle } from '@/components/notifications/PushNotificationToggle';
 
 const TalentProfileSettings = () => {
   const navigate = useNavigate();
@@ -28,6 +29,20 @@ const TalentProfileSettings = () => {
           <p className="text-muted-foreground">Personaliza tu experiencia profesional y privacidad</p>
         </div>
       </div>
+
+      <section className="space-y-3 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
+        <div className="flex items-start gap-3">
+          <BellRing className="h-5 w-5 text-primary mt-1" />
+          <div className="space-y-1">
+            <p className="font-semibold text-foreground">Activa tus notificaciones push</p>
+            <p className="text-sm text-muted-foreground">
+              Primero autoriza tu navegador usando el siguiente control. Luego, en la pestaña
+              <strong> Notificaciones</strong> podrás elegir qué alertas recibir (email, web o push).
+            </p>
+          </div>
+        </div>
+        <PushNotificationToggle />
+      </section>
 
       <Tabs defaultValue="privacy" className="w-full">
         <TabsList className={`grid w-full ${isAcademyStudent ? 'grid-cols-3' : 'grid-cols-2'}`}>
