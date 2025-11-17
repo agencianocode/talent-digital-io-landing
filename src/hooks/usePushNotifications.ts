@@ -2,7 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
+const DEFAULT_VAPID_PUBLIC_KEY =
+  'BOEKW3QP-LfleNFqh2ug5Ax1hniociI7C3ZHZifBljNwVYj4nWtUlliSQrL2hDoi7dgNYuon-CA0caVLecMCebI';
+
+const VAPID_PUBLIC_KEY =
+  import.meta.env.VITE_VAPID_PUBLIC_KEY && import.meta.env.VITE_VAPID_PUBLIC_KEY.trim().length > 0
+    ? import.meta.env.VITE_VAPID_PUBLIC_KEY
+    : DEFAULT_VAPID_PUBLIC_KEY;
 
 interface PushSubscriptionData {
   endpoint: string;
