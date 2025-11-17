@@ -24,29 +24,29 @@ WHERE read = false
 ORDER BY created_at ASC;
 
 -- 2. Contar notificaciones por antigüedad
+WITH categorized AS (
+  SELECT 
+    CASE 
+      WHEN created_at < NOW() - INTERVAL '7 days' THEN '>7 días'
+      WHEN created_at < NOW() - INTERVAL '3 days' THEN '>3 días'
+      WHEN created_at < NOW() - INTERVAL '24 hours' THEN '>24 horas'
+      ELSE '<24 horas'
+    END AS antiguedad,
+    read
+  FROM notifications
+)
 SELECT 
-  CASE 
-    WHEN created_at < NOW() - INTERVAL '7 days' THEN '>7 días'
-    WHEN created_at < NOW() - INTERVAL '3 days' THEN '>3 días'
-    WHEN created_at < NOW() - INTERVAL '24 hours' THEN '>24 horas'
-    ELSE '<24 horas'
-  END as antiguedad,
-  COUNT(*) as cantidad,
-  COUNT(*) FILTER (WHERE read = false) as no_leidas,
-  COUNT(*) FILTER (WHERE read = true) as leidas
-FROM notifications
-GROUP BY 
-  CASE 
-    WHEN created_at < NOW() - INTERVAL '7 days' THEN '>7 días'
-    WHEN created_at < NOW() - INTERVAL '3 days' THEN '>3 días'
-    WHEN created_at < NOW() - INTERVAL '24 hours' THEN '>24 horas'
-    ELSE '<24 horas'
-  END
+  antiguedad,
+  COUNT(*) AS cantidad,
+  COUNT(*) FILTER (WHERE read = false) AS no_leidas,
+  COUNT(*) FILTER (WHERE read = true) AS leidas
+FROM categorized
+GROUP BY antiguedad
 ORDER BY 
-  CASE 
-    WHEN antiguedad = '>7 días' THEN 1
-    WHEN antiguedad = '>3 días' THEN 2
-    WHEN antiguedad = '>24 horas' THEN 3
+  CASE antiguedad
+    WHEN '>7 días' THEN 1
+    WHEN '>3 días' THEN 2
+    WHEN '>24 horas' THEN 3
     ELSE 4
   END;
 
