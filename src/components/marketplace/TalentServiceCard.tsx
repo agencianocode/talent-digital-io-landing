@@ -26,7 +26,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { TalentService } from '@/hooks/useTalentServices';
-import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
+import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 
 interface TalentServiceCardProps {
   service: TalentService;
@@ -46,7 +46,7 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
   onViewPortfolio
 }) => {
   const { categories: marketplaceCategories } = useMarketplaceCategories();
-  const category = marketplaceCategories.find(cat => cat.name === service.category);
+  const category = marketplaceCategories.find((cat) => cat.name === service.category);
 
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('es-ES', {

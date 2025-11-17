@@ -31,7 +31,6 @@ import {
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import { useToast } from '@/hooks/use-toast';
-import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 
 interface ServiceRequestModalProps {
   isOpen: boolean;
