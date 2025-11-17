@@ -211,7 +211,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     onClose();
   };
 
-  const selectedCategory = opportunityCategories.find(cat => cat.id === formData.category);
+  const selectedCategory = marketplaceCategories.find((cat) => cat.name === formData.category);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
