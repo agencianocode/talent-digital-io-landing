@@ -156,22 +156,22 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           <Button 
             onClick={(e) => {
               e.stopPropagation();
-              onRequestService(service);
+              navigate(serviceDetailPath);
             }}
             className="flex-1"
             size="sm"
           >
-            Solicitar Servicio
+            Ver Detalles
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              navigate(serviceDetailPath);
+              onRequestService(service);
             }}
           >
-            <ExternalLink className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>
