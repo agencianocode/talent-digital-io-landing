@@ -10,6 +10,9 @@ interface Application {
   status: string;
   created_at: string;
   updated_at: string;
+  first_response_at?: string | null;
+  contacted_at?: string | null;
+  viewed_at?: string | null;
   opportunities?: {
     id: string;
     title: string;
@@ -143,19 +146,46 @@ export const useRealApplications = () => {
       ).length;
       
       // Calcular promedio de tiempo de respuesta (en horas)
-      // Solo para aplicaciones que han sido contactadas o tienen un status diferente a pending
-      const respondedApplications = apps.filter(app => 
-        app.status !== 'pending' && app.updated_at && app.created_at
-      );
+      // Prioridad: first_response_at > contacted_at > viewed_at > updated_at (solo si no es pending)
+      // Esto mide el tiempo desde que el talento aplicó hasta que la empresa respondió por primera vez
+      const respondedApplications = apps.filter(app => {
+        // Solo considerar aplicaciones que han sido procesadas (no pending)
+        if (app.status === 'pending') return false;
+        
+        // Debe tener al menos una fecha de respuesta
+        return app.first_response_at || app.contacted_at || app.viewed_at || 
+               (app.updated_at && app.created_at);
+      });
       
       let averageResponseTime = 0;
       if (respondedApplications.length > 0) {
         const totalResponseTime = respondedApplications.reduce((sum, app) => {
           const created = new Date(app.created_at).getTime();
-          const updated = new Date(app.updated_at).getTime();
-          const responseTimeHours = (updated - created) / (1000 * 60 * 60); // Convertir a horas
-          return sum + responseTimeHours;
+          
+          // Prioridad: usar first_response_at si existe (más preciso)
+          // Luego contacted_at, luego viewed_at, y como último recurso updated_at
+          let responseTime: number;
+          
+          if (app.first_response_at) {
+            // Mejor opción: tiempo hasta primera respuesta
+            responseTime = (new Date(app.first_response_at).getTime() - created) / (1000 * 60 * 60);
+          } else if (app.contacted_at) {
+            // Segunda opción: tiempo hasta contacto
+            responseTime = (new Date(app.contacted_at).getTime() - created) / (1000 * 60 * 60);
+          } else if (app.viewed_at) {
+            // Tercera opción: tiempo hasta que fue vista
+            responseTime = (new Date(app.viewed_at).getTime() - created) / (1000 * 60 * 60);
+          } else if (app.updated_at) {
+            // Última opción: tiempo hasta última actualización (menos preciso)
+            responseTime = (new Date(app.updated_at).getTime() - created) / (1000 * 60 * 60);
+          } else {
+            // Si no hay ninguna fecha, usar 0 (no debería pasar)
+            responseTime = 0;
+          }
+          
+          return sum + responseTime;
         }, 0);
+        
         averageResponseTime = Math.round((totalResponseTime / respondedApplications.length) * 10) / 10;
       }
       

@@ -347,9 +347,38 @@ export const useSupabaseOpportunities = () => {
   // Update application status (for business users)
   const updateApplicationStatus = useCallback(async (applicationId: string, status: string) => {
     try {
+      // Primero obtener el estado actual para verificar si es la primera respuesta
+      const { data: currentApp, error: fetchError } = await supabase
+        .from('applications')
+        .select('status, first_response_at, viewed_at')
+        .eq('id', applicationId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Preparar los datos a actualizar
+      const updateData: any = { status };
+      const currentAppData = currentApp as any;
+
+      // Si el estado actual es 'pending' y el nuevo estado NO es 'pending',
+      // y first_response_at aún no está establecido, establecerlo ahora
+      if (currentAppData?.status === 'pending' && status !== 'pending' && !currentAppData?.first_response_at) {
+        updateData.first_response_at = new Date().toISOString();
+      }
+
+      // Si el nuevo estado es 'contacted', también actualizar contacted_at
+      if (status === 'contacted') {
+        updateData.contacted_at = new Date().toISOString();
+      }
+
+      // Si el nuevo estado es 'reviewed' y viewed_at no está establecido, establecerlo
+      if (status === 'reviewed' && !currentAppData?.viewed_at) {
+        updateData.viewed_at = new Date().toISOString();
+      }
+
       const { error } = await supabase
         .from('applications')
-        .update({ status })
+        .update(updateData)
         .eq('id', applicationId);
 
       if (error) throw error;
