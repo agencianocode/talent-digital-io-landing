@@ -323,21 +323,21 @@ const ApplicationDetail = () => {
 
   // Función para calcular la puntuación de match
   const calculateMatchScore = () => {
-    if (!application?.opportunities) return { score: 0, details: [] };
+    if (!application?.opportunities) return { score: 0, details: [], totalPossible: 0, achieved: 0 };
 
     const opportunity = application.opportunities;
     const requirements = opportunity.requirements || '';
     const matchDetails = [];
 
-    // Extraer habilidades requeridas
+    // Extraer habilidades requeridas (más flexible)
     const skillsMatch = requirements.match(/Habilidades:\s*([^\n]+)/i);
     const requiredSkills = skillsMatch?.[1] ? skillsMatch[1].split(',').map(s => s.trim().toLowerCase()) : [];
     
-    // Extraer herramientas requeridas
+    // Extraer herramientas requeridas (más flexible)
     const toolsMatch = requirements.match(/Herramientas:\s*([^\n]+)/i);
     const requiredTools = toolsMatch?.[1] ? toolsMatch[1].split(',').map(t => t.trim().toLowerCase()) : [];
 
-    // Extraer idiomas requeridos
+    // Extraer idiomas requeridos (más flexible)
     const languagesMatch = requirements.match(/Idiomas preferidos:\s*([^\n]+)/i);
     const requiredLanguages = languagesMatch?.[1] ? languagesMatch[1].split(',').map(l => l.trim().toLowerCase()) : [];
 
@@ -377,6 +377,18 @@ const ApplicationDetail = () => {
         color: 'text-blue-600',
         bgColor: 'bg-blue-100'
       });
+    } else {
+      // Si no hay habilidades en el formato esperado, agregar sección indicativa
+      matchDetails.push({
+        category: 'Habilidades',
+        score: 0,
+        maxScore: 40,
+        matched: [],
+        required: [],
+        icon: Target,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-100'
+      });
     }
 
     // Calcular match de herramientas (30% del score)
@@ -396,6 +408,18 @@ const ApplicationDetail = () => {
         maxScore: 30,
         matched: matchedTools,
         required: requiredTools,
+        icon: TrendingUp,
+        color: 'text-green-600',
+        bgColor: 'bg-green-100'
+      });
+    } else {
+      // Si no hay herramientas en el formato esperado, agregar sección indicativa
+      matchDetails.push({
+        category: 'Herramientas',
+        score: 0,
+        maxScore: 30,
+        matched: [],
+        required: [],
         icon: TrendingUp,
         color: 'text-green-600',
         bgColor: 'bg-green-100'
@@ -423,6 +447,18 @@ const ApplicationDetail = () => {
         color: 'text-purple-600',
         bgColor: 'bg-purple-100'
       });
+    } else {
+      // Si no hay idiomas en el formato esperado, agregar sección indicativa
+      matchDetails.push({
+        category: 'Idiomas',
+        score: 0,
+        maxScore: 20,
+        matched: [],
+        required: [],
+        icon: CheckCircle2,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-100'
+      });
     }
 
     // Calcular match de zona horaria (10% del score)
@@ -443,14 +479,28 @@ const ApplicationDetail = () => {
         color: 'text-orange-600',
         bgColor: 'bg-orange-100'
       });
+    } else {
+      // Si no hay zona horaria en el formato esperado, agregar sección indicativa
+      matchDetails.push({
+        category: 'Zona Horaria',
+        score: 0,
+        maxScore: 10,
+        matched: [],
+        required: [],
+        icon: XCircle,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-100'
+      });
     }
 
-    const finalScore = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    // Asegurar que maxScore sea siempre 100 para representar 100%
+    const totalMaxScore = 100;
+    const finalScore = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
 
     return {
       score: finalScore,
       details: matchDetails,
-      totalPossible: maxScore,
+      totalPossible: totalMaxScore,
       achieved: Math.round(totalScore)
     };
   };
@@ -458,7 +508,7 @@ const ApplicationDetail = () => {
   // Memoizar el cálculo del match score para optimización
   const matchScoreData = useMemo(() => {
     if (!application?.opportunities || !userProfile) {
-      return { score: 0, details: [], totalPossible: 0, achieved: 0 };
+      return { score: 0, details: [], totalPossible: 100, achieved: 0 };
     }
     
     return calculateMatchScore();
