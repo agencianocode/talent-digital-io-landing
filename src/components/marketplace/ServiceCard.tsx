@@ -8,7 +8,6 @@ import {
   Star, 
   Eye, 
   MessageSquare, 
-  ExternalLink,
   MapPin,
   Clock,
   DollarSign
