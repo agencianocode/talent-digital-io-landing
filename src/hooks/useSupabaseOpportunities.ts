@@ -244,6 +244,19 @@ export const useSupabaseOpportunities = () => {
         throw new Error('Ya has aplicado a esta oportunidad anteriormente');
       }
 
+      // 🚀 VERIFICAR LÍMITE DE POSTULACIONES MENSUALES DEL TALENTO
+      const { checkTalentApplicationLimit } = await import('@/hooks/useApplicationLimits');
+      const limitCheck = await checkTalentApplicationLimit(user.id, userRole);
+      
+      if (!limitCheck.canApply && limitCheck.limit > 0) {
+        const roleText = userRole === 'premium_talent' ? 'Premium' : 'Freemium';
+        throw new Error(
+          `Has alcanzado tu límite mensual de ${limitCheck.limit} postulaciones (${roleText}). ` +
+          `Ya has aplicado ${limitCheck.current} vez${limitCheck.current !== 1 ? 'es' : ''} este mes. ` +
+          `El límite se reiniciará el próximo mes.`
+        );
+      }
+
       const { error } = await supabase
         .from('applications')
         .insert({
