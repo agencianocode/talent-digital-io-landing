@@ -501,11 +501,13 @@ const TalentEditProfile = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {categories.length > 0 ? (
-                        categories.map(cat => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))
+                        // Eliminar duplicados por id antes de renderizar
+                        Array.from(new Map(categories.map(cat => [cat.id, cat])).values())
+                          .map(cat => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </SelectItem>
+                          ))
                       ) : (
                         // Fallback si no hay categorías cargadas
                         <SelectItem value="development">Desarrollo de Software</SelectItem>
