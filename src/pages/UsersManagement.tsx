@@ -457,7 +457,7 @@ const UsersManagement = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="max-w-6xl mx-auto px-4 py-6">
           {/* Header */}
           <div className="mb-8">
@@ -613,27 +613,27 @@ const UsersManagement = () => {
           </div>
 
           {/* Team Members Section */}
-          <Card>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
-                  <span className="ml-2 text-gray-600">Cargando miembros...</span>
-                </div>
-              ) : teamMembers.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No hay miembros en el equipo</h3>
-                  <p className="text-gray-600 mb-4">Invita a los primeros miembros para comenzar a colaborar</p>
-                  <Button onClick={() => setIsInviteModalOpen(true)}>
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Invitar Primer Miembro
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {teamMembers.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+              <span className="ml-2 text-gray-600">Cargando miembros...</span>
+            </div>
+          ) : teamMembers.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No hay miembros en el equipo</h3>
+              <p className="text-gray-600 mb-4">Invita a los primeros miembros para comenzar a colaborar</p>
+              <Button onClick={() => setIsInviteModalOpen(true)}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Invitar Primer Miembro
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {teamMembers.map((member) => (
+                <Card key={member.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <Avatar className="w-10 h-10">
                           <AvatarImage src={member.user?.avatar_url} />
@@ -699,11 +699,11 @@ const UsersManagement = () => {
                         )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </TooltipProvider>
