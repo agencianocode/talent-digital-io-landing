@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/select';
 import { Search, Filter, X } from 'lucide-react';
 import { ServiceFilters as ServiceFiltersType } from '@/hooks/useMarketplaceServices';
-import { CATEGORY_SKILLS, getAllSkills } from '@/lib/marketplace-categories';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import { NEW_MARKETPLACE_CATEGORIES } from '@/lib/marketplace-constants';
 
@@ -31,21 +30,12 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
 }) => {
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   
-  // Get available skills based on selected category
-  const availableSkills = useMemo(() => {
-    if (filters.categoryFilter === 'all') {
-      return getAllSkills();
-    }
-    return CATEGORY_SKILLS[filters.categoryFilter] || [];
-  }, [filters.categoryFilter]);
-
   const hasActiveFilters = 
     filters.searchQuery !== '' ||
     filters.categoryFilter !== 'all' ||
     filters.priceRange !== 'all' ||
     filters.locationFilter !== 'all' ||
-    filters.availabilityFilter !== 'all' ||
-    (filters.skillsFilter && filters.skillsFilter !== 'all');
+    filters.availabilityFilter !== 'all';
 
   const priceRanges = [
     { value: 'all', label: 'Todos los precios' },
@@ -108,7 +98,7 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
         </div>
 
         {/* Filters Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Category Filter */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Categoría</label>
@@ -116,9 +106,7 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
               value={filters.categoryFilter}
               onValueChange={(value) => {
                 onFiltersChange({ 
-                  categoryFilter: value,
-                  // Reset skills filter when category changes
-                  skillsFilter: 'all'
+                  categoryFilter: value
                 });
               }}
             >
@@ -130,28 +118,6 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
                 {NEW_MARKETPLACE_CATEGORIES.map((name) => (
                   <SelectItem key={name} value={name}>
                     {name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Skills Filter - Right next to Category */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Skills</label>
-            <Select
-              value={filters.skillsFilter || 'all'}
-              onValueChange={(value) => onFiltersChange({ skillsFilter: value })}
-              disabled={availableSkills.length === 0}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={availableSkills.length > 0 ? "Todas las skills" : "Selecciona categoría"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las skills</SelectItem>
-                {availableSkills.map((skill) => (
-                  <SelectItem key={skill} value={skill}>
-                    {skill}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -246,11 +212,6 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
             {filters.availabilityFilter !== 'all' && (
               <Badge variant="secondary" className="text-xs">
                 Disponibilidad: {availabilityOptions.find(o => o.value === filters.availabilityFilter)?.label}
-              </Badge>
-            )}
-            {filters.skillsFilter && filters.skillsFilter !== 'all' && (
-              <Badge variant="secondary" className="text-xs">
-                Skill: {filters.skillsFilter}
               </Badge>
             )}
           </div>

@@ -34,7 +34,6 @@ interface FilterState {
   location?: string;
   experience?: string | string[];
   salaryRange?: number[];
-  skills?: string[];
 }
 
 const TalentOpportunitiesSearch = () => {
@@ -232,21 +231,6 @@ const TalentOpportunitiesSearch = () => {
           return false;
         }
       }
-    }
-
-    // Filtro de skills/tags
-    if (filters.skills && Array.isArray(filters.skills) && filters.skills.length > 0) {
-      // Buscar en título, descripción o requisitos
-      const hasMatchingSkill = filters.skills.some((skill: string) => {
-        const skillLower = skill.toLowerCase();
-        return (
-          opportunity.title?.toLowerCase().includes(skillLower) ||
-          opportunity.description?.toLowerCase().includes(skillLower) ||
-          opportunity.requirements?.toLowerCase().includes(skillLower)
-        );
-      });
-      
-      if (!hasMatchingSkill) return false;
     }
 
     return true;
