@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Plus, 
   Grid3X3, 
@@ -10,8 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
-  Settings,
-  FileText
+  Settings
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMarketplaceServices } from '@/hooks/useMarketplaceServices';
@@ -19,7 +17,6 @@ import ServiceCard from '@/components/marketplace/ServiceCard';
 import ServiceFilters from '@/components/marketplace/ServiceFilters';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import PublishServiceModal from '@/components/marketplace/PublishServiceModal';
-import MyPublishingRequests from '@/components/marketplace/MyPublishingRequests';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 
 const BusinessMarketplace: React.FC = () => {
@@ -114,21 +111,6 @@ const BusinessMarketplace: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Tabs for Services and My Requests */}
-      <Tabs defaultValue="services" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="services" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            Explorar Servicios
-          </TabsTrigger>
-          <TabsTrigger value="my-requests" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Mis Solicitudes
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="services" className="space-y-6">
 
       {/* Filters */}
       <ServiceFilters
@@ -262,12 +244,6 @@ const BusinessMarketplace: React.FC = () => {
           )}
         </>
       )}
-        </TabsContent>
-
-        <TabsContent value="my-requests">
-          <MyPublishingRequests />
-        </TabsContent>
-      </Tabs>
 
       {/* Service Request Modal */}
       <ServiceRequestModal
