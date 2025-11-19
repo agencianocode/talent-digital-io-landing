@@ -54,10 +54,17 @@ export const useProfessionalData = () => {
       const { data, error } = await supabase.rpc('get_professional_categories');
       if (error) throw error;
       
-      // Eliminar duplicados basándose en el id
-      const uniqueCategories = (data || []).reduce((acc: ProfessionalCategory[], category: ProfessionalCategory) => {
+      // Convertir y eliminar duplicados basándose en el id
+      const categoriesData = (data || []) as any[];
+      const uniqueCategories = categoriesData.reduce((acc: ProfessionalCategory[], category: any) => {
         if (!acc.find(c => c.id === category.id)) {
-          acc.push(category);
+          acc.push({
+            id: category.id,
+            name: category.name,
+            description: category.description,
+            icon: category.icon,
+            subcategories: Array.isArray(category.subcategories) ? category.subcategories : []
+          });
         }
         return acc;
       }, [] as ProfessionalCategory[]);
