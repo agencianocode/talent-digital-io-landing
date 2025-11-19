@@ -7,13 +7,7 @@ import {
   Plus, 
   Package, 
   MessageSquare, 
-  Eye, 
-  TrendingUp,
-  Star,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Pause
+  AlertCircle
 } from 'lucide-react';
 import { useTalentServices } from '@/hooks/useTalentServices';
 import ServiceForm from '@/components/marketplace/ServiceForm';
@@ -42,14 +36,7 @@ const TalentMyServices: React.FC = () => {
     refreshServices,
   } = useTalentServices();
 
-  const servicesByStatus = {
-    active: services.filter(s => s.is_available),
-    inactive: services.filter(s => !s.is_available)
-  };
   const pendingRequests = serviceRequests.filter(r => r.status === 'pending');
-  const totalViews = services.reduce((sum, _s) => sum + 0, 0);
-  const totalRequests = serviceRequests.length;
-  const averageRating = 4.7;
 
   const handleUpdateRequestStatus = async (requestId: string, status: 'pending' | 'accepted' | 'declined' | 'completed'): Promise<boolean> => {
     try {
@@ -197,61 +184,6 @@ const TalentMyServices: React.FC = () => {
           </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Package className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Servicios</p>
-                  <p className="text-2xl font-bold">{services.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Eye className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Vistas Totales</p>
-                  <p className="text-2xl font-bold">{totalViews}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Solicitudes</p>
-                  <p className="text-2xl font-bold">{totalRequests}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Star className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Rating Promedio</p>
-                  <p className="text-2xl font-bold">{averageRating.toFixed(1)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
 
       {/* Tabs */}
@@ -277,62 +209,6 @@ const TalentMyServices: React.FC = () => {
 
         {/* Services Tab */}
         <TabsContent value="services" className="space-y-6">
-          {/* Service Status Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Activos</p>
-                    <p className="text-xl font-bold">{servicesByStatus.active.length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Pause className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pausados</p>
-                    <p className="text-xl font-bold">{servicesByStatus.inactive.length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-muted rounded-lg">
-                    <Clock className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Borradores</p>
-                    <p className="text-xl font-bold">0</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Vendidos</p>
-                    <p className="text-xl font-bold">{totalRequests}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Services Grid */}
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

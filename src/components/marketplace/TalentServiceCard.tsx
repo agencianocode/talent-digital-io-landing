@@ -95,8 +95,20 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
   const statusInfo = getStatusInfo(service.status);
   const StatusIcon = statusInfo.icon;
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // No abrir el modal si se hace clic en el dropdown menu o botones
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('[role="menuitem"]')) {
+      return;
+    }
+    onEdit(service);
+  };
+
   return (
-    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
+    <Card 
+      className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
