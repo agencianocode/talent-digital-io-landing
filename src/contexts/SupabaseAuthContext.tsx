@@ -761,7 +761,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     }
 
-    // Crear la empresa con user_id (ahora permitido tener múltiples empresas)
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .insert({ ...data, user_id: authState.user.id })
@@ -773,11 +772,10 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     if (!company) {
-      return { error: new Error('Error al crear la empresa') };
+      return { error: new Error('Company creation failed') };
     }
 
-    // Crear el rol de owner en company_user_roles para todas las empresas
-    // Esto permite que el sistema funcione correctamente con múltiples empresas
+    // Crear el rol de owner en company_user_roles
     const { error: roleError } = await supabase
       .from('company_user_roles')
       .insert({
@@ -790,19 +788,25 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
 
     if (roleError) {
-      console.warn('Error creating owner role (non-critical):', roleError);
-      // No eliminamos la empresa si falla el rol, ya que puede ser que ya exista
+      console.error('Error creating owner role:', roleError);
+      // Si falla la creación del rol, intentar crear la empresa de todos modos
+      // pero mostrar un warning al usuario
+      // Podría ser que ya existe el rol o hay un problema de permisos
+      // Nota: El rol podría ser creado por un trigger en la base de datos
+      if (roleError.code !== '23505') { // 23505 = unique_violation, significa que el rol ya existe
+        console.warn('Owner role creation failed, but company was created. Error:', roleError);
+      }
     }
 
     // NO actualizar authState.company automáticamente cuando se crea una nueva empresa
     // El CompanyContext se encargará de manejar la empresa activa
     // Solo actualizar si no hay empresa actual (primera empresa del usuario)
-    if (company && !authState.company) {
+    if (!authState.company) {
       setAuthState(prev => ({
         ...prev,
         company: {
           ...company,
-          user_id: authState.user!.id, // Mantener user_id en el estado para compatibilidad
+          user_id: authState.user!.id,
           social_links: (company.social_links as Record<string, string>) || {},
           gallery_urls: ((company.gallery_urls as any[]) || []).map((item: any) => ({
             id: item?.id || Math.random().toString(),

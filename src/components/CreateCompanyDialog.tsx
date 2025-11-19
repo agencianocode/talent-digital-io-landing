@@ -81,7 +81,8 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({
       
       if (result.error) {
         console.error('Error creating company:', result.error);
-        toast.error('Error al crear la empresa. Intenta nuevamente.');
+        const errorMessage = result.error.message || 'Error al crear la empresa. Intenta nuevamente.';
+        toast.error(errorMessage);
         return;
       }
 

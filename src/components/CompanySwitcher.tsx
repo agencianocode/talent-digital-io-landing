@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Building, Crown, Shield, Eye, Plus, ChevronDown, Users, FileText } from 'lucide-react';
@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import CreateCompanyDialog from '@/components/CreateCompanyDialog';
 
 interface CompanySwitcherProps {
   className?: string;
@@ -26,9 +27,11 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
     userCompanies, 
     currentUserRole,
     switchCompany, 
-    isLoading 
+    isLoading,
+    refreshCompanies 
   } = useCompany();
   const navigate = useNavigate();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -64,15 +67,24 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
           No hay empresas disponibles
         </div>
         {showCreateButton && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/register-business')}
-            className="flex items-center gap-1"
-          >
-            <Plus className="h-3 w-3" />
-            Crear Empresa
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="flex items-center gap-1"
+            >
+              <Plus className="h-3 w-3" />
+              Crear Empresa
+            </Button>
+            <CreateCompanyDialog
+              open={isCreateDialogOpen}
+              onOpenChange={setIsCreateDialogOpen}
+              onCompanyCreated={async () => {
+                await refreshCompanies();
+              }}
+            />
+          </>
         )}
       </div>
     );
@@ -143,7 +155,7 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
           {showCreateButton && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/register-business')}>
+              <DropdownMenuItem onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Agregar empresa
               </DropdownMenuItem>
@@ -168,6 +180,16 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      
+      {showCreateButton && (
+        <CreateCompanyDialog
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+          onCompanyCreated={async () => {
+            await refreshCompanies();
+          }}
+        />
+      )}
     </div>
   );
 };
