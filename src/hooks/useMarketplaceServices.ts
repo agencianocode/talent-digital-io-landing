@@ -82,7 +82,18 @@ export const useMarketplaceServices = (): UseMarketplaceServicesReturn => {
     if (savedFilters) {
       try {
         const parsedFilters = JSON.parse(savedFilters);
-        setFilters(parsedFilters);
+        // Migración: eliminar skillsFilter si existe (ya no se usa)
+        if ('skillsFilter' in parsedFilters) {
+          delete parsedFilters.skillsFilter;
+        }
+        // Asegurar que solo se usen los filtros válidos
+        setFilters({
+          searchQuery: parsedFilters.searchQuery || '',
+          categoryFilter: parsedFilters.categoryFilter || 'all',
+          priceRange: parsedFilters.priceRange || 'all',
+          locationFilter: parsedFilters.locationFilter || 'all',
+          availabilityFilter: parsedFilters.availabilityFilter || 'all'
+        });
       } catch (error) {
         console.error('Error parsing saved filters:', error);
       }
