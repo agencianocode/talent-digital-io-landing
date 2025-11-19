@@ -159,11 +159,11 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
             unreadApplications: realApplicationMetrics.unreadApplications,
             unreviewedApplications: realApplicationMetrics.unreadApplications,
             candidatesInEvaluation: realApplicationMetrics.candidatesInEvaluation || 0,
-            averageResponseTime: 0, // Mostrar 0 hasta implementar cálculo real
+            averageResponseTime: realApplicationMetrics.averageResponseTime || 0,
             contactedCandidates: realApplicationMetrics.contactedCandidates,
             candidatesContacted: realApplicationMetrics.contactedCandidates,
             thisWeekApplications: realApplicationMetrics.thisWeekApplications,
-            applicationsThisMonth: realApplicationMetrics.thisWeekApplications,
+            applicationsThisMonth: realApplicationMetrics.thisMonthApplications || 0,
             conversionRate: realApplicationMetrics.conversionRate
           });
 

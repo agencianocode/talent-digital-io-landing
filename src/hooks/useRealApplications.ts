@@ -27,8 +27,10 @@ interface ApplicationMetrics {
   totalApplications: number;
   unreadApplications: number;
   thisWeekApplications: number;
+  thisMonthApplications: number;
   contactedCandidates: number;
   candidatesInEvaluation: number;
+  averageResponseTime: number;
   conversionRate: number;
   applicationsByOpportunity: Record<string, number>;
 }
@@ -40,8 +42,10 @@ export const useRealApplications = () => {
     totalApplications: 0,
     unreadApplications: 0,
     thisWeekApplications: 0,
+    thisMonthApplications: 0,
     contactedCandidates: 0,
     candidatesInEvaluation: 0,
+    averageResponseTime: 0,
     conversionRate: 0,
     applicationsByOpportunity: {}
   });
@@ -75,8 +79,10 @@ export const useRealApplications = () => {
           totalApplications: 0,
           unreadApplications: 0,
           thisWeekApplications: 0,
+          thisMonthApplications: 0,
           contactedCandidates: 0,
           candidatesInEvaluation: 0,
+          averageResponseTime: 0,
           conversionRate: 0,
           applicationsByOpportunity: {}
         });
@@ -107,11 +113,15 @@ export const useRealApplications = () => {
       // Calcular métricas reales
       const now = new Date();
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       
       const totalApplications = apps.length;
       const unreadApplications = apps.filter(app => app.status === 'pending').length;
       const thisWeekApplications = apps.filter(app => 
         new Date(app.created_at) >= oneWeekAgo
+      ).length;
+      const thisMonthApplications = apps.filter(app => 
+        new Date(app.created_at) >= firstDayOfMonth
       ).length;
       const contactedCandidates = apps.filter(app => 
         app.status === 'contacted' || app.status === 'interviewed'
@@ -120,6 +130,23 @@ export const useRealApplications = () => {
       const candidatesInEvaluation = apps.filter(app => 
         app.status === 'pending' || app.status === 'reviewed'
       ).length;
+      
+      // Calcular promedio de tiempo de respuesta (en horas)
+      // Solo para aplicaciones que han sido contactadas o tienen un status diferente a pending
+      const respondedApplications = apps.filter(app => 
+        app.status !== 'pending' && app.updated_at && app.created_at
+      );
+      
+      let averageResponseTime = 0;
+      if (respondedApplications.length > 0) {
+        const totalResponseTime = respondedApplications.reduce((sum, app) => {
+          const created = new Date(app.created_at).getTime();
+          const updated = new Date(app.updated_at).getTime();
+          const responseTimeHours = (updated - created) / (1000 * 60 * 60); // Convertir a horas
+          return sum + responseTimeHours;
+        }, 0);
+        averageResponseTime = Math.round((totalResponseTime / respondedApplications.length) * 10) / 10;
+      }
       
       const conversionRate = totalApplications > 0 
         ? Math.round((contactedCandidates / totalApplications) * 100 * 10) / 10
@@ -138,8 +165,10 @@ export const useRealApplications = () => {
         totalApplications,
         unreadApplications,
         thisWeekApplications,
+        thisMonthApplications,
         contactedCandidates,
         candidatesInEvaluation,
+        averageResponseTime,
         conversionRate,
         applicationsByOpportunity
       });
