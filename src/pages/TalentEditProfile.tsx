@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { X, Plus, MapPin, Phone, User, Camera, Upload, ArrowLeft, Link as LinkIcon, Target } from 'lucide-react';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useSocialLinks } from '@/hooks/useSocialLinks';
+import { useProfessionalData } from '@/hooks/useProfessionalData';
 import { ProfileEditData } from '@/types/profile';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,16 +24,7 @@ const EXPERIENCE_LEVELS = [
   { value: 'experto', label: 'Experto (15+ años)' }
 ];
 
-const PROFESSIONAL_CATEGORIES = [
-  { value: 'development', label: 'Desarrollo de Software' },
-  { value: 'design', label: 'Diseño' },
-  { value: 'marketing', label: 'Marketing Digital' },
-  { value: 'data', label: 'Ciencia de Datos' },
-  { value: 'management', label: 'Gestión de Proyectos' },
-  { value: 'sales', label: 'Ventas' },
-  { value: 'support', label: 'Soporte' },
-  { value: 'other', label: 'Otro' }
-];
+// Las categorías se cargarán desde useProfessionalData
 
 const SOCIAL_PLATFORMS = [
   { value: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/in/tu-perfil' },
@@ -84,6 +76,7 @@ const TalentEditProfile = () => {
   const navigate = useNavigate();
   const { profile, userProfile, updateProfile, updateAvatar, validateProfile } = useProfileData();
   const { socialLinks, addSocialLink, deleteSocialLink } = useSocialLinks();
+  const { categories } = useProfessionalData();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<ProfileEditData>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -104,21 +97,57 @@ const TalentEditProfile = () => {
 
   // Initialize form data
   useEffect(() => {
-    if (userProfile) {
-      setFormData({
-        full_name: userProfile.full_name || '',
-        title: profile?.title || '',
-        bio: profile?.bio || '',
-        skills: profile?.skills || [],
-        location: profile?.location || '',
-        country: profile?.country || '',
-        city: profile?.city || '',
-        phone: userProfile.phone || profile?.phone || '',
-        video_presentation_url: profile?.video_presentation_url || '',
-        availability: profile?.availability || ''
-      });
-      setSkills(profile?.skills || []);
-    }
+    const loadTalentProfileData = async () => {
+      if (!userProfile?.user_id) return;
+
+      try {
+        // Cargar datos de talent_profiles para experience_level y primary_category_id
+        const { data: talentProfile } = await supabase
+          .from('talent_profiles')
+          .select('experience_level, primary_category_id, secondary_category_id')
+          .eq('user_id', userProfile.user_id)
+          .maybeSingle();
+
+        if (userProfile) {
+          setFormData({
+            full_name: userProfile.full_name || '',
+            title: profile?.title || '',
+            bio: profile?.bio || '',
+            skills: profile?.skills || [],
+            location: profile?.location || '',
+            country: profile?.country || '',
+            city: profile?.city || '',
+            phone: userProfile.phone || profile?.phone || '',
+            video_presentation_url: profile?.video_presentation_url || '',
+            availability: profile?.availability || '',
+            experience_level: talentProfile?.experience_level || '',
+            primary_category_id: talentProfile?.primary_category_id || '',
+            secondary_category_id: talentProfile?.secondary_category_id || ''
+          });
+          setSkills(profile?.skills || []);
+        }
+      } catch (error) {
+        console.error('Error loading talent profile data:', error);
+        // Fallback sin datos de talent_profiles
+        if (userProfile) {
+          setFormData({
+            full_name: userProfile.full_name || '',
+            title: profile?.title || '',
+            bio: profile?.bio || '',
+            skills: profile?.skills || [],
+            location: profile?.location || '',
+            country: profile?.country || '',
+            city: profile?.city || '',
+            phone: userProfile.phone || profile?.phone || '',
+            video_presentation_url: profile?.video_presentation_url || '',
+            availability: profile?.availability || ''
+          });
+          setSkills(profile?.skills || []);
+        }
+      }
+    };
+
+    loadTalentProfileData();
   }, [profile, userProfile]);
 
   // Initialize social links
@@ -464,18 +493,23 @@ const TalentEditProfile = () => {
                 <div>
                   <Label htmlFor="category">Categoría Principal</Label>
                   <Select
-                    value={(formData as any).primary_category || ''}
-                    onValueChange={(value) => handleInputChange('primary_category' as any, value)}
+                    value={(formData as any).primary_category_id || ''}
+                    onValueChange={(value) => handleInputChange('primary_category_id' as any, value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona una categoría" />
                     </SelectTrigger>
                     <SelectContent>
-                      {PROFESSIONAL_CATEGORIES.map(cat => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </SelectItem>
-                      ))}
+                      {categories.length > 0 ? (
+                        categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        // Fallback si no hay categorías cargadas
+                        <SelectItem value="development">Desarrollo de Software</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

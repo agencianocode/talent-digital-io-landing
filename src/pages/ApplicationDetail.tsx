@@ -165,33 +165,59 @@ const ApplicationDetail = () => {
   const fetchUserProfileData = async (userId: string) => {
     try {
       // Obtener talent_profiles para skills
-      const { data: talentProfile } = await supabase
+      const { data: talentProfile, error: talentError } = await supabase
         .from('talent_profiles')
         .select('skills, location, country, city')
         .eq('user_id', userId)
         .maybeSingle();
 
+      if (talentError && talentError.code !== 'PGRST116') {
+        console.warn('Error fetching talent profile:', talentError);
+      }
+
       // Obtener profiles para professional_preferences y otros datos
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('professional_preferences, country, city')
         .eq('user_id', userId)
         .maybeSingle();
 
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.warn('Error fetching profile:', profileError);
+      }
+
       // Extraer datos del perfil
       const professionalPrefs = profile?.professional_preferences as any || {};
       
       // Construir perfil del usuario con datos reales
+      // Si no hay datos, usar arrays vacíos en lugar de valores por defecto
       const userProfileData = {
-        skills: (talentProfile?.skills || []).map((s: string) => s.toLowerCase()),
-        tools: (professionalPrefs.tools || professionalPrefs.software_tools || []).map((t: string) => t.toLowerCase()),
-        languages: (professionalPrefs.languages || professionalPrefs.spoken_languages || []).map((l: string) => l.toLowerCase()),
+        skills: Array.isArray(talentProfile?.skills) 
+          ? talentProfile.skills.map((s: string) => s.toLowerCase())
+          : [],
+        tools: Array.isArray(professionalPrefs.tools) 
+          ? professionalPrefs.tools.map((t: string) => t.toLowerCase())
+          : Array.isArray(professionalPrefs.software_tools)
+          ? professionalPrefs.software_tools.map((t: string) => t.toLowerCase())
+          : [],
+        languages: Array.isArray(professionalPrefs.languages)
+          ? professionalPrefs.languages.map((l: string) => l.toLowerCase())
+          : Array.isArray(professionalPrefs.spoken_languages)
+          ? professionalPrefs.spoken_languages.map((l: string) => l.toLowerCase())
+          : [],
         timezone: professionalPrefs.timezone || 
                   professionalPrefs.timezone_preference ||
                   (talentProfile?.location ? `${talentProfile.location}` : '') ||
                   (profile?.country && profile?.city ? `${profile.city}, ${profile.country}` : '') ||
-                  'UTC-5'
+                  ''
       };
+
+      console.log('User profile data loaded:', {
+        skillsCount: userProfileData.skills.length,
+        toolsCount: userProfileData.tools.length,
+        languagesCount: userProfileData.languages.length,
+        timezone: userProfileData.timezone
+      });
 
       setUserProfile(userProfileData);
     } catch (error) {
@@ -201,7 +227,7 @@ const ApplicationDetail = () => {
         skills: [],
         tools: [],
         languages: [],
-        timezone: 'UTC-5'
+        timezone: ''
       });
     }
   };
@@ -828,7 +854,7 @@ const ApplicationDetail = () => {
 
             {/* Detalles de Compatibilidad */}
             {(() => {
-              const matchData = calculateMatchScore();
+              const matchData = matchScoreData;
               return matchData.details.length > 0 && (
                 <Card className="shadow-md">
                   <CardHeader className="pb-3">
