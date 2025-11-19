@@ -148,10 +148,12 @@ const ApplicationsPage = () => {
         return "bg-yellow-100 text-yellow-800";
       case 'reviewed':
         return "bg-blue-100 text-blue-800";
-      case 'accepted':
+      case 'contacted':
         return "bg-green-100 text-green-800";
       case 'rejected':
         return "bg-red-100 text-red-800";
+      case 'hired':
+        return "bg-purple-100 text-purple-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -160,13 +162,15 @@ const ApplicationsPage = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'Pendiente';
+        return 'En revisión';
       case 'reviewed':
         return 'Revisada';
-      case 'accepted':
-        return 'Aceptada';
+      case 'contacted':
+        return 'Contactado';
       case 'rejected':
-        return 'Rechazada';
+        return 'Rechazado';
+      case 'hired':
+        return 'Contratado';
       default:
         return status;
     }
@@ -253,10 +257,11 @@ const ApplicationsPage = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem value="pending">Pendientes</SelectItem>
+            <SelectItem value="pending">En revisión</SelectItem>
             <SelectItem value="reviewed">Revisadas</SelectItem>
-            <SelectItem value="accepted">Aceptadas</SelectItem>
-            <SelectItem value="rejected">Rechazadas</SelectItem>
+            <SelectItem value="contacted">Contactados</SelectItem>
+            <SelectItem value="rejected">Rechazados</SelectItem>
+            <SelectItem value="hired">Contratados</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -337,33 +342,22 @@ const ApplicationsPage = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    {hasPermission('admin') && application.status === 'pending' && (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={() => handleStatusUpdate(application.id, 'accepted')}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          Aceptar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleStatusUpdate(application.id, 'rejected')}
-                          className="border-red-300 text-red-600 hover:bg-red-50"
-                        >
-                          Rechazar
-                        </Button>
-                      </>
-                    )}
-                    {hasPermission('admin') && application.status === 'pending' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleStatusUpdate(application.id, 'reviewed')}
+                    {hasPermission('admin') && (
+                      <Select
+                        value={application.status}
+                        onValueChange={(value) => handleStatusUpdate(application.id, value)}
                       >
-                        Marcar como Revisada
-                      </Button>
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">En revisión</SelectItem>
+                          <SelectItem value="reviewed">Revisada</SelectItem>
+                          <SelectItem value="contacted">Contactado</SelectItem>
+                          <SelectItem value="rejected">Rechazado</SelectItem>
+                          <SelectItem value="hired">Contratado</SelectItem>
+                        </SelectContent>
+                      </Select>
                     )}
                   </div>
                 </div>
