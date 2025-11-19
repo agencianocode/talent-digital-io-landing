@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useSupabaseAuth, UserRole } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseAuth, UserRole, isBusinessRole } from '@/contexts/SupabaseAuthContext';
 
 export interface ApplicationLimit {
   limit: number;
