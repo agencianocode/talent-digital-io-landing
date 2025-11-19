@@ -144,10 +144,8 @@ export const checkCompanyApplicationLimit = async (companyId: string): Promise<A
       console.error('Error checking company application limit:', error);
       // En caso de error, permitir aplicaciones (fail open)
       return { limit: 0, current: 0, remaining: 0, canApply: true };
-    } finally {
-      setIsChecking(false);
     }
-  }, []);
+};
 
 /**
  * Hook para usar las funciones de verificación de límites
