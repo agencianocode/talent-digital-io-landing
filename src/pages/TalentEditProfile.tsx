@@ -501,8 +501,13 @@ const TalentEditProfile = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {categories.length > 0 ? (
-                        // Eliminar duplicados por id antes de renderizar
-                        Array.from(new Map(categories.map(cat => [cat.id, cat])).values())
+                        // Eliminar duplicados por nombre (no por id)
+                        Array.from(
+                          new Map(
+                            categories.map(cat => [cat.name.toLowerCase().trim(), cat])
+                          ).values()
+                        )
+                          .sort((a, b) => a.name.localeCompare(b.name))
                           .map(cat => (
                             <SelectItem key={cat.id} value={cat.id}>
                               {cat.name}
