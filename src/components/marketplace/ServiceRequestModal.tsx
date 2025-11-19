@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { 
@@ -31,6 +30,8 @@ import {
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import { useToast } from '@/hooks/use-toast';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface ServiceRequestModalProps {
   isOpen: boolean;
@@ -40,10 +41,6 @@ interface ServiceRequestModalProps {
 }
 
 interface ServiceRequestForm {
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  companyName: string;
   budgetRange: string;
   timeline: string;
   message: string;
@@ -57,13 +54,11 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   onRequestSent
 }) => {
   const { toast } = useToast();
+  const { user, profile } = useSupabaseAuth();
+  const { activeCompany } = useCompany();
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ServiceRequestForm>({
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    companyName: '',
     budgetRange: '',
     timeline: '',
     message: '',
@@ -130,29 +125,40 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
       const { marketplaceService } = await import('@/services/marketplaceService');
       const { supabase } = await import('@/integrations/supabase/client');
       
+      // Get user data from authentication context
+      const requesterName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario';
+      const requesterEmail = user?.email || '';
+      const requesterPhone = profile?.phone || user?.user_metadata?.phone || '';
+      const companyName = activeCompany?.name || '';
+
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "Debes estar autenticado para enviar una solicitud.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Submit the service request
       await marketplaceService.createServiceRequest(service.id, {
-        requester_name: formData.contactName,
-        requester_email: formData.contactEmail,
-        requester_phone: formData.contactPhone,
-        company_name: formData.companyName,
+        requester_name: requesterName,
+        requester_email: requesterEmail,
+        requester_phone: requesterPhone,
+        company_name: companyName,
         message: formData.message,
         budget_range: formData.budgetRange,
         timeline: formData.timeline,
         project_type: formData.projectType
       });
-
-      // Get current user to send notification
-      const { data: { user } } = await supabase.auth.getUser();
       
       // Send notification to service owner
-      if (user) {
-        await supabase.rpc('notify_service_inquiry', {
-          p_service_id: service.id,
-          p_inquirer_id: user.id,
-          p_message: formData.message
-        });
-      }
+      await supabase.rpc('notify_service_inquiry', {
+        p_service_id: service.id,
+        p_inquirer_id: user.id,
+        p_message: formData.message
+      });
       
       toast({
         title: "Solicitud enviada",
@@ -161,10 +167,6 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
 
       // Reset form
       setFormData({
-        contactName: '',
-        contactEmail: '',
-        contactPhone: '',
-        companyName: '',
         budgetRange: '',
         timeline: '',
         message: '',
@@ -186,8 +188,6 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   };
 
   const isFormValid = 
-    formData.contactName.trim() !== '' &&
-    formData.contactEmail.trim() !== '' &&
     formData.message.trim() !== '' &&
     formData.budgetRange !== '' &&
     formData.timeline !== '' &&
@@ -281,51 +281,6 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
 
         {/* Request Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="contactName">Nombre completo *</Label>
-              <Input
-                id="contactName"
-                value={formData.contactName}
-                onChange={(e) => handleInputChange('contactName', e.target.value)}
-                placeholder="Tu nombre completo"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contactEmail">Email *</Label>
-              <Input
-                id="contactEmail"
-                type="email"
-                value={formData.contactEmail}
-                onChange={(e) => handleInputChange('contactEmail', e.target.value)}
-                placeholder="tu@email.com"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="contactPhone">Teléfono</Label>
-              <Input
-                id="contactPhone"
-                value={formData.contactPhone}
-                onChange={(e) => handleInputChange('contactPhone', e.target.value)}
-                placeholder="+1 (555) 123-4567"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="companyName">Empresa</Label>
-              <Input
-                id="companyName"
-                value={formData.companyName}
-                onChange={(e) => handleInputChange('companyName', e.target.value)}
-                placeholder="Nombre de tu empresa"
-              />
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Presupuesto *</Label>
