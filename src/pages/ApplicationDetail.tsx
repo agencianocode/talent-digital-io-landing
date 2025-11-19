@@ -354,11 +354,11 @@ const ApplicationDetail = () => {
     };
 
     let totalScore = 0;
-    let maxScore = 0;
+    // maxScore siempre es 100 (40 + 30 + 20 + 10)
+    const maxScore = 100;
 
     // Calcular match de habilidades (40% del score)
     if (requiredSkills.length > 0) {
-      maxScore += 40;
       const matchedSkills = requiredSkills.filter(skill => 
         profileData.skills.some(userSkill => 
           userSkill.toLowerCase().includes(skill) || skill.includes(userSkill.toLowerCase())
@@ -378,7 +378,7 @@ const ApplicationDetail = () => {
         bgColor: 'bg-blue-100'
       });
     } else {
-      // Si no hay habilidades en el formato esperado, agregar sección indicativa
+      // Si no hay habilidades requeridas, la puntuación es 0 pero sigue contando en el total
       matchDetails.push({
         category: 'Habilidades',
         score: 0,
@@ -393,7 +393,6 @@ const ApplicationDetail = () => {
 
     // Calcular match de herramientas (30% del score)
     if (requiredTools.length > 0) {
-      maxScore += 30;
       const matchedTools = requiredTools.filter(tool => 
         profileData.tools.some(userTool => 
           userTool.toLowerCase().includes(tool) || tool.includes(userTool.toLowerCase())
@@ -413,7 +412,7 @@ const ApplicationDetail = () => {
         bgColor: 'bg-green-100'
       });
     } else {
-      // Si no hay herramientas en el formato esperado, agregar sección indicativa
+      // Si no hay herramientas requeridas, la puntuación es 0 pero sigue contando en el total
       matchDetails.push({
         category: 'Herramientas',
         score: 0,
@@ -428,7 +427,6 @@ const ApplicationDetail = () => {
 
     // Calcular match de idiomas (20% del score)
     if (requiredLanguages.length > 0) {
-      maxScore += 20;
       const matchedLanguages = requiredLanguages.filter(lang => 
         profileData.languages.some(userLang => 
           userLang.toLowerCase().includes(lang) || lang.includes(userLang.toLowerCase())
@@ -448,7 +446,7 @@ const ApplicationDetail = () => {
         bgColor: 'bg-purple-100'
       });
     } else {
-      // Si no hay idiomas en el formato esperado, agregar sección indicativa
+      // Si no hay idiomas requeridos, la puntuación es 0 pero sigue contando en el total
       matchDetails.push({
         category: 'Idiomas',
         score: 0,
@@ -463,7 +461,6 @@ const ApplicationDetail = () => {
 
     // Calcular match de zona horaria (10% del score)
     if (requiredTimezone && profileData.timezone) {
-      maxScore += 10;
       const timezoneMatch = profileData.timezone.toLowerCase().includes(requiredTimezone.toLowerCase()) ||
                            requiredTimezone.toLowerCase().includes(profileData.timezone.toLowerCase());
       const timezoneScore = timezoneMatch ? 10 : 0;
@@ -480,7 +477,7 @@ const ApplicationDetail = () => {
         bgColor: 'bg-orange-100'
       });
     } else {
-      // Si no hay zona horaria en el formato esperado, agregar sección indicativa
+      // Si no hay zona horaria requerida, la puntuación es 0 pero sigue contando en el total
       matchDetails.push({
         category: 'Zona Horaria',
         score: 0,
@@ -493,14 +490,13 @@ const ApplicationDetail = () => {
       });
     }
 
-    // Asegurar que maxScore sea siempre 100 para representar 100%
-    const totalMaxScore = 100;
-    const finalScore = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
+    // Calcular el porcentaje final (totalScore ya está sobre 100)
+    const finalScore = Math.round(totalScore);
 
     return {
       score: finalScore,
       details: matchDetails,
-      totalPossible: totalMaxScore,
+      totalPossible: maxScore,
       achieved: Math.round(totalScore)
     };
   };
