@@ -38,9 +38,10 @@ const systemSettingsSchema = z.object({
   max_marketplace_services_per_user: z.coerce.number().min(1, 'Debe ser al menos 1'),
   
   // Application Limits
-  max_applications_per_month_company: z.coerce.number().min(0, 'Debe ser 0 o mayor'),
   max_applications_per_month_talent_freemium: z.coerce.number().min(0, 'Debe ser 0 o mayor'),
   max_applications_per_month_talent_premium: z.coerce.number().min(0, 'Debe ser 0 o mayor'),
+  max_applications_per_month_company_freemium: z.coerce.number().min(0, 'Debe ser 0 o mayor'),
+  max_applications_per_month_company_premium: z.coerce.number().min(0, 'Debe ser 0 o mayor'),
   
   // System Settings
   maintenance_mode: z.boolean(),
@@ -83,9 +84,10 @@ const AdminSystemSettings: React.FC = () => {
       max_users_per_company: 10,
       max_opportunities_per_company: 50,
       max_marketplace_services_per_user: 20,
-      max_applications_per_month_company: 100,
       max_applications_per_month_talent_freemium: 5,
       max_applications_per_month_talent_premium: 50,
+      max_applications_per_month_company_freemium: 50,
+      max_applications_per_month_company_premium: 200,
       maintenance_mode: false,
       registration_enabled: true,
       email_verification_required: true,
@@ -544,34 +546,13 @@ const AdminSystemSettings: React.FC = () => {
                   <Briefcase className="h-4 w-4" />
                   Límites de Postulaciones Mensuales
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="max_applications_per_month_company"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Máximo Postulaciones x Mes (Empresa)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Límite de postulaciones que puede recibir una empresa por mes (0 = ilimitado)
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <FormField
                     control={form.control}
                     name="max_applications_per_month_talent_freemium"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Máximo Postulaciones x Mes (Talento Freemium)</FormLabel>
+                        <FormLabel>Talento Freemium</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -580,7 +561,7 @@ const AdminSystemSettings: React.FC = () => {
                           />
                         </FormControl>
                         <FormDescription>
-                          Límite de postulaciones que puede hacer un talento freemium por mes (0 = ilimitado)
+                          Postulaciones que puede hacer por mes (0 = ilimitado)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -592,7 +573,7 @@ const AdminSystemSettings: React.FC = () => {
                     name="max_applications_per_month_talent_premium"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Máximo Postulaciones x Mes (Talento Premium)</FormLabel>
+                        <FormLabel>Talento Premium</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -601,7 +582,49 @@ const AdminSystemSettings: React.FC = () => {
                           />
                         </FormControl>
                         <FormDescription>
-                          Límite de postulaciones que puede hacer un talento premium por mes (0 = ilimitado)
+                          Postulaciones que puede hacer por mes (0 = ilimitado)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="max_applications_per_month_company_freemium"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Empresa Freemium</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Postulaciones que puede recibir por mes (0 = ilimitado)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="max_applications_per_month_company_premium"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Empresa Premium</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Postulaciones que puede recibir por mes (0 = ilimitado)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

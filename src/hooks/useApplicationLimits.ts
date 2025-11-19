@@ -89,18 +89,55 @@ export const checkTalentApplicationLimit = async (
  * Función utilitaria para verificar el límite de postulaciones mensuales de una empresa
  * Puede ser usada directamente sin ser un hook
  */
-export const checkCompanyApplicationLimit = async (companyId: string): Promise<ApplicationLimit> => {
+export const checkCompanyApplicationLimit = async (
+  companyId: string,
+  userRole?: UserRole | null
+): Promise<ApplicationLimit> => {
     if (!companyId) {
       return { limit: 0, current: 0, remaining: 0, canApply: true };
     }
 
     try {
+      // Determinar si la empresa es premium o freemium basándose en el rol del usuario
+      // Si no se proporciona el rol, intentar obtenerlo del usuario asociado a la empresa
+      let companyUserRole = userRole;
+      
+      if (!companyUserRole) {
+        // Buscar el rol del usuario dueño de la empresa
+        const { data: companyData } = await supabase
+          .from('companies')
+          .select('user_id')
+          .eq('id', companyId)
+          .maybeSingle();
+
+        if (companyData?.user_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('user_id', companyData.user_id)
+            .maybeSingle();
+          
+          companyUserRole = profile?.role as UserRole | null;
+        }
+      }
+
+      // Determinar si es premium o freemium
+      const isPremium = companyUserRole === 'premium_business';
+      const isFreemium = companyUserRole === 'freemium_business' || 
+                         companyUserRole === 'business' || 
+                         companyUserRole === 'academy_premium';
+
+      // Si no es un rol de empresa conocido, usar freemium por defecto
+      const limitKey = isPremium 
+        ? 'max_applications_per_month_company_premium'
+        : 'max_applications_per_month_company_freemium';
+
       // Obtener límite desde admin_settings
       const { data: settings, error: settingsError } = await supabase
         .from('admin_settings')
         .select('key, value')
         .eq('category', 'system')
-        .eq('key', 'max_applications_per_month_company')
+        .eq('key', limitKey)
         .maybeSingle();
 
       if (settingsError && settingsError.code !== 'PGRST116') {
@@ -168,18 +205,20 @@ export const useApplicationLimits = () => {
     }
   }, [user, userRole]);
 
-  const checkCompanyLimit = useCallback(async (companyId: string): Promise<ApplicationLimit> => {
+  const checkCompanyLimit = useCallback(async (companyId: string, companyUserRole?: UserRole | null): Promise<ApplicationLimit> => {
     if (!companyId) {
       return { limit: 0, current: 0, remaining: 0, canApply: true };
     }
 
     setIsChecking(true);
     try {
-      return await checkCompanyApplicationLimit(companyId);
+      // Usar el rol proporcionado o el rol del usuario actual si es de tipo business
+      const roleToUse = companyUserRole || (isBusinessRole(userRole) ? userRole : null);
+      return await checkCompanyApplicationLimit(companyId, roleToUse);
     } finally {
       setIsChecking(false);
     }
-  }, []);
+  }, [userRole]);
 
   return {
     checkTalentApplicationLimit: checkTalentLimit,
