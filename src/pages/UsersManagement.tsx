@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -382,11 +382,6 @@ const UsersManagement = () => {
     loadTeamMembers();
   }, [activeCompany?.id]);
 
-  // Calculate statistics
-  const totalMembers = teamMembers.length;
-  const admins = teamMembers.filter(m => m.role === 'admin').length;
-  const viewers = teamMembers.filter(m => m.role === 'viewer').length;
-  const owners = teamMembers.filter(m => m.role === 'owner').length;
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -466,93 +461,25 @@ const UsersManagement = () => {
         <div className="max-w-6xl mx-auto px-4 py-6">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Gestión de Equipo</h1>
+                  <p className="text-gray-600">Administra los miembros y permisos de tu empresa</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Gestión de Equipo</h1>
-                <p className="text-gray-600">Administra los miembros y permisos de tu empresa</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Users className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">{totalMembers}</p>
-                    <p className="text-sm text-gray-600">Total Miembros</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <Crown className="w-5 h-5 text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">{owners}</p>
-                    <p className="text-sm text-gray-600">Propietarios</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Shield className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">{admins}</p>
-                    <p className="text-sm text-gray-600">Administradores</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Eye className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">{viewers}</p>
-                    <p className="text-sm text-gray-600">Visualizadores</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Team Members Section */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Users className="w-5 h-5 text-gray-600" />
-                  <CardTitle>Miembros de la organización</CardTitle>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Dialog open={isInviteModalOpen} onOpenChange={setIsInviteModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <UserPlus className="w-4 h-4" />
-                        + Invitar a un compañero de equipo
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-lg">
+              <div className="flex items-center gap-3">
+                <Dialog open={isInviteModalOpen} onOpenChange={setIsInviteModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800">
+                      <UserPlus className="w-4 h-4" />
+                      + Invitar a un compañero de equipo
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-lg">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-semibold">Invitar a compañeros de equipo</DialogTitle>
                         <DialogDescription>
@@ -669,7 +596,7 @@ const UsersManagement = () => {
                           <Button 
                             onClick={handleSendInvitation} 
                             disabled={isLoading || !inviteData.email.trim()}
-                            className="px-6"
+                            className="px-6 bg-gray-900 hover:bg-gray-800"
                           >
                             {isLoading ? 'Enviando...' : 'Enviar invitación'}
                           </Button>
@@ -683,7 +610,10 @@ const UsersManagement = () => {
                   </Button>
                 </div>
               </div>
-            </CardHeader>
+          </div>
+
+          {/* Team Members Section */}
+          <Card>
             <CardContent>
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
