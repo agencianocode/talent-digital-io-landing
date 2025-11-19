@@ -761,17 +761,46 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     }
 
-    const { data: company, error } = await supabase
+    // Crear la empresa con user_id (ahora permitido tener múltiples empresas)
+    const { data: company, error: companyError } = await supabase
       .from('companies')
       .insert({ ...data, user_id: authState.user.id })
       .select()
       .single();
 
-    if (!error && company) {
+    if (companyError) {
+      return { error: companyError };
+    }
+
+    if (!company) {
+      return { error: new Error('Error al crear la empresa') };
+    }
+
+    // Crear el rol de owner en company_user_roles para todas las empresas
+    // Esto permite que el sistema funcione correctamente con múltiples empresas
+    const { error: roleError } = await supabase
+      .from('company_user_roles')
+      .insert({
+        company_id: company.id,
+        user_id: authState.user.id,
+        role: 'owner',
+        status: 'accepted',
+        accepted_at: new Date().toISOString(),
+        invited_at: new Date().toISOString()
+      });
+
+    if (roleError) {
+      console.warn('Error creating owner role (non-critical):', roleError);
+      // No eliminamos la empresa si falla el rol, ya que puede ser que ya exista
+    }
+
+    // Actualizar el estado con la nueva empresa
+    if (company) {
       setAuthState(prev => ({
         ...prev,
-        company: company ? {
+        company: {
           ...company,
+          user_id: authState.user!.id, // Mantener user_id en el estado para compatibilidad
           social_links: (company.social_links as Record<string, string>) || {},
           gallery_urls: ((company.gallery_urls as any[]) || []).map((item: any) => ({
             id: item?.id || Math.random().toString(),
@@ -781,11 +810,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             description: item?.description,
             thumbnail: item?.thumbnail
           }))
-        } as Company : null
+        } as Company
       }));
     }
 
-    return { error };
+    return { error: null };
   };
 
   const switchUserType = async (newRole: UserRole) => {
