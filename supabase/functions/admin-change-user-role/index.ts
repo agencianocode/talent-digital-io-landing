@@ -54,7 +54,7 @@ serve(async (req) => {
     console.log('Changing role for user:', userId, 'to:', newRole);
 
     // Valid roles
-    const validRoles = ['admin', 'business', 'talent', 'premium_business', 'freemium_business', 'premium_talent', 'freemium_talent'];
+    const validRoles = ['admin', 'business', 'talent', 'premium_business', 'freemium_business', 'premium_talent', 'freemium_talent', 'academy_premium'];
     if (!validRoles.includes(newRole)) {
       throw new Error('Invalid role');
     }
