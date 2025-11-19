@@ -28,6 +28,7 @@ interface ApplicationMetrics {
   unreadApplications: number;
   thisWeekApplications: number;
   contactedCandidates: number;
+  candidatesInEvaluation: number;
   conversionRate: number;
   applicationsByOpportunity: Record<string, number>;
 }
@@ -40,6 +41,7 @@ export const useRealApplications = () => {
     unreadApplications: 0,
     thisWeekApplications: 0,
     contactedCandidates: 0,
+    candidatesInEvaluation: 0,
     conversionRate: 0,
     applicationsByOpportunity: {}
   });
@@ -74,6 +76,7 @@ export const useRealApplications = () => {
           unreadApplications: 0,
           thisWeekApplications: 0,
           contactedCandidates: 0,
+          candidatesInEvaluation: 0,
           conversionRate: 0,
           applicationsByOpportunity: {}
         });
@@ -113,6 +116,10 @@ export const useRealApplications = () => {
       const contactedCandidates = apps.filter(app => 
         app.status === 'contacted' || app.status === 'interviewed'
       ).length;
+      // Candidatos en evaluación: pending o reviewed (aún no contactados, aceptados o rechazados)
+      const candidatesInEvaluation = apps.filter(app => 
+        app.status === 'pending' || app.status === 'reviewed'
+      ).length;
       
       const conversionRate = totalApplications > 0 
         ? Math.round((contactedCandidates / totalApplications) * 100 * 10) / 10
@@ -132,6 +139,7 @@ export const useRealApplications = () => {
         unreadApplications,
         thisWeekApplications,
         contactedCandidates,
+        candidatesInEvaluation,
         conversionRate,
         applicationsByOpportunity
       });

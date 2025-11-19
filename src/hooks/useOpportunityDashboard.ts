@@ -158,7 +158,7 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
             applicationsInActiveOpportunities: realApplicationMetrics.totalApplications,
             unreadApplications: realApplicationMetrics.unreadApplications,
             unreviewedApplications: realApplicationMetrics.unreadApplications,
-            candidatesInEvaluation: Math.floor(realApplicationMetrics.totalApplications * 0.25),
+            candidatesInEvaluation: realApplicationMetrics.candidatesInEvaluation || 0,
             averageResponseTime: 0, // Mostrar 0 hasta implementar cálculo real
             contactedCandidates: realApplicationMetrics.contactedCandidates,
             candidatesContacted: realApplicationMetrics.contactedCandidates,
