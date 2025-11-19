@@ -31,6 +31,7 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
   } = useCompany();
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -125,7 +126,16 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
             return (
               <DropdownMenuItem 
                 key={company.id} 
-                onClick={() => switchCompany(company.id)}
+                onClick={async () => {
+                  if (isSwitching) return;
+                  setIsSwitching(true);
+                  try {
+                    await switchCompany(company.id);
+                  } finally {
+                    setIsSwitching(false);
+                  }
+                }}
+                disabled={isSwitching}
                 className="p-3"
               >
                 <div className="flex items-center gap-3 w-full">

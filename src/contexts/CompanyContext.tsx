@@ -62,7 +62,7 @@ interface CompanyContextType {
   
   // Actions
   refreshCompanies: () => Promise<void>;
-  switchCompany: (companyId: string) => void;
+  switchCompany: (companyId: string) => Promise<void>;
   
   // Helper functions
   hasPermission: (permission: 'owner' | 'admin' | 'viewer') => boolean;
@@ -249,30 +249,85 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
   };
 
   // Switch to different company
-  const switchCompany = (companyId: string) => {
+  const switchCompany = async (companyId: string) => {
     const company = userCompanies.find(c => c.id === companyId);
-    if (company) {
-      setActiveCompanyState(company);
+    if (!company) {
+      toast.error('Empresa no encontrada');
+      return;
+    }
+
+    try {
+      // Recargar la información completa de la empresa desde la base de datos
+      const { data: freshCompany, error: companyError } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('id', companyId)
+        .single();
+
+      if (companyError) {
+        console.error('Error loading company:', companyError);
+        toast.error('Error al cargar la empresa');
+        return;
+      }
+
+      if (!freshCompany) {
+        toast.error('Empresa no encontrada');
+        return;
+      }
+
+      // Formatear la empresa con los campos opcionales correctamente
+      const companyWithUndefined: Company = {
+        ...freshCompany,
+        description: freshCompany.description ?? undefined,
+        website: freshCompany.website ?? undefined,
+        size: freshCompany.size ?? undefined,
+        location: freshCompany.location ?? undefined,
+        logo_url: freshCompany.logo_url ?? undefined,
+        annual_revenue_range: freshCompany.annual_revenue_range ?? undefined,
+        business_type: freshCompany.business_type ?? undefined,
+        employee_count_range: freshCompany.employee_count_range ?? undefined,
+        industry: freshCompany.industry ?? undefined,
+        social_links: freshCompany.social_links ? (freshCompany.social_links as Record<string, string>) : undefined,
+        gallery_urls: ((freshCompany.gallery_urls as any[]) || []).map((item: any) => ({
+          id: item?.id || Math.random().toString(),
+          type: item?.type || 'image',
+          url: item?.url || '',
+          title: item?.title || 'Sin título',
+          description: item?.description,
+          thumbnail: item?.thumbnail
+        }))
+      };
+
+      // Actualizar el estado con la empresa fresca
+      setActiveCompanyState(companyWithUndefined);
       localStorage.setItem('activeCompanyId', companyId);
+      
+      // Actualizar la lista de empresas con la información fresca
+      setUserCompanies(prev => prev.map(c => 
+        c.id === companyId ? companyWithUndefined : c
+      ));
       
       // Update current user role
       const existingRole = userRoles.find(role => role.company_id === companyId);
-      const userRole: CompanyUserRole | null = existingRole ||
-        (company.user_id === user?.id ? {
+      const userRole: CompanyUserRole | null = existingRole || 
+        (freshCompany.user_id === user?.id ? {
           id: 'owner-role',
-          company_id: company.id,
+          company_id: freshCompany.id,
           user_id: user.id,
           role: 'owner' as const,
           status: 'accepted' as const,
           invited_by: undefined,
-          invited_at: company.created_at,
-          accepted_at: company.created_at,
-          created_at: company.created_at,
-          updated_at: company.updated_at,
+          invited_at: freshCompany.created_at,
+          accepted_at: freshCompany.created_at,
+          created_at: freshCompany.created_at,
+          updated_at: freshCompany.updated_at,
         } : null);
       
       setCurrentUserRole(userRole);
-      toast.success(`Cambiado a empresa: ${company.name}`);
+      toast.success(`Cambiado a empresa: ${companyWithUndefined.name}`);
+    } catch (error) {
+      console.error('Error switching company:', error);
+      toast.error('Error al cambiar de empresa');
     }
   };
 
