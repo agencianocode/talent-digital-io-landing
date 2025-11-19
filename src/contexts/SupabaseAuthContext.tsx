@@ -794,8 +794,10 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // No eliminamos la empresa si falla el rol, ya que puede ser que ya exista
     }
 
-    // Actualizar el estado con la nueva empresa
-    if (company) {
+    // NO actualizar authState.company automáticamente cuando se crea una nueva empresa
+    // El CompanyContext se encargará de manejar la empresa activa
+    // Solo actualizar si no hay empresa actual (primera empresa del usuario)
+    if (company && !authState.company) {
       setAuthState(prev => ({
         ...prev,
         company: {

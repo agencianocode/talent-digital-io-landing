@@ -178,14 +178,23 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
       
       setUserRoles(mappedRoles);
 
-      // Set active company from localStorage or first available
+      // Set active company from localStorage or preserve current active company
       const savedCompanyId = localStorage.getItem('activeCompanyId');
+      // También verificar si hay una empresa activa actualmente
+      const currentActiveId = activeCompany?.id || savedCompanyId;
       let activeComp = null;
 
-      if (savedCompanyId) {
+      // Prioridad 1: Empresa activa actual (si todavía existe en la lista)
+      if (currentActiveId) {
+        activeComp = companies?.find(c => c.id === currentActiveId);
+      }
+      
+      // Prioridad 2: Empresa guardada en localStorage (si existe)
+      if (!activeComp && savedCompanyId) {
         activeComp = companies?.find(c => c.id === savedCompanyId);
       }
       
+      // Prioridad 3: Primera empresa disponible
       if (!activeComp && companies && companies.length > 0) {
         activeComp = companies[0];
       }
@@ -359,6 +368,7 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
 
   // Refresh companies data
   const refreshCompanies = async () => {
+    // loadUserCompanies ya preserva la empresa activa actual si existe
     await loadUserCompanies();
   };
 
