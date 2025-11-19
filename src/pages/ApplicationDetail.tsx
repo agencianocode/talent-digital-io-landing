@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,6 +83,12 @@ const ApplicationDetail = () => {
     cover_letter: '',
     resume_url: ''
   });
+  const [userProfile, setUserProfile] = useState<{
+    skills: string[];
+    tools: string[];
+    languages: string[];
+    timezone: string;
+  } | null>(null);
 
   useEffect(() => {
     if (id && user) {
@@ -143,6 +149,9 @@ const ApplicationDetail = () => {
         cover_letter: applicationData.cover_letter || '',
         resume_url: applicationData.resume_url || ''
       });
+
+      // Obtener datos reales del perfil del usuario
+      await fetchUserProfileData(applicationData.user_id);
       
     } catch (error) {
       console.error('Error fetching application detail:', error);
@@ -150,6 +159,50 @@ const ApplicationDetail = () => {
       navigate('/talent-dashboard/applications');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserProfileData = async (userId: string) => {
+    try {
+      // Obtener talent_profiles para skills
+      const { data: talentProfile } = await supabase
+        .from('talent_profiles')
+        .select('skills, location, country, city')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      // Obtener profiles para professional_preferences y otros datos
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('professional_preferences, country, city')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      // Extraer datos del perfil
+      const professionalPrefs = profile?.professional_preferences as any || {};
+      
+      // Construir perfil del usuario con datos reales
+      const userProfileData = {
+        skills: (talentProfile?.skills || []).map((s: string) => s.toLowerCase()),
+        tools: (professionalPrefs.tools || professionalPrefs.software_tools || []).map((t: string) => t.toLowerCase()),
+        languages: (professionalPrefs.languages || professionalPrefs.spoken_languages || []).map((l: string) => l.toLowerCase()),
+        timezone: professionalPrefs.timezone || 
+                  professionalPrefs.timezone_preference ||
+                  (talentProfile?.location ? `${talentProfile.location}` : '') ||
+                  (profile?.country && profile?.city ? `${profile.city}, ${profile.country}` : '') ||
+                  'UTC-5'
+      };
+
+      setUserProfile(userProfileData);
+    } catch (error) {
+      console.error('Error fetching user profile data:', error);
+      // Usar valores por defecto si hay error
+      setUserProfile({
+        skills: [],
+        tools: [],
+        languages: [],
+        timezone: 'UTC-5'
+      });
     }
   };
 
@@ -266,12 +319,12 @@ const ApplicationDetail = () => {
     const timezoneMatch = requirements.match(/Zona horaria preferida:\s*([^\n]+)/i);
     const requiredTimezone = timezoneMatch?.[1] ? timezoneMatch[1].trim() : '';
 
-    // Simular perfil del usuario (en una implementación real, esto vendría de la base de datos)
-    const userProfile = {
-      skills: ['cierre de ventas', 'negociación', 'crm', 'prospección', 'cold calling'], // Ejemplo
-      tools: ['hubspot', 'salesforce', 'zoom', 'linkedin sales navigator'], // Ejemplo
-      languages: ['español', 'inglés'], // Ejemplo
-      timezone: 'UTC-5 (EST) - Estados Unidos (Costa Este), Colombia' // Ejemplo
+    // Usar perfil real del usuario o valores por defecto
+    const profileData = userProfile || {
+      skills: [],
+      tools: [],
+      languages: [],
+      timezone: ''
     };
 
     let totalScore = 0;
@@ -281,7 +334,7 @@ const ApplicationDetail = () => {
     if (requiredSkills.length > 0) {
       maxScore += 40;
       const matchedSkills = requiredSkills.filter(skill => 
-        userProfile.skills.some(userSkill => 
+        profileData.skills.some(userSkill => 
           userSkill.toLowerCase().includes(skill) || skill.includes(userSkill.toLowerCase())
         )
       );
@@ -304,7 +357,7 @@ const ApplicationDetail = () => {
     if (requiredTools.length > 0) {
       maxScore += 30;
       const matchedTools = requiredTools.filter(tool => 
-        userProfile.tools.some(userTool => 
+        profileData.tools.some(userTool => 
           userTool.toLowerCase().includes(tool) || tool.includes(userTool.toLowerCase())
         )
       );
@@ -327,7 +380,7 @@ const ApplicationDetail = () => {
     if (requiredLanguages.length > 0) {
       maxScore += 20;
       const matchedLanguages = requiredLanguages.filter(lang => 
-        userProfile.languages.some(userLang => 
+        profileData.languages.some(userLang => 
           userLang.toLowerCase().includes(lang) || lang.includes(userLang.toLowerCase())
         )
       );
@@ -347,10 +400,10 @@ const ApplicationDetail = () => {
     }
 
     // Calcular match de zona horaria (10% del score)
-    if (requiredTimezone) {
+    if (requiredTimezone && profileData.timezone) {
       maxScore += 10;
-      const timezoneMatch = userProfile.timezone.toLowerCase().includes(requiredTimezone.toLowerCase()) ||
-                           requiredTimezone.toLowerCase().includes(userProfile.timezone.toLowerCase());
+      const timezoneMatch = profileData.timezone.toLowerCase().includes(requiredTimezone.toLowerCase()) ||
+                           requiredTimezone.toLowerCase().includes(profileData.timezone.toLowerCase());
       const timezoneScore = timezoneMatch ? 10 : 0;
       totalScore += timezoneScore;
       
@@ -375,6 +428,15 @@ const ApplicationDetail = () => {
       achieved: Math.round(totalScore)
     };
   };
+
+  // Memoizar el cálculo del match score para optimización
+  const matchScoreData = useMemo(() => {
+    if (!application?.opportunities || !userProfile) {
+      return { score: 0, details: [], totalPossible: 0, achieved: 0 };
+    }
+    
+    return calculateMatchScore();
+  }, [application, userProfile]);
 
   // Generar timeline de la aplicación
   const generateApplicationTimeline = () => {
@@ -659,7 +721,7 @@ const ApplicationDetail = () => {
                 </div>
 
                 {(() => {
-                  const matchData = calculateMatchScore();
+                  const matchData = matchScoreData;
                   return (
                     <div className="pt-4 border-t">
                       <div className="flex items-center justify-between mb-2">
