@@ -349,6 +349,11 @@ function App() {
                             <BusinessMarketplace />
                           </Suspense>
                         } />
+                        <Route path="my-services" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <BusinessMyServices />
+                          </Suspense>
+                        } />
                         <Route path="marketplace/service/:id" element={
                           <Suspense fallback={<LoadingSkeleton type="card" />}>
                             <ServiceDetail />
