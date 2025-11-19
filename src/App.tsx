@@ -52,6 +52,7 @@ const PublicTalentProfile = lazy(() => import('./pages/PublicTalentProfile'));
 const CompanyDetails = lazy(() => import('./pages/CompanyDetails'));
 const BusinessProfile = lazy(() => import('./pages/BusinessProfile'));
 const BusinessMarketplace = lazy(() => import('./pages/BusinessMarketplace'));
+const BusinessMyServices = lazy(() => import('./pages/BusinessMyServices'));
 const ServiceDetail = lazy(() => import('./pages/ServiceDetail'));
 const BusinessMessagesPage = lazy(() => import('./pages/BusinessMessagesPage'));
 const BusinessNotificationsPage = lazy(() => import('./pages/BusinessNotificationsPage'));

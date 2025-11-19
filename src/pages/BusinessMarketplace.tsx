@@ -10,23 +10,23 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
-  Search,
+  Settings,
   FileText
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useMarketplaceServices } from '@/hooks/useMarketplaceServices';
 import ServiceCard from '@/components/marketplace/ServiceCard';
 import ServiceFilters from '@/components/marketplace/ServiceFilters';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import PublishServiceModal from '@/components/marketplace/PublishServiceModal';
-import RequestServiceModal from '@/components/marketplace/RequestServiceModal';
 import MyPublishingRequests from '@/components/marketplace/MyPublishingRequests';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 
 const BusinessMarketplace: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-  const [isRequestServiceModalOpen, setIsRequestServiceModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const {
@@ -64,9 +64,12 @@ const BusinessMarketplace: React.FC = () => {
     });
   };
 
-  // Remove unused stats variable
   const handlePublishService = () => {
     setIsPublishModalOpen(true);
+  };
+
+  const handleManageServices = () => {
+    navigate('/business-dashboard/my-services');
   };
 
   if (error) {
@@ -99,14 +102,10 @@ const BusinessMarketplace: React.FC = () => {
               Encuentra los mejores talentos para tu empresa
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button 
-              onClick={() => setIsRequestServiceModalOpen(true)} 
-              variant="outline" 
-              className="flex items-center gap-2"
-            >
-              <Search className="h-4 w-4" />
-              Solicitar Servicio
+          <div className="flex items-center gap-2">
+            <Button onClick={handleManageServices} variant="outline" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Mis Servicios
             </Button>
             <Button onClick={handlePublishService} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
@@ -285,11 +284,6 @@ const BusinessMarketplace: React.FC = () => {
         onSuccess={refreshServices}
       />
 
-      {/* Request Service Modal */}
-      <RequestServiceModal
-        isOpen={isRequestServiceModalOpen}
-        onClose={() => setIsRequestServiceModalOpen(false)}
-      />
     </div>
   );
 };
