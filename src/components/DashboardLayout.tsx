@@ -240,7 +240,7 @@ const DashboardLayout = () => {
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start p-2.5 h-auto">
+              <Button variant="ghost" className="w-full justify-start p-2.5 h-auto hover:bg-purple-50 hover:text-slate-900">
                 <div className="flex items-center gap-3 w-full">
                   {profile?.avatar_url || user?.user_metadata?.avatar_url ? (
                     <img 
@@ -292,7 +292,7 @@ const DashboardLayout = () => {
                 </div>
                 <Button 
                   size="sm" 
-                  className="w-full mt-3"
+                  className="w-full mt-3 bg-purple-600 hover:bg-purple-700"
                   onClick={() => setIsHelpModalOpen(true)}
                 >
                   Enviar feedback
