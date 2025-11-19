@@ -287,7 +287,7 @@ const BusinessDashboard = () => {
                   </ul>
                   {useCompany().canCreateOpportunities() && (
                     <Button 
-                      className="mt-2 sm:mt-3 bg-black hover:bg-gray-800 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
+                      className="mt-2 sm:mt-3 text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
                       onClick={() => navigate('/business-dashboard/opportunities/new')}
                     >
                       Publicar Oportunidad
@@ -312,7 +312,7 @@ const BusinessDashboard = () => {
                     <li>• Resolver dudas</li>
                   </ul>
                   <Button 
-                    className="w-full bg-black hover:bg-gray-800 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
+                    className="w-full text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
                     onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}
                   >
                     Agendar Llamada
@@ -346,7 +346,7 @@ const BusinessDashboard = () => {
                     <div className="text-center py-6 sm:py-8 text-slate-500">
                       <p className="text-sm sm:text-base">No hay oportunidades activas</p>
                       <Button 
-                        className="mt-2 sm:mt-3 bg-black hover:bg-gray-800 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
+                        className="mt-2 sm:mt-3 text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
                         onClick={() => navigate('/business-dashboard/opportunities/new')}
                       >
                         Crear primera oportunidad

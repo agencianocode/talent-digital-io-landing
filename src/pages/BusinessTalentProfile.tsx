@@ -463,8 +463,7 @@ const BusinessTalentProfile = () => {
             </CardHeader>
             <CardContent>
               <Button 
-                variant="outline" 
-                    className="w-full border-black text-black hover:bg-black hover:text-white transition-colors"
+                className="w-full"
                     onClick={() => window.open(portfolios[0].url, '_blank')}
                   >
                     Ver Portfolio

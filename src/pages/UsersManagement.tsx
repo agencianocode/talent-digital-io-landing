@@ -547,7 +547,7 @@ const UsersManagement = () => {
                 <div className="flex items-center gap-3">
                   <Dialog open={isInviteModalOpen} onOpenChange={setIsInviteModalOpen}>
                     <DialogTrigger asChild>
-                      <Button className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800">
+                      <Button>
                         <UserPlus className="w-4 h-4" />
                         + Invitar a un compañero de equipo
                       </Button>
@@ -669,7 +669,7 @@ const UsersManagement = () => {
                           <Button 
                             onClick={handleSendInvitation} 
                             disabled={isLoading || !inviteData.email.trim()}
-                            className="px-6 bg-gray-900 hover:bg-gray-800"
+                            className="px-6"
                           >
                             {isLoading ? 'Enviando...' : 'Enviar invitación'}
                           </Button>

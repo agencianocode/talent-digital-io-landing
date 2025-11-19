@@ -292,7 +292,7 @@ const DashboardLayout = () => {
                 </div>
                 <Button 
                   size="sm" 
-                  className="w-full mt-3 bg-purple-600 hover:bg-purple-700"
+                  className="w-full mt-3"
                   onClick={() => setIsHelpModalOpen(true)}
                 >
                   Enviar feedback

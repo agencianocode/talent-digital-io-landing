@@ -403,7 +403,6 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
               <Button
                 onClick={handleSubmit}
                 disabled={!validateStep(currentStep) || isSubmitting}
-                className="bg-purple-600 hover:bg-purple-700"
               >
                 {isSubmitting ? 'Enviando...' : 'Enviar Aplicación'}
               </Button>
