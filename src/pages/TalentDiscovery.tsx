@@ -48,7 +48,10 @@ interface RealTalent {
   social_links?: any;
   profile_completeness?: number | null;
   years_experience?: number;
+  experience_level?: string | null;
   availability?: string | null;
+  work_modality?: string[];
+  contract_types?: string[];
   is_complete?: boolean;
   is_featured?: boolean;
   is_verified?: boolean;
@@ -119,6 +122,7 @@ const TalentDiscovery = () => {
           bio,
           portfolio_url,
           years_experience,
+          experience_level,
           availability
         `);
 
@@ -162,6 +166,7 @@ const TalentDiscovery = () => {
             video_presentation_url,
             social_links,
             profile_completeness,
+            professional_preferences,
             created_at,
             updated_at
           `)
@@ -264,6 +269,9 @@ const TalentDiscovery = () => {
         const academyInfo = verifiedUsersMap.get(profile.user_id);
         const userEmail = userEmailsMap.get(profile.user_id);
         
+        // Extraer professional_preferences
+        const professionalPrefs = (profile as any)?.professional_preferences as any || {};
+        
         return {
           id: profile.id,
           user_id: profile.user_id,
@@ -282,7 +290,10 @@ const TalentDiscovery = () => {
           social_links: profile.social_links,
           profile_completeness: (profile as any)?.profile_completeness ?? null,
           years_experience: talentProfile?.years_experience || 0,
+          experience_level: talentProfile?.experience_level || null,
           availability: talentProfile?.availability || null,
+          work_modality: Array.isArray(professionalPrefs.work_modality) ? professionalPrefs.work_modality : [],
+          contract_types: Array.isArray(professionalPrefs.contract_types) ? professionalPrefs.contract_types : [],
           is_complete: (((profile as any)?.profile_completeness ?? 0) >= 70) || meetsMinimums({
             bio: talentProfile?.bio,
             city: profile.city,
@@ -405,76 +416,110 @@ const TalentDiscovery = () => {
         );
       }
       
-      // Experience filter - mapear years_experience a niveles
+      // Experience filter - usar experience_level directamente
       if (experienceFilter.length > 0) {
         filtered = filtered.filter(talent => {
-          const years = (talent as any).years_experience;
+          const experienceLevel = (talent as any).experience_level;
           
-          // Si no tiene years_experience definido, no filtrar (mostrar todos)
-          if (years === null || years === undefined) return true;
+          // Si no tiene experience_level definido, no filtrar (mostrar todos)
+          if (!experienceLevel) return true;
           
+          // Mapear los valores del filtro a los valores de experience_level
           return experienceFilter.some(level => {
-            if (level.includes('Junior') || level.includes('0-2')) return years >= 0 && years <= 2;
-            if (level.includes('Mid') || level.includes('3-5')) return years >= 3 && years <= 5;
-            if (level.includes('Senior') || level.includes('6-10')) return years >= 6 && years <= 10;
-            if (level.includes('Lead') || level.includes('10+')) return years >= 10 && years <= 14;
-            if (level.includes('Experto') || level.includes('15+')) return years >= 15;
-            return false;
+            const levelLower = level.toLowerCase();
+            const expLevelLower = (experienceLevel as string).toLowerCase();
+            
+            // Mapeo de filtros a valores de experience_level
+            if (levelLower.includes('junior') || levelLower.includes('0-2')) {
+              return expLevelLower === 'principiante';
+            }
+            if (levelLower.includes('mid') || levelLower.includes('3-5')) {
+              return expLevelLower === 'intermedio';
+            }
+            if (levelLower.includes('senior') || levelLower.includes('6-10')) {
+              return expLevelLower === 'avanzado';
+            }
+            if (levelLower.includes('lead') || levelLower.includes('10+') || levelLower.includes('experto') || levelLower.includes('15+')) {
+              return expLevelLower === 'experto';
+            }
+            
+            // Fallback: búsqueda parcial
+            return expLevelLower.includes(levelLower.replace(/[^a-z]/g, ''));
           });
         });
       }
       
-      // Contract type filter - mapear availability a tipos de contrato
+      // Contract type filter - usar contract_types de professional_preferences
       if (contractTypeFilter.length > 0) {
         filtered = filtered.filter(talent => {
-          const avail = ((talent as any).availability || '').toLowerCase();
+          const contractTypes = (talent as any).contract_types || [];
           
-          // Si no tiene availability, mostrar todos
-          if (!avail) return true;
+          // Si no tiene contract_types, mostrar todos
+          if (!contractTypes || contractTypes.length === 0) return true;
           
-          return contractTypeFilter.some(type => {
-            const typeLower = type.toLowerCase();
-            // Mapeo flexible de availability a tipos de contrato
-            if (typeLower.includes('completo') || typeLower.includes('tiempo completo')) {
-              return avail.includes('full') || avail.includes('completo') || avail.includes('tiempo completo');
-            }
-            if (typeLower.includes('medio') || typeLower.includes('medio tiempo')) {
-              return avail.includes('part') || avail.includes('medio') || avail.includes('half');
-            }
-            if (typeLower.includes('freelance')) {
-              return avail.includes('freelance') || avail.includes('independiente');
-            }
-            if (typeLower.includes('proyecto')) {
-              return avail.includes('project') || avail.includes('proyecto');
-            }
-            if (typeLower.includes('consultoría')) {
-              return avail.includes('consultoria') || avail.includes('consulting');
-            }
-            // Fallback: búsqueda general
-            return avail.includes(typeLower);
+          // Normalizar los valores del filtro y comparar con contract_types
+          return contractTypeFilter.some(filterType => {
+            const filterLower = filterType.toLowerCase();
+            
+            // Mapeo de filtros a valores de contract_types
+            const normalizedFilter = filterLower
+              .replace(/\s+/g, '_')
+              .replace(/[^a-z_]/g, '');
+            
+            return contractTypes.some((ct: string) => {
+              const ctLower = ct.toLowerCase().replace(/\s+/g, '_');
+              
+              // Mapeos específicos
+              if (normalizedFilter.includes('tiempo_completo') || normalizedFilter.includes('completo')) {
+                return ctLower.includes('full') || ctLower.includes('completo') || ctLower.includes('tiempo_completo');
+              }
+              if (normalizedFilter.includes('medio_tiempo') || normalizedFilter.includes('medio')) {
+                return ctLower.includes('part') || ctLower.includes('medio') || ctLower.includes('half');
+              }
+              if (normalizedFilter.includes('freelance')) {
+                return ctLower.includes('freelance') || ctLower.includes('independiente');
+              }
+              if (normalizedFilter.includes('proyecto')) {
+                return ctLower.includes('project') || ctLower.includes('proyecto');
+              }
+              if (normalizedFilter.includes('consultoría') || normalizedFilter.includes('consultoria')) {
+                return ctLower.includes('consultoria') || ctLower.includes('consulting') || ctLower.includes('consultant');
+              }
+              
+              // Fallback: búsqueda parcial
+              return ctLower.includes(normalizedFilter) || normalizedFilter.includes(ctLower);
+            });
           });
         });
       }
       
-      // Remote filter - sin campo específico, usar búsqueda en bio/título/availability
+      // Remote filter - usar work_modality de professional_preferences
       if (remoteFilter !== 'all') {
         filtered = filtered.filter(talent => {
-          const searchText = `${talent.title || ''} ${talent.bio || ''} ${(talent as any).availability || ''}`.toLowerCase();
+          const workModality = (talent as any).work_modality || [];
           
-          // Si no hay información suficiente, mostrar el talento (no excluir)
-          if (!searchText.trim() || searchText.length < 10) return true;
+          // Si no tiene work_modality, mostrar todos
+          if (!workModality || workModality.length === 0) return true;
           
-          if (remoteFilter === 'Remoto') {
-            return searchText.includes('remoto') || searchText.includes('remote') || searchText.includes('distancia');
+          // Mapear el filtro a valores de work_modality
+          const filterValue = remoteFilter.toLowerCase();
+          
+          if (filterValue === 'remoto' || filterValue === 'remote') {
+            return workModality.some((wm: string) => 
+              wm.toLowerCase() === 'remote' || wm.toLowerCase() === 'remoto'
+            );
           }
-          if (remoteFilter === 'Presencial') {
-            return searchText.includes('presencial') || searchText.includes('onsite') || 
-                   searchText.includes('oficina') || searchText.includes('in-person');
+          if (filterValue === 'presencial' || filterValue === 'onsite') {
+            return workModality.some((wm: string) => 
+              wm.toLowerCase() === 'onsite' || wm.toLowerCase() === 'presencial'
+            );
           }
-          if (remoteFilter === 'Híbrido') {
-            return searchText.includes('híbrido') || searchText.includes('hybrid') || 
-                   searchText.includes('mixto');
+          if (filterValue === 'híbrido' || filterValue === 'hybrid' || filterValue === 'hibrido') {
+            return workModality.some((wm: string) => 
+              wm.toLowerCase() === 'hybrid' || wm.toLowerCase() === 'híbrido' || wm.toLowerCase() === 'hibrido'
+            );
           }
+          
           return true;
         });
       }
