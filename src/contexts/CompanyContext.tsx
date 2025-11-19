@@ -138,7 +138,20 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
 
       if (rolesError) throw rolesError;
 
-      setUserCompanies((companies || []).map(company => ({
+      // Ordenar empresas: "Agencia de No Code" primero, luego el resto
+      const sortedCompanies = (companies || []).sort((a, b) => {
+        const aIsAgencia = a.name.toLowerCase().includes('agencia de no code') || 
+                          a.name.toLowerCase().includes('agencianocode');
+        const bIsAgencia = b.name.toLowerCase().includes('agencia de no code') || 
+                          b.name.toLowerCase().includes('agencianocode');
+        
+        if (aIsAgencia && !bIsAgencia) return -1;
+        if (!aIsAgencia && bIsAgencia) return 1;
+        // Si ambas o ninguna son "Agencia de No Code", ordenar por fecha de creación
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+
+      setUserCompanies(sortedCompanies.map(company => ({
         ...company,
         description: company.description ?? undefined,
         website: company.website ?? undefined,
@@ -186,17 +199,28 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
 
       // Prioridad 1: Empresa activa actual (si todavía existe en la lista)
       if (currentActiveId) {
-        activeComp = companies?.find(c => c.id === currentActiveId);
+        activeComp = sortedCompanies?.find(c => c.id === currentActiveId);
       }
       
       // Prioridad 2: Empresa guardada en localStorage (si existe)
       if (!activeComp && savedCompanyId) {
-        activeComp = companies?.find(c => c.id === savedCompanyId);
+        activeComp = sortedCompanies?.find(c => c.id === savedCompanyId);
       }
       
-      // Prioridad 3: Primera empresa disponible
-      if (!activeComp && companies && companies.length > 0) {
-        activeComp = companies[0];
+      // Prioridad 3: "Agencia de No Code" si existe (empresa principal)
+      if (!activeComp && sortedCompanies && sortedCompanies.length > 0) {
+        const agenciaNoCode = sortedCompanies.find(c => 
+          c.name.toLowerCase().includes('agencia de no code') || 
+          c.name.toLowerCase().includes('agencianocode')
+        );
+        if (agenciaNoCode) {
+          activeComp = agenciaNoCode;
+        }
+      }
+      
+      // Prioridad 4: Primera empresa disponible (ya está ordenada, así que será "Agencia de No Code" si existe)
+      if (!activeComp && sortedCompanies && sortedCompanies.length > 0) {
+        activeComp = sortedCompanies[0];
       }
 
       if (activeComp) {
