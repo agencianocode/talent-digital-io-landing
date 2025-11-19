@@ -289,9 +289,9 @@ const BusinessTalentProfile = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Perfil no encontrado</h2>
           <p className="text-gray-600 mb-6">El perfil del talento que buscas no existe o no está disponible.</p>
-          <Button onClick={() => navigate(-1)} variant="outline">
+          <Button onClick={() => navigate('/business-dashboard')} variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver
+            Volver al Dashboard
         </Button>
         </div>
       </div>
@@ -304,7 +304,15 @@ const BusinessTalentProfile = () => {
       {/* Header */}
         <div className="mb-8">
         <Button 
-            onClick={() => navigate(-1)} 
+            onClick={() => {
+              // Intentar volver atrás, si falla o no hay historial, ir al dashboard
+              const canGoBack = document.referrer && document.referrer !== window.location.href;
+              if (canGoBack) {
+                navigate(-1);
+              } else {
+                navigate('/business-dashboard');
+              }
+            }} 
           variant="ghost"
           className="mb-4"
         >
