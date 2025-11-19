@@ -53,6 +53,17 @@ export const useRealApplications = () => {
 
   const fetchApplications = useCallback(async () => {
     if (!activeCompany?.id) {
+      setMetrics({
+        totalApplications: 0,
+        unreadApplications: 0,
+        thisWeekApplications: 0,
+        thisMonthApplications: 0,
+        contactedCandidates: 0,
+        candidatesInEvaluation: 0,
+        averageResponseTime: 0,
+        conversionRate: 0,
+        applicationsByOpportunity: {}
+      });
       setIsLoading(false);
       return;
     }

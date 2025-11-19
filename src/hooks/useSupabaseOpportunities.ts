@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { logger } from '@/lib/logger';
 import { filterOpportunitiesForTalent } from '@/lib/country-restrictions';
 
@@ -42,7 +43,10 @@ interface SupabaseApplication {
 }
 
 export const useSupabaseOpportunities = () => {
-  const { user, userRole, isAuthenticated, profile, company } = useSupabaseAuth();
+  const { user, userRole, isAuthenticated, profile, company: authCompany } = useSupabaseAuth();
+  const { activeCompany } = useCompany();
+  // Usar activeCompany de CompanyContext si está disponible, sino usar company de AuthContext
+  const company = activeCompany || authCompany;
   const [opportunities, setOpportunities] = useState<SupabaseOpportunity[]>([]);
   const [applications, setApplications] = useState<SupabaseApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
