@@ -135,12 +135,7 @@ export const useAdminChat = () => {
         const messages = messagesMap.get(conv.id) || [];
         const lastMsg = messages[0];
         
-        // Count only unread messages sent BY users TO admin
-        const unreadByAdmin = messages.filter(m => 
-          !m.is_read && 
-          m.recipient_id === adminId && 
-          m.sender_id !== adminId
-        ).length;
+        // Count only unread messages sent BY users TO admin (for future use if needed)
         
         return {
           id: conv.id,
