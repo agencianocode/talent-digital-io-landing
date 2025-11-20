@@ -26,11 +26,13 @@ import {
   Send,
   Loader2,
   CheckCircle,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
+import { useMarketplaceServices } from '@/hooks/useMarketplaceServices';
 import { NEW_MARKETPLACE_CATEGORIES } from '@/lib/marketplace-constants';
 
 interface PublishServiceModalProps {
@@ -66,8 +68,20 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const { toast } = useToast();
   const { userRole, user, profile } = useSupabaseAuth();
   const { activeCompany } = useCompany();
+  const { myRequests, loadMyRequests } = useMarketplaceServices();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showPendingRequestDialog, setShowPendingRequestDialog] = useState(false);
+  
+  // Verificar si hay una solicitud pendiente
+  const hasPendingRequest = myRequests.some(request => request.status === 'pending');
+  
+  // Cargar solicitudes cuando se abre el modal
+  useEffect(() => {
+    if (isOpen && isFreemiumUser) {
+      loadMyRequests();
+    }
+  }, [isOpen, isFreemiumUser, loadMyRequests]);
   const [formData, setFormData] = useState<PublishServiceForm>({
     // Common
     serviceType: '',
@@ -304,6 +318,7 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   }
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -597,6 +612,50 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Dialog para mostrar cuando hay solicitud pendiente */}
+    <Dialog open={showPendingRequestDialog} onOpenChange={setShowPendingRequestDialog}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            Solicitud Pendiente
+          </DialogTitle>
+          <DialogDescription>
+            Ya tienes una solicitud de publicación pendiente de revisión.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            No puedes enviar otra solicitud mientras tengas una pendiente de aprobación. 
+            Por favor espera a que un administrador revise tu solicitud actual.
+          </p>
+          
+          {hasPendingRequest && myRequests.find(r => r.status === 'pending') && (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-sm font-medium text-yellow-800 mb-1">
+                Solicitud enviada el {new Date(myRequests.find(r => r.status === 'pending')!.created_at).toLocaleDateString('es-ES', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </p>
+              <p className="text-xs text-yellow-700">
+                Estado: Pendiente de revisión
+              </p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button onClick={() => setShowPendingRequestDialog(false)}>
+            Entendido
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
