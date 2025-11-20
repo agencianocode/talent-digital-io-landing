@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 import { 
   Share2, 
@@ -45,7 +44,6 @@ const generateSlugFromName = (name: string): string => {
 };
 
 export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = ({ academyId }) => {
-  const { toast: toastHook } = useToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   
@@ -104,10 +102,11 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
         
         // Directory settings
         setAcademyData(data as any);
-        if (data.directory_settings) {
-          setShowLogo(data.directory_settings.show_logo ?? true);
-          setShowDescription(data.directory_settings.show_description ?? true);
-          setStudentsFilter(data.directory_settings.students_filter ?? 'all');
+        if (data.directory_settings && typeof data.directory_settings === 'object') {
+          const dirSettings = data.directory_settings as { show_logo?: boolean; show_description?: boolean; students_filter?: 'all' | 'graduated' | 'enrolled' };
+          setShowLogo(dirSettings.show_logo ?? true);
+          setShowDescription(dirSettings.show_description ?? true);
+          setStudentsFilter(dirSettings.students_filter ?? 'all');
         }
       }
     } catch (error) {
@@ -246,7 +245,7 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
           </Button>
           <Button variant="outline" onClick={handleViewPublic}>
             <ExternalLink className="h-4 w-4 mr-2" />
-            Ver Público
+            Ver Directorio
           </Button>
         </div>
       </div>
