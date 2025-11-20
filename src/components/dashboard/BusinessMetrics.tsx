@@ -3,10 +3,8 @@ import { Button } from '@/components/ui/button';
 import {
   Briefcase, 
   Users, 
-  TrendingUp, 
   MessageCircle,
   AlertCircle,
-  BarChart3,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
