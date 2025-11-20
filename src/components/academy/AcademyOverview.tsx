@@ -1,18 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAcademyData } from '@/hooks/useAcademyData';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
   Mail, 
   TrendingUp, 
   Briefcase, 
   Activity,
-  Plus,
-  ExternalLink
+  Share2,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 
 interface AcademyOverviewProps {
@@ -22,6 +24,34 @@ interface AcademyOverviewProps {
 
 export const AcademyOverview: React.FC<AcademyOverviewProps> = ({ academyId, onTabChange }) => {
   const { stats, activity, isLoading } = useAcademyData(academyId);
+  const [publicDirectoryEnabled, setPublicDirectoryEnabled] = useState<boolean | null>(null);
+  const [loadingDirectoryStatus, setLoadingDirectoryStatus] = useState(true);
+
+  useEffect(() => {
+    const loadDirectoryStatus = async () => {
+      try {
+        setLoadingDirectoryStatus(true);
+        const { data, error } = await supabase
+          .from('companies')
+          .select('public_directory_enabled')
+          .eq('id', academyId)
+          .single();
+
+        if (error) throw error;
+
+        setPublicDirectoryEnabled(data?.public_directory_enabled ?? false);
+      } catch (error) {
+        console.error('Error loading directory status:', error);
+        setPublicDirectoryEnabled(false);
+      } finally {
+        setLoadingDirectoryStatus(false);
+      }
+    };
+
+    if (academyId) {
+      loadDirectoryStatus();
+    }
+  }, [academyId]);
 
   if (isLoading) {
     return (
@@ -103,22 +133,44 @@ export const AcademyOverview: React.FC<AcademyOverviewProps> = ({ academyId, onT
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={publicDirectoryEnabled === false ? 'border-orange-200 bg-orange-50/30' : ''}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Acciones Rápidas</CardTitle>
-            <Plus className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Directorio Público</CardTitle>
+            {loadingDirectoryStatus ? (
+              <Activity className="h-4 w-4 text-muted-foreground animate-pulse" />
+            ) : publicDirectoryEnabled ? (
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            ) : (
+              <XCircle className="h-4 w-4 text-orange-600" />
+            )}
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Button size="sm" className="w-full" onClick={() => onTabChange?.('invitations')}>
-                <Plus className="h-4 w-4 mr-2" />
-                Invitar Estudiantes
-              </Button>
-              <Button variant="outline" size="sm" className="w-full" onClick={() => onTabChange?.('directory')}>
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Ver Directorio Público
-              </Button>
+            <div className="text-2xl font-bold">
+              {loadingDirectoryStatus ? (
+                <span className="text-muted-foreground">...</span>
+              ) : publicDirectoryEnabled ? (
+                'Habilitado'
+              ) : (
+                'Deshabilitado'
+              )}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {publicDirectoryEnabled 
+                ? 'Visible para el público'
+                : 'No visible públicamente'
+              }
+            </p>
+            {publicDirectoryEnabled === false && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full mt-3"
+                onClick={() => onTabChange?.('public-directory')}
+              >
+                <Share2 className="h-3 w-3 mr-2" />
+                Configurar Directorio
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

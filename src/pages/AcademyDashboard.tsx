@@ -14,7 +14,6 @@ import {
   Activity,
   Share2,
   Plus,
-  Settings,
   FileUp
 } from 'lucide-react';
 import AcademyOverview from '../components/academy/AcademyOverview';
@@ -111,10 +110,6 @@ const AcademyDashboard: React.FC = () => {
             <Button variant="outline" size="sm" onClick={() => setShareModalOpen(true)}>
               <Share2 className="h-4 w-4 mr-2" />
               Compartir
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setActiveTab('public-directory')}>
-              <Settings className="h-4 w-4 mr-2" />
-              Configuración
             </Button>
             <Button size="sm" onClick={() => {
               setActiveTab('students');
