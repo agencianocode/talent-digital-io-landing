@@ -19,7 +19,6 @@ const TalentMessagesPage = () => {
     markAsUnread,
     archiveConversation,
     unarchiveConversation,
-    deleteConversation
   } = useMessages();
   
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -151,7 +150,8 @@ const TalentMessagesPage = () => {
         onMarkAsRead={markAsRead}
         onArchive={archiveConversation}
         onUnarchive={unarchiveConversation}
-        onDelete={deleteConversation}
+<｜tool▁call▁end｜><｜tool▁call▁begin｜>
+grep
       />
       <ChatView
         conversation={activeConversation as any}

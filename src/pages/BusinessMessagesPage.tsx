@@ -19,7 +19,6 @@ const BusinessMessagesPage = () => {
     markAsUnread,
     archiveConversation,
     unarchiveConversation,
-    deleteConversation
   } = useMessages();
   
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -151,7 +150,6 @@ const BusinessMessagesPage = () => {
         onMarkAsRead={markAsRead}
         onArchive={archiveConversation}
         onUnarchive={unarchiveConversation}
-        onDelete={deleteConversation}
       />
       <ChatView
         conversation={activeConversation as any}

@@ -13,16 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -33,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { format } from 'date-fns';
-import { MessageCircle, MoreVertical, Mail, Archive, MailOpen, Briefcase, User, ShoppingBag, Trash2, Search, Filter, ArrowLeft } from 'lucide-react';
+import { MessageCircle, MoreVertical, Mail, Archive, MailOpen, Briefcase, User, ShoppingBag, Search, Filter, ArrowLeft } from 'lucide-react';
 
 interface Conversation {
   id: string;
@@ -61,7 +51,6 @@ interface ConversationsListProps {
   onMarkAsRead?: (conversationId: string) => void;
   onArchive?: (conversationId: string) => void;
   onUnarchive?: (conversationId: string) => void;
-  onDelete?: (conversationId: string) => void;
 }
 
 const ConversationsList: React.FC<ConversationsListProps> = ({
@@ -78,8 +67,6 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<'inbox' | 'archived'>('inbox');
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
@@ -199,22 +186,6 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                         <MailOpen className="h-4 w-4 mr-2" />
                         Desarchivar
                       </DropdownMenuItem>
-                    )}
-                    {onDelete && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setConversationToDelete(conversation.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Eliminar conversación
-                        </DropdownMenuItem>
-                      </>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -394,31 +365,6 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
         )}
       </ScrollArea>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar conversación?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. Se eliminarán todos los mensajes de esta conversación permanentemente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (conversationToDelete && onDelete) {
-                  onDelete(conversationToDelete);
-                  setConversationToDelete(null);
-                }
-              }}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
