@@ -11,6 +11,9 @@ const UpgradeRequestButton: React.FC = () => {
   const { userRole } = useSupabaseAuth();
   const { userRequest } = useUpgradeRequests();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Verificar si hay una solicitud pendiente
+  const hasPendingRequest = userRequest && userRequest.status === 'pending';
 
   // Don't show for admin users or premium users
   if (userRole === 'admin' || userRole?.includes('premium')) {
@@ -124,12 +127,21 @@ const UpgradeRequestButton: React.FC = () => {
               Accede a funcionalidades avanzadas con un plan Premium.
             </p>
             
+            {hasPendingRequest && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-sm text-yellow-800">
+                  Ya tienes una solicitud pendiente. Por favor espera a que sea revisada antes de enviar otra.
+                </p>
+              </div>
+            )}
+            
             <Button 
               onClick={() => setIsModalOpen(true)}
               className="w-full"
+              disabled={hasPendingRequest}
             >
               <Crown className="h-4 w-4 mr-2" />
-              Solicitar Premium
+              {hasPendingRequest ? 'Solicitud Pendiente' : 'Solicitar Premium'}
             </Button>
           </div>
         </CardContent>

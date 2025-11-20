@@ -32,8 +32,11 @@ interface UpgradeRequestModalProps {
 
 const UpgradeRequestModal: React.FC<UpgradeRequestModalProps> = ({ isOpen, onClose }) => {
   const { userRole } = useSupabaseAuth();
-  const { createUpgradeRequest } = useUpgradeRequests();
+  const { createUpgradeRequest, userRequest } = useUpgradeRequests();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Verificar si ya hay una solicitud pendiente
+  const hasPendingRequest = userRequest && userRequest.status === 'pending';
 
   const form = useForm<UpgradeRequestFormData>({
     resolver: zodResolver(upgradeRequestSchema),
@@ -44,6 +47,13 @@ const UpgradeRequestModal: React.FC<UpgradeRequestModalProps> = ({ isOpen, onClo
   });
 
   const onSubmit = async (data: UpgradeRequestFormData) => {
+    // Validar nuevamente antes de enviar (por si acaso el estado cambió)
+    if (hasPendingRequest) {
+      toast.error('Ya tienes una solicitud pendiente. Por favor espera a que sea revisada.');
+      onClose();
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const success = await createUpgradeRequest(data as CreateUpgradeRequestData);

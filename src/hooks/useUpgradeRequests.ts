@@ -112,6 +112,28 @@ export const useUpgradeRequests = () => {
     }
 
     try {
+      // Verificar si ya existe una solicitud pendiente
+      const { data: existingRequest, error: checkError } = await supabase
+        .from('upgrade_requests')
+        .select('id, status, created_at')
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing request:', checkError);
+        toast.error('Error al verificar solicitudes existentes');
+        return false;
+      }
+
+      if (existingRequest) {
+        const createdDate = new Date(existingRequest.created_at).toLocaleDateString('es-ES');
+        toast.error(`Ya tienes una solicitud pendiente desde el ${createdDate}. Por favor espera a que sea revisada.`);
+        loadUserRequest(); // Reload user request to show current status
+        return false;
+      }
+
+      // Crear nueva solicitud solo si no existe una pendiente
       const { error } = await supabase
         .from('upgrade_requests')
         .insert({
