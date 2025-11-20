@@ -17,7 +17,7 @@ interface ChatData {
   user_id: string;
   user_name: string;
   user_email: string;
-  user_type: 'talent' | 'business' | 'admin';
+  user_type: 'talent' | 'business' | 'academy' | 'admin';
   user_avatar?: string;
   company_name?: string;
   company_logo?: string;
@@ -142,7 +142,7 @@ export const useAdminChat = () => {
           user_id: conv.user_id,
           user_name: user?.full_name || profile?.full_name || 'Usuario',
           user_email: user?.email || '',
-          user_type: user?.role?.includes('business') || user?.role?.includes('academy') ? 'business' : user?.role === 'admin' ? 'admin' : 'talent',
+          user_type: user?.role?.includes('business') ? 'business' : user?.role?.includes('academy') ? 'academy' : user?.role === 'admin' ? 'admin' : 'talent',
           user_avatar: profile?.avatar_url ? String(profile.avatar_url) : undefined,
           subject: conv.subject ? String(conv.subject) : 'Conversación',
           status: (conv.status ? String(conv.status) : 'active') as 'active' | 'pending' | 'resolved' | 'archived',

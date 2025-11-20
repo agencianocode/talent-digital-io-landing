@@ -34,7 +34,7 @@ interface ChatDetail {
   user_id: string;
   user_name: string;
   user_email: string;
-  user_type: 'talent' | 'business' | 'admin';
+  user_type: 'talent' | 'business' | 'academy' | 'admin';
   user_avatar?: string;
   company_name?: string;
   company_logo?: string;

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X, MessageSquare, User, Building, AlertTriangle, Star } from 'lucide-react';
+import { Search, Filter, X, MessageSquare, User, Building, AlertTriangle, Star, GraduationCap } from 'lucide-react';
 
 interface ChatFilters {
   searchQuery: string;
@@ -116,6 +116,12 @@ const AdminChatFilters: React.FC<AdminChatFiltersProps> = ({
                   <div className="flex items-center gap-2">
                     <Building className="h-4 w-4" />
                     Empresas
+                  </div>
+                </SelectItem>
+                <SelectItem value="academy">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4" />
+                    Academia Premium
                   </div>
                 </SelectItem>
                 <SelectItem value="admin">
