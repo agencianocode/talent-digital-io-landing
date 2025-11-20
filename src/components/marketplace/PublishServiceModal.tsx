@@ -72,16 +72,6 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPendingRequestDialog, setShowPendingRequestDialog] = useState(false);
-  
-  // Verificar si hay una solicitud pendiente
-  const hasPendingRequest = myRequests.some(request => request.status === 'pending');
-  
-  // Cargar solicitudes cuando se abre el modal
-  useEffect(() => {
-    if (isOpen && isFreemiumUser) {
-      loadMyRequests();
-    }
-  }, [isOpen, isFreemiumUser, loadMyRequests]);
   const [formData, setFormData] = useState<PublishServiceForm>({
     // Common
     serviceType: '',
