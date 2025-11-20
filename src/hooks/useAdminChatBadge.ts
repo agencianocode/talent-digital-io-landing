@@ -19,7 +19,7 @@ export const useAdminChatBadge = () => {
       // IMPORTANT: Exclude messages sent BY admin (sender_id != admin.id)
       const { data: messages, error } = await supabase
         .from('messages')
-        .select('conversation_id, sender_id, is_read, recipient_id')
+        .select('id, conversation_id, conversation_uuid, sender_id, recipient_id, is_read, label, created_at')
         .eq('recipient_id', user.id) // Admin is the recipient
         .neq('sender_id', user.id)   // Exclude messages sent BY admin
         .eq('is_read', false)
@@ -30,8 +30,11 @@ export const useAdminChatBadge = () => {
         return;
       }
 
+      console.log('[AdminChatBadge] Raw unread messages for admin', user.id, messages);
+
       // Get unique conversations with unread messages
-      const uniqueConversations = new Set(messages?.map(m => m.conversation_id) || []);
+      const uniqueConversations = new Set(messages?.map(m => m.conversation_uuid || m.conversation_id) || []);
+      console.log('[AdminChatBadge] Unique unread conversations count', uniqueConversations.size);
       setUnreadCount(uniqueConversations.size);
     } catch (error) {
       console.error('Error in fetchUnreadCount:', error);
