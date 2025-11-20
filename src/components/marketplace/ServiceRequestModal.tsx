@@ -144,7 +144,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
       }
 
       // Submit the service request
-      const serviceRequest = await marketplaceService.createServiceRequest(service.id, {
+      await marketplaceService.createServiceRequest(service.id, {
         requester_name: requesterName,
         requester_email: requesterEmail,
         requester_phone: requesterPhone,
@@ -188,12 +188,10 @@ ${formData.message}
 Puedes responder a esta conversación para continuar la comunicación.
           `.trim();
 
-          await sendMessage({
-            conversation_id: conversationId,
-            recipient_id: serviceOwnerId,
-            content: requestDetails,
-            message_type: 'text'
-          });
+          await sendMessage(
+            conversationId,
+            requestDetails
+          );
         } catch (conversationError) {
           console.error('Error creating conversation:', conversationError);
           // No fallar la solicitud si falla la conversación, solo registrar el error
