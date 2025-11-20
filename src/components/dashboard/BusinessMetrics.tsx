@@ -135,7 +135,7 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
-              <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm text-muted-foreground leading-tight">Postulaciones en Oportunidades Activas</div>
+              <div className="text-[10px] sm:text-xs md:text-sm text-muted-foreground leading-[1.2] px-1">Postulaciones en Oportunidades Activas</div>
               <div className="text-xl sm:text-2xl font-bold">{metrics.applicationsInActiveOpportunities || 0}</div>
               <div className="text-xs text-muted-foreground mt-1">
                 {metrics.unreviewedApplications || 0} sin revisar / {metrics.applicationsInActiveOpportunities || 0} totales
