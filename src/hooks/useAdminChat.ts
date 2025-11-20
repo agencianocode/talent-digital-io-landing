@@ -53,6 +53,11 @@ export const useAdminChat = () => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Get admin user
+      const { data: { user: adminUser } } = await supabase.auth.getUser();
+      if (!adminUser) return;
+      const adminUserId = adminUser.id;
 
       // Fetch conversations with related data
       const { data: conversationsData, error: convError } = await supabase
@@ -131,7 +136,7 @@ export const useAdminChat = () => {
           user_id: conv.user_id,
           user_name: user?.full_name || profile?.full_name || 'Usuario',
           user_email: user?.email || '',
-          user_type: user?.role === 'business' ? 'business' : user?.role === 'admin' ? 'admin' : 'talent',
+          user_type: user?.role?.includes('business') || user?.role?.includes('academy') ? 'business' : user?.role === 'admin' ? 'admin' : 'talent',
           user_avatar: profile?.avatar_url ? String(profile.avatar_url) : undefined,
           subject: conv.subject ? String(conv.subject) : 'Conversación',
           status: (conv.status ? String(conv.status) : 'active') as 'active' | 'pending' | 'resolved' | 'archived',
@@ -142,7 +147,7 @@ export const useAdminChat = () => {
           updated_at: conv.updated_at,
           last_message_at: conv.last_message_at || conv.created_at,
           messages_count: messages.length,
-          unread_count: messages.filter(m => !m.is_read).length,
+          unread_count: messages.filter(m => !m.is_read && m.recipient_id === adminUserId && m.sender_id === conv.user_id).length,
           last_message_preview: lastMsg?.content ? String(lastMsg.content).substring(0, 100) : undefined
         };
       });
