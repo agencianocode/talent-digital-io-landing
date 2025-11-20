@@ -103,35 +103,92 @@ export const usePublishingRequests = () => {
         // PRIMERO: Actualizar el rol del usuario a premium_talent si es freemium_talent o talent
         // Esto se hace ANTES de crear el servicio para asegurar que siempre se ejecute
         try {
+          console.log('🔍 [Aprobación] Verificando rol del usuario:', requesterUserId);
+          
           const { data: currentRole, error: roleFetchError } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', requesterUserId)
-            .single();
+            .maybeSingle(); // Usar maybeSingle para evitar errores si no existe
+
+          console.log('🔍 [Aprobación] Resultado de consulta de rol:', { currentRole, roleFetchError });
 
           if (roleFetchError) {
             console.error('❌ Error obteniendo rol del usuario:', roleFetchError);
-          } else if (currentRole && (currentRole.role === 'freemium_talent' || currentRole.role === 'talent')) {
-            const { error: roleUpdateError } = await supabase
-              .from('user_roles')
-              .update({ role: 'premium_talent' })
-              .eq('user_id', requesterUserId);
-            
-            if (roleUpdateError) {
-              console.error('❌ Error actualizando rol:', roleUpdateError);
-              toast({
-                title: 'Advertencia',
-                description: 'No se pudo actualizar el rol del usuario. Por favor, actualízalo manualmente.',
-                variant: 'default',
-              });
-            } else {
-              console.log('✅ Rol actualizado a premium_talent para usuario:', requesterUserId);
-            }
+            console.error('❌ Detalles del error:', {
+              message: roleFetchError.message,
+              details: roleFetchError.details,
+              hint: roleFetchError.hint,
+              code: roleFetchError.code
+            });
+            toast({
+              title: 'Error',
+              description: `Error al obtener el rol del usuario: ${roleFetchError.message}`,
+              variant: 'destructive',
+            });
+          } else if (!currentRole) {
+            console.error('❌ No se encontró registro de rol para el usuario:', requesterUserId);
+            toast({
+              title: 'Error',
+              description: 'No se encontró el rol del usuario en la base de datos.',
+              variant: 'destructive',
+            });
           } else {
-            console.log('ℹ️ Usuario no es freemium_talent o talent, no se actualiza el rol. Rol actual:', currentRole?.role);
+            const currentRoleValue = currentRole.role;
+            console.log('🔍 [Aprobación] Rol actual del usuario:', currentRoleValue);
+            
+            // Verificar si es un rol de talento que debe actualizarse
+            // Incluir freemium_talent, talent, o cualquier rol que contenga 'talent' pero no 'premium'
+            const shouldUpdateRole = currentRoleValue === 'freemium_talent' || 
+                                     currentRoleValue === 'talent' ||
+                                     (typeof currentRoleValue === 'string' && 
+                                      currentRoleValue.includes('talent') && 
+                                      !currentRoleValue.includes('premium'));
+            
+            console.log('🔍 [Aprobación] ¿Debe actualizarse el rol?', shouldUpdateRole);
+            
+            if (shouldUpdateRole) {
+              console.log('🔄 [Aprobación] Actualizando rol de', currentRoleValue, 'a premium_talent para usuario:', requesterUserId);
+              
+              const { data: updatedRole, error: roleUpdateError } = await supabase
+                .from('user_roles')
+                .update({ role: 'premium_talent' })
+                .eq('user_id', requesterUserId)
+                .select()
+                .single();
+              
+              if (roleUpdateError) {
+                console.error('❌ Error actualizando rol:', roleUpdateError);
+                console.error('❌ Detalles del error:', {
+                  message: roleUpdateError.message,
+                  details: roleUpdateError.details,
+                  hint: roleUpdateError.hint,
+                  code: roleUpdateError.code
+                });
+                toast({
+                  title: 'Advertencia',
+                  description: `No se pudo actualizar el rol del usuario: ${roleUpdateError.message}. Por favor, actualízalo manualmente.`,
+                  variant: 'default',
+                });
+              } else {
+                console.log('✅ [Aprobación] Rol actualizado exitosamente a premium_talent:', updatedRole);
+                toast({
+                  title: 'Éxito',
+                  description: 'Rol del usuario actualizado a Premium Talent correctamente.',
+                });
+              }
+            } else {
+              console.log('ℹ️ [Aprobación] Usuario no requiere actualización de rol. Rol actual:', currentRoleValue);
+            }
           }
         } catch (roleError: any) {
-          console.error('❌ Error al actualizar rol:', roleError);
+          console.error('❌ Error al actualizar rol (catch):', roleError);
+          console.error('❌ Stack trace:', roleError.stack);
+          toast({
+            title: 'Error',
+            description: `Error inesperado al actualizar el rol: ${roleError.message || 'Error desconocido'}`,
+            variant: 'destructive',
+          });
           // Continuar con la creación del servicio aunque falle la actualización del rol
         }
 
