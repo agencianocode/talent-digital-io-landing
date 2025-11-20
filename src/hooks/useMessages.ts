@@ -79,38 +79,38 @@ export const useMessages = () => {
     loadConversations();
     loadUnreadCount();
     
-    // Setup Realtime subscription for new messages
-    console.log('[useMessages] Setting up Realtime subscription for messages');
-    const messagesSubscription = supabase
-      .channel('messages_channel')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `recipient_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('[useMessages] New message received via Realtime:', payload);
-          loadConversations();
-          loadUnreadCount();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
-          filter: `recipient_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('[useMessages] Message updated via Realtime (recipient):', payload);
-          loadConversations();
-          loadUnreadCount();
-        }
-      )
+      // Setup Realtime subscription for new messages (both as sender and recipient)
+      console.log('[useMessages] Setting up Realtime subscription for messages');
+      const messagesSubscription = supabase
+        .channel('messages_channel')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `or(recipient_id.eq.${user.id},sender_id.eq.${user.id})`
+          },
+          (payload) => {
+            console.log('[useMessages] New message received via Realtime:', payload);
+            loadConversations();
+            loadUnreadCount();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'messages',
+            filter: `or(recipient_id.eq.${user.id},sender_id.eq.${user.id})`
+          },
+          (payload) => {
+            console.log('[useMessages] Message updated via Realtime:', payload);
+            loadConversations();
+            loadUnreadCount();
+          }
+        )
       .subscribe();
 
     // Setup Realtime subscription for conversation overrides

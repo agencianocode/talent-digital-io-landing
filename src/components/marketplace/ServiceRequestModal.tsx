@@ -57,7 +57,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   const { toast } = useToast();
   const { user, profile } = useSupabaseAuth();
   const { activeCompany } = useCompany();
-  const { getOrCreateConversation, sendMessage } = useMessages();
+  const { getOrCreateConversation, sendMessage, loadConversations } = useMessages();
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ServiceRequestForm>({
@@ -192,6 +192,15 @@ Puedes responder a esta conversación para continuar la comunicación.
             conversationId,
             requestDetails
           );
+
+          // Recargar conversaciones para que aparezcan inmediatamente en /talent-dashboard/messages
+          // Esto asegura que la conversación creada se muestre en la página de mensajería
+          try {
+            await loadConversations();
+          } catch (reloadError) {
+            console.error('Error reloading conversations:', reloadError);
+            // No fallar si no se puede recargar, la suscripción en tiempo real debería actualizar
+          }
         } catch (conversationError) {
           console.error('Error creating conversation:', conversationError);
           // No fallar la solicitud si falla la conversación, solo registrar el error
