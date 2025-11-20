@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -24,8 +25,8 @@ import {
   MapPin, 
   Clock, 
   DollarSign,
-  ExternalLink,
-  Send
+  Send,
+  User
 } from 'lucide-react';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
@@ -54,6 +55,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   service,
   onRequestSent
 }) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile } = useSupabaseAuth();
   const { activeCompany } = useCompany();
@@ -353,15 +355,15 @@ Puedes responder a esta conversación para continuar la comunicación.
                     </span>
                   </div>
                 )}
-                {service.portfolio_url && (
+                {service.user_id && (
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-6 px-2 text-xs"
-                    onClick={() => window.open(service.portfolio_url, '_blank')}
+                    onClick={() => navigate(`/business-dashboard/talent-profile/${service.user_id}`)}
                   >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Portfolio
+                    <User className="h-3 w-3 mr-1" />
+                    Ver Perfil
                   </Button>
                 )}
               </div>
