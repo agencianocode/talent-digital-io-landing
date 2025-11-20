@@ -3,17 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  ChevronDown,
-  ChevronUp,
   MessageSquare,
   Clock,
   CheckCircle,
   XCircle,
-  Mail,
-  Phone,
   Building,
-  Calendar,
-  DollarSign,
   ExternalLink
 } from 'lucide-react';
 import { ServiceRequest } from '@/hooks/useTalentServices';
@@ -37,12 +31,8 @@ const ServiceRequestsSection: React.FC<ServiceRequestsSectionProps> = ({
   onUpdateStatus,
   isUpdating = false
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { getOrCreateConversation } = useMessages();
   const { user } = useSupabaseAuth();
-  const { toast } = useToast();
 
   const pendingRequests = requests.filter(r => r.status === 'pending');
   const totalRequests = requests.length;
@@ -91,47 +81,20 @@ const ServiceRequestsSection: React.FC<ServiceRequestsSectionProps> = ({
       .slice(0, 2);
   };
 
-  const handleOpenConversation = async (request: ServiceRequest) => {
-    if (!user || !request.requester_id) {
-      toast({
-        title: "Error",
-        description: "No se puede abrir la conversación. Usuario no identificado.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Crear o obtener conversación
-      const conversationId = await getOrCreateConversation(
-        request.requester_id,
-        'service_inquiry',
-        undefined, // opportunityId
-        serviceId // serviceId
-      );
-
-      // Navegar a la conversación
-      const userRole = user.user_metadata?.user_role || 'talent';
-      const basePath = userRole.includes('business') ? '/business-dashboard' : '/talent-dashboard';
-      navigate(`${basePath}/messages/${conversationId}`);
-    } catch (error) {
-      console.error('Error opening conversation:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo abrir la conversación. Intenta nuevamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (totalRequests === 0) {
     return null;
   }
 
+  const handleViewRequests = () => {
+    const userRole = user?.user_metadata?.user_role || 'talent';
+    const basePath = userRole.includes('business') ? '/business-dashboard' : '/talent-dashboard';
+    navigate(`${basePath}/my-services/${serviceId}/requests`);
+  };
+
   return (
     <div className="border-t pt-4 mt-4">
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleViewRequests}
         className="w-full flex items-center justify-between text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
       >
         <div className="flex items-center gap-2">
@@ -143,19 +106,15 @@ const ServiceRequestsSection: React.FC<ServiceRequestsSectionProps> = ({
             </Badge>
           )}
         </div>
-        {isExpanded ? (
-          <ChevronUp className="h-4 w-4" />
-        ) : (
-          <ChevronDown className="h-4 w-4" />
-        )}
+        <ExternalLink className="h-4 w-4" />
       </button>
 
-      {isExpanded && (
-        <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
-          {requests.map((request) => {
+      {/* Preview de las primeras 2 solicitudes pendientes */}
+      {pendingRequests.length > 0 && (
+        <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+          {pendingRequests.slice(0, 2).map((request) => {
             const statusInfo = getStatusInfo(request.status);
             const StatusIcon = statusInfo.icon;
-            const isExpandedRequest = expandedRequestId === request.id;
 
             return (
               <div
@@ -188,98 +147,19 @@ const ServiceRequestsSection: React.FC<ServiceRequestsSectionProps> = ({
                       </div>
                     )}
                     
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                    <p className="text-xs text-muted-foreground line-clamp-2">
                       {request.message}
                     </p>
-
-                    {isExpandedRequest && (
-                      <div className="mt-2 space-y-2 text-xs">
-                        <div className="flex items-center gap-4 text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            <span>{request.requester_email}</span>
-                          </div>
-                          {request.requester_phone && (
-                            <div className="flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              <span>{request.requester_phone}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="h-3 w-3" />
-                            <span>{request.budget_range}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{request.timeline}</span>
-                          </div>
-                        </div>
-                        <div className="text-muted-foreground">
-                          <Calendar className="h-3 w-3 inline mr-1" />
-                          {new Date(request.created_at).toLocaleDateString('es-ES', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </div>
-                        <div className="p-2 bg-background rounded border text-xs">
-                          <p className="font-medium mb-1">Mensaje completo:</p>
-                          <p className="text-muted-foreground whitespace-pre-wrap">
-                            {request.message}
-                          </p>
-                        </div>
-                      </div>
-                    )}
 
                     <div className="flex items-center gap-2 mt-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => setExpandedRequestId(
-                          isExpandedRequest ? null : request.id
-                        )}
+                        className="h-7 text-xs flex-1"
+                        onClick={handleViewRequests}
                       >
-                        {isExpandedRequest ? 'Ver menos' : 'Ver detalles'}
+                        Ver todas las solicitudes
                       </Button>
-                      
-                      {request.requester_id && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => handleOpenConversation(request)}
-                        >
-                          <MessageSquare className="h-3 w-3 mr-1" />
-                          Responder
-                        </Button>
-                      )}
-                      
-                      {request.status === 'pending' && (
-                        <>
-                          <Button
-                            size="sm"
-                            className="h-7 text-xs bg-green-600 hover:bg-green-700"
-                            onClick={() => onUpdateStatus(request.id, 'accepted')}
-                            disabled={isUpdating}
-                          >
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Aceptar
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs border-red-500 text-red-500 hover:bg-red-50"
-                            onClick={() => onUpdateStatus(request.id, 'declined')}
-                            disabled={isUpdating}
-                          >
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Rechazar
-                          </Button>
-                        </>
-                      )}
                     </div>
                   </div>
                 </div>

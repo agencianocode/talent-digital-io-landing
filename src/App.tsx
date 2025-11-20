@@ -36,6 +36,7 @@ const ApplicationDetail = lazy(() => import('./pages/ApplicationDetail'));
 const TalentMarketplace = lazy(() => import('./pages/TalentMarketplace'));
 const TalentMyServices = lazy(() => import('./pages/TalentMyServices'));
 const TalentMyPublishingRequests = lazy(() => import('./pages/TalentMyPublishingRequests'));
+const ServiceRequestsPage = lazy(() => import('./pages/ServiceRequestsPage'));
 const SavedOpportunities = lazy(() => import('./pages/SavedOpportunities'));
 const OpportunityDetail = lazy(() => import('./pages/OpportunityDetail'));
 
@@ -228,6 +229,11 @@ function App() {
                             <TalentMyServices />
                           </Suspense>
                         } />
+                        <Route path="my-services/:serviceId/requests" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <ServiceRequestsPage />
+                          </Suspense>
+                        } />
                         <Route path="my-publishing-requests" element={
                           <Suspense fallback={<LoadingSkeleton type="list" />}>
                             <TalentMyPublishingRequests />
@@ -352,6 +358,11 @@ function App() {
                         <Route path="my-services" element={
                           <Suspense fallback={<LoadingSkeleton type="list" />}>
                             <BusinessMyServices />
+                          </Suspense>
+                        } />
+                        <Route path="my-services/:serviceId/requests" element={
+                          <Suspense fallback={<LoadingSkeleton type="list" />}>
+                            <ServiceRequestsPage />
                           </Suspense>
                         } />
                         <Route path="marketplace/service/:id" element={
