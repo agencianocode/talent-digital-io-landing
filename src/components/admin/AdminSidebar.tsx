@@ -1,4 +1,4 @@
-import { LayoutDashboard, UserCog, Building2, Briefcase, ShoppingBag, MessageSquare, User, Bell, LogOut, Settings, ChevronDown, RefreshCw, FileText } from "lucide-react";
+import { LayoutDashboard, UserCog, Building2, Briefcase, ShoppingBag, MessageSquare, User, Bell, LogOut, Settings, ChevronDown, FileText } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
@@ -92,9 +92,6 @@ export function AdminSidebar({
       <SidebarHeader className="border-b p-4 bg-background">
         <div className="flex items-center gap-2 mb-3">
           {!collapsed && <h2 className="text-lg font-semibold text-foreground">TalentoDigital.io</h2>}
-          {!collapsed && <Button variant="ghost" size="sm" className="p-1 h-auto">
-              <RefreshCw className="h-3 w-3" />
-            </Button>}
         </div>
         
         {!collapsed && <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-lg p-3 space-y-2">
