@@ -134,6 +134,12 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validar si hay una solicitud pendiente (solo para usuarios Freemium)
+    if (isFreemiumUser && hasPendingRequest) {
+      setShowPendingRequestDialog(true);
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
