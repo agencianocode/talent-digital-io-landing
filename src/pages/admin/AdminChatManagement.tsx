@@ -26,7 +26,6 @@ import AdminChatFilters from '@/components/admin/AdminChatFilters';
 import AdminChatDetail from '@/components/admin/AdminChatDetail';
 import StartNewChatModal from '@/components/admin/StartNewChatModal';
 import { useAdminChat } from '@/hooks/useAdminChat';
-import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 interface AdminChatManagementProps {
