@@ -455,7 +455,7 @@ const ServiceDetail: React.FC = () => {
                     <span>{service.location}</span>
                   </div>
                 </div>
-                {service.rating && (
+                {service.rating != null && service.rating > 0 && service.reviews_count > 0 && (
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium">{service.rating}</span>
