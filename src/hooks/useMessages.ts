@@ -278,14 +278,22 @@ export const useMessages = () => {
       // Group messages by conversation_id
       const conversationsMap = new Map<string, Conversation>();
       
+      console.log('[fetchConversations] Processing', messages?.length || 0, 'messages');
+      
       (messages || []).forEach((message: any) => {
         const conversationId = message.conversation_id;
+        
+        if (!conversationId) {
+          console.warn('[fetchConversations] Message without conversation_id:', message.id);
+          return;
+        }
         
         // Check if conversation is archived for current user
         const archivedBy = message.archived_by || [];
         const isArchived = archivedBy.includes(user.id);
         
         if (!conversationsMap.has(conversationId)) {
+          console.log('[fetchConversations] Creating new conversation entry for:', conversationId);
           const senderProfile = profileMap.get(message.sender_id);
           const recipientProfile = profileMap.get(message.recipient_id);
           const senderCompany = companyMap.get(message.sender_id);
@@ -353,9 +361,14 @@ export const useMessages = () => {
         }
       }
       
-      return Array.from(conversationsMap.values()).sort((a, b) => 
+      const finalConversations = Array.from(conversationsMap.values()).sort((a, b) => 
         new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
+      
+      console.log('[fetchConversations] Returning', finalConversations.length, 'conversations');
+      console.log('[fetchConversations] Conversation types:', finalConversations.map(c => ({ id: c.id.substring(0, 30), type: c.type })));
+      
+      return finalConversations;
     } catch (error) {
       console.error('Error fetching conversations:', error);
       toast({
