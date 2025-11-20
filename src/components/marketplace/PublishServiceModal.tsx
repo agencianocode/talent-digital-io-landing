@@ -99,17 +99,24 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   // Cargar solicitudes cuando se abre el modal y verificar si hay pendiente
   useEffect(() => {
     if (isOpen && isFreemiumUser) {
-      loadMyRequests().then(() => {
-        // Verificar después de cargar las solicitudes
-        const pending = myRequests.some(request => request.status === 'pending');
+      const checkPendingRequests = async () => {
+        // Cargar solicitudes primero
+        await loadMyRequests();
+        
+        // Obtener solicitudes directamente para verificar
+        const { marketplaceService } = await import('@/services/marketplaceService');
+        const requests = await marketplaceService.getMyPublishingRequests();
+        const pending = requests.some(request => request.status === 'pending');
+        
         if (pending) {
           setShowPendingRequestDialog(true);
           // Cerrar el modal del formulario si hay solicitud pendiente
           onClose();
         }
-      });
+      };
+      checkPendingRequests();
     }
-  }, [isOpen, isFreemiumUser, loadMyRequests, myRequests, onClose]);
+  }, [isOpen, isFreemiumUser, loadMyRequests, onClose]);
 
   const serviceTypes = NEW_MARKETPLACE_CATEGORIES.map(name => ({
     value: name,
