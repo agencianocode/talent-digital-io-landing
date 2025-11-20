@@ -86,41 +86,16 @@ export const usePublishingRequests = () => {
       if (fetchError) throw fetchError;
       if (!request) throw new Error('Solicitud no encontrada');
 
-      // Obtener el user_id del solicitante (requester_id o buscar por email)
+      // Obtener el user_id del solicitante
+      // Nota: requester_id debería estar presente cuando se crea la solicitud desde PublishServiceModal
       let requesterUserId = request.requester_id;
       
-      // Si no tiene requester_id, buscar el usuario por email
-      if (!requesterUserId && request.contact_email) {
-        const { data: userData } = await supabase
-          .from('auth.users')
-          .select('id')
-          .eq('email', request.contact_email)
-          .single();
-        
-        if (userData) {
-          requesterUserId = userData.id;
-          // Actualizar la solicitud con el requester_id encontrado
-          await supabase
-            .from('marketplace_publishing_requests')
-            .update({ requester_id: requesterUserId })
-            .eq('id', requestId);
-        } else {
-          // Si no encontramos el usuario por email, intentar buscar en profiles
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('user_id')
-            .eq('email', request.contact_email)
-            .single();
-          
-          if (profileData?.user_id) {
-            requesterUserId = profileData.user_id;
-            // Actualizar la solicitud con el requester_id encontrado
-            await supabase
-              .from('marketplace_publishing_requests')
-              .update({ requester_id: requesterUserId })
-              .eq('id', requestId);
-          }
-        }
+      // Si no tiene requester_id, no podemos crear el servicio automáticamente
+      // El requester_id se establece cuando se crea la solicitud desde PublishServiceModal
+      if (!requesterUserId) {
+        console.warn('⚠️ La solicitud no tiene requester_id. Email del solicitante:', request.contact_email);
+        console.warn('⚠️ No se puede crear el servicio automáticamente sin el user_id del solicitante.');
+        console.warn('⚠️ Por favor, verifica que la solicitud tenga el campo requester_id o créalo manualmente.');
       }
 
       // Si se aprueba y tiene requester_id, crear el servicio en el marketplace
