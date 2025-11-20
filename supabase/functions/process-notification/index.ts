@@ -221,14 +221,11 @@ Deno.serve(async (req) => {
         
         const { error: pushError } = await supabase.functions.invoke('send-push-notification', {
           body: {
-            user_id: notification.user_id,
+            userId: notification.user_id,
             title: notification.title,
-            body: notification.message,
-            data: {
-              url: notification.action_url,
-              notification_id: notification.id,
-              ...notification.data,
-            },
+            message: notification.message,
+            actionUrl: notification.action_url,
+            notificationId: notification.id,
           },
         });
 

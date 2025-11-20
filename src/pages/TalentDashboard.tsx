@@ -202,7 +202,7 @@ const TalentDashboard = () => {
                     </li>
                   </ul>
                   <Button 
-                    className="w-full mt-4"
+                    className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
                     onClick={() => nextTask?.route && navigate(nextTask.route)}
                   >
                     Continuar ahora →

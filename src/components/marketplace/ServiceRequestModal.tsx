@@ -32,6 +32,7 @@ import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
+import { useMessages } from '@/hooks/useMessages';
 
 interface ServiceRequestModalProps {
   isOpen: boolean;
@@ -56,6 +57,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   const { toast } = useToast();
   const { user, profile } = useSupabaseAuth();
   const { activeCompany } = useCompany();
+  const { getOrCreateConversation, sendMessage } = useMessages();
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ServiceRequestForm>({
@@ -142,7 +144,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
       }
 
       // Submit the service request
-      await marketplaceService.createServiceRequest(service.id, {
+      const serviceRequest = await marketplaceService.createServiceRequest(service.id, {
         requester_name: requesterName,
         requester_email: requesterEmail,
         requester_phone: requesterPhone,
@@ -153,12 +155,65 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
         project_type: formData.projectType
       });
       
-      // Send notification to service owner
-      await supabase.rpc('notify_service_inquiry', {
-        p_service_id: service.id,
-        p_inquirer_id: user.id,
-        p_message: formData.message
-      });
+      // Get service owner user_id
+      const serviceOwnerId = service.user_id;
+      
+      if (serviceOwnerId && user.id) {
+        try {
+          // Create or get conversation with service owner
+          const conversationId = await getOrCreateConversation(
+            serviceOwnerId,
+            'service_inquiry',
+            undefined, // opportunityId
+            service.id // serviceId
+          );
+
+          // Send initial message with request details
+          const requestDetails = `
+Nueva solicitud de servicio recibida:
+
+📋 Servicio: ${service.title}
+👤 Solicitante: ${requesterName}
+${companyName ? `🏢 Empresa: ${companyName}` : ''}
+📧 Email: ${requesterEmail}
+${requesterPhone ? `📱 Teléfono: ${requesterPhone}` : ''}
+
+💰 Presupuesto: ${formData.budgetRange}
+⏱️ Timeline: ${formData.timeline}
+📦 Tipo de proyecto: ${formData.projectType}
+
+💬 Mensaje:
+${formData.message}
+
+Puedes responder a esta conversación para continuar la comunicación.
+          `.trim();
+
+          await sendMessage({
+            conversation_id: conversationId,
+            recipient_id: serviceOwnerId,
+            content: requestDetails,
+            message_type: 'text'
+          });
+        } catch (conversationError) {
+          console.error('Error creating conversation:', conversationError);
+          // No fallar la solicitud si falla la conversación, solo registrar el error
+        }
+      }
+      
+      // Service request created successfully
+      console.log('Service request created successfully');
+      
+      // Send notification to service owner (email)
+      try {
+        await supabase.rpc('notify_service_inquiry', {
+          p_service_id: service.id,
+          p_inquirer_id: user.id,
+          p_message: formData.message
+        });
+      } catch (notificationError) {
+        console.error('Error sending notification:', notificationError);
+        // No fallar la solicitud si falla la notificación
+      }
       
       toast({
         title: "Solicitud enviada",

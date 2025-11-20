@@ -43,6 +43,7 @@ export const OpportunityDashboard = () => {
           <Button 
             variant={useMockData ? "default" : "outline"}
             onClick={() => setUseMockData(!useMockData)}
+            className="bg-purple-600 hover:bg-purple-700"
           >
             <TestTube className="h-4 w-4 mr-2" />
             {useMockData ? 'Datos de Prueba' : 'Datos Reales'}

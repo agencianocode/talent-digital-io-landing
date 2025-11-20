@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,12 +83,6 @@ const ApplicationDetail = () => {
     cover_letter: '',
     resume_url: ''
   });
-  const [userProfile, setUserProfile] = useState<{
-    skills: string[];
-    tools: string[];
-    languages: string[];
-    timezone: string;
-  } | null>(null);
 
   useEffect(() => {
     if (id && user) {
@@ -149,9 +143,6 @@ const ApplicationDetail = () => {
         cover_letter: applicationData.cover_letter || '',
         resume_url: applicationData.resume_url || ''
       });
-
-      // Obtener datos reales del perfil del usuario
-      await fetchUserProfileData(applicationData.user_id);
       
     } catch (error) {
       console.error('Error fetching application detail:', error);
@@ -159,76 +150,6 @@ const ApplicationDetail = () => {
       navigate('/talent-dashboard/applications');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchUserProfileData = async (userId: string) => {
-    try {
-      // Obtener talent_profiles para skills
-      const { data: talentProfile, error: talentError } = await supabase
-        .from('talent_profiles')
-        .select('skills, location, country, city')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (talentError && talentError.code !== 'PGRST116') {
-        console.warn('Error fetching talent profile:', talentError);
-      }
-
-      // Obtener profiles para professional_preferences y otros datos
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('professional_preferences, country, city')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.warn('Error fetching profile:', profileError);
-      }
-
-      // Extraer datos del perfil
-      const professionalPrefs = profile?.professional_preferences as any || {};
-      
-      // Construir perfil del usuario con datos reales
-      // Si no hay datos, usar arrays vacíos en lugar de valores por defecto
-      const userProfileData = {
-        skills: Array.isArray(talentProfile?.skills) 
-          ? talentProfile.skills.map((s: string) => s.toLowerCase())
-          : [],
-        tools: Array.isArray(professionalPrefs.tools) 
-          ? professionalPrefs.tools.map((t: string) => t.toLowerCase())
-          : Array.isArray(professionalPrefs.software_tools)
-          ? professionalPrefs.software_tools.map((t: string) => t.toLowerCase())
-          : [],
-        languages: Array.isArray(professionalPrefs.languages)
-          ? professionalPrefs.languages.map((l: string) => l.toLowerCase())
-          : Array.isArray(professionalPrefs.spoken_languages)
-          ? professionalPrefs.spoken_languages.map((l: string) => l.toLowerCase())
-          : [],
-        timezone: professionalPrefs.timezone || 
-                  professionalPrefs.timezone_preference ||
-                  (talentProfile?.location ? `${talentProfile.location}` : '') ||
-                  (profile?.country && profile?.city ? `${profile.city}, ${profile.country}` : '') ||
-                  ''
-      };
-
-      console.log('User profile data loaded:', {
-        skillsCount: userProfileData.skills.length,
-        toolsCount: userProfileData.tools.length,
-        languagesCount: userProfileData.languages.length,
-        timezone: userProfileData.timezone
-      });
-
-      setUserProfile(userProfileData);
-    } catch (error) {
-      console.error('Error fetching user profile data:', error);
-      // Usar valores por defecto si hay error
-      setUserProfile({
-        skills: [],
-        tools: [],
-        languages: [],
-        timezone: ''
-      });
     }
   };
 
@@ -323,21 +244,21 @@ const ApplicationDetail = () => {
 
   // Función para calcular la puntuación de match
   const calculateMatchScore = () => {
-    if (!application?.opportunities) return { score: 0, details: [], totalPossible: 0, achieved: 0 };
+    if (!application?.opportunities) return { score: 0, details: [] };
 
     const opportunity = application.opportunities;
     const requirements = opportunity.requirements || '';
     const matchDetails = [];
 
-    // Extraer habilidades requeridas (más flexible)
+    // Extraer habilidades requeridas
     const skillsMatch = requirements.match(/Habilidades:\s*([^\n]+)/i);
     const requiredSkills = skillsMatch?.[1] ? skillsMatch[1].split(',').map(s => s.trim().toLowerCase()) : [];
     
-    // Extraer herramientas requeridas (más flexible)
+    // Extraer herramientas requeridas
     const toolsMatch = requirements.match(/Herramientas:\s*([^\n]+)/i);
     const requiredTools = toolsMatch?.[1] ? toolsMatch[1].split(',').map(t => t.trim().toLowerCase()) : [];
 
-    // Extraer idiomas requeridos (más flexible)
+    // Extraer idiomas requeridos
     const languagesMatch = requirements.match(/Idiomas preferidos:\s*([^\n]+)/i);
     const requiredLanguages = languagesMatch?.[1] ? languagesMatch[1].split(',').map(l => l.trim().toLowerCase()) : [];
 
@@ -345,22 +266,22 @@ const ApplicationDetail = () => {
     const timezoneMatch = requirements.match(/Zona horaria preferida:\s*([^\n]+)/i);
     const requiredTimezone = timezoneMatch?.[1] ? timezoneMatch[1].trim() : '';
 
-    // Usar perfil real del usuario o valores por defecto
-    const profileData = userProfile || {
-      skills: [],
-      tools: [],
-      languages: [],
-      timezone: ''
+    // Simular perfil del usuario (en una implementación real, esto vendría de la base de datos)
+    const userProfile = {
+      skills: ['cierre de ventas', 'negociación', 'crm', 'prospección', 'cold calling'], // Ejemplo
+      tools: ['hubspot', 'salesforce', 'zoom', 'linkedin sales navigator'], // Ejemplo
+      languages: ['español', 'inglés'], // Ejemplo
+      timezone: 'UTC-5 (EST) - Estados Unidos (Costa Este), Colombia' // Ejemplo
     };
 
     let totalScore = 0;
-    // maxScore siempre es 100 (40 + 30 + 20 + 10)
-    const maxScore = 100;
+    let maxScore = 0;
 
     // Calcular match de habilidades (40% del score)
     if (requiredSkills.length > 0) {
+      maxScore += 40;
       const matchedSkills = requiredSkills.filter(skill => 
-        profileData.skills.some(userSkill => 
+        userProfile.skills.some(userSkill => 
           userSkill.toLowerCase().includes(skill) || skill.includes(userSkill.toLowerCase())
         )
       );
@@ -377,24 +298,13 @@ const ApplicationDetail = () => {
         color: 'text-blue-600',
         bgColor: 'bg-blue-100'
       });
-    } else {
-      // Si no hay habilidades requeridas, la puntuación es 0 pero sigue contando en el total
-      matchDetails.push({
-        category: 'Habilidades',
-        score: 0,
-        maxScore: 40,
-        matched: [],
-        required: [],
-        icon: Target,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-100'
-      });
     }
 
     // Calcular match de herramientas (30% del score)
     if (requiredTools.length > 0) {
+      maxScore += 30;
       const matchedTools = requiredTools.filter(tool => 
-        profileData.tools.some(userTool => 
+        userProfile.tools.some(userTool => 
           userTool.toLowerCase().includes(tool) || tool.includes(userTool.toLowerCase())
         )
       );
@@ -411,24 +321,13 @@ const ApplicationDetail = () => {
         color: 'text-green-600',
         bgColor: 'bg-green-100'
       });
-    } else {
-      // Si no hay herramientas requeridas, la puntuación es 0 pero sigue contando en el total
-      matchDetails.push({
-        category: 'Herramientas',
-        score: 0,
-        maxScore: 30,
-        matched: [],
-        required: [],
-        icon: TrendingUp,
-        color: 'text-green-600',
-        bgColor: 'bg-green-100'
-      });
     }
 
     // Calcular match de idiomas (20% del score)
     if (requiredLanguages.length > 0) {
+      maxScore += 20;
       const matchedLanguages = requiredLanguages.filter(lang => 
-        profileData.languages.some(userLang => 
+        userProfile.languages.some(userLang => 
           userLang.toLowerCase().includes(lang) || lang.includes(userLang.toLowerCase())
         )
       );
@@ -445,24 +344,13 @@ const ApplicationDetail = () => {
         color: 'text-purple-600',
         bgColor: 'bg-purple-100'
       });
-    } else {
-      // Si no hay idiomas requeridos, la puntuación es 0 pero sigue contando en el total
-      matchDetails.push({
-        category: 'Idiomas',
-        score: 0,
-        maxScore: 20,
-        matched: [],
-        required: [],
-        icon: CheckCircle2,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-100'
-      });
     }
 
     // Calcular match de zona horaria (10% del score)
-    if (requiredTimezone && profileData.timezone) {
-      const timezoneMatch = profileData.timezone.toLowerCase().includes(requiredTimezone.toLowerCase()) ||
-                           requiredTimezone.toLowerCase().includes(profileData.timezone.toLowerCase());
+    if (requiredTimezone) {
+      maxScore += 10;
+      const timezoneMatch = userProfile.timezone.toLowerCase().includes(requiredTimezone.toLowerCase()) ||
+                           requiredTimezone.toLowerCase().includes(userProfile.timezone.toLowerCase());
       const timezoneScore = timezoneMatch ? 10 : 0;
       totalScore += timezoneScore;
       
@@ -476,22 +364,9 @@ const ApplicationDetail = () => {
         color: 'text-orange-600',
         bgColor: 'bg-orange-100'
       });
-    } else {
-      // Si no hay zona horaria requerida, la puntuación es 0 pero sigue contando en el total
-      matchDetails.push({
-        category: 'Zona Horaria',
-        score: 0,
-        maxScore: 10,
-        matched: [],
-        required: [],
-        icon: XCircle,
-        color: 'text-orange-600',
-        bgColor: 'bg-orange-100'
-      });
     }
 
-    // Calcular el porcentaje final (totalScore ya está sobre 100)
-    const finalScore = Math.round(totalScore);
+    const finalScore = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
 
     return {
       score: finalScore,
@@ -500,15 +375,6 @@ const ApplicationDetail = () => {
       achieved: Math.round(totalScore)
     };
   };
-
-  // Memoizar el cálculo del match score para optimización
-  const matchScoreData = useMemo(() => {
-    if (!application?.opportunities || !userProfile) {
-      return { score: 0, details: [], totalPossible: 100, achieved: 0 };
-    }
-    
-    return calculateMatchScore();
-  }, [application, userProfile]);
 
   // Generar timeline de la aplicación
   const generateApplicationTimeline = () => {
@@ -793,7 +659,7 @@ const ApplicationDetail = () => {
                 </div>
 
                 {(() => {
-                  const matchData = matchScoreData;
+                  const matchData = calculateMatchScore();
                   return (
                     <div className="pt-4 border-t">
                       <div className="flex items-center justify-between mb-2">
@@ -900,7 +766,7 @@ const ApplicationDetail = () => {
 
             {/* Detalles de Compatibilidad */}
             {(() => {
-              const matchData = matchScoreData;
+              const matchData = calculateMatchScore();
               return matchData.details.length > 0 && (
                 <Card className="shadow-md">
                   <CardHeader className="pb-3">

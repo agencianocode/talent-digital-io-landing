@@ -10,7 +10,7 @@ import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext"
 import { useCompany } from "@/contexts/CompanyContext";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Eye, MessageSquare, Calendar, Settings, CheckCircle2, XCircle, UserCheck, Clock } from "lucide-react";
+import { Search, Eye, MessageSquare, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -43,15 +43,6 @@ const ApplicationsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-
-  // Calcular estadísticas por estado
-  const statusCounts = {
-    pending: applications.filter(app => app.status === 'pending').length,
-    reviewed: applications.filter(app => app.status === 'reviewed').length,
-    contacted: applications.filter(app => app.status === 'contacted').length,
-    rejected: applications.filter(app => app.status === 'rejected').length,
-    hired: applications.filter(app => app.status === 'hired').length,
-  };
 
   // Handle URL filters
   useEffect(() => {
@@ -157,12 +148,10 @@ const ApplicationsPage = () => {
         return "bg-yellow-100 text-yellow-800";
       case 'reviewed':
         return "bg-blue-100 text-blue-800";
-      case 'contacted':
+      case 'accepted':
         return "bg-green-100 text-green-800";
       case 'rejected':
         return "bg-red-100 text-red-800";
-      case 'hired':
-        return "bg-purple-100 text-purple-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -171,15 +160,13 @@ const ApplicationsPage = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'En revisión';
+        return 'Pendiente';
       case 'reviewed':
         return 'Revisada';
-      case 'contacted':
-        return 'Contactado';
+      case 'accepted':
+        return 'Aceptada';
       case 'rejected':
-        return 'Rechazado';
-      case 'hired':
-        return 'Contratado';
+        return 'Rechazada';
       default:
         return status;
     }
@@ -230,9 +217,9 @@ const ApplicationsPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             Aplicaciones Recibidas
-            {statusCounts.pending > 0 && (
+            {filteredApplications.filter(app => app.status === 'pending').length > 0 && (
               <Badge variant="destructive" className="animate-pulse">
-                {statusCounts.pending} nuevas
+                {filteredApplications.filter(app => app.status === 'pending').length} nuevas
               </Badge>
             )}
           </h1>
@@ -247,82 +234,6 @@ const ApplicationsPage = () => {
           Ver Oportunidades
         </Button>
       </div>
-
-      {/* Estadísticas rápidas por estado */}
-      {hasPermission('admin') && applications.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-          <button
-            onClick={() => setStatusFilter('pending')}
-            className={`p-3 rounded-lg border-2 transition-all ${
-              statusFilter === 'pending'
-                ? 'border-yellow-500 bg-yellow-50'
-                : 'border-gray-200 hover:border-yellow-300'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <Clock className="h-4 w-4 text-yellow-600" />
-              <span className="text-2xl font-bold text-yellow-600">{statusCounts.pending}</span>
-            </div>
-            <p className="text-xs text-muted-foreground text-left">En revisión</p>
-          </button>
-          <button
-            onClick={() => setStatusFilter('reviewed')}
-            className={`p-3 rounded-lg border-2 transition-all ${
-              statusFilter === 'reviewed'
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-blue-300'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <Eye className="h-4 w-4 text-blue-600" />
-              <span className="text-2xl font-bold text-blue-600">{statusCounts.reviewed}</span>
-            </div>
-            <p className="text-xs text-muted-foreground text-left">Revisadas</p>
-          </button>
-          <button
-            onClick={() => setStatusFilter('contacted')}
-            className={`p-3 rounded-lg border-2 transition-all ${
-              statusFilter === 'contacted'
-                ? 'border-green-500 bg-green-50'
-                : 'border-gray-200 hover:border-green-300'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <MessageSquare className="h-4 w-4 text-green-600" />
-              <span className="text-2xl font-bold text-green-600">{statusCounts.contacted}</span>
-            </div>
-            <p className="text-xs text-muted-foreground text-left">Contactados</p>
-          </button>
-          <button
-            onClick={() => setStatusFilter('rejected')}
-            className={`p-3 rounded-lg border-2 transition-all ${
-              statusFilter === 'rejected'
-                ? 'border-red-500 bg-red-50'
-                : 'border-gray-200 hover:border-red-300'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <XCircle className="h-4 w-4 text-red-600" />
-              <span className="text-2xl font-bold text-red-600">{statusCounts.rejected}</span>
-            </div>
-            <p className="text-xs text-muted-foreground text-left">Rechazados</p>
-          </button>
-          <button
-            onClick={() => setStatusFilter('hired')}
-            className={`p-3 rounded-lg border-2 transition-all ${
-              statusFilter === 'hired'
-                ? 'border-purple-500 bg-purple-50'
-                : 'border-gray-200 hover:border-purple-300'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <UserCheck className="h-4 w-4 text-purple-600" />
-              <span className="text-2xl font-bold text-purple-600">{statusCounts.hired}</span>
-            </div>
-            <p className="text-xs text-muted-foreground text-left">Contratados</p>
-          </button>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="flex items-center space-x-4 mb-6">
@@ -341,12 +252,11 @@ const ApplicationsPage = () => {
             <SelectValue placeholder="Filtrar por estado" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos los estados ({applications.length})</SelectItem>
-            <SelectItem value="pending">En revisión ({statusCounts.pending})</SelectItem>
-            <SelectItem value="reviewed">Revisadas ({statusCounts.reviewed})</SelectItem>
-            <SelectItem value="contacted">Contactados ({statusCounts.contacted})</SelectItem>
-            <SelectItem value="rejected">Rechazados ({statusCounts.rejected})</SelectItem>
-            <SelectItem value="hired">Contratados ({statusCounts.hired})</SelectItem>
+            <SelectItem value="all">Todos los estados</SelectItem>
+            <SelectItem value="pending">Pendientes</SelectItem>
+            <SelectItem value="reviewed">Revisadas</SelectItem>
+            <SelectItem value="accepted">Aceptadas</SelectItem>
+            <SelectItem value="rejected">Rechazadas</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -388,33 +298,13 @@ const ApplicationsPage = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <Badge className={getStatusBadgeClass(application.status)}>
+                      {getStatusText(application.status)}
+                    </Badge>
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4 mr-1" />
                       {format(new Date(application.created_at), 'dd MMM yyyy', { locale: es })}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getStatusBadgeClass(application.status)}>
-                        {getStatusText(application.status)}
-                      </Badge>
-                      {hasPermission('admin') && (
-                        <Select
-                          value={application.status}
-                          onValueChange={(value) => handleStatusUpdate(application.id, value)}
-                        >
-                          <SelectTrigger className="w-48 border-2 border-primary/20 hover:border-primary/40 bg-background">
-                            <Settings className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">En revisión</SelectItem>
-                            <SelectItem value="reviewed">Revisada</SelectItem>
-                            <SelectItem value="contacted">Contactado</SelectItem>
-                            <SelectItem value="rejected">Rechazado</SelectItem>
-                            <SelectItem value="hired">Contratado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -427,118 +317,55 @@ const ApplicationsPage = () => {
                   </p>
                 </div>
                 
-                {/* Sección de Gestión de Estado - Más visible */}
-                {hasPermission('admin') && (
-                  <div className="mb-4 p-4 bg-primary/5 border-2 border-primary/20 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h4 className="font-semibold text-sm flex items-center gap-2">
-                          <Settings className="h-4 w-4" />
-                          Cambiar Estado de la Aplicación
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Actualiza el estado de esta aplicación
-                        </p>
-                      </div>
-                      <Select
-                        value={application.status}
-                        onValueChange={(value) => handleStatusUpdate(application.id, value)}
-                      >
-                        <SelectTrigger className="w-56 bg-background border-2 border-primary/30">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">En revisión</SelectItem>
-                          <SelectItem value="reviewed">Revisada</SelectItem>
-                          <SelectItem value="contacted">Contactado</SelectItem>
-                          <SelectItem value="rejected">Rechazado</SelectItem>
-                          <SelectItem value="hired">Contratado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {/* Botones de acción rápida */}
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {application.status === 'pending' && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleStatusUpdate(application.id, 'reviewed')}
-                            className="border-blue-300 text-blue-700 hover:bg-blue-50"
-                          >
-                            <Eye className="h-3 w-3 mr-1" />
-                            Marcar como Revisada
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleStatusUpdate(application.id, 'contacted')}
-                            className="border-green-300 text-green-700 hover:bg-green-50"
-                          >
-                            <MessageSquare className="h-3 w-3 mr-1" />
-                            Contactar
-                          </Button>
-                        </>
-                      )}
-                      {application.status !== 'rejected' && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                                         <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={() => navigate(`/business-dashboard/talent-profile/${application.user_id}`)}
+                     >
+                       <Eye className="h-4 w-4 mr-1" />
+                       Ver Perfil
+                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-1" />
+                      Contactar
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    {hasPermission('admin') && application.status === 'pending' && (
+                      <>
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => handleStatusUpdate(application.id, 'rejected')}
-                          className="border-red-300 text-red-700 hover:bg-red-50"
+                          onClick={() => handleStatusUpdate(application.id, 'accepted')}
+                          className="bg-green-600 hover:bg-green-700"
                         >
-                          <XCircle className="h-3 w-3 mr-1" />
+                          Aceptar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleStatusUpdate(application.id, 'rejected')}
+                          className="border-red-300 text-red-600 hover:bg-red-50"
+                        >
                           Rechazar
                         </Button>
-                      )}
-                      {application.status !== 'hired' && application.status !== 'rejected' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleStatusUpdate(application.id, 'hired')}
-                          className="border-purple-300 text-purple-700 hover:bg-purple-50"
-                        >
-                          <UserCheck className="h-3 w-3 mr-1" />
-                          Contratar
-                        </Button>
-                      )}
-                      {application.status === 'rejected' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleStatusUpdate(application.id, 'pending')}
-                          className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
-                        >
-                          <Clock className="h-3 w-3 mr-1" />
-                          Volver a Revisión
-                        </Button>
-                      )}
-                    </div>
+                      </>
+                    )}
+                    {hasPermission('admin') && application.status === 'pending' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStatusUpdate(application.id, 'reviewed')}
+                      >
+                        Marcar como Revisada
+                      </Button>
+                    )}
                   </div>
-                )}
-                
-                {/* Acciones de navegación */}
-                <div className="flex items-center space-x-2 pt-2 border-t">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/business-dashboard/talent-profile/${application.user_id}`)}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Ver Perfil Completo
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      handleStatusUpdate(application.id, 'contacted');
-                      // Aquí podrías abrir un modal de contacto o redirigir a un chat
-                    }}
-                  >
-                    <MessageSquare className="h-4 w-4 mr-1" />
-                    Contactar
-                  </Button>
                 </div>
               </CardContent>
             </Card>

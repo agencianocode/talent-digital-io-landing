@@ -372,7 +372,7 @@ const RecommendedProfiles: React.FC = () => {
                     className="w-full mt-auto"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/business-dashboard/talent-profile/${profile.id}`);
+                      window.open(`/business-dashboard/talent-profile/${profile.id}`, '_blank');
                     }}
                   >
                     Ver Perfil

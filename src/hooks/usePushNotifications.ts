@@ -103,13 +103,11 @@ export const usePushNotifications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated');
 
+      // Guardar el objeto completo de suscripción (endpoint + keys) para webpush
       await supabase.from('push_subscriptions').upsert({
         user_id: user.id,
         endpoint: subData.endpoint,
-        subscription: {
-          p256dh: subData.keys.p256dh,
-          auth: subData.keys.auth,
-        },
+        subscription: subData, // Guardar el objeto completo con endpoint y keys
       } as any);
 
       toast({

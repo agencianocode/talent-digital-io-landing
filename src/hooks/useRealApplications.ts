@@ -10,9 +10,6 @@ interface Application {
   status: string;
   created_at: string;
   updated_at: string;
-  first_response_at?: string | null;
-  contacted_at?: string | null;
-  viewed_at?: string | null;
   opportunities?: {
     id: string;
     title: string;
@@ -30,10 +27,7 @@ interface ApplicationMetrics {
   totalApplications: number;
   unreadApplications: number;
   thisWeekApplications: number;
-  thisMonthApplications: number;
   contactedCandidates: number;
-  candidatesInEvaluation: number;
-  averageResponseTime: number;
   conversionRate: number;
   applicationsByOpportunity: Record<string, number>;
 }
@@ -45,10 +39,7 @@ export const useRealApplications = () => {
     totalApplications: 0,
     unreadApplications: 0,
     thisWeekApplications: 0,
-    thisMonthApplications: 0,
     contactedCandidates: 0,
-    candidatesInEvaluation: 0,
-    averageResponseTime: 0,
     conversionRate: 0,
     applicationsByOpportunity: {}
   });
@@ -56,17 +47,6 @@ export const useRealApplications = () => {
 
   const fetchApplications = useCallback(async () => {
     if (!activeCompany?.id) {
-      setMetrics({
-        totalApplications: 0,
-        unreadApplications: 0,
-        thisWeekApplications: 0,
-        thisMonthApplications: 0,
-        contactedCandidates: 0,
-        candidatesInEvaluation: 0,
-        averageResponseTime: 0,
-        conversionRate: 0,
-        applicationsByOpportunity: {}
-      });
       setIsLoading(false);
       return;
     }
@@ -93,10 +73,7 @@ export const useRealApplications = () => {
           totalApplications: 0,
           unreadApplications: 0,
           thisWeekApplications: 0,
-          thisMonthApplications: 0,
           contactedCandidates: 0,
-          candidatesInEvaluation: 0,
-          averageResponseTime: 0,
           conversionRate: 0,
           applicationsByOpportunity: {}
         });
@@ -127,67 +104,15 @@ export const useRealApplications = () => {
       // Calcular métricas reales
       const now = new Date();
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       
       const totalApplications = apps.length;
       const unreadApplications = apps.filter(app => app.status === 'pending').length;
       const thisWeekApplications = apps.filter(app => 
         new Date(app.created_at) >= oneWeekAgo
       ).length;
-      const thisMonthApplications = apps.filter(app => 
-        new Date(app.created_at) >= firstDayOfMonth
-      ).length;
       const contactedCandidates = apps.filter(app => 
         app.status === 'contacted' || app.status === 'interviewed'
       ).length;
-      // Candidatos en evaluación: pending o reviewed (aún no contactados, aceptados o rechazados)
-      const candidatesInEvaluation = apps.filter(app => 
-        app.status === 'pending' || app.status === 'reviewed'
-      ).length;
-      
-      // Calcular promedio de tiempo de respuesta (en horas)
-      // Prioridad: first_response_at > contacted_at > viewed_at > updated_at (solo si no es pending)
-      // Esto mide el tiempo desde que el talento aplicó hasta que la empresa respondió por primera vez
-      const respondedApplications = apps.filter(app => {
-        // Solo considerar aplicaciones que han sido procesadas (no pending)
-        if (app.status === 'pending') return false;
-        
-        // Debe tener al menos una fecha de respuesta
-        return app.first_response_at || app.contacted_at || app.viewed_at || 
-               (app.updated_at && app.created_at);
-      });
-      
-      let averageResponseTime = 0;
-      if (respondedApplications.length > 0) {
-        const totalResponseTime = respondedApplications.reduce((sum, app) => {
-          const created = new Date(app.created_at).getTime();
-          
-          // Prioridad: usar first_response_at si existe (más preciso)
-          // Luego contacted_at, luego viewed_at, y como último recurso updated_at
-          let responseTime: number;
-          
-          if (app.first_response_at) {
-            // Mejor opción: tiempo hasta primera respuesta
-            responseTime = (new Date(app.first_response_at).getTime() - created) / (1000 * 60 * 60);
-          } else if (app.contacted_at) {
-            // Segunda opción: tiempo hasta contacto
-            responseTime = (new Date(app.contacted_at).getTime() - created) / (1000 * 60 * 60);
-          } else if (app.viewed_at) {
-            // Tercera opción: tiempo hasta que fue vista
-            responseTime = (new Date(app.viewed_at).getTime() - created) / (1000 * 60 * 60);
-          } else if (app.updated_at) {
-            // Última opción: tiempo hasta última actualización (menos preciso)
-            responseTime = (new Date(app.updated_at).getTime() - created) / (1000 * 60 * 60);
-          } else {
-            // Si no hay ninguna fecha, usar 0 (no debería pasar)
-            responseTime = 0;
-          }
-          
-          return sum + responseTime;
-        }, 0);
-        
-        averageResponseTime = Math.round((totalResponseTime / respondedApplications.length) * 10) / 10;
-      }
       
       const conversionRate = totalApplications > 0 
         ? Math.round((contactedCandidates / totalApplications) * 100 * 10) / 10
@@ -206,10 +131,7 @@ export const useRealApplications = () => {
         totalApplications,
         unreadApplications,
         thisWeekApplications,
-        thisMonthApplications,
         contactedCandidates,
-        candidatesInEvaluation,
-        averageResponseTime,
         conversionRate,
         applicationsByOpportunity
       });

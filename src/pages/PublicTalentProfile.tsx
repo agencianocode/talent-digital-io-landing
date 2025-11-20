@@ -524,7 +524,8 @@ const PublicTalentProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    className="w-full"
+                    variant="outline" 
+                    className="w-full border-black text-black hover:bg-black hover:text-white transition-colors"
                     onClick={() => portfolios[0]?.url && window.open(portfolios[0].url, '_blank')}
                   >
                     Ver Portfolio

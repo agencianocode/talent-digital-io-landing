@@ -53,23 +53,7 @@ export const useProfessionalData = () => {
     try {
       const { data, error } = await supabase.rpc('get_professional_categories');
       if (error) throw error;
-      
-      // Convertir y eliminar duplicados basándose en el id
-      const categoriesData = (data || []) as any[];
-      const uniqueCategories = categoriesData.reduce((acc: ProfessionalCategory[], category: any) => {
-        if (!acc.find(c => c.id === category.id)) {
-          acc.push({
-            id: category.id,
-            name: category.name,
-            description: category.description,
-            icon: category.icon,
-            subcategories: Array.isArray(category.subcategories) ? category.subcategories : []
-          });
-        }
-        return acc;
-      }, [] as ProfessionalCategory[]);
-      
-      setCategories(uniqueCategories);
+      setCategories((data || []) as ProfessionalCategory[]);
     } catch (error) {
       console.error('Error fetching categories:', error);
       // Fallback to hardcoded categories if database is not available

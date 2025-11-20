@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Plus, 
   Package, 
-  MessageSquare, 
   AlertCircle
 } from 'lucide-react';
 import { useTalentServices } from '@/hooks/useTalentServices';
 import ServiceForm from '@/components/marketplace/ServiceForm';
 import TalentServiceCard from '@/components/marketplace/TalentServiceCard';
-import ServiceRequestsList from '@/components/marketplace/ServiceRequestsList';
 import { TalentService, ServiceFormData } from '@/hooks/useTalentServices';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,7 +16,6 @@ const TalentMyServices: React.FC = () => {
   const { toast } = useToast();
   const [isServiceFormOpen, setIsServiceFormOpen] = useState(false);
   const [editingService, setEditingService] = useState<TalentService | null>(null);
-  const [activeTab, setActiveTab] = useState('services');
 
   const {
     services,
@@ -34,9 +29,13 @@ const TalentMyServices: React.FC = () => {
     updateRequestStatus,
     duplicateService,
     refreshServices,
+    loadServiceRequests,
   } = useTalentServices();
 
-  const pendingRequests = serviceRequests.filter(r => r.status === 'pending');
+  // Cargar solicitudes al montar el componente
+  React.useEffect(() => {
+    loadServiceRequests();
+  }, [loadServiceRequests]);
 
   const handleUpdateRequestStatus = async (requestId: string, status: 'pending' | 'accepted' | 'declined' | 'completed'): Promise<boolean> => {
     try {
@@ -186,87 +185,63 @@ const TalentMyServices: React.FC = () => {
 
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="services" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            Mis Servicios
-            <Badge variant="secondary" className="ml-1">
-              {services.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="requests" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Solicitudes
-            {pendingRequests.length > 0 && (
-              <Badge variant="destructive" className="ml-1">
-                {pendingRequests.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Services Tab */}
-        <TabsContent value="services" className="space-y-6">
-          {/* Services Grid */}
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Card key={index} className="animate-pulse">
-                  <CardHeader>
-                    <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-muted rounded w-1/2"></div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="h-3 bg-muted rounded"></div>
-                      <div className="h-3 bg-muted rounded w-5/6"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : services.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Package className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No tienes servicios</h3>
-                <p className="text-muted-foreground text-center mb-4">
-                  Crea tu primer servicio para empezar a recibir solicitudes de clientes.
-                </p>
-                <Button onClick={handleOpenCreateForm}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Crear Mi Primer Servicio
-                </Button>
+      {/* Services Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Card key={index} className="animate-pulse">
+              <CardHeader>
+                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-1/2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="h-3 bg-muted rounded"></div>
+                  <div className="h-3 bg-muted rounded w-5/6"></div>
+                </div>
               </CardContent>
             </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services.map((service) => (
-                <TalentServiceCard
-                  key={service.id}
-                  service={service}
-                  onEdit={handleOpenEditForm}
-                  onDelete={handleDeleteService}
-                  onDuplicate={handleDuplicateService}
-                  onToggleStatus={handleToggleStatus}
-                  onViewPortfolio={handleViewPortfolio}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Requests Tab */}
-        <TabsContent value="requests" className="space-y-6">
-          <ServiceRequestsList
-            requests={serviceRequests}
-            onUpdateStatus={handleUpdateRequestStatus}
-            isUpdating={isRequestsLoading}
-          />
-        </TabsContent>
-      </Tabs>
+          ))}
+        </div>
+      ) : services.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Package className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No tienes servicios</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              Crea tu primer servicio para empezar a recibir solicitudes de clientes.
+            </p>
+            <Button onClick={handleOpenCreateForm}>
+              <Plus className="h-4 w-4 mr-2" />
+              Crear Mi Primer Servicio
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map((service) => {
+            // Filtrar solicitudes para este servicio
+            const serviceRequestsForService = serviceRequests.filter(
+              req => req.service_id === service.id
+            );
+            
+            return (
+              <TalentServiceCard
+                key={service.id}
+                service={service}
+                serviceRequests={serviceRequestsForService}
+                onEdit={handleOpenEditForm}
+                onDelete={handleDeleteService}
+                onDuplicate={handleDuplicateService}
+                onToggleStatus={handleToggleStatus}
+                onViewPortfolio={handleViewPortfolio}
+                onUpdateRequestStatus={handleUpdateRequestStatus}
+                isUpdatingRequest={isRequestsLoading}
+              />
+            );
+          })}
+        </div>
+      )}
 
       {/* Service Form Modal */}
       <ServiceForm

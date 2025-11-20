@@ -25,25 +25,32 @@ import {
   MessageSquare,
   ExternalLink
 } from 'lucide-react';
-import { TalentService } from '@/hooks/useTalentServices';
+import { TalentService, ServiceRequest } from '@/hooks/useTalentServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
+import ServiceRequestsSection from './ServiceRequestsSection';
 
 interface TalentServiceCardProps {
   service: TalentService;
+  serviceRequests?: ServiceRequest[];
   onEdit: (service: TalentService) => void;
   onDelete: (service: TalentService) => void;
   onDuplicate: (service: TalentService) => void;
   onToggleStatus: (service: TalentService) => void;
   onViewPortfolio?: (service: TalentService) => void;
+  onUpdateRequestStatus?: (requestId: string, status: ServiceRequest['status']) => Promise<boolean>;
+  isUpdatingRequest?: boolean;
 }
 
 const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
   service,
+  serviceRequests = [],
   onEdit,
   onDelete,
   onDuplicate,
   onToggleStatus,
-  onViewPortfolio
+  onViewPortfolio,
+  onUpdateRequestStatus,
+  isUpdatingRequest = false
 }) => {
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   const category = marketplaceCategories.find((cat) => cat.name === service.category);
@@ -249,6 +256,17 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
             {new Date(service.updated_at).toLocaleDateString('es-ES')}
           </div>
         </div>
+
+        {/* Service Requests Section */}
+        {onUpdateRequestStatus && (
+          <ServiceRequestsSection
+            serviceId={service.id}
+            serviceTitle={service.title}
+            requests={serviceRequests}
+            onUpdateStatus={onUpdateRequestStatus}
+            isUpdating={isUpdatingRequest}
+          />
+        )}
       </CardContent>
     </Card>
   );

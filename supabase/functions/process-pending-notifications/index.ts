@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     const { data: notifications, error } = await supabase
       .from('notifications')
       .select('id, user_id, type, created_at')
-      .eq('is_read', false)
+      .eq('read', false)
       .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: true })
       .limit(50);

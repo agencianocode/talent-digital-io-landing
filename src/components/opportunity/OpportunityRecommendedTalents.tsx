@@ -261,7 +261,7 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
                   size="sm"
                   variant="outline"
                   className="flex-1"
-                  onClick={() => navigate(`/business-dashboard/talent-profile/${talent.id}`)}
+                  onClick={() => window.open(`/business-dashboard/talent-profile/${talent.id}`, '_blank')}
                 >
                   Ver Perfil
                 </Button>

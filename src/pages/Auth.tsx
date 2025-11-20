@@ -599,7 +599,7 @@ const Auth = () => {
                     setShowEmailVerification(false);
                     setAuthTab('login');
                   }}
-                  className="w-full"
+                  className="w-full bg-purple-600 hover:bg-purple-700"
                 >
                   Ir a iniciar sesión
                 </Button>

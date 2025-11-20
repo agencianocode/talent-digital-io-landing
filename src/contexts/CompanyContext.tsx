@@ -62,7 +62,7 @@ interface CompanyContextType {
   
   // Actions
   refreshCompanies: () => Promise<void>;
-  switchCompany: (companyId: string) => Promise<void>;
+  switchCompany: (companyId: string) => void;
   
   // Helper functions
   hasPermission: (permission: 'owner' | 'admin' | 'viewer') => boolean;
@@ -138,20 +138,7 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
 
       if (rolesError) throw rolesError;
 
-      // Ordenar empresas: "Agencia de No Code" primero, luego el resto
-      const sortedCompanies = (companies || []).sort((a, b) => {
-        const aIsAgencia = a.name.toLowerCase().includes('agencia de no code') || 
-                          a.name.toLowerCase().includes('agencianocode');
-        const bIsAgencia = b.name.toLowerCase().includes('agencia de no code') || 
-                          b.name.toLowerCase().includes('agencianocode');
-        
-        if (aIsAgencia && !bIsAgencia) return -1;
-        if (!aIsAgencia && bIsAgencia) return 1;
-        // Si ambas o ninguna son "Agencia de No Code", ordenar por fecha de creación
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      });
-
-      setUserCompanies(sortedCompanies.map(company => ({
+      setUserCompanies((companies || []).map(company => ({
         ...company,
         description: company.description ?? undefined,
         website: company.website ?? undefined,
@@ -191,36 +178,16 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
       
       setUserRoles(mappedRoles);
 
-      // Set active company from localStorage or preserve current active company
+      // Set active company from localStorage or first available
       const savedCompanyId = localStorage.getItem('activeCompanyId');
-      // También verificar si hay una empresa activa actualmente
-      const currentActiveId = activeCompany?.id || savedCompanyId;
       let activeComp = null;
 
-      // Prioridad 1: Empresa activa actual (si todavía existe en la lista)
-      if (currentActiveId) {
-        activeComp = sortedCompanies?.find(c => c.id === currentActiveId);
+      if (savedCompanyId) {
+        activeComp = companies?.find(c => c.id === savedCompanyId);
       }
       
-      // Prioridad 2: Empresa guardada en localStorage (si existe)
-      if (!activeComp && savedCompanyId) {
-        activeComp = sortedCompanies?.find(c => c.id === savedCompanyId);
-      }
-      
-      // Prioridad 3: "Agencia de No Code" si existe (empresa principal)
-      if (!activeComp && sortedCompanies && sortedCompanies.length > 0) {
-        const agenciaNoCode = sortedCompanies.find(c => 
-          c.name.toLowerCase().includes('agencia de no code') || 
-          c.name.toLowerCase().includes('agencianocode')
-        );
-        if (agenciaNoCode) {
-          activeComp = agenciaNoCode;
-        }
-      }
-      
-      // Prioridad 4: Primera empresa disponible (ya está ordenada, así que será "Agencia de No Code" si existe)
-      if (!activeComp && sortedCompanies && sortedCompanies.length > 0) {
-        activeComp = sortedCompanies[0];
+      if (!activeComp && companies && companies.length > 0) {
+        activeComp = companies[0];
       }
 
       if (activeComp) {
@@ -282,85 +249,30 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
   };
 
   // Switch to different company
-  const switchCompany = async (companyId: string) => {
+  const switchCompany = (companyId: string) => {
     const company = userCompanies.find(c => c.id === companyId);
-    if (!company) {
-      toast.error('Empresa no encontrada');
-      return;
-    }
-
-    try {
-      // Recargar la información completa de la empresa desde la base de datos
-      const { data: freshCompany, error: companyError } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('id', companyId)
-        .single();
-
-      if (companyError) {
-        console.error('Error loading company:', companyError);
-        toast.error('Error al cargar la empresa');
-        return;
-      }
-
-      if (!freshCompany) {
-        toast.error('Empresa no encontrada');
-        return;
-      }
-
-      // Formatear la empresa con los campos opcionales correctamente
-      const companyWithUndefined: Company = {
-        ...freshCompany,
-        description: freshCompany.description ?? undefined,
-        website: freshCompany.website ?? undefined,
-        size: freshCompany.size ?? undefined,
-        location: freshCompany.location ?? undefined,
-        logo_url: freshCompany.logo_url ?? undefined,
-        annual_revenue_range: freshCompany.annual_revenue_range ?? undefined,
-        business_type: freshCompany.business_type ?? undefined,
-        employee_count_range: freshCompany.employee_count_range ?? undefined,
-        industry: freshCompany.industry ?? undefined,
-        social_links: freshCompany.social_links ? (freshCompany.social_links as Record<string, string>) : undefined,
-        gallery_urls: ((freshCompany.gallery_urls as any[]) || []).map((item: any) => ({
-          id: item?.id || Math.random().toString(),
-          type: item?.type || 'image',
-          url: item?.url || '',
-          title: item?.title || 'Sin título',
-          description: item?.description,
-          thumbnail: item?.thumbnail
-        }))
-      };
-
-      // Actualizar el estado con la empresa fresca
-      setActiveCompanyState(companyWithUndefined);
+    if (company) {
+      setActiveCompanyState(company);
       localStorage.setItem('activeCompanyId', companyId);
-      
-      // Actualizar la lista de empresas con la información fresca
-      setUserCompanies(prev => prev.map(c => 
-        c.id === companyId ? companyWithUndefined : c
-      ));
       
       // Update current user role
       const existingRole = userRoles.find(role => role.company_id === companyId);
-      const userRole: CompanyUserRole | null = existingRole || 
-        (freshCompany.user_id === user?.id ? {
+      const userRole: CompanyUserRole | null = existingRole ||
+        (company.user_id === user?.id ? {
           id: 'owner-role',
-          company_id: freshCompany.id,
+          company_id: company.id,
           user_id: user.id,
           role: 'owner' as const,
           status: 'accepted' as const,
           invited_by: undefined,
-          invited_at: freshCompany.created_at,
-          accepted_at: freshCompany.created_at,
-          created_at: freshCompany.created_at,
-          updated_at: freshCompany.updated_at,
+          invited_at: company.created_at,
+          accepted_at: company.created_at,
+          created_at: company.created_at,
+          updated_at: company.updated_at,
         } : null);
       
       setCurrentUserRole(userRole);
-      toast.success(`Cambiado a empresa: ${companyWithUndefined.name}`);
-    } catch (error) {
-      console.error('Error switching company:', error);
-      toast.error('Error al cambiar de empresa');
+      toast.success(`Cambiado a empresa: ${company.name}`);
     }
   };
 
@@ -392,7 +304,6 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
 
   // Refresh companies data
   const refreshCompanies = async () => {
-    // loadUserCompanies ya preserva la empresa activa actual si existe
     await loadUserCompanies();
   };
 

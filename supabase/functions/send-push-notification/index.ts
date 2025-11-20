@@ -77,9 +77,15 @@ serve(async (req) => {
     // Enviar notificación a cada suscripción
     const results = await Promise.allSettled(
       subscriptions.map(async (sub) => {
+        // El objeto subscription ya contiene endpoint + keys completo
         const subscription = typeof sub.subscription === 'string' 
           ? JSON.parse(sub.subscription) 
           : sub.subscription;
+
+        // Asegurar que el endpoint esté presente (usar el de la BD si falta en el objeto)
+        if (!subscription.endpoint && sub.endpoint) {
+          subscription.endpoint = sub.endpoint;
+        }
 
         const payload = JSON.stringify({
           title: title || 'Talent Digital IO',
@@ -97,10 +103,10 @@ serve(async (req) => {
           await webpush.sendNotification(subscription, payload);
 
           return {
-            endpoint: subscription.endpoint,
+            endpoint: subscription.endpoint || sub.endpoint,
             success: true,
           };
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error sending to endpoint:', error);
           
           // Si el endpoint falló (410 Gone), eliminar suscripción
@@ -108,11 +114,11 @@ serve(async (req) => {
             await supabaseClient
               .from('push_subscriptions')
               .delete()
-              .eq('endpoint', subscription.endpoint);
+              .eq('endpoint', subscription.endpoint || sub.endpoint);
           }
 
           return {
-            endpoint: subscription.endpoint,
+            endpoint: subscription.endpoint || sub.endpoint,
             success: false,
             error: error.message,
           };
