@@ -501,35 +501,66 @@ export const usePublishingRequests = () => {
 
       console.log('🔍 [Eliminar] Solicitud encontrada:', existingRequest);
 
-      // Intentar eliminar
-      const { error, data } = await supabase
+      // Intentar eliminar sin select primero para verificar si funciona
+      const { error: deleteError, count } = await supabase
         .from('marketplace_publishing_requests')
-        .delete()
-        .eq('id', requestId)
-        .select();
+        .delete({ count: 'exact' })
+        .eq('id', requestId);
 
-      console.log('🔍 [Eliminar] Resultado de eliminación:', { error, data });
+      console.log('🔍 [Eliminar] Resultado de eliminación (sin select):', { error: deleteError, count });
 
-      if (error) {
-        console.error('❌ [Eliminar] Error de Supabase:', error);
+      if (deleteError) {
+        console.error('❌ [Eliminar] Error de Supabase:', deleteError);
         console.error('❌ [Eliminar] Detalles del error:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
+          message: deleteError.message,
+          details: deleteError.details,
+          hint: deleteError.hint,
+          code: deleteError.code
         });
-        throw error;
+        throw deleteError;
       }
 
-      console.log('✅ [Eliminar] Solicitud eliminada exitosamente');
+      // Verificar que realmente se eliminó
+      if (count === 0) {
+        console.warn('⚠️ [Eliminar] No se eliminó ningún registro. Count:', count);
+        // Intentar verificar si todavía existe
+        const { data: stillExists } = await supabase
+          .from('marketplace_publishing_requests')
+          .select('id')
+          .eq('id', requestId)
+          .single();
+        
+        if (stillExists) {
+          throw new Error('La solicitud no se pudo eliminar. Puede ser un problema de permisos (RLS).');
+        } else {
+          console.log('✅ [Eliminar] La solicitud ya no existe, se eliminó correctamente');
+        }
+      } else {
+        console.log(`✅ [Eliminar] ${count} solicitud(es) eliminada(s) exitosamente`);
+      }
 
       toast({
         title: 'Éxito',
         description: 'Solicitud eliminada correctamente.',
       });
 
-      // Recargar las solicitudes
+      // Forzar recarga de solicitudes con un pequeño delay para asegurar que la BD se actualice
+      await new Promise(resolve => setTimeout(resolve, 100));
       await loadRequests();
+      
+      // Verificar una vez más que se eliminó
+      const { data: verifyDeleted } = await supabase
+        .from('marketplace_publishing_requests')
+        .select('id')
+        .eq('id', requestId)
+        .single();
+      
+      if (verifyDeleted) {
+        console.warn('⚠️ [Eliminar] La solicitud todavía existe después de eliminar. Puede ser un problema de caché o RLS.');
+      } else {
+        console.log('✅ [Eliminar] Verificación: La solicitud fue eliminada correctamente');
+      }
+      
       return true;
     } catch (error: any) {
       console.error('❌ [Eliminar] Error al eliminar solicitud (catch):', error);
