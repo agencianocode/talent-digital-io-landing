@@ -494,32 +494,115 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
         </CardContent>
       </Card>
 
-      {/* Section 3: Vista Previa */}
-      {academyData && (showLogo || showDescription) && (
+      {/* Section 3: Vista Previa del Directorio */}
+      {academyData && publicDirectoryEnabled && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Vista Previa del Directorio</CardTitle>
+            <CardDescription>
+              Esta es una vista previa de cómo se verá tu directorio público cuando lo compartas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Hero Section Preview - Replica del directorio público */}
+              <div 
+                className="py-12 px-6 rounded-lg text-white"
+                style={{
+                  background: `linear-gradient(135deg, ${brandColor} 0%, ${secondaryColor} 100%)`,
+                }}
+              >
+                <div className="flex flex-col items-center text-center gap-4">
+                  {showLogo && academyData.logo_url && (
+                    <img 
+                      src={academyData.logo_url} 
+                      alt={academyData.name}
+                      className="h-20 w-20 object-contain rounded-lg bg-white/10 p-2"
+                    />
+                  )}
+                  <h3 className="text-3xl font-bold">{academyData.name}</h3>
+                  {tagline && (
+                    <p className="text-lg text-white/90">{tagline}</p>
+                  )}
+                  {showDescription && academyData.description && (
+                    <p className="text-white/80 max-w-2xl text-sm">
+                      {academyData.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Students Preview */}
+              {graduates.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <GraduationCap className="h-5 w-5" style={{ color: brandColor }} />
+                    <h4 className="text-lg font-semibold">
+                      {studentsFilter === 'all' && `Estudiantes (${graduates.length})`}
+                      {studentsFilter === 'graduated' && `Graduados (${graduates.length})`}
+                      {studentsFilter === 'enrolled' && `Estudiantes Activos (${graduates.length})`}
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                    {graduates.slice(0, 6).map((graduate) => (
+                      <Card key={graduate.id || graduate.student_id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="h-12 w-12 flex-shrink-0">
+                              <AvatarImage src={graduate.avatar_url || undefined} />
+                              <AvatarFallback>
+                                {(graduate.full_name || graduate.student_name || 'E').charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <h5 className="font-semibold text-sm truncate">
+                                {graduate.full_name || graduate.student_name || 'Estudiante'}
+                              </h5>
+                              {graduate.location && (
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                  <MapPin className="w-3 h-3" />
+                                  <span className="truncate">{graduate.location}</span>
+                                </div>
+                              )}
+                              {graduate.graduation_date && (
+                                <Badge variant="secondary" className="mt-2 text-xs">
+                                  {new Date(graduate.graduation_date).toLocaleDateString()}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  {graduates.length > 6 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      ... y {graduates.length - 6} más
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {graduates.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  {studentsFilter === 'all' && 'No hay estudiantes para mostrar en el directorio'}
+                  {studentsFilter === 'graduated' && 'No hay graduados para mostrar en el directorio'}
+                  {studentsFilter === 'enrolled' && 'No hay estudiantes activos para mostrar en el directorio'}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {academyData && !publicDirectoryEnabled && (
         <Card>
           <CardHeader>
             <CardTitle>Vista Previa del Directorio</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 p-6 border rounded-lg bg-card">
-              {showLogo && academyData.logo_url && (
-                <div className="flex justify-center">
-                  <img 
-                    src={academyData.logo_url} 
-                    alt={academyData.name}
-                    className="h-20 w-auto object-contain"
-                  />
-                </div>
-              )}
-              
-              <div className="text-center">
-                <h3 className="text-2xl font-bold">{academyData.name}</h3>
-                {showDescription && academyData.description && (
-                  <p className="text-muted-foreground mt-2">
-                    {academyData.description}
-                  </p>
-                )}
-              </div>
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Habilita el directorio público para ver la vista previa</p>
             </div>
           </CardContent>
         </Card>
