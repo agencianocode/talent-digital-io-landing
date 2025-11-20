@@ -54,10 +54,10 @@ export const useAdminChat = () => {
       setIsLoading(true);
       setError(null);
       
-      // Get admin user
-      const { data: { user: adminUser } } = await supabase.auth.getUser();
-      if (!adminUser) return;
-      const adminUserId = adminUser.id;
+      // Get admin user for conversation loading
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) return;
+      const currentUserId = currentUser.id;
 
       // Fetch conversations with related data
       const { data: conversationsData, error: convError } = await supabase
@@ -153,7 +153,7 @@ export const useAdminChat = () => {
           updated_at: conv.updated_at,
           last_message_at: conv.last_message_at || conv.created_at,
           messages_count: messages.length,
-          unread_count: messages.filter(m => !m.is_read && m.recipient_id === adminUserId && m.sender_id === conv.user_id).length,
+          unread_count: messages.filter(m => !m.is_read && m.recipient_id === currentUserId && m.sender_id === conv.user_id).length,
           last_message_preview: lastMsg?.content ? String(lastMsg.content).substring(0, 100) : undefined
         };
       });
