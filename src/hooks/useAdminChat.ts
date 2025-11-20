@@ -292,6 +292,17 @@ export const useAdminChat = () => {
     }
   };
 
+  const archiveConversation = async (conversationId: string) => {
+    try {
+      await updateConversation(conversationId, { status: 'archived' });
+      toast.success('Conversación archivada correctamente');
+    } catch (err) {
+      console.error('Error archiving conversation:', err);
+      toast.error('Error al archivar la conversación');
+      throw err;
+    }
+  };
+
   const deleteConversation = async (conversationId: string) => {
     try {
       // Delete conversation (cascade will delete messages)
@@ -346,6 +357,7 @@ export const useAdminChat = () => {
     conversationsPerPage,
     setCurrentPage,
     updateConversation,
+    archiveConversation,
     deleteConversation,
     stats,
     refetch: loadConversations

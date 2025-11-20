@@ -47,6 +47,7 @@ const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnr
     setCurrentPage,
     stats,
     refetch,
+    archiveConversation,
     deleteConversation
   } = useAdminChat();
 
@@ -493,6 +494,23 @@ const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnr
                       <Eye className="h-4 w-4 md:mr-2" />
                       <span className="md:inline">Ver Chat</span>
                     </Button>
+                    {conversation.status !== 'archived' && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            await archiveConversation(conversation.id);
+                          } catch (error) {
+                            console.error('Error archiving conversation:', error);
+                          }
+                        }}
+                        className="flex-1 md:flex-initial"
+                      >
+                        <Archive className="h-4 w-4 md:mr-2" />
+                        <span className="md:inline">Archivar</span>
+                      </Button>
+                    )}
                     <Button
                       variant="destructive"
                       size="sm"
