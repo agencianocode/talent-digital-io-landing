@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 import { 
   Share2, 
@@ -45,7 +44,6 @@ const generateSlugFromName = (name: string): string => {
 };
 
 export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = ({ academyId }) => {
-  const { toast: toastHook } = useToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   
@@ -104,10 +102,11 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
         
         // Directory settings
         setAcademyData(data as any);
-        if (data.directory_settings) {
-          setShowLogo(data.directory_settings.show_logo ?? true);
-          setShowDescription(data.directory_settings.show_description ?? true);
-          setStudentsFilter(data.directory_settings.students_filter ?? 'all');
+        if (data.directory_settings && typeof data.directory_settings === 'object' && !Array.isArray(data.directory_settings)) {
+          const dirSettings = data.directory_settings as { show_logo?: boolean; show_description?: boolean; students_filter?: 'all' | 'graduated' | 'enrolled' };
+          setShowLogo(dirSettings.show_logo ?? true);
+          setShowDescription(dirSettings.show_description ?? true);
+          setStudentsFilter(dirSettings.students_filter ?? 'all');
         }
       }
     } catch (error) {
@@ -251,6 +250,65 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
         </div>
       </div>
 
+      {/* Section 0: Habilitar Directorio Público */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Share2 className="h-5 w-5" />
+            Directorio Público Habilitado
+          </CardTitle>
+          <CardDescription>
+            Activa o desactiva la visibilidad pública de tu directorio de estudiantes
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="publicDirectory" className="text-base font-medium">
+                {publicDirectoryEnabled ? 'Directorio Público Activo' : 'Directorio Público Desactivado'}
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                {publicDirectoryEnabled 
+                  ? 'El público puede ver tu directorio de graduados en la URL configurada'
+                  : 'El directorio público está desactivado y no será visible para el público'}
+              </p>
+            </div>
+            <Switch
+              id="publicDirectory"
+              checked={publicDirectoryEnabled}
+              onCheckedChange={async (checked) => {
+                setPublicDirectoryEnabled(checked);
+                // Auto-save cuando se cambia el switch
+                try {
+                  setSaving(true);
+                  const { error } = await supabase
+                    .from('companies')
+                    .update({
+                      public_directory_enabled: checked,
+                    })
+                    .eq('id', academyId);
+
+                  if (error) throw error;
+
+                  toast.success(checked 
+                    ? 'Directorio público activado' 
+                    : 'Directorio público desactivado'
+                  );
+                } catch (error) {
+                  console.error('Error updating directory status:', error);
+                  toast.error('No se pudo actualizar el estado del directorio');
+                  // Revertir el cambio si falla
+                  setPublicDirectoryEnabled(!checked);
+                } finally {
+                  setSaving(false);
+                }
+              }}
+              disabled={saving}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Section 1: Personalización de Marca */}
       <Card>
         <CardHeader>
@@ -331,20 +389,6 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
             <p className="text-xs text-muted-foreground">
               La URL se genera automáticamente desde el nombre de tu academia: <span className="font-medium">{companyName}</span>
             </p>
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="publicDirectory">Directorio Público Habilitado</Label>
-              <p className="text-sm text-muted-foreground">
-                Permite que el público vea tu directorio de graduados
-              </p>
-            </div>
-            <Switch
-              id="publicDirectory"
-              checked={publicDirectoryEnabled}
-              onCheckedChange={setPublicDirectoryEnabled}
-            />
           </div>
 
           <div className="flex justify-end pt-4 border-t">
