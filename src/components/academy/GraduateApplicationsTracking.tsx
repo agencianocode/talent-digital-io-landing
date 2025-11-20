@@ -80,7 +80,7 @@ export const GraduateApplicationsTracking = ({
       <CardHeader>
         <div className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />
-          <CardTitle>Aplicaciones de Estudiantes a Ofertas    </CardTitle>
+          <CardTitle>Aplicaciones de Estudiantes a Ofertas Laborales                                                                                      </CardTitle>
         </div>
         <CardDescription>
           Seguimiento de las aplicaciones a oportunidades laborales
