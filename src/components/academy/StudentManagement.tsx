@@ -82,6 +82,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
       case 'graduated': return 'bg-blue-100 text-blue-800';
       case 'paused': return 'bg-yellow-100 text-yellow-800';
       case 'suspended': return 'bg-red-100 text-red-800';
+      case 'pending_invitations': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -92,6 +93,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
       case 'graduated': return 'Graduado';
       case 'paused': return 'Pausado';
       case 'suspended': return 'Suspendido';
+      case 'pending_invitations': return 'Invitación Pendiente';
       default: return status;
     }
   };
@@ -423,6 +425,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
                 <SelectItem value="graduated">Graduado</SelectItem>
                 <SelectItem value="paused">Pausado</SelectItem>
                 <SelectItem value="suspended">Suspendido</SelectItem>
+                <SelectItem value="pending_invitations">Invitaciones Pendientes</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -458,83 +461,103 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
             </CardContent>
           </Card>
         ) : (
-          filteredStudents.map((student) => (
-            <Card key={student.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage src={student.talent_profiles?.avatar_url || undefined} />
-                    <AvatarFallback>
-                      {student.talent_profiles?.full_name?.charAt(0) || 'E'}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {student.talent_profiles?.full_name || 'Estudiante'}
-                        </h3>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                          <Mail className="w-4 h-4" />
-                          <span>{student.talent_profiles?.email}</span>
-                          {student.talent_profiles?.city && (
-                            <>
-                              <span>•</span>
-                              <MapPin className="w-4 h-4" />
-                              <span>{student.talent_profiles.city}, {student.talent_profiles.country}</span>
-                            </>
+          filteredStudents.map((student) => {
+            const isPendingInvitation = student.status === 'pending_invitations';
+            
+            return (
+              <Card key={student.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={student.talent_profiles?.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {isPendingInvitation 
+                          ? (student.talent_profiles?.email?.charAt(0).toUpperCase() || 'I')
+                          : (student.talent_profiles?.full_name?.charAt(0) || 'E')
+                        }
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {isPendingInvitation 
+                              ? student.talent_profiles?.email || 'Invitación Pendiente'
+                              : student.talent_profiles?.full_name || 'Estudiante'
+                            }
+                          </h3>
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                            <Mail className="w-4 h-4" />
+                            <span>{student.talent_profiles?.email}</span>
+                            {!isPendingInvitation && student.talent_profiles?.city && (
+                              <>
+                                <span>•</span>
+                                <MapPin className="w-4 h-4" />
+                                <span>{student.talent_profiles.city}, {student.talent_profiles.country}</span>
+                              </>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Calendar className="w-4 h-4" />
+                            <span>
+                              {isPendingInvitation 
+                                ? `Invitación enviada: ${new Date(student.joined_at).toLocaleDateString()}`
+                                : `Se unió: ${new Date(student.joined_at).toLocaleDateString()}`
+                              }
+                            </span>
+                            {!isPendingInvitation && student.graduation_date && (
+                              <>
+                                <span>•</span>
+                                <span>
+                                  Graduado: {new Date(student.graduation_date).toLocaleDateString()}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          {isPendingInvitation && (
+                            <p className="text-xs text-muted-foreground mt-2 italic">
+                              El estudiante aún no se ha registrado en la plataforma
+                            </p>
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Calendar className="w-4 h-4" />
-                          <span>
-                            Se unió: {new Date(student.joined_at).toLocaleDateString()}
-                          </span>
-                          {student.graduation_date && (
-                            <>
-                              <span>•</span>
-                              <span>
-                                Graduado: {new Date(student.graduation_date).toLocaleDateString()}
-                              </span>
-                            </>
-                          )}
+                        <div className="flex items-center gap-2">
+                          <Badge className={`${getStatusColor(student.status)} text-xs`}>
+                            {getStatusText(student.status)}
+                          </Badge>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {!isPendingInvitation && (
+                                <DropdownMenuItem onClick={() => handleSendMessage(student.user_id)}>
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Enviar Mensaje
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem 
+                                onClick={() => handleRemoveStudent(student.talent_profiles?.email || student.user_id)}
+                                className="text-red-600"
+                              >
+                                <UserX className="h-4 w-4 mr-2" />
+                                {isPendingInvitation ? 'Cancelar Invitación' : 'Desligar Estudiante'}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Badge className={`${getStatusColor(student.status)} text-xs`}>
-                          {getStatusText(student.status)}
-                        </Badge>
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleSendMessage(student.user_id)}>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Enviar Mensaje
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleRemoveStudent(student.talent_profiles?.email || student.user_id)}
-                              className="text-red-600"
-                            >
-                              <UserX className="h-4 w-4 mr-2" />
-                              Desligar Estudiante
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
 

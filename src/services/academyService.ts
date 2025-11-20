@@ -126,7 +126,8 @@ export const academyService = {
         .eq('academy_id', academyId);
 
       // Apply status filter - map UI status values to database status values
-      if (filters?.status && filters.status !== 'all') {
+      // Note: pending_invitations filter is handled after fetching data
+      if (filters?.status && filters.status !== 'all' && filters.status !== 'pending_invitations') {
         // Map 'active' to 'enrolled' for database query
         let dbStatus = filters.status;
         if (filters.status === 'active') {
@@ -148,12 +149,18 @@ export const academyService = {
       const allStudentEmails = (data || []).map(s => s.student_email);
       let namesMap = new Map<string, string>();
       let avatarsMap = new Map<string, string | null>();
+      let userProfiles: Array<{ 
+        email: string; 
+        user_id: string; 
+        full_name: string | null;
+        avatar_url: string | null;
+      }> | null = null;
       
       if (allStudentEmails.length > 0) {
         console.log('🔍 Getting data for ALL students:', allStudentEmails.length);
         console.log('📧 All student emails:', allStudentEmails);
         
-        const { data: userProfiles, error: rpcError } = await supabase
+        const { data: profilesData, error: rpcError } = await supabase
           .rpc('get_user_ids_by_emails', { 
             user_emails: allStudentEmails
           }) as { 
@@ -170,6 +177,7 @@ export const academyService = {
           console.error('❌ Error calling get_user_ids_by_emails:', rpcError);
         }
         
+        userProfiles = profilesData;
         console.log('📊 RPC Response for all students:', userProfiles);
         
         // Mapa de nombres solo para los que necesitan reemplazo
@@ -187,16 +195,32 @@ export const academyService = {
         console.log('✅ Avatars Map:', Array.from(avatarsMap.entries()));
       }
 
+      // Create a set of emails that have user_ids (registered users)
+      const registeredEmails = new Set(
+        userProfiles?.map(p => p.email) || []
+      );
+      
       // Transform data to match AcademyStudent type
       const students: AcademyStudent[] = (data || []).map(student => {
-        // Map 'enrolled' to 'active' for type compatibility
-        let mappedStatus: 'active' | 'graduated' | 'paused' | 'suspended' = 'active';
-        if (student.status === 'graduated') mappedStatus = 'graduated';
-        else if (student.status === 'paused') mappedStatus = 'paused';
-        else if (student.status === 'suspended') mappedStatus = 'suspended';
-        else mappedStatus = 'active'; // 'enrolled' maps to 'active'
+        // Check if this is a pending invitation (email not in registeredEmails means not registered yet)
+        const isPendingInvitation = !registeredEmails.has(student.student_email);
+        
+        // Map 'enrolled' to 'active' for type compatibility, but handle pending invitations
+        let mappedStatus: 'active' | 'graduated' | 'paused' | 'suspended' | 'pending_invitations' = 'active';
+        if (isPendingInvitation) {
+          mappedStatus = 'pending_invitations';
+        } else if (student.status === 'graduated') {
+          mappedStatus = 'graduated';
+        } else if (student.status === 'paused') {
+          mappedStatus = 'paused';
+        } else if (student.status === 'suspended') {
+          mappedStatus = 'suspended';
+        } else {
+          mappedStatus = 'active'; // 'enrolled' maps to 'active'
+        }
         
         // Usar nombre real si student_name es un email
+        // Para invitaciones pendientes, mostrar solo el email si no hay nombre
         let displayName = student.student_name;
         if (!displayName || isEmail(displayName)) {
           displayName = namesMap.get(student.student_email) || student.student_email;
@@ -208,7 +232,9 @@ export const academyService = {
           student_name: student.student_name,
           displayName,
           avatarUrl,
-          foundInMap: namesMap.has(student.student_email)
+          foundInMap: namesMap.has(student.student_email),
+          isPendingInvitation,
+          isRegistered: registeredEmails.has(student.student_email)
         });
         
         return {
@@ -227,16 +253,22 @@ export const academyService = {
         };
       });
 
+      // Apply pending_invitations filter (after determining status)
+      let filteredStudents = students;
+      if (filters?.status === 'pending_invitations') {
+        filteredStudents = students.filter(student => student.status === 'pending_invitations');
+      }
+
       // Apply search filter
       if (filters?.search) {
         const searchLower = filters.search.toLowerCase();
-        return students.filter(student => 
+        filteredStudents = filteredStudents.filter(student => 
           student.talent_profiles?.full_name?.toLowerCase().includes(searchLower) ||
           student.talent_profiles?.email?.toLowerCase().includes(searchLower)
         );
       }
 
-      return students;
+      return filteredStudents;
     } catch (error) {
       console.error('Error fetching students:', error);
       return [];
