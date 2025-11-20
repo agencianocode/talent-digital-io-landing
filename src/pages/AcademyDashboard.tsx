@@ -21,8 +21,7 @@ import {
   FileUp
 } from 'lucide-react';
 import AcademyOverview from '../components/academy/AcademyOverview';
-import StudentDirectory from '../components/academy/StudentDirectory';
-import InvitationManager from '../components/academy/InvitationManager';
+import StudentManagement from '../components/academy/StudentManagement';
 import ActivityFeed from '../components/academy/ActivityFeed';
 import PublicDirectory from '../components/academy/PublicDirectory';
 import { AcademyBrandingSettings } from '@/components/academy/AcademyBrandingSettings';
@@ -38,6 +37,7 @@ const AcademyDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [expandInvitations, setExpandInvitations] = useState(false);
 
   // Check if user has academy role
   const isAcademyRole = userRole === 'business' || userRole === 'premium_business' || userRole === 'freemium_business' || userRole === 'academy_premium' || userRole === 'admin';
@@ -120,7 +120,12 @@ const AcademyDashboard: React.FC = () => {
               <Settings className="h-4 w-4 mr-2" />
               Configuración
             </Button>
-            <Button size="sm" onClick={() => setActiveTab('invitations')}>
+            <Button size="sm" onClick={() => {
+              setActiveTab('students');
+              setExpandInvitations(true);
+              // Reset after a short delay to allow the component to react
+              setTimeout(() => setExpandInvitations(false), 100);
+            }}>
               <Plus className="h-4 w-4 mr-2" />
               Invitar Estudiantes
             </Button>
@@ -186,7 +191,7 @@ const AcademyDashboard: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Dashboard
@@ -198,10 +203,6 @@ const AcademyDashboard: React.FC = () => {
           <TabsTrigger value="students" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Estudiantes
-          </TabsTrigger>
-          <TabsTrigger value="invitations" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            Invitaciones
           </TabsTrigger>
           <TabsTrigger value="activity" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -232,12 +233,8 @@ const AcademyDashboard: React.FC = () => {
                 Importar CSV
               </Button>
             </div>
-            <StudentDirectory academyId={academyId} onInviteClick={() => setActiveTab('invitations')} />
+            <StudentManagement academyId={academyId} initialExpanded={expandInvitations} />
           </div>
-        </TabsContent>
-
-        <TabsContent value="invitations">
-          <InvitationManager academyId={academyId} />
         </TabsContent>
 
         <TabsContent value="activity">
