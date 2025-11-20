@@ -476,12 +476,52 @@ export const usePublishingRequests = () => {
 
   const deleteRequest = async (requestId: string) => {
     try {
-      const { error } = await supabase
+      console.log('🗑️ [Eliminar] Iniciando eliminación de solicitud:', requestId);
+      
+      // Verificar que el requestId existe
+      if (!requestId) {
+        throw new Error('ID de solicitud no proporcionado');
+      }
+
+      // Verificar que la solicitud existe antes de intentar eliminarla
+      const { data: existingRequest, error: checkError } = await supabase
+        .from('marketplace_publishing_requests')
+        .select('id, contact_email, status')
+        .eq('id', requestId)
+        .single();
+
+      if (checkError) {
+        console.error('❌ [Eliminar] Error al verificar solicitud:', checkError);
+        throw new Error(`No se encontró la solicitud: ${checkError.message}`);
+      }
+
+      if (!existingRequest) {
+        throw new Error('La solicitud no existe');
+      }
+
+      console.log('🔍 [Eliminar] Solicitud encontrada:', existingRequest);
+
+      // Intentar eliminar
+      const { error, data } = await supabase
         .from('marketplace_publishing_requests')
         .delete()
-        .eq('id', requestId);
+        .eq('id', requestId)
+        .select();
 
-      if (error) throw error;
+      console.log('🔍 [Eliminar] Resultado de eliminación:', { error, data });
+
+      if (error) {
+        console.error('❌ [Eliminar] Error de Supabase:', error);
+        console.error('❌ [Eliminar] Detalles del error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
+
+      console.log('✅ [Eliminar] Solicitud eliminada exitosamente');
 
       toast({
         title: 'Éxito',
@@ -492,10 +532,16 @@ export const usePublishingRequests = () => {
       await loadRequests();
       return true;
     } catch (error: any) {
-      console.error('Error deleting request:', error);
+      console.error('❌ [Eliminar] Error al eliminar solicitud (catch):', error);
+      console.error('❌ [Eliminar] Stack trace:', error.stack);
+      
+      const errorMessage = error.message || 'No se pudo eliminar la solicitud';
+      const errorDetails = error.details ? ` Detalles: ${error.details}` : '';
+      const errorHint = error.hint ? ` Sugerencia: ${error.hint}` : '';
+      
       toast({
         title: 'Error',
-        description: error.message || 'No se pudo eliminar la solicitud',
+        description: `${errorMessage}${errorDetails}${errorHint}`,
         variant: 'destructive',
       });
       return false;
