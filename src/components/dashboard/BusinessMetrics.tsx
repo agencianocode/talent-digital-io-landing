@@ -185,49 +185,6 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
         )}
       </div>
 
-      {/* Secondary Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 w-full">
-        <Card>
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="text-xs sm:text-sm text-muted-foreground">Total de Postulaciones</div>
-                <div className="text-lg sm:text-xl font-bold">{metrics.totalApplications}</div>
-              </div>
-              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/30 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="text-xs sm:text-sm text-muted-foreground line-clamp-2">Promedio de Tiempo de Respuesta</div>
-                <div className="text-lg sm:text-xl font-bold">
-                  {typeof metrics.averageResponseTime === 'number' && metrics.averageResponseTime > 0 
-                    ? `${metrics.averageResponseTime}h` 
-                    : 'N/A'}
-                </div>
-              </div>
-              <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/30 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="text-xs sm:text-sm text-muted-foreground">Postulaciones Este Mes</div>
-                <div className="text-lg sm:text-xl font-bold">{metrics.applicationsThisMonth || 0}</div>
-              </div>
-              <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/30 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
     </div>
   );
 };
