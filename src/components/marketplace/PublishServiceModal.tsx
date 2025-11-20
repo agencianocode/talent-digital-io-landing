@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { NEW_MARKETPLACE_CATEGORIES } from '@/lib/marketplace-constants';
 
 interface PublishServiceModalProps {
@@ -50,9 +51,6 @@ interface PublishServiceForm {
   location: string;
   
   // Freemium user fields (for publishing request)
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
   companyName: string;
   budget: string;
   timeline: string;
@@ -66,7 +64,8 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userRole } = useSupabaseAuth();
+  const { userRole, user, profile } = useSupabaseAuth();
+  const { activeCompany } = useCompany();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState<PublishServiceForm>({
@@ -79,9 +78,6 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
     deliveryTime: '',
     location: '',
     // Freemium
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
     companyName: '',
     budget: '',
     timeline: '',
@@ -155,11 +151,19 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
         });
       } else {
         // Freemium users: Submit publishing request
+        // Obtener datos del perfil del usuario automáticamente
+        const contactName = profile?.full_name || user?.email?.split('@')[0] || 'Usuario';
+        const contactEmail = user?.email || '';
+        const contactPhone = profile?.phone || '';
+        const companyName = isFreemiumBusiness 
+          ? (formData.companyName || activeCompany?.name || '')
+          : (profile?.full_name || contactName);
+
         await marketplaceService.createPublishingRequest({
-          contact_name: formData.contactName,
-          contact_email: formData.contactEmail,
-          contact_phone: formData.contactPhone,
-          company_name: isFreemiumBusiness ? formData.companyName : formData.contactName, // Para talentos usar el nombre en lugar de empresa
+          contact_name: contactName,
+          contact_email: contactEmail,
+          contact_phone: contactPhone || undefined,
+          company_name: companyName,
           service_type: formData.serviceType,
           budget: formData.budget,
           timeline: formData.timeline,
@@ -435,56 +439,29 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
           ) : (
             // Freemium User Form - Publishing request
             <>
-              {/* Información de Contacto */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Información de Contacto</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contactName">Nombre completo *</Label>
-                    <Input
-                      id="contactName"
-                      value={formData.contactName}
-                      onChange={(e) => handleInputChange('contactName', e.target.value)}
-                      placeholder="Tu nombre completo"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contactEmail">Email *</Label>
-                    <Input
-                      id="contactEmail"
-                      type="email"
-                      value={formData.contactEmail}
-                      onChange={(e) => handleInputChange('contactEmail', e.target.value)}
-                      placeholder="tu@empresa.com"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contactPhone">Teléfono</Label>
-                    <Input
-                      id="contactPhone"
-                      value={formData.contactPhone}
-                      onChange={(e) => handleInputChange('contactPhone', e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-                  {isFreemiumBusiness && (
+              {/* Información de Contacto - Solo para empresas */}
+              {isFreemiumBusiness && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Información de Empresa</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="companyName">Empresa *</Label>
                       <Input
                         id="companyName"
-                        value={formData.companyName}
+                        value={formData.companyName || activeCompany?.name || ''}
                         onChange={(e) => handleInputChange('companyName', e.target.value)}
-                        placeholder="Nombre de tu empresa"
+                        placeholder={activeCompany?.name || "Nombre de tu empresa"}
                         required
                       />
+                      {activeCompany?.name && (
+                        <p className="text-xs text-muted-foreground">
+                          Usando: {activeCompany.name}
+                        </p>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Detalles del Servicio */}
               <div className="space-y-4">
