@@ -69,13 +69,15 @@ const TalentMarketplace: React.FC = () => {
           );
           const latestRequest = sortedRequests[0];
           
-          // Verificar si el usuario ya cerró el banner para esta solicitud
-          const dismissedKey = `publishing_request_alert_dismissed_${latestRequest.id}`;
-          const isDismissed = localStorage.getItem(dismissedKey) === 'true';
-          
-          if (!isDismissed) {
-            setPublishingRequestStatus(latestRequest.status as 'pending' | 'approved' | 'rejected');
-            setShowAlert(true);
+          if (latestRequest) {
+            // Verificar si el usuario ya cerró el banner para esta solicitud
+            const dismissedKey = `publishing_request_alert_dismissed_${latestRequest.id}`;
+            const isDismissed = localStorage.getItem(dismissedKey) === 'true';
+            
+            if (!isDismissed) {
+              setPublishingRequestStatus(latestRequest.status as 'pending' | 'approved' | 'rejected');
+              setShowAlert(true);
+            }
           }
         }
       } catch (error) {
@@ -123,9 +125,11 @@ const TalentMarketplace: React.FC = () => {
         );
         const latestRequest = sortedRequests[0];
         
-        // Guardar en localStorage que el usuario cerró el banner
-        const dismissedKey = `publishing_request_alert_dismissed_${latestRequest.id}`;
-        localStorage.setItem(dismissedKey, 'true');
+        if (latestRequest) {
+          // Guardar en localStorage que el usuario cerró el banner
+          const dismissedKey = `publishing_request_alert_dismissed_${latestRequest.id}`;
+          localStorage.setItem(dismissedKey, 'true');
+        }
       }
     } catch (error) {
       console.error('Error dismissing alert:', error);
