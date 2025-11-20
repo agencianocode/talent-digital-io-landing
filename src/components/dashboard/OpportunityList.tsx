@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { 
@@ -59,6 +61,7 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [showDrafts, setShowDrafts] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [opportunityToDelete, setOpportunityToDelete] = useState<any>(null);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
@@ -119,7 +122,10 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
     const matchesStatus = statusFilter === 'all' || opp.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || (opp.category && opp.category === categoryFilter);
     
-    return matchesSearch && matchesStatus && matchesCategory;
+    // Ocultar borradores por defecto a menos que showDrafts esté activado
+    const matchesDraftFilter = showDrafts || opp.status !== 'draft';
+    
+    return matchesSearch && matchesStatus && matchesCategory && matchesDraftFilter;
   });
 
   const handleDuplicate = async (opportunity: any) => {
@@ -306,6 +312,18 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      {/* Toggle para mostrar borradores */}
+      <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+        <Switch
+          id="show-drafts"
+          checked={showDrafts}
+          onCheckedChange={setShowDrafts}
+        />
+        <Label htmlFor="show-drafts" className="text-sm font-medium cursor-pointer">
+          Mostrar borradores
+        </Label>
       </div>
 
       {/* Opportunities List */}

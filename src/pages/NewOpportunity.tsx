@@ -139,6 +139,25 @@ const NewOpportunity = () => {
         // CRÍTICO: Guardar el ID y cambiar a modo edición para evitar duplicados
         if (insertedData?.id) {
           console.log('✅ Borrador creado con ID:', insertedData.id);
+          
+          // Eliminar borradores antiguos de esta empresa (excepto el recién creado)
+          try {
+            const { error: deleteError } = await supabase
+              .from('opportunities')
+              .delete()
+              .eq('company_id', activeCompany.id)
+              .eq('status', 'draft')
+              .neq('id', insertedData.id);
+            
+            if (deleteError) {
+              console.warn('⚠️ Error al eliminar borradores antiguos:', deleteError);
+            } else {
+              console.log('✅ Borradores antiguos eliminados');
+            }
+          } catch (cleanupError) {
+            console.warn('⚠️ Error al limpiar borradores antiguos:', cleanupError);
+          }
+          
           setIsEditing(true);
           // Actualizar la URL para reflejar que ahora estamos editando
           window.history.replaceState(null, '', `/business-dashboard/opportunities/edit/${insertedData.id}`);
