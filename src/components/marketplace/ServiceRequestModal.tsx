@@ -346,7 +346,7 @@ Puedes responder a esta conversación para continuar la comunicación.
             <div className="flex-1">
               <p className="text-sm font-medium">{service.user_name}</p>
               <div className="flex items-center gap-2">
-                {service.rating && (
+                {service.rating != null && service.rating > 0 && service.reviews_count > 0 && (
                   <div className="flex items-center gap-1">
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     <span className="text-xs font-medium">{service.rating}</span>
