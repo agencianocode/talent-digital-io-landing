@@ -178,16 +178,35 @@ export const CompanyProvider: React.FC<CompanyProviderProps> = ({ children }) =>
       
       setUserRoles(mappedRoles);
 
-      // Set active company from localStorage or first available
+      // Sort companies to prioritize "Agencia de No Code"
+      const sortedCompanies = companies ? [...companies].sort((a, b) => {
+        const aName = a.name?.toLowerCase() || '';
+        const bName = b.name?.toLowerCase() || '';
+        const isAgenciaA = aName.includes('agencia de no code') || aName.includes('agencianocode');
+        const isAgenciaB = bName.includes('agencia de no code') || bName.includes('agencianocode');
+        
+        if (isAgenciaA && !isAgenciaB) return -1;
+        if (!isAgenciaA && isAgenciaB) return 1;
+        return 0;
+      }) : [];
+
+      // Set active company from localStorage or prioritize "Agencia de No Code"
       const savedCompanyId = localStorage.getItem('activeCompanyId');
       let activeComp = null;
 
       if (savedCompanyId) {
-        activeComp = companies?.find(c => c.id === savedCompanyId);
+        activeComp = sortedCompanies.find(c => c.id === savedCompanyId);
       }
       
-      if (!activeComp && companies && companies.length > 0) {
-        activeComp = companies[0];
+      if (!activeComp && sortedCompanies.length > 0) {
+        // First try to find "Agencia de No Code"
+        const agenciaCompany = sortedCompanies.find(c => {
+          const name = c.name?.toLowerCase() || '';
+          return name.includes('agencia de no code') || name.includes('agencianocode');
+        });
+        
+        // If found, use it; otherwise use the first company (which should be sorted first)
+        activeComp = agenciaCompany || sortedCompanies[0];
       }
 
       if (activeComp) {
