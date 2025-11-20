@@ -57,7 +57,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   const { toast } = useToast();
   const { user, profile } = useSupabaseAuth();
   const { activeCompany } = useCompany();
-  const { getOrCreateConversation, sendMessage, loadConversations } = useMessages();
+  const { getOrCreateConversation, loadConversations } = useMessages();
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ServiceRequestForm>({
@@ -188,10 +188,38 @@ ${formData.message}
 Puedes responder a esta conversación para continuar la comunicación.
           `.trim();
 
-          await sendMessage(
-            conversationId,
-            requestDetails
-          );
+          // Insertar mensaje directamente en la base de datos
+          // Esto asegura que el mensaje se guarde correctamente y aparezca en /talent-dashboard/messages
+          console.log('[ServiceRequestModal] Inserting message with:', {
+            conversation_id: conversationId,
+            sender_id: user.id,
+            recipient_id: serviceOwnerId,
+            content_length: requestDetails.length
+          });
+          
+          const { data: messageResult, error: messageError } = await supabase
+            .from('messages' as any)
+            .insert({
+              conversation_id: conversationId,
+              sender_id: user.id,
+              recipient_id: serviceOwnerId,
+              message_type: 'text',
+              content: requestDetails
+            })
+            .select('*')
+            .single();
+
+          if (messageError) {
+            console.error('[ServiceRequestModal] Error inserting message:', messageError);
+            throw messageError;
+          }
+
+          console.log('[ServiceRequestModal] Message inserted successfully:', {
+            id: messageResult?.id,
+            conversation_id: messageResult?.conversation_id,
+            sender_id: messageResult?.sender_id,
+            recipient_id: messageResult?.recipient_id
+          });
 
           // Recargar conversaciones para que aparezcan inmediatamente en /talent-dashboard/messages
           // Esto asegura que la conversación creada se muestre en la página de mensajería

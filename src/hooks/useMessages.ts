@@ -219,13 +219,20 @@ export const useMessages = () => {
       setIsLoading(true);
       
       // Get all messages where user is sender or recipient
+      console.log('[fetchConversations] Fetching messages for user:', user.id);
       const { data: messages, error } = await supabase
         .from('messages' as any)
         .select('*')
         .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[fetchConversations] Error fetching messages:', error);
+        throw error;
+      }
+      
+      console.log('[fetchConversations] Found', messages?.length || 0, 'messages');
+      console.log('[fetchConversations] Conversation IDs:', messages?.map((m: any) => m.conversation_id).filter((v: any, i: number, a: any[]) => a.indexOf(v) === i));
 
       // Fetch conversation overrides
       const { data: overrides } = await supabase
