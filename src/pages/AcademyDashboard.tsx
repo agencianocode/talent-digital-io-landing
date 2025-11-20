@@ -15,14 +15,12 @@ import {
   Share2,
   Plus,
   Settings,
-  Palette,
   FileUp
 } from 'lucide-react';
 import AcademyOverview from '../components/academy/AcademyOverview';
 import StudentManagement from '../components/academy/StudentManagement';
 import ActivityFeed from '../components/academy/ActivityFeed';
-import PublicDirectory from '../components/academy/PublicDirectory';
-import { AcademyBrandingSettings } from '@/components/academy/AcademyBrandingSettings';
+import PublicDirectorySettings from '../components/academy/PublicDirectorySettings';
 import { BulkInviteModal } from '@/components/academy/BulkInviteModal';
 import { AcademyEmployabilityStats } from '@/components/academy/AcademyEmployabilityStats';
 import { GraduateApplicationsTracking } from '@/components/academy/GraduateApplicationsTracking';
@@ -114,7 +112,7 @@ const AcademyDashboard: React.FC = () => {
               <Share2 className="h-4 w-4 mr-2" />
               Compartir
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setActiveTab('branding')}>
+            <Button variant="outline" size="sm" onClick={() => setActiveTab('public-directory')}>
               <Settings className="h-4 w-4 mr-2" />
               Configuración
             </Button>
@@ -133,14 +131,10 @@ const AcademyDashboard: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Dashboard
-          </TabsTrigger>
-          <TabsTrigger value="branding" className="flex items-center gap-2">
-            <Palette className="h-4 w-4" />
-            Branding
           </TabsTrigger>
           <TabsTrigger value="students" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -150,9 +144,9 @@ const AcademyDashboard: React.FC = () => {
             <TrendingUp className="h-4 w-4" />
             Actividad
           </TabsTrigger>
-          <TabsTrigger value="directory" className="flex items-center gap-2">
+          <TabsTrigger value="public-directory" className="flex items-center gap-2">
             <Share2 className="h-4 w-4" />
-            Directorio
+            Directorio Público
           </TabsTrigger>
         </TabsList>
 
@@ -161,10 +155,6 @@ const AcademyDashboard: React.FC = () => {
             <AcademyOverview academyId={academyId} onTabChange={setActiveTab} />
             <AcademyEmployabilityStats academyId={academyId} />
           </div>
-        </TabsContent>
-
-        <TabsContent value="branding">
-          <AcademyBrandingSettings academyId={academyId} />
         </TabsContent>
 
         <TabsContent value="students">
@@ -186,8 +176,8 @@ const AcademyDashboard: React.FC = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="directory">
-          <PublicDirectory academyId={academyId} />
+        <TabsContent value="public-directory">
+          <PublicDirectorySettings academyId={academyId} />
         </TabsContent>
       </Tabs>
 
