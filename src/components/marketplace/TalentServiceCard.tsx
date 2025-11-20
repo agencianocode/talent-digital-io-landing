@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +53,7 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
   onUpdateRequestStatus,
   isUpdatingRequest = false
 }) => {
+  const navigate = useNavigate();
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   const category = marketplaceCategories.find((cat) => cat.name === service.category);
 
@@ -103,12 +105,18 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
   const StatusIcon = statusInfo.icon;
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // No abrir el modal si se hace clic en el dropdown menu o botones
+    // No navegar si se hace clic en el dropdown menu o botones
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('[role="menuitem"]')) {
       return;
     }
-    onEdit(service);
+    
+    // Navegar a la página de detalle del servicio
+    const userRole = window.location.pathname.includes('business-dashboard') 
+      ? 'business' 
+      : 'talent';
+    const basePath = userRole === 'business' ? '/business-dashboard' : '/talent-dashboard';
+    navigate(`${basePath}/my-services/${service.id}`);
   };
 
   return (

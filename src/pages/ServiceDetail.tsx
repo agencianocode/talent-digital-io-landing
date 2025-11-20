@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,13 +14,25 @@ import {
   MapPin,
   Clock,
   DollarSign,
-  Package
+  Package,
+  Edit,
+  Mail,
+  Phone,
+  Building,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import { ServiceReviews } from '@/components/marketplace/ServiceReviews';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useTalentServices } from '@/hooks/useTalentServices';
+import { useMessages } from '@/hooks/useMessages';
+import { useToast } from '@/hooks/use-toast';
+import ServiceForm from '@/components/marketplace/ServiceForm';
 
 interface ServiceDetail {
   id: string;
@@ -47,13 +59,35 @@ interface ServiceDetail {
 const ServiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useSupabaseAuth();
+  const { toast } = useToast();
+  const { getOrCreateConversation } = useMessages();
+  const { 
+    serviceRequests, 
+    updateRequestStatus, 
+    updateService,
+    loadServiceRequests 
+  } = useTalentServices();
+  
   const [service, setService] = useState<ServiceDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-const [canReview, setCanReview] = useState(false);
+  const [canReview, setCanReview] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
+  const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
+  
   const { categories: marketplaceCategories } = useMarketplaceCategories();
+  
+  // Detectar si viene de /my-services (es propietario)
+  const isOwnerView = location.pathname.includes('/my-services/');
+  
+  // Filtrar solicitudes para este servicio
+  const requestsForService = isOwnerView 
+    ? serviceRequests.filter(req => req.service_id === id)
+    : [];
 
   useEffect(() => {
     if (id) {
@@ -61,8 +95,11 @@ const [canReview, setCanReview] = useState(false);
       if (user) {
         checkReviewEligibility();
       }
+      if (isOwnerView) {
+        loadServiceRequests();
+      }
     }
-  }, [id, user]);
+  }, [id, user, isOwnerView]);
 
   const loadServiceDetail = async () => {
     try {
@@ -108,8 +145,9 @@ const [canReview, setCanReview] = useState(false);
           is_available: serviceData.is_available
         });
 
-        // Increment view count
-        if (id) {
+        // Increment view count (solo si no es vista de propietario)
+        const isOwnerViewCheck = location.pathname.includes('/my-services/');
+        if (id && !isOwnerViewCheck) {
           await supabase
             .from('marketplace_services')
             .update({ views_count: serviceData.views_count + 1 })
@@ -151,6 +189,120 @@ const [canReview, setCanReview] = useState(false);
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return { 
+          label: 'Pendiente', 
+          color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+          icon: Clock
+        };
+      case 'accepted':
+        return { 
+          label: 'Aceptado', 
+          color: 'bg-green-100 text-green-800 border-green-200',
+          icon: CheckCircle
+        };
+      case 'declined':
+        return { 
+          label: 'Rechazado', 
+          color: 'bg-red-100 text-red-800 border-red-200',
+          icon: XCircle
+        };
+      case 'completed':
+        return { 
+          label: 'Completado', 
+          color: 'bg-blue-100 text-blue-800 border-blue-200',
+          icon: CheckCircle
+        };
+      default:
+        return { 
+          label: 'Desconocido', 
+          color: 'bg-gray-100 text-gray-800 border-gray-200',
+          icon: Clock
+        };
+    }
+  };
+
+  const handleOpenConversation = async (request: typeof requestsForService[0]) => {
+    if (!user || !request.requester_id) {
+      toast({
+        title: "Error",
+        description: "No se puede abrir la conversación. Usuario no identificado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const conversationId = await getOrCreateConversation(
+        request.requester_id,
+        'service_inquiry',
+        undefined,
+        id!
+      );
+
+      const userRole = user.user_metadata?.user_role || 'talent';
+      const basePath = userRole.includes('business') ? '/business-dashboard' : '/talent-dashboard';
+      navigate(`${basePath}/messages/${conversationId}`);
+    } catch (error) {
+      console.error('Error opening conversation:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo abrir la conversación. Intenta nuevamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateStatus = async (
+    requestId: string, 
+    status: 'pending' | 'accepted' | 'declined' | 'completed'
+  ) => {
+    setIsUpdatingStatus(requestId);
+    try {
+      await updateRequestStatus(requestId, status);
+      toast({
+        title: "Estado actualizado",
+        description: `La solicitud ha sido ${status === 'accepted' ? 'aceptada' : status === 'declined' ? 'rechazada' : 'actualizada'}.`,
+      });
+      setExpandedRequestId(null);
+      await loadServiceRequests();
+      await loadServiceDetail();
+    } catch (error) {
+      console.error('Error updating request status:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de la solicitud.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingStatus(null);
+    }
+  };
+
+  const handleEditService = async (formData: any) => {
+    if (!id) return false;
+    try {
+      await updateService(id, formData);
+      setIsEditModalOpen(false);
+      await loadServiceDetail();
+      toast({
+        title: "Servicio actualizado",
+        description: "Los cambios se han guardado correctamente.",
+      });
+      return true;
+    } catch (error) {
+      console.error('Error updating service:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el servicio.",
+        variant: "destructive",
+      });
+      return false;
+    }
   };
 
   if (isLoading) {
@@ -197,7 +349,15 @@ const [canReview, setCanReview] = useState(false);
       {/* Back Button */}
       <Button
         variant="ghost"
-        onClick={() => navigate(-1)}
+        onClick={() => {
+          if (isOwnerView) {
+            const userRole = user?.user_metadata?.user_role || 'talent';
+            const basePath = userRole.includes('business') ? '/business-dashboard' : '/talent-dashboard';
+            navigate(`${basePath}/my-services`);
+          } else {
+            navigate(-1);
+          }
+        }}
         className="mb-6"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
@@ -293,8 +453,174 @@ const [canReview, setCanReview] = useState(false);
             </CardContent>
           </Card>
 
-          {/* Reviews Section */}
-          <ServiceReviews serviceId={service.id} canReview={canReview} />
+          {/* Reviews Section o Solicitudes Section según si es propietario */}
+          {isOwnerView ? (
+            <Card>
+              <CardHeader>
+                <h2 className="text-xl font-semibold">Solicitudes de Servicio</h2>
+                <p className="text-sm text-muted-foreground">
+                  Gestiona las solicitudes recibidas para este servicio
+                </p>
+              </CardHeader>
+              <CardContent>
+                {requestsForService.length === 0 ? (
+                  <div className="text-center py-8">
+                    <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      Aún no has recibido solicitudes para este servicio.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {requestsForService.map((request) => {
+                      const statusInfo = getStatusInfo(request.status);
+                      const StatusIcon = statusInfo.icon;
+                      const isExpanded = expandedRequestId === request.id;
+
+                      return (
+                        <Card key={request.id} className="overflow-hidden">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-4">
+                              <Avatar className="h-10 w-10">
+                                <AvatarFallback>
+                                  {getInitials(request.requester_name)}
+                                </AvatarFallback>
+                              </Avatar>
+                              
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="font-semibold">{request.requester_name}</h3>
+                                  <Badge className={statusInfo.color} variant="outline">
+                                    <StatusIcon className="h-3 w-3 mr-1" />
+                                    {statusInfo.label}
+                                  </Badge>
+                                </div>
+                                
+                                {request.company_name && (
+                                  <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+                                    <Building className="h-3 w-3" />
+                                    <span>{request.company_name}</span>
+                                  </div>
+                                )}
+                                
+                                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                                  {request.message}
+                                </p>
+
+                                <div className="flex flex-wrap gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setExpandedRequestId(isExpanded ? null : request.id)}
+                                  >
+                                    {isExpanded ? 'Ver menos' : 'Ver detalles'}
+                                  </Button>
+                                  
+                                  {request.requester_id && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleOpenConversation(request)}
+                                    >
+                                      <MessageSquare className="h-3 w-3 mr-1" />
+                                      Responder
+                                    </Button>
+                                  )}
+                                  
+                                  {request.status === 'pending' && (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        className="bg-green-600 hover:bg-green-700"
+                                        onClick={() => handleUpdateStatus(request.id, 'accepted')}
+                                        disabled={isUpdatingStatus === request.id}
+                                      >
+                                        {isUpdatingStatus === request.id ? (
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <>
+                                            <CheckCircle className="h-3 w-3 mr-1" />
+                                            Aceptar
+                                          </>
+                                        )}
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="border-red-500 text-red-500 hover:bg-red-50"
+                                        onClick={() => handleUpdateStatus(request.id, 'declined')}
+                                        disabled={isUpdatingStatus === request.id}
+                                      >
+                                        {isUpdatingStatus === request.id ? (
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <>
+                                            <XCircle className="h-3 w-3 mr-1" />
+                                            Rechazar
+                                          </>
+                                        )}
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+
+                                {isExpanded && (
+                                  <div className="mt-4 pt-4 border-t space-y-3">
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                      <div className="flex items-center gap-2 text-muted-foreground">
+                                        <DollarSign className="h-4 w-4" />
+                                        <span className="font-medium">Presupuesto:</span>
+                                        <span>{request.budget_range}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-muted-foreground">
+                                        <Clock className="h-4 w-4" />
+                                        <span className="font-medium">Timeline:</span>
+                                        <span>{request.timeline}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-muted-foreground col-span-2">
+                                        <Mail className="h-4 w-4" />
+                                        <span>{request.requester_email}</span>
+                                      </div>
+                                      {request.requester_phone && (
+                                        <div className="flex items-center gap-2 text-muted-foreground col-span-2">
+                                          <Phone className="h-4 w-4" />
+                                          <span>{request.requester_phone}</span>
+                                        </div>
+                                      )}
+                                      <div className="flex items-center gap-2 text-muted-foreground col-span-2">
+                                        <Calendar className="h-4 w-4" />
+                                        <span>
+                                          {new Date(request.created_at).toLocaleDateString('es-ES', {
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="p-3 bg-muted/50 rounded-lg">
+                                      <p className="font-medium text-sm mb-1">Mensaje completo:</p>
+                                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                        {request.message}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <ServiceReviews serviceId={service.id} canReview={canReview} />
+          )}
         </div>
 
         {/* Sidebar */}
@@ -315,19 +641,32 @@ const [canReview, setCanReview] = useState(false);
                 </div>
               </div>
 
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={() => setIsRequestModalOpen(true)}
-                disabled={!service.is_available || service.user_id === user?.id}
-              >
-                Solicitar Servicio
-              </Button>
+              {isOwnerView ? (
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={() => setIsEditModalOpen(true)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar Servicio
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() => setIsRequestModalOpen(true)}
+                    disabled={!service.is_available || service.user_id === user?.id}
+                  >
+                    Solicitar Servicio
+                  </Button>
 
-              {service.user_id === user?.id && (
-                <p className="text-xs text-center text-muted-foreground">
-                  Este es tu servicio
-                </p>
+                  {service.user_id === user?.id && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      Este es tu servicio
+                    </p>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -366,7 +705,7 @@ const [canReview, setCanReview] = useState(false);
       </div>
 
       {/* Service Request Modal */}
-      {service && (
+      {service && !isOwnerView && (
         <ServiceRequestModal
           isOpen={isRequestModalOpen}
           onClose={() => setIsRequestModalOpen(false)}
@@ -384,6 +723,30 @@ const [canReview, setCanReview] = useState(false);
             loadServiceDetail();
             setIsRequestModalOpen(false);
           }}
+        />
+      )}
+
+      {/* Service Edit Modal */}
+      {service && isOwnerView && (
+        <ServiceForm
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={handleEditService}
+          initialData={{
+            title: service.title,
+            description: service.description,
+            category: service.category,
+            price: service.price,
+            currency: service.currency,
+            delivery_time: service.delivery_time,
+            location: service.location,
+            is_available: service.is_available,
+            portfolio_url: service.portfolio_url || undefined,
+            demo_url: service.demo_url || undefined,
+            tags: service.tags
+          }}
+          isSubmitting={false}
+          mode="edit"
         />
       )}
     </div>
