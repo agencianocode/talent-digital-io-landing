@@ -24,7 +24,6 @@ import AcademyOverview from '../components/academy/AcademyOverview';
 import StudentDirectory from '../components/academy/StudentDirectory';
 import InvitationManager from '../components/academy/InvitationManager';
 import ActivityFeed from '../components/academy/ActivityFeed';
-import ExclusiveOpportunities from '../components/academy/ExclusiveOpportunities';
 import PublicDirectory from '../components/academy/PublicDirectory';
 import { AcademyBrandingSettings } from '@/components/academy/AcademyBrandingSettings';
 import { BulkInviteModal } from '@/components/academy/BulkInviteModal';
@@ -187,7 +186,7 @@ const AcademyDashboard: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Dashboard
@@ -207,10 +206,6 @@ const AcademyDashboard: React.FC = () => {
           <TabsTrigger value="activity" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
             Actividad
-          </TabsTrigger>
-          <TabsTrigger value="opportunities" className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4" />
-            Oportunidades
           </TabsTrigger>
           <TabsTrigger value="directory" className="flex items-center gap-2">
             <Share2 className="h-4 w-4" />
@@ -250,10 +245,6 @@ const AcademyDashboard: React.FC = () => {
             <ActivityFeed academyId={academyId} />
             <GraduateApplicationsTracking academyId={academyId} />
           </div>
-        </TabsContent>
-
-        <TabsContent value="opportunities">
-          <ExclusiveOpportunities academyId={academyId} />
         </TabsContent>
 
         <TabsContent value="directory">
