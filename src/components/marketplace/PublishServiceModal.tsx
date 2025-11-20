@@ -92,6 +92,16 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const isFreemiumUser = userRole === 'freemium_business' || userRole === 'freemium_talent';
   const isFreemiumBusiness = userRole === 'freemium_business';
   const isPremiumUser = userRole === 'premium_business' || userRole === 'premium_talent' || userRole === 'academy_premium';
+  
+  // Verificar si hay una solicitud pendiente
+  const hasPendingRequest = myRequests.some(request => request.status === 'pending');
+  
+  // Cargar solicitudes cuando se abre el modal
+  useEffect(() => {
+    if (isOpen && isFreemiumUser) {
+      loadMyRequests();
+    }
+  }, [isOpen, isFreemiumUser, loadMyRequests]);
 
   const serviceTypes = NEW_MARKETPLACE_CATEGORIES.map(name => ({
     value: name,
