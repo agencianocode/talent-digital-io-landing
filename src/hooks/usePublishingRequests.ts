@@ -221,28 +221,35 @@ export const usePublishingRequests = () => {
             throw new Error(`Error al crear el servicio: ${serviceError.message}`);
           } else {
             console.log('✅ Servicio creado exitosamente:', serviceData);
-          }
-
-          // Actualizar el rol del usuario a premium_talent si es freemium_talent
-          const { data: currentRole } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', requesterUserId)
-            .single();
-
-          if (currentRole && currentRole.role === 'freemium_talent') {
-            const { error: roleUpdateError } = await supabase
-              .from('user_roles')
-              .update({ role: 'premium_talent' })
-              .eq('user_id', requesterUserId);
             
-            if (roleUpdateError) {
-              console.error('❌ Error actualizando rol:', roleUpdateError);
+            // Actualizar el rol del usuario a premium_talent si es freemium_talent
+            const { data: currentRole, error: roleFetchError } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', requesterUserId)
+              .single();
+
+            if (roleFetchError) {
+              console.error('❌ Error obteniendo rol del usuario:', roleFetchError);
+            } else if (currentRole && currentRole.role === 'freemium_talent') {
+              const { error: roleUpdateError } = await supabase
+                .from('user_roles')
+                .update({ role: 'premium_talent' })
+                .eq('user_id', requesterUserId);
+              
+              if (roleUpdateError) {
+                console.error('❌ Error actualizando rol:', roleUpdateError);
+                toast({
+                  title: 'Advertencia',
+                  description: 'Servicio creado pero no se pudo actualizar el rol del usuario. Por favor, actualízalo manualmente.',
+                  variant: 'default',
+                });
+              } else {
+                console.log('✅ Rol actualizado a premium_talent para usuario:', requesterUserId);
+              }
             } else {
-              console.log('✅ Rol actualizado a premium_talent para usuario:', requesterUserId);
+              console.log('ℹ️ Usuario no es freemium_talent, no se actualiza el rol. Rol actual:', currentRole?.role);
             }
-          } else {
-            console.log('ℹ️ Usuario no es freemium_talent, no se actualiza el rol. Rol actual:', currentRole?.role);
           }
         } catch (serviceError: any) {
           console.error('❌ Error al crear servicio o actualizar rol:', serviceError);
