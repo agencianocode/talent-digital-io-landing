@@ -41,7 +41,7 @@ export const useAdminChat = () => {
   const [filters, setFilters] = useState<ChatFilters>({
     searchQuery: '',
     userTypeFilter: 'all',
-    statusFilter: 'all',
+    statusFilter: 'active',
     dateRange: 'all',
     priorityFilter: 'all',
     unreadFilter: 'all'
