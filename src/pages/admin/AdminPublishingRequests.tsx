@@ -26,7 +26,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useState } from 'react';
 
 export const AdminPublishingRequests = () => {
   const { requests, loading, updateRequestStatus, createServiceForApprovedRequest, deleteRequest } = usePublishingRequests();
