@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
-import { useSupabaseMessages } from "@/contexts/SupabaseMessagesContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAdminCustomization } from "@/hooks/useAdminCustomization";
 import { usePublishingRequests } from "@/hooks/usePublishingRequests";
+import { useAdminChatBadge } from "@/hooks/useAdminChatBadge";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 const navigationItems = [{
@@ -60,9 +60,6 @@ export function AdminSidebar({
     signOut
   } = useSupabaseAuth();
   const {
-    conversations
-  } = useSupabaseMessages();
-  const {
     unreadCount: unreadNotificationsCount
   } = useNotifications();
   const {
@@ -71,10 +68,10 @@ export function AdminSidebar({
   const {
     pendingCount
   } = usePublishingRequests();
+  const {
+    unreadCount: unreadMessagesCount
+  } = useAdminChatBadge();
   const navigate = useNavigate();
-
-  // Calculate unread messages count
-  const unreadMessagesCount = conversations?.filter(c => (c.unread_count ?? 0) > 0).length || 0;
   const getInitials = (name: string) => {
     if (!name) return "A";
     const parts = name.split(" ");
