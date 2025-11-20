@@ -102,7 +102,11 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
         
         // Directory settings
         setAcademyData(data as any);
+<<<<<<< HEAD
         if (data.directory_settings && typeof data.directory_settings === 'object' && !Array.isArray(data.directory_settings)) {
+=======
+        if (data.directory_settings && typeof data.directory_settings === 'object') {
+>>>>>>> 20a4e4bbe6c6d52bee83936f862cbf66142380d6
           const dirSettings = data.directory_settings as { show_logo?: boolean; show_description?: boolean; students_filter?: 'all' | 'graduated' | 'enrolled' };
           setShowLogo(dirSettings.show_logo ?? true);
           setShowDescription(dirSettings.show_description ?? true);
@@ -245,7 +249,7 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
           </Button>
           <Button variant="outline" onClick={handleViewPublic}>
             <ExternalLink className="h-4 w-4 mr-2" />
-            Ver Público
+            Ver Directorio
           </Button>
         </div>
       </div>
