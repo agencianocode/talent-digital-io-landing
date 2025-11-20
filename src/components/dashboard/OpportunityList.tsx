@@ -119,13 +119,21 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
   const filteredOpportunities = opportunities.filter(opp => {
     const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (opp.category && opp.category.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || opp.status === statusFilter;
+    
+    // Si el filtro de estado es 'draft', solo mostrar si showDrafts está activado
+    let matchesStatus = true;
+    if (statusFilter === 'draft') {
+      matchesStatus = showDrafts && opp.status === 'draft';
+    } else if (statusFilter === 'all') {
+      // Si es 'all', ocultar borradores a menos que showDrafts esté activado
+      matchesStatus = showDrafts || opp.status !== 'draft';
+    } else {
+      matchesStatus = opp.status === statusFilter;
+    }
+    
     const matchesCategory = categoryFilter === 'all' || (opp.category && opp.category === categoryFilter);
     
-    // Ocultar borradores por defecto a menos que showDrafts esté activado
-    const matchesDraftFilter = showDrafts || opp.status !== 'draft';
-    
-    return matchesSearch && matchesStatus && matchesCategory && matchesDraftFilter;
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
   const handleDuplicate = async (opportunity: any) => {
