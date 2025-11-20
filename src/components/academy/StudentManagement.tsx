@@ -8,16 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useAcademyData } from '@/hooks/useAcademyData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -35,7 +25,6 @@ import {
   Copy,
   CheckCircle2,
   Link as LinkIcon,
-  Loader2,
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
@@ -64,11 +53,6 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
   const [isSending, setIsSending] = useState(false);
   const [copiedActive, setCopiedActive] = useState(false);
   const [copiedGraduated, setCopiedGraduated] = useState(false);
-  const [invitations, setInvitations] = useState<any[]>([]);
-  const [loadingInvitations, setLoadingInvitations] = useState(true);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [studentToDelete, setStudentToDelete] = useState<{ id: string; email: string } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Generate invitation links
   const activeInviteLink = `${window.location.origin}/accept-academy-invitation?academy=${academyId}&status=enrolled`;
@@ -83,13 +67,6 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, academyId]);
 
-  // Load invitations
-  useEffect(() => {
-    if (showInvitations) {
-      loadInvitations();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [academyId, showInvitations]);
 
   // Handle initialExpanded prop changes
   useEffect(() => {
@@ -98,23 +75,6 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     }
   }, [initialExpanded]);
 
-  const loadInvitations = async () => {
-    try {
-      setLoadingInvitations(true);
-      const { data, error } = await supabase
-        .from('academy_students')
-        .select('*')
-        .eq('academy_id', academyId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setInvitations(data || []);
-    } catch (error) {
-      console.error('Error loading invitations:', error);
-    } finally {
-      setLoadingInvitations(false);
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -264,7 +224,6 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
 
       setEmailList('');
       setMessage('');
-      loadInvitations(); // Reload the list
       loadStudents({ 
         status: statusFilter !== 'all' ? statusFilter : undefined,
         search: searchTerm || undefined 
@@ -283,56 +242,6 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     }
   };
 
-  const openDeleteDialog = (id: string, email: string) => {
-    setStudentToDelete({ id, email });
-    setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!studentToDelete) return;
-
-    try {
-      setIsDeleting(true);
-      console.log('🗑️ Deleting student:', studentToDelete.id);
-      
-      const { error } = await supabase
-        .from('academy_students')
-        .delete()
-        .eq('id', studentToDelete.id);
-
-      if (error) {
-        console.error('❌ Error deleting student:', error);
-        throw error;
-      }
-
-      console.log('✅ Student deleted successfully');
-      toast.success(
-        `🗑️ Estudiante eliminado`,
-        {
-          description: `${studentToDelete.email} ha sido eliminado de tu academia correctamente.`,
-          duration: 4000
-        }
-      );
-      loadInvitations();
-      loadStudents({ 
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-        search: searchTerm || undefined 
-      });
-      setDeleteDialogOpen(false);
-      setStudentToDelete(null);
-    } catch (error: any) {
-      console.error('❌ Error al eliminar estudiante:', error);
-      toast.error(
-        'Error al eliminar estudiante',
-        {
-          description: error.message || 'No se pudo eliminar el estudiante. Por favor, intenta de nuevo.',
-          duration: 5000
-        }
-      );
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -485,64 +394,6 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
             </CardContent>
           </Card>
 
-          {/* Invitations List */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Estudiantes Invitados
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loadingInvitations ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : invitations.length === 0 ? (
-                <div className="text-center py-8">
-                  <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No hay estudiantes invitados</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {invitations.map((invitation) => (
-                    <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <div>
-                          <p className="font-medium">{invitation.student_email}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Agregado: {new Date(invitation.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Badge className={`text-xs ${
-                          invitation.status === 'enrolled' ? 'bg-blue-100 text-blue-800' :
-                          invitation.status === 'graduated' ? 'bg-green-100 text-green-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {invitation.status === 'enrolled' ? 'Activo' : 
-                           invitation.status === 'graduated' ? 'Graduado' : 
-                           invitation.status}
-                        </Badge>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => openDeleteDialog(invitation.id, invitation.student_email)}
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar'}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
       )}
 
@@ -687,35 +538,6 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
         )}
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar estudiante?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de que deseas eliminar a <strong>{studentToDelete?.email}</strong> de tu academia?
-              Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Eliminando...
-                </>
-              ) : (
-                'Eliminar'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
