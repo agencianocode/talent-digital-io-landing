@@ -230,10 +230,9 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header - Simplificado (sin título redundante ya que la tab lo indica) */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Directorio Público</h2>
           <p className="text-muted-foreground">
             Configura y personaliza tu directorio público de estudiantes
           </p>
@@ -255,7 +254,7 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5" />
-            Directorio Público Habilitado
+            Estado del Directorio
           </CardTitle>
           <CardDescription>
             Activa o desactiva la visibilidad pública de tu directorio de estudiantes
@@ -265,12 +264,12 @@ export const PublicDirectorySettings: React.FC<PublicDirectorySettingsProps> = (
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
               <Label htmlFor="publicDirectory" className="text-base font-medium">
-                {publicDirectoryEnabled ? 'Directorio Público Activo' : 'Directorio Público Desactivado'}
+                {publicDirectoryEnabled ? 'Activo' : 'Desactivado'}
               </Label>
               <p className="text-sm text-muted-foreground">
                 {publicDirectoryEnabled 
                   ? 'El público puede ver tu directorio de graduados en la URL configurada'
-                  : 'El directorio público está desactivado y no será visible para el público'}
+                  : 'El directorio está desactivado y no será visible para el público'}
               </p>
             </div>
             <Switch
