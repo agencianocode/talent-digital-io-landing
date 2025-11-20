@@ -8,6 +8,7 @@ interface ChatFilters {
   statusFilter: string;
   dateRange: string;
   priorityFilter: string;
+  unreadFilter: string;
 }
 
 
@@ -42,7 +43,8 @@ export const useAdminChat = () => {
     userTypeFilter: 'all',
     statusFilter: 'all',
     dateRange: 'all',
-    priorityFilter: 'all'
+    priorityFilter: 'all',
+    unreadFilter: 'all'
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [conversationsPerPage] = useState(20);
@@ -213,6 +215,15 @@ export const useAdminChat = () => {
       filtered = filtered.filter(conversation => 
         new Date(conversation.created_at) >= startDate
       );
+    }
+
+    // Unread filter
+    if (filters.unreadFilter !== 'all') {
+      if (filters.unreadFilter === 'unread') {
+        filtered = filtered.filter(conversation => conversation.unread_count > 0);
+      } else if (filters.unreadFilter === 'read') {
+        filtered = filtered.filter(conversation => conversation.unread_count === 0);
+      }
     }
 
     // Sort by last message date (most recent first)

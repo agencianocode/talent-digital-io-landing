@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X, MessageSquare, User, Building, AlertTriangle } from 'lucide-react';
+import { Search, Filter, X, MessageSquare, User, Building, AlertTriangle, Star } from 'lucide-react';
 
 interface ChatFilters {
   searchQuery: string;
@@ -12,6 +12,7 @@ interface ChatFilters {
   statusFilter: string;
   dateRange: string;
   priorityFilter: string;
+  unreadFilter: string;
 }
 
 interface AdminChatFiltersProps {
@@ -42,7 +43,8 @@ const AdminChatFilters: React.FC<AdminChatFiltersProps> = ({
       userTypeFilter: 'all',
       statusFilter: 'all',
       dateRange: 'all',
-      priorityFilter: 'all'
+      priorityFilter: 'all',
+      unreadFilter: 'all'
     });
   };
 
@@ -199,6 +201,34 @@ const AdminChatFilters: React.FC<AdminChatFiltersProps> = ({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Filtro por Mensajes Sin Leer */}
+          <div>
+            <Select
+              value={filters.unreadFilter}
+              onValueChange={(value) => handleFilterChange('unreadFilter', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todos los mensajes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los mensajes</SelectItem>
+                <SelectItem value="unread">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-red-600" />
+                    Sin leer
+                  </div>
+                </SelectItem>
+                <SelectItem value="read">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-green-600" />
+                    Leídos
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Filtro por Rango de Fechas */}
@@ -267,6 +297,15 @@ const AdminChatFilters: React.FC<AdminChatFiltersProps> = ({
                 <X 
                   className="h-3 w-3 cursor-pointer" 
                   onClick={() => handleFilterChange('dateRange', 'all')}
+                />
+              </Badge>
+            )}
+            {filters.unreadFilter !== 'all' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {filters.unreadFilter === 'unread' ? 'Sin leer' : 'Leídos'}
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => handleFilterChange('unreadFilter', 'all')}
                 />
               </Badge>
             )}

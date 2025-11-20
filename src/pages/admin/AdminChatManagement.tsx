@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,8 +26,15 @@ import AdminChatFilters from '@/components/admin/AdminChatFilters';
 import AdminChatDetail from '@/components/admin/AdminChatDetail';
 import StartNewChatModal from '@/components/admin/StartNewChatModal';
 import { useAdminChat } from '@/hooks/useAdminChat';
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-const AdminChatManagement: React.FC = () => {
+interface AdminChatManagementProps {
+  autoFilterUnread?: boolean;
+}
+
+const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnread = false }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     conversations,
     allConversations,
@@ -43,6 +50,21 @@ const AdminChatManagement: React.FC = () => {
     refetch,
     deleteConversation
   } = useAdminChat();
+
+  // Apply auto filter for unread messages when navigating from sidebar with badge
+  useEffect(() => {
+    const unreadParam = searchParams.get('unread');
+    const shouldFilterUnread = autoFilterUnread || unreadParam === 'true';
+    
+    if (shouldFilterUnread && filters.unreadFilter !== 'unread') {
+      updateFilters({ unreadFilter: 'unread' });
+      // Remove the URL parameter after applying the filter
+      if (unreadParam) {
+        searchParams.delete('unread');
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [autoFilterUnread, searchParams, filters.unreadFilter, updateFilters, setSearchParams]);
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);

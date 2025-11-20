@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,8 +54,12 @@ const AdminPanel: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [adminNotes, setAdminNotes] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [companyFilterId, setCompanyFilterId] = useState<string | null>(null);
+
+  // Check if we should auto-filter unread messages
+  const shouldFilterUnread = searchParams.get('unread') === 'true';
 
   // Load admin stats using get-all-users Edge Function
   const loadStats = async () => {
@@ -426,7 +430,7 @@ const AdminPanel: React.FC = () => {
             )}
 
             {activeTab === "chat" && (
-              <AdminChatManagement />
+              <AdminChatManagement autoFilterUnread={shouldFilterUnread} />
             )}
 
             {activeTab === "notifications" && (

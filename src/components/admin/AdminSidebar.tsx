@@ -41,7 +41,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useAdminCustomization } from "@/hooks/useAdminCustomization";
 import { usePublishingRequests } from "@/hooks/usePublishingRequests";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
   const navigationItems = [
     { title: "Dashboard", value: "dashboard", icon: LayoutDashboard, showKey: 'show_dashboard' },
@@ -66,9 +66,22 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const { customization } = useAdminCustomization();
   const { pendingCount } = usePublishingRequests();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Calculate unread messages count
   const unreadMessagesCount = conversations?.filter(c => (c.unread_count ?? 0) > 0).length || 0;
+
+  // Handle messages navigation with unread filter
+  const handleMessagesClick = () => {
+    if (unreadMessagesCount > 0) {
+      // Navigate to chat tab with unread filter
+      onTabChange("chat");
+      // Use URL search params to trigger auto-filter
+      navigate(`${location.pathname}?unread=true`, { replace: true });
+    } else {
+      onTabChange("chat");
+    }
+  };
 
   const getInitials = (name: string) => {
     if (!name) return "A";
@@ -163,7 +176,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
         <div className="space-y-2 mb-4">
           {customization?.show_chat !== false && (
             <SidebarMenuButton
-              onClick={() => onTabChange("chat")}
+              onClick={handleMessagesClick}
               isActive={activeTab === "chat"}
               className={cn(
                 "cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors",
