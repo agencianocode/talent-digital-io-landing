@@ -10,9 +10,7 @@ import { useAcademyData } from '@/hooks/useAcademyData';
 import { 
   GraduationCap, 
   Users, 
-  Mail, 
   TrendingUp, 
-  Briefcase, 
   Activity,
   Share2,
   Plus,
@@ -45,7 +43,7 @@ const AcademyDashboard: React.FC = () => {
   // Initialize useAcademyData BEFORE any conditional returns (React Hook rules)
   // Pass activeCompany?.id safely, hook will handle empty/invalid values
   const academyId = activeCompany?.id || '';
-  const { stats } = useAcademyData(academyId);
+  useAcademyData(academyId);
 
   useEffect(() => {
     if (!user) {
@@ -130,62 +128,6 @@ const AcademyDashboard: React.FC = () => {
               Invitar Estudiantes
             </Button>
           </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Estudiantes</p>
-                  <p className="text-2xl font-bold">{stats.active_students}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Mail className="h-5 w-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Invitaciones</p>
-                  <p className="text-2xl font-bold">{stats.pending_invitations}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Aplicaciones</p>
-                  <p className="text-2xl font-bold">{stats.total_applications}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Briefcase className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Oportunidades</p>
-                  <p className="text-2xl font-bold">{stats.exclusive_opportunities}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
