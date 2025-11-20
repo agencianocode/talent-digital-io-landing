@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -12,7 +12,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
-  Info
+  Info,
+  CheckCircle,
+  XCircle,
+  X
 } from 'lucide-react';
 import { useMarketplaceServices } from '@/hooks/useMarketplaceServices';
 import ServiceCard from '@/components/marketplace/ServiceCard';
@@ -22,6 +25,7 @@ import PublishServiceModal from '@/components/marketplace/PublishServiceModal';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { AcademyCoursesSection } from '@/components/marketplace/AcademyCoursesSection';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { marketplaceService } from '@/services/marketplaceService';
 
 const TalentMarketplace: React.FC = () => {
   const navigate = useNavigate();
@@ -30,7 +34,9 @@ const TalentMarketplace: React.FC = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showPendingAlert, setShowPendingAlert] = useState(false);
+  const [publishingRequestStatus, setPublishingRequestStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
+  const [showAlert, setShowAlert] = useState(false);
+  const { user } = useSupabaseAuth();
 
   const {
     services,
@@ -46,6 +52,39 @@ const TalentMarketplace: React.FC = () => {
     prevPage,
     refreshServices
   } = useMarketplaceServices();
+
+  // Cargar estado de solicitudes de publicación al montar el componente
+  useEffect(() => {
+    const loadPublishingRequestStatus = async () => {
+      if (!user || userRole !== 'freemium_talent') return;
+
+      try {
+        const requests = await marketplaceService.getMyPublishingRequests();
+        
+        // Buscar la solicitud más reciente
+        if (requests.length > 0) {
+          // Ordenar por fecha de creación (más reciente primero)
+          const sortedRequests = requests.sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+          const latestRequest = sortedRequests[0];
+          
+          // Verificar si el usuario ya cerró el banner para esta solicitud
+          const dismissedKey = `publishing_request_alert_dismissed_${latestRequest.id}`;
+          const isDismissed = localStorage.getItem(dismissedKey) === 'true';
+          
+          if (!isDismissed) {
+            setPublishingRequestStatus(latestRequest.status as 'pending' | 'approved' | 'rejected');
+            setShowAlert(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading publishing request status:', error);
+      }
+    };
+
+    loadPublishingRequestStatus();
+  }, [user, userRole]);
 
   const handleRequestService = (service: MarketplaceService) => {
     setSelectedService(service);
@@ -71,11 +110,28 @@ const TalentMarketplace: React.FC = () => {
   };
 
   const handleManageServices = () => {
-    if (userRole === 'freemium_talent') {
-      setShowPendingAlert(true);
-    } else {
-      navigate('/talent-dashboard/my-services');
+    navigate('/talent-dashboard/my-services');
+  };
+
+  const handleDismissAlert = async () => {
+    // Obtener la solicitud más reciente para guardar el ID
+    try {
+      const requests = await marketplaceService.getMyPublishingRequests();
+      if (requests.length > 0) {
+        const sortedRequests = requests.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        const latestRequest = sortedRequests[0];
+        
+        // Guardar en localStorage que el usuario cerró el banner
+        const dismissedKey = `publishing_request_alert_dismissed_${latestRequest.id}`;
+        localStorage.setItem(dismissedKey, 'true');
+      }
+    } catch (error) {
+      console.error('Error dismissing alert:', error);
     }
+    
+    setShowAlert(false);
   };
 
   if (error) {
@@ -121,20 +177,61 @@ const TalentMarketplace: React.FC = () => {
         </div>
       </div>
 
-      {/* Alert de solicitud pendiente para Freemium */}
-      {showPendingAlert && (
-        <Alert className="mb-6 bg-blue-50 border-blue-200">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-900 font-semibold">Solicitud en Revisión ⏳</AlertTitle>
-          <AlertDescription className="text-blue-700 mt-2">
-            Tu solicitud para acceder al Marketplace de Servicios está siendo revisada por nuestro equipo. 
-            Te notificaremos por email cuando sea aprobada y puedas empezar a publicar tus servicios.
-          </AlertDescription>
+      {/* Alert de estado de solicitud de publicación para Freemium */}
+      {showAlert && publishingRequestStatus && (
+        <Alert className={`mb-6 relative ${
+          publishingRequestStatus === 'approved' 
+            ? 'bg-green-50 border-green-200' 
+            : publishingRequestStatus === 'rejected'
+            ? 'bg-red-50 border-red-200'
+            : 'bg-blue-50 border-blue-200'
+        }`}>
+          <button
+            onClick={handleDismissAlert}
+            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+            aria-label="Cerrar"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          
+          {publishingRequestStatus === 'pending' && (
+            <>
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertTitle className="text-blue-900 font-semibold">Solicitud en Revisión ⏳</AlertTitle>
+              <AlertDescription className="text-blue-700 mt-2">
+                Tu solicitud para acceder al Marketplace de Servicios está siendo revisada por nuestro equipo. 
+                Te notificaremos por email cuando sea aprobada y puedas empezar a publicar tus servicios.
+              </AlertDescription>
+            </>
+          )}
+          
+          {publishingRequestStatus === 'approved' && (
+            <>
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-900 font-semibold">¡Solicitud Aprobada! ✅</AlertTitle>
+              <AlertDescription className="text-green-700 mt-2">
+                Tu solicitud para acceder al Marketplace de Servicios ha sido aprobada. 
+                Ya puedes empezar a publicar tus servicios en el marketplace.
+              </AlertDescription>
+            </>
+          )}
+          
+          {publishingRequestStatus === 'rejected' && (
+            <>
+              <XCircle className="h-4 w-4 text-red-600" />
+              <AlertTitle className="text-red-900 font-semibold">Solicitud Rechazada ❌</AlertTitle>
+              <AlertDescription className="text-red-700 mt-2">
+                Tu solicitud para acceder al Marketplace de Servicios ha sido rechazada. 
+                Si tienes preguntas o deseas más información, por favor contacta a nuestro equipo de soporte.
+              </AlertDescription>
+            </>
+          )}
+          
           <Button 
             variant="outline" 
             size="sm" 
             className="mt-3"
-            onClick={() => setShowPendingAlert(false)}
+            onClick={handleDismissAlert}
           >
             Entendido
           </Button>
