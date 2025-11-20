@@ -88,6 +88,8 @@ const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnr
   const handleStatusChange = async (conversationId: string, newStatus: string) => {
     try {
       await updateConversation(conversationId, { status: newStatus as 'active' | 'pending' | 'resolved' | 'archived' });
+      // Refetch conversations to apply current filters after status change
+      await refetch();
     } catch (error) {
       console.error('Error updating conversation status:', error);
     }
