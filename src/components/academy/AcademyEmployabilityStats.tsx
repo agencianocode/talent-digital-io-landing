@@ -55,12 +55,28 @@ export const AcademyEmployabilityStats = ({ academyId }: AcademyEmployabilitySta
       // Guard: only query if we have emails to avoid malformed query (400 error)
       let userIds: string[] = [];
       if (graduateEmails.length > 0) {
-        const { data: users } = await supabase
-          .from('profiles')
-          .select('user_id')
-          .in('email', graduateEmails);
+        // Use RPC to get user_ids by emails (more efficient and reliable)
+        const { data: userProfiles, error: rpcError } = await supabase
+          .rpc('get_user_ids_by_emails', { 
+            user_emails: graduateEmails
+          }) as { 
+            data: Array<{ 
+              email: string; 
+              user_id: string; 
+              full_name: string | null;
+              avatar_url: string | null;
+            }> | null;
+            error: any;
+          };
 
-        userIds = users?.map(u => u.user_id) || [];
+        if (rpcError) {
+          console.error('Error getting user IDs:', rpcError);
+        }
+
+        userIds = userProfiles?.map((p: { email: string; user_id: string; full_name: string | null; avatar_url: string | null }) => p.user_id) || [];
+        
+        console.log('📊 Graduate emails:', graduateEmails.length);
+        console.log('👤 Found user IDs:', userIds.length);
       }
 
       // Guard: only query applications if we have user IDs
@@ -73,6 +89,7 @@ export const AcademyEmployabilityStats = ({ academyId }: AcademyEmployabilitySta
             user_id,
             status,
             created_at,
+            updated_at,
             opportunities (
               id,
               title,
@@ -87,19 +104,51 @@ export const AcademyEmployabilityStats = ({ academyId }: AcademyEmployabilitySta
         applications = applicationsData || [];
       }
 
-      // Calculate employment stats
-      const employedCount = applications?.filter(a => 
-        a.status === 'accepted' || a.status === 'hired'
-      ).length || 0;
-
+      // Calculate employment stats - only count 'hired' status (no 'accepted' status exists)
+      const hiredApplications = applications?.filter(a => a.status === 'hired') || [];
+      
+      // Calculate unique employed graduates (a graduate might have multiple hired applications)
+      const uniqueEmployedGraduates = new Set(hiredApplications.map(a => a.user_id)).size;
+      
       const employmentRate = totalGraduates > 0 
-        ? Math.round((employedCount / totalGraduates) * 100) 
+        ? Math.round((uniqueEmployedGraduates / totalGraduates) * 100) 
         : 0;
+
+      // Calculate average days to hire
+      // Note: We use updated_at as an approximation, but ideally we'd track when status changed to 'hired'
+      let avgDaysToHire = 0;
+      if (hiredApplications.length > 0) {
+        const daysToHire = hiredApplications
+          .map(app => {
+            if (!app.created_at || !app.updated_at) return null;
+            const createdDate = new Date(app.created_at);
+            const updatedDate = new Date(app.updated_at);
+            
+            // Only calculate if updated_at is after created_at (valid status change)
+            if (updatedDate <= createdDate) return null;
+            
+            const diffTime = updatedDate.getTime() - createdDate.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Sanity check: days should be positive and reasonable (less than 365 days)
+            if (diffDays > 0 && diffDays < 365) {
+              return diffDays;
+            }
+            return null;
+          })
+          .filter((days): days is number => days !== null); // Only count valid calculations
+
+        if (daysToHire.length > 0) {
+          avgDaysToHire = Math.round(
+            daysToHire.reduce((sum, days) => sum + days, 0) / daysToHire.length
+          );
+        }
+      }
 
       // Calculate top companies
       const companyHires: Record<string, number> = {};
-      applications?.forEach(app => {
-        if ((app.status === 'accepted' || app.status === 'hired') && app.opportunities?.companies?.name) {
+      hiredApplications.forEach(app => {
+        if (app.opportunities?.companies?.name) {
           const name = app.opportunities.companies.name;
           companyHires[name] = (companyHires[name] || 0) + 1;
         }
@@ -112,9 +161,9 @@ export const AcademyEmployabilityStats = ({ academyId }: AcademyEmployabilitySta
 
       setStats({
         total_graduates: totalGraduates,
-        employed_graduates: employedCount,
+        employed_graduates: uniqueEmployedGraduates, // Use unique count instead of total hired applications
         employment_rate: employmentRate,
-        avg_days_to_hire: 30, // Placeholder
+        avg_days_to_hire: avgDaysToHire, // Real calculation
         total_applications: applications?.length || 0,
         top_companies: topCompanies,
         top_roles: [],
