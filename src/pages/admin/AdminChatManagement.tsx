@@ -49,7 +49,6 @@ const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnr
     stats,
     refetch,
     updateConversation,
-    archiveConversation,
     deleteConversation
   } = useAdminChat();
 
