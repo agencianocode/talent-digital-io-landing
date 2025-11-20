@@ -324,6 +324,7 @@ export const useAdminChat = () => {
     const active = conversations.filter(c => c.status === 'active').length;
     const pending = conversations.filter(c => c.status === 'pending').length;
     const resolved = conversations.filter(c => c.status === 'resolved').length;
+    const archived = conversations.filter(c => c.status === 'archived').length;
     const unread = conversations.reduce((sum, c) => sum + c.unread_count, 0);
 
     return {
@@ -331,6 +332,7 @@ export const useAdminChat = () => {
       active,
       pending,
       resolved,
+      archived,
       unread
     };
   }, [conversations]);

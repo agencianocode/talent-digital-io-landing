@@ -18,7 +18,8 @@ import {
   CheckCircle,
   Archive,
   Star,
-  Trash2
+  Trash2,
+  Users
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -324,11 +325,11 @@ const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnr
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4">
         <Card>
           <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
+              <Users className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-lg md:text-2xl font-bold">{stats.total}</p>
                 <p className="text-xs md:text-sm text-muted-foreground truncate">Total</p>
@@ -350,7 +351,7 @@ const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnr
         <Card>
           <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-green-600 flex-shrink-0" />
+              <MessageSquare className="h-6 w-6 md:h-8 md:w-8 text-green-600 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-lg md:text-2xl font-bold">{stats.active}</p>
                 <p className="text-xs md:text-sm text-muted-foreground truncate">Activas</p>
@@ -361,10 +362,21 @@ const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnr
         <Card>
           <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
             <div className="flex items-center gap-2">
-              <Archive className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
+              <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-lg md:text-2xl font-bold">{stats.resolved}</p>
                 <p className="text-xs md:text-sm text-muted-foreground truncate">Resueltas</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="flex items-center gap-2">
+              <Archive className="h-6 w-6 md:h-8 md:w-8 text-gray-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-lg md:text-2xl font-bold">{stats.archived}</p>
+                <p className="text-xs md:text-sm text-muted-foreground truncate">Archivadas</p>
               </div>
             </div>
           </CardContent>
