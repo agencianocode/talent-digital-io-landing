@@ -100,11 +100,15 @@ export const useAdminChat = () => {
 
       const profilesMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
+      // Get current admin user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      const adminId = user?.id;
+
       // Get message counts
       const conversationIds = conversationsData.map(c => c.id);
       const { data: messagesData } = await supabase
         .from('messages')
-        .select('conversation_uuid, content, created_at, is_read')
+        .select('conversation_uuid, content, created_at, is_read, sender_id, recipient_id')
         .in('conversation_uuid', conversationIds)
         .order('created_at', { ascending: false });
 
@@ -126,6 +130,13 @@ export const useAdminChat = () => {
         const messages = messagesMap.get(conv.id) || [];
         const lastMsg = messages[0];
         
+        // Count only unread messages sent BY users TO admin
+        const unreadByAdmin = messages.filter(m => 
+          !m.is_read && 
+          m.recipient_id === adminId && 
+          m.sender_id !== adminId
+        ).length;
+        
         return {
           id: conv.id,
           user_id: conv.user_id,
@@ -142,7 +153,7 @@ export const useAdminChat = () => {
           updated_at: conv.updated_at,
           last_message_at: conv.last_message_at || conv.created_at,
           messages_count: messages.length,
-          unread_count: messages.filter(m => !m.is_read).length,
+          unread_count: unreadByAdmin,
           last_message_preview: lastMsg?.content ? String(lastMsg.content).substring(0, 100) : undefined
         };
       });
