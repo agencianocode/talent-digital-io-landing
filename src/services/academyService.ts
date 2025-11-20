@@ -314,30 +314,40 @@ export const academyService = {
 
       if (error) throw error;
 
-      // Obtener los nombres completos desde profiles usando RPC para estudiantes sin student_name
-      const studentsWithoutName = students?.filter(s => !s.student_name) || [];
-      console.log('🔍 Students without name:', studentsWithoutName.length);
+      // Obtener todos los emails para obtener nombres y avatares
+      const allStudentEmails = students?.map(s => s.student_email) || [];
       let profilesMap = new Map<string, string>();
+      let avatarsMap = new Map<string, string | null>();
       
-      if (studentsWithoutName.length > 0) {
-        console.log('📧 Fetching names for emails:', studentsWithoutName.map(s => s.student_email));
+      if (allStudentEmails.length > 0) {
+        console.log('📧 Fetching profiles for emails:', allStudentEmails);
         const { data: userProfiles, error: profilesError } = await supabase
           .rpc('get_user_ids_by_emails', { 
-            user_emails: studentsWithoutName.map(s => s.student_email) 
+            user_emails: allStudentEmails
           }) as { 
-            data: Array<{ email: string; user_id: string; full_name: string | null }> | null;
+            data: Array<{ 
+              email: string; 
+              user_id: string; 
+              full_name: string | null;
+              avatar_url: string | null;
+            }> | null;
             error: any;
           };
         
         if (profilesError) {
           console.error('❌ Error getting user profiles:', profilesError);
         }
-        console.log('✅ User profiles obtained:', userProfiles);
         
         profilesMap = new Map(
           userProfiles?.map(p => [p.email, p.full_name || p.email]) || []
         );
-        console.log('📋 Profiles map:', Array.from(profilesMap.entries()));
+        
+        avatarsMap = new Map(
+          userProfiles?.map(p => [p.email, p.avatar_url]) || []
+        );
+        
+        console.log('✅ Profiles map:', Array.from(profilesMap.entries()));
+        console.log('✅ Avatars map:', Array.from(avatarsMap.entries()));
       }
 
       const activities: AcademyActivity[] = (students || []).map(student => {
@@ -353,18 +363,22 @@ export const academyService = {
           displayName = profilesMap.get(student.student_email) || student.student_email;
         }
         
-        console.log(`👤 Student: ${student.student_email} -> Display name: ${displayName}`);
+        const avatarUrl = avatarsMap.get(student.student_email);
         
+        console.log(`👤 Student: ${student.student_email} -> Display name: ${displayName}, Avatar: ${avatarUrl}`);
+        
+        // Siempre mostrar solo "se unió a la academia", no importa si tiene graduation_date
         return {
-        id: student.id,
-        academy_id: academyId,
-        type: student.graduation_date ? 'graduation' : 'new_member',
-        description: student.graduation_date 
-            ? `${displayName} completó su programa`
-            : `${displayName} se unió a la academia`,
-        user_id: student.student_email,
-        created_at: student.graduation_date || student.created_at,
-        metadata: { status: student.status }
+          id: student.id,
+          academy_id: academyId,
+          type: 'new_member', // Siempre es una unión, no mostramos graduaciones
+          description: `${displayName} se unió a la academia`,
+          user_id: student.student_email,
+          created_at: student.created_at, // Usar siempre la fecha de creación (unión)
+          metadata: { 
+            status: student.status,
+            avatar_url: avatarUrl || undefined
+          }
         };
       });
 

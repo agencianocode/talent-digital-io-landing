@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Activity, 
   Users, 
-  Briefcase, 
-  GraduationCap,
-  Mail,
   Loader2
 } from 'lucide-react';
 import { academyService } from '@/services/academyService';
@@ -23,6 +21,10 @@ interface ActivityItem {
   description: string;
   timestamp: string;
   created_at: string;
+  metadata?: {
+    status?: string;
+    avatar_url?: string;
+  };
 }
 
 export const ActivityFeed: React.FC<ActivityFeedProps> = ({ academyId }) => {
@@ -59,34 +61,17 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ academyId }) => {
     }
   };
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'application': return <Briefcase className="h-4 w-4" />;
-      case 'new_member': return <Users className="h-4 w-4" />;
-      case 'graduation': return <GraduationCap className="h-4 w-4" />;
-      case 'invitation_sent': return <Mail className="h-4 w-4" />;
-      default: return <Activity className="h-4 w-4" />;
-    }
+  const getActivityBadge = (status?: string) => {
+    // El badge se basa en el status del estudiante, no en el tipo de actividad
+    if (status === 'graduated') return 'Graduado';
+    if (status === 'enrolled' || status === 'active') return 'Estudiante';
+    return 'Estudiante'; // Por defecto
   };
 
-  const getActivityColor = (type: string) => {
-    switch (type) {
-      case 'application': return 'text-blue-600 bg-blue-100';
-      case 'new_member': return 'text-green-600 bg-green-100';
-      case 'graduation': return 'text-purple-600 bg-purple-100';
-      case 'invitation_sent': return 'text-yellow-600 bg-yellow-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getActivityBadge = (type: string) => {
-    switch (type) {
-      case 'application': return 'Aplicación';
-      case 'new_member': return 'Nuevo miembro';
-      case 'graduation': return 'Graduación';
-      case 'invitation_sent': return 'Invitación';
-      default: return 'Actividad';
-    }
+  const getBadgeColor = (status?: string) => {
+    if (status === 'graduated') return 'bg-blue-100 text-blue-800';
+    if (status === 'enrolled' || status === 'active') return 'bg-green-100 text-green-800';
+    return 'bg-gray-100 text-gray-800';
   };
 
   if (loading) {
@@ -140,26 +125,38 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ academyId }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {activities.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className={`p-2 rounded-full ${getActivityColor(activity.type)}`}>
-                    {getActivityIcon(activity.type)}
+              {activities.map((activity) => {
+                const avatarUrl = activity.metadata?.avatar_url;
+                const status = activity.metadata?.status;
+                const studentName = activity.description.replace(' se unió a la academia', '');
+                
+                return (
+                  <div key={activity.id} className="flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <Avatar className="h-10 w-10 flex-shrink-0">
+                      <AvatarImage src={avatarUrl} alt={studentName} />
+                      <AvatarFallback className="bg-green-100 text-green-700">
+                        <Users className="h-5 w-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        {activity.description}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {activity.timestamp}
+                      </p>
+                    </div>
+                    
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${getBadgeColor(status)}`}
+                    >
+                      {getActivityBadge(status)}
+                    </Badge>
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
-                      {activity.description}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {activity.timestamp}
-                    </p>
-                  </div>
-                  
-                  <Badge variant="outline" className="text-xs">
-                    {getActivityBadge(activity.type)}
-                  </Badge>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
