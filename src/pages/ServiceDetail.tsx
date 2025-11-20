@@ -57,7 +57,9 @@ interface ServiceDetail {
 }
 
 const ServiceDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  // Soportar tanto 'id' como 'serviceId' para compatibilidad con diferentes rutas
+  const params = useParams<{ id?: string; serviceId?: string }>();
+  const id = params.id || params.serviceId;
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useSupabaseAuth();
