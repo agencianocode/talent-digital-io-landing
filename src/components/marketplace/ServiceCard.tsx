@@ -97,7 +97,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
               <span>{service.location}</span>
             </div>
           </div>
-          {service.rating && service.reviews_count > 0 && (
+          {service.rating != null && service.rating > 0 && service.reviews_count > 0 && (
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
               <span className="text-xs font-medium">{service.rating}</span>
