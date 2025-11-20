@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CompanyData {
@@ -34,6 +35,7 @@ interface TaskStatus {
 
 export const useProfileProgress = () => {
   const { user } = useSupabaseAuth();
+  const { activeCompany } = useCompany();
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,38 +45,43 @@ export const useProfileProgress = () => {
       if (!user) return;
 
       try {
-        // Obtener datos de la empresa
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (companyError && companyError.code !== 'PGRST116') {
-          console.error('Error fetching company:', companyError);
-        } else if (company) {
-          setCompanyData(company);
+        // Priorizar activeCompany del CompanyContext
+        if (activeCompany) {
+          setCompanyData(activeCompany as CompanyData);
         } else {
-          // Fallback: if user is a team member, get the company via accepted membership
-          const { data: membership, error: roleError } = await supabase
-            .from('company_user_roles')
-            .select('company_id, status, accepted_at')
+          // Fallback: si no hay activeCompany, buscar por user_id (comportamiento anterior)
+          const { data: company, error: companyError } = await supabase
+            .from('companies')
+            .select('*')
             .eq('user_id', user.id)
-            .eq('status', 'accepted')
-            .order('accepted_at', { ascending: false })
-            .limit(1)
             .maybeSingle();
 
-          if (roleError && roleError.code !== 'PGRST116') {
-            console.error('Error fetching membership:', roleError);
-          } else if (membership?.company_id) {
-            const { data: memberCompany, error: companyByIdError } = await supabase
-              .from('companies')
-              .select('*')
-              .eq('id', membership.company_id)
+          if (companyError && companyError.code !== 'PGRST116') {
+            console.error('Error fetching company:', companyError);
+          } else if (company) {
+            setCompanyData(company);
+          } else {
+            // Fallback: if user is a team member, get the company via accepted membership
+            const { data: membership, error: roleError } = await supabase
+              .from('company_user_roles')
+              .select('company_id, status, accepted_at')
+              .eq('user_id', user.id)
+              .eq('status', 'accepted')
+              .order('accepted_at', { ascending: false })
+              .limit(1)
               .maybeSingle();
-            if (!companyByIdError && memberCompany) {
-              setCompanyData(memberCompany);
+
+            if (roleError && roleError.code !== 'PGRST116') {
+              console.error('Error fetching membership:', roleError);
+            } else if (membership?.company_id) {
+              const { data: memberCompany, error: companyByIdError } = await supabase
+                .from('companies')
+                .select('*')
+                .eq('id', membership.company_id)
+                .maybeSingle();
+              if (!companyByIdError && memberCompany) {
+                setCompanyData(memberCompany);
+              }
             }
           }
         }
@@ -96,7 +103,7 @@ export const useProfileProgress = () => {
     };
 
     fetchData();
-  }, [user]);
+  }, [user, activeCompany]);
 
   const getTasksStatus = (): TaskStatus[] => {
     if (!companyData || !userProfile) {

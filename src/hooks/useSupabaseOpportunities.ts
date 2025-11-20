@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { logger } from '@/lib/logger';
 import { filterOpportunitiesForTalent } from '@/lib/country-restrictions';
 
@@ -43,10 +44,14 @@ interface SupabaseApplication {
 
 export const useSupabaseOpportunities = () => {
   const { user, userRole, isAuthenticated, profile, company } = useSupabaseAuth();
+  const { activeCompany } = useCompany();
   const [opportunities, setOpportunities] = useState<SupabaseOpportunity[]>([]);
   const [applications, setApplications] = useState<SupabaseApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Usar activeCompany del CompanyContext si está disponible, sino usar company del SupabaseAuthContext
+  const currentCompany = activeCompany || company;
 
   // Obtener la ubicación del talento para filtrado
   const talentLocation = useMemo(() => {
@@ -66,10 +71,12 @@ export const useSupabaseOpportunities = () => {
       setIsLoading(true);
       console.log('🔍 Fetching opportunities for:', { 
         userRole, 
-        companyId: company?.id, 
+        companyId: currentCompany?.id, 
         isAuthenticated,
         user: user?.id,
-        company: company
+        company: currentCompany,
+        activeCompany: activeCompany?.id,
+        fallbackCompany: company?.id
       });
       
       if (isTalentRole(userRole)) {
@@ -104,14 +111,14 @@ export const useSupabaseOpportunities = () => {
         console.log('Company object:', company);
         console.log('Company ID:', company?.id);
         
-        if (!company?.id) {
+        if (!currentCompany?.id) {
           console.log('❌ No company ID found for business user');
-          console.log('Available company data:', company);
+          console.log('Available company data:', currentCompany);
           setOpportunities([]);
           return;
         }
 
-        console.log('🔍 Querying opportunities for company_id:', company.id);
+        console.log('🔍 Querying opportunities for company_id:', currentCompany.id);
         
         // Fetch active and paused opportunities
         const { data: activeData, error: activeError } = await supabase
@@ -123,7 +130,7 @@ export const useSupabaseOpportunities = () => {
               logo_url
             )
           `)
-          .eq('company_id', company.id)
+          .eq('company_id', currentCompany.id)
           .in('status', ['active', 'paused', 'closed'])
           .order('created_at', { ascending: false });
 
@@ -142,7 +149,7 @@ export const useSupabaseOpportunities = () => {
               logo_url
             )
           `)
-          .eq('company_id', company.id)
+          .eq('company_id', currentCompany.id)
           .eq('status', 'draft')
           .order('created_at', { ascending: false })
           .limit(2);
@@ -164,7 +171,7 @@ export const useSupabaseOpportunities = () => {
           totalCount: data?.length || 0 
         });
         
-        console.log('🏢 Business opportunities loaded:', data?.length || 0, 'for company:', company.id);
+        console.log('🏢 Business opportunities loaded:', data?.length || 0, 'for company:', currentCompany.id);
         console.log('📋 Opportunities data:', data);
         setOpportunities(data || []);
       }
@@ -174,7 +181,7 @@ export const useSupabaseOpportunities = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [userRole, company?.id]);
+  }, [userRole, currentCompany?.id]);
 
   // Fetch user applications
   const fetchUserApplications = useCallback(async () => {
