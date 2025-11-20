@@ -125,9 +125,14 @@ export const academyService = {
         .select('*')
         .eq('academy_id', academyId);
 
-      // Apply status filter
+      // Apply status filter - map UI status values to database status values
       if (filters?.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+        // Map 'active' to 'enrolled' for database query
+        let dbStatus = filters.status;
+        if (filters.status === 'active') {
+          dbStatus = 'enrolled';
+        }
+        query = query.eq('status', dbStatus);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
