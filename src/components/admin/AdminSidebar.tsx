@@ -36,10 +36,10 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
-import { useSupabaseMessages } from "@/contexts/SupabaseMessagesContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAdminCustomization } from "@/hooks/useAdminCustomization";
 import { usePublishingRequests } from "@/hooks/usePublishingRequests";
+import { useAdminChatBadge } from "@/hooks/useAdminChatBadge";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -61,15 +61,12 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { user, profile, signOut } = useSupabaseAuth();
-  const { conversations } = useSupabaseMessages();
+  const { unreadCount: unreadMessagesCount } = useAdminChatBadge();
   const { unreadCount: unreadNotificationsCount } = useNotifications();
   const { customization } = useAdminCustomization();
   const { pendingCount } = usePublishingRequests();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Calculate unread messages count
-  const unreadMessagesCount = conversations?.filter(c => (c.unread_count ?? 0) > 0).length || 0;
 
   // Handle messages navigation with unread filter
   const handleMessagesClick = () => {
