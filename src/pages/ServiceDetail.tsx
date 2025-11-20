@@ -22,7 +22,8 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  Loader2
+  Loader2,
+  MoreVertical
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
@@ -33,6 +34,12 @@ import { useTalentServices } from '@/hooks/useTalentServices';
 import { useMessages } from '@/hooks/useMessages';
 import { useToast } from '@/hooks/use-toast';
 import ServiceForm from '@/components/marketplace/ServiceForm';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ServiceDetail {
   id: string;
@@ -526,135 +533,183 @@ const ServiceDetail: React.FC = () => {
                       const statusInfo = getStatusInfo(request.status);
                       const StatusIcon = statusInfo.icon;
                       const isExpanded = expandedRequestId === request.id;
+                      const messageLines = request.message.split('\n').length;
+                      const shouldTruncate = messageLines > 3 || request.message.length > 200;
 
                       return (
-                        <Card key={request.id} className="overflow-hidden">
+                        <Card 
+                          key={request.id} 
+                          className={`overflow-hidden transition-all cursor-pointer hover:shadow-md ${
+                            isExpanded ? 'ring-2 ring-primary/20' : ''
+                          }`}
+                          onClick={() => setExpandedRequestId(isExpanded ? null : request.id)}
+                        >
                           <CardContent className="p-4">
                             <div className="flex items-start gap-4">
-                              <Avatar className="h-10 w-10">
-                                <AvatarFallback>
+                              <Avatar className="h-12 w-12 flex-shrink-0">
+                                <AvatarFallback className="text-sm font-semibold">
                                   {getInitials(request.requester_name)}
                                 </AvatarFallback>
                               </Avatar>
                               
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h3 className="font-semibold">{request.requester_name}</h3>
-                                  <Badge className={statusInfo.color} variant="outline">
-                                    <StatusIcon className="h-3 w-3 mr-1" />
-                                    {statusInfo.label}
-                                  </Badge>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                      <h3 className="font-semibold text-base truncate">{request.requester_name}</h3>
+                                      <Badge className={`${statusInfo.color} font-medium`} variant="outline">
+                                        <StatusIcon className="h-3 w-3 mr-1" />
+                                        {statusInfo.label}
+                                      </Badge>
+                                    </div>
+                                    
+                                    {request.company_name && (
+                                      <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+                                        <Building className="h-3 w-3 flex-shrink-0" />
+                                        <span className="truncate">{request.company_name}</span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                                 
-                                {request.company_name && (
-                                  <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
-                                    <Building className="h-3 w-3" />
-                                    <span>{request.company_name}</span>
-                                  </div>
-                                )}
-                                
-                                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                                  {request.message}
-                                </p>
-
-                                <div className="flex flex-wrap gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setExpandedRequestId(isExpanded ? null : request.id)}
-                                  >
-                                    {isExpanded ? 'Ver menos' : 'Ver detalles'}
-                                  </Button>
-                                  
-                                  {request.requester_id && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleOpenConversation(request)}
-                                    >
-                                      <MessageSquare className="h-3 w-3 mr-1" />
-                                      Responder
-                                    </Button>
+                                <div 
+                                  className="text-sm text-foreground mb-3"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {shouldTruncate && !isExpanded ? (
+                                    <p className="line-clamp-3">{request.message}</p>
+                                  ) : (
+                                    <p className="whitespace-pre-wrap">{request.message}</p>
                                   )}
+                                </div>
+
+                                <div 
+                                  className="flex items-center justify-between gap-2 pt-2 border-t"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {request.requester_id && (
+                                      <Button
+                                        variant="default"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenConversation(request);
+                                        }}
+                                        className="bg-primary hover:bg-primary/90"
+                                      >
+                                        <MessageSquare className="h-4 w-4 mr-1.5" />
+                                        Responder
+                                      </Button>
+                                    )}
+                                    
+                                    {!isExpanded && shouldTruncate && (
+                                      <span className="text-xs text-muted-foreground">
+                                        Click para ver más
+                                      </span>
+                                    )}
+                                  </div>
                                   
                                   {request.status === 'pending' && (
-                                    <>
-                                      <Button
-                                        size="sm"
-                                        className="bg-green-600 hover:bg-green-700"
-                                        onClick={() => handleUpdateStatus(request.id, 'accepted')}
-                                        disabled={isUpdatingStatus === request.id}
-                                      >
-                                        {isUpdatingStatus === request.id ? (
-                                          <Loader2 className="h-3 w-3 animate-spin" />
-                                        ) : (
-                                          <>
-                                            <CheckCircle className="h-3 w-3 mr-1" />
-                                            Aceptar
-                                          </>
-                                        )}
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="border-red-500 text-red-500 hover:bg-red-50"
-                                        onClick={() => handleUpdateStatus(request.id, 'declined')}
-                                        disabled={isUpdatingStatus === request.id}
-                                      >
-                                        {isUpdatingStatus === request.id ? (
-                                          <Loader2 className="h-3 w-3 animate-spin" />
-                                        ) : (
-                                          <>
-                                            <XCircle className="h-3 w-3 mr-1" />
-                                            Rechazar
-                                          </>
-                                        )}
-                                      </Button>
-                                    </>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-8 w-8 p-0"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <MoreVertical className="h-4 w-4" />
+                                          <span className="sr-only">Más acciones</span>
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="w-48">
+                                        <DropdownMenuItem
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleUpdateStatus(request.id, 'accepted');
+                                          }}
+                                          disabled={isUpdatingStatus === request.id}
+                                          className="text-green-600 focus:text-green-600 focus:bg-green-50"
+                                        >
+                                          {isUpdatingStatus === request.id ? (
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                          ) : (
+                                            <CheckCircle className="h-4 w-4 mr-2" />
+                                          )}
+                                          Aceptar solicitud
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleUpdateStatus(request.id, 'declined');
+                                          }}
+                                          disabled={isUpdatingStatus === request.id}
+                                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                        >
+                                          {isUpdatingStatus === request.id ? (
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                          ) : (
+                                            <XCircle className="h-4 w-4 mr-2" />
+                                          )}
+                                          Rechazar solicitud
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
                                   )}
                                 </div>
 
                                 {isExpanded && (
-                                  <div className="mt-4 pt-4 border-t space-y-3">
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                      <div className="flex items-center gap-2 text-muted-foreground">
-                                        <DollarSign className="h-4 w-4" />
-                                        <span className="font-medium">Presupuesto:</span>
-                                        <span>{request.budget_range}</span>
+                                  <div 
+                                    className="mt-4 pt-4 border-t space-y-4"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                      <div className="flex items-start gap-2">
+                                        <DollarSign className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                        <div>
+                                          <span className="font-medium text-foreground">Presupuesto:</span>
+                                          <p className="text-muted-foreground mt-0.5">{request.budget_range}</p>
+                                        </div>
                                       </div>
-                                      <div className="flex items-center gap-2 text-muted-foreground">
-                                        <Clock className="h-4 w-4" />
-                                        <span className="font-medium">Timeline:</span>
-                                        <span>{request.timeline}</span>
+                                      <div className="flex items-start gap-2">
+                                        <Clock className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                        <div>
+                                          <span className="font-medium text-foreground">Timeline:</span>
+                                          <p className="text-muted-foreground mt-0.5">{request.timeline}</p>
+                                        </div>
                                       </div>
-                                      <div className="flex items-center gap-2 text-muted-foreground col-span-2">
-                                        <Mail className="h-4 w-4" />
-                                        <span>{request.requester_email}</span>
+                                      <div className="flex items-start gap-2 sm:col-span-2">
+                                        <Mail className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                        <div>
+                                          <span className="font-medium text-foreground">Email:</span>
+                                          <p className="text-muted-foreground mt-0.5 break-all">{request.requester_email}</p>
+                                        </div>
                                       </div>
                                       {request.requester_phone && (
-                                        <div className="flex items-center gap-2 text-muted-foreground col-span-2">
-                                          <Phone className="h-4 w-4" />
-                                          <span>{request.requester_phone}</span>
+                                        <div className="flex items-start gap-2 sm:col-span-2">
+                                          <Phone className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                          <div>
+                                            <span className="font-medium text-foreground">Teléfono:</span>
+                                            <p className="text-muted-foreground mt-0.5">{request.requester_phone}</p>
+                                          </div>
                                         </div>
                                       )}
-                                      <div className="flex items-center gap-2 text-muted-foreground col-span-2">
-                                        <Calendar className="h-4 w-4" />
-                                        <span>
-                                          {new Date(request.created_at).toLocaleDateString('es-ES', {
-                                            day: 'numeric',
-                                            month: 'long',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                          })}
-                                        </span>
+                                      <div className="flex items-start gap-2 sm:col-span-2">
+                                        <Calendar className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                        <div>
+                                          <span className="font-medium text-foreground">Fecha de solicitud:</span>
+                                          <p className="text-muted-foreground mt-0.5">
+                                            {new Date(request.created_at).toLocaleDateString('es-ES', {
+                                              day: 'numeric',
+                                              month: 'long',
+                                              year: 'numeric',
+                                              hour: '2-digit',
+                                              minute: '2-digit'
+                                            })}
+                                          </p>
+                                        </div>
                                       </div>
-                                    </div>
-                                    <div className="p-3 bg-muted/50 rounded-lg">
-                                      <p className="font-medium text-sm mb-1">Mensaje completo:</p>
-                                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                                        {request.message}
-                                      </p>
                                     </div>
                                   </div>
                                 )}
