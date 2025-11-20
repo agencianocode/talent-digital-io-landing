@@ -13,7 +13,7 @@ const UpgradeRequestButton: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Verificar si hay una solicitud pendiente
-  const hasPendingRequest = userRequest && userRequest.status === 'pending';
+  const hasPendingRequest = Boolean(userRequest && userRequest.status === 'pending');
 
   // Don't show for admin users or premium users
   if (userRole === 'admin' || userRole?.includes('premium')) {
