@@ -16,22 +16,27 @@ export const useAdminChatBadge = () => {
       if (!user) return;
 
       // Count conversations with unread messages sent BY users TO admin
-      // IMPORTANT: Exclude messages sent BY admin (sender_id != admin.id)
+      // IMPORTANT: Exclude messages sent BY admin and system, and only consider messages linked to conversations
       const { data: messages, error } = await supabase
         .from('messages')
-        .select('conversation_id, sender_id, is_read, recipient_id')
+        .select('id, conversation_id, conversation_uuid, sender_id, recipient_id, is_read, label, created_at')
         .eq('recipient_id', user.id) // Admin is the recipient
         .neq('sender_id', user.id)   // Exclude messages sent BY admin
+        .neq('sender_id', '00000000-0000-0000-0000-000000000000') // Exclude system messages
         .eq('is_read', false)
-        .neq('label', 'welcome'); // Exclude welcome messages
+        .neq('label', 'welcome') // Exclude welcome messages
+        .not('conversation_uuid', 'is', null); // Only messages tied to a conversation
 
       if (error) {
         console.error('Error fetching unread count:', error);
         return;
       }
 
-      // Get unique conversations with unread messages
-      const uniqueConversations = new Set(messages?.map(m => m.conversation_id) || []);
+      console.log('[AdminChatBadge] Raw unread messages for admin', user.id, messages);
+
+      // Get unique conversations with unread messages (by conversation_uuid)
+      const uniqueConversations = new Set(messages?.map(m => m.conversation_uuid) || []);
+      console.log('[AdminChatBadge] Unique unread conversations count', uniqueConversations.size);
       setUnreadCount(uniqueConversations.size);
     } catch (error) {
       console.error('Error in fetchUnreadCount:', error);
