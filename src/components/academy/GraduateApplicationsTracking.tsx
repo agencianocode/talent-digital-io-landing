@@ -83,7 +83,7 @@ export const GraduateApplicationsTracking = ({
           <CardTitle>Aplicaciones de Estudiantes a Ofertas    </CardTitle>
         </div>
         <CardDescription>
-          Seguimiento de las aplicaciones de tus graduados a oportunidades laborales
+          Seguimiento de las aplicaciones a oportunidades laborales
         </CardDescription>
       </CardHeader>
       <CardContent>
