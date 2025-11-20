@@ -86,8 +86,45 @@ export const usePublishingRequests = () => {
       if (fetchError) throw fetchError;
       if (!request) throw new Error('Solicitud no encontrada');
 
+      // Obtener el user_id del solicitante (requester_id o buscar por email)
+      let requesterUserId = request.requester_id;
+      
+      // Si no tiene requester_id, buscar el usuario por email
+      if (!requesterUserId && request.contact_email) {
+        const { data: userData } = await supabase
+          .from('auth.users')
+          .select('id')
+          .eq('email', request.contact_email)
+          .single();
+        
+        if (userData) {
+          requesterUserId = userData.id;
+          // Actualizar la solicitud con el requester_id encontrado
+          await supabase
+            .from('marketplace_publishing_requests')
+            .update({ requester_id: requesterUserId })
+            .eq('id', requestId);
+        } else {
+          // Si no encontramos el usuario por email, intentar buscar en profiles
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .eq('email', request.contact_email)
+            .single();
+          
+          if (profileData?.user_id) {
+            requesterUserId = profileData.user_id;
+            // Actualizar la solicitud con el requester_id encontrado
+            await supabase
+              .from('marketplace_publishing_requests')
+              .update({ requester_id: requesterUserId })
+              .eq('id', requestId);
+          }
+        }
+      }
+
       // Si se aprueba y tiene requester_id, crear el servicio en el marketplace
-      if (status === 'approved' && request.requester_id) {
+      if (status === 'approved' && requesterUserId) {
         try {
           // Convertir el budget a número si es posible
           let price = 0;
@@ -142,7 +179,7 @@ export const usePublishingRequests = () => {
 
           // Crear el servicio en marketplace_services
           console.log('🔧 Creando servicio con datos:', {
-            user_id: request.requester_id,
+            user_id: requesterUserId,
             title: serviceTitle,
             category: request.service_type,
             price: price || 0,
@@ -153,7 +190,7 @@ export const usePublishingRequests = () => {
           const { error: serviceError, data: serviceData } = await supabase
             .from('marketplace_services')
             .insert({
-              user_id: request.requester_id,
+              user_id: requesterUserId,
               title: serviceTitle,
               description: request.description,
               category: request.service_type,
@@ -190,14 +227,22 @@ export const usePublishingRequests = () => {
           const { data: currentRole } = await supabase
             .from('user_roles')
             .select('role')
-            .eq('user_id', request.requester_id)
+            .eq('user_id', requesterUserId)
             .single();
 
           if (currentRole && currentRole.role === 'freemium_talent') {
-            await supabase
+            const { error: roleUpdateError } = await supabase
               .from('user_roles')
               .update({ role: 'premium_talent' })
-              .eq('user_id', request.requester_id);
+              .eq('user_id', requesterUserId);
+            
+            if (roleUpdateError) {
+              console.error('❌ Error actualizando rol:', roleUpdateError);
+            } else {
+              console.log('✅ Rol actualizado a premium_talent para usuario:', requesterUserId);
+            }
+          } else {
+            console.log('ℹ️ Usuario no es freemium_talent, no se actualiza el rol. Rol actual:', currentRole?.role);
           }
         } catch (serviceError: any) {
           console.error('❌ Error al crear servicio o actualizar rol:', serviceError);
@@ -224,16 +269,16 @@ export const usePublishingRequests = () => {
 
       // Mostrar mensaje de éxito
       if (status === 'approved') {
-        if (!request.requester_id) {
+        if (!requesterUserId) {
           toast({
             title: 'Advertencia',
-            description: 'Solicitud aprobada, pero no se pudo crear el servicio porque falta el ID del solicitante. Por favor, créalo manualmente.',
+            description: 'Solicitud aprobada, pero no se pudo crear el servicio porque no se encontró el usuario. Por favor, créalo manualmente.',
             variant: 'default',
           });
         } else {
           toast({
             title: 'Éxito',
-            description: 'Solicitud aprobada y servicio creado correctamente en el marketplace',
+            description: 'Solicitud aprobada, servicio creado y rol actualizado correctamente',
           });
         }
       } else {
