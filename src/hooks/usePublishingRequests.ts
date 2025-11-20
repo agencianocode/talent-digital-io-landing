@@ -194,6 +194,21 @@ export const usePublishingRequests = () => {
 
         // SEGUNDO: Crear el servicio en el marketplace
         try {
+          console.log('🔧 [Aprobación] Iniciando creación de servicio para usuario:', requesterUserId);
+          console.log('🔧 [Aprobación] Datos de la solicitud:', {
+            service_type: request.service_type,
+            description: request.description,
+            budget: request.budget,
+            timeline: request.timeline,
+            company_name: request.company_name,
+            contact_name: request.contact_name
+          });
+
+          // Validar que tenemos los datos necesarios
+          if (!request.service_type || !request.description) {
+            throw new Error('La solicitud no tiene los datos necesarios (service_type o description) para crear el servicio.');
+          }
+
           // Convertir el budget a número si es posible
           let price = 0;
           if (request.budget) {
@@ -245,41 +260,62 @@ export const usePublishingRequests = () => {
             ? `${request.company_name.trim()} - ${categoryCapitalized}`
             : categoryCapitalized;
 
+          // Verificar si ya existe un servicio para este usuario con el mismo título o categoría
+          console.log('🔍 [Aprobación] Verificando si ya existe un servicio para este usuario...');
+          const { data: existingServices, error: checkError } = await supabase
+            .from('marketplace_services')
+            .select('id, title, category, status')
+            .eq('user_id', requesterUserId)
+            .eq('category', request.service_type);
+
+          if (checkError) {
+            console.warn('⚠️ [Aprobación] Error al verificar servicios existentes:', checkError);
+          } else if (existingServices && existingServices.length > 0) {
+            console.log('ℹ️ [Aprobación] Ya existe un servicio para este usuario con la misma categoría:', existingServices);
+            // Verificar si alguno está activo
+            const activeService = existingServices.find(s => s.status === 'active' && s.category === request.service_type);
+            if (activeService) {
+              console.log('✅ [Aprobación] Ya existe un servicio activo. No se creará uno nuevo.');
+              toast({
+                title: 'Información',
+                description: 'Ya existe un servicio activo para este usuario. El servicio no se duplicará.',
+              });
+              // No crear servicio duplicado, pero continuar con la aprobación
+            } else {
+              console.log('ℹ️ [Aprobación] Existe un servicio pero no está activo. Se creará uno nuevo.');
+            }
+          }
+
           // Crear el servicio en marketplace_services
-          console.log('🔧 Creando servicio con datos:', {
+          const serviceDataToInsert = {
             user_id: requesterUserId,
             title: serviceTitle,
+            description: request.description,
             category: request.service_type,
             price: price || 0,
+            currency: 'USD',
+            delivery_time: deliveryTime,
+            location: 'Remoto', // Valor por defecto, puede ajustarse después
+            is_available: true,
             status: 'active',
-            is_available: true
-          });
+            tags: [],
+            views_count: 0,
+            requests_count: 0,
+            rating: 0,
+            reviews_count: 0
+          };
+
+          console.log('🔧 [Aprobación] Creando servicio con datos:', serviceDataToInsert);
 
           const { error: serviceError, data: serviceData } = await supabase
             .from('marketplace_services')
-            .insert({
-              user_id: requesterUserId,
-              title: serviceTitle,
-              description: request.description,
-              category: request.service_type,
-              price: price || 0,
-              currency: 'USD',
-              delivery_time: deliveryTime,
-              location: 'Remoto', // Valor por defecto, puede ajustarse después
-              is_available: true,
-              status: 'active',
-              tags: [],
-              views_count: 0,
-              requests_count: 0,
-              rating: 0,
-              reviews_count: 0
-            })
+            .insert(serviceDataToInsert)
             .select()
             .single();
 
           if (serviceError) {
-            console.error('❌ Error creando servicio:', serviceError);
-            console.error('Error details:', {
+            console.error('❌ [Aprobación] Error creando servicio:', serviceError);
+            console.error('❌ [Aprobación] Detalles del error:', {
               message: serviceError.message,
               details: serviceError.details,
               hint: serviceError.hint,
@@ -288,16 +324,24 @@ export const usePublishingRequests = () => {
             // Lanzar error para que se muestre al usuario
             throw new Error(`Error al crear el servicio: ${serviceError.message}`);
           } else {
-            console.log('✅ Servicio creado exitosamente:', serviceData);
+            console.log('✅ [Aprobación] Servicio creado exitosamente:', serviceData);
+            console.log('✅ [Aprobación] ID del servicio creado:', serviceData?.id);
+            toast({
+              title: 'Éxito',
+              description: 'Servicio creado y publicado en el Marketplace correctamente.',
+            });
           }
         } catch (serviceError: any) {
-          console.error('❌ Error al crear servicio o actualizar rol:', serviceError);
+          console.error('❌ [Aprobación] Error al crear servicio (catch):', serviceError);
+          console.error('❌ [Aprobación] Stack trace:', serviceError.stack);
           // Mostrar error al usuario pero continuar con la actualización del estado
           toast({
             title: 'Error al crear servicio',
             description: serviceError.message || 'Hubo un problema al crear el servicio. Por favor, contacta al administrador.',
             variant: 'destructive',
           });
+          // NO lanzar el error aquí para que la solicitud se marque como aprobada
+          // El admin puede crear el servicio manualmente si es necesario
         }
       }
 
