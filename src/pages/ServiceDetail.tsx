@@ -90,23 +90,49 @@ const ServiceDetail: React.FC = () => {
     : [];
 
   useEffect(() => {
-    if (id) {
-      loadServiceDetail();
-      if (user) {
-        checkReviewEligibility();
-      }
-      if (isOwnerView) {
-        loadServiceRequests();
-      }
+    if (!id) {
+      console.warn('[ServiceDetail] No ID in URL params');
+      setIsLoading(false);
+      return;
     }
-  }, [id, user, isOwnerView]);
+
+    console.log('[ServiceDetail] useEffect triggered with:', { id, isOwnerView, hasUser: !!user });
+
+    const loadData = async () => {
+      try {
+        await loadServiceDetail();
+        
+        if (user) {
+          checkReviewEligibility();
+        }
+        
+        if (isOwnerView) {
+          console.log('[ServiceDetail] Loading service requests for owner view');
+          await loadServiceRequests();
+        }
+      } catch (error) {
+        console.error('[ServiceDetail] Error in loadData:', error);
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const loadServiceDetail = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      if (!id) return;
+      if (!id) {
+        console.error('[ServiceDetail] No service ID provided');
+        setError('ID de servicio no proporcionado');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('[ServiceDetail] Loading service with ID:', id);
 
       const { data: serviceData, error: fetchError } = await supabase
         .from('marketplace_services')
@@ -114,51 +140,73 @@ const ServiceDetail: React.FC = () => {
         .eq('id', id)
         .single();
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error('[ServiceDetail] Error fetching service:', fetchError);
+        throw fetchError;
+      }
 
-      if (serviceData) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url')
-          .eq('user_id', serviceData.user_id)
-          .single();
+      if (!serviceData) {
+        console.error('[ServiceDetail] Service not found for ID:', id);
+        setError('Servicio no encontrado');
+        setIsLoading(false);
+        return;
+      }
 
-        setService({
-          id: serviceData.id,
-          title: serviceData.title,
-          description: serviceData.description,
-          category: serviceData.category,
-          price: serviceData.price,
-          currency: serviceData.currency,
-          delivery_time: serviceData.delivery_time,
-          location: serviceData.location,
-          tags: serviceData.tags || [],
-          portfolio_url: serviceData.portfolio_url,
-          demo_url: serviceData.demo_url,
-          rating: serviceData.rating,
-          reviews_count: serviceData.reviews_count,
-          views_count: serviceData.views_count,
-          requests_count: serviceData.requests_count,
-          user_id: serviceData.user_id,
-          user_name: profileData?.full_name || 'Usuario',
-          user_avatar: profileData?.avatar_url || null,
-          is_available: serviceData.is_available
-        });
+      console.log('[ServiceDetail] Service data loaded:', serviceData);
 
-        // Increment view count (solo si no es vista de propietario)
-        const isOwnerViewCheck = location.pathname.includes('/my-services/');
-        if (id && !isOwnerViewCheck) {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('user_id', serviceData.user_id)
+        .single();
+
+      if (profileError) {
+        console.warn('[ServiceDetail] Error fetching profile:', profileError);
+      }
+
+      setService({
+        id: serviceData.id,
+        title: serviceData.title,
+        description: serviceData.description,
+        category: serviceData.category,
+        price: serviceData.price,
+        currency: serviceData.currency,
+        delivery_time: serviceData.delivery_time,
+        location: serviceData.location,
+        tags: serviceData.tags || [],
+        portfolio_url: serviceData.portfolio_url,
+        demo_url: serviceData.demo_url,
+        rating: serviceData.rating,
+        reviews_count: serviceData.reviews_count,
+        views_count: serviceData.views_count,
+        requests_count: serviceData.requests_count,
+        user_id: serviceData.user_id,
+        user_name: profileData?.full_name || 'Usuario',
+        user_avatar: profileData?.avatar_url || null,
+        is_available: serviceData.is_available
+      });
+
+      console.log('[ServiceDetail] Service state updated successfully');
+
+      // Increment view count (solo si no es vista de propietario)
+      const isOwnerViewCheck = location.pathname.includes('/my-services/');
+      if (id && !isOwnerViewCheck) {
+        try {
           await supabase
             .from('marketplace_services')
             .update({ views_count: serviceData.views_count + 1 })
             .eq('id', id);
+        } catch (viewError) {
+          console.warn('[ServiceDetail] Error incrementing view count:', viewError);
+          // No fallar si no se puede incrementar las vistas
         }
       }
     } catch (err) {
-      console.error('Error loading service:', err);
-      setError('No se pudo cargar el servicio');
+      console.error('[ServiceDetail] Error loading service:', err);
+      setError(err instanceof Error ? err.message : 'No se pudo cargar el servicio');
     } finally {
       setIsLoading(false);
+      console.log('[ServiceDetail] Loading finished, isLoading set to false');
     }
   };
 
