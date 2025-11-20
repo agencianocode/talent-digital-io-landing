@@ -10,7 +10,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -60,8 +59,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   onMarkAsUnread,
   onMarkAsRead,
   onArchive,
-  onUnarchive,
-  onDelete
+  onUnarchive
 }) => {
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
