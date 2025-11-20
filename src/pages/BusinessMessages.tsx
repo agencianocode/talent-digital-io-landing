@@ -17,8 +17,7 @@ const BusinessMessages = () => {
     markAsRead,
     markAsUnread,
     archiveConversation,
-    unarchiveConversation,
-    deleteConversation
+    unarchiveConversation
   } = useMessages();
   
   const [activeId, setActiveId] = useState<string | null>(conversationId || null);
@@ -88,7 +87,6 @@ const BusinessMessages = () => {
         onMarkAsRead={markAsRead}
         onArchive={archiveConversation}
         onUnarchive={unarchiveConversation}
-        onDelete={deleteConversation}
       />
       <ChatView
         conversation={activeConversation as any}

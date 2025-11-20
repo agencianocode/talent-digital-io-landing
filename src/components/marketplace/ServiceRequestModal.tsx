@@ -199,7 +199,7 @@ Puedes responder a esta conversación para continuar la comunicación.
             content_length: requestDetails.length
           });
           
-          const { data: messageResult, error: messageError } = await supabase
+          const { error: messageError } = await supabase
             .from('messages' as any)
             .insert({
               conversation_id: conversationId,
@@ -216,12 +216,7 @@ Puedes responder a esta conversación para continuar la comunicación.
             throw messageError;
           }
 
-          console.log('[ServiceRequestModal] Message inserted successfully:', {
-            id: messageResult?.id,
-            conversation_id: messageResult?.conversation_id,
-            sender_id: messageResult?.sender_id,
-            recipient_id: messageResult?.recipient_id
-          });
+          console.log('[ServiceRequestModal] Message inserted successfully');
 
           // Recargar conversaciones para que aparezcan inmediatamente en /talent-dashboard/messages
           // Esto asegura que la conversación creada se muestre en la página de mensajería
