@@ -218,11 +218,11 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
       formData.deliveryTime !== '' &&
       formData.location.trim() !== '' &&
       formData.description.trim() !== ''
-    :       formData.contactName.trim() !== '' &&
-      formData.contactEmail.trim() !== '' &&
-      (isFreemiumBusiness ? formData.companyName.trim() !== '' : true) &&
+    : (isFreemiumBusiness ? (formData.companyName.trim() !== '' || activeCompany?.name) : true) &&
       formData.serviceType !== '' &&
-      formData.description.trim() !== '';
+      formData.description.trim() !== '' &&
+      user?.email && // Validar que el usuario tenga email
+      (profile?.full_name || user?.email); // Validar que tenga nombre o email
 
   if (isSubmitted) {
     return (
