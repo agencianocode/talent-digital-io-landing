@@ -90,22 +90,6 @@ const BusinessNotificationsPage = () => {
     }
   };
 
-  const deleteNotification = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('notifications' as any)
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      // Update local state
-      setNotifications(prev => prev.filter(n => n.id !== id));
-    } catch (error) {
-      console.error('Error deleting notification:', error);
-    }
-  };
-
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'message':
