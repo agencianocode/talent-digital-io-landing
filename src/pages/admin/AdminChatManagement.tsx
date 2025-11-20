@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   MessageSquare, 
   Building, 
@@ -47,6 +48,7 @@ const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnr
     setCurrentPage,
     stats,
     refetch,
+    updateConversation,
     archiveConversation,
     deleteConversation
   } = useAdminChat();
@@ -82,6 +84,14 @@ const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnr
 
   const handleConversationUpdate = () => {
     refetch();
+  };
+
+  const handleStatusChange = async (conversationId: string, newStatus: string) => {
+    try {
+      await updateConversation(conversationId, { status: newStatus as 'active' | 'pending' | 'resolved' | 'archived' });
+    } catch (error) {
+      console.error('Error updating conversation status:', error);
+    }
   };
 
   const handleRefresh = async () => {
@@ -494,23 +504,43 @@ const AdminChatManagement: React.FC<AdminChatManagementProps> = ({ autoFilterUnr
                       <Eye className="h-4 w-4 md:mr-2" />
                       <span className="md:inline">Ver Chat</span>
                     </Button>
-                    {conversation.status !== 'archived' && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={async () => {
-                          try {
-                            await archiveConversation(conversation.id);
-                          } catch (error) {
-                            console.error('Error archiving conversation:', error);
-                          }
-                        }}
-                        className="flex-1 md:flex-initial"
-                      >
-                        <Archive className="h-4 w-4 md:mr-2" />
-                        <span className="md:inline">Archivar</span>
-                      </Button>
-                    )}
+                    
+                    {/* Status Selector */}
+                    <Select
+                      value={conversation.status}
+                      onValueChange={(value) => handleStatusChange(conversation.id, value)}
+                    >
+                      <SelectTrigger className="w-[120px] h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">
+                          <div className="flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4 text-green-600" />
+                            Activa
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="pending">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-yellow-600" />
+                            Pendiente
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="resolved">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-blue-600" />
+                            Resuelta
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="archived">
+                          <div className="flex items-center gap-2">
+                            <Archive className="h-4 w-4 text-gray-600" />
+                            Archivada
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+
                     <Button
                       variant="destructive"
                       size="sm"
