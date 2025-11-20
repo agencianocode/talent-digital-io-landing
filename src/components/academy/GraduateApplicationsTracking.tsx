@@ -89,7 +89,7 @@ export const GraduateApplicationsTracking = ({
       <CardContent>
         {applications.length === 0 ? <div className="text-center py-12 text-muted-foreground">
             <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aún no hay aplicaciones de graduados registradas</p>
+            <p>Aún no hay aplicaciones de estudiantes registradas</p>
           </div> : <div className="rounded-md border">
             <Table>
               <TableHeader>
