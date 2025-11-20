@@ -16,10 +16,12 @@ export const useAdminChatBadge = () => {
       if (!user) return;
 
       // Count conversations with unread messages sent BY users TO admin
+      // IMPORTANT: Exclude messages sent BY admin (sender_id != admin.id)
       const { data: messages, error } = await supabase
         .from('messages')
         .select('conversation_id, sender_id, is_read, recipient_id')
-        .eq('recipient_id', user.id)
+        .eq('recipient_id', user.id) // Admin is the recipient
+        .neq('sender_id', user.id)   // Exclude messages sent BY admin
         .eq('is_read', false)
         .neq('label', 'welcome'); // Exclude welcome messages
 
