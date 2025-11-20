@@ -12,13 +12,26 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Eye, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Search, Eye, CheckCircle, XCircle, FileText, Trash2 } from 'lucide-react';
 import { usePublishingRequests, PublishingRequest } from '@/hooks/usePublishingRequests';
 import { AdminPublishingRequestDetail } from '@/components/admin/AdminPublishingRequestDetail';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useState } from 'react';
 
 export const AdminPublishingRequests = () => {
-  const { requests, loading, updateRequestStatus, createServiceForApprovedRequest } = usePublishingRequests();
+  const { requests, loading, updateRequestStatus, createServiceForApprovedRequest, deleteRequest } = usePublishingRequests();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [requestToDelete, setRequestToDelete] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [selectedRequest, setSelectedRequest] = useState<PublishingRequest | null>(null);
@@ -64,6 +77,19 @@ export const AdminPublishingRequests = () => {
 
   const handleCreateService = async (requestId: string) => {
     await createServiceForApprovedRequest(requestId);
+  };
+
+  const handleDeleteClick = (requestId: string) => {
+    setRequestToDelete(requestId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (requestToDelete) {
+      await deleteRequest(requestToDelete);
+      setRequestToDelete(null);
+      setDeleteDialogOpen(false);
+    }
   };
 
   if (loading) {
@@ -190,6 +216,14 @@ export const AdminPublishingRequests = () => {
                           </Button>
                         </>
                       )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteClick(request.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </Card>
@@ -276,6 +310,14 @@ export const AdminPublishingRequests = () => {
                               </Button>
                             </>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteClick(request.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -295,6 +337,27 @@ export const AdminPublishingRequests = () => {
         onReject={handleReject}
         onCreateService={handleCreateService}
       />
+
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar solicitud?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la solicitud de publicación.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -474,6 +474,34 @@ export const usePublishingRequests = () => {
     }
   };
 
+  const deleteRequest = async (requestId: string) => {
+    try {
+      const { error } = await supabase
+        .from('marketplace_publishing_requests')
+        .delete()
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Éxito',
+        description: 'Solicitud eliminada correctamente.',
+      });
+
+      // Recargar las solicitudes
+      await loadRequests();
+      return true;
+    } catch (error: any) {
+      console.error('Error deleting request:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'No se pudo eliminar la solicitud',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   return {
     requests,
     loading,
@@ -481,5 +509,6 @@ export const usePublishingRequests = () => {
     loadRequests,
     updateRequestStatus,
     createServiceForApprovedRequest,
+    deleteRequest,
   };
 };
