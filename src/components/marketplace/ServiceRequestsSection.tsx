@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Clock } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { ServiceRequest } from '@/hooks/useTalentServices';
 
 interface ServiceRequestsSectionProps {

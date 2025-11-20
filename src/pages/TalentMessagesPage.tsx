@@ -150,8 +150,6 @@ const TalentMessagesPage = () => {
         onMarkAsRead={markAsRead}
         onArchive={archiveConversation}
         onUnarchive={unarchiveConversation}
-<｜tool▁call▁end｜><｜tool▁call▁begin｜>
-grep
       />
       <ChatView
         conversation={activeConversation as any}
