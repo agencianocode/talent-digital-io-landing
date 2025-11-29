@@ -105,10 +105,6 @@ export const useAdminChat = () => {
 
       const profilesMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
-      // Get current admin user ID
-      const { data: { user: adminUser } } = await supabase.auth.getUser();
-      const adminUserId = adminUser?.id;
-
       // Get message counts
       const conversationIds = conversationsData.map(c => c.id);
       const { data: messagesData } = await supabase
