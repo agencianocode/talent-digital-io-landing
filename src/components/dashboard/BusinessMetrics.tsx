@@ -90,7 +90,7 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
       <div className="relative">
         {/* Gradiente izquierdo para indicar scroll */}
         {showLeftArrow && (
-          <div className="absolute left-0 top-0 bottom-2 w-12 bg-gradient-to-r from-background to-transparent pointer-events-none z-10 xl:hidden" />
+          <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none z-10 xl:hidden" />
         )}
 
         {/* Botón Izquierda - solo en pantallas pequeñas */}
@@ -98,18 +98,18 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
           <Button
             variant="outline"
             size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-background hover:bg-accent rounded-full border-2 xl:hidden h-10 w-10"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-background/95 backdrop-blur-sm hover:bg-accent rounded-full border-2 xl:hidden h-8 w-8"
             onClick={scrollLeft}
             aria-label="Desplazar izquierda"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
         )}
 
         {/* Flex horizontal con scroll en pantallas pequeñas, Grid en pantallas grandes */}
         <div 
           ref={scrollContainerRef}
-          className="flex xl:grid xl:grid-cols-4 gap-3 sm:gap-4 overflow-x-auto xl:overflow-x-visible pb-2 scroll-smooth"
+          className="flex xl:grid xl:grid-cols-4 gap-3 sm:gap-4 overflow-x-auto xl:overflow-x-visible pb-2 scroll-smooth px-10 xl:px-0"
           style={{ 
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -178,7 +178,7 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
 
         {/* Gradiente derecho para indicar scroll */}
         {showRightArrow && (
-          <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none z-10 xl:hidden" />
+          <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none z-10 xl:hidden" />
         )}
 
         {/* Botón Derecha - solo en pantallas pequeñas */}
@@ -186,11 +186,11 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
           <Button
             variant="outline"
             size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-background hover:bg-accent rounded-full border-2 xl:hidden h-10 w-10"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-background/95 backdrop-blur-sm hover:bg-accent rounded-full border-2 xl:hidden h-8 w-8"
             onClick={scrollRight}
             aria-label="Desplazar derecha"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         )}
       </div>
