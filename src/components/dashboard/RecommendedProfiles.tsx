@@ -266,22 +266,28 @@ const RecommendedProfiles: React.FC = () => {
       <CardContent className="overflow-x-hidden">
         {profiles.length > 0 ? (
           <div className="relative">
+            {/* Gradiente izquierdo para indicar scroll */}
+            {showLeftArrow && (
+              <div className="absolute left-0 top-0 bottom-4 w-8 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none z-10" />
+            )}
+
             {/* Botón Izquierda */}
             {showLeftArrow && (
               <Button
                 variant="outline"
                 size="icon"
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-background/95 backdrop-blur-sm hover:bg-accent rounded-full border-2 h-8 w-8"
                 onClick={scrollLeft}
+                aria-label="Desplazar izquierda"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-4 w-4" />
               </Button>
             )}
 
             {/* Flex horizontal con scroll controlado por flechas - contenido en esta sección */}
             <div 
               ref={scrollContainerRef}
-              className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory"
+              className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory px-10"
               style={{ 
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
@@ -381,15 +387,21 @@ const RecommendedProfiles: React.FC = () => {
               ))}
             </div>
 
+            {/* Gradiente derecho para indicar scroll */}
+            {showRightArrow && (
+              <div className="absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none z-10" />
+            )}
+
             {/* Botón Derecha */}
             {showRightArrow && (
               <Button
                 variant="outline"
                 size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-background/95 backdrop-blur-sm hover:bg-accent rounded-full border-2 h-8 w-8"
                 onClick={scrollRight}
+                aria-label="Desplazar derecha"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             )}
           </div>
