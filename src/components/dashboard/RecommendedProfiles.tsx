@@ -271,10 +271,10 @@ const RecommendedProfiles: React.FC = () => {
               <Button
                 variant="outline"
                 size="icon"
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2 h-7 w-7"
                 onClick={scrollLeft}
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
             )}
 
@@ -386,10 +386,10 @@ const RecommendedProfiles: React.FC = () => {
               <Button
                 variant="outline"
                 size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2 h-7 w-7"
                 onClick={scrollRight}
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             )}
           </div>
