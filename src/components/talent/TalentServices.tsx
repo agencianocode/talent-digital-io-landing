@@ -276,13 +276,14 @@ export const TalentServices = ({
 
         {services.length > 0 && (
           <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <p className="text-sm text-muted-foreground">
                 ¿No encuentras lo que buscas?
               </p>
-              <Button variant="outline" size="sm" onClick={onContact}>
+              <Button variant="outline" size="sm" onClick={onContact} className="w-full sm:w-auto">
                 <MessageSquare className="h-4 w-4 mr-2" />
-                Contactar para proyecto personalizado
+                <span className="hidden sm:inline">Contactar para proyecto personalizado</span>
+                <span className="sm:hidden">Contactar</span>
               </Button>
             </div>
           </div>
