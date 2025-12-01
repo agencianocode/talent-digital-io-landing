@@ -408,7 +408,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                         {/* Mobile: Checkboxes */}
                         <div className="flex items-center gap-4 sm:hidden">
                           <div className="flex flex-col items-center gap-1">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                             <FormField
                               control={form.control}
                               name={`notifications.${index}.email`}
@@ -419,6 +419,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                                       checked={field.value}
                                       onCheckedChange={field.onChange}
                                       disabled={!form.watch(`notifications.${index}.enabled`)}
+                                      className="h-3 w-3"
                                     />
                                   </FormControl>
                                 </FormItem>
@@ -426,7 +427,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                             />
                           </div>
                           <div className="flex flex-col items-center gap-1">
-                            <Bell className="h-4 w-4 text-muted-foreground" />
+                            <Bell className="h-3.5 w-3.5 text-muted-foreground" />
                             <FormField
                               control={form.control}
                               name={`notifications.${index}.push`}
@@ -437,6 +438,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                                       checked={field.value}
                                       onCheckedChange={field.onChange}
                                       disabled={!form.watch(`notifications.${index}.enabled`)}
+                                      className="h-3 w-3"
                                     />
                                   </FormControl>
                                 </FormItem>
