@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
 import { Loader2, Eye, EyeOff, Users, ArrowLeft } from 'lucide-react';
@@ -120,38 +120,32 @@ const RegisterTalent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-6 sm:py-8">
       <div className="w-full max-w-md">
         <Button 
           variant="ghost" 
           onClick={() => navigate('/')}
-          className="mb-6"
+          className="mb-4 sm:mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver al inicio
         </Button>
 
-        <div className="text-center mb-8">
-          <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Users className="h-8 w-8 text-primary" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="bg-primary/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
             Registro para Talento
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Encuentra las mejores oportunidades laborales
           </p>
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Crear perfil de talento</CardTitle>
-            <CardDescription>
-              Completa la información para comenzar a buscar oportunidades
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
                 <Input

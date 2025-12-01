@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
@@ -137,13 +137,7 @@ const RegisterBusiness = () => {
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Crear cuenta empresarial</CardTitle>
-            <CardDescription>
-              Completa la información para comenzar a buscar talento
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
