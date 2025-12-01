@@ -88,13 +88,19 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
     <div className="space-y-4 sm:space-y-6 w-full">
       {/* Main Metrics */}
       <div className="relative">
+        {/* Gradiente izquierdo para indicar scroll */}
+        {showLeftArrow && (
+          <div className="absolute left-0 top-0 bottom-2 w-12 bg-gradient-to-r from-background to-transparent pointer-events-none z-10 xl:hidden" />
+        )}
+
         {/* Botón Izquierda - solo en pantallas pequeñas */}
         {showLeftArrow && (
           <Button
             variant="outline"
             size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2 xl:hidden"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-background hover:bg-accent rounded-full border-2 xl:hidden h-10 w-10"
             onClick={scrollLeft}
+            aria-label="Desplazar izquierda"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
@@ -103,7 +109,7 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
         {/* Flex horizontal con scroll en pantallas pequeñas, Grid en pantallas grandes */}
         <div 
           ref={scrollContainerRef}
-          className="flex xl:grid xl:grid-cols-4 gap-3 sm:gap-4 overflow-x-auto xl:overflow-x-visible pb-2"
+          className="flex xl:grid xl:grid-cols-4 gap-3 sm:gap-4 overflow-x-auto xl:overflow-x-visible pb-2 scroll-smooth"
           style={{ 
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -170,13 +176,19 @@ export const BusinessMetrics = ({ useMockData = false }: BusinessMetricsProps) =
           </Card>
         </div>
 
+        {/* Gradiente derecho para indicar scroll */}
+        {showRightArrow && (
+          <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none z-10 xl:hidden" />
+        )}
+
         {/* Botón Derecha - solo en pantallas pequeñas */}
         {showRightArrow && (
           <Button
             variant="outline"
             size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 shadow-xl bg-white hover:bg-gray-50 rounded-full border-2 xl:hidden"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 shadow-lg bg-background hover:bg-accent rounded-full border-2 xl:hidden h-10 w-10"
             onClick={scrollRight}
+            aria-label="Desplazar derecha"
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
