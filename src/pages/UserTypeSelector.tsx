@@ -5,40 +5,33 @@ const UserTypeSelector = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full text-center space-y-8">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8 sm:py-12">
+      <div className="max-w-2xl w-full text-center space-y-4 sm:space-y-6 md:space-y-8">
         <div>
-          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-3 sm:mb-4">
             ¿Qué buscas?
           </h1>
-          <p className="text-xl text-muted-foreground mb-12">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 md:mb-12 px-2">
             Selecciona el tipo de cuenta que mejor se adapte a tus necesidades
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
           {/* Business Card */}
           <div 
-            className="p-8 rounded-2xl cursor-pointer transition-all group border border-gray-200 shadow-md hover:shadow-lg"
+            className="p-4 sm:p-6 md:p-8 rounded-2xl cursor-pointer transition-all group border border-border bg-card hover:bg-accent shadow-md hover:shadow-lg"
             onClick={() => navigate('/register-business')}
-            style={{ backgroundColor: '#ffffff' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f3f4f6';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#ffffff';
-            }}
           >
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center space-y-3 sm:space-y-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-foreground">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                 Busco Talento
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Para mi negocio o empresa
               </p>
             </div>
@@ -46,38 +39,31 @@ const UserTypeSelector = () => {
 
           {/* Talent Card */}
           <div 
-            className="p-8 rounded-2xl cursor-pointer transition-all group border border-gray-200 shadow-md hover:shadow-lg"
+            className="p-4 sm:p-6 md:p-8 rounded-2xl cursor-pointer transition-all group border border-border bg-card hover:bg-accent shadow-md hover:shadow-lg"
             onClick={() => navigate('/register-talent')}
-            style={{ backgroundColor: '#ffffff' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f3f4f6';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#ffffff';
-            }}
           >
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center space-y-3 sm:space-y-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-foreground">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                 Busco Trabajo
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Soy un profesional digital
               </p>
             </div>
           </div>
         </div>
 
-        <div className="pt-6 border-t border-border">
-          <p className="text-muted-foreground mb-4">¿Ya tienes una cuenta?</p>
+        <div className="pt-4 sm:pt-6 border-t border-border">
+          <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">¿Ya tienes una cuenta?</p>
           <Button 
             variant="outline"
             onClick={() => navigate('/auth')}
-            className="w-full max-w-sm text-lg py-4 h-auto font-semibold"
+            className="w-full max-w-sm text-base sm:text-lg py-3 sm:py-4 h-auto font-semibold"
           >
             Iniciar Sesión
           </Button>
