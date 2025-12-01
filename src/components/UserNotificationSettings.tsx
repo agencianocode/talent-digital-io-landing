@@ -189,10 +189,12 @@ const businessNotifications: NotificationType[] = [
 
 interface UserNotificationSettingsProps {
   userType?: 'talent' | 'business';
+  hideTitle?: boolean;
 }
 
 const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({ 
-  userType = 'talent' 
+  userType = 'talent',
+  hideTitle = false
 }) => {
   const { user } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -307,27 +309,29 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Bell className="h-6 w-6 text-primary" />
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Notificaciones</h2>
-          <p className="text-muted-foreground">Configura cómo y cuándo recibir notificaciones</p>
+    <div className="space-y-4 sm:space-y-6">
+      {!hideTitle && (
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground">Notificaciones</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">Configura cómo y cuándo recibir notificaciones</p>
+          </div>
         </div>
-      </div>
+      )}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Push Notifications Toggle */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
                 Activar Notificaciones Push
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Activa las notificaciones push de tu navegador para recibir alertas en tiempo real
                 incluso cuando no estés dentro de la aplicación. Este control gestiona la
                 suscripción del dispositivo; más abajo puedes decidir qué tipos de alertas quieres
@@ -339,25 +343,25 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
 
           {/* Notifications Table */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
                 Preferencias de Notificaciones
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 sm:p-6">
               <div className="border rounded-lg overflow-hidden">
-                {/* Table Header */}
-                <div className="grid grid-cols-[40px,1fr,120px,180px] gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
+                {/* Table Header - Hidden on mobile, shown on desktop */}
+                <div className="hidden sm:grid sm:grid-cols-[40px,1fr,120px,180px] gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
                   <div></div>
                   <div>Tipo de Notificación</div>
                   <div className="flex items-center justify-center gap-2">
                     <Mail className="h-4 w-4" />
-                    <span className="hidden sm:inline">Email</span>
+                    <span>Email</span>
                   </div>
                   <div className="flex items-center justify-center gap-2">
                     <Bell className="h-4 w-4" />
-                    <span className="hidden sm:inline">Web App</span>
+                    <span>Web App</span>
                   </div>
                 </div>
 
@@ -366,38 +370,83 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                   {form.watch('notifications').map((notification, index) => (
                     <div 
                       key={notification.id}
-                      className="grid grid-cols-[40px,1fr,120px,180px] gap-4 p-4 hover:bg-muted/30 transition-colors"
+                      className="flex flex-col sm:grid sm:grid-cols-[40px,1fr,120px,180px] gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-muted/30 transition-colors"
                     >
-                      {/* Toggle Switch */}
-                      <div className="flex items-start pt-1">
-                        <FormField
-                          control={form.control}
-                          name={`notifications.${index}.enabled`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+                      {/* Mobile: Header with toggle */}
+                      <div className="flex items-start justify-between sm:contents">
+                        <div className="flex items-start gap-3 sm:contents">
+                          {/* Toggle Switch */}
+                          <div className="flex items-start pt-1">
+                            <FormField
+                              control={form.control}
+                              name={`notifications.${index}.enabled`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          {/* Notification Name & Description */}
+                          <div className="flex flex-col gap-1 flex-1 sm:flex-none">
+                            <FormLabel className="text-sm font-medium">
+                              {notification.name}
+                            </FormLabel>
+                            <p className="text-xs text-muted-foreground">
+                              {notification.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Mobile: Checkboxes */}
+                        <div className="flex items-center gap-4 sm:hidden">
+                          <div className="flex flex-col items-center gap-1">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <FormField
+                              control={form.control}
+                              name={`notifications.${index}.email`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                      disabled={!form.watch(`notifications.${index}.enabled`)}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="flex flex-col items-center gap-1">
+                            <Bell className="h-4 w-4 text-muted-foreground" />
+                            <FormField
+                              control={form.control}
+                              name={`notifications.${index}.push`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                      disabled={!form.watch(`notifications.${index}.enabled`)}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Notification Name & Description */}
-                      <div className="flex flex-col gap-1">
-                        <FormLabel className="text-sm font-medium">
-                          {notification.name}
-                        </FormLabel>
-                        <p className="text-xs text-muted-foreground">
-                          {notification.description}
-                        </p>
-                      </div>
-
-                      {/* Email Checkbox */}
-                      <div className="flex items-start justify-center pt-1">
+                      {/* Desktop: Email Checkbox */}
+                      <div className="hidden sm:flex items-start justify-center pt-1">
                         <FormField
                           control={form.control}
                           name={`notifications.${index}.email`}
@@ -415,8 +464,8 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                         />
                       </div>
 
-                      {/* Push Checkbox */}
-                      <div className="flex items-start justify-center pt-1">
+                      {/* Desktop: Push Checkbox */}
+                      <div className="hidden sm:flex items-start justify-center pt-1">
                         <FormField
                           control={form.control}
                           name={`notifications.${index}.push`}
