@@ -200,8 +200,8 @@ const LandingPage = () => {
           </h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            <div className="text-center p-4 sm:p-6 card-hover rounded-xl transition-all duration-300 hover:bg-card/50">
-              <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 hover-scale">
+            <div className="text-center p-4 sm:p-6 rounded-xl transition-all duration-300 active:bg-card/50 hover:bg-card/50 touch-manipulation">
+              <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <Search className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 font-heading">Búsqueda Inteligente</h3>
@@ -211,8 +211,8 @@ const LandingPage = () => {
               </p>
             </div>
 
-            <div className="text-center p-4 sm:p-6 card-hover rounded-xl transition-all duration-300 hover:bg-card/50">
-              <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 hover-scale">
+            <div className="text-center p-4 sm:p-6 rounded-xl transition-all duration-300 active:bg-card/50 hover:bg-card/50 touch-manipulation">
+              <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <Star className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 font-heading">Perfiles Verificados</h3>
@@ -222,8 +222,8 @@ const LandingPage = () => {
               </p>
             </div>
 
-            <div className="text-center p-4 sm:p-6 card-hover rounded-xl transition-all duration-300 hover:bg-card/50">
-              <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 hover-scale">
+            <div className="text-center p-4 sm:p-6 rounded-xl transition-all duration-300 active:bg-card/50 hover:bg-card/50 touch-manipulation">
+              <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 font-heading">Comunidad Activa</h3>

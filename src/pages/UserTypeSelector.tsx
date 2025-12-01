@@ -19,7 +19,7 @@ const UserTypeSelector = () => {
         <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
           {/* Business Card */}
           <div 
-            className="p-4 sm:p-6 md:p-8 rounded-2xl cursor-pointer transition-all group border border-border bg-card hover:bg-accent shadow-md hover:shadow-lg"
+            className="p-4 sm:p-6 md:p-8 rounded-2xl cursor-pointer transition-all group border border-border bg-background hover:bg-[#f4e8ff] active:bg-[#f4e8ff]/80 shadow-md hover:shadow-lg active:shadow-md touch-manipulation"
             onClick={() => navigate('/register-business')}
           >
             <div className="text-center space-y-3 sm:space-y-4">
@@ -39,7 +39,7 @@ const UserTypeSelector = () => {
 
           {/* Talent Card */}
           <div 
-            className="p-4 sm:p-6 md:p-8 rounded-2xl cursor-pointer transition-all group border border-border bg-card hover:bg-accent shadow-md hover:shadow-lg"
+            className="p-4 sm:p-6 md:p-8 rounded-2xl cursor-pointer transition-all group border border-border bg-background hover:bg-[#f4e8ff] active:bg-[#f4e8ff]/80 shadow-md hover:shadow-lg active:shadow-md touch-manipulation"
             onClick={() => navigate('/register-talent')}
           >
             <div className="text-center space-y-3 sm:space-y-4">
