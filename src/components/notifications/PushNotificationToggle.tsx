@@ -39,13 +39,13 @@ export const PushNotificationToggle = () => {
   };
 
   return (
-    <Card className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Bell className="h-5 w-5" />
-          <div>
-            <p className="font-medium">Notificaciones Push</p>
-            <p className="text-sm text-muted-foreground">
+    <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+          <Bell className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="font-medium text-sm sm:text-base">Notificaciones Push</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {permission === 'denied'
                 ? 'Bloqueadas por el navegador'
                 : isSubscribed
@@ -58,6 +58,7 @@ export const PushNotificationToggle = () => {
           checked={isSubscribed}
           onCheckedChange={handleToggle}
           disabled={permission === 'denied'}
+          className="h-5 w-9 sm:h-6 sm:w-11 flex-shrink-0"
         />
       </div>
 
@@ -66,7 +67,7 @@ export const PushNotificationToggle = () => {
           variant="outline"
           size="sm"
           onClick={sendTestNotification}
-          className="w-full"
+          className="w-full text-xs sm:text-sm"
         >
           Enviar notificación de prueba
         </Button>

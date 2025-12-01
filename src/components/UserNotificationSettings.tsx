@@ -386,6 +386,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                                     <Switch
                                       checked={field.value}
                                       onCheckedChange={field.onChange}
+                                      className="h-5 w-9 sm:h-6 sm:w-11"
                                     />
                                   </FormControl>
                                 </FormItem>
