@@ -383,10 +383,12 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
-                                    <Switch
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                    />
+                                    <div className="scale-[0.8] sm:scale-100 origin-left">
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                      />
+                                    </div>
                                   </FormControl>
                                 </FormItem>
                               )}
@@ -405,8 +407,8 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                         </div>
 
                         {/* Mobile: Checkboxes */}
-                        <div className="flex items-center gap-3 sm:hidden">
-                          <div className="flex flex-col items-center gap-1">
+                        <div className="flex items-center gap-2 sm:hidden scale-[0.85] origin-right">
+                          <div className="flex flex-col items-center gap-0.5">
                             <Mail className="h-3 w-3 text-muted-foreground" />
                             <FormField
                               control={form.control}
@@ -424,7 +426,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                               )}
                             />
                           </div>
-                          <div className="flex flex-col items-center gap-1">
+                          <div className="flex flex-col items-center gap-0.5">
                             <Bell className="h-3 w-3 text-muted-foreground" />
                             <FormField
                               control={form.control}
