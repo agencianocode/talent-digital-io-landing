@@ -340,6 +340,12 @@ const ProfileSettings = () => {
       if (!publicUrl) {
         throw new Error('No se pudo obtener la URL pública');
       }
+      
+      console.log('📸 Upload successful, public URL:', publicUrl);
+      console.log('📸 User ID:', user.id);
+      console.log('📸 User provider:', user.app_metadata?.provider);
+      
+      // Update profiles table first
       const {
         error: directUpdateError
       } = await supabase.from('profiles').upsert({
@@ -349,9 +355,29 @@ const ProfileSettings = () => {
       }, {
         onConflict: 'user_id'
       });
+      
       if (directUpdateError) {
+        console.error('❌ Error updating profiles table:', directUpdateError);
         throw directUpdateError;
       }
+      
+      console.log('✅ Profiles table updated successfully');
+      
+      // Update user_metadata (important for Google Auth users)
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: {
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString()
+        }
+      });
+      
+      if (metadataError) {
+        console.warn('⚠️ Error updating user_metadata (non-critical):', metadataError);
+        // Continue even if metadata update fails, profile table is more important
+      } else {
+        console.log('✅ User metadata updated successfully');
+      }
+      
       // Update form value
       profileForm.setValue('photo', publicUrl);
       
@@ -364,11 +390,16 @@ const ProfileSettings = () => {
         });
         
         if (updateResult.error) {
-          console.error('Error actualizando contexto:', updateResult.error);
+          console.error('❌ Error actualizando contexto:', updateResult.error);
+        } else {
+          console.log('✅ Context updated successfully');
         }
       }
       
-      console.log('Foto actualizada exitosamente');
+      // Force a refresh of the user data
+      await supabase.auth.refreshSession();
+      
+      console.log('✅ Foto actualizada exitosamente');
       toast.success('Foto actualizada correctamente');
     } catch (error: any) {
       let errorMsg = '';
