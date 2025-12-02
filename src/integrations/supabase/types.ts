@@ -2421,6 +2421,7 @@ export type Database = {
         Returns: {
           email: string
           user_id: string
+          avatar_url: string | null
         }[]
       }
       get_user_ids_by_emails: {

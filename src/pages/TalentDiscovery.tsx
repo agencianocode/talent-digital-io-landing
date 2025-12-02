@@ -179,10 +179,10 @@ const TalentDiscovery = () => {
           .in('role', ['talent', 'freemium_talent', 'premium_talent'])
           .in('user_id', talentUserIds),
         
-        // Get user emails using RPC function (accesses auth.users securely)
+        // Get user emails and avatar_urls using RPC function (accesses auth.users securely)
         supabase
           .rpc('get_user_emails_by_ids', { user_ids: talentUserIds }) as unknown as Promise<{ 
-            data: Array<{ user_id: string; email: string }> | null;
+            data: Array<{ user_id: string; email: string; avatar_url: string | null }> | null;
             error: any;
           }>
       ]);
@@ -204,10 +204,15 @@ const TalentDiscovery = () => {
 
       // Get academy students to mark verified talents
       const userEmailsMap = new Map<string, string>(); // user_id -> email
+      const userAvatarUrlsMap = new Map<string, string | null>(); // user_id -> avatar_url (from user_metadata)
       if (userEmails && Array.isArray(userEmails)) {
         userEmails.forEach((item) => {
           if (item.email) {
             userEmailsMap.set(item.user_id, item.email);
+          }
+          // Store avatar_url from user_metadata as fallback
+          if (item.avatar_url) {
+            userAvatarUrlsMap.set(item.user_id, item.avatar_url);
           }
         });
       }
@@ -272,6 +277,9 @@ const TalentDiscovery = () => {
         // Extraer professional_preferences
         const professionalPrefs = (profile as any)?.professional_preferences as any || {};
         
+        // Use avatar_url from profiles first, then fallback to user_metadata
+        const avatarUrl = profile.avatar_url || userAvatarUrlsMap.get(profile.user_id) || null;
+        
         return {
           id: profile.id,
           user_id: profile.user_id,
@@ -279,7 +287,7 @@ const TalentDiscovery = () => {
           full_name: profile.full_name || 'Sin nombre',
           title: talentProfile?.title || 'Talento Digital',
           bio: talentProfile?.bio || 'Sin descripción',
-          avatar_url: profile.avatar_url,
+          avatar_url: avatarUrl,
           city: profile.city,
           country: profile.country,
           phone: null, // Phone protected - use get_talent_phone_if_authorized() when needed
