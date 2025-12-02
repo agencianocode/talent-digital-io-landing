@@ -26,6 +26,7 @@ import { ProfileImprovementModal } from "@/components/ProfileImprovementModal";
 import { useNavigate } from 'react-router-dom';
 import { Lightbulb, Heart } from 'lucide-react';
 import VideoThumbnail from "@/components/VideoThumbnail";
+import VideoPlayerModal from "@/components/VideoPlayerModal";
 import { PortfolioSection } from "@/components/PortfolioSection";
 import { ExperienceSection } from "@/components/ExperienceSection";
 import { EducationSection } from "@/components/EducationSection";
@@ -45,6 +46,8 @@ const TalentMyProfile = () => {
   const { profile, userProfile } = useProfileData();
   const { generatePublicUrl, copyToClipboard } = useProfileSharing();
   const { getCompletionPercentage, getTasksStatus } = useTalentProfileProgress();
+  
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   
   const { portfolios } = usePortfolio();
   const { experiences } = useExperience();
@@ -238,11 +241,11 @@ const TalentMyProfile = () => {
                 </div>
                 
                 {videoUrl ? (
-                  <div className="w-full h-48 bg-muted rounded-lg relative group overflow-hidden">
+                  <div className="w-full h-48 bg-muted rounded-lg relative group overflow-hidden cursor-pointer" onClick={() => setIsVideoModalOpen(true)}>
                     <VideoThumbnail url={videoUrl} />
                     
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button onClick={() => window.open(videoUrl, '_blank')} size="lg" className="gap-2 bg-white text-black hover:bg-gray-100">
+                      <Button size="lg" className="gap-2 bg-white text-black hover:bg-gray-100" onClick={() => setIsVideoModalOpen(true)}>
                         <Video className="h-5 w-5" />
                         Reproducir Video
                       </Button>
@@ -252,7 +255,9 @@ const TalentMyProfile = () => {
                       <Badge variant="secondary" className="text-xs bg-black/70 text-white">
                         {videoUrl.includes('loom.com') ? 'Loom' : 
                          videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') ? 'YouTube' :
-                         videoUrl.includes('vimeo.com') ? 'Vimeo' : 'Video'}
+                         videoUrl.includes('vimeo.com') ? 'Vimeo' :
+                         videoUrl.includes('drive.google.com') ? 'Google Drive' :
+                         videoUrl.includes('dropbox.com') ? 'Dropbox' : 'Video'}
                       </Badge>
                     </div>
                   </div>
@@ -486,6 +491,15 @@ const TalentMyProfile = () => {
         isOpen={isImprovementModalOpen}
         onClose={() => setIsImprovementModalOpen(false)}
       />
+
+      {videoUrl && (
+        <VideoPlayerModal
+          isOpen={isVideoModalOpen}
+          onClose={() => setIsVideoModalOpen(false)}
+          videoUrl={videoUrl}
+          title="Mi Video de Presentación"
+        />
+      )}
     </div>
   );
 };

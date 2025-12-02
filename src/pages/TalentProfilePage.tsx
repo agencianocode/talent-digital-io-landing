@@ -16,6 +16,7 @@ import { es } from "date-fns/locale";
 import { TalentServices } from "@/components/talent/TalentServices";
 import { useMessages } from "@/hooks/useMessages";
 import VideoThumbnail from "@/components/VideoThumbnail";
+import VideoPlayerModal from "@/components/VideoPlayerModal";
 
 interface TalentProfile {
   id: string;
@@ -62,6 +63,7 @@ const TalentProfilePage = () => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactMessage, setContactMessage] = useState("");
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   
   // Mensajería existente basada en tabla messages
   const { getOrCreateConversation, sendMessage } = useMessages();
@@ -508,13 +510,13 @@ const TalentProfilePage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="w-full h-48 bg-muted rounded-lg relative group overflow-hidden">
+                <div className="w-full h-48 bg-muted rounded-lg relative group overflow-hidden cursor-pointer" onClick={() => setIsVideoModalOpen(true)}>
                   <VideoThumbnail url={userProfile.video_presentation_url} />
                   
                   {/* Hover overlay with play button */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Button 
-                      onClick={() => window.open(userProfile.video_presentation_url!, '_blank')} 
+                      onClick={() => setIsVideoModalOpen(true)} 
                       size="lg" 
                       className="gap-2 bg-white text-black hover:bg-gray-100"
                     >
@@ -780,6 +782,15 @@ const TalentProfilePage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {userProfile?.video_presentation_url && (
+        <VideoPlayerModal
+          isOpen={isVideoModalOpen}
+          onClose={() => setIsVideoModalOpen(false)}
+          videoUrl={userProfile.video_presentation_url}
+          title="Video de Presentación"
+        />
+      )}
     </div>
   );
 };

@@ -41,6 +41,20 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({ url }) => {
           thumbnail = '';
           detectedPlatform = 'Loom';
         }
+        // Google Drive
+        else if (url.includes('drive.google.com')) {
+          const fileId = extractGoogleDriveFileId(url);
+          if (fileId) {
+            // Google Drive thumbnail usando el ID del archivo
+            thumbnail = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1920`;
+            detectedPlatform = 'Google Drive';
+          }
+        }
+        // Dropbox
+        else if (url.includes('dropbox.com')) {
+          thumbnail = '';
+          detectedPlatform = 'Dropbox';
+        }
 
         setThumbnailUrl(thumbnail);
         setPlatform(detectedPlatform);
@@ -66,6 +80,24 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({ url }) => {
     const regex = /vimeo\.com\/(\d+)/;
     const match = url.match(regex);
     return match?.[1] || null;
+  };
+
+  const extractGoogleDriveFileId = (url: string): string | null => {
+    // Soporta formatos: 
+    // - https://drive.google.com/file/d/FILE_ID/view
+    // - https://drive.google.com/open?id=FILE_ID
+    const patterns = [
+      /\/file\/d\/([^\/]+)/,
+      /[?&]id=([^&]+)/,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match?.[1]) {
+        return match[1];
+      }
+    }
+    return null;
   };
 
   if (isLoading) {
