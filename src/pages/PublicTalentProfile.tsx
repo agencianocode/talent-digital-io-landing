@@ -29,6 +29,7 @@ import { usePublicContact } from '@/hooks/usePublicContact';
 import { useAcademyAffiliations } from '@/hooks/useAcademyAffiliations';
 import { AcademyCertificationBadge } from '@/components/academy/AcademyCertificationBadge';
 import VideoThumbnail from '@/components/VideoThumbnail';
+import VideoPlayerModal from '@/components/VideoPlayerModal';
 import { TalentServices } from '@/components/talent/TalentServices';
 import { ShareProfileModal } from '@/components/ShareProfileModal';
 import { toast } from 'sonner';
@@ -132,7 +133,7 @@ const PublicTalentProfile = () => {
   const [showAllEducation, setShowAllEducation] = useState(false);
   const [showAllWorkExperience, setShowAllWorkExperience] = useState(false);
   const [videoPresentationUrl, setVideoPresentationUrl] = useState<string | null>(null);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   
@@ -329,19 +330,8 @@ const PublicTalentProfile = () => {
   };
 
   // Function to convert YouTube URL to embed URL
-  const getEmbedUrl = (url: string) => {
-    if (url.includes('youtu.be/')) {
-      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
-    } else if (url.includes('youtube.com/watch?v=')) {
-      const videoId = url.split('v=')[1]?.split('&')[0];
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
-    }
-    return url;
-  };
-
   const handleVideoClick = () => {
-    setIsVideoPlaying(true);
+    setIsVideoModalOpen(true);
   };
 
   const getPlatformIcon = (platform: string) => {
@@ -596,29 +586,17 @@ const PublicTalentProfile = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {!isVideoPlaying ? (
-                    <div className="bg-black rounded-lg aspect-video flex items-center justify-center relative overflow-hidden group cursor-pointer"
-                         onClick={handleVideoClick}>
-                      <VideoThumbnail url={videoPresentationUrl} />
-                      
-                      {/* Play Button Overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center group-hover:bg-black/20 transition-all duration-200">
-                        <div className="h-12 w-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center group-hover:bg-opacity-100 group-hover:scale-110 transition-all duration-200">
-                          <Play className="h-6 w-6 text-gray-800 ml-1" />
-                        </div>
+                  <div className="bg-black rounded-lg aspect-video flex items-center justify-center relative overflow-hidden group cursor-pointer"
+                       onClick={handleVideoClick}>
+                    <VideoThumbnail url={videoPresentationUrl} />
+                    
+                    {/* Play Button Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center group-hover:bg-black/20 transition-all duration-200">
+                      <div className="h-12 w-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center group-hover:bg-opacity-100 group-hover:scale-110 transition-all duration-200">
+                        <Play className="h-6 w-6 text-gray-800 ml-1" />
                       </div>
                     </div>
-                  ) : (
-                    <div className="bg-black rounded-lg aspect-video overflow-hidden">
-                      <iframe
-                        src={getEmbedUrl(videoPresentationUrl)}
-                        title="Video de Presentación"
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -774,6 +752,16 @@ const PublicTalentProfile = () => {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
       />
+
+      {/* Video Player Modal */}
+      {videoPresentationUrl && (
+        <VideoPlayerModal
+          isOpen={isVideoModalOpen}
+          onClose={() => setIsVideoModalOpen(false)}
+          videoUrl={videoPresentationUrl}
+          title="Video de Presentación"
+        />
+      )}
     </div>
   );
 };
