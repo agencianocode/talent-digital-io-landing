@@ -528,12 +528,23 @@ export const useProfileData = () => {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.toLowerCase();
       
-      return (
-        hostname.includes('youtube.com') ||
-        hostname.includes('youtu.be') ||
-        hostname.includes('loom.com') ||
-        hostname.includes('vimeo.com')
-      );
+      // Lista de dominios permitidos para videos
+      const allowedDomains = [
+        'youtube.com',
+        'youtu.be',
+        'vimeo.com',
+        'loom.com',
+        'drive.google.com',
+        'dropbox.com',
+        'streamable.com',
+        'wistia.com',
+        'vidyard.com',
+        'cloudinary.com',
+        'amazonaws.com',
+        'supabase.co',
+      ];
+      
+      return allowedDomains.some(domain => hostname.includes(domain));
     } catch {
       return false;
     }

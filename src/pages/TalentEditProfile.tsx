@@ -601,7 +601,7 @@ const TalentEditProfile = () => {
                   id="video_presentation_url"
                   value={formData.video_presentation_url || ''}
                   onChange={(e) => handleInputChange('video_presentation_url', e.target.value)}
-                  placeholder="https://loom.com/share/..."
+                  placeholder="https://youtube.com/watch?v=... o https://drive.google.com/..."
                   className={errors.video_presentation_url ? 'border-destructive' : ''}
                 />
                 {errors.video_presentation_url && (
@@ -609,6 +609,8 @@ const TalentEditProfile = () => {
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
                   Un video de presentación corto puede aumentar tus oportunidades hasta 3 veces 🎥
+                  <br />
+                  <span className="text-xs">Plataformas soportadas: YouTube, Vimeo, Loom, Google Drive, Dropbox</span>
                 </p>
               </div>
             </CardContent>

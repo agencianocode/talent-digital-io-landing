@@ -321,11 +321,11 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
                   type="url"
                   value={applicationData.video_presentation_url}
                   onChange={(e) => setApplicationData(prev => ({ ...prev, video_presentation_url: e.target.value }))}
-                  placeholder="https://www.youtube.com/watch?v=..."
+                  placeholder="https://youtube.com/watch?v=... o https://drive.google.com/..."
                   className="mt-1"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Comparte un video donde te presentes profesionalmente (YouTube, Loom, etc.)
+                  Comparte un video donde te presentes profesionalmente (YouTube, Vimeo, Loom, Google Drive, Dropbox)
                 </p>
               </div>
             </div>

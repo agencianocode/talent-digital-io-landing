@@ -431,14 +431,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
                 id="video_presentation_url"
                 value={formData.video_presentation_url || ''}
                 onChange={(e) => handleInputChange('video_presentation_url', e.target.value)}
-                placeholder="https://loom.com/share/..."
+                placeholder="https://youtube.com/watch?v=... o https://drive.google.com/..."
                 className={errors.video_presentation_url ? 'border-red-500' : ''}
               />
               {errors.video_presentation_url && (
                 <p className="text-sm text-red-500 mt-1">{errors.video_presentation_url}</p>
               )}
               <p className="text-xs text-gray-500 mt-1">
-                Enlaces de Loom, YouTube, Vimeo, etc.
+                Plataformas soportadas: YouTube, Vimeo, Loom, Google Drive, Dropbox
               </p>
             </div>
           </div>
