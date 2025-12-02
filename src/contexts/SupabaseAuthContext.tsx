@@ -269,21 +269,51 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             let userData = await fetchUserData(session.user.id, pendingUserType || undefined);
             console.log('Initial userData fetched:', { role: userData.role, profile: !!userData.profile });
             
+            // Check for original_user_type in metadata (for academy_premium registrations)
+            const originalUserType = (session.user.user_metadata as any)?.original_user_type;
+            console.log('Checking original_user_type from metadata:', originalUserType);
+            
+            // If original_user_type is academy_premium but current role is not, fix it
+            if (originalUserType === 'academy_premium' && userData.role !== 'academy_premium') {
+              console.log('Detected academy_premium registration - fixing role from', userData.role, 'to academy_premium');
+              const fixResult = await fixUserRoleForGoogleAuth(session.user.id, 'academy_premium');
+              if (!fixResult.error) {
+                console.log('Academy role fixed successfully, refetching user data');
+                userData = await fetchUserData(session.user.id, 'academy_premium');
+                console.log('Refetched userData:', { role: userData.role, profile: !!userData.profile });
+              } else {
+                console.error('Failed to fix academy role:', fixResult.error);
+              }
+            }
+            
             // If this is a Google OAuth user and role doesn't match expected type, fix it
             if (pendingUserType && userData.role) {
-              const isBusinessType = pendingUserType === 'business' || pendingUserType === 'freemium_business';
+              const isBusinessType = pendingUserType === 'business' || pendingUserType === 'freemium_business' || pendingUserType === 'academy_premium';
               const hasBusinessRole = isBusinessRole(userData.role as UserRole);
+              const isAcademyType = pendingUserType === 'academy_premium';
               
               console.log('Google OAuth role check:', { 
                 pendingUserType, 
                 isBusinessType, 
+                isAcademyType,
                 currentRole: userData.role, 
                 hasBusinessRole,
                 shouldFixToBusiness: isBusinessType && !hasBusinessRole,
                 shouldFixToTalent: !isBusinessType && hasBusinessRole
               });
               
-              if (isBusinessType && !hasBusinessRole) {
+              // Special handling for academy_premium
+              if (isAcademyType && userData.role !== 'academy_premium') {
+                console.log('Role mismatch detected - fixing Google OAuth user role to academy_premium');
+                const fixResult = await fixUserRoleForGoogleAuth(session.user.id, 'academy_premium');
+                if (!fixResult.error) {
+                  console.log('Academy role fixed successfully, refetching user data');
+                  userData = await fetchUserData(session.user.id, 'academy_premium');
+                  console.log('Refetched userData:', { role: userData.role, profile: !!userData.profile });
+                } else {
+                  console.error('Failed to fix academy role:', fixResult.error);
+                }
+              } else if (isBusinessType && !hasBusinessRole) {
                 console.log('Role mismatch detected - fixing Google OAuth user role from talent to business');
                 const fixResult = await fixUserRoleForGoogleAuth(session.user.id, pendingUserType);
                 if (!fixResult.error) {
@@ -547,7 +577,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const fixUserRoleForGoogleAuth = async (userId: string, targetUserType: string) => {
     try {
       // Use database role values, not frontend mapped values
-      const targetRole = targetUserType === 'business' || targetUserType === 'freemium_business'
+      const targetRole = targetUserType === 'academy_premium'
+        ? 'academy_premium'
+        : targetUserType === 'business' || targetUserType === 'freemium_business'
         ? 'freemium_business' 
         : targetUserType === 'freemium_talent'
         ? 'freemium_talent'
