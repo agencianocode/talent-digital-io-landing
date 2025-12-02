@@ -138,19 +138,27 @@ const RecommendedProfiles: React.FC = () => {
           return;
         }
 
-        // Obtener emails de auth.users usando RPC
+        // Obtener emails y avatar_urls de auth.users usando RPC
         const { data: userEmails, error: emailsError } = await supabase
-          .rpc('get_user_emails_by_ids', { user_ids: userIds });
+          .rpc('get_user_emails_by_ids', { user_ids: userIds }) as { 
+            data: Array<{ user_id: string; email: string; avatar_url: string | null }> | null;
+            error: any;
+          };
 
         if (emailsError) {
           console.error('Error fetching user emails:', emailsError);
         }
 
-        // Crear un mapa de user_id a email
+        // Crear un mapa de user_id a email y avatar_url (desde user_metadata)
         const emailMap: Record<string, string> = {};
+        const avatarUrlMap: Record<string, string | null> = {};
         if (userEmails) {
           userEmails.forEach((item: any) => {
             emailMap[item.user_id] = item.email;
+            // Store avatar_url from user_metadata as fallback
+            if (item.avatar_url) {
+              avatarUrlMap[item.user_id] = item.avatar_url;
+            }
           });
         }
 
@@ -183,10 +191,17 @@ const RecommendedProfiles: React.FC = () => {
             if (profile.bio && profile.bio.length > 50) relevanceScore += 7;
             if (profile.skills && profile.skills.length >= 3) relevanceScore += 5;
             
+            // Use avatar_url from profiles first, then fallback to user_metadata
+            const profileAvatarUrl = profileData.avatar_url;
+            const metadataAvatarUrl = avatarUrlMap[profile.user_id];
+            // Filter out blob URLs (temporary URLs that won't work)
+            const rawAvatarUrl = profileAvatarUrl || metadataAvatarUrl || null;
+            const finalAvatarUrl = rawAvatarUrl && !rawAvatarUrl.startsWith('blob:') ? rawAvatarUrl : '';
+            
             return {
               id: profile.user_id,
               full_name: profileData.full_name || 'Candidato',
-              avatar_url: profileData.avatar_url || '',
+              avatar_url: finalAvatarUrl,
               title: profile.title || 'Profesional',
               bio: profile.bio || '',
               skills: profile.skills || [],
