@@ -207,8 +207,23 @@ const TalentDiscovery = () => {
         console.log('🖼️ Avatar URLs from RPC:', userEmails.map((u: any) => ({
           user_id: u.user_id,
           email: u.email,
-          avatar_url: u.avatar_url
+          avatar_url: u.avatar_url,
+          avatar_url_type: typeof u.avatar_url,
+          avatar_url_length: u.avatar_url?.length
         })));
+        
+        // Debug specific users
+        const specificEmails = ['mafesotoespinoza@gmail.com', 'jimmymcarballo@gmail.com'];
+        userEmails.forEach((u: any) => {
+          if (specificEmails.includes(u.email?.toLowerCase())) {
+            console.log(`🔍 Specific user found in RPC:`, {
+              email: u.email,
+              user_id: u.user_id,
+              avatar_url: u.avatar_url,
+              has_avatar: !!u.avatar_url
+            });
+          }
+        });
       }
 
       // Get academy students to mark verified talents
@@ -294,15 +309,26 @@ const TalentDiscovery = () => {
         const rawAvatarUrl = profileAvatarUrl || metadataAvatarUrl || null;
         const avatarUrl = rawAvatarUrl && !rawAvatarUrl.startsWith('blob:') ? rawAvatarUrl : null;
         
-        // Debug for specific users
-        if (profile.full_name === 'Jimmy Mora Carballo' || profile.full_name === 'Maria Fernanda Soto' || profile.full_name === 'María Fernanda Soto') {
-          console.log(`🖼️ Debug avatar for ${profile.full_name}:`, {
+        // Debug for specific users by email or name
+        const userEmailForDebug = userEmailsMap.get(profile.user_id);
+        const isSpecificUser = userEmailForDebug && (
+          userEmailForDebug.toLowerCase().includes('mafesotoespinoza') ||
+          userEmailForDebug.toLowerCase().includes('jimmymcarballo') ||
+          profile.full_name === 'Jimmy Mora Carballo' ||
+          profile.full_name === 'Maria Fernanda Soto' ||
+          profile.full_name === 'María Fernanda Soto'
+        );
+        
+        if (isSpecificUser) {
+          console.log(`🖼️ Debug avatar for ${profile.full_name} (${userEmailForDebug}):`, {
             user_id: profile.user_id,
             profile_avatar_url: profileAvatarUrl,
             metadata_avatar_url: metadataAvatarUrl,
             raw_avatar_url: rawAvatarUrl,
             final_avatar_url: avatarUrl,
-            isBlobUrl: rawAvatarUrl?.startsWith('blob:')
+            isBlobUrl: rawAvatarUrl?.startsWith('blob:'),
+            in_avatar_map: userAvatarUrlsMap.has(profile.user_id),
+            avatar_map_value: userAvatarUrlsMap.get(profile.user_id)
           });
         }
         
