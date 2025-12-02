@@ -49,7 +49,7 @@ const Index = () => {
                 </svg>
               </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Busco Talento
+                Empresa Freemium
               </h2>
               <p className="text-sm text-gray-600">
                 Para mi negocio o empresa
@@ -79,7 +79,7 @@ const Index = () => {
                 </svg>
               </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Busco Trabajo
+                Talento Freemium
               </h2>
               <p className="text-sm text-gray-600">
                 Soy un profesional digital

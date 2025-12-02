@@ -70,7 +70,7 @@ const RegisterBusiness = () => {
 
     const signUpResult = await signUp(formData.email, formData.password, {
       full_name: `${formData.firstName} ${formData.lastName}`.trim(),
-      user_type: 'business'
+      user_type: 'freemium_business'
     });
     
     if (signUpResult.error) {
@@ -81,7 +81,7 @@ const RegisterBusiness = () => {
       return;
     }
 
-    console.log('✅ Business account created successfully with user_type=business');
+    console.log('✅ Business account created successfully with user_type=freemium_business');
     
     // Account created successfully - redirect to verification page
     navigate(`/email-verification-pending?type=business&email=${encodeURIComponent(formData.email)}`);
@@ -94,7 +94,7 @@ const RegisterBusiness = () => {
     setIsSubmitting(true);
     setError('');
 
-    const { error } = await signUpWithGoogle('business');
+    const { error } = await signUpWithGoogle('freemium_business');
     
     if (error) {
       setError('Error al registrarse con Google. Intenta nuevamente.');
@@ -129,7 +129,7 @@ const RegisterBusiness = () => {
             <Building2 className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Registro para Empresas
+            Empresa Freemium
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             Encuentra el mejor talento digital para tu empresa

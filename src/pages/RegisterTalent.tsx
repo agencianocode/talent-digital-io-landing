@@ -136,7 +136,7 @@ const RegisterTalent = () => {
             <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Registro para Talento
+            Talento Freemium
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             Encuentra las mejores oportunidades laborales

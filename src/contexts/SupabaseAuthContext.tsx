@@ -92,7 +92,7 @@ interface AuthContextType extends AuthState {
   signUp: (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
-  signUpWithGoogle: (userType: 'business' | 'talent' | 'freemium_talent' | 'academy_premium') => Promise<{ error: Error | null }>;
+  signUpWithGoogle: (userType: 'business' | 'talent' | 'freemium_talent' | 'freemium_business' | 'academy_premium') => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
   updateCompany: (data: Partial<Company>) => Promise<{ error: Error | null }>;
@@ -271,7 +271,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             
             // If this is a Google OAuth user and role doesn't match expected type, fix it
             if (pendingUserType && userData.role) {
-              const isBusinessType = pendingUserType === 'business';
+              const isBusinessType = pendingUserType === 'business' || pendingUserType === 'freemium_business';
               const hasBusinessRole = isBusinessRole(userData.role as UserRole);
               
               console.log('Google OAuth role check:', { 
@@ -285,22 +285,22 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
               
               if (isBusinessType && !hasBusinessRole) {
                 console.log('Role mismatch detected - fixing Google OAuth user role from talent to business');
-                const fixResult = await fixUserRoleForGoogleAuth(session.user.id, 'business');
+                const fixResult = await fixUserRoleForGoogleAuth(session.user.id, pendingUserType);
                 if (!fixResult.error) {
                   console.log('Role fixed successfully, refetching user data');
                   // Refetch user data with corrected role
-                  userData = await fetchUserData(session.user.id, 'business');
+                  userData = await fetchUserData(session.user.id, pendingUserType);
                   console.log('Refetched userData:', { role: userData.role, profile: !!userData.profile });
                 } else {
                   console.error('Failed to fix role:', fixResult.error);
                 }
               } else if (!isBusinessType && hasBusinessRole) {
                 console.log('Role mismatch detected - fixing Google OAuth user role from business to talent');
-                const fixResult = await fixUserRoleForGoogleAuth(session.user.id, 'talent');
+                const fixResult = await fixUserRoleForGoogleAuth(session.user.id, pendingUserType);
                 if (!fixResult.error) {
                   console.log('Role fixed successfully, refetching user data');
                   // Refetch user data with corrected role
-                  userData = await fetchUserData(session.user.id, 'talent');
+                  userData = await fetchUserData(session.user.id, pendingUserType);
                   console.log('Refetched userData:', { role: userData.role, profile: !!userData.profile });
                 } else {
                   console.error('Failed to fix role:', fixResult.error);
@@ -466,6 +466,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
     // For academy registrations, normalize to 'business' for compatibility
     // but keep the original intent in metadata
+    // Preserve freemium_business and freemium_talent as-is
     const actualUserType = metadata?.user_type === 'academy_premium' ? 'business' : metadata?.user_type;
     const metadataToSend = {
       ...metadata,
@@ -477,7 +478,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Set different redirect URLs based on user type
     const redirectUrl = metadata?.user_type === 'academy_premium'
       ? `${window.location.origin}/business-dashboard`
-      : metadata?.user_type === 'business' 
+      : metadata?.user_type === 'business' || metadata?.user_type === 'freemium_business'
         ? `${window.location.origin}/company-onboarding`
         : `${window.location.origin}/talent-onboarding`;
     
@@ -518,7 +519,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return { error };
   };
 
-  const signUpWithGoogle = async (userType: 'business' | 'talent' | 'freemium_talent' | 'academy_premium') => {
+  const signUpWithGoogle = async (userType: 'business' | 'talent' | 'freemium_talent' | 'freemium_business' | 'academy_premium') => {
     // Store the user type in localStorage temporarily for after OAuth redirect
     localStorage.setItem('pending_user_type', userType);
     console.log('Google OAuth: Stored pending_user_type as:', userType);
@@ -526,7 +527,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // For Google OAuth, redirect directly to onboarding since Google verifies email automatically
     const redirectUrl = userType === 'academy_premium'
       ? `${window.location.origin}/business-dashboard`
-      : userType === 'business' 
+      : userType === 'business' || userType === 'freemium_business'
         ? `${window.location.origin}/company-onboarding`
         : `${window.location.origin}/talent-onboarding`;
     
@@ -546,11 +547,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const fixUserRoleForGoogleAuth = async (userId: string, targetUserType: string) => {
     try {
       // Use database role values, not frontend mapped values
-      const targetRole = targetUserType === 'business' 
-        ? 'business' 
+      const targetRole = targetUserType === 'business' || targetUserType === 'freemium_business'
+        ? 'freemium_business' 
         : targetUserType === 'freemium_talent'
         ? 'freemium_talent'
-        : 'talent';
+        : 'freemium_talent'; // Default to freemium_talent instead of 'talent'
       
       console.log(`Fixing Google OAuth user role: ${userId} -> ${targetRole}`);
       

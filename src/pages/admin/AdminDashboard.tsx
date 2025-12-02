@@ -158,7 +158,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
               <div className="flex items-center gap-3">
                 <span className="text-xl">🏢</span>
                 <div>
-                  <p className="font-medium text-sm">Registro para Empresas</p>
+                  <p className="font-medium text-sm">Empresa Freemium</p>
                   <p className="text-xs text-muted-foreground">/register-business</p>
                 </div>
               </div>
@@ -178,7 +178,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onTabChange }) => {
               <div className="flex items-center gap-3">
                 <span className="text-xl">👤</span>
                 <div>
-                  <p className="font-medium text-sm">Registro para Talento</p>
+                  <p className="font-medium text-sm">Talento Freemium</p>
                   <p className="text-xs text-muted-foreground">/register-talent</p>
                 </div>
               </div>

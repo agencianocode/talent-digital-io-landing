@@ -29,7 +29,7 @@ const UserTypeSelector = () => {
                 </svg>
               </div>
               <h2 className="text-lg sm:text-2xl font-bold text-foreground">
-                Busco Talento
+                Empresa Freemium
               </h2>
               <p className="text-xs sm:text-base text-muted-foreground">
                 Para mi negocio o empresa
@@ -49,7 +49,7 @@ const UserTypeSelector = () => {
                 </svg>
               </div>
               <h2 className="text-lg sm:text-2xl font-bold text-foreground">
-                Busco Trabajo
+                Talento Freemium
               </h2>
               <p className="text-xs sm:text-base text-muted-foreground">
                 Soy un profesional digital
