@@ -102,12 +102,42 @@ serve(async (req) => {
       const isCompanyAdmin = companyRoles.some(r => r === 'owner' || r === 'admin');
       const hasCompanies = companies_count > 0;
 
+      // Determine user role: prefer role from user_roles table, fallback to metadata, then default
+      let userRole = role?.role;
+      
+      // If no role in user_roles, try to infer from metadata
+      if (!userRole) {
+        const metadataUserType = user.user_metadata?.user_type || user.user_metadata?.original_user_type;
+        
+        // Normalize old roles to new format
+        if (metadataUserType === 'talent' || metadataUserType === 'freemium_talent') {
+          userRole = 'freemium_talent';
+        } else if (metadataUserType === 'business' || metadataUserType === 'freemium_business') {
+          userRole = 'freemium_business';
+        } else if (metadataUserType === 'academy_premium') {
+          userRole = 'academy_premium';
+        } else if (hasCompanies) {
+          // If user has companies, likely a business user
+          userRole = 'freemium_business';
+        } else {
+          // Default to freemium_talent instead of old 'talent'
+          userRole = 'freemium_talent';
+        }
+      } else {
+        // Normalize old roles if they exist
+        if (userRole === 'talent') {
+          userRole = 'freemium_talent';
+        } else if (userRole === 'business') {
+          userRole = 'freemium_business';
+        }
+      }
+
       return {
         id: user.id,
         email: user.email,
         full_name: profile?.full_name || user.user_metadata?.full_name || 'Sin nombre',
         avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || null,
-        role: role?.role || 'talent',
+        role: userRole,
         created_at: profile?.created_at || user.created_at,
         updated_at: profile?.updated_at || user.updated_at,
         last_sign_in_at: user.last_sign_in_at,
