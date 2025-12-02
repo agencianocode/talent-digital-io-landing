@@ -383,11 +383,20 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
-                                    <Switch
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                      className="h-5 w-9 sm:h-6 sm:w-11"
-                                    />
+                                    <>
+                                      {/* Mobile: Smaller switch */}
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                        className="sm:hidden scale-75 origin-left"
+                                      />
+                                      {/* Desktop: Normal switch */}
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                        className="hidden sm:inline-flex"
+                                      />
+                                    </>
                                   </FormControl>
                                 </FormItem>
                               )}
@@ -405,10 +414,10 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                           </div>
                         </div>
 
-                        {/* Mobile: Checkboxes */}
-                        <div className="flex items-center gap-4 sm:hidden">
-                          <div className="flex flex-col items-center gap-1">
-                            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                        {/* Mobile: Checkboxes - smaller */}
+                        <div className="flex items-center gap-3 sm:hidden">
+                          <div className="flex flex-col items-center gap-0.5">
+                            <Mail className="h-3 w-3 text-muted-foreground" />
                             <FormField
                               control={form.control}
                               name={`notifications.${index}.email`}
@@ -419,15 +428,15 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                                       checked={field.value}
                                       onCheckedChange={field.onChange}
                                       disabled={!form.watch(`notifications.${index}.enabled`)}
-                                      className="h-3 w-3"
+                                      className="scale-75"
                                     />
                                   </FormControl>
                                 </FormItem>
                               )}
                             />
                           </div>
-                          <div className="flex flex-col items-center gap-1">
-                            <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+                          <div className="flex flex-col items-center gap-0.5">
+                            <Bell className="h-3 w-3 text-muted-foreground" />
                             <FormField
                               control={form.control}
                               name={`notifications.${index}.push`}
@@ -438,7 +447,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                                       checked={field.value}
                                       onCheckedChange={field.onChange}
                                       disabled={!form.watch(`notifications.${index}.enabled`)}
-                                      className="h-3 w-3"
+                                      className="scale-75"
                                     />
                                   </FormControl>
                                 </FormItem>
