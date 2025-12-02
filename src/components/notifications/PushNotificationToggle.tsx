@@ -58,7 +58,7 @@ export const PushNotificationToggle = () => {
           checked={isSubscribed}
           onCheckedChange={handleToggle}
           disabled={permission === 'denied'}
-          className="h-5 w-9 sm:h-6 sm:w-11 flex-shrink-0"
+          className="flex-shrink-0"
         />
       </div>
 

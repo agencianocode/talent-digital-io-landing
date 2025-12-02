@@ -383,20 +383,10 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
-                                    <>
-                                      {/* Mobile: Much smaller switch */}
-                                      <Switch
-                                        checked={field.value}
-                                        onCheckedChange={field.onChange}
-                                        className="sm:hidden scale-[0.6] origin-left"
-                                      />
-                                      {/* Desktop: Normal switch */}
-                                      <Switch
-                                        checked={field.value}
-                                        onCheckedChange={field.onChange}
-                                        className="hidden sm:inline-flex"
-                                      />
-                                    </>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
                                   </FormControl>
                                 </FormItem>
                               )}
@@ -414,10 +404,10 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                           </div>
                         </div>
 
-                        {/* Mobile: Checkboxes - much smaller */}
-                        <div className="flex items-center gap-2 sm:hidden">
-                          <div className="flex flex-col items-center gap-0.5">
-                            <Mail className="h-2.5 w-2.5 text-muted-foreground" />
+                        {/* Mobile: Checkboxes */}
+                        <div className="flex items-center gap-3 sm:hidden">
+                          <div className="flex flex-col items-center gap-1">
+                            <Mail className="h-3 w-3 text-muted-foreground" />
                             <FormField
                               control={form.control}
                               name={`notifications.${index}.email`}
@@ -428,15 +418,14 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                                       checked={field.value}
                                       onCheckedChange={field.onChange}
                                       disabled={!form.watch(`notifications.${index}.enabled`)}
-                                      className="scale-[0.6]"
                                     />
                                   </FormControl>
                                 </FormItem>
                               )}
                             />
                           </div>
-                          <div className="flex flex-col items-center gap-0.5">
-                            <Bell className="h-2.5 w-2.5 text-muted-foreground" />
+                          <div className="flex flex-col items-center gap-1">
+                            <Bell className="h-3 w-3 text-muted-foreground" />
                             <FormField
                               control={form.control}
                               name={`notifications.${index}.push`}
@@ -447,7 +436,6 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                                       checked={field.value}
                                       onCheckedChange={field.onChange}
                                       disabled={!form.watch(`notifications.${index}.enabled`)}
-                                      className="scale-[0.6]"
                                     />
                                   </FormControl>
                                 </FormItem>
