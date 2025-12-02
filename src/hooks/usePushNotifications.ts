@@ -168,11 +168,41 @@ export const usePushNotifications = () => {
   };
 
   const sendTestNotification = async () => {
-    if (permission === 'granted') {
-      new Notification('¡Notificación de prueba!', {
-        body: 'Las notificaciones están funcionando correctamente',
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: 'Error',
+          description: 'Debes iniciar sesión para enviar una notificación de prueba',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Enviando...',
+        description: 'Enviando notificación de prueba',
+      });
+
+      const { error } = await supabase.functions.invoke('test-notification', {
+        body: {
+          user_id: user.id,
+          type: 'application',
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: '✅ Notificación enviada',
+        description: 'Revisa tus notificaciones push, email y la campana de notificaciones',
+      });
+    } catch (error: any) {
+      console.error('Error sending test notification:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'No se pudo enviar la notificación de prueba',
+        variant: 'destructive',
       });
     }
   };
