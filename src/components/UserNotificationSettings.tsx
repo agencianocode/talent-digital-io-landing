@@ -383,7 +383,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
-                                    <div className="scale-[0.8] sm:scale-100 origin-left">
+                                    <div className="scale-[0.65] sm:scale-100 origin-left">
                                       <Switch
                                         checked={field.value}
                                         onCheckedChange={field.onChange}
@@ -407,7 +407,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                         </div>
 
                         {/* Mobile: Checkboxes */}
-                        <div className="flex items-center gap-2 sm:hidden scale-[0.85] origin-right">
+                        <div className="flex items-center gap-1 sm:hidden scale-[0.7] origin-right">
                           <div className="flex flex-col items-center gap-0.5">
                             <Mail className="h-3 w-3 text-muted-foreground" />
                             <FormField
