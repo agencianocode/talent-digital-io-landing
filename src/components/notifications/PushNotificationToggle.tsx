@@ -65,9 +65,9 @@ export const PushNotificationToggle = () => {
       {isSubscribed && (
         <Button
           variant="outline"
-          size="sm"
+          size="default"
           onClick={sendTestNotification}
-          className="w-full text-xs sm:text-sm"
+          className="w-full text-sm sm:text-sm py-3 sm:py-2"
         >
           Enviar notificación de prueba
         </Button>
