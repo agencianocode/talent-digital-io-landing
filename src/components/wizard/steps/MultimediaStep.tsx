@@ -15,7 +15,45 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const multimediaSchema = z.object({
-  video_presentation_url: z.string().optional(),
+  video_presentation_url: z.string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val || val === '') return true;
+        
+        // Validar que sea una URL válida
+        try {
+          new URL(val);
+        } catch {
+          return false;
+        }
+        
+        // Lista de dominios permitidos para videos
+        const allowedDomains = [
+          'youtube.com',
+          'youtu.be',
+          'vimeo.com',
+          'loom.com',
+          'drive.google.com',
+          'dropbox.com',
+          'streamable.com',
+          'wistia.com',
+          'vidyard.com',
+          'cloudinary.com',
+          'amazonaws.com', // Para S3
+        ];
+        
+        const url = new URL(val);
+        // Si es un archivo subido (nuestro storage), siempre permitirlo
+        if (url.hostname.includes('supabase.co')) return true;
+        
+        // Verificar si el dominio está en la lista permitida
+        return allowedDomains.some(domain => url.hostname.includes(domain));
+      },
+      {
+        message: 'Por favor ingresa una URL válida de YouTube, Vimeo, Loom, Google Drive, Dropbox u otra plataforma de video soportada'
+      }
+    ),
   portfolio_url: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
 });
 
@@ -52,8 +90,11 @@ export const MultimediaStep: React.FC<MultimediaStepProps> = ({
   });
 
   const onSubmit = async (formData: MultimediaFormData) => {
+    // Priorizar el video subido, luego el link pegado en el campo
+    const videoUrl = uploadedVideo || formData.video_presentation_url || '';
+    
     await updateData({
-      video_presentation_url: uploadedVideo || formData.video_presentation_url || '',
+      video_presentation_url: videoUrl,
       portfolio_url: formData.portfolio_url || '',
     });
     onNext();
@@ -149,15 +190,11 @@ export const MultimediaStep: React.FC<MultimediaStepProps> = ({
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-sm font-medium">Video subido exitosamente</span>
+                    <span className="text-sm font-medium">Video agregado exitosamente</span>
                   </div>
-                  <video 
-                    controls 
-                    className="w-full max-w-md rounded-lg"
-                    src={uploadedVideo}
-                  >
-                    Tu navegador no soporta la reproducción de video.
-                  </video>
+                  <div className="bg-muted/50 p-3 rounded-lg">
+                    <p className="text-sm break-all">{uploadedVideo}</p>
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
@@ -172,10 +209,54 @@ export const MultimediaStep: React.FC<MultimediaStepProps> = ({
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* Opción 1: Pegar link */}
+                  <div className="space-y-3">
+                    <FormField
+                      control={form.control}
+                      name="video_presentation_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Link className="h-4 w-4" />
+                            Opción 1: Pegar link de video
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="https://youtube.com/watch?v=... o https://drive.google.com/..."
+                              {...field} 
+                              onChange={(e) => {
+                                field.onChange(e);
+                                if (e.target.value) {
+                                  setUploadedVideo(e.target.value);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Plataformas soportadas: YouTube, Vimeo, Loom, Google Drive, Dropbox
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        o
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Opción 2: Subir archivo */}
                   <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
                     <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">Sube tu video de presentación</p>
+                      <p className="text-sm font-medium">Opción 2: Subir archivo de video</p>
                       <p className="text-xs text-muted-foreground">
                         MP4, WebM u OGG (máximo 50MB)
                       </p>
