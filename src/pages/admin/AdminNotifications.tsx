@@ -191,58 +191,76 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto p-6">
+    <div className="container max-w-4xl mx-auto p-3 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Bell className="h-6 w-6" />
-            Notificaciones
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <Bell className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+            <span className="truncate">Notificaciones</span>
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             {unreadCount > 0 ? `${unreadCount} no leídas` : 'Todo al día'}
           </p>
         </div>
 
         {unreadCount > 0 && (
-          <Button onClick={markAllAsRead} variant="outline" size="sm">
+          <Button 
+            onClick={markAllAsRead} 
+            variant="outline" 
+            size="sm"
+            className="w-full sm:w-auto flex-shrink-0"
+          >
             <Check className="h-4 w-4 mr-2" />
-            Marcar todas como leídas
+            <span className="hidden sm:inline">Marcar todas como leídas</span>
+            <span className="sm:hidden">Marcar todas</span>
           </Button>
         )}
       </div>
 
       {/* Filter Tabs */}
-      <Tabs value={filter} onValueChange={(value) => setFilter(value as any)} className="mb-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="todas">
+      <Tabs value={filter} onValueChange={(value) => setFilter(value as any)} className="mb-4 sm:mb-6">
+        <TabsList className="grid w-full grid-cols-4 h-auto sm:h-10 gap-0.5 sm:gap-0">
+          <TabsTrigger 
+            value="todas" 
+            className="text-[10px] sm:text-sm px-1 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap"
+          >
             Todas
             {notifications.length > 0 && (
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-1 sm:ml-2 hidden sm:inline-flex text-xs">
                 {notifications.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="solicitudes">
+          <TabsTrigger 
+            value="solicitudes" 
+            className="text-[10px] sm:text-sm px-1 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap"
+          >
             Solicitudes
             {notifications.filter(n => n.type === 'marketplace' || n.type === 'marketplace_request').length > 0 && (
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-1 sm:ml-2 hidden sm:inline-flex text-xs">
                 {notifications.filter(n => n.type === 'marketplace' || n.type === 'marketplace_request').length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="mensajes">
+          <TabsTrigger 
+            value="mensajes" 
+            className="text-[10px] sm:text-sm px-1 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap"
+          >
             Mensajes
             {notifications.filter(n => n.type === 'message').length > 0 && (
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-1 sm:ml-2 hidden sm:inline-flex text-xs">
                 {notifications.filter(n => n.type === 'message').length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="oportunidades">
+          <TabsTrigger 
+            value="oportunidades" 
+            className="text-[10px] sm:text-sm px-1 sm:px-3 py-2 sm:py-1.5 whitespace-nowrap"
+          >
             Oportunidades
             {notifications.filter(n => n.type === 'opportunity').length > 0 && (
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-1 sm:ml-2 hidden sm:inline-flex text-xs">
                 {notifications.filter(n => n.type === 'opportunity').length}
               </Badge>
             )}
@@ -270,39 +288,41 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
             </p>
           </div>
         ) : (
-          <div className="space-y-2 pb-6">
+          <div className="space-y-2 sm:space-y-3 pb-6">
             {filteredNotifications.map(notification => (
               <Card
                 key={notification.id}
-                className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
+                className={`p-3 sm:p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
                   !notification.read ? 'bg-primary/5 border-primary/20' : ''
                 }`}
                 onClick={() => handleNotificationClick(notification)}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3 sm:gap-4">
                   {/* Icon */}
-                  <div className="mt-1">
+                  <div className="mt-1 flex-shrink-0">
                     {getNotificationIcon(notification.type)}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-sm flex items-center gap-2">
-                          {notification.title}
-                          {!notification.read && (
-                            <Badge variant="default" className="h-5 px-2">
-                              Nuevo
-                            </Badge>
-                          )}
-                          {(notification.type === 'marketplace' || notification.type === 'marketplace_request') && (
-                            <Badge variant="secondary" className="h-5 px-2 bg-purple-100 text-purple-800">
-                              Solicitud
-                            </Badge>
-                          )}
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm flex items-center gap-2 flex-wrap">
+                          <span className="truncate">{notification.title}</span>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {!notification.read && (
+                              <Badge variant="default" className="h-5 px-2 text-xs">
+                                Nuevo
+                              </Badge>
+                            )}
+                            {(notification.type === 'marketplace' || notification.type === 'marketplace_request') && (
+                              <Badge variant="secondary" className="h-5 px-2 bg-purple-100 text-purple-800 text-xs">
+                                Solicitud
+                              </Badge>
+                            )}
+                          </div>
                         </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">
                           {notification.message}
                         </p>
                         
@@ -310,56 +330,57 @@ const AdminNotifications = ({ onTabChange }: AdminNotificationsProps) => {
                         {(notification.type === 'marketplace' || notification.type === 'marketplace_request') && (notification as any).data && (
                           <div className="mt-2 p-2 bg-muted/30 rounded-md space-y-1 text-xs">
                             {(notification as any).data.contact_name && (
-                              <p><span className="font-medium">Contacto:</span> {(notification as any).data.contact_name}</p>
+                              <p className="truncate"><span className="font-medium">Contacto:</span> {(notification as any).data.contact_name}</p>
                             )}
                             {(notification as any).data.contact_email && (
-                              <p><span className="font-medium">Email:</span> {(notification as any).data.contact_email}</p>
+                              <p className="truncate"><span className="font-medium">Email:</span> {(notification as any).data.contact_email}</p>
                             )}
                             {(notification as any).data.company_name && (
-                              <p><span className="font-medium">Empresa:</span> {(notification as any).data.company_name}</p>
+                              <p className="truncate"><span className="font-medium">Empresa:</span> {(notification as any).data.company_name}</p>
                             )}
                             {(notification as any).data.service_type && (
-                              <p><span className="font-medium">Servicio:</span> {(notification as any).data.service_type}</p>
+                              <p className="truncate"><span className="font-medium">Servicio:</span> {(notification as any).data.service_type}</p>
                             )}
                           </div>
                         )}
                         
-                   <p className="text-xs text-muted-foreground mt-2">
-                      {formatDistanceToNow(new Date(notification.created_at), {
-                        addSuffix: true,
-                        locale: es,
-                      })}
-                    </p>
-                   
-                   <div className="flex gap-2 mt-2">
-                     {notification.action_url && (
-                       <Button
-                         variant="link"
-                         size="sm"
-                         className="h-auto p-0 text-primary"
-                         onClick={(e) => handleActionClick(e, notification.action_url!)}
-                       >
-                         Ver detalles →
-                       </Button>
-                     )}
-                      {notification.type === 'marketplace_request' && (
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           handleContactUser(notification);
-                         }}
-                       >
-                         <Mail className="h-4 w-4 mr-2" />
-                         Contactar
-                       </Button>
-                     )}
-                   </div>
-                 </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {formatDistanceToNow(new Date(notification.created_at), {
+                            addSuffix: true,
+                            locale: es,
+                          })}
+                        </p>
+                       
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {notification.action_url && (
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-primary text-xs sm:text-sm"
+                              onClick={(e) => handleActionClick(e, notification.action_url!)}
+                            >
+                              Ver detalles →
+                            </Button>
+                          )}
+                          {notification.type === 'marketplace_request' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs sm:text-sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleContactUser(notification);
+                              }}
+                            >
+                              <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                              Contactar
+                            </Button>
+                          )}
+                        </div>
+                      </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-shrink-0 sm:mt-0 mt-2 sm:mt-0">
                         {!notification.read && (
                           <Button
                             variant="ghost"
