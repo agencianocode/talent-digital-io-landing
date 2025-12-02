@@ -90,8 +90,7 @@ const TalentTopNavigation = () => {
               onClick={() => navigate('/talent-dashboard')}
               className="text-base sm:text-xl font-bold text-foreground hover:text-primary transition-colors cursor-pointer"
             >
-              <span className="hidden sm:inline">TalentoDigital.io</span>
-              <span className="sm:hidden">TD.io</span>
+              TalentoDigital.io
             </button>
           </div>
 

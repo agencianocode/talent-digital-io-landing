@@ -92,19 +92,19 @@ const BusinessMarketplace: React.FC = () => {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Marketplace de Servicios</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Marketplace de Servicios</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Encuentra los mejores talentos para tu empresa
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={handleManageServices} variant="outline" className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            <Button onClick={handleManageServices} variant="outline" className="flex items-center justify-center gap-2 w-full sm:w-auto">
               <Settings className="h-4 w-4" />
               Mis Servicios
             </Button>
-            <Button onClick={handlePublishService} className="flex items-center gap-2">
+            <Button onClick={handlePublishService} className="flex items-center justify-center gap-2 w-full sm:w-auto">
               <Plus className="h-4 w-4" />
               Publicar Servicio
             </Button>

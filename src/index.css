@@ -565,4 +565,61 @@
   .animate-bounce-in {
     animation: bounce-in 0.6s ease-out;
   }
+
+  /* Switch móvil ovalado y pequeño - Estilos de alta prioridad */
+  @media (max-width: 639px) {
+    .switch-mobile-oval button[role="switch"],
+    .switch-mobile-oval button {
+      height: 20px !important;
+      width: 40px !important; /* El doble de ancho que alto para asegurar óvalo */
+      border-radius: 9999px !important;
+      min-width: 40px !important; /* Forzar ancho mínimo */
+      min-height: 20px !important; /* Forzar alto máximo */
+      background-color: #e2e8f0;
+      border: none !important; /* Quitar bordes que puedan afectar el tamaño */
+      margin: 0 !important;
+    }
+
+    .switch-mobile-oval button[role="switch"][data-state="checked"],
+    .switch-mobile-oval button[data-state="checked"] {
+      background-color: #0f172a !important;
+    }
+
+    /* Ajuste del círculo (thumb) */
+    .switch-mobile-oval button[role="switch"] > span,
+    .switch-mobile-oval button > span {
+      height: 16px !important;
+      width: 16px !important;
+      transform: translateX(2px) !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      background-color: white !important;
+    }
+
+    /* Posición del círculo cuando está activo */
+    .switch-mobile-oval button[role="switch"][data-state="checked"] > span,
+    .switch-mobile-oval button[data-state="checked"] > span {
+      transform: translateX(22px) !important; /* 40px - 16px - 2px = 22px */
+    }
+  }
+
+  /* Restaurar estilos normales para Desktop (sm y superior) */
+  @media (min-width: 640px) {
+    .switch-mobile-oval button[role="switch"],
+    .switch-mobile-oval button {
+      height: 1.25rem !important; /* h-5 (20px) */
+      width: 2.75rem !important; /* w-11 (44px) */
+    }
+
+    .switch-mobile-oval button[role="switch"] > span,
+    .switch-mobile-oval button > span {
+      height: 1rem !important; /* h-4 (16px) */
+      width: 1rem !important; /* w-4 (16px) */
+      transform: translateX(2px) !important;
+    }
+
+    .switch-mobile-oval button[role="switch"][data-state="checked"] > span,
+    .switch-mobile-oval button[data-state="checked"] > span {
+      transform: translateX(1.625rem) !important; /* 26px */
+    }
+  }
 }

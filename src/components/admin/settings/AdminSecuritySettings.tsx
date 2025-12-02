@@ -426,10 +426,12 @@ const AdminSecuritySettings: React.FC = () => {
                         </FormDescription>
                       </div>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div className="switch-mobile-oval">
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
@@ -447,10 +449,12 @@ const AdminSecuritySettings: React.FC = () => {
                         </FormDescription>
                       </div>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div className="switch-mobile-oval">
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
@@ -468,10 +472,12 @@ const AdminSecuritySettings: React.FC = () => {
                         </FormDescription>
                       </div>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div className="switch-mobile-oval">
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
@@ -489,10 +495,12 @@ const AdminSecuritySettings: React.FC = () => {
                         </FormDescription>
                       </div>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div className="switch-mobile-oval">
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
@@ -637,10 +645,12 @@ const AdminSecuritySettings: React.FC = () => {
                         <FormLabel className="text-base">Log Intentos Fallidos</FormLabel>
                       </div>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div className="switch-mobile-oval">
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
@@ -655,10 +665,12 @@ const AdminSecuritySettings: React.FC = () => {
                         <FormLabel className="text-base">Log Acciones Admin</FormLabel>
                       </div>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div className="switch-mobile-oval">
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
@@ -673,10 +685,12 @@ const AdminSecuritySettings: React.FC = () => {
                         <FormLabel className="text-base">Log Acciones Usuario</FormLabel>
                       </div>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div className="switch-mobile-oval">
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
@@ -769,10 +783,12 @@ const AdminSecuritySettings: React.FC = () => {
                         </FormDescription>
                       </div>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <div className="switch-mobile-oval">
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}

@@ -69,10 +69,12 @@ const AdminCustomizationSettings = () => {
                     <Label className="cursor-pointer">{widget.label}</Label>
                     <p className="text-sm text-muted-foreground">{widget.desc}</p>
                   </div>
-                  <Switch
-                    checked={getValue(widget.key as any)}
-                    onCheckedChange={(checked) => setLocalChanges({...localChanges, [widget.key]: checked})}
-                  />
+                  <div className="switch-mobile-oval">
+                    <Switch
+                      checked={getValue(widget.key as any)}
+                      onCheckedChange={(checked) => setLocalChanges({...localChanges, [widget.key]: checked})}
+                    />
+                  </div>
                 </div>
               ))}
             </CardContent>
@@ -101,10 +103,12 @@ const AdminCustomizationSettings = () => {
                     <Label className="cursor-pointer">{item.label}</Label>
                     <p className="text-sm text-muted-foreground">{item.desc}</p>
                   </div>
-                  <Switch
-                    checked={getValue(item.key as any)}
-                    onCheckedChange={(checked) => setLocalChanges({...localChanges, [item.key]: checked})}
-                  />
+                  <div className="switch-mobile-oval">
+                    <Switch
+                      checked={getValue(item.key as any)}
+                      onCheckedChange={(checked) => setLocalChanges({...localChanges, [item.key]: checked})}
+                    />
+                  </div>
                 </div>
               ))}
             </CardContent>

@@ -238,7 +238,6 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
               ...defaultNotif,
               enabled: userPref.enabled,
               email: userPref.email,
-              sms: userPref.sms,
               push: userPref.push,
             };
           }
@@ -383,7 +382,7 @@ const UserNotificationSettings: React.FC<UserNotificationSettingsProps> = ({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
-                                    <div className="scale-[0.65] sm:scale-100 origin-left">
+                                    <div className="switch-mobile-oval">
                                       <Switch
                                         checked={field.value}
                                         onCheckedChange={field.onChange}

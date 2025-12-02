@@ -54,12 +54,13 @@ export const PushNotificationToggle = () => {
             </p>
           </div>
         </div>
-        <Switch
-          checked={isSubscribed}
-          onCheckedChange={handleToggle}
-          disabled={permission === 'denied'}
-          className="flex-shrink-0"
-        />
+        <div className="switch-mobile-oval flex-shrink-0">
+          <Switch
+            checked={isSubscribed}
+            onCheckedChange={handleToggle}
+            disabled={permission === 'denied'}
+          />
+        </div>
       </div>
 
       {isSubscribed && (

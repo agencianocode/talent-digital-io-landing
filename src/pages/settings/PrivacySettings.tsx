@@ -150,10 +150,12 @@ const PrivacySettings = () => {
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <div className="switch-mobile-oval">
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </div>
                     </FormControl>
                   </FormItem>
                 )}
@@ -246,10 +248,12 @@ const PrivacySettings = () => {
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <div className="switch-mobile-oval">
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </div>
                     </FormControl>
                   </FormItem>
                 )}
@@ -267,10 +271,12 @@ const PrivacySettings = () => {
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <div className="switch-mobile-oval">
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </div>
                     </FormControl>
                   </FormItem>
                 )}
@@ -296,10 +302,12 @@ const PrivacySettings = () => {
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <div className="switch-mobile-oval">
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </div>
                     </FormControl>
                   </FormItem>
                 )}

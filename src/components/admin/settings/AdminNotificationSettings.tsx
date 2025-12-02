@@ -338,10 +338,12 @@ const AdminNotificationSettings: React.FC = () => {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
+                                <div className="switch-mobile-oval">
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </div>
                               </FormControl>
                             </FormItem>
                           )}

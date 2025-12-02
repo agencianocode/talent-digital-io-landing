@@ -193,10 +193,12 @@ const NotificationSettings: React.FC = () => {
               </p>
             </div>
           </div>
-          <Switch
-            checked={preferences.soundNotifications}
-            onCheckedChange={(checked) => updatePreference('soundNotifications', checked)}
-          />
+          <div className="switch-mobile-oval">
+            <Switch
+              checked={preferences.soundNotifications}
+              onCheckedChange={(checked) => updatePreference('soundNotifications', checked)}
+            />
+          </div>
         </div>
 
         {/* Email Notifications */}
@@ -210,10 +212,12 @@ const NotificationSettings: React.FC = () => {
               </p>
             </div>
           </div>
-          <Switch
-            checked={preferences.emailNotifications}
-            onCheckedChange={(checked) => updatePreference('emailNotifications', checked)}
-          />
+          <div className="switch-mobile-oval">
+            <Switch
+              checked={preferences.emailNotifications}
+              onCheckedChange={(checked) => updatePreference('emailNotifications', checked)}
+            />
+          </div>
         </div>
 
         {/* Notification Types */}
@@ -223,34 +227,42 @@ const NotificationSettings: React.FC = () => {
           <div className="space-y-3 pl-4 border-l-2 border-primary/20">
             <div className="flex items-center justify-between">
               <Label>Nuevas aplicaciones</Label>
-              <Switch
-                checked={preferences.newApplications}
-                onCheckedChange={(checked) => updatePreference('newApplications', checked)}
-              />
+              <div className="switch-mobile-oval">
+                <Switch
+                  checked={preferences.newApplications}
+                  onCheckedChange={(checked) => updatePreference('newApplications', checked)}
+                />
+              </div>
             </div>
             
             <div className="flex items-center justify-between">
               <Label>Actualizaciones de aplicaciones</Label>
-              <Switch
-                checked={preferences.applicationUpdates}
-                onCheckedChange={(checked) => updatePreference('applicationUpdates', checked)}
-              />
+              <div className="switch-mobile-oval">
+                <Switch
+                  checked={preferences.applicationUpdates}
+                  onCheckedChange={(checked) => updatePreference('applicationUpdates', checked)}
+                />
+              </div>
             </div>
             
             <div className="flex items-center justify-between">
               <Label>Oportunidades por expirar</Label>
-              <Switch
-                checked={preferences.opportunityExpiring}
-                onCheckedChange={(checked) => updatePreference('opportunityExpiring', checked)}
-              />
+              <div className="switch-mobile-oval">
+                <Switch
+                  checked={preferences.opportunityExpiring}
+                  onCheckedChange={(checked) => updatePreference('opportunityExpiring', checked)}
+                />
+              </div>
             </div>
             
             <div className="flex items-center justify-between">
               <Label>Reportes semanales</Label>
-              <Switch
-                checked={preferences.weeklyReports}
-                onCheckedChange={(checked) => updatePreference('weeklyReports', checked)}
-              />
+              <div className="switch-mobile-oval">
+                <Switch
+                  checked={preferences.weeklyReports}
+                  onCheckedChange={(checked) => updatePreference('weeklyReports', checked)}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -284,10 +296,12 @@ const NotificationSettings: React.FC = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="font-medium">Horas de silencio</Label>
-              <Switch
-                checked={preferences.quietHours.enabled}
-                onCheckedChange={(checked) => updateQuietHours('enabled', checked)}
-              />
+              <div className="switch-mobile-oval">
+                <Switch
+                  checked={preferences.quietHours.enabled}
+                  onCheckedChange={(checked) => updateQuietHours('enabled', checked)}
+                />
+              </div>
             </div>
             
             {preferences.quietHours.enabled && (

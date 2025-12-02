@@ -162,10 +162,12 @@ const AdminBannerSettings: React.FC = () => {
                 Habilita o deshabilita el video del banner
               </p>
             </div>
-            <Switch
-              checked={getValue('banner_show_video')}
-              onCheckedChange={(checked) => handleChange('banner_show_video', checked)}
-            />
+            <div className="switch-mobile-oval">
+              <Switch
+                checked={getValue('banner_show_video')}
+                onCheckedChange={(checked) => handleChange('banner_show_video', checked)}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -245,10 +247,12 @@ const AdminBannerSettings: React.FC = () => {
                 Habilita o deshabilita el botón de agendamiento
               </p>
             </div>
-            <Switch
-              checked={getValue('banner_show_call_button')}
-              onCheckedChange={(checked) => handleChange('banner_show_call_button', checked)}
-            />
+            <div className="switch-mobile-oval">
+              <Switch
+                checked={getValue('banner_show_call_button')}
+                onCheckedChange={(checked) => handleChange('banner_show_call_button', checked)}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
