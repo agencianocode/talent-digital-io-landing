@@ -201,6 +201,15 @@ const TalentDiscovery = () => {
         console.error('❌ Error getting user emails:', emailsError);
       }
       console.log('📧 User emails obtained:', userEmails?.length || 0, userEmails);
+      
+      // Debug: Log avatar URLs from RPC
+      if (userEmails && Array.isArray(userEmails)) {
+        console.log('🖼️ Avatar URLs from RPC:', userEmails.map((u: any) => ({
+          user_id: u.user_id,
+          email: u.email,
+          avatar_url: u.avatar_url
+        })));
+      }
 
       // Get academy students to mark verified talents
       const userEmailsMap = new Map<string, string>(); // user_id -> email
@@ -210,12 +219,13 @@ const TalentDiscovery = () => {
           if (item.email) {
             userEmailsMap.set(item.user_id, item.email);
           }
-          // Store avatar_url from user_metadata as fallback
-          if (item.avatar_url) {
-            userAvatarUrlsMap.set(item.user_id, item.avatar_url);
-          }
+          // Store avatar_url from user_metadata as fallback (even if null, to track)
+          userAvatarUrlsMap.set(item.user_id, item.avatar_url || null);
         });
       }
+      
+      console.log('🖼️ Avatar URLs Map size:', userAvatarUrlsMap.size);
+      console.log('🖼️ Avatar URLs Map entries:', Array.from(userAvatarUrlsMap.entries()));
       
       const emails = Array.from(userEmailsMap.values());
       const { data: academyStudents } = emails.length > 0 ? await supabase
@@ -278,7 +288,23 @@ const TalentDiscovery = () => {
         const professionalPrefs = (profile as any)?.professional_preferences as any || {};
         
         // Use avatar_url from profiles first, then fallback to user_metadata
-        const avatarUrl = profile.avatar_url || userAvatarUrlsMap.get(profile.user_id) || null;
+        const profileAvatarUrl = profile.avatar_url;
+        const metadataAvatarUrl = userAvatarUrlsMap.get(profile.user_id);
+        // Filter out blob URLs (temporary URLs that won't work)
+        const rawAvatarUrl = profileAvatarUrl || metadataAvatarUrl || null;
+        const avatarUrl = rawAvatarUrl && !rawAvatarUrl.startsWith('blob:') ? rawAvatarUrl : null;
+        
+        // Debug for specific users
+        if (profile.full_name === 'Jimmy Mora Carballo' || profile.full_name === 'Maria Fernanda Soto' || profile.full_name === 'María Fernanda Soto') {
+          console.log(`🖼️ Debug avatar for ${profile.full_name}:`, {
+            user_id: profile.user_id,
+            profile_avatar_url: profileAvatarUrl,
+            metadata_avatar_url: metadataAvatarUrl,
+            raw_avatar_url: rawAvatarUrl,
+            final_avatar_url: avatarUrl,
+            isBlobUrl: rawAvatarUrl?.startsWith('blob:')
+          });
+        }
         
         return {
           id: profile.id,
