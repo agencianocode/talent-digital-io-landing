@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Calendar, GraduationCap, BookOpen, Clock } from 'lucide-react';
 import { useEducation } from '@/hooks/useEducation';
 import { EducationFormData } from '@/types/profile';
@@ -232,16 +233,13 @@ export const EducationModal: React.FC<EducationModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="start_date">Fecha de Inicio *</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="start_date"
-                  type="date"
-                  value={formData.start_date}
-                  onChange={(e) => handleInputChange('start_date', e.target.value)}
-                  className={`pl-10 ${errors.start_date ? 'border-red-500' : ''}`}
-                />
-              </div>
+              <DatePicker
+                selected={formData.start_date ? new Date(formData.start_date) : undefined}
+                onSelect={(date) => handleInputChange('start_date', date ? date.toISOString().split('T')[0] : '')}
+                placeholder="dd/mm/aaaa"
+                fromYear={1950}
+                toYear={new Date().getFullYear()}
+              />
               {errors.start_date && (
                 <p className="text-sm text-red-500 mt-1">{errors.start_date}</p>
               )}
@@ -249,17 +247,14 @@ export const EducationModal: React.FC<EducationModalProps> = ({
 
             <div>
               <Label htmlFor="end_date">Fecha de Fin</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="end_date"
-                  type="date"
-                  value={formData.end_date || ''}
-                  onChange={(e) => handleInputChange('end_date', e.target.value)}
-                  disabled={formData.current}
-                  className={`pl-10 ${errors.end_date ? 'border-red-500' : ''}`}
-                />
-              </div>
+              <DatePicker
+                selected={formData.end_date ? new Date(formData.end_date) : undefined}
+                onSelect={(date) => handleInputChange('end_date', date ? date.toISOString().split('T')[0] : '')}
+                placeholder="dd/mm/aaaa"
+                disabled={formData.current}
+                fromYear={1950}
+                toYear={new Date().getFullYear()}
+              />
               {errors.end_date && (
                 <p className="text-sm text-red-500 mt-1">{errors.end_date}</p>
               )}
