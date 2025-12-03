@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, Check, MessageCircle, Briefcase, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useNavigate } from 'react-router-dom';
 
 interface Notification {
   id: string;
@@ -23,7 +22,6 @@ interface Notification {
 
 const BusinessNotificationsPage = () => {
   const { user } = useSupabaseAuth();
-  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -109,13 +107,14 @@ const BusinessNotificationsPage = () => {
   };
 
   const handleActionClick = (e: React.MouseEvent, actionUrl: string) => {
+    e.preventDefault();
     e.stopPropagation();
     
     // Handle external URLs
     if (/^https?:\/\//i.test(actionUrl)) {
-      window.location.assign(actionUrl);
+      window.open(actionUrl, '_blank');
     } else {
-      navigate(actionUrl);
+      window.location.href = actionUrl;
     }
   };
 
