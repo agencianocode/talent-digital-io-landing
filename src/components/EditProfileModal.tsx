@@ -184,9 +184,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, avatar: 'El archivo debe ser menor a 5MB' }));
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, avatar: 'El archivo debe ser menor a 10MB' }));
       return;
     }
 
