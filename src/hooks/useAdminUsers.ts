@@ -8,6 +8,8 @@ interface UserFilters {
   countryFilter: string;
   dateRange: string;
   companyRoleFilter: string;
+  sortBy: 'name' | 'date';
+  sortOrder: 'asc' | 'desc';
 }
 
 interface UserData {
@@ -37,7 +39,9 @@ export const useAdminUsers = () => {
     statusFilter: 'all',
     countryFilter: 'all',
     dateRange: 'all',
-    companyRoleFilter: 'all'
+    companyRoleFilter: 'all',
+    sortBy: 'date',
+    sortOrder: 'desc'
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(20);
@@ -190,6 +194,21 @@ export const useAdminUsers = () => {
         new Date(user.created_at) >= startDate
       );
     }
+
+    // Aplicar ordenamiento
+    filtered.sort((a, b) => {
+      if (filters.sortBy === 'name') {
+        const nameA = a.full_name.toLowerCase();
+        const nameB = b.full_name.toLowerCase();
+        const comparison = nameA.localeCompare(nameB, 'es');
+        return filters.sortOrder === 'asc' ? comparison : -comparison;
+      } else if (filters.sortBy === 'date') {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return filters.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      return 0;
+    });
 
     return filtered;
   }, [users, filters]);

@@ -8,6 +8,8 @@ interface CompanyFilters {
   locationFilter: string;
   dateRange: string;
   statusFilter: string;
+  sortBy: 'name' | 'date';
+  sortOrder: 'asc' | 'desc';
 }
 
 interface CompanyData {
@@ -39,7 +41,9 @@ export const useAdminCompanies = () => {
     sizeFilter: 'all',
     locationFilter: 'all',
     dateRange: 'all',
-    statusFilter: 'all'
+    statusFilter: 'all',
+    sortBy: 'date',
+    sortOrder: 'desc'
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [companiesPerPage] = useState(20);
@@ -309,6 +313,21 @@ export const useAdminCompanies = () => {
         new Date(company.created_at) >= startDate
       );
     }
+
+    // Aplicar ordenamiento
+    filtered.sort((a, b) => {
+      if (filters.sortBy === 'name') {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        const comparison = nameA.localeCompare(nameB, 'es');
+        return filters.sortOrder === 'asc' ? comparison : -comparison;
+      } else if (filters.sortBy === 'date') {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return filters.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      return 0;
+    });
 
     return filtered;
   }, [companies, filters]);

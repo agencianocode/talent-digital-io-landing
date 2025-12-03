@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X, Building, Users, MapPin } from 'lucide-react';
+import { Search, Filter, X, Building, Users, MapPin, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface CompanyFilters {
   searchQuery: string;
@@ -13,6 +13,8 @@ interface CompanyFilters {
   locationFilter: string;
   dateRange: string;
   statusFilter: string;
+  sortBy: 'name' | 'date';
+  sortOrder: 'asc' | 'desc';
 }
 
 interface AdminCompanyFiltersProps {
@@ -44,8 +46,14 @@ const AdminCompanyFilters: React.FC<AdminCompanyFiltersProps> = ({
       sizeFilter: 'all',
       locationFilter: 'all',
       dateRange: 'all',
-      statusFilter: 'all'
+      statusFilter: 'all',
+      sortBy: 'date',
+      sortOrder: 'desc'
     });
+  };
+
+  const toggleSortOrder = () => {
+    handleFilterChange('sortOrder', filters.sortOrder === 'asc' ? 'desc' : 'asc');
   };
 
   const hasActiveFilters = Object.values(filters).some(value => 
@@ -258,25 +266,76 @@ const AdminCompanyFilters: React.FC<AdminCompanyFiltersProps> = ({
           </div>
         </div>
 
-        {/* Filtro por Rango de Fechas */}
-        <div className="mt-4">
-          <Select
-            value={filters.dateRange}
-            onValueChange={(value) => handleFilterChange('dateRange', value)}
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-full md:w-64">
-              <SelectValue placeholder="Rango de fechas" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las fechas</SelectItem>
-              <SelectItem value="today">Hoy</SelectItem>
-              <SelectItem value="week">Última semana</SelectItem>
-              <SelectItem value="month">Último mes</SelectItem>
-              <SelectItem value="quarter">Último trimestre</SelectItem>
-              <SelectItem value="year">Último año</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Filtro por Rango de Fechas y Ordenamiento */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <Select
+              value={filters.dateRange}
+              onValueChange={(value) => handleFilterChange('dateRange', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Rango de fechas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las fechas</SelectItem>
+                <SelectItem value="today">Hoy</SelectItem>
+                <SelectItem value="week">Última semana</SelectItem>
+                <SelectItem value="month">Último mes</SelectItem>
+                <SelectItem value="quarter">Último trimestre</SelectItem>
+                <SelectItem value="year">Último año</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Ordenar por */}
+          <div>
+            <Select
+              value={filters.sortBy}
+              onValueChange={(value: 'name' | 'date') => handleFilterChange('sortBy', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-4 w-4" />
+                    Fecha de registro
+                  </div>
+                </SelectItem>
+                <SelectItem value="name">
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-4 w-4" />
+                    Nombre
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Orden ascendente/descendente */}
+          <div>
+            <Button
+              variant="outline"
+              onClick={toggleSortOrder}
+              disabled={isLoading}
+              className="w-full justify-start"
+            >
+              {filters.sortOrder === 'asc' ? (
+                <>
+                  <ArrowUp className="h-4 w-4 mr-2" />
+                  Ascendente
+                </>
+              ) : (
+                <>
+                  <ArrowDown className="h-4 w-4 mr-2" />
+                  Descendente
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Resumen de filtros activos */}
@@ -334,6 +393,11 @@ const AdminCompanyFilters: React.FC<AdminCompanyFiltersProps> = ({
                   className="h-3 w-3 cursor-pointer" 
                   onClick={() => handleFilterChange('dateRange', 'all')}
                 />
+              </Badge>
+            )}
+            {(filters.sortBy !== 'date' || filters.sortOrder !== 'desc') && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Orden: {filters.sortBy === 'date' ? 'Fecha' : 'Nombre'} ({filters.sortOrder === 'asc' ? 'Asc' : 'Desc'})
               </Badge>
             )}
           </div>
