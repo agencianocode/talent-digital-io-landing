@@ -215,7 +215,17 @@ const CompanyOnboarding = () => {
 
   const handleStep1Complete = (data: CompanyData) => {
     setCompanyData(data);
-    setCurrentStep(2);
+    
+    // Si seleccionó una empresa existente, saltar directamente al perfil personal (paso 4)
+    if (data.existingCompanyId) {
+      console.log('✅ Empresa existente seleccionada, saltando al paso 4 (perfil personal)');
+      toast.info(`Te estás uniendo a ${data.name}. Completa tu perfil personal.`);
+      setCurrentStep(4);
+    } else {
+      // Empresa nueva, continuar con detalles
+      console.log('📝 Nueva empresa, continuando con paso 2 (detalles)');
+      setCurrentStep(2);
+    }
   };
 
   const handleUserProfileChange = (profile: UserProfile) => {
@@ -701,7 +711,7 @@ const CompanyOnboarding = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-8">
         <div className="flex items-center gap-2 mb-8">
-          {currentStep > 1 && !isInvitationFlow && (
+          {currentStep > 1 && !isInvitationFlow && !companyData.existingCompanyId && (
             <Button
               variant="ghost"
               size="icon"
@@ -712,10 +722,10 @@ const CompanyOnboarding = () => {
           )}
           <div className="flex-1">
             <h1 className="text-3xl font-bold">
-              {isInvitationFlow ? 'Completa tu Perfil' : 'Registro Empresarial'}
+              {(isInvitationFlow || companyData.existingCompanyId) ? 'Completa tu Perfil' : 'Registro Empresarial'}
             </h1>
             <p className="text-muted-foreground">
-              {isInvitationFlow 
+              {(isInvitationFlow || companyData.existingCompanyId)
                 ? 'Completa tu información para unirte a la empresa'
                 : 'Completa la información de tu empresa'
               }
@@ -723,7 +733,7 @@ const CompanyOnboarding = () => {
           </div>
         </div>
 
-        {isInvitationFlow && invitationData && (
+        {(isInvitationFlow && invitationData) && (
           <Alert className="mb-6 border-primary/50 bg-primary/5">
             <UserPlus className="h-4 w-4" />
             <AlertDescription>
@@ -732,9 +742,18 @@ const CompanyOnboarding = () => {
             </AlertDescription>
           </Alert>
         )}
+        
+        {(!isInvitationFlow && companyData.existingCompanyId && currentStep === 4) && (
+          <Alert className="mb-6 border-primary/50 bg-primary/5">
+            <UserPlus className="h-4 w-4" />
+            <AlertDescription>
+              Solicitud de unión a <strong>{companyData.name}</strong>. El propietario revisará tu solicitud.
+            </AlertDescription>
+          </Alert>
+        )}
 
-        {/* Steps Indicator - Only show if not invitation flow */}
-        {!isInvitationFlow && (
+        {/* Steps Indicator - Only show if not invitation flow and not joining existing company */}
+        {!isInvitationFlow && !companyData.existingCompanyId && (
           <div className="flex items-center justify-center gap-2 mb-8">
             {[
               { number: 1, icon: Building2, label: 'Empresa' },
@@ -804,8 +823,8 @@ const CompanyOnboarding = () => {
             initialData={currentUserProfile}
             onProfileChange={handleUserProfileChange}
             onProfilePhotoChange={handleProfilePhotoChange}
-            isInvitationFlow={isInvitationFlow}
-            invitationCompanyName={invitationData?.company_name}
+            isInvitationFlow={isInvitationFlow || !!companyData.existingCompanyId}
+            invitationCompanyName={invitationData?.company_name || (companyData.existingCompanyId ? companyData.name : undefined)}
           />
         )}
       </div>
