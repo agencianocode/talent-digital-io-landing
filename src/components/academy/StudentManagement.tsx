@@ -169,25 +169,29 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
         throw new Error('No hay sesión activa');
       }
 
-      const { data, error } = await supabase.functions.invoke('update-academy-student-status', {
+      const response = await supabase.functions.invoke('update-academy-student-status', {
         body: requestData,
         headers: {
           Authorization: `Bearer ${session.access_token}`
         }
       });
 
-      console.log('✅ Edge function result:', { data, error });
+      console.log('✅ Edge function response completa:', response);
+      console.log('✅ Response data:', response.data);
+      console.log('✅ Response error:', response.error);
 
-      if (error) {
-        console.error('❌ Error from edge function:', error);
-        console.error('❌ Error completo:', JSON.stringify(error, null, 2));
-        throw error;
+      if (response.error) {
+        console.error('❌ Error from edge function:', response.error);
+        console.error('❌ Error message:', response.error.message);
+        console.error('❌ Error context:', response.error.context);
+        
+        throw new Error(response.error.message || 'Error al llamar a la función edge');
       }
 
-      if (data?.error) {
-        console.error('❌ Error en respuesta de función edge:', data.error);
-        console.error('❌ Detalles:', data.details);
-        throw new Error(data.error);
+      if (response.data?.error) {
+        console.error('❌ Error en respuesta de función edge:', response.data.error);
+        console.error('❌ Detalles:', response.data.details);
+        throw new Error(response.data.error);
       }
 
       const statusLabels = {
