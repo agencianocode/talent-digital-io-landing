@@ -18,7 +18,7 @@ import { TalentService } from '@/hooks/useTalentServices';
 import { marketplaceService } from '@/services/marketplaceService';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
-import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
+import { normalizeDeliveryTime, formatPriceRange } from '@/lib/marketplace-utils';
 
 // TalentService interface is now imported from the hook
 
@@ -191,7 +191,7 @@ export const TalentServices = ({
                         Precio
                       </p>
                       <p className="text-base font-bold text-green-700 dark:text-green-300">
-                        ${service.price.toLocaleString()} {service.currency}
+                        {formatPriceRange(service.price_min, service.price_max, service.currency)}
                       </p>
                     </div>
                   </div>

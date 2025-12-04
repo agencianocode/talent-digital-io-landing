@@ -31,7 +31,7 @@ import {
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import { useToast } from '@/hooks/use-toast';
-import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
+import { normalizeDeliveryTime, formatPriceRange } from '@/lib/marketplace-utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useMessages } from '@/hooks/useMessages';
@@ -72,15 +72,6 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
 
   const category = service ? marketplaceCategories.find(cat => cat.name === service.category) : null;
 
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
-  };
-
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -91,7 +82,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   };
 
   const budgetRanges = [
-    { value: 'exact', label: `Presupuesto exacto (${service ? formatPrice(service.price, service.currency) : ''})` },
+    { value: 'exact', label: `Presupuesto exacto (${service ? formatPriceRange(service.price_min, service.price_max, service.currency) : ''})` },
     { value: 'flexible', label: 'Presupuesto flexible' },
     { value: 'negotiable', label: 'Presupuesto negociable' },
     { value: 'custom', label: 'Presupuesto personalizado' }
@@ -316,7 +307,7 @@ Puedes responder a esta conversación para continuar la comunicación.
                 <div className="flex items-center gap-1">
                   <DollarSign className="h-4 w-4 text-green-600" />
                   <span className="font-semibold text-green-600">
-                    {formatPrice(service.price, service.currency)}
+                    {formatPriceRange(service.price_min, service.price_max, service.currency)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">

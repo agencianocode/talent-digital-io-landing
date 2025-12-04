@@ -31,3 +31,24 @@ export const normalizeDeliveryTime = (deliveryTime: string): string => {
   return technicalToReadable[deliveryTime.toLowerCase()] || deliveryTime;
 };
 
+/**
+ * Formatea el rango de precios de un servicio
+ * Muestra un rango si los precios son diferentes, o un precio único si son iguales
+ */
+export const formatPriceRange = (priceMin: number, priceMax: number, currency: string): string => {
+  const formatter = new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+
+  // Si los precios son iguales, mostrar solo uno
+  if (priceMin === priceMax) {
+    return formatter.format(priceMin);
+  }
+
+  // Si son diferentes, mostrar el rango
+  return `${formatter.format(priceMin)} - ${formatter.format(priceMax)}`;
+};
+

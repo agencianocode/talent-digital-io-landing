@@ -995,6 +995,8 @@ export type Database = {
           location: string
           portfolio_url: string | null
           price: number
+          price_min: number
+          price_max: number
           rating: number | null
           requests_count: number
           reviews_count: number
@@ -1016,7 +1018,9 @@ export type Database = {
           is_available?: boolean
           location: string
           portfolio_url?: string | null
-          price: number
+          price?: number
+          price_min: number
+          price_max: number
           rating?: number | null
           requests_count?: number
           reviews_count?: number
@@ -1039,6 +1043,8 @@ export type Database = {
           location?: string
           portfolio_url?: string | null
           price?: number
+          price_min?: number
+          price_max?: number
           rating?: number | null
           requests_count?: number
           reviews_count?: number

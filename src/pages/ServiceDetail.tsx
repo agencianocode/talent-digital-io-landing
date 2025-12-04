@@ -28,7 +28,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
-import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
+import { normalizeDeliveryTime, formatPriceRange } from '@/lib/marketplace-utils';
 import { ServiceReviews } from '@/components/marketplace/ServiceReviews';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useTalentServices } from '@/hooks/useTalentServices';
@@ -48,6 +48,8 @@ interface ServiceDetail {
   description: string;
   category: string;
   price: number;
+  price_min: number;
+  price_max: number;
   currency: string;
   delivery_time: string;
   location: string;
@@ -180,6 +182,8 @@ const ServiceDetail: React.FC = () => {
         description: serviceData.description,
         category: serviceData.category,
         price: serviceData.price,
+        price_min: serviceData.price_min,
+        price_max: serviceData.price_max,
         currency: serviceData.currency,
         delivery_time: serviceData.delivery_time,
         location: serviceData.location,
@@ -229,15 +233,6 @@ const ServiceDetail: React.FC = () => {
     // For now, allow any logged-in user to review
     // TODO: Add service_requests table and check if user completed a request
     setCanReview(true);
-  };
-
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
   };
 
   const getInitials = (name: string) => {
@@ -738,7 +733,7 @@ const ServiceDetail: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-green-600" />
                   <span className="text-2xl font-bold text-green-600">
-                    {formatPrice(service.price, service.currency)}
+                    {formatPriceRange(service.price_min, service.price_max, service.currency)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">

@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { TalentService, ServiceRequest } from '@/hooks/useTalentServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
-import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
+import { normalizeDeliveryTime, formatPriceRange } from '@/lib/marketplace-utils';
 import ServiceRequestsSection from './ServiceRequestsSection';
 
 interface TalentServiceCardProps {
@@ -57,15 +57,6 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
   const navigate = useNavigate();
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   const category = marketplaceCategories.find((cat) => cat.name === service.category);
-
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
-  };
 
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -231,7 +222,7 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
           <div className="flex items-center gap-1">
             <DollarSign className="h-4 w-4 text-green-600" />
             <span className="text-lg font-bold text-green-600">
-              {formatPrice(service.price, service.currency)}
+              {formatPriceRange(service.price_min, service.price_max, service.currency)}
             </span>
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">

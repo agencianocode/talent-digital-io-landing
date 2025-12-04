@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
-import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
+import { normalizeDeliveryTime, formatPriceRange } from '@/lib/marketplace-utils';
 
 interface ServiceCardProps {
   service: MarketplaceService;
@@ -35,15 +35,6 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   const serviceDetailPath = isTalentContext 
     ? `/talent-dashboard/marketplace/service/${service.id}`
     : `/business-dashboard/marketplace/service/${service.id}`;
-
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
-  };
 
   const getInitials = (name: string) => {
     return name
@@ -142,7 +133,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           <div className="flex items-center gap-1">
             <DollarSign className="h-4 w-4 text-green-600" />
             <span className="text-lg font-bold text-green-600">
-              {formatPrice(service.price, service.currency)}
+              {formatPriceRange(service.price_min, service.price_max, service.currency)}
             </span>
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">

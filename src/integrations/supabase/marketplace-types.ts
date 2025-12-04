@@ -7,7 +7,9 @@ export interface TalentService {
   title: string;
   description: string;
   category: string;
-  price: number;
+  price: number; // Obsoleto: usar price_min y price_max
+  price_min: number;
+  price_max: number;
   currency: string;
   delivery_time: string;
   location: string;
@@ -74,7 +76,9 @@ export interface ServiceFormData {
   title: string;
   description: string;
   category: string;
-  price: number;
+  price?: number; // Obsoleto: usar price_min y price_max
+  price_min: number;
+  price_max: number;
   currency: string;
   delivery_time: string;
   location: string;

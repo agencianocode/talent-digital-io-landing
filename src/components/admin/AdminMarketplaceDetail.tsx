@@ -27,7 +27,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
-import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
+import { normalizeDeliveryTime, formatPriceRange } from '@/lib/marketplace-utils';
 
 interface MarketplaceDetail {
   id: string;
@@ -35,6 +35,8 @@ interface MarketplaceDetail {
   description: string;
   category: string;
   price: number;
+  price_min: number;
+  price_max: number;
   currency: string;
   delivery_time: string;
   location: string;
@@ -444,31 +446,47 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                   <div>
                     <Label className="text-sm font-medium">Precio</Label>
                     {isEditing ? (
-                      <div className="flex gap-2 mt-1">
-                        <Input
-                          type="number"
-                          value={editData.price || ''}
-                          onChange={(e) => setEditData({ ...editData, price: parseFloat(e.target.value) })}
-                          placeholder="0.00"
-                          className="flex-1"
-                        />
-                        <Select
-                          value={editData.currency || 'USD'}
-                          onValueChange={(value) => setEditData({ ...editData, currency: value })}
-                        >
-                          <SelectTrigger className="w-20">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="USD">USD</SelectItem>
-                            <SelectItem value="EUR">EUR</SelectItem>
-                            <SelectItem value="ARS">ARS</SelectItem>
-                            <SelectItem value="MXN">MXN</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div className="space-y-2 mt-1">
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <Label className="text-xs">Mínimo</Label>
+                            <Input
+                              type="number"
+                              value={editData.price_min || ''}
+                              onChange={(e) => setEditData({ ...editData, price_min: parseFloat(e.target.value) })}
+                              placeholder="0.00"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Label className="text-xs">Máximo</Label>
+                            <Input
+                              type="number"
+                              value={editData.price_max || ''}
+                              onChange={(e) => setEditData({ ...editData, price_max: parseFloat(e.target.value) })}
+                              placeholder="0.00"
+                            />
+                          </div>
+                          <div className="w-20">
+                            <Label className="text-xs">Moneda</Label>
+                            <Select
+                              value={editData.currency || 'USD'}
+                              onValueChange={(value) => setEditData({ ...editData, currency: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="USD">USD</SelectItem>
+                                <SelectItem value="EUR">EUR</SelectItem>
+                                <SelectItem value="ARS">ARS</SelectItem>
+                                <SelectItem value="MXN">MXN</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                       </div>
                     ) : (
-                      <p className="font-medium text-sm sm:text-base mt-1 break-words">{service.currency} {service.price}</p>
+                      <p className="font-medium text-sm sm:text-base mt-1 break-words">{formatPriceRange(service.price_min, service.price_max, service.currency)}</p>
                     )}
                   </div>
 

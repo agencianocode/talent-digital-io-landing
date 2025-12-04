@@ -48,7 +48,8 @@ interface PublishServiceForm {
   
   // Premium user fields (for direct service creation)
   title: string;
-  price: string;
+  priceMin: string;
+  priceMax: string;
   deliveryTime: string;
   location: string;
   
@@ -78,7 +79,8 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
     description: '',
     // Premium
     title: '',
-    price: '',
+    priceMin: '',
+    priceMax: '',
     deliveryTime: '',
     location: '',
     // Freemium
@@ -170,7 +172,8 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
           title: formData.title,
           description: formData.description,
           category: formData.serviceType,
-          price: parseFloat(formData.price),
+          price_min: parseFloat(formData.priceMin),
+          price_max: parseFloat(formData.priceMax),
           currency: 'USD',
           delivery_time: formData.deliveryTime,
           location: formData.location,
@@ -234,7 +237,8 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
       serviceType: '',
       description: '',
       title: '',
-      price: '',
+      priceMin: '',
+      priceMax: '',
       deliveryTime: '',
       location: '',
       companyName: '',
@@ -249,7 +253,8 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const isFormValid = isPremiumUser
     ? formData.title.trim() !== '' &&
       formData.serviceType !== '' &&
-      formData.price.trim() !== '' &&
+      formData.priceMin.trim() !== '' &&
+      formData.priceMax.trim() !== '' &&
       formData.deliveryTime !== '' &&
       formData.location.trim() !== '' &&
       formData.description.trim() !== ''
@@ -410,18 +415,33 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Precio (USD) *</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) => handleInputChange('price', e.target.value)}
-                      placeholder="1000"
-                      required
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="priceMin">Precio Mínimo (USD) *</Label>
+                      <Input
+                        id="priceMin"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.priceMin}
+                        onChange={(e) => handleInputChange('priceMin', e.target.value)}
+                        placeholder="500"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="priceMax">Precio Máximo (USD) *</Label>
+                      <Input
+                        id="priceMax"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.priceMax}
+                        onChange={(e) => handleInputChange('priceMax', e.target.value)}
+                        placeholder="1000"
+                        required
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Tiempo de entrega *</Label>

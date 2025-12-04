@@ -32,6 +32,7 @@ import {
 import { ServiceFormData } from '@/hooks/useTalentServices';
 import { useToast } from '@/hooks/use-toast';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
+import { formatPriceRange } from '@/lib/marketplace-utils';
 
 interface ServiceFormProps {
   isOpen: boolean;
@@ -56,7 +57,8 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     title: '',
     description: '',
     category: '',
-    price: 0,
+    price_min: 0,
+    price_max: 0,
     currency: 'USD',
     delivery_time: '',
     location: 'Remoto',
@@ -120,8 +122,16 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
       newErrors.category = 'La categoría es requerida';
     }
 
-    if (formData.price <= 0) {
-      newErrors.price = 'El precio debe ser mayor a 0';
+    if (formData.price_min <= 0) {
+      newErrors.price_min = 'El precio mínimo debe ser mayor a 0';
+    }
+
+    if (formData.price_max <= 0) {
+      newErrors.price_max = 'El precio máximo debe ser mayor a 0';
+    }
+
+    if (formData.price_min > formData.price_max) {
+      newErrors.price_max = 'El precio máximo debe ser mayor o igual al precio mínimo';
     }
 
     if (!formData.delivery_time) {
@@ -197,7 +207,8 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
       title: '',
       description: '',
       category: '',
-      price: 0,
+      price_min: 0,
+      price_max: 0,
       currency: 'USD',
       delivery_time: '',
       location: 'Remoto',
@@ -353,23 +364,43 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
               <CardTitle className="text-lg">Precio y Entrega</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Precio *</Label>
+                  <Label htmlFor="price_min">Precio Mínimo *</Label>
                   <Input
-                    id="price"
+                    id="price_min"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
+                    value={formData.price_min}
+                    onChange={(e) => handleInputChange('price_min', parseFloat(e.target.value) || 0)}
                     placeholder="0.00"
-                    className={errors.price ? 'border-red-500' : ''}
+                    className={errors.price_min ? 'border-red-500' : ''}
                   />
-                  {errors.price && (
+                  {errors.price_min && (
                     <p className="text-sm text-red-500 flex items-center gap-1">
                       <AlertCircle className="h-4 w-4" />
-                      {errors.price}
+                      {errors.price_min}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="price_max">Precio Máximo *</Label>
+                  <Input
+                    id="price_max"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.price_max}
+                    onChange={(e) => handleInputChange('price_max', parseFloat(e.target.value) || 0)}
+                    placeholder="0.00"
+                    className={errors.price_max ? 'border-red-500' : ''}
+                  />
+                  {errors.price_max && (
+                    <p className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      {errors.price_max}
                     </p>
                   )}
                 </div>
@@ -534,11 +565,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-bold text-green-600">
-                      {new Intl.NumberFormat('es-ES', {
-                        style: 'currency',
-                        currency: formData.currency,
-                        minimumFractionDigits: 0
-                      }).format(formData.price)}
+                      {formatPriceRange(formData.price_min, formData.price_max, formData.currency)}
                     </span>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       {formData.location}
