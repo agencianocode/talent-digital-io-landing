@@ -397,8 +397,33 @@ const TalentDiscovery = () => {
         } as any;
       }) || [];
 
+      // Filtrar talentos que tengan información mínima para mostrarse
+      // Excluir perfiles prácticamente vacíos
+      const talentsWithMinimumInfo = talents.filter(talent => {
+        const hasName = talent.full_name && talent.full_name.trim() !== '' && talent.full_name !== 'Sin nombre';
+        const hasBio = talent.bio && talent.bio.trim().length >= 20;
+        const hasTitle = talent.title && talent.title.trim() !== '' && talent.title !== 'Talento Digital';
+        
+        // Requiere al menos nombre, bio mínima, y título
+        const meetsMinimum = hasName && hasBio && hasTitle;
+        
+        if (!meetsMinimum) {
+          console.log('🚫 Perfil filtrado por información mínima insuficiente:', {
+            name: talent.full_name,
+            hasName,
+            hasBio,
+            hasTitle,
+            bio_length: talent.bio?.length || 0
+          });
+        }
+        
+        return meetsMinimum;
+      });
+
+      console.log('📊 Perfiles totales:', talents.length, '| Con info mínima:', talentsWithMinimumInfo.length, '| Filtrados:', talents.length - talentsWithMinimumInfo.length);
+
       // Enhance existing talents with better data
-      const enhancedTalents = talents.map(talent => {
+      const enhancedTalents = talentsWithMinimumInfo.map(talent => {
         // If this is Fabian Segura, enhance his data
         if (talent.full_name === 'Fabian Segura' || talent.user_id === '1c1c3c4f-3587-4e47-958b-9529d0620d26') {
           return {
