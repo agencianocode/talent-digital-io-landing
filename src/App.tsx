@@ -13,6 +13,7 @@ import ToastContainer from '@/components/ToastContainer';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import AccessibilityWrapper from '@/components/AccessibilityWrapper';
 import AuthErrorBoundary from '@/components/AuthErrorBoundary';
+import { usePlatformSettings } from '@/hooks/usePlatformSettings';
 
 // Importar páginas básicas
 import Auth from './pages/Auth';
@@ -94,6 +95,12 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 // Testing pages
 const TestNotifications = lazy(() => import('./pages/testing/TestNotifications'));
 
+// Platform settings loader component
+const PlatformSettingsLoader = ({ children }: { children: React.ReactNode }) => {
+  usePlatformSettings();
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <ThemeProvider
@@ -102,17 +109,18 @@ function App() {
       enableSystem
       disableTransitionOnChange
     >
-      <ProfileManagerProvider>
-        <NotificationsProvider>
-          <OpportunitiesProvider>
-            <SupabaseMessagesProvider>
-              <MessagingProvider>
-                <ToastProvider>
-                  <BrowserRouter>
-                    <NavigationFlowProvider>
-                      <AccessibilityWrapper>
-                        <div className="min-h-screen bg-background text-foreground">
-                          <Routes>
+      <PlatformSettingsLoader>
+        <ProfileManagerProvider>
+          <NotificationsProvider>
+            <OpportunitiesProvider>
+              <SupabaseMessagesProvider>
+                <MessagingProvider>
+                  <ToastProvider>
+                    <BrowserRouter>
+                      <NavigationFlowProvider>
+                        <AccessibilityWrapper>
+                          <div className="min-h-screen bg-background text-foreground">
+                            <Routes>
                       <Route path="/" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <UserTypeSelector />
@@ -503,6 +511,7 @@ function App() {
           </OpportunitiesProvider>
         </NotificationsProvider>
       </ProfileManagerProvider>
+      </PlatformSettingsLoader>
     </ThemeProvider>
   );
 }

@@ -123,6 +123,17 @@ const AdminSystemSettings: React.FC = () => {
             value = parseFloat(setting.value || '0');
           }
           settings[setting.key] = value;
+          
+          // Load favicon preview if exists
+          if (setting.key === 'platform_favicon_url' && setting.value) {
+            setFaviconPreview(setting.value);
+            applyFavicon(setting.value);
+          }
+          
+          // Load logo preview if exists
+          if (setting.key === 'platform_logo_url' && setting.value) {
+            setLogoPreview(setting.value);
+          }
         });
         form.reset(settings);
       }
@@ -132,6 +143,22 @@ const AdminSystemSettings: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Apply favicon to the document
+  const applyFavicon = (url: string) => {
+    if (!url) return;
+    
+    // Remove existing favicon links
+    const existingLinks = document.querySelectorAll("link[rel*='icon']");
+    existingLinks.forEach(link => link.remove());
+    
+    // Create new favicon link
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.type = url.endsWith('.ico') ? 'image/x-icon' : 'image/png';
+    link.href = url;
+    document.head.appendChild(link);
   };
 
   const loadCategories = async () => {
@@ -297,17 +324,38 @@ const AdminSystemSettings: React.FC = () => {
         .getPublicUrl(filePath);
 
       setFaviconPreview(publicUrl);
-      // Store favicon URL in settings
-      await supabase
+      
+      // Check if setting already exists
+      const { data: existingSetting } = await supabase
         .from('admin_settings')
-        .upsert({
-          key: 'platform_favicon_url',
-          value: publicUrl,
-          type: 'string',
-          category: 'system'
-        }, { onConflict: 'key,category' });
+        .select('id')
+        .eq('key', 'platform_favicon_url')
+        .eq('category', 'system')
+        .maybeSingle();
 
-      toast.success('Favicon subido correctamente');
+      if (existingSetting) {
+        // Update existing setting
+        await supabase
+          .from('admin_settings')
+          .update({ value: publicUrl })
+          .eq('key', 'platform_favicon_url')
+          .eq('category', 'system');
+      } else {
+        // Insert new setting
+        await supabase
+          .from('admin_settings')
+          .insert({
+            key: 'platform_favicon_url',
+            value: publicUrl,
+            type: 'string',
+            category: 'system'
+          });
+      }
+
+      // Apply favicon immediately
+      applyFavicon(publicUrl);
+      
+      toast.success('Favicon subido y aplicado correctamente');
     } catch (error) {
       console.error('Error uploading favicon:', error);
       toast.error('Error al subir el favicon');
