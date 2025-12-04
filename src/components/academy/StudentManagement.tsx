@@ -80,7 +80,8 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
       case 'graduated': return 'bg-blue-100 text-blue-800';
-      case 'paused': return 'bg-gray-100 text-gray-600';
+      case 'inactive': return 'bg-gray-100 text-gray-600';
+      case 'paused': return 'bg-yellow-100 text-yellow-800';
       case 'suspended': return 'bg-red-100 text-red-800';
       case 'pending_invitations': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -91,6 +92,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     switch (status) {
       case 'active': return 'Activo';
       case 'graduated': return 'Graduado';
+      case 'inactive': return 'Inactivo';
       case 'paused': return 'Pausado';
       case 'suspended': return 'Suspendido';
       case 'pending_invitations': return 'Invitación Pendiente';
@@ -128,7 +130,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     toast.info('Función de mensajería próximamente');
   };
 
-  const handleChangeStudentStatus = async (studentEmail: string, newStatus: 'enrolled' | 'graduated' | 'paused') => {
+  const handleChangeStudentStatus = async (studentEmail: string, newStatus: 'enrolled' | 'graduated' | 'inactive') => {
     try {
       console.log('🔄 Cambiando estado de estudiante:', { 
         academyId, 
@@ -150,54 +152,69 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
         throw new Error(`No se encontró el estudiante con email ${studentEmail}`);
       }
 
+      // Preparar datos de actualización
+      const updateData: any = { 
+        status: newStatus
+      };
+
+      // Si se marca como graduado, agregar fecha de graduación; si no, limpiarla
+      if (newStatus === 'graduated') {
+        updateData.graduation_date = new Date().toISOString().split('T')[0];
+      } else {
+        updateData.graduation_date = null;
+      }
+
       // Preparar datos para la función edge
       const requestData: any = { 
         studentId: existingStudent.id,
-        newStatus
+        newStatus,
+        graduationDate: updateData.graduation_date
       };
 
-      // Si se marca como graduado, agregar fecha de graduación
-      if (newStatus === 'graduated') {
-        requestData.graduationDate = new Date().toISOString().split('T')[0];
-      }
+      console.log('📝 Actualizando directamente en DB con datos:', updateData);
 
-      console.log('📝 Llamando función edge con datos:', requestData);
+      // Intentar actualización directa primero (más simple y rápido)
+      const { data: updateResult, error: directError } = await supabase
+        .from('academy_students')
+        .update(updateData)
+        .eq('id', existingStudent.id)
+        .select();
 
-      // Usar función edge con permisos de administrador
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No hay sesión activa');
-      }
+      console.log('✅ Direct update result:', { updateResult, directError });
 
-      const response = await supabase.functions.invoke('update-academy-student-status', {
-        body: requestData,
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-
-      console.log('✅ Edge function response completa:', response);
-      console.log('✅ Response data:', response.data);
-      console.log('✅ Response error:', response.error);
-
-      if (response.error) {
-        console.error('❌ Error from edge function:', response.error);
-        console.error('❌ Error message:', response.error.message);
-        console.error('❌ Error context:', response.error.context);
+      // Si la actualización directa falla, intentar con función edge
+      if (directError || !updateResult || updateResult.length === 0) {
+        console.log('⚠️ Actualización directa falló, intentando con función edge...');
         
-        throw new Error(response.error.message || 'Error al llamar a la función edge');
-      }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('No hay sesión activa');
+        }
 
-      if (response.data?.error) {
-        console.error('❌ Error en respuesta de función edge:', response.data.error);
-        console.error('❌ Detalles:', response.data.details);
-        throw new Error(response.data.error);
+        const response = await supabase.functions.invoke('update-academy-student-status', {
+          body: requestData,
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+
+        console.log('✅ Edge function response:', response);
+
+        if (response.error) {
+          console.error('❌ Error from edge function:', response.error);
+          throw new Error(response.error.message || 'Error al llamar a la función edge');
+        }
+
+        if (response.data?.error) {
+          console.error('❌ Error en respuesta:', response.data.error);
+          throw new Error(response.data.error);
+        }
       }
 
       const statusLabels = {
         'enrolled': 'Activo',
         'graduated': 'Graduado',
-        'paused': 'Pausado'
+        'inactive': 'Inactivo'
       };
 
       toast.success(`Estudiante marcado como ${statusLabels[newStatus]}`);
@@ -508,6 +525,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
                 <SelectItem value="all">Todos los estados</SelectItem>
                 <SelectItem value="active">Activo</SelectItem>
                 <SelectItem value="graduated">Graduado</SelectItem>
+                <SelectItem value="inactive">Inactivo</SelectItem>
                 <SelectItem value="paused">Pausado</SelectItem>
                 <SelectItem value="suspended">Suspendido</SelectItem>
                 <SelectItem value="pending_invitations">Invitaciones Pendientes</SelectItem>
@@ -644,12 +662,12 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
                                       Marcar como Graduado
                                     </DropdownMenuItem>
                                   )}
-                                  {student.status !== 'paused' && (
+                                  {student.status !== 'paused' && student.status !== 'suspended' && (
                                     <DropdownMenuItem 
-                                      onClick={() => handleChangeStudentStatus(student.talent_profiles?.email || '', 'paused')}
+                                      onClick={() => handleChangeStudentStatus(student.talent_profiles?.email || '', 'inactive')}
                                     >
                                       <UserX className="h-4 w-4 mr-2 text-gray-600" />
-                                      Marcar como Pausado
+                                      Marcar como Inactivo
                                     </DropdownMenuItem>
                                   )}
                                 </>
