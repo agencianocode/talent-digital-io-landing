@@ -313,9 +313,9 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-background">
+    <div className="flex-1 flex flex-col bg-background h-full">
       {/* Chat Header */}
-      <div className="p-4 border-b border-border bg-card">
+      <div className="p-4 border-b border-border bg-card flex-shrink-0">
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
             <AvatarImage src={otherParticipantAvatar || undefined} alt={otherParticipantName} />
@@ -412,7 +412,7 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
       </ScrollArea>
 
       {/* Message Input */}
-      <div className="p-4 border-t border-border bg-card">
+      <div className="p-4 border-t border-border bg-card flex-shrink-0">
         {/* File Preview */}
         {selectedFile && (
           <div className="mb-3 p-3 bg-secondary/50 rounded-lg flex items-center gap-3">

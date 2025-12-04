@@ -170,7 +170,7 @@ const BusinessMessagesPage = () => {
   );
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-[calc(100vh-64px)]">
       <ConversationsList
         key={conversationsKey}
         conversations={conversations as any}
