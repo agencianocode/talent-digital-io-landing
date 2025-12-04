@@ -82,7 +82,7 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({
   };
 
   const budgetRanges = [
-    { value: 'exact', label: `Presupuesto exacto (${service ? formatPriceRange(service.price_min, service.price_max, service.currency) : ''})` },
+    { value: 'exact', label: `Presupuesto exacto (${service ? formatPriceRange(service.price_min, service.price_max, service.currency, service.price) : ''})` },
     { value: 'flexible', label: 'Presupuesto flexible' },
     { value: 'negotiable', label: 'Presupuesto negociable' },
     { value: 'custom', label: 'Presupuesto personalizado' }
@@ -307,7 +307,7 @@ Puedes responder a esta conversación para continuar la comunicación.
                 <div className="flex items-center gap-1">
                   <DollarSign className="h-4 w-4 text-green-600" />
                   <span className="font-semibold text-green-600">
-                    {formatPriceRange(service.price_min, service.price_max, service.currency)}
+                    {formatPriceRange(service.price_min, service.price_max, service.currency, service.price)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">

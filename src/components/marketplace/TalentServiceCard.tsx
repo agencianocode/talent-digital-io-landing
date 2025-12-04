@@ -222,7 +222,7 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
           <div className="flex items-center gap-1">
             <DollarSign className="h-4 w-4 text-green-600" />
             <span className="text-lg font-bold text-green-600">
-              {formatPriceRange(service.price_min, service.price_max, service.currency)}
+              {formatPriceRange(service.price_min, service.price_max, service.currency, service.price)}
             </span>
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">

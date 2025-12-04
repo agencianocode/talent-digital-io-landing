@@ -733,7 +733,7 @@ const ServiceDetail: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-green-600" />
                   <span className="text-2xl font-bold text-green-600">
-                    {formatPriceRange(service.price_min, service.price_max, service.currency)}
+                    {formatPriceRange(service.price_min, service.price_max, service.currency, service.price)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">

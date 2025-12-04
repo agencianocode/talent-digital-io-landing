@@ -191,7 +191,7 @@ export const TalentServices = ({
                         Precio
                       </p>
                       <p className="text-base font-bold text-green-700 dark:text-green-300">
-                        {formatPriceRange(service.price_min, service.price_max, service.currency)}
+                        {formatPriceRange(service.price_min, service.price_max, service.currency, service.price)}
                       </p>
                     </div>
                   </div>

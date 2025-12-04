@@ -34,14 +34,30 @@ export const normalizeDeliveryTime = (deliveryTime: string): string => {
 /**
  * Formatea el rango de precios de un servicio
  * Muestra un rango si los precios son diferentes, o un precio único si son iguales
+ * Maneja compatibilidad con servicios antiguos que solo tienen 'price'
  */
-export const formatPriceRange = (priceMin: number, priceMax: number, currency: string): string => {
+export const formatPriceRange = (
+  priceMin: number | undefined, 
+  priceMax: number | undefined, 
+  currency: string,
+  fallbackPrice?: number
+): string => {
   const formatter = new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   });
+
+  // Compatibilidad hacia atrás: si no hay price_min/price_max, usar price antiguo
+  if ((!priceMin || !priceMax) && fallbackPrice) {
+    return formatter.format(fallbackPrice);
+  }
+
+  // Si faltan los valores, retornar mensaje de error amigable
+  if (!priceMin || !priceMax) {
+    return 'Precio no disponible';
+  }
 
   // Si los precios son iguales, mostrar solo uno
   if (priceMin === priceMax) {

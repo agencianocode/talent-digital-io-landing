@@ -486,7 +486,7 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                         </div>
                       </div>
                     ) : (
-                      <p className="font-medium text-sm sm:text-base mt-1 break-words">{formatPriceRange(service.price_min, service.price_max, service.currency)}</p>
+                      <p className="font-medium text-sm sm:text-base mt-1 break-words">{formatPriceRange(service.price_min, service.price_max, service.currency, service.price)}</p>
                     )}
                   </div>
 
