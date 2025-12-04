@@ -1036,25 +1036,8 @@ const TalentDiscovery = () => {
                     /* Talent Cards - Componente Unificado */
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filteredTalents.map((talent) => {
-                        // Preparar datos de academia si existen
-                        const academyBadgeData = talent.email ? {
-                          userId: talent.user_id,
-                          userEmail: talent.email
-                        } : null;
-
                         return (
                           <div key={talent.id} className="relative">
-                            {/* Academy Badge absoluto si es premium */}
-                            {academyBadgeData && (
-                              <div className="absolute top-2 right-2 z-10">
-                                <TalentCardAcademyBadge 
-                                  userId={academyBadgeData.userId}
-                                  userEmail={academyBadgeData.userEmail}
-                                  compact={true}
-                                />
-                              </div>
-                            )}
-                            
                             <UnifiedTalentCard
                               userId={talent.user_id}
                               fullName={talent.full_name}
@@ -1064,7 +1047,6 @@ const TalentDiscovery = () => {
                               country={talent.country || undefined}
                               bio={talent.bio}
                               skills={talent.skills}
-                              profileCompleteness={talent.profile_completeness}
                               lastActive={talent.last_active || talent.updated_at}
                               primaryAction={{
                                 label: 'Ver Perfil',
@@ -1078,6 +1060,17 @@ const TalentDiscovery = () => {
                               showBio={true}
                               maxSkills={3}
                             />
+                            
+                            {/* Academy Badge absoluto en esquina superior derecha */}
+                            {talent.email && (
+                              <div className="absolute top-4 right-4 z-10">
+                                <TalentCardAcademyBadge 
+                                  userId={talent.user_id}
+                                  userEmail={talent.email}
+                                  compact={true}
+                                />
+                              </div>
+                            )}
                           </div>
                         );
                       })}

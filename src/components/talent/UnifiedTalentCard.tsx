@@ -21,7 +21,6 @@ export interface UnifiedTalentCardProps {
   skills?: string[];
   
   // Estado del perfil
-  profileCompleteness?: number | null;
   lastActive?: string | null;
   
   // Badges y certificaciones (no usado - se maneja con TalentCardAcademyBadge externamente)
@@ -54,7 +53,6 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
   country,
   bio,
   skills = [],
-  profileCompleteness,
   lastActive,
   primaryAction,
   secondaryAction,
@@ -91,10 +89,13 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
       <CardContent className="p-4 sm:p-6 flex flex-col h-full">
         {/* Header: Avatar, Nombre, Ubicación y Badge */}
         <div className="flex items-start gap-3 mb-4">
-          <Avatar className="h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0">
-            <AvatarImage src={avatarUrl || undefined} alt={fullName} />
-            <AvatarFallback className="text-sm">{getInitials(fullName)}</AvatarFallback>
-          </Avatar>
+          {/* Avatar Container - Con badge de academia posicionado */}
+          <div className="relative flex-shrink-0">
+            <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
+              <AvatarImage src={avatarUrl || undefined} alt={fullName} />
+              <AvatarFallback className="text-sm">{getInitials(fullName)}</AvatarFallback>
+            </Avatar>
+          </div>
           
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-base sm:text-lg text-foreground truncate">
@@ -103,19 +104,10 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
             <p className="text-sm text-muted-foreground truncate mb-1">
               {title}
             </p>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{displayLocation}</span>
             </div>
-            
-            {/* Academy Badge - Component handles data fetching internally */}
-            
-            {/* Profile Completeness Badge */}
-            {profileCompleteness !== undefined && profileCompleteness !== null && profileCompleteness < 70 && (
-              <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300 mt-1">
-                Perfil incompleto
-              </Badge>
-            )}
           </div>
         </div>
 

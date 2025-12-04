@@ -287,27 +287,28 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {talents.map(talent => (
-              <UnifiedTalentCard
-                key={talent.id}
-                userId={talent.id}
-                fullName={talent.full_name}
-                title={talent.title}
-                avatarUrl={talent.avatar_url}
-                location={talent.location}
-                skills={talent.skills}
-                primaryAction={{
-                  label: 'Ver Perfil',
-                  onClick: () => window.open(`/business-dashboard/talent-profile/${talent.id}`, '_blank'),
-                  variant: 'outline'
-                }}
-                secondaryAction={{
-                  label: 'Invitar',
-                  icon: <MessageSquare className="h-4 w-4 mr-2" />,
-                  onClick: () => handleInvite(talent)
-                }}
-                showBio={false}
-                maxSkills={3}
-              />
+              <div key={talent.id} className="relative">
+                <UnifiedTalentCard
+                  userId={talent.id}
+                  fullName={talent.full_name}
+                  title={talent.title}
+                  avatarUrl={talent.avatar_url}
+                  location={talent.location}
+                  skills={talent.skills}
+                  primaryAction={{
+                    label: 'Ver Perfil',
+                    onClick: () => window.open(`/business-dashboard/talent-profile/${talent.id}`, '_blank'),
+                    variant: 'outline'
+                  }}
+                  secondaryAction={{
+                    label: 'Invitar',
+                    icon: <MessageSquare className="h-4 w-4 mr-2" />,
+                    onClick: () => handleInvite(talent)
+                  }}
+                  showBio={false}
+                  maxSkills={3}
+                />
+              </div>
             ))}
           </div>
         </CardContent>
