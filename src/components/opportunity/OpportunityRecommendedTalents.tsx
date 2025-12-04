@@ -86,41 +86,75 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
 
         if (userError) throw userError;
 
-        // Score and rank talents
+        // Normalize opportunity skills for comparison
+        const normalizedOppSkills = skills.map(s => s.toLowerCase().trim());
+        
+        // Also extract keywords from opportunity title/category for broader matching
+        const categoryKeywords = category.toLowerCase().split(/[\s,]+/).filter(w => w.length > 3);
+        
+        // Score and rank talents - ONLY include those with actual relevance
         const scoredTalents = talentProfiles
           .map(talent => {
             const userProfile = userProfiles?.find(up => up.user_id === talent.user_id);
             if (!userProfile) return null;
 
             let score = 0;
+            let hasRelevance = false;
 
-            // +15 per matching skill
-            if (talent.skills && skills.length > 0) {
-              const matchingSkills = talent.skills.filter((skill: string) =>
-                skills.some(oppSkill => oppSkill.toLowerCase() === skill.toLowerCase())
-              );
-              score += matchingSkills.length * 15;
+            // Count matching skills (exact or partial match)
+            let matchingSkillsCount = 0;
+            if (talent.skills && normalizedOppSkills.length > 0) {
+              const talentSkillsNormalized = talent.skills.map((s: string) => s.toLowerCase().trim());
+              
+              for (const talentSkill of talentSkillsNormalized) {
+                for (const oppSkill of normalizedOppSkills) {
+                  // Exact match or partial match (one contains the other)
+                  if (talentSkill === oppSkill || 
+                      talentSkill.includes(oppSkill) || 
+                      oppSkill.includes(talentSkill)) {
+                    matchingSkillsCount++;
+                    hasRelevance = true;
+                    break;
+                  }
+                }
+              }
+              score += matchingSkillsCount * 20;
             }
 
-            // +20 if experience level matches
+            // Check if talent title matches opportunity category/keywords
+            if (talent.title) {
+              const titleLower = talent.title.toLowerCase();
+              for (const keyword of categoryKeywords) {
+                if (titleLower.includes(keyword)) {
+                  score += 15;
+                  hasRelevance = true;
+                }
+              }
+              // Also check against category directly
+              const firstWord = titleLower.split(' ')[0] || '';
+              if (titleLower.includes(category.toLowerCase()) || 
+                  (firstWord && category.toLowerCase().includes(firstWord))) {
+                score += 25;
+                hasRelevance = true;
+              }
+            }
+
+            // +10 if experience level matches
             if (talent.experience_level && experienceLevels.includes(talent.experience_level)) {
-              score += 20;
+              score += 10;
+              hasRelevance = true;
             }
 
-            // + profile completeness / 5
+            // Only include talents with actual relevance to the opportunity
+            if (!hasRelevance) return null;
+
+            // Bonus for profile quality (but only if already relevant)
             if (userProfile.profile_completeness) {
-              score += userProfile.profile_completeness / 5;
+              score += userProfile.profile_completeness / 10;
             }
-
-            // Quality bonuses
-            if (talent.title && talent.title.length > 10) score += 5;
-            if (talent.bio && talent.bio.length > 50) score += 5;
-            if (talent.skills && talent.skills.length >= 3) score += 5;
-
-            // Fallback scoring if no matches
-            if (score === 0) {
-              score = (userProfile.profile_completeness || 0) / 10;
-            }
+            if (talent.title && talent.title.length > 10) score += 3;
+            if (talent.bio && talent.bio.length > 50) score += 3;
+            if (talent.skills && talent.skills.length >= 3) score += 2;
 
             return {
               id: talent.user_id,
