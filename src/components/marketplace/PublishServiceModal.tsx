@@ -52,6 +52,7 @@ interface PublishServiceForm {
   priceMax: string;
   deliveryTime: string;
   location: string;
+  publishAsCompany: boolean; // true = a nombre de empresa, false = a nombre personal
   
   // Freemium user fields (for publishing request)
   companyName: string;
@@ -83,6 +84,7 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
     priceMax: '',
     deliveryTime: '',
     location: '',
+    publishAsCompany: false, // Por defecto a nombre personal
     // Freemium
     companyName: '',
     freemiumPriceMin: '',
@@ -94,6 +96,9 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   const isFreemiumUser = userRole === 'freemium_business' || userRole === 'freemium_talent';
   const isFreemiumBusiness = userRole === 'freemium_business';
   const isPremiumUser = userRole === 'premium_business' || userRole === 'premium_talent' || userRole === 'academy_premium';
+  
+  // Verificar si es empresa o academia (pueden publicar a nombre de empresa)
+  const isBusinessOrAcademy = userRole === 'premium_business' || userRole === 'academy_premium' || userRole === 'freemium_business';
   
   // Verificar si hay una solicitud pendiente
   const hasPendingRequest = myRequests.some(request => request.status === 'pending');
@@ -132,11 +137,19 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
     { value: '3-6 meses', label: 'Flexible (3-6 meses)' }
   ];
 
-  const handleInputChange = (field: keyof PublishServiceForm, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleInputChange = (field: keyof PublishServiceForm, value: string | boolean) => {
+    // Handle boolean values specially
+    if (field === 'publishAsCompany') {
+      setFormData(prev => ({
+        ...prev,
+        publishAsCompany: value === 'true' || value === true
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -159,6 +172,9 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Usuario no autenticado');
         
+        // Determinar si se publica a nombre de empresa o personal
+        const companyId = (formData.publishAsCompany && activeCompany?.id) ? activeCompany.id : null;
+        
         await marketplaceService.createService(user.id, {
           title: formData.title,
           description: formData.description,
@@ -169,7 +185,8 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
           delivery_time: formData.deliveryTime,
           location: formData.location,
           is_available: true,
-          tags: []
+          tags: [],
+          company_id: companyId
         });
         
         setIsSubmitted(true);
@@ -237,6 +254,7 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
       priceMax: '',
       deliveryTime: '',
       location: '',
+      publishAsCompany: false,
       companyName: '',
       freemiumPriceMin: '',
       freemiumPriceMax: '',
@@ -471,6 +489,41 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                     required
                   />
                 </div>
+                
+                {/* Selector para empresas/academias: publicar a nombre de empresa o personal */}
+                {isBusinessOrAcademy && activeCompany && (
+                  <div className="space-y-2">
+                    <Label>Publicar como *</Label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="publishAs"
+                          checked={!formData.publishAsCompany}
+                          onChange={() => handleInputChange('publishAsCompany', 'false')}
+                          className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">A nombre personal</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="publishAs"
+                          checked={formData.publishAsCompany}
+                          onChange={() => handleInputChange('publishAsCompany', 'true')}
+                          className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">A nombre de {activeCompany.name}</span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {formData.publishAsCompany 
+                        ? `El servicio se mostrará asociado a ${activeCompany.name}` 
+                        : 'El servicio se mostrará solo con tu nombre personal'}
+                    </p>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="description">Descripción del servicio *</Label>
                   <Textarea

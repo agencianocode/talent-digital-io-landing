@@ -985,6 +985,7 @@ export type Database = {
       marketplace_services: {
         Row: {
           category: string
+          company_id: string | null
           created_at: string
           currency: string
           delivery_time: string
@@ -1009,6 +1010,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          company_id?: string | null
           created_at?: string
           currency?: string
           delivery_time: string
@@ -1033,6 +1035,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          company_id?: string | null
           created_at?: string
           currency?: string
           delivery_time?: string

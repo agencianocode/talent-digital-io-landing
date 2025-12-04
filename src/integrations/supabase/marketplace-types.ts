@@ -22,6 +22,7 @@ export interface TalentService {
   requests_count: number;
   rating?: number;
   reviews_count: number;
+  company_id?: string | null; // ID de la empresa si se publica a nombre de empresa
   created_at: string;
   updated_at: string;
 }
@@ -86,6 +87,7 @@ export interface ServiceFormData {
   portfolio_url?: string;
   demo_url?: string;
   tags: string[];
+  company_id?: string | null; // ID de la empresa si se publica a nombre de empresa
 }
 
 export interface ServiceRequestFormData {
