@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 interface ShareProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
+  profileUserId?: string; // Optional: when viewing another user's profile
 }
 
 const SHARE_PLATFORMS = [
@@ -70,7 +71,8 @@ const SHARE_PLATFORMS = [
 
 export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ 
   isOpen, 
-  onClose 
+  onClose,
+  profileUserId
 }) => {
   const { 
     shareData, 
@@ -85,14 +87,24 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
 
   const [publicUrl, setPublicUrl] = useState('');
 
+  // Generate URL for the specified user or current user
+  const getProfileUrl = (userId?: string): string => {
+    if (userId) {
+      return `https://app.talentodigital.io/profile/${userId}`;
+    }
+    return generatePublicUrl();
+  };
+
   // Load share data when modal opens
   useEffect(() => {
     if (isOpen) {
-      const url = generatePublicUrl();
+      const url = getProfileUrl(profileUserId);
       setPublicUrl(url);
-      getShareData();
+      if (!profileUserId) {
+        getShareData();
+      }
     }
-  }, [isOpen, generatePublicUrl, getShareData]);
+  }, [isOpen, profileUserId]);
 
   const handleCopyUrl = async () => {
     const success = await copyToClipboard(publicUrl);
@@ -138,7 +150,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
         <div className="space-y-4 py-2">
           {/* URL del Perfil */}
           <div className="space-y-2">
-            <Label htmlFor="profile-url" className="text-sm font-medium">URL de tu Perfil</Label>
+            <Label htmlFor="profile-url" className="text-sm font-medium">{profileUserId ? 'URL del Perfil' : 'URL de tu Perfil'}</Label>
             <div className="flex gap-2">
               <Input
                 id="profile-url"

@@ -751,6 +751,7 @@ const PublicTalentProfile = () => {
       <ShareProfileModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
+        profileUserId={talentId}
       />
 
       {/* Video Player Modal */}

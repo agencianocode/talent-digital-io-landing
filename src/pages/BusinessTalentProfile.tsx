@@ -667,6 +667,7 @@ const BusinessTalentProfile = () => {
       <ShareProfileModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
+        profileUserId={id}
       />
 
       {/* Video Player Modal */}
