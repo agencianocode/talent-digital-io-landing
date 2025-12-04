@@ -508,11 +508,29 @@ const TalentDiscovery = () => {
         );
       }
       
-      // Category filter (using title as category for now)
+      // Category filter con palabras clave y sinónimos
       if (categoryFilter.length > 0) {
-        filtered = filtered.filter(talent => 
-          categoryFilter.some(cat => talent.title.toLowerCase().includes(cat.toLowerCase()))
-        );
+        const categoryKeywords: Record<string, string[]> = {
+          'Atención al Cliente': ['atención', 'cliente', 'customer', 'success', 'servicio', 'soporte'],
+          'Creativo': ['creativo', 'diseño', 'design', 'gráfico', 'ux', 'ui', 'web', 'logo', 'brand'],
+          'Marketing': ['marketing', 'publicidad', 'ads', 'social media', 'content', 'seo', 'digital'],
+          'Operaciones': ['operaciones', 'operations', 'logística', 'procesos', 'administra'],
+          'Soporte Profesional': ['soporte', 'support', 'asistente', 'assistant', 'ayuda'],
+          'Tecnología y Automatizaciones': ['tecnología', 'tech', 'automatiz', 'automation', 'desarrollo', 'developer', 'programación', 'software', 'ia', 'ai', 'no code'],
+          'Ventas': ['venta', 'sales', 'closer', 'comercial', 'sdr', 'bdr', 'representante']
+        };
+
+        filtered = filtered.filter(talent => {
+          const titleLower = talent.title.toLowerCase();
+          const bioLower = talent.bio.toLowerCase();
+          
+          return categoryFilter.some(cat => {
+            const keywords = categoryKeywords[cat] || [cat.toLowerCase()];
+            return keywords.some(keyword => 
+              titleLower.includes(keyword) || bioLower.includes(keyword)
+            );
+          });
+        });
       }
       
       // Country filter
