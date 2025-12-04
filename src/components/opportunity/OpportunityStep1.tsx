@@ -958,7 +958,7 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
               {data.tools.map((tool) => (
                 <div
                   key={tool}
-                  className="inline-flex items-center gap-2 bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-medium border border-gray-200 shadow-sm whitespace-nowrap"
+                  className="inline-flex items-center gap-2 bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-medium border border-gray-200 shadow-sm"
                 >
                   <img 
                     src={getToolIcon(tool)} 
@@ -970,7 +970,7 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
                       e.currentTarget.style.display = 'none';
                     }}
                   />
-                  <span className="truncate max-w-[150px]" title={tool}>{tool}</span>
+                  <span>{tool}</span>
                   <button
                     type="button"
                     onClick={() => removeTool(tool)}
