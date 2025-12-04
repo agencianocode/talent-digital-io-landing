@@ -8,8 +8,20 @@ ADD COLUMN IF NOT EXISTS price_max DECIMAL(10, 2);
 
 -- Migrar datos existentes: copiar price a price_min y price_max
 UPDATE marketplace_services 
-SET price_min = price, price_max = price 
-WHERE price_min IS NULL AND price_max IS NULL;
+SET 
+  price_min = COALESCE(price_min, price),
+  price_max = COALESCE(price_max, price)
+WHERE 
+  price IS NOT NULL 
+  AND (price_min IS NULL OR price_max IS NULL);
+
+-- Asegurar que no haya valores NULL
+UPDATE marketplace_services 
+SET 
+  price_min = COALESCE(price_min, 0),
+  price_max = COALESCE(price_max, 0)
+WHERE 
+  price_min IS NULL OR price_max IS NULL;
 
 -- Hacer price_min y price_max NOT NULL ahora que tienen datos
 ALTER TABLE marketplace_services 
@@ -18,7 +30,7 @@ ALTER COLUMN price_max SET NOT NULL;
 
 -- Agregar constraint para asegurar que price_min <= price_max
 ALTER TABLE marketplace_services 
-ADD CONSTRAINT check_price_range CHECK (price_min <= price_max);
+ADD CONSTRAINT IF NOT EXISTS check_price_range CHECK (price_min <= price_max);
 
 -- Crear índice para búsquedas por rango de precio
 CREATE INDEX IF NOT EXISTS idx_marketplace_services_price_range 
