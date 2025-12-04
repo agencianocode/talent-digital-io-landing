@@ -29,6 +29,12 @@ serve(async (req) => {
       throw new Error('studentId and newStatus are required');
     }
 
+    // Validar que el estado sea uno válido
+    const validStatuses = ['enrolled', 'graduated', 'inactive', 'paused', 'suspended'];
+    if (!validStatuses.includes(newStatus)) {
+      throw new Error(`Invalid status: ${newStatus}. Must be one of: ${validStatuses.join(', ')}`);
+    }
+
     console.log('Updating student status:', { studentId, newStatus, graduationDate });
 
     // Prepare update data
@@ -38,6 +44,9 @@ serve(async (req) => {
 
     if (graduationDate) {
       updateData.graduation_date = graduationDate;
+    } else if (newStatus !== 'graduated') {
+      // Si no es graduado, limpiar la fecha de graduación
+      updateData.graduation_date = null;
     }
 
     // Update student status using admin client
