@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -492,17 +492,61 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
   console.log('🏢 OpportunityStep1 - business_type:', company?.business_type);
   console.log('🏢 OpportunityStep1 - Is Academy?:', company?.business_type === 'academy');
 
+  // Normalizar herramientas al cargar los datos
+  useEffect(() => {
+    if (data.tools && data.tools.length > 0) {
+      const normalizedTools = data.tools.map(tool => normalizeToolName(tool));
+      const hasChanges = normalizedTools.some((normalized, index) => normalized !== data.tools![index]);
+      
+      if (hasChanges) {
+        console.log('🔧 Normalizando herramientas:', { original: data.tools, normalized: normalizedTools });
+        onChange({ tools: normalizedTools });
+      }
+    }
+  }, []); // Solo ejecutar una vez al montar
+
+  // Normalizar nombres de herramientas conocidas que pueden estar cortados o mal escritos
+  const normalizeToolName = (toolName: string): string => {
+    const normalizations: Record<string, string> = {
+      'airt': 'Airtable',
+      'calendl': 'Calendly',
+      'gohighleve': 'GoHighLevel',
+      'hubspo': 'HubSpot',
+      'pipedri': 'Pipedrive',
+      'salesforc': 'Salesforce',
+    };
+    
+    const lowerName = toolName.toLowerCase().trim();
+    
+    // Buscar coincidencia exacta
+    if (normalizations[lowerName]) {
+      return normalizations[lowerName];
+    }
+    
+    // Buscar coincidencia parcial
+    for (const [partial, full] of Object.entries(normalizations)) {
+      if (lowerName.includes(partial) || partial.includes(lowerName)) {
+        return full;
+      }
+    }
+    
+    return toolName;
+  };
+
   const getToolIcon = (toolName: string): string => {
+    // Normalizar el nombre primero
+    const normalizedName = normalizeToolName(toolName);
+    
     // First try exact match
     let toolData = professionalTools.find((tool: ProfessionalTool) => 
-      tool.name.toLowerCase() === toolName.toLowerCase()
+      tool.name.toLowerCase() === normalizedName.toLowerCase()
     );
     
     // If no exact match, try partial match
     if (!toolData) {
       toolData = professionalTools.find((tool: ProfessionalTool) => 
-        tool.name.toLowerCase().includes(toolName.toLowerCase()) ||
-        toolName.toLowerCase().includes(tool.name.toLowerCase())
+        tool.name.toLowerCase().includes(normalizedName.toLowerCase()) ||
+        normalizedName.toLowerCase().includes(tool.name.toLowerCase())
       );
     }
     
@@ -956,9 +1000,17 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
           {data.tools && data.tools.length > 0 && (
             <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg min-h-[48px]">
               {data.tools.map((tool) => {
+                // Normalizar el nombre de la herramienta para visualización
+                const displayName = normalizeToolName(tool);
+                
                 // Debug: Log si es Airtable para ver el valor real
                 if (tool.toLowerCase().includes('airt')) {
-                  console.log('🔍 Tool que contiene "airt":', { tool, length: tool.length, chars: tool.split('') });
+                  console.log('🔍 Tool que contiene "airt":', { 
+                    original: tool, 
+                    normalized: displayName,
+                    length: tool.length, 
+                    chars: tool.split('') 
+                  });
                 }
                 
                 return (
@@ -968,7 +1020,7 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
                   >
                     <img 
                       src={getToolIcon(tool)} 
-                      alt={tool} 
+                      alt={displayName} 
                       className="w-4 h-4 flex-shrink-0" 
                       style={{ filter: 'invert(0.2)' }}
                       onError={(e) => {
@@ -976,7 +1028,7 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
                         e.currentTarget.style.display = 'none';
                       }}
                     />
-                    <span className="inline-block">{tool}</span>
+                    <span className="inline-block">{displayName}</span>
                     <button
                       type="button"
                       onClick={() => removeTool(tool)}
