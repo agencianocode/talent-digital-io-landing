@@ -85,6 +85,9 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
   const visibleSkills = skills.slice(0, maxSkills);
   const remainingSkills = skills.length - maxSkills;
 
+  // Truncar bio a 120 caracteres para mantener altura consistente
+  const truncatedBio = bio && bio.length > 120 ? `${bio.substring(0, 120)}...` : bio;
+
   return (
     <Card className={`h-full flex flex-col hover:shadow-lg transition-all duration-200 ${className}`}>
       <CardContent className="p-4 sm:p-6 flex flex-col h-full">
@@ -138,9 +141,9 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
         )}
 
         {/* Bio */}
-        {showBio && bio && (
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">
-            {bio}
+        {showBio && truncatedBio && (
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+            {truncatedBio}
           </p>
         )}
 
