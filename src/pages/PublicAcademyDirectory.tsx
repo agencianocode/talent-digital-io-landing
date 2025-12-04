@@ -5,7 +5,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, GraduationCap, MapPin, Award, ExternalLink } from 'lucide-react';
+import { Loader2, GraduationCap, MapPin, Award, ExternalLink, Eye, MessageCircle, Clock } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 
 interface Graduate {
   student_id: string;
@@ -195,34 +198,95 @@ export default function PublicAcademyDirectory() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-6">
                   {graduates.filter(g => g.status === 'enrolled').map((graduate) => (
-                    <Card key={graduate.student_id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={graduate.avatar_url || undefined} />
-                            <AvatarFallback>
-                              {graduate.student_name?.charAt(0) || 'E'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold truncate">
-                              {graduate.student_name || 'Estudiante'}
-                            </h3>
-                            {graduate.title && (
-                              <p className="text-sm text-muted-foreground truncate">
-                                {graduate.title}
-                              </p>
-                            )}
-                            {(graduate.city || graduate.country) && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                <MapPin className="h-3 w-3" />
-                                {[graduate.city, graduate.country].filter(Boolean).join(', ')}
+                    <Card 
+                      key={graduate.student_id} 
+                      className="hover:shadow-lg transition-shadow cursor-pointer group"
+                      onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                    >
+                      <CardContent className="p-6">
+                        {/* Header */}
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="relative">
+                            <Avatar className="h-16 w-16">
+                              <AvatarImage src={graduate.avatar_url || undefined} />
+                              <AvatarFallback>
+                                {graduate.student_name?.split(' ').map(n => n[0]).join('') || 'E'}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
+                                  {graduate.student_name || 'Estudiante'}
+                                </h3>
+                                <p className="text-gray-600 text-sm">{graduate.title || 'Estudiante'}</p>
                               </div>
-                            )}
+                              
+                              <div className="flex flex-col items-end gap-1">
+                                <div className="flex items-center gap-1">
+                                  <Badge className="bg-yellow-100 text-yellow-800 text-xs whitespace-nowrap">
+                                    Perfil incompleto
+                                  </Badge>
+                                </div>
+                                
+                                {/* Academy affiliation badge */}
+                                {graduate.student_email && (
+                                  <TalentCardAcademyBadge 
+                                    userId={graduate.user_id || ''}
+                                    userEmail={graduate.student_email}
+                                    compact={true}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-1 text-sm text-gray-600 mt-2">
+                              <MapPin className="h-3 w-3" />
+                              <span>{[graduate.city, graduate.country].filter(Boolean).join(', ') || 'Ubicación no especificada'}</span>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Bio */}
+                        {graduate.bio && (
+                          <p className="text-gray-700 text-sm line-clamp-2 mb-4">
+                            {graduate.bio}
+                          </p>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ver Perfil
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => graduate.user_id && navigate(`/business-dashboard/messages?user=${graduate.user_id}`)}
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Contactar
+                          </Button>
+                        </div>
+
+                        {/* Activity indicator */}
+                        {graduate.enrollment_date && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500 mt-3">
+                            <Clock className="h-3 w-3" />
+                            Activo {formatDistanceToNow(new Date(graduate.enrollment_date), { addSuffix: true, locale: es })}
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -245,39 +309,95 @@ export default function PublicAcademyDirectory() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-6">
                   {graduates.filter(g => g.status === 'graduated').map((graduate) => (
-                    <Card key={graduate.student_id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={graduate.avatar_url || undefined} />
-                            <AvatarFallback>
-                              {graduate.student_name?.charAt(0) || 'G'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold truncate">
-                              {graduate.student_name || 'Graduado'}
-                            </h3>
-                            {graduate.title && (
-                              <p className="text-sm text-muted-foreground truncate">
-                                {graduate.title}
-                              </p>
-                            )}
-                            {(graduate.city || graduate.country) && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                <MapPin className="h-3 w-3" />
-                                {[graduate.city, graduate.country].filter(Boolean).join(', ')}
+                    <Card 
+                      key={graduate.student_id} 
+                      className="hover:shadow-lg transition-shadow cursor-pointer group"
+                      onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                    >
+                      <CardContent className="p-6">
+                        {/* Header */}
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="relative">
+                            <Avatar className="h-16 w-16">
+                              <AvatarImage src={graduate.avatar_url || undefined} />
+                              <AvatarFallback>
+                                {graduate.student_name?.split(' ').map(n => n[0]).join('') || 'G'}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
+                                  {graduate.student_name || 'Graduado'}
+                                </h3>
+                                <p className="text-gray-600 text-sm">{graduate.title || 'Graduado'}</p>
                               </div>
-                            )}
-                            {graduate.graduation_date && (
-                              <Badge variant="secondary" className="mt-2 text-xs">
-                                {new Date(graduate.graduation_date).toLocaleDateString()}
-                              </Badge>
-                            )}
+                              
+                              <div className="flex flex-col items-end gap-1">
+                                <div className="flex items-center gap-1">
+                                  <Badge className="bg-yellow-100 text-yellow-800 text-xs whitespace-nowrap">
+                                    Perfil incompleto
+                                  </Badge>
+                                </div>
+                                
+                                {/* Academy affiliation badge */}
+                                {graduate.student_email && (
+                                  <TalentCardAcademyBadge 
+                                    userId={graduate.user_id || ''}
+                                    userEmail={graduate.student_email}
+                                    compact={true}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-1 text-sm text-gray-600 mt-2">
+                              <MapPin className="h-3 w-3" />
+                              <span>{[graduate.city, graduate.country].filter(Boolean).join(', ') || 'Ubicación no especificada'}</span>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Bio */}
+                        {graduate.bio && (
+                          <p className="text-gray-700 text-sm line-clamp-2 mb-4">
+                            {graduate.bio}
+                          </p>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ver Perfil
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => graduate.user_id && navigate(`/business-dashboard/messages?user=${graduate.user_id}`)}
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Contactar
+                          </Button>
+                        </div>
+
+                        {/* Activity indicator */}
+                        {graduate.graduation_date && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500 mt-3">
+                            <Clock className="h-3 w-3" />
+                            Activo {formatDistanceToNow(new Date(graduate.graduation_date), { addSuffix: true, locale: es })}
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -310,64 +430,90 @@ export default function PublicAcademyDirectory() {
             ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {graduates.map((graduate) => (
-              <Card key={graduate.student_id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={graduate.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {graduate.student_name?.charAt(0) || 'G'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg truncate">
-                        {graduate.student_name || 'Graduado'}
-                      </h3>
-                      {graduate.title && (
-                        <p className="text-sm text-muted-foreground truncate">
-                          {graduate.title}
-                        </p>
-                      )}
-                      {(graduate.city || graduate.country) && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                          <MapPin className="h-3 w-3" />
-                          {[graduate.city, graduate.country]
-                            .filter(Boolean)
-                            .join(', ')}
+              <Card 
+                key={graduate.student_id} 
+                className="hover:shadow-lg transition-shadow cursor-pointer group flex flex-col"
+                onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+              >
+                <CardContent className="p-6 flex flex-col flex-1">
+                  {/* Header */}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="relative">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={graduate.avatar_url || undefined} />
+                        <AvatarFallback>
+                          {graduate.student_name?.split(' ').map(n => n[0]).join('') || 'G'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
+                            {graduate.student_name || 'Graduado'}
+                          </h3>
+                          <p className="text-gray-600 text-sm">{graduate.title || (graduate.status === 'graduated' ? 'Graduado' : 'Estudiante')}</p>
                         </div>
-                      )}
+                        
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex items-center gap-1">
+                            <Badge className="bg-yellow-100 text-yellow-800 text-xs whitespace-nowrap">
+                              Perfil incompleto
+                            </Badge>
+                          </div>
+                          
+                          {/* Academy affiliation badge */}
+                          {graduate.student_email && (
+                            <TalentCardAcademyBadge 
+                              userId={graduate.user_id || ''}
+                              userEmail={graduate.student_email}
+                              compact={true}
+                            />
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-1 text-sm text-gray-600 mt-2">
+                        <MapPin className="h-3 w-3" />
+                        <span>{[graduate.city, graduate.country].filter(Boolean).join(', ') || 'Ubicación no especificada'}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-4 space-y-2">
-                    {graduate.program_name && (
-                      <Badge variant="secondary" className="w-full justify-center">
-                        {graduate.program_name}
-                      </Badge>
-                    )}
-                    {graduate.graduation_date && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Award className="h-4 w-4" />
-                        Graduado: {new Date(graduate.graduation_date).toLocaleDateString('es')}
-                      </div>
-                    )}
-                    {graduate.certificate_url && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full"
-                        asChild
-                      >
-                        <a 
-                          href={graduate.certificate_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                        >
-                          <Award className="mr-2 h-4 w-4" />
-                          Ver Certificado
-                        </a>
-                      </Button>
-                    )}
+                  {/* Bio */}
+                  {graduate.bio && (
+                    <p className="text-gray-700 text-sm line-clamp-2 mb-4">
+                      {graduate.bio}
+                    </p>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver Perfil
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => graduate.user_id && navigate(`/business-dashboard/messages?user=${graduate.user_id}`)}
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Contactar
+                    </Button>
+                  </div>
+
+                  {/* Activity indicator */}
+                  <div className="flex items-center gap-1 text-xs text-gray-500 mt-3">
+                    <Clock className="h-3 w-3" />
+                    Activo {formatDistanceToNow(new Date(graduate.graduation_date || graduate.enrollment_date || new Date()), { addSuffix: true, locale: es })}
                   </div>
                 </CardContent>
               </Card>
