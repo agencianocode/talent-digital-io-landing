@@ -24,14 +24,13 @@ const EXPERIENCE_LEVELS = [
 ];
 
 const PROFESSIONAL_CATEGORIES = [
-  { value: 'development', label: 'Desarrollo de Software' },
-  { value: 'design', label: 'Diseño' },
-  { value: 'marketing', label: 'Marketing Digital' },
-  { value: 'data', label: 'Ciencia de Datos' },
-  { value: 'management', label: 'Gestión de Proyectos' },
-  { value: 'sales', label: 'Ventas' },
-  { value: 'support', label: 'Soporte' },
-  { value: 'other', label: 'Otro' }
+  { value: 'atencion_cliente', label: 'Atención al cliente' },
+  { value: 'creativo', label: 'Creativo' },
+  { value: 'marketing', label: 'Marketing' },
+  { value: 'operaciones', label: 'Operaciones' },
+  { value: 'soporte_profesional', label: 'Soporte Profesional' },
+  { value: 'tecnologia_automatizaciones', label: 'Tecnología y Automatizaciones' },
+  { value: 'ventas', label: 'Ventas' }
 ];
 
 const SOCIAL_PLATFORMS = [
