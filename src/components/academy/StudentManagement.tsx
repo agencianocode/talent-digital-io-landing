@@ -138,6 +138,20 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
         newStatus 
       });
 
+      // Primero verificar si el estudiante existe
+      const { data: existingStudent, error: checkError } = await supabase
+        .from('academy_students')
+        .select('*')
+        .eq('academy_id', academyId)
+        .eq('student_email', studentEmail)
+        .single();
+
+      console.log('🔍 Verificando estudiante:', { existingStudent, checkError });
+
+      if (checkError || !existingStudent) {
+        throw new Error(`No se encontró el estudiante con email ${studentEmail}`);
+      }
+
       const updateData: any = { 
         status: newStatus
       };
@@ -147,18 +161,23 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
         updateData.graduation_date = new Date().toISOString().split('T')[0];
       }
 
+      console.log('📝 Actualizando con datos:', updateData);
+
       const { data, error } = await supabase
         .from('academy_students')
         .update(updateData)
-        .eq('academy_id', academyId)
-        .eq('student_email', studentEmail)
+        .eq('id', existingStudent.id) // Usar el ID en lugar de academy_id + email
         .select();
 
-      console.log('✅ Update result:', { data, error });
+      console.log('✅ Update result:', { data, error, updatedRows: data?.length || 0 });
 
       if (error) {
         console.error('❌ Error from Supabase:', error);
         throw error;
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error('No se actualizó ningún registro. Puede ser un problema de permisos.');
       }
 
       const statusLabels = {
