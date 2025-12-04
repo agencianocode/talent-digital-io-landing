@@ -5,7 +5,7 @@
 SELECT 
   p.user_id,
   p.full_name,
-  p.title,
+  tp.title,
   tp.skills
 FROM profiles p
 LEFT JOIN talent_profiles tp ON tp.user_id = p.user_id
@@ -24,16 +24,12 @@ WHERE tp.skills = ARRAY['automatizaciones', 'desarrollo No Code', 'product manag
 UPDATE talent_profiles tp
 SET skills = ARRAY[]::text[]
 WHERE tp.skills = ARRAY['automatizaciones', 'desarrollo No Code', 'product manager']::text[]
-  AND tp.user_id IN (
-    SELECT p.user_id 
-    FROM profiles p
-    WHERE p.title NOT ILIKE '%tecnolog%'
-      AND p.title NOT ILIKE '%automation%'
-      AND p.title NOT ILIKE '%no code%'
-      AND p.title NOT ILIKE '%product manager%'
-      AND p.title NOT ILIKE '%developer%'
-      AND p.title NOT ILIKE '%programador%'
-  );
+  AND tp.title NOT ILIKE '%tecnolog%'
+  AND tp.title NOT ILIKE '%automation%'
+  AND tp.title NOT ILIKE '%no code%'
+  AND tp.title NOT ILIKE '%product manager%'
+  AND tp.title NOT ILIKE '%developer%'
+  AND tp.title NOT ILIKE '%programador%';
 
 -- PASO 4: Verificar resultado
 SELECT 
@@ -47,18 +43,18 @@ FROM talent_profiles;
 SELECT 
   p.user_id,
   p.full_name,
-  p.title,
+  tp.title,
   tp.skills,
   CASE 
-    WHEN p.title ILIKE '%venta%' OR p.title ILIKE '%sales%' OR p.title ILIKE '%closer%' THEN 'Sugerencia: agregar skills de ventas'
-    WHEN p.title ILIKE '%marketing%' THEN 'Sugerencia: agregar skills de marketing'
-    WHEN p.title ILIKE '%diseño%' OR p.title ILIKE '%design%' THEN 'Sugerencia: agregar skills de diseño'
-    WHEN p.title ILIKE '%customer%' OR p.title ILIKE '%atención%' THEN 'Sugerencia: agregar skills de atención al cliente'
+    WHEN tp.title ILIKE '%venta%' OR tp.title ILIKE '%sales%' OR tp.title ILIKE '%closer%' THEN 'Sugerencia: agregar skills de ventas'
+    WHEN tp.title ILIKE '%marketing%' THEN 'Sugerencia: agregar skills de marketing'
+    WHEN tp.title ILIKE '%diseño%' OR tp.title ILIKE '%design%' THEN 'Sugerencia: agregar skills de diseño'
+    WHEN tp.title ILIKE '%customer%' OR tp.title ILIKE '%atención%' THEN 'Sugerencia: agregar skills de atención al cliente'
     ELSE 'Revisar manualmente'
   END as recomendacion
 FROM profiles p
 LEFT JOIN talent_profiles tp ON tp.user_id = p.user_id
 WHERE (tp.skills IS NULL OR tp.skills = '{}' OR array_length(tp.skills, 1) = 0)
-  AND p.title IS NOT NULL
+  AND tp.title IS NOT NULL
 ORDER BY p.created_at DESC;
 
