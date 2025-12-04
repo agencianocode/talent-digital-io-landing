@@ -516,7 +516,8 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
         'gohighlevel': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/gear.svg',
         'linkedin': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg',
         'outreach': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/mailchimp.svg',
-        'calendly': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/calendly.svg',
+        'calendly': 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/calendly.svg',
+        'airtable': 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/airtable.svg',
         'google ads': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/googleads.svg',
         'facebook ads': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg',
         'google analytics': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/googleanalytics.svg',
@@ -957,19 +958,23 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
               {data.tools.map((tool) => (
                 <div
                   key={tool}
-                  className="inline-flex items-center gap-2 bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-medium border border-gray-200 shadow-sm"
+                  className="inline-flex items-center gap-2 bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-medium border border-gray-200 shadow-sm whitespace-nowrap"
                 >
                   <img 
                     src={getToolIcon(tool)} 
                     alt={tool} 
-                    className="w-4 h-4" 
+                    className="w-4 h-4 flex-shrink-0" 
                     style={{ filter: 'invert(0.2)' }}
+                    onError={(e) => {
+                      // Fallback si la imagen no carga
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
-                  <span>{tool}</span>
+                  <span className="truncate max-w-[150px]" title={tool}>{tool}</span>
                   <button
                     type="button"
                     onClick={() => removeTool(tool)}
-                    className="inline-flex items-center justify-center w-4 h-4 ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                    className="inline-flex items-center justify-center w-4 h-4 ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -1053,21 +1058,25 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
                         }
                       }}
                       disabled={isAlreadyAdded || !canAdd}
-                      className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs border transition-colors ${
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border transition-colors whitespace-nowrap ${
                         isAlreadyAdded 
                           ? 'bg-green-50 border-green-200 text-green-700 cursor-not-allowed' 
                           : canAdd
                           ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'
                           : 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
                       }`}
+                      title={tool}
                     >
                       <img 
                         src={getToolIcon(tool)} 
                         alt={tool} 
-                        className="w-3 h-3" 
+                        className="w-3 h-3 flex-shrink-0" 
                         style={{ filter: isAlreadyAdded ? 'none' : 'invert(0.3)' }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
                       />
-                      {tool} {isAlreadyAdded && '✓'}
+                      <span className="inline-block">{tool} {isAlreadyAdded && '✓'}</span>
                     </button>
                 );
               })}
