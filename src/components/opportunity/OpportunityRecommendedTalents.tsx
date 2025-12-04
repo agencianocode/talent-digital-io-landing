@@ -185,6 +185,8 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
   }, [opportunityId]);
 
   const handleInvite = (userId: string) => {
+    // Navegar directamente al chat con parámetro user
+    // La página de mensajes manejará la creación/apertura de la conversación
     navigate(`/business-dashboard/messages?user=${userId}`);
   };
 
