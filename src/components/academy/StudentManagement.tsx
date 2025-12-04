@@ -132,16 +132,34 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
 
   const handleChangeStudentStatus = async (studentEmail: string, newStatus: 'enrolled' | 'graduated' | 'inactive') => {
     try {
-      const { error } = await supabase
-        .from('academy_students')
-        .update({ 
-          status: newStatus,
-          graduation_date: newStatus === 'graduated' ? new Date().toISOString().split('T')[0] : null
-        })
-        .eq('academy_id', academyId)
-        .eq('student_email', studentEmail);
+      console.log('🔄 Cambiando estado de estudiante:', { 
+        academyId, 
+        studentEmail, 
+        newStatus 
+      });
 
-      if (error) throw error;
+      const updateData: any = { 
+        status: newStatus
+      };
+
+      // Si se marca como graduado, agregar fecha de graduación
+      if (newStatus === 'graduated') {
+        updateData.graduation_date = new Date().toISOString().split('T')[0];
+      }
+
+      const { data, error } = await supabase
+        .from('academy_students')
+        .update(updateData)
+        .eq('academy_id', academyId)
+        .eq('student_email', studentEmail)
+        .select();
+
+      console.log('✅ Update result:', { data, error });
+
+      if (error) {
+        console.error('❌ Error from Supabase:', error);
+        throw error;
+      }
 
       const statusLabels = {
         'enrolled': 'Activo',
@@ -150,13 +168,15 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
       };
 
       toast.success(`Estudiante marcado como ${statusLabels[newStatus]}`);
-      loadStudents({ 
+      
+      // Recargar lista de estudiantes
+      await loadStudents({ 
         status: statusFilter !== 'all' ? statusFilter : undefined,
         search: searchTerm || undefined 
       });
     } catch (error) {
-      console.error('Error updating student status:', error);
-      toast.error('Error al actualizar el estado del estudiante');
+      console.error('❌ Error updating student status:', error);
+      toast.error(`Error al actualizar el estado: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
 
