@@ -492,20 +492,9 @@ export const useProfileData = () => {
   const validateProfile = useCallback((data: Partial<ProfileEditData>): ValidationResult => {
     const errors: Record<string, string> = {};
 
+    // Validaciones CRÍTICAS (bloquean el guardado)
     if (data.full_name && data.full_name.trim().length < 2) {
       errors.full_name = 'El nombre debe tener al menos 2 caracteres';
-    }
-
-    if (data.title && data.title.trim().length < 3) {
-      errors.title = 'El título debe tener al menos 3 caracteres';
-    }
-
-    if (data.bio && data.bio.trim().length < 50) {
-      errors.bio = 'La biografía debe tener al menos 50 caracteres';
-    }
-
-    if (data.skills && data.skills.length === 0) {
-      errors.skills = 'Debes agregar al menos una habilidad';
     }
 
     if (data.hourly_rate_min && data.hourly_rate_max && data.hourly_rate_min > data.hourly_rate_max) {
@@ -515,6 +504,12 @@ export const useProfileData = () => {
     if (data.video_presentation_url && !isValidVideoUrl(data.video_presentation_url)) {
       errors.video_presentation_url = 'URL de video no válida';
     }
+
+    // Validaciones OPCIONALES (ya no bloquean el guardado)
+    // Solo muestran warnings pero permiten guardar
+    // - Title mínimo 3 caracteres: ahora permite vacío o más corto
+    // - Bio mínimo 50 caracteres: ahora permite más corto
+    // - Skills al menos 1: ahora permite sin skills
 
     return {
       isValid: Object.keys(errors).length === 0,
