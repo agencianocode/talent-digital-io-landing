@@ -2,16 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
-import { MapPin, MessageSquare, Users } from 'lucide-react';
+import { MessageSquare, Users } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 import { toast } from 'sonner';
+import { UnifiedTalentCard } from '@/components/talent/UnifiedTalentCard';
 
 interface RecommendedTalent {
   id: string;
@@ -288,68 +287,27 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {talents.map(talent => (
-              <div
+              <UnifiedTalentCard
                 key={talent.id}
-                className="p-4 border rounded-lg hover:shadow-md transition-shadow space-y-3"
-              >
-              <div className="flex items-start gap-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={talent.avatar_url || undefined} alt={talent.full_name} />
-                  <AvatarFallback>
-                    {talent.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">{talent.full_name}</h3>
-                  <p className="text-sm text-muted-foreground truncate">{talent.title}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <MapPin className="h-3 w-3" />
-                <span className="truncate">{talent.location}</span>
-              </div>
-
-              {talent.experience_level && (
-                <Badge variant="secondary" className="text-xs">
-                  {talent.experience_level}
-                </Badge>
-              )}
-
-              {talent.skills && talent.skills.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {talent.skills.slice(0, 3).map((skill, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {skill}
-                    </Badge>
-                  ))}
-                  {talent.skills.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{talent.skills.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => window.open(`/business-dashboard/talent-profile/${talent.id}`, '_blank')}
-                >
-                  Ver Perfil
-                </Button>
-                <Button
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleInvite(talent)}
-                >
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  Invitar
-                </Button>
-              </div>
-              </div>
+                userId={talent.id}
+                fullName={talent.full_name}
+                title={talent.title}
+                avatarUrl={talent.avatar_url}
+                location={talent.location}
+                skills={talent.skills}
+                primaryAction={{
+                  label: 'Ver Perfil',
+                  onClick: () => window.open(`/business-dashboard/talent-profile/${talent.id}`, '_blank'),
+                  variant: 'outline'
+                }}
+                secondaryAction={{
+                  label: 'Invitar',
+                  icon: <MessageSquare className="h-4 w-4 mr-2" />,
+                  onClick: () => handleInvite(talent)
+                }}
+                showBio={false}
+                maxSkills={3}
+              />
             ))}
           </div>
         </CardContent>

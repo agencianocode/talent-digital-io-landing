@@ -2,21 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Search, 
-  MapPin, 
-  Eye,
   MessageCircle,
-  Clock,
-  Github,
   Plus,
   ChevronDown,
   X
@@ -24,9 +18,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useMessages } from '@/hooks/useMessages';
-import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
+import { UnifiedTalentCard } from '@/components/talent/UnifiedTalentCard';
 
 // Real talent interfaces based on Supabase tables
 interface RealTalent {
@@ -1040,121 +1033,54 @@ const TalentDiscovery = () => {
                       </CardContent>
                     </Card>
                   ) : (
-                    /* Talent Cards */
+                    /* Talent Cards - Componente Unificado */
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredTalents.map((talent) => (
-                        <Card 
-                          key={talent.id} 
-                          className="hover:shadow-lg transition-shadow cursor-pointer group flex flex-col"
-                          onClick={() => handleViewProfile(talent.user_id)}
-                        >
-                          <CardContent className="p-6 flex flex-col flex-1">
-                            {/* Header */}
-                            <div className="flex items-start gap-4 mb-4">
-                              <div className="relative">
-                                <Avatar className="h-16 w-16">
-                                  <AvatarImage src={talent.avatar_url || undefined} />
-                                  <AvatarFallback>
-                                    {talent.full_name.split(' ').map(n => n[0]).join('')}
-                                  </AvatarFallback>
-                                </Avatar>
-                              </div>
-                              
-                              <div className="flex-1">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
-                                      {talent.full_name}
-                                    </h3>
-                                    <p className="text-gray-600 text-sm">{talent.title}</p>
-                                  </div>
-                                  
-                                  <div className="flex flex-col items-end gap-1">
-                                    <div className="flex items-center gap-1">
-                                      {talent.is_premium && (
-                                        <Badge className="bg-primary text-primary-foreground text-xs flex items-center gap-1">
-                                          <Plus className="h-3 w-3" />
-                                          Premium
-                                        </Badge>
-                                      )}
-                                      {!talent.is_complete && !talent.is_premium && (
-                                        <Badge className="bg-yellow-100 text-yellow-800 text-xs whitespace-nowrap">
-                                          Perfil incompleto
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    
-                    {/* Academy affiliation badge */}
-                    <TalentCardAcademyBadge 
-                      userId={talent.user_id}
-                      userEmail={talent.email || undefined}
-                      compact={true}
-                    />
-                                  </div>
-                                </div>
-                                
-                                <div className="flex items-center gap-1 text-sm text-gray-600 mt-2">
-                                  <MapPin className="h-3 w-3" />
-                                  <span>{talent.city && talent.country ? `${talent.city}, ${talent.country}` : 'Ubicación no especificada'}</span>
-                                </div>
-                              </div>
-                            </div>
+                      {filteredTalents.map((talent) => {
+                        // Preparar datos de academia si existen
+                        const academyBadgeData = talent.email ? {
+                          userId: talent.user_id,
+                          userEmail: talent.email
+                        } : null;
 
-                            {/* Bio */}
-                            <p className="text-gray-700 text-sm line-clamp-2 mb-4">
-                              {talent.bio}
-                            </p>
-
-                            {/* Indicators - Video y Portfolio removidos */}
-                            {talent.github_url && (
-                              <div className="flex items-center gap-3 mb-4">
-                                <div className="flex items-center gap-1 text-gray-600">
-                                  <Github className="h-3 w-3" />
-                                  <span className="text-xs">GitHub</span>
-                                </div>
+                        return (
+                          <div key={talent.id} className="relative">
+                            {/* Academy Badge absoluto si es premium */}
+                            {academyBadgeData && (
+                              <div className="absolute top-2 right-2 z-10">
+                                <TalentCardAcademyBadge 
+                                  userId={academyBadgeData.userId}
+                                  userEmail={academyBadgeData.userEmail}
+                                  compact={true}
+                                />
                               </div>
                             )}
-
-                            {/* Actions - empujado al final de la card */}
-                            <div className="flex gap-2 mt-auto pt-4">
-                              <Button 
-                                size="sm" 
-                                className="flex-1"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleViewProfile(talent.user_id);
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                Ver Perfil
-                              </Button>
-                              
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleContactTalent(talent);
-                                }}
-                              >
-                                <MessageCircle className="h-4 w-4 mr-2" />
-                                Contactar
-                              </Button>
-                            </div>
-
-                            {/* Last Active */}
-                            <div className="text-xs text-gray-500 mt-3 flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span>
-                                Activo {formatDistanceToNow(new Date(talent.last_active || talent.updated_at), { 
-                                  addSuffix: true, 
-                                  locale: es 
-                                })}
-                              </span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            
+                            <UnifiedTalentCard
+                              userId={talent.user_id}
+                              fullName={talent.full_name}
+                              title={talent.title}
+                              avatarUrl={talent.avatar_url}
+                              city={talent.city || undefined}
+                              country={talent.country || undefined}
+                              bio={talent.bio}
+                              skills={talent.skills}
+                              profileCompleteness={talent.profile_completeness}
+                              lastActive={talent.last_active || talent.updated_at}
+                              primaryAction={{
+                                label: 'Ver Perfil',
+                                onClick: () => handleViewProfile(talent.user_id)
+                              }}
+                              secondaryAction={{
+                                label: 'Contactar',
+                                icon: <MessageCircle className="h-4 w-4 mr-2" />,
+                                onClick: () => handleContactTalent(talent)
+                              }}
+                              showBio={true}
+                              maxSkills={3}
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </>
