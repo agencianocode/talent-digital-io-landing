@@ -55,9 +55,9 @@ interface PublishServiceForm {
   
   // Freemium user fields (for publishing request)
   companyName: string;
-  budget: string;
+  freemiumPriceMin: string;
+  freemiumPriceMax: string;
   timeline: string;
-  requirements: string;
 }
 
 const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
@@ -85,9 +85,9 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
     location: '',
     // Freemium
     companyName: '',
-    budget: '',
-    timeline: '',
-    requirements: ''
+    freemiumPriceMin: '',
+    freemiumPriceMax: '',
+    timeline: ''
   });
 
   // Verificar si es usuario Freemium o Premium
@@ -124,15 +124,6 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
     value: name,
     label: name
   }));
-
-  const budgetRanges = [
-    { value: '500-1000', label: '$500 - $1,000' },
-    { value: '1000-2500', label: '$1,000 - $2,500' },
-    { value: '2500-5000', label: '$2,500 - $5,000' },
-    { value: '5000-10000', label: '$5,000 - $10,000' },
-    { value: '10000+', label: 'Más de $10,000' },
-    { value: 'custom', label: 'Presupuesto personalizado' }
-  ];
 
   const timelineOptions = [
     { value: '1-2 semanas', label: 'Urgente (1-2 semanas)' },
@@ -197,16 +188,21 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
           ? (formData.companyName || activeCompany?.name || '')
           : (profile?.full_name || contactName);
 
+        // Crear string de presupuesto con el rango
+        const budgetRange = formData.freemiumPriceMin && formData.freemiumPriceMax
+          ? `$${formData.freemiumPriceMin} - $${formData.freemiumPriceMax} USD`
+          : 'No especificado';
+
         await marketplaceService.createPublishingRequest({
           contact_name: contactName,
           contact_email: contactEmail,
           contact_phone: contactPhone || undefined,
           company_name: companyName,
           service_type: formData.serviceType,
-          budget: formData.budget,
+          budget: budgetRange,
           timeline: formData.timeline,
           description: formData.description,
-          requirements: formData.requirements
+          requirements: undefined
         });
         
         setIsSubmitted(true);
@@ -242,9 +238,9 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
       deliveryTime: '',
       location: '',
       companyName: '',
-      budget: '',
-      timeline: '',
-      requirements: ''
+      freemiumPriceMin: '',
+      freemiumPriceMax: '',
+      timeline: ''
     });
     setIsSubmitted(false);
     onClose();
@@ -260,6 +256,9 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
       formData.description.trim() !== ''
     : (isFreemiumBusiness ? (formData.companyName.trim() !== '' || activeCompany?.name) : true) &&
       formData.serviceType !== '' &&
+      formData.freemiumPriceMin.trim() !== '' &&
+      formData.freemiumPriceMax.trim() !== '' &&
+      formData.timeline !== '' &&
       formData.description.trim() !== '' &&
       user?.email && // Validar que el usuario tenga email
       (profile?.full_name || user?.email); // Validar que tenga nombre o email
@@ -538,23 +537,33 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Presupuesto</Label>
-                    <Select
-                      value={formData.budget}
-                      onValueChange={(value) => handleInputChange('budget', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar presupuesto" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {budgetRanges.map((range) => (
-                          <SelectItem key={range.value} value={range.value}>
-                            {range.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="freemiumPriceMin">Precio Mínimo (USD) *</Label>
+                      <Input
+                        id="freemiumPriceMin"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.freemiumPriceMin}
+                        onChange={(e) => handleInputChange('freemiumPriceMin', e.target.value)}
+                        placeholder="500"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="freemiumPriceMax">Precio Máximo (USD) *</Label>
+                      <Input
+                        id="freemiumPriceMax"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.freemiumPriceMax}
+                        onChange={(e) => handleInputChange('freemiumPriceMax', e.target.value)}
+                        placeholder="1000"
+                        required
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Timeline</Label>
@@ -594,16 +603,6 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                   <p className="text-xs text-muted-foreground">
                     💡 Puedes copiar y pegar texto con viñetas desde Word, Google Docs, etc. El formato se mantendrá.
                   </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="requirements">Requisitos específicos</Label>
-                  <Textarea
-                    id="requirements"
-                    value={formData.requirements}
-                    onChange={(e) => handleInputChange('requirements', e.target.value)}
-                    placeholder="Especifica cualquier requisito especial, experiencia necesaria, etc."
-                    rows={3}
-                  />
                 </div>
               </div>
 
