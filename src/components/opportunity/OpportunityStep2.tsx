@@ -342,43 +342,7 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
       );
     }
 
-    if (data.paymentMethod === 'monthly') {
-      return (
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-900">
-            Máximo de horas por mes
-          </Label>
-          <div className="flex items-center space-x-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onChange({ maxHoursPerMonth: Math.max(0, data.maxHoursPerMonth - 1) })}
-              disabled={data.maxHoursPerMonth <= 0}
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-            <Input
-              type="number"
-              value={data.maxHoursPerMonth}
-              onChange={(e) => onChange({ maxHoursPerMonth: parseInt(e.target.value) || 0 })}
-              className="w-20 text-center h-10"
-              min="0"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onChange({ maxHoursPerMonth: data.maxHoursPerMonth + 1 })}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-            <span className="text-sm text-gray-500">Opcional</span>
-          </div>
-        </div>
-      );
-    }
-
+    // Campo "Máximo de horas por mes" removido según solicitud del usuario
     return null;
   };
 
