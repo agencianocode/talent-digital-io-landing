@@ -419,7 +419,7 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                     required
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Categoría *</Label>
                     <Select
@@ -438,34 +438,6 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="priceMin">Precio Mínimo (USD) *</Label>
-                      <Input
-                        id="priceMin"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.priceMin}
-                        onChange={(e) => handleInputChange('priceMin', e.target.value)}
-                        placeholder="500"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="priceMax">Precio Máximo (USD) *</Label>
-                      <Input
-                        id="priceMax"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.priceMax}
-                        onChange={(e) => handleInputChange('priceMax', e.target.value)}
-                        placeholder="1000"
-                        required
-                      />
-                    </div>
-                  </div>
                   <div className="space-y-2">
                     <Label>Tiempo de entrega *</Label>
                     <Select
@@ -483,6 +455,34 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="priceMin">Precio Mínimo (USD) *</Label>
+                    <Input
+                      id="priceMin"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.priceMin}
+                      onChange={(e) => handleInputChange('priceMin', e.target.value)}
+                      placeholder="500"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="priceMax">Precio Máximo (USD) *</Label>
+                    <Input
+                      id="priceMax"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.priceMax}
+                      onChange={(e) => handleInputChange('priceMax', e.target.value)}
+                      placeholder="1000"
+                      required
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
