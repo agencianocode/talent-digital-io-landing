@@ -64,8 +64,9 @@ class MarketplaceService {
 
       if (error) throw error;
 
-      // Get unique user IDs
+      // Get unique user IDs and company IDs
       const userIds = [...new Set((data || []).map((service: any) => service.user_id).filter(Boolean))];
+      const companyIds = [...new Set((data || []).map((service: any) => service.company_id).filter(Boolean))];
       
       // Fetch profiles for all users
       let profilesMap = new Map();
@@ -82,15 +83,47 @@ class MarketplaceService {
         }
       }
 
-      // Transform data to include user info
+      // Fetch company info for services with company_id
+      let companiesMap = new Map();
+      if (companyIds.length > 0) {
+        const { data: companiesData } = await supabase
+          .from('companies')
+          .select('id, name, logo_url')
+          .in('id', companyIds);
+        
+        if (companiesData) {
+          companiesMap = new Map(
+            companiesData.map((c: any) => [c.id, { name: c.name, logo_url: c.logo_url }])
+          );
+        }
+      }
+
+      // Transform data to include user or company info
       const servicesWithUser: TalentServiceWithUser[] = (data || []).map((service: any) => {
-        const profile = profilesMap.get(service.user_id);
+        let providerName = 'Usuario';
+        let providerAvatar = null;
+
+        if (service.company_id) {
+          // Servicio publicado a nombre de empresa
+          const company = companiesMap.get(service.company_id);
+          if (company) {
+            providerName = company.name;
+            providerAvatar = company.logo_url;
+          }
+        } else {
+          // Servicio publicado a nombre personal
+          const profile = profilesMap.get(service.user_id);
+          if (profile) {
+            providerName = profile.full_name || 'Usuario';
+            providerAvatar = profile.avatar_url;
+          }
+        }
         
         return {
           ...service,
           tags: Array.isArray(service.tags) ? service.tags : [],
-          user_name: profile?.full_name || 'Usuario',
-          user_avatar: profile?.avatar_url || null
+          user_name: providerName,
+          user_avatar: providerAvatar
         };
       });
 
