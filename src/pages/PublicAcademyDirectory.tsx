@@ -22,6 +22,7 @@ interface Graduate {
   title?: string | null;
   bio?: string | null;
   linkedin?: string | null;
+  skills?: string[];
 }
 
 interface AcademyInfo {
@@ -120,7 +121,36 @@ export default function PublicAcademyDirectory() {
       console.log('✅ Visible students (enrolled/graduated):', visibleStudents.length);
       console.log('🚫 Hidden students (pending/inactive/etc):', (graduatesData?.length || 0) - visibleStudents.length);
 
-      setGraduates(visibleStudents);
+      // Obtener skills de talent_profiles para los estudiantes visibles
+      if (visibleStudents.length > 0) {
+        const userIds = visibleStudents.map((s: Graduate) => s.user_id).filter(Boolean) as string[];
+        
+        if (userIds.length > 0) {
+          const { data: talentProfilesData } = await supabase
+            .from('talent_profiles')
+            .select('user_id, skills')
+            .in('user_id', userIds);
+
+          if (talentProfilesData) {
+            // Agregar skills a cada estudiante
+            const studentsWithSkills = visibleStudents.map((student: Graduate) => {
+              const talentProfile = talentProfilesData.find(tp => tp.user_id === student.user_id);
+              return {
+                ...student,
+                skills: talentProfile?.skills || []
+              };
+            });
+            
+            setGraduates(studentsWithSkills);
+          } else {
+            setGraduates(visibleStudents);
+          }
+        } else {
+          setGraduates(visibleStudents);
+        }
+      } else {
+        setGraduates(visibleStudents);
+      }
     } catch (error) {
       console.error('Error loading academy data:', error);
       navigate('/404');
@@ -215,6 +245,7 @@ export default function PublicAcademyDirectory() {
                       city={graduate.city || undefined}
                       country={graduate.country || undefined}
                       bio={graduate.bio || undefined}
+                      skills={graduate.skills}
                       userEmail={graduate.student_email}
                       lastActive={graduate.enrollment_date || undefined}
                       primaryAction={{
@@ -253,9 +284,10 @@ export default function PublicAcademyDirectory() {
                       avatarUrl={graduate.avatar_url}
                       city={graduate.city || undefined}
                       country={graduate.country || undefined}
-                      bio={graduate.bio || undefined}
-                      userEmail={graduate.student_email}
-                      lastActive={graduate.graduation_date || undefined}
+                bio={graduate.bio || undefined}
+                skills={graduate.skills}
+                userEmail={graduate.student_email}
+                lastActive={graduate.graduation_date || undefined}
                       primaryAction={{
                         label: 'Ver Perfil',
                         onClick: () => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')
@@ -301,6 +333,7 @@ export default function PublicAcademyDirectory() {
                 city={graduate.city || undefined}
                 country={graduate.country || undefined}
                 bio={graduate.bio || undefined}
+                skills={graduate.skills}
                 userEmail={graduate.student_email}
                 lastActive={graduate.graduation_date || graduate.enrollment_date || undefined}
                 primaryAction={{
