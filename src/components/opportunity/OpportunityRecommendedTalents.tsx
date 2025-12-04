@@ -18,6 +18,7 @@ interface RecommendedTalent {
   avatar_url: string | null;
   title: string;
   bio?: string;
+  email?: string;
   skills: string[];
   experience_level: string | null;
   location: string;
@@ -88,13 +89,29 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
         // Get user IDs
         const userIds = talentProfiles.map(tp => tp.user_id);
 
-        // Fetch user profiles
-        const { data: userProfiles, error: userError } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, avatar_url, city, country, profile_completeness')
-          .in('user_id', userIds);
+        // Fetch user profiles and emails in parallel
+        const [
+          { data: userProfiles, error: userError },
+          { data: userEmails, error: emailsError }
+        ] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('user_id, full_name, avatar_url, city, country, profile_completeness')
+            .in('user_id', userIds),
+          supabase
+            .rpc('get_user_emails_by_ids', { user_ids: userIds }) as unknown as Promise<{ 
+              data: Array<{ user_id: string; email: string; avatar_url: string | null }> | null;
+              error: any;
+            }>
+        ]);
 
         if (userError) throw userError;
+        if (emailsError) console.warn('Error fetching user emails:', emailsError);
+
+        // Create email map
+        const userEmailsMap = new Map(
+          (userEmails || []).map((ue: any) => [ue.user_id, ue.email])
+        );
 
         // Normalize opportunity skills for comparison
         const normalizedOppSkills = skills.map(s => s.toLowerCase().trim());
@@ -172,6 +189,7 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
               avatar_url: userProfile.avatar_url || null,
               title: talent.title || 'Sin título',
               bio: talent.bio,
+              email: userEmailsMap.get(talent.user_id),
               skills: talent.skills || [],
               experience_level: talent.experience_level || null,
               location: talent.city && talent.country
@@ -298,6 +316,7 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
                   location={talent.location}
                   bio={talent.bio}
                   skills={talent.skills}
+                  userEmail={talent.email}
                   primaryAction={{
                     label: 'Ver Perfil',
                     onClick: () => window.open(`/business-dashboard/talent-profile/${talent.id}`, '_blank')
