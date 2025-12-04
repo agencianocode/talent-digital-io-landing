@@ -511,30 +511,34 @@ const TalentDiscovery = () => {
         );
       }
       
-      // Category filter con palabras clave y sinónimos
+      // Category filter con palabras clave más específicas
+      // Prioriza título y skills, usa bio solo como último recurso
       if (categoryFilter.length > 0) {
         const categoryKeywords: Record<string, string[]> = {
-          'Atención al Cliente': ['atención', 'cliente', 'customer', 'success', 'servicio', 'soporte'],
-          'Creativo': ['creativo', 'diseño', 'design', 'gráfico', 'ux', 'ui', 'web', 'logo', 'brand'],
-          'Marketing': ['marketing', 'publicidad', 'ads', 'social media', 'content', 'seo', 'digital'],
-          'Operaciones': ['operaciones', 'operations', 'logística', 'procesos', 'administra'],
-          'Soporte Profesional': ['soporte', 'support', 'asistente', 'assistant', 'ayuda'],
-          'Tecnología y Automatizaciones': ['tecnología', 'tech', 'automatiz', 'automation', 'desarrollo', 'developer', 'programación', 'software', 'ia', 'ai', 'no code'],
-          'Ventas': ['venta', 'sales', 'closer', 'comercial', 'sdr', 'bdr', 'representante']
+          'Atención al Cliente': ['atención al cliente', 'customer success', 'customer service', 'servicio al cliente', 'soporte cliente'],
+          'Creativo': ['diseñador', 'diseño', 'designer', 'creativo', 'gráfico', 'ux', 'ui', 'ilustrador', 'editor video'],
+          'Marketing': ['marketing', 'marketero', 'publicista', 'growth', 'sem', 'seo', 'content manager', 'community manager'],
+          'Operaciones': ['operaciones', 'operations manager', 'logística', 'supply chain'],
+          'Soporte Profesional': ['asistente virtual', 'virtual assistant', 'contador', 'abogado', 'legal', 'recursos humanos', 'hr'],
+          'Tecnología y Automatizaciones': ['desarrollador', 'developer', 'programador', 'ingeniero software', 'software engineer', 'automatizaciones', 'no code', 'low code', 'especialista no code', 'inteligencia artificial', 'data scientist', 'analista de datos'],
+          'Ventas': ['ventas', 'sales', 'closer', 'vendedor', 'comercial', 'sdr', 'bdr', 'ejecutivo comercial']
         };
 
         filtered = filtered.filter(talent => {
           const titleLower = talent.title.toLowerCase();
-          const bioLower = talent.bio.toLowerCase();
-          const skillsLower = (talent.skills || []).map((s: string) => s.toLowerCase()).join(' ');
+          const skillsText = (talent.skills || []).join(' ').toLowerCase();
           
           return categoryFilter.some(cat => {
             const keywords = categoryKeywords[cat] || [cat.toLowerCase()];
-            return keywords.some(keyword => 
-              titleLower.includes(keyword) || 
-              bioLower.includes(keyword) ||
-              skillsLower.includes(keyword)
-            );
+            
+            // Primero buscar en título (peso alto)
+            const inTitle = keywords.some(keyword => titleLower.includes(keyword.toLowerCase()));
+            
+            // Segundo buscar en skills (peso medio-alto)
+            const inSkills = keywords.some(keyword => skillsText.includes(keyword.toLowerCase()));
+            
+            // Si está en título o skills, incluir el perfil
+            return inTitle || inSkills;
           });
         });
       }
