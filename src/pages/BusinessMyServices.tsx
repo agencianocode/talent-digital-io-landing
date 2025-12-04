@@ -166,7 +166,11 @@ const BusinessMyServices: React.FC = () => {
     }
   };
 
-  const allServices = [...personalServices, ...companyServices];
+  // Filtrar servicios personales para excluir los que tienen company_id (para evitar duplicados)
+  const personalServicesOnly = personalServices.filter(service => !service.company_id);
+  
+  // Combinar servicios personales (sin company_id) + servicios de empresa (con company_id)
+  const allServices = [...personalServicesOnly, ...companyServices];
   const isLoading = loadingPersonal || isLoadingCompanyServices;
 
   return (
