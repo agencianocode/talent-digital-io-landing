@@ -955,31 +955,38 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
           {/* Display selected tools as chips */}
           {data.tools && data.tools.length > 0 && (
             <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg min-h-[48px]">
-              {data.tools.map((tool) => (
-                <div
-                  key={tool}
-                  className="inline-flex items-center gap-2 bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-medium border border-gray-200 shadow-sm"
-                >
-                  <img 
-                    src={getToolIcon(tool)} 
-                    alt={tool} 
-                    className="w-4 h-4 flex-shrink-0" 
-                    style={{ filter: 'invert(0.2)' }}
-                    onError={(e) => {
-                      // Fallback si la imagen no carga
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                  <span>{tool}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeTool(tool)}
-                    className="inline-flex items-center justify-center w-4 h-4 ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              {data.tools.map((tool) => {
+                // Debug: Log si es Airtable para ver el valor real
+                if (tool.toLowerCase().includes('airt')) {
+                  console.log('🔍 Tool que contiene "airt":', { tool, length: tool.length, chars: tool.split('') });
+                }
+                
+                return (
+                  <div
+                    key={tool}
+                    className="inline-flex items-center gap-2 bg-white text-gray-800 px-3 py-1 rounded-full text-sm font-medium border border-gray-200 shadow-sm"
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+                    <img 
+                      src={getToolIcon(tool)} 
+                      alt={tool} 
+                      className="w-4 h-4 flex-shrink-0" 
+                      style={{ filter: 'invert(0.2)' }}
+                      onError={(e) => {
+                        // Fallback si la imagen no carga
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                    <span className="inline-block">{tool}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeTool(tool)}
+                      className="inline-flex items-center justify-center w-4 h-4 ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
           
