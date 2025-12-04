@@ -28,11 +28,16 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const searchCompanies = async (query: string) => {
+    console.log('🔍 searchCompanies called with query:', query);
+    
     if (query.length < 2) {
+      console.log('❌ Query too short (<2 chars), not searching');
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
+
+    console.log('✅ Query length OK, searching in Supabase...');
 
     try {
       const { data: companies, error } = await supabase
@@ -42,18 +47,20 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
         .limit(5);
 
       if (error) {
-        console.error('Error searching companies:', error);
+        console.error('❌ Error searching companies:', error);
         setSuggestions([]);
       } else {
+        console.log('✅ Supabase response received:', { totalCompanies: companies?.length || 0 });
+        
         const companyList = companies?.map(c => ({
           id: c.id,
           name: c.name,
           logo_url: c.logo_url
         })) || [];
         
-        console.log('Company search results:', companyList);
+        console.log('📋 Company search results:', companyList);
         companyList.forEach(company => {
-          console.log(`Company: ${company.name}, Logo URL: ${company.logo_url}, ID: ${company.id}`);
+          console.log(`  - ${company.name} (ID: ${company.id})`);
         });
         
         // Siempre agregar la opción de crear nueva empresa
@@ -62,22 +69,30 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
           { name: `Crear "${query}"`, logo_url: null, id: 'create-new' }
         ];
         
+        console.log('📊 Final suggestions array:', { count: finalSuggestions.length, suggestions: finalSuggestions.map(s => s.name) });
+        
         setSuggestions(finalSuggestions);
         setShowSuggestions(finalSuggestions.length > 0);
+        
+        console.log('🎯 State updated - showSuggestions:', finalSuggestions.length > 0);
       }
     } catch (error) {
-      console.error('Error searching companies:', error);
+      console.error('💥 Exception in searchCompanies:', error);
       setSuggestions([]);
     }
   };
 
   const handleCompanyNameChange = (value: string) => {
+    console.log('📝 handleCompanyNameChange called:', { value, isIndividual });
     setCompanyName(value);
     setIsValid(value.trim().length > 0);
     onCompanyNameChange(value);
     
     if (!isIndividual) {
+      console.log('🚀 Calling searchCompanies (not individual)');
       searchCompanies(value);
+    } else {
+      console.log('⏭️ Skipping search (is individual)');
     }
   };
 
