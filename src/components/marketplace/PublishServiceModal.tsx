@@ -577,7 +577,9 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
               {/* Detalles del Servicio */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Detalles del Servicio</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                {/* Primera fila: Tipo de Servicio y Timeline */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Tipo de Servicio *</Label>
                     <Select
@@ -596,42 +598,14 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="freemiumPriceMin">Precio Mínimo (USD) *</Label>
-                      <Input
-                        id="freemiumPriceMin"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.freemiumPriceMin}
-                        onChange={(e) => handleInputChange('freemiumPriceMin', e.target.value)}
-                        placeholder="500"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="freemiumPriceMax">Precio Máximo (USD) *</Label>
-                      <Input
-                        id="freemiumPriceMax"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.freemiumPriceMax}
-                        onChange={(e) => handleInputChange('freemiumPriceMax', e.target.value)}
-                        placeholder="1000"
-                        required
-                      />
-                    </div>
-                  </div>
                   <div className="space-y-2">
-                    <Label>Timeline</Label>
+                    <Label>Tiempo de Entrega *</Label>
                     <Select
                       value={formData.timeline}
                       onValueChange={(value) => handleInputChange('timeline', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar timeline" />
+                        <SelectValue placeholder="Seleccionar tiempo" />
                       </SelectTrigger>
                       <SelectContent>
                         {timelineOptions.map((option) => (
@@ -641,6 +615,36 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+
+                {/* Segunda fila: Precios */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="freemiumPriceMin">Precio Mínimo (USD) *</Label>
+                    <Input
+                      id="freemiumPriceMin"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.freemiumPriceMin}
+                      onChange={(e) => handleInputChange('freemiumPriceMin', e.target.value)}
+                      placeholder="500"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="freemiumPriceMax">Precio Máximo (USD) *</Label>
+                    <Input
+                      id="freemiumPriceMax"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.freemiumPriceMax}
+                      onChange={(e) => handleInputChange('freemiumPriceMax', e.target.value)}
+                      placeholder="1000"
+                      required
+                    />
                   </div>
                 </div>
               </div>
