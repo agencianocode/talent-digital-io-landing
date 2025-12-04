@@ -36,6 +36,7 @@ interface RealTalent {
   full_name: string;
   title: string;
   bio: string;
+  skills?: string[];
   avatar_url?: string | null;
   city?: string | null;
   country?: string | null;
@@ -119,6 +120,7 @@ const TalentDiscovery = () => {
           user_id,
           title,
           bio,
+          skills,
           portfolio_url,
           years_experience,
           experience_level,
@@ -338,6 +340,7 @@ const TalentDiscovery = () => {
           full_name: profile.full_name || 'Sin nombre',
           title: talentProfile?.title || 'Talento Digital',
           bio: talentProfile?.bio || 'Sin descripción',
+          skills: talentProfile?.skills || [],
           avatar_url: avatarUrl,
           city: profile.city,
           country: profile.country,
@@ -523,11 +526,14 @@ const TalentDiscovery = () => {
         filtered = filtered.filter(talent => {
           const titleLower = talent.title.toLowerCase();
           const bioLower = talent.bio.toLowerCase();
+          const skillsLower = (talent.skills || []).map((s: string) => s.toLowerCase()).join(' ');
           
           return categoryFilter.some(cat => {
             const keywords = categoryKeywords[cat] || [cat.toLowerCase()];
             return keywords.some(keyword => 
-              titleLower.includes(keyword) || bioLower.includes(keyword)
+              titleLower.includes(keyword) || 
+              bioLower.includes(keyword) ||
+              skillsLower.includes(keyword)
             );
           });
         });
