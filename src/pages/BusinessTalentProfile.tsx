@@ -371,11 +371,14 @@ const BusinessTalentProfile = () => {
                     )}
                     </div>
                   
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    <Badge variant="secondary">automatizaciones</Badge>
-                    <Badge variant="secondary">desarrollo No Code</Badge>
-                    <Badge variant="secondary">product manager</Badge>
-                  </div>
+                  {/* Skills */}
+                  {talentProfile?.skills && talentProfile.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {talentProfile.skills.map((skill: string, index: number) => (
+                        <Badge key={index} variant="secondary">{skill}</Badge>
+                      ))}
+                    </div>
+                  )}
                   
                   <Button onClick={handleContact} className="w-full">
                     <MessageCircle className="h-4 w-4 mr-2" />
