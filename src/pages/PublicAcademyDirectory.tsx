@@ -369,32 +369,23 @@ export default function PublicAcademyDirectory() {
             ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {graduates.map((graduate) => (
-              <div key={graduate.student_id} className="relative">
-                <UnifiedTalentCard
-                  userId={graduate.user_id || ''}
-                  fullName={graduate.student_name || 'Graduado'}
-                  title={graduate.title || (graduate.status === 'graduated' ? 'Graduado' : 'Estudiante')}
-                  avatarUrl={graduate.avatar_url}
-                  city={graduate.city || undefined}
-                  country={graduate.country || undefined}
-                  bio={graduate.bio || undefined}
-                  lastActive={graduate.graduation_date || graduate.enrollment_date || undefined}
-                  primaryAction={{
-                    label: 'Ver Perfil',
-                    onClick: () => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')
-                  }}
-                  showBio={true}
-                />
-                
-                {/* Academy Badge en esquina superior derecha */}
-                <div className="absolute top-4 right-4 z-10">
-                  <TalentCardAcademyBadge 
-                    userId={graduate.user_id || ''}
-                    userEmail={graduate.student_email}
-                    compact={true}
-                  />
-                </div>
-              </div>
+              <UnifiedTalentCard
+                key={graduate.student_id}
+                userId={graduate.user_id || ''}
+                fullName={graduate.student_name || 'Graduado'}
+                title={graduate.title || (graduate.status === 'graduated' ? 'Graduado' : 'Estudiante')}
+                avatarUrl={graduate.avatar_url}
+                city={graduate.city || undefined}
+                country={graduate.country || undefined}
+                bio={graduate.bio || undefined}
+                userEmail={graduate.student_email}
+                lastActive={graduate.graduation_date || graduate.enrollment_date || undefined}
+                primaryAction={{
+                  label: 'Ver Perfil',
+                  onClick: () => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')
+                }}
+                showBio={true}
+              />
             ))}
           </div>
             )}

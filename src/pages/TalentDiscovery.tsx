@@ -18,7 +18,6 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useMessages } from '@/hooks/useMessages';
-import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 import { UnifiedTalentCard } from '@/components/talent/UnifiedTalentCard';
 
 // Real talent interfaces based on Supabase tables
@@ -1037,41 +1036,30 @@ const TalentDiscovery = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filteredTalents.map((talent) => {
                         return (
-                          <div key={talent.id} className="relative">
-                            <UnifiedTalentCard
-                              userId={talent.user_id}
-                              fullName={talent.full_name}
-                              title={talent.title}
-                              avatarUrl={talent.avatar_url}
-                              city={talent.city || undefined}
-                              country={talent.country || undefined}
-                              bio={talent.bio}
-                              skills={talent.skills}
-                              lastActive={talent.last_active || talent.updated_at}
-                              primaryAction={{
-                                label: 'Ver Perfil',
-                                onClick: () => handleViewProfile(talent.user_id)
-                              }}
-                              secondaryAction={{
-                                label: 'Contactar',
-                                icon: <MessageCircle className="h-4 w-4 mr-2" />,
-                                onClick: () => handleContactTalent(talent)
-                              }}
-                              showBio={true}
-                              maxSkills={3}
-                            />
-                            
-                            {/* Academy Badge absoluto en esquina superior derecha */}
-                            {talent.email && (
-                              <div className="absolute top-4 right-4 z-10">
-                                <TalentCardAcademyBadge 
-                                  userId={talent.user_id}
-                                  userEmail={talent.email}
-                                  compact={true}
-                                />
-                              </div>
-                            )}
-                          </div>
+                          <UnifiedTalentCard
+                            key={talent.id}
+                            userId={talent.user_id}
+                            fullName={talent.full_name}
+                            title={talent.title}
+                            avatarUrl={talent.avatar_url}
+                            city={talent.city || undefined}
+                            country={talent.country || undefined}
+                            bio={talent.bio}
+                            skills={talent.skills}
+                            userEmail={talent.email || undefined}
+                            lastActive={talent.last_active || talent.updated_at}
+                            primaryAction={{
+                              label: 'Ver Perfil',
+                              onClick: () => handleViewProfile(talent.user_id)
+                            }}
+                            secondaryAction={{
+                              label: 'Contactar',
+                              icon: <MessageCircle className="h-4 w-4 mr-2" />,
+                              onClick: () => handleContactTalent(talent)
+                            }}
+                            showBio={true}
+                            maxSkills={3}
+                          />
                         );
                       })}
                     </div>

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MapPin, Eye, MessageSquare, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { TalentCardAcademyBadge } from './TalentCardAcademyBadge';
 
 export interface UnifiedTalentCardProps {
   // Datos básicos del talento
@@ -22,8 +23,7 @@ export interface UnifiedTalentCardProps {
   
   // Estado del perfil
   lastActive?: string | null;
-  
-  // Badges y certificaciones (no usado - se maneja con TalentCardAcademyBadge externamente)
+  userEmail?: string; // Para mostrar badge de academia
   
   // Acciones
   primaryAction?: {
@@ -54,6 +54,7 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
   bio,
   skills = [],
   lastActive,
+  userEmail,
   primaryAction,
   secondaryAction,
   showBio = true,
@@ -104,10 +105,19 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
             <p className="text-sm text-muted-foreground truncate mb-1">
               {title}
             </p>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
               <MapPin className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{displayLocation}</span>
             </div>
+            
+            {/* Academy Badge - integrado en el flujo */}
+            {userEmail && (
+              <TalentCardAcademyBadge 
+                userId={userId}
+                userEmail={userEmail}
+                compact={true}
+              />
+            )}
           </div>
         </div>
 
