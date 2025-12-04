@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  ArrowLeft, 
   MessageCircle, 
   Share2, 
   ExternalLink, 
@@ -121,7 +120,6 @@ interface SocialLink {
 
 const PublicTalentProfile = () => {
   const { talentId } = useParams<{ talentId: string }>();
-  const navigate = useNavigate();
   
   const [talentProfile, setTalentProfile] = useState<TalentProfile | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -371,10 +369,6 @@ const PublicTalentProfile = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Perfil no encontrado</h2>
           <p className="text-gray-600 mb-6">El perfil del talento que buscas no existe o no está disponible.</p>
-          <Button onClick={() => navigate(-1)} variant="outline">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver
-          </Button>
         </div>
       </div>
     );
@@ -385,14 +379,6 @@ const PublicTalentProfile = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Button 
-            onClick={() => navigate(-1)} 
-            variant="ghost"
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver
-          </Button>
           <h1 className="text-3xl font-bold text-gray-900">Perfil de Talento</h1>
         </div>
 

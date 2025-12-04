@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, GraduationCap, MapPin, Award, ExternalLink, Eye, MessageCircle, Clock } from 'lucide-react';
+import { Loader2, GraduationCap, MapPin, Award, ExternalLink, Eye, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
@@ -203,7 +203,7 @@ export default function PublicAcademyDirectory() {
                     <Card 
                       key={graduate.student_id} 
                       className="hover:shadow-lg transition-shadow cursor-pointer group"
-                      onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                      onClick={() => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')}
                     >
                       <CardContent className="p-6">
                         {/* Header */}
@@ -258,25 +258,16 @@ export default function PublicAcademyDirectory() {
                           </p>
                         )}
 
-                        {/* Action Buttons */}
+                        {/* Action Button */}
                         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="default"
                             size="sm"
-                            className="flex-1"
-                            onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                            className="w-full"
+                            onClick={() => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')}
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             Ver Perfil
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => graduate.user_id && navigate(`/business-dashboard/messages?user=${graduate.user_id}`)}
-                          >
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Contactar
                           </Button>
                         </div>
 
@@ -314,7 +305,7 @@ export default function PublicAcademyDirectory() {
                     <Card 
                       key={graduate.student_id} 
                       className="hover:shadow-lg transition-shadow cursor-pointer group"
-                      onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                      onClick={() => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')}
                     >
                       <CardContent className="p-6">
                         {/* Header */}
@@ -369,25 +360,16 @@ export default function PublicAcademyDirectory() {
                           </p>
                         )}
 
-                        {/* Action Buttons */}
+                        {/* Action Button */}
                         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="default"
                             size="sm"
-                            className="flex-1"
-                            onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                            className="w-full"
+                            onClick={() => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')}
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             Ver Perfil
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => graduate.user_id && navigate(`/business-dashboard/messages?user=${graduate.user_id}`)}
-                          >
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Contactar
                           </Button>
                         </div>
 
@@ -433,7 +415,7 @@ export default function PublicAcademyDirectory() {
               <Card 
                 key={graduate.student_id} 
                 className="hover:shadow-lg transition-shadow cursor-pointer group flex flex-col"
-                onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                onClick={() => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')}
               >
                 <CardContent className="p-6 flex flex-col flex-1">
                   {/* Header */}
@@ -488,25 +470,16 @@ export default function PublicAcademyDirectory() {
                     </p>
                   )}
 
-                  {/* Action Buttons */}
+                  {/* Action Button */}
                   <div className="flex gap-2 mt-auto" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="default"
                       size="sm"
-                      className="flex-1"
-                      onClick={() => graduate.user_id && navigate(`/business-dashboard/talent-profile/${graduate.user_id}`)}
+                      className="w-full"
+                      onClick={() => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Ver Perfil
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => graduate.user_id && navigate(`/business-dashboard/messages?user=${graduate.user_id}`)}
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Contactar
                     </Button>
                   </div>
 
