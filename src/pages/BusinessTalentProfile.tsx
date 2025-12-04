@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAcademyAffiliations } from '@/hooks/useAcademyAffiliations';
 import { AcademyCertificationBadge } from '@/components/academy/AcademyCertificationBadge';
+import { useMessages } from '@/hooks/useMessages';
 
 // Custom X (Twitter) icon component
 const XIcon = ({ className }: { className?: string }) => (
@@ -33,6 +34,7 @@ const XIcon = ({ className }: { className?: string }) => (
 const BusinessTalentProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { getOrCreateConversation, sendMessage: sendMessageToConversation } = useMessages();
   
   const [userProfile, setUserProfile] = useState<any>(null);
   const [talentProfile, setTalentProfile] = useState<any>(null);
@@ -45,6 +47,7 @@ const BusinessTalentProfile = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [message, setMessage] = useState('');
   const [isFetching, setIsFetching] = useState(false);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [showAllEducation, setShowAllEducation] = useState(false);
   const [showAllWorkExperience, setShowAllWorkExperience] = useState(false);
   const [videoPresentationUrl, setVideoPresentationUrl] = useState<string | null>(null);
@@ -236,15 +239,34 @@ const BusinessTalentProfile = () => {
       return;
     }
 
+    if (!id) {
+      toast({
+        title: "Error",
+        description: "ID de usuario no disponible",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSendingMessage(true);
     try {
-      // Here you would implement the message sending logic
-      console.log('Sending message:', message);
+      console.log('[BusinessTalentProfile] Sending message to user:', id);
+      // Crear o obtener conversación
+      const conversationId = await getOrCreateConversation(id, 'profile_contact');
+      console.log('[BusinessTalentProfile] Conversation ID:', conversationId);
+      
+      // Enviar mensaje
+      await sendMessageToConversation(conversationId, message.trim());
+      
       toast({
         title: "Éxito",
         description: "Mensaje enviado correctamente"
       });
       setMessage('');
-        setShowContactModal(false);
+      setShowContactModal(false);
+      
+      // Navegar al chat
+      navigate(`/business-dashboard/messages/${conversationId}`);
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -252,6 +274,8 @@ const BusinessTalentProfile = () => {
         description: "Error al enviar el mensaje",
         variant: "destructive"
       });
+    } finally {
+      setIsSendingMessage(false);
     }
   };
 
@@ -652,11 +676,18 @@ const BusinessTalentProfile = () => {
               />
             </div>
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowContactModal(false)}>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowContactModal(false)}
+                disabled={isSendingMessage}
+              >
                 Cancelar
-                </Button>
-              <Button onClick={handleSendMessage}>
-                    Enviar Mensaje
+              </Button>
+              <Button 
+                onClick={handleSendMessage}
+                disabled={isSendingMessage}
+              >
+                {isSendingMessage ? 'Enviando...' : 'Enviar Mensaje'}
               </Button>
             </div>
           </div>
