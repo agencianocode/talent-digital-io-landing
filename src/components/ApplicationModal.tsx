@@ -232,8 +232,8 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
                     {opportunity.salary_min && opportunity.salary_max
                       ? `$${opportunity.salary_min.toLocaleString()} - $${opportunity.salary_max.toLocaleString()}`
                       : opportunity.salary_min
-                      ? `Desde $${opportunity.salary_min.toLocaleString()}`
-                      : `Hasta $${opportunity.salary_max?.toLocaleString()}`
+                      ? `$${opportunity.salary_min.toLocaleString()}`
+                      : `$${opportunity.salary_max?.toLocaleString()}`
                     }
                   </div>
                 )}

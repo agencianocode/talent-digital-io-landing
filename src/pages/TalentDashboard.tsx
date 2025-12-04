@@ -322,7 +322,7 @@ const TalentDashboard = () => {
                               {opportunity.salary_min && opportunity.salary_max
                                 ? `$${opportunity.salary_min}-${opportunity.salary_max} ${opportunity.currency || 'USD'}`
                                 : opportunity.salary_min
-                                ? `Desde $${opportunity.salary_min} ${opportunity.currency || 'USD'}`
+                                ? `$${opportunity.salary_min} ${opportunity.currency || 'USD'}`
                                 : 'A Convenir'
                               }
                             </span>

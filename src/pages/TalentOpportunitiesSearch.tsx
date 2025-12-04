@@ -424,8 +424,8 @@ const TalentOpportunitiesSearch = () => {
                               {opportunity.salary_min && opportunity.salary_max
                                 ? `${opportunity.currency || '$'}${opportunity.salary_min.toLocaleString()} - ${opportunity.currency || '$'}${opportunity.salary_max.toLocaleString()}`
                                 : opportunity.salary_min
-                                ? `Desde ${opportunity.currency || '$'}${opportunity.salary_min.toLocaleString()}`
-                                : `Hasta ${opportunity.currency || '$'}${opportunity.salary_max?.toLocaleString()}`
+                                ? `${opportunity.currency || '$'}${opportunity.salary_min.toLocaleString()}`
+                                : `${opportunity.currency || '$'}${opportunity.salary_max?.toLocaleString()}`
                               }
                             </div>
                           )}

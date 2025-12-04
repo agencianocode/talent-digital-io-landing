@@ -39,9 +39,9 @@ export const OpportunityCardWithExclusive = ({
       return `${currency} ${opportunity.salary_min.toLocaleString()} - ${opportunity.salary_max.toLocaleString()}`;
     }
     if (opportunity.salary_min) {
-      return `Desde ${currency} ${opportunity.salary_min.toLocaleString()}`;
+      return `${currency} ${opportunity.salary_min.toLocaleString()}`;
     }
-    return `Hasta ${currency} ${opportunity.salary_max?.toLocaleString()}`;
+    return `${currency} ${opportunity.salary_max?.toLocaleString()}`;
   };
 
   const isExclusive = opportunity.is_academy_exclusive && showExclusiveBadge;

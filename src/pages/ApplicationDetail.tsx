@@ -862,8 +862,8 @@ const ApplicationDetail = () => {
                           {application.opportunities.salary_min && application.opportunities.salary_max
                             ? `$${application.opportunities.salary_min.toLocaleString()} - $${application.opportunities.salary_max.toLocaleString()}`
                             : application.opportunities.salary_min
-                            ? `Desde $${application.opportunities.salary_min.toLocaleString()}`
-                            : `Hasta $${application.opportunities.salary_max?.toLocaleString()}`
+                            ? `$${application.opportunities.salary_min.toLocaleString()}`
+                            : `$${application.opportunities.salary_max?.toLocaleString()}`
                           }
                           {application.opportunities.currency && ` ${application.opportunities.currency}`}
                         </p>

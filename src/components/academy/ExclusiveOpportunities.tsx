@@ -100,8 +100,8 @@ export const ExclusiveOpportunities: React.FC<ExclusiveOpportunitiesProps> = ({ 
     if (opp.salary_min && opp.salary_max) {
       return `${currency} ${opp.salary_min.toLocaleString()} - ${opp.salary_max.toLocaleString()}`;
     }
-    if (opp.salary_min) return `Desde ${currency} ${opp.salary_min.toLocaleString()}`;
-    return `Hasta ${currency} ${opp.salary_max?.toLocaleString()}`;
+    if (opp.salary_min) return `${currency} ${opp.salary_min.toLocaleString()}`;
+    return `${currency} ${opp.salary_max?.toLocaleString()}`;
   };
 
   if (loading) {
