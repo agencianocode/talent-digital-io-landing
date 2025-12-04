@@ -353,14 +353,36 @@ const TalentDiscovery = () => {
           availability: talentProfile?.availability || null,
           work_modality: Array.isArray(professionalPrefs.work_modality) ? professionalPrefs.work_modality : [],
           contract_types: Array.isArray(professionalPrefs.contract_types) ? professionalPrefs.contract_types : [],
-          is_complete: (((profile as any)?.profile_completeness ?? 0) >= 70) || meetsMinimums({
-            bio: talentProfile?.bio,
-            city: profile.city,
-            country: profile.country,
-            video: profile.video_presentation_url,
-            portfolio: talentProfile?.portfolio_url,
-            social: profile.social_links,
-          }),
+          is_complete: (() => {
+            const completenessScore = (profile as any)?.profile_completeness ?? 0;
+            const minimums = meetsMinimums({
+              bio: talentProfile?.bio,
+              city: profile.city,
+              country: profile.country,
+              video: profile.video_presentation_url,
+              portfolio: talentProfile?.portfolio_url,
+              social: profile.social_links,
+            });
+            const isComplete = completenessScore >= 70 || minimums;
+            
+            // Debug log para María Fernanda Soto
+            if (profile.full_name?.toLowerCase().includes('fernanda')) {
+              console.log('🔍 María Fernanda Soto completeness check:', {
+                full_name: profile.full_name,
+                profile_completeness: completenessScore,
+                bio_length: talentProfile?.bio?.length || 0,
+                city: profile.city,
+                country: profile.country,
+                video: !!profile.video_presentation_url,
+                portfolio: !!talentProfile?.portfolio_url,
+                social_links: profile.social_links,
+                meetsMinimums: minimums,
+                isComplete
+              });
+            }
+            
+            return isComplete;
+          })(),
           is_featured: false, // Column doesn't exist in talent_profiles table
           is_verified: !!academyInfo, // Verified if belongs to any academy
           is_premium: userRole?.role === 'premium_talent', // Usar el rol real del usuario
