@@ -43,7 +43,7 @@ interface StudentManagementProps {
 export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId, initialExpanded = false }) => {
   // Student Directory State
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('active'); // Por defecto mostrar solo activos
   const { students, loadStudents, removeStudent, isLoading } = useAcademyData(academyId);
 
   // Invitation Manager State

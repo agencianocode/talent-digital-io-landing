@@ -253,11 +253,23 @@ export const academyService = {
         };
       });
 
-      // Apply pending_invitations filter (after determining status)
+      // Apply status filter (after determining status)
       let filteredStudents = students;
       if (filters?.status === 'pending_invitations') {
+        // Solo invitaciones pendientes
         filteredStudents = students.filter(student => student.status === 'pending_invitations');
+      } else if (filters?.status === 'active') {
+        // Solo estudiantes activos (excluir invitaciones pendientes)
+        filteredStudents = students.filter(student => student.status === 'active');
+      } else if (filters?.status === 'graduated') {
+        // Solo graduados
+        filteredStudents = students.filter(student => student.status === 'graduated');
+      } else if (filters?.status === 'paused') {
+        filteredStudents = students.filter(student => student.status === 'paused');
+      } else if (filters?.status === 'suspended') {
+        filteredStudents = students.filter(student => student.status === 'suspended');
       }
+      // Si es 'all', incluye todo (incluyendo pending_invitations)
 
       // Apply search filter
       if (filters?.search) {
