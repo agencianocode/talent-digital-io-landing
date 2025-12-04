@@ -17,6 +17,7 @@ interface RecommendedTalent {
   full_name: string;
   avatar_url: string | null;
   title: string;
+  bio?: string;
   skills: string[];
   experience_level: string | null;
   location: string;
@@ -170,6 +171,7 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
               full_name: userProfile.full_name || 'Sin nombre',
               avatar_url: userProfile.avatar_url || null,
               title: talent.title || 'Sin título',
+              bio: talent.bio,
               skills: talent.skills || [],
               experience_level: talent.experience_level || null,
               location: talent.city && talent.country
@@ -294,18 +296,18 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
                   title={talent.title}
                   avatarUrl={talent.avatar_url}
                   location={talent.location}
+                  bio={talent.bio}
                   skills={talent.skills}
                   primaryAction={{
                     label: 'Ver Perfil',
-                    onClick: () => window.open(`/business-dashboard/talent-profile/${talent.id}`, '_blank'),
-                    variant: 'outline'
+                    onClick: () => window.open(`/business-dashboard/talent-profile/${talent.id}`, '_blank')
                   }}
                   secondaryAction={{
                     label: 'Invitar',
                     icon: <MessageSquare className="h-4 w-4 mr-2" />,
                     onClick: () => handleInvite(talent)
                   }}
-                  showBio={false}
+                  showBio={true}
                   maxSkills={3}
                 />
               </div>
