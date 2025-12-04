@@ -58,10 +58,20 @@ serve(async (req) => {
 
     if (error) {
       console.error('Error updating student:', error);
-      throw error;
+      console.error('Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw new Error(`Database error: ${error.message} (${error.code}). Details: ${error.details || 'none'}. Hint: ${error.hint || 'none'}`);
     }
 
     console.log('Student updated successfully:', data);
+
+    if (!data || data.length === 0) {
+      throw new Error('No rows updated. Record may not exist or update permissions missing.');
+    }
 
     return new Response(
       JSON.stringify({ success: true, data }),
@@ -69,8 +79,14 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in update-academy-student-status:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined
+      }),
       { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

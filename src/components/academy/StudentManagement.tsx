@@ -182,10 +182,13 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
 
       if (error) {
         console.error('❌ Error from edge function:', error);
+        console.error('❌ Error completo:', JSON.stringify(error, null, 2));
         throw error;
       }
 
       if (data?.error) {
+        console.error('❌ Error en respuesta de función edge:', data.error);
+        console.error('❌ Detalles:', data.details);
         throw new Error(data.error);
       }
 
