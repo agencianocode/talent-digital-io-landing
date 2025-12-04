@@ -185,10 +185,10 @@ export default function PublicAcademyDirectory() {
       </div>
 
       {/* Students Section */}
-      <div className="container mx-auto max-w-6xl py-12 px-4">
+      <div className="container mx-auto max-w-7xl py-12 px-4">
         {studentsFilter === 'all' ? (
-          // Mostrar 2 columnas: Activos a la izquierda, Graduados a la derecha
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          // Mostrar secciones en vertical (no lado a lado)
+          <div className="space-y-12">
             {/* Estudiantes Activos */}
             <div>
               <div className="flex items-center gap-3 mb-6">
