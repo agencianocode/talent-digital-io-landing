@@ -294,7 +294,7 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
         </div>
 
         <div className="w-full sm:w-40">
-          <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Rol</label>
+          <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Categoría</label>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Categoría" />
