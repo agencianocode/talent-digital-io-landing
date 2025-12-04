@@ -22,7 +22,8 @@ import {
   Clock,
   AlertTriangle,
   Eye,
-  Trash2
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -56,13 +57,15 @@ interface AdminUserDetailProps {
   isOpen: boolean;
   onClose: () => void;
   onUserUpdate: () => void;
+  onNavigateToCompany?: (companyId: string) => void;
 }
 
 const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
   userId,
   isOpen,
   onClose,
-  onUserUpdate
+  onUserUpdate,
+  onNavigateToCompany
 }) => {
   const [user, setUser] = useState<UserDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,6 +85,8 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
         throw new Error('No active session');
       }
 
+      console.log('Loading user details for:', userId);
+
       // Call edge function to get complete user details with real email
       const { data: userDetails, error } = await supabase.functions.invoke('get-user-details', {
         body: { userId },
@@ -90,9 +95,11 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
         }
       });
 
+      console.log('User details response:', { userDetails, error });
+
       if (error) {
         console.error('Error from get-user-details:', error);
-        throw error;
+        throw new Error(error.message || 'Error al cargar usuario');
       }
 
       if (!userDetails) {
@@ -120,7 +127,10 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
       setNewRole(userDetails.role);
     } catch (error) {
       console.error('Error loading user detail:', error);
-      toast.error('Error al cargar los detalles del usuario');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al cargar los detalles del usuario: ${errorMessage}`);
+      // Mantener el modal abierto pero mostrar el error
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -334,9 +344,21 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
           <DialogHeader>
             <DialogTitle>Usuario no encontrado</DialogTitle>
           </DialogHeader>
-          <div className="text-center py-8">
+          <div className="text-center py-8 space-y-4">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-            <p>No se pudo cargar la información del usuario</p>
+            <div>
+              <p className="font-semibold mb-2">No se pudo cargar la información del usuario</p>
+              <p className="text-sm text-muted-foreground">
+                Verifica la consola del navegador (F12) para más detalles del error.
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Posibles causas: función edge no desplegada, problemas de permisos, o usuario no existe.
+              </p>
+            </div>
+            <Button onClick={loadUserDetail} variant="outline" disabled={isLoading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              {isLoading ? 'Cargando...' : 'Reintentar'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -468,9 +490,17 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
               <CardContent>
                 <div className="space-y-3">
                   {user.companies.map((company) => (
-                    <div key={company.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 border rounded-lg">
+                    <div 
+                      key={company.id} 
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        if (onNavigateToCompany) {
+                          onNavigateToCompany(company.id);
+                        }
+                      }}
+                    >
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm sm:text-base truncate">{company.name}</p>
+                        <p className="font-medium text-sm sm:text-base truncate hover:text-primary">{company.name}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground">
                           Se unió {formatDistanceToNow(new Date(company.joined_at), { 
                             addSuffix: true, 

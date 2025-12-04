@@ -22,6 +22,7 @@ import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import AdminUserFilters from '@/components/admin/AdminUserFilters';
 import AdminUserDetail from '@/components/admin/AdminUserDetail';
+import AdminCompanyDetail from '@/components/admin/AdminCompanyDetail';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 
@@ -42,6 +43,8 @@ const AdminUserManagement: React.FC = () => {
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [isCompanyDetailOpen, setIsCompanyDetailOpen] = useState(false);
 
   const handleViewUser = (userId: string) => {
     setSelectedUserId(userId);
@@ -54,6 +57,23 @@ const AdminUserManagement: React.FC = () => {
   };
 
   const handleUserUpdate = () => {
+    refetch();
+  };
+
+  const handleNavigateToCompany = (companyId: string) => {
+    // Cerrar el modal de usuario
+    setIsDetailOpen(false);
+    // Abrir el modal de empresa
+    setSelectedCompanyId(companyId);
+    setIsCompanyDetailOpen(true);
+  };
+
+  const handleCloseCompanyDetail = () => {
+    setIsCompanyDetailOpen(false);
+    setSelectedCompanyId(null);
+  };
+
+  const handleCompanyUpdate = () => {
     refetch();
   };
 
@@ -340,6 +360,17 @@ const AdminUserManagement: React.FC = () => {
           isOpen={isDetailOpen}
           onClose={handleCloseDetail}
           onUserUpdate={handleUserUpdate}
+          onNavigateToCompany={handleNavigateToCompany}
+        />
+      )}
+
+      {/* Company Detail Modal */}
+      {selectedCompanyId && (
+        <AdminCompanyDetail
+          companyId={selectedCompanyId}
+          isOpen={isCompanyDetailOpen}
+          onClose={handleCloseCompanyDetail}
+          onCompanyUpdate={handleCompanyUpdate}
         />
       )}
     </div>
