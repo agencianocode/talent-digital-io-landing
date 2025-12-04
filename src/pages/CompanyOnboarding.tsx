@@ -15,6 +15,7 @@ import CompanyOnboardingStep4 from '@/components/CompanyOnboardingStep4';
 interface CompanyData {
   name: string;
   isIndividual: boolean;
+  existingCompanyId?: string; // ID de empresa existente si se seleccionó una
 }
 
 interface CompanyDetails {
@@ -52,7 +53,8 @@ const CompanyOnboarding = () => {
   } | null>(null);
   const [companyData, setCompanyData] = useState<CompanyData>({
     name: '',
-    isIndividual: false
+    isIndividual: false,
+    existingCompanyId: undefined
   });
   const [companyDetails, setCompanyDetails] = useState<CompanyDetails>({
     description: '',
@@ -413,6 +415,137 @@ const CompanyOnboarding = () => {
           toast.error('Error al completar el onboarding. Por favor, intenta nuevamente.');
           return;
         }
+      }
+
+      // EXISTING COMPANY FLOW: User wants to join an existing company
+      if (companyData.existingCompanyId) {
+        console.log('🏢 Usuario seleccionó empresa existente:', {
+          companyId: companyData.existingCompanyId,
+          companyName: companyData.name
+        });
+
+        // 1. Obtener información de la empresa y su propietario
+        const { data: companyInfo, error: companyError } = await supabase
+          .from('companies')
+          .select('id, name, user_id')
+          .eq('id', companyData.existingCompanyId)
+          .single();
+
+        if (companyError || !companyInfo) {
+          console.error('Error obteniendo información de la empresa:', companyError);
+          toast.error('No se pudo encontrar la empresa seleccionada');
+          return;
+        }
+
+        // 2. Verificar si ya existe una solicitud pendiente o aceptada
+        const { data: existingRequest } = await supabase
+          .from('company_user_roles')
+          .select('id, status')
+          .eq('user_id', user.id)
+          .eq('company_id', companyData.existingCompanyId)
+          .maybeSingle();
+
+        if (existingRequest) {
+          if (existingRequest.status === 'accepted') {
+            toast.info('Ya eres miembro de esta empresa');
+            navigate('/business-dashboard');
+            return;
+          } else if (existingRequest.status === 'pending') {
+            toast.info('Ya tienes una solicitud pendiente para esta empresa');
+            navigate('/business-dashboard');
+            return;
+          }
+        }
+
+        // 3. Crear solicitud de membresía pendiente
+        const { error: membershipError } = await supabase
+          .from('company_user_roles')
+          .insert({
+            user_id: user.id,
+            company_id: companyData.existingCompanyId,
+            role: 'viewer', // Rol por defecto (viewer es el más básico)
+            status: 'pending',
+            invited_by: null // Auto-solicitud
+          });
+
+        if (membershipError) {
+          console.error('Error creando solicitud de membresía:', membershipError);
+          toast.error('Error al enviar solicitud a la empresa');
+          return;
+        }
+
+        // 4. Obtener información del propietario
+        const { data: ownerProfile } = await supabase
+          .from('profiles')
+          .select('full_name, user_id')
+          .eq('user_id', companyInfo.user_id)
+          .single();
+
+        const requesterName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Un usuario';
+
+        // 5. Crear notificación para el propietario
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: companyInfo.user_id,
+            type: 'membership_request',
+            title: 'Nueva solicitud para unirse a tu empresa',
+            message: `${requesterName} (${user.email}) ha solicitado unirse a ${companyInfo.name}`,
+            action_url: '/business-dashboard/team',
+            metadata: {
+              requester_id: user.id,
+              requester_name: requesterName,
+              requester_email: user.email,
+              company_id: companyData.existingCompanyId,
+              company_name: companyInfo.name
+            }
+          });
+
+        // 6. Enviar email al propietario
+        const { data: ownerAuth } = await supabase.auth.admin.getUserById(companyInfo.user_id);
+        const ownerEmail = ownerAuth?.user?.email;
+
+        if (ownerEmail) {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              to: ownerEmail,
+              subject: `Nueva solicitud para unirse a ${companyInfo.name}`,
+              html: `
+                <h2>Nueva solicitud de membresía</h2>
+                <p>Hola ${ownerProfile?.full_name || 'allí'},</p>
+                <p><strong>${requesterName}</strong> (${user.email}) ha solicitado unirse a <strong>${companyInfo.name}</strong>.</p>
+                <p>Puedes revisar y aprobar esta solicitud en tu panel de administración:</p>
+                <a href="https://talentodigital.io/business-dashboard/team" style="display: inline-block; padding: 12px 24px; background-color: #000; color: #fff; text-decoration: none; border-radius: 6px; margin: 16px 0;">
+                  Ver Solicitud
+                </a>
+                <p>Si no reconoces a este usuario o crees que esto es un error, puedes rechazar la solicitud desde tu panel.</p>
+              `
+            }
+          });
+        }
+
+        // 7. Asignar rol business al usuario
+        await supabase
+          .from('user_roles')
+          .upsert({
+            user_id: user.id,
+            role: 'freemium_business'
+          });
+
+        // 8. Marcar onboarding como completado
+        await supabase.auth.updateUser({
+          data: {
+            onboarding_completed: true
+          }
+        });
+
+        console.log('✅ Solicitud de membresía enviada exitosamente');
+        toast.success(`Solicitud enviada a ${companyInfo.name}. El propietario revisará tu solicitud.`);
+
+        // Refresh companies and redirect
+        await refreshCompanies();
+        navigate('/business-dashboard');
+        return;
       }
 
       // NORMAL FLOW: Create or update company

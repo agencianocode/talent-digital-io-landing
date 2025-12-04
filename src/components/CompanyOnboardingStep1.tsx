@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface CompanyData {
   name: string;
   isIndividual: boolean;
+  existingCompanyId?: string; // ID de empresa existente si se seleccionó una
 }
 
 interface CompanyOnboardingStep1Props {
@@ -82,13 +83,17 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
 
   const handleSuggestionClick = (suggestion: {name: string, logo_url?: string | null, id?: string}) => {
     let finalCompanyName = '';
+    let selectedCompanyId: string | undefined = undefined;
     
     if (suggestion.id === 'create-new') {
       // Extraer el nombre de la empresa del texto "Crear 'Nombre'"
       finalCompanyName = suggestion.name.match(/Crear "(.+)"/)?.[1] || '';
+      selectedCompanyId = undefined; // Nueva empresa
     } else {
-      // Empresa existente
+      // Empresa existente - guardar tanto nombre como ID
       finalCompanyName = suggestion.name;
+      selectedCompanyId = suggestion.id;
+      console.log('✅ Empresa existente seleccionada:', { name: finalCompanyName, id: selectedCompanyId });
     }
     
     setCompanyName(finalCompanyName);
@@ -101,6 +106,7 @@ const CompanyOnboardingStep1 = ({ onComplete, initialData, onCompanyNameChange, 
       onComplete({
         name: finalCompanyName.trim(),
         isIndividual: isIndividual,
+        existingCompanyId: selectedCompanyId // NUEVO: Pasar el ID de empresa existente
       });
     }, 100); // Pequeño delay para que el usuario vea la selección
   };
