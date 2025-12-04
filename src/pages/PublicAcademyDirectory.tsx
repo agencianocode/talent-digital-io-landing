@@ -187,8 +187,8 @@ export default function PublicAcademyDirectory() {
       {/* Students Section */}
       <div className="container mx-auto max-w-7xl py-12 px-4">
         {studentsFilter === 'all' ? (
-          // Mostrar secciones en vertical (no lado a lado)
-          <div className="space-y-12">
+          // Mostrar 2 columnas: Activos a la izquierda, Graduados a la derecha
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Estudiantes Activos */}
             <div>
               <div className="flex items-center gap-3 mb-6">
@@ -204,7 +204,7 @@ export default function PublicAcademyDirectory() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-6">
                   {graduates.filter(g => g.status === 'enrolled').map((graduate) => (
                     <UnifiedTalentCard
                       key={graduate.student_id}
@@ -243,7 +243,7 @@ export default function PublicAcademyDirectory() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-6">
                   {graduates.filter(g => g.status === 'graduated').map((graduate) => (
                     <UnifiedTalentCard
                       key={graduate.student_id}
