@@ -138,10 +138,10 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
         newStatus 
       });
 
-      // Primero verificar si el estudiante existe
+      // Primero verificar si el estudiante existe y obtener su ID
       const { data: existingStudent, error: checkError } = await supabase
         .from('academy_students')
-        .select('*')
+        .select('id, student_name, status')
         .eq('academy_id', academyId)
         .eq('student_email', studentEmail)
         .single();
@@ -152,32 +152,41 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
         throw new Error(`No se encontró el estudiante con email ${studentEmail}`);
       }
 
-      const updateData: any = { 
-        status: newStatus
+      // Preparar datos para la función edge
+      const requestData: any = { 
+        studentId: existingStudent.id,
+        newStatus
       };
 
       // Si se marca como graduado, agregar fecha de graduación
       if (newStatus === 'graduated') {
-        updateData.graduation_date = new Date().toISOString().split('T')[0];
+        requestData.graduationDate = new Date().toISOString().split('T')[0];
       }
 
-      console.log('📝 Actualizando con datos:', updateData);
+      console.log('📝 Llamando función edge con datos:', requestData);
 
-      const { data, error } = await supabase
-        .from('academy_students')
-        .update(updateData)
-        .eq('id', existingStudent.id) // Usar el ID en lugar de academy_id + email
-        .select();
+      // Usar función edge con permisos de administrador
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No hay sesión activa');
+      }
 
-      console.log('✅ Update result:', { data, error, updatedRows: data?.length || 0 });
+      const { data, error } = await supabase.functions.invoke('update-academy-student-status', {
+        body: requestData,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      console.log('✅ Edge function result:', { data, error });
 
       if (error) {
-        console.error('❌ Error from Supabase:', error);
+        console.error('❌ Error from edge function:', error);
         throw error;
       }
 
-      if (!data || data.length === 0) {
-        throw new Error('No se actualizó ningún registro. Puede ser un problema de permisos.');
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       const statusLabels = {
