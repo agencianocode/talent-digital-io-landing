@@ -2,13 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, GraduationCap, MapPin, Award, ExternalLink, Eye, Clock } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
+import { Loader2, GraduationCap, Award, ExternalLink } from 'lucide-react';
 import { UnifiedTalentCard } from '@/components/talent/UnifiedTalentCard';
 
 interface Graduate {
@@ -209,88 +204,25 @@ export default function PublicAcademyDirectory() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {graduates.filter(g => g.status === 'enrolled').map((graduate) => (
-                    <Card 
-                      key={graduate.student_id} 
-                      className="hover:shadow-lg transition-shadow cursor-pointer group"
-                      onClick={() => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')}
-                    >
-                      <CardContent className="p-6">
-                        {/* Header */}
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="relative">
-                            <Avatar className="h-16 w-16">
-                              <AvatarImage src={graduate.avatar_url || undefined} />
-                              <AvatarFallback>
-                                {graduate.student_name?.split(' ').map(n => n[0]).join('') || 'E'}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                          
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
-                                  {graduate.student_name || 'Estudiante'}
-                                </h3>
-                                <p className="text-gray-600 text-sm">{graduate.title || 'Estudiante'}</p>
-                              </div>
-                              
-                              <div className="flex flex-col items-end gap-1">
-                                <div className="flex items-center gap-1">
-                                  <Badge className="bg-yellow-100 text-yellow-800 text-xs whitespace-nowrap">
-                                    Perfil incompleto
-                                  </Badge>
-                                </div>
-                                
-                                {/* Academy affiliation badge */}
-                                {graduate.student_email && (
-                                  <TalentCardAcademyBadge 
-                                    userId={graduate.user_id || ''}
-                                    userEmail={graduate.student_email}
-                                    compact={true}
-                                  />
-                                )}
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-1 text-sm text-gray-600 mt-2">
-                              <MapPin className="h-3 w-3" />
-                              <span>{[graduate.city, graduate.country].filter(Boolean).join(', ') || 'Ubicación no especificada'}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Bio */}
-                        {graduate.bio && (
-                          <p className="text-gray-700 text-sm line-clamp-2 mb-4">
-                            {graduate.bio}
-                          </p>
-                        )}
-
-                        {/* Action Button */}
-                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ver Perfil
-                          </Button>
-                        </div>
-
-                        {/* Activity indicator */}
-                        {graduate.enrollment_date && (
-                          <div className="flex items-center gap-1 text-xs text-gray-500 mt-3">
-                            <Clock className="h-3 w-3" />
-                            Activo {formatDistanceToNow(new Date(graduate.enrollment_date), { addSuffix: true, locale: es })}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <UnifiedTalentCard
+                      key={graduate.student_id}
+                      userId={graduate.user_id || ''}
+                      fullName={graduate.student_name || 'Estudiante'}
+                      title={graduate.title || 'Estudiante'}
+                      avatarUrl={graduate.avatar_url}
+                      city={graduate.city || undefined}
+                      country={graduate.country || undefined}
+                      bio={graduate.bio || undefined}
+                      userEmail={graduate.student_email}
+                      lastActive={graduate.enrollment_date || undefined}
+                      primaryAction={{
+                        label: 'Ver Perfil',
+                        onClick: () => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')
+                      }}
+                      showBio={true}
+                    />
                   ))}
                 </div>
               )}
@@ -313,32 +245,23 @@ export default function PublicAcademyDirectory() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {graduates.filter(g => g.status === 'graduated').map((graduate) => (
-                    <div key={graduate.student_id} className="relative">
-                      <UnifiedTalentCard
-                        userId={graduate.user_id || ''}
-                        fullName={graduate.student_name || 'Graduado'}
-                        title={graduate.title || 'Graduado'}
-                        avatarUrl={graduate.avatar_url}
-                        city={graduate.city || undefined}
-                        country={graduate.country || undefined}
-                        bio={graduate.bio || undefined}
-                        lastActive={graduate.graduation_date || undefined}
-                        primaryAction={{
-                          label: 'Ver Perfil',
-                          onClick: () => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')
-                        }}
-                        showBio={true}
-                      />
-                      
-                      {/* Academy Badge en esquina superior derecha */}
-                      <div className="absolute top-4 right-4 z-10">
-                        <TalentCardAcademyBadge 
-                          userId={graduate.user_id || ''}
-                          userEmail={graduate.student_email}
-                          compact={true}
-                        />
-                      </div>
-                    </div>
+                    <UnifiedTalentCard
+                      key={graduate.student_id}
+                      userId={graduate.user_id || ''}
+                      fullName={graduate.student_name || 'Graduado'}
+                      title={graduate.title || 'Graduado'}
+                      avatarUrl={graduate.avatar_url}
+                      city={graduate.city || undefined}
+                      country={graduate.country || undefined}
+                      bio={graduate.bio || undefined}
+                      userEmail={graduate.student_email}
+                      lastActive={graduate.graduation_date || undefined}
+                      primaryAction={{
+                        label: 'Ver Perfil',
+                        onClick: () => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')
+                      }}
+                      showBio={true}
+                    />
                   ))}
                 </div>
               )}
