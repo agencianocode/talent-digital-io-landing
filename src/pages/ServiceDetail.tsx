@@ -166,14 +166,34 @@ const ServiceDetail: React.FC = () => {
 
       console.log('[ServiceDetail] Service data loaded:', serviceData);
 
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('user_id', serviceData.user_id)
-        .single();
+      // Si el servicio tiene company_id, obtener nombre de la empresa; si no, del perfil
+      let providerName = 'Usuario';
+      let providerAvatar: string | null = null;
 
-      if (profileError) {
-        console.warn('[ServiceDetail] Error fetching profile:', profileError);
+      if (serviceData.company_id) {
+        // Servicio publicado a nombre de empresa
+        const { data: companyData, error: companyError } = await supabase
+          .from('companies')
+          .select('name, logo_url')
+          .eq('id', serviceData.company_id)
+          .single();
+
+        if (!companyError && companyData) {
+          providerName = companyData.name;
+          providerAvatar = companyData.logo_url;
+        }
+      } else {
+        // Servicio publicado a nombre personal
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('user_id', serviceData.user_id)
+          .single();
+
+        if (!profileError && profileData) {
+          providerName = profileData.full_name || 'Usuario';
+          providerAvatar = profileData.avatar_url;
+        }
       }
 
       setService({
@@ -195,8 +215,8 @@ const ServiceDetail: React.FC = () => {
         views_count: serviceData.views_count,
         requests_count: serviceData.requests_count,
         user_id: serviceData.user_id,
-        user_name: profileData?.full_name || 'Usuario',
-        user_avatar: profileData?.avatar_url || null,
+        user_name: providerName,
+        user_avatar: providerAvatar,
         is_available: serviceData.is_available
       });
 
