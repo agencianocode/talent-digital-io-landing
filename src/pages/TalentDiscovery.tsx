@@ -15,7 +15,6 @@ import {
   MapPin, 
   Eye,
   MessageCircle,
-  CheckCircle,
   Clock,
   Github,
   Plus,
@@ -984,11 +983,6 @@ const TalentDiscovery = () => {
                                     {talent.full_name.split(' ').map(n => n[0]).join('')}
                                   </AvatarFallback>
                                 </Avatar>
-                                {talent.is_verified && (
-                                  <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-green-500 rounded-full flex items-center justify-center">
-                                    <CheckCircle className="h-3 w-3 text-white" />
-                                  </div>
-                                )}
                               </div>
                               
                               <div className="flex-1">
@@ -1008,13 +1002,7 @@ const TalentDiscovery = () => {
                                           Premium
                                         </Badge>
                                       )}
-                                      {talent.is_verified && !talent.is_premium && (
-                                        <Badge className="bg-green-100 text-green-800 text-xs flex items-center gap-1">
-                                          <CheckCircle className="h-3 w-3" />
-                                          Certificado
-                                        </Badge>
-                                      )}
-                                      {!talent.is_complete && !talent.is_premium && !talent.is_verified && (
+                                      {!talent.is_complete && !talent.is_premium && (
                                         <Badge className="bg-yellow-100 text-yellow-800 text-xs whitespace-nowrap">
                                           Perfil incompleto
                                         </Badge>
