@@ -114,7 +114,17 @@ export default function PublicAcademyDirectory() {
 
       if (graduatesError) throw graduatesError;
 
-      setGraduates(graduatesData || []);
+      // Filtrar solo estudiantes que han aceptado la invitación (enrolled o graduated)
+      // Excluir invitaciones pendientes
+      const acceptedStudents = (graduatesData || []).filter((student: Graduate) => 
+        student.status === 'enrolled' || student.status === 'graduated'
+      );
+
+      console.log('📚 Total students from RPC:', graduatesData?.length || 0);
+      console.log('✅ Accepted students (enrolled/graduated):', acceptedStudents.length);
+      console.log('⏳ Pending invitations filtered out:', (graduatesData?.length || 0) - acceptedStudents.length);
+
+      setGraduates(acceptedStudents);
     } catch (error) {
       console.error('Error loading academy data:', error);
       navigate('/404');
