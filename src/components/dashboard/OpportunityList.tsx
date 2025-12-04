@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { 
@@ -59,9 +57,8 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
   } = useOpportunityDashboard(useMockData);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('active');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [showDrafts, setShowDrafts] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [opportunityToDelete, setOpportunityToDelete] = useState<any>(null);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
@@ -120,16 +117,8 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
     const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (opp.category && opp.category.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    // Si el filtro de estado es 'draft', solo mostrar si showDrafts está activado
-    let matchesStatus = true;
-    if (statusFilter === 'draft') {
-      matchesStatus = showDrafts && opp.status === 'draft';
-    } else if (statusFilter === 'all') {
-      // Si es 'all', ocultar borradores a menos que showDrafts esté activado
-      matchesStatus = showDrafts || opp.status !== 'draft';
-    } else {
-      matchesStatus = opp.status === statusFilter;
-    }
+    // Filtro de estado simplificado
+    const matchesStatus = statusFilter === 'all' ? true : opp.status === statusFilter;
     
     const matchesCategory = categoryFilter === 'all' || (opp.category && opp.category === categoryFilter);
     
@@ -323,16 +312,6 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
       </div>
 
       {/* Toggle para mostrar borradores */}
-      <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-        <Switch
-          id="show-drafts"
-          checked={showDrafts}
-          onCheckedChange={setShowDrafts}
-        />
-        <Label htmlFor="show-drafts" className="text-sm font-medium cursor-pointer">
-          Mostrar borradores
-        </Label>
-      </div>
 
       {/* Opportunities List */}
       <div className="space-y-4">
