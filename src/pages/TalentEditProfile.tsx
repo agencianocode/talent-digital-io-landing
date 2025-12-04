@@ -104,6 +104,7 @@ const TalentEditProfile = () => {
   // Initialize form data
   useEffect(() => {
     if (userProfile) {
+      const profileData = profile as any;
       setFormData({
         full_name: userProfile.full_name || '',
         title: profile?.title || '',
@@ -114,7 +115,10 @@ const TalentEditProfile = () => {
         city: profile?.city || '',
         phone: userProfile.phone || profile?.phone || '',
         video_presentation_url: profile?.video_presentation_url || '',
-        availability: profile?.availability || ''
+        availability: profile?.availability || '',
+        primary_category_id: profileData?.primary_category_id || '',
+        secondary_category_id: profileData?.secondary_category_id || '',
+        experience_level: profileData?.experience_level || ''
       });
       setSkills(profile?.skills || []);
     }
@@ -442,7 +446,7 @@ const TalentEditProfile = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="experience_level">Nivel de Experiencia</Label>
+                  <Label htmlFor="experience_level">Nivel de Experiencia *</Label>
                   <Select
                     value={(formData as any).experience_level || ''}
                     onValueChange={(value) => handleInputChange('experience_level' as any, value)}
@@ -461,10 +465,10 @@ const TalentEditProfile = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="category">Categoría Principal</Label>
+                  <Label htmlFor="category">Categoría Principal *</Label>
                   <Select
-                    value={(formData as any).primary_category || ''}
-                    onValueChange={(value) => handleInputChange('primary_category' as any, value)}
+                    value={(formData as any).primary_category_id || ''}
+                    onValueChange={(value) => handleInputChange('primary_category_id' as any, value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona una categoría" />
@@ -478,6 +482,28 @@ const TalentEditProfile = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="secondary_category">Categoría Secundaria *</Label>
+                <Select
+                  value={(formData as any).secondary_category_id || ''}
+                  onValueChange={(value) => handleInputChange('secondary_category_id' as any, value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una categoría secundaria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROFESSIONAL_CATEGORIES.map(cat => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Campo obligatorio para perfil completo
+                </p>
               </div>
 
               <div>
@@ -550,7 +576,7 @@ const TalentEditProfile = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="country">País</Label>
+                  <Label htmlFor="country">País *</Label>
                   <Input
                     id="country"
                     value={formData.country || ''}
@@ -560,7 +586,7 @@ const TalentEditProfile = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="city">Ciudad</Label>
+                  <Label htmlFor="city">Ciudad *</Label>
                   <Input
                     id="city"
                     value={formData.city || ''}

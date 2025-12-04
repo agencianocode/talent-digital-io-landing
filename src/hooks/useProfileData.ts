@@ -182,30 +182,51 @@ export const useProfileData = () => {
       
       if (!profileData) return;
       
-      // Calculate completeness based on actual fields
+      // NUEVOS REQUISITOS PARA PERFIL COMPLETO (100%)
+      // Campos OBLIGATORIOS para perfil completo:
+      // 1. Foto de perfil
+      // 2. Nombre y apellido
+      // 3. País y ciudad
+      // 4. Categoría principal
+      // 5. Categoría secundaria
+      // 6. Título
+      // 7. Nivel de experiencia
+      // 8. Skills (al menos 1)
+      // 9. Bio / descripción
+      
       let score = 0;
+      const requiredFields = 9; // Total de campos obligatorios
+      const pointsPerField = Math.floor(100 / requiredFields); // ~11 puntos por campo
       
-      // Basic Info (40%)
-      if (profileData.full_name) score += 10;
-      if (profileData.avatar_url) score += 5;
-      if (profileData.phone) score += 5;
-      if (profileData.country) score += 5;
-      if (profileData.city) score += 5;
-      if (profileData.social_links && Object.keys(profileData.social_links || {}).length > 0) score += 10;
+      // 1. Foto de perfil (11%)
+      if (profileData.avatar_url) score += pointsPerField;
       
-      // Professional Info (30%)
-      if (talentData?.primary_category_id) score += 15;
-      if (talentData?.title) score += 8;
-      if (talentData?.experience_level) score += 4;
-      if (talentData?.bio) score += 3;
+      // 2. Nombre y apellido (11%)
+      if (profileData.full_name && profileData.full_name.trim().length >= 2) score += pointsPerField;
       
-      // Skills (20%)
-      if (talentData?.skills && talentData.skills.length > 0) score += 15;
-      if (talentData?.industries_of_interest && talentData.industries_of_interest.length > 0) score += 5;
+      // 3. País (6%)
+      if (profileData.country) score += Math.floor(pointsPerField / 2);
       
-      // Multimedia (10%)
-      if (profileData.video_presentation_url) score += 5;
-      if (talentData?.portfolio_url) score += 5;
+      // 4. Ciudad (5%)
+      if (profileData.city) score += Math.floor(pointsPerField / 2);
+      
+      // 5. Categoría principal (11%)
+      if (talentData?.primary_category_id) score += pointsPerField;
+      
+      // 6. Categoría secundaria (11%)
+      if (talentData?.secondary_category_id) score += pointsPerField;
+      
+      // 7. Título (11%)
+      if (talentData?.title && talentData.title.trim().length >= 3) score += pointsPerField;
+      
+      // 8. Nivel de experiencia (11%)
+      if (talentData?.experience_level) score += pointsPerField;
+      
+      // 9. Skills - al menos 1 (11%)
+      if (talentData?.skills && talentData.skills.length > 0) score += pointsPerField;
+      
+      // 10. Bio / descripción (11%)
+      if (talentData?.bio && talentData.bio.trim().length >= 50) score += pointsPerField;
       
       const finalScore = Math.min(score, 100);
       
@@ -216,6 +237,18 @@ export const useProfileData = () => {
         .eq('user_id', userId);
       
       console.log(`✅ Profile completeness recalculated: ${finalScore}%`);
+      console.log('📋 Campos completos:', {
+        avatar: !!profileData.avatar_url,
+        full_name: !!profileData.full_name,
+        country: !!profileData.country,
+        city: !!profileData.city,
+        primary_category: !!talentData?.primary_category_id,
+        secondary_category: !!talentData?.secondary_category_id,
+        title: !!talentData?.title,
+        experience_level: !!talentData?.experience_level,
+        skills: talentData?.skills?.length || 0,
+        bio: talentData?.bio?.length || 0
+      });
     } catch (error) {
       console.error('Error recalculating profile completeness:', error);
     }
@@ -492,7 +525,7 @@ export const useProfileData = () => {
   const validateProfile = useCallback((data: Partial<ProfileEditData>): ValidationResult => {
     const errors: Record<string, string> = {};
 
-    // Validaciones CRÍTICAS (bloquean el guardado)
+    // Validaciones CRÍTICAS para guardar cambios
     if (data.full_name && data.full_name.trim().length < 2) {
       errors.full_name = 'El nombre debe tener al menos 2 caracteres';
     }
@@ -505,11 +538,21 @@ export const useProfileData = () => {
       errors.video_presentation_url = 'URL de video no válida';
     }
 
-    // Validaciones OPCIONALES (ya no bloquean el guardado)
-    // Solo muestran warnings pero permiten guardar
-    // - Title mínimo 3 caracteres: ahora permite vacío o más corto
-    // - Bio mínimo 50 caracteres: ahora permite más corto
-    // - Skills al menos 1: ahora permite sin skills
+    // NOTA: Estas validaciones NO bloquean el guardado, pero SÍ afectan:
+    // - Perfil completo (banner)
+    // - Aparecer en búsqueda de talento
+    // - Poder aplicar a oportunidades
+    // 
+    // Campos requeridos para perfil completo:
+    // ✓ Foto de perfil
+    // ✓ Nombre y apellido
+    // ✓ País y ciudad
+    // ✓ Categoría principal
+    // ✓ Categoría secundaria
+    // ✓ Título
+    // ✓ Nivel de experiencia
+    // ✓ Skills (al menos 1)
+    // ✓ Bio / descripción
 
     return {
       isValid: Object.keys(errors).length === 0,

@@ -7,6 +7,9 @@ export interface TalentProfile {
   bio: string | null;
   skills: string[] | null;
   years_experience: number | null;
+  experience_level: string | null;
+  primary_category_id: string | null;
+  secondary_category_id: string | null;
   availability: string | null;
   linkedin_url: string | null;
   portfolio_url: string | null;
@@ -18,6 +21,7 @@ export interface TalentProfile {
   city: string | null;
   phone: string | null;
   video_presentation_url: string | null;
+  industries_of_interest: string[] | null;
   created_at: string;
   updated_at: string;
 }
