@@ -80,6 +80,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
       case 'graduated': return 'bg-blue-100 text-blue-800';
+      case 'inactive': return 'bg-gray-100 text-gray-600';
       case 'paused': return 'bg-yellow-100 text-yellow-800';
       case 'suspended': return 'bg-red-100 text-red-800';
       case 'pending_invitations': return 'bg-purple-100 text-purple-800';
@@ -91,6 +92,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     switch (status) {
       case 'active': return 'Activo';
       case 'graduated': return 'Graduado';
+      case 'inactive': return 'Inactivo';
       case 'paused': return 'Pausado';
       case 'suspended': return 'Suspendido';
       case 'pending_invitations': return 'Invitación Pendiente';
@@ -126,6 +128,36 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
   const handleSendMessage = (_userId: string) => {
     // TODO: Implement send message navigation
     toast.info('Función de mensajería próximamente');
+  };
+
+  const handleChangeStudentStatus = async (studentEmail: string, newStatus: 'enrolled' | 'graduated' | 'inactive') => {
+    try {
+      const { error } = await supabase
+        .from('academy_students')
+        .update({ 
+          status: newStatus,
+          graduation_date: newStatus === 'graduated' ? new Date().toISOString().split('T')[0] : null
+        })
+        .eq('academy_id', academyId)
+        .eq('student_email', studentEmail);
+
+      if (error) throw error;
+
+      const statusLabels = {
+        'enrolled': 'Activo',
+        'graduated': 'Graduado',
+        'inactive': 'Inactivo'
+      };
+
+      toast.success(`Estudiante marcado como ${statusLabels[newStatus]}`);
+      loadStudents({ 
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        search: searchTerm || undefined 
+      });
+    } catch (error) {
+      console.error('Error updating student status:', error);
+      toast.error('Error al actualizar el estado del estudiante');
+    }
   };
 
   const copyToClipboard = async (text: string, type: 'active' | 'graduated') => {
@@ -423,6 +455,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
                 <SelectItem value="all">Todos los estados</SelectItem>
                 <SelectItem value="active">Activo</SelectItem>
                 <SelectItem value="graduated">Graduado</SelectItem>
+                <SelectItem value="inactive">Inactivo</SelectItem>
                 <SelectItem value="paused">Pausado</SelectItem>
                 <SelectItem value="suspended">Suspendido</SelectItem>
                 <SelectItem value="pending_invitations">Invitaciones Pendientes</SelectItem>
@@ -536,10 +569,38 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               {!isPendingInvitation && (
-                                <DropdownMenuItem onClick={() => handleSendMessage(student.user_id)}>
-                                  <Mail className="h-4 w-4 mr-2" />
-                                  Enviar Mensaje
-                                </DropdownMenuItem>
+                                <>
+                                  <DropdownMenuItem onClick={() => handleSendMessage(student.user_id)}>
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    Enviar Mensaje
+                                  </DropdownMenuItem>
+                                  
+                                  {/* Opciones de cambio de estado */}
+                                  {student.status !== 'active' && (
+                                    <DropdownMenuItem 
+                                      onClick={() => handleChangeStudentStatus(student.talent_profiles?.email || '', 'enrolled')}
+                                    >
+                                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+                                      Marcar como Activo
+                                    </DropdownMenuItem>
+                                  )}
+                                  {student.status !== 'graduated' && (
+                                    <DropdownMenuItem 
+                                      onClick={() => handleChangeStudentStatus(student.talent_profiles?.email || '', 'graduated')}
+                                    >
+                                      <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
+                                      Marcar como Graduado
+                                    </DropdownMenuItem>
+                                  )}
+                                  {student.status !== 'paused' && (
+                                    <DropdownMenuItem 
+                                      onClick={() => handleChangeStudentStatus(student.talent_profiles?.email || '', 'inactive')}
+                                    >
+                                      <UserX className="h-4 w-4 mr-2 text-gray-600" />
+                                      Marcar como Inactivo
+                                    </DropdownMenuItem>
+                                  )}
+                                </>
                               )}
                               <DropdownMenuItem 
                                 onClick={() => handleRemoveStudent(student.talent_profiles?.email || student.user_id)}
