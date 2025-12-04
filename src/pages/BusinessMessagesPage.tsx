@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import ConversationsList from '@/components/ConversationsList';
 import ChatView from '@/components/ChatView';
@@ -8,6 +8,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const BusinessMessagesPage = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useSupabaseAuth();
   const { 
     conversations, 
@@ -19,32 +20,51 @@ const BusinessMessagesPage = () => {
     markAsUnread,
     archiveConversation,
     unarchiveConversation,
+    getOrCreateConversation,
   } = useMessages();
   
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isResolvingId, setIsResolvingId] = useState(false);
+  const [pendingRecipientId, setPendingRecipientId] = useState<string | null>(null);
 
-  // Accept conversation ID as-is (supports both legacy "chat_*" and UUID)
-  const resolveConversationId = async (id: string): Promise<string | null> => {
-    return id;
-  };
+  // Handle ?user= query param to start conversation with specific user
+  useEffect(() => {
+    const targetUserId = searchParams.get('user');
+    if (!targetUserId || !user) return;
+
+    const initConversation = async () => {
+      setIsResolvingId(true);
+      try {
+        // Get or create conversation with the target user
+        const convId = await getOrCreateConversation(targetUserId, 'direct');
+        setActiveId(convId);
+        setPendingRecipientId(targetUserId);
+        // Clear the query param from URL
+        setSearchParams({}, { replace: true });
+      } catch (error) {
+        console.error('Error creating conversation:', error);
+      } finally {
+        setIsResolvingId(false);
+      }
+    };
+
+    initConversation();
+  }, [searchParams, user, getOrCreateConversation, setSearchParams]);
 
   // Resolve conversationId from URL parameter
   useEffect(() => {
     if (!conversationId) {
-      setActiveId(null);
+      // Don't reset activeId if we have a pending user conversation
+      if (!searchParams.get('user')) {
+        setActiveId(null);
+      }
       return;
     }
 
-    const resolveAndSetId = async () => {
-      setIsResolvingId(true);
-      const resolvedId = await resolveConversationId(conversationId);
-      setActiveId(resolvedId);
-      setIsResolvingId(false);
-    };
-
-    resolveAndSetId();
-  }, [conversationId]);
+    setIsResolvingId(true);
+    setActiveId(conversationId);
+    setIsResolvingId(false);
+  }, [conversationId, searchParams]);
 
   // Load conversations on mount only if user is authenticated
   useEffect(() => {
@@ -99,6 +119,12 @@ const BusinessMessagesPage = () => {
       fileSize,
       fileType
     );
+    
+    // Clear pending recipient after first message and reload conversations
+    if (pendingRecipientId) {
+      setPendingRecipientId(null);
+      loadConversations();
+    }
   };
 
   // Show loading state while resolving conversation ID
