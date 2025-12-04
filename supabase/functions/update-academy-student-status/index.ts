@@ -29,8 +29,8 @@ serve(async (req) => {
       throw new Error('studentId and newStatus are required');
     }
 
-    // Validar que el estado sea uno válido
-    const validStatuses = ['enrolled', 'graduated', 'inactive', 'paused', 'suspended'];
+    // Validar que el estado sea uno válido (sin 'inactive' que no existe en la DB)
+    const validStatuses = ['enrolled', 'graduated', 'paused', 'suspended'];
     if (!validStatuses.includes(newStatus)) {
       throw new Error(`Invalid status: ${newStatus}. Must be one of: ${validStatuses.join(', ')}`);
     }

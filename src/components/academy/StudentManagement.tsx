@@ -80,8 +80,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
       case 'graduated': return 'bg-blue-100 text-blue-800';
-      case 'inactive': return 'bg-gray-100 text-gray-600';
-      case 'paused': return 'bg-yellow-100 text-yellow-800';
+      case 'paused': return 'bg-gray-100 text-gray-600';
       case 'suspended': return 'bg-red-100 text-red-800';
       case 'pending_invitations': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -92,7 +91,6 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     switch (status) {
       case 'active': return 'Activo';
       case 'graduated': return 'Graduado';
-      case 'inactive': return 'Inactivo';
       case 'paused': return 'Pausado';
       case 'suspended': return 'Suspendido';
       case 'pending_invitations': return 'Invitación Pendiente';
@@ -130,7 +128,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
     toast.info('Función de mensajería próximamente');
   };
 
-  const handleChangeStudentStatus = async (studentEmail: string, newStatus: 'enrolled' | 'graduated' | 'inactive') => {
+  const handleChangeStudentStatus = async (studentEmail: string, newStatus: 'enrolled' | 'graduated' | 'paused') => {
     try {
       console.log('🔄 Cambiando estado de estudiante:', { 
         academyId, 
@@ -195,7 +193,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
       const statusLabels = {
         'enrolled': 'Activo',
         'graduated': 'Graduado',
-        'inactive': 'Inactivo'
+        'paused': 'Pausado'
       };
 
       toast.success(`Estudiante marcado como ${statusLabels[newStatus]}`);
@@ -506,7 +504,6 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
                 <SelectItem value="all">Todos los estados</SelectItem>
                 <SelectItem value="active">Activo</SelectItem>
                 <SelectItem value="graduated">Graduado</SelectItem>
-                <SelectItem value="inactive">Inactivo</SelectItem>
                 <SelectItem value="paused">Pausado</SelectItem>
                 <SelectItem value="suspended">Suspendido</SelectItem>
                 <SelectItem value="pending_invitations">Invitaciones Pendientes</SelectItem>
@@ -645,10 +642,10 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
                                   )}
                                   {student.status !== 'paused' && (
                                     <DropdownMenuItem 
-                                      onClick={() => handleChangeStudentStatus(student.talent_profiles?.email || '', 'inactive')}
+                                      onClick={() => handleChangeStudentStatus(student.talent_profiles?.email || '', 'paused')}
                                     >
                                       <UserX className="h-4 w-4 mr-2 text-gray-600" />
-                                      Marcar como Inactivo
+                                      Marcar como Pausado
                                     </DropdownMenuItem>
                                   )}
                                 </>

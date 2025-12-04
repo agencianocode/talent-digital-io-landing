@@ -18,7 +18,7 @@ export interface AcademyStudent {
   id: string;
   academy_id: string;
   user_id: string;
-  status: 'active' | 'graduated' | 'inactive' | 'paused' | 'suspended' | 'pending_invitations';
+  status: 'active' | 'graduated' | 'paused' | 'suspended' | 'pending_invitations';
   joined_at: string;
   graduation_date?: string;
   certificate_url?: string;

@@ -206,13 +206,11 @@ export const academyService = {
         const isPendingInvitation = !registeredEmails.has(student.student_email);
         
         // Map 'enrolled' to 'active' for type compatibility, but handle pending invitations
-        let mappedStatus: 'active' | 'graduated' | 'inactive' | 'paused' | 'suspended' | 'pending_invitations' = 'active';
+        let mappedStatus: 'active' | 'graduated' | 'paused' | 'suspended' | 'pending_invitations' = 'active';
         if (isPendingInvitation) {
           mappedStatus = 'pending_invitations';
         } else if (student.status === 'graduated') {
           mappedStatus = 'graduated';
-        } else if (student.status === 'inactive') {
-          mappedStatus = 'inactive';
         } else if (student.status === 'paused') {
           mappedStatus = 'paused';
         } else if (student.status === 'suspended') {
@@ -266,10 +264,8 @@ export const academyService = {
       } else if (filters?.status === 'graduated') {
         // Solo graduados
         filteredStudents = students.filter(student => student.status === 'graduated');
-      } else if (filters?.status === 'inactive') {
-        // Solo inactivos
-        filteredStudents = students.filter(student => student.status === 'inactive');
       } else if (filters?.status === 'paused') {
+        // Solo pausados
         filteredStudents = students.filter(student => student.status === 'paused');
       } else if (filters?.status === 'suspended') {
         filteredStudents = students.filter(student => student.status === 'suspended');
