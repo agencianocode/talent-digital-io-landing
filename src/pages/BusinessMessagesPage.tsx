@@ -35,10 +35,14 @@ const BusinessMessagesPage = () => {
     const initConversation = async () => {
       setIsResolvingId(true);
       try {
+        console.log('[BusinessMessagesPage] Creating conversation with user:', targetUserId);
         // Get or create conversation with the target user
-        const convId = await getOrCreateConversation(targetUserId, 'direct');
+        const convId = await getOrCreateConversation(targetUserId, 'profile_contact');
+        console.log('[BusinessMessagesPage] Conversation ID:', convId);
         setActiveId(convId);
         setPendingRecipientId(targetUserId);
+        // Reload conversations to ensure the new one appears in the list
+        await loadConversations();
         // Clear the query param from URL
         setSearchParams({}, { replace: true });
       } catch (error) {
@@ -49,7 +53,7 @@ const BusinessMessagesPage = () => {
     };
 
     initConversation();
-  }, [searchParams, user, getOrCreateConversation, setSearchParams]);
+  }, [searchParams, user, getOrCreateConversation, setSearchParams, loadConversations]);
 
   // Resolve conversationId from URL parameter
   useEffect(() => {

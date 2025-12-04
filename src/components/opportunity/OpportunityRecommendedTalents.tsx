@@ -5,8 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { MapPin, MessageSquare, Users } from 'lucide-react';
+import { useMessages } from '@/hooks/useMessages';
+import { toast } from 'sonner';
 
 interface RecommendedTalent {
   id: string;
@@ -25,10 +30,15 @@ interface OpportunityRecommendedTalentsProps {
 
 export default function OpportunityRecommendedTalents({ opportunityId }: OpportunityRecommendedTalentsProps) {
   const navigate = useNavigate();
+  const { getOrCreateConversation, sendMessage: sendMessageToConversation } = useMessages();
   const [talents, setTalents] = useState<RecommendedTalent[]>([]);
   const [loading, setLoading] = useState(true);
   const [opportunitySkills, setOpportunitySkills] = useState<string[]>([]);
   const [opportunityCategory, setOpportunityCategory] = useState<string>('');
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [selectedTalent, setSelectedTalent] = useState<RecommendedTalent | null>(null);
+  const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     const fetchRecommendedTalents = async () => {
@@ -184,10 +194,38 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
     fetchRecommendedTalents();
   }, [opportunityId]);
 
-  const handleInvite = (userId: string) => {
-    // Navegar directamente al chat con parámetro user
-    // La página de mensajes manejará la creación/apertura de la conversación
-    navigate(`/business-dashboard/messages?user=${userId}`);
+  const handleInvite = (talent: RecommendedTalent) => {
+    setSelectedTalent(talent);
+    setMessage(`Hola ${talent.full_name}, me interesa tu perfil para una oportunidad.`);
+    setShowContactModal(true);
+  };
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !selectedTalent) {
+      toast.error('Por favor escribe un mensaje');
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      // Crear o obtener conversación
+      const conversationId = await getOrCreateConversation(selectedTalent.id, 'profile_contact');
+      // Enviar mensaje
+      await sendMessageToConversation(conversationId, message.trim());
+      
+      toast.success('Mensaje enviado correctamente');
+      setMessage('');
+      setShowContactModal(false);
+      setSelectedTalent(null);
+      
+      // Navegar al chat
+      navigate(`/business-dashboard/messages/${conversationId}`);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Error al enviar el mensaje');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleViewAll = () => {
@@ -234,25 +272,26 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Talentos que podrían interesarte
-          </CardTitle>
-          <Button variant="outline" size="sm" onClick={handleViewAll}>
-            Ver todos
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {talents.map(talent => (
-            <div
-              key={talent.id}
-              className="p-4 border rounded-lg hover:shadow-md transition-shadow space-y-3"
-            >
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Talentos que podrían interesarte
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={handleViewAll}>
+              Ver todos
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {talents.map(talent => (
+              <div
+                key={talent.id}
+                className="p-4 border rounded-lg hover:shadow-md transition-shadow space-y-3"
+              >
               <div className="flex items-start gap-3">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={talent.avatar_url || undefined} alt={talent.full_name} />
@@ -304,16 +343,54 @@ export default function OpportunityRecommendedTalents({ opportunityId }: Opportu
                 <Button
                   size="sm"
                   className="flex-1"
-                  onClick={() => handleInvite(talent.id)}
+                  onClick={() => handleInvite(talent)}
                 >
                   <MessageSquare className="h-4 w-4 mr-1" />
                   Invitar
                 </Button>
               </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Modal de contacto */}
+      <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enviar mensaje a {selectedTalent?.full_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="message">Mensaje</Label>
+              <Textarea
+                id="message"
+                placeholder="Escribe tu mensaje aquí..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={4}
+              />
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowContactModal(false);
+                  setSelectedTalent(null);
+                  setMessage('');
+                }}
+                disabled={isSending}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleSendMessage} disabled={isSending}>
+                {isSending ? 'Enviando...' : 'Enviar Mensaje'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
