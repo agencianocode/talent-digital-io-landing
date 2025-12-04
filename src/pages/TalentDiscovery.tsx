@@ -274,6 +274,8 @@ const TalentDiscovery = () => {
       }
 
       // Combine profiles and talent_profiles data
+      // Simplificada: Un perfil está completo si tiene profile_completeness >= 70
+      // O si cumple con los requisitos básicos mínimos
       const meetsMinimums = (params: {
         bio?: string | null;
         city?: string | null;
@@ -284,11 +286,9 @@ const TalentDiscovery = () => {
       }) => {
         const bioOk = (params.bio?.trim().length || 0) >= 50;
         const locationOk = !!(params.city && params.country);
-        const mediaOk = !!(params.video || params.portfolio);
-        const socialsCount = params.social ? Object.values(params.social).filter((v: any) => typeof v === 'string' && v.trim().length > 0).length : 0;
-        const socialsOk = socialsCount > 0;
-        // Nota: en esta vista no validamos experiencia/educación por no estar disponibles en esta consulta
-        return bioOk && locationOk && mediaOk && socialsOk;
+        // Relajado: Ya no se requiere video/portfolio/social para ser completo
+        // Solo bio y ubicación son esenciales
+        return bioOk && locationOk;
       };
 
 
