@@ -285,9 +285,9 @@ const TalentDiscovery = () => {
         social?: any;
       }) => {
         const bioOk = (params.bio?.trim().length || 0) >= 50;
-        const locationOk = !!(params.city && params.country);
+        const locationOk = !!params.country; // Solo país es requerido, ciudad es opcional
         // Relajado: Ya no se requiere video/portfolio/social para ser completo
-        // Solo bio y ubicación son esenciales
+        // Solo bio y país son esenciales
         return bioOk && locationOk;
       };
 
