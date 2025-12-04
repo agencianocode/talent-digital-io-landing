@@ -11,6 +11,7 @@ interface MultiStepFormData {
   // Step 1
   title: string;
   description: string;
+  contractType: string;
   skills: string[];
   tools: string[];
   contractorsCount: number;
@@ -165,7 +166,7 @@ const NewOpportunityMultiStep = () => {
         description: formData.description,
         requirements: requirements.trim(),
         category: selectedCategory,
-        type: formData.paymentMethod === 'one-time' ? 'Proyecto Una Vez' : 'Trabajo Continuo',
+        type: formData.contractType || 'Tiempo Completo',
         location: formData.preferredTimezone || 'Remoto',
         salary_min: salaryMin,
         salary_max: salaryMax,

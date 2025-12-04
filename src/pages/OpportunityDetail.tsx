@@ -39,12 +39,20 @@ const OpportunityDetail = () => {
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [showCompletenessModal, setShowCompletenessModal] = useState(false);
 
-  const jobTypes = [
-    { value: 'full-time', label: 'Tiempo Completo' },
-    { value: 'part-time', label: 'Medio Tiempo' },
-    { value: 'contract', label: 'Por Contrato' },
-    { value: 'freelance', label: 'Freelance' }
-  ];
+  // Los tipos de contrato ahora se guardan directamente en español
+  // Simplemente mostramos el valor tal cual viene de la BD
+  const getContractTypeLabel = (type: string) => {
+    // Si viene en inglés (datos antiguos), traducir
+    const typeMap: Record<string, string> = {
+      'full-time': 'Tiempo Completo',
+      'part-time': 'Medio Tiempo',
+      'contract': 'Por Contrato',
+      'freelance': 'Freelance',
+      'Trabajo Continuo': 'Tiempo Completo', // Mapear valor antiguo
+      'Proyecto Una Vez': 'Por Proyecto'     // Mapear valor antiguo
+    };
+    return typeMap[type] || type; // Si ya está en español, devolver tal cual
+  };
 
   useEffect(() => {
     const fetchOpportunity = async () => {
@@ -294,7 +302,7 @@ const OpportunityDetail = () => {
               )}
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
-                <span>{jobTypes.find(t => t.value === opportunity.type)?.label || opportunity.type}</span>
+                <span>{getContractTypeLabel(opportunity.type)}</span>
               </div>
             </div>
           )}
@@ -370,7 +378,7 @@ const OpportunityDetail = () => {
               
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>{jobTypes.find(t => t.value === opportunity.type)?.label || opportunity.type}</span>
+                <span>{getContractTypeLabel(opportunity.type)}</span>
               </div>
               
               {opportunity.location && (
