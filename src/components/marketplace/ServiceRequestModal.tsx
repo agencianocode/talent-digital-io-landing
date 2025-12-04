@@ -31,6 +31,7 @@ import {
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useMessages } from '@/hooks/useMessages';
@@ -303,7 +304,7 @@ Puedes responder a esta conversación para continuar la comunicación.
                   </Badge>
                 )}
                 <Badge variant="outline" className="text-xs">
-                  {service.delivery_time}
+                  {normalizeDeliveryTime(service.delivery_time)}
                 </Badge>
               </div>
               <h3 className="font-semibold text-lg mb-2">{service.title}</h3>
@@ -320,7 +321,7 @@ Puedes responder a esta conversación para continuar la comunicación.
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  <span>{service.delivery_time}</span>
+                  <span>{normalizeDeliveryTime(service.delivery_time)}</span>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <MapPin className="h-4 w-4" />

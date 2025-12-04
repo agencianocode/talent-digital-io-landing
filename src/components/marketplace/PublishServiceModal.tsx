@@ -133,10 +133,10 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
   ];
 
   const timelineOptions = [
-    { value: 'urgent', label: 'Urgente (1-2 semanas)' },
-    { value: 'fast', label: 'Rápido (1 mes)' },
-    { value: 'normal', label: 'Normal (2-3 meses)' },
-    { value: 'flexible', label: 'Flexible (3-6 meses)' }
+    { value: '1-2 semanas', label: 'Urgente (1-2 semanas)' },
+    { value: '1 mes', label: 'Rápido (1 mes)' },
+    { value: '2-3 meses', label: 'Normal (2-3 meses)' },
+    { value: '3-6 meses', label: 'Flexible (3-6 meses)' }
   ];
 
   const handleInputChange = (field: keyof PublishServiceForm, value: string) => {

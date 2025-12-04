@@ -18,6 +18,7 @@ import { TalentService } from '@/hooks/useTalentServices';
 import { marketplaceService } from '@/services/marketplaceService';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
+import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
 
 // TalentService interface is now imported from the hook
 
@@ -204,7 +205,7 @@ export const TalentServices = ({
                         Tiempo de entrega
                       </p>
                       <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                        {service.delivery_time}
+                        {normalizeDeliveryTime(service.delivery_time)}
                       </p>
                     </div>
                   </div>

@@ -27,6 +27,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useOpportunityCategories } from '@/hooks/useOpportunityCategories';
+import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
 
 interface MarketplaceDetail {
   id: string;
@@ -481,7 +482,7 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                         className="mt-1"
                       />
                     ) : (
-                      <p className="font-medium text-sm sm:text-base mt-1 break-words">{service.delivery_time}</p>
+                      <p className="font-medium text-sm sm:text-base mt-1 break-words">{normalizeDeliveryTime(service.delivery_time)}</p>
                     )}
                   </div>
 

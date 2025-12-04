@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
+import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
 
 interface ServiceCardProps {
   service: MarketplaceService;
@@ -68,7 +69,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                 </Badge>
               )}
               <Badge variant="outline" className="text-xs">
-                {service.delivery_time}
+                {normalizeDeliveryTime(service.delivery_time)}
               </Badge>
             </div>
             <h3 className="font-semibold text-lg line-clamp-2 mb-2">
@@ -146,7 +147,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
-            <span>{service.delivery_time}</span>
+            <span>{normalizeDeliveryTime(service.delivery_time)}</span>
           </div>
         </div>
 

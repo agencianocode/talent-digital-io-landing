@@ -28,6 +28,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
+import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
 import { ServiceReviews } from '@/components/marketplace/ServiceReviews';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useTalentServices } from '@/hooks/useTalentServices';
@@ -434,7 +435,7 @@ const ServiceDetail: React.FC = () => {
                   </Badge>
                 )}
                 <Badge variant="outline" className="text-xs">
-                  {service.delivery_time}
+                  {normalizeDeliveryTime(service.delivery_time)}
                 </Badge>
                 {!service.is_available && (
                   <Badge variant="destructive">No disponible</Badge>
@@ -742,7 +743,7 @@ const ServiceDetail: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  <span>{service.delivery_time}</span>
+                  <span>{normalizeDeliveryTime(service.delivery_time)}</span>
                 </div>
               </div>
 

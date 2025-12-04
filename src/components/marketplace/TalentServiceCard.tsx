@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { TalentService, ServiceRequest } from '@/hooks/useTalentServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
+import { normalizeDeliveryTime } from '@/lib/marketplace-utils';
 import ServiceRequestsSection from './ServiceRequestsSection';
 
 interface TalentServiceCardProps {
@@ -235,7 +236,7 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
-            <span>{service.delivery_time}</span>
+            <span>{normalizeDeliveryTime(service.delivery_time)}</span>
           </div>
         </div>
 
