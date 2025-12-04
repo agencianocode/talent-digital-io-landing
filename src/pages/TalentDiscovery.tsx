@@ -756,7 +756,7 @@ const TalentDiscovery = () => {
                     Limpiar selección
                   </Button>
                 )}
-                {stats.categories.map((category) => (
+                {['Atención al Cliente', 'Creativo', 'Marketing', 'Operaciones', 'Soporte Profesional', 'Tecnología y Automatizaciones', 'Ventas'].map((category) => (
                   <div key={category} className="flex items-center space-x-2">
                     <Checkbox
                       id={`cat-${category}`}
