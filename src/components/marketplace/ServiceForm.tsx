@@ -304,22 +304,11 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                       <SelectValue placeholder="Seleccionar categoría" />
                     </SelectTrigger>
                     <SelectContent>
-                      {marketplaceCategories.length > 0 ? (
-                        marketplaceCategories
-                          .filter((c) => ['Atención al Cliente','Creativo','Marketing','Operaciones','Soporte Profesional','Tecnología y Automatizaciones','Ventas'].includes(c.name))
-                          .sort((a,b) => ['Atención al Cliente','Creativo','Marketing','Operaciones','Soporte Profesional','Tecnología y Automatizaciones','Ventas'].indexOf(a.name) - ['Atención al Cliente','Creativo','Marketing','Operaciones','Soporte Profesional','Tecnología y Automatizaciones','Ventas'].indexOf(b.name))
-                          .map((category) => (
-                            <SelectItem key={category.id} value={category.name}>
-                              {category.name}
-                            </SelectItem>
-                          ))
-                      ) : (
-                        ['Atención al Cliente','Creativo','Marketing','Operaciones','Soporte Profesional','Tecnología y Automatizaciones','Ventas'].map((name) => (
-                          <SelectItem key={name} value={name}>
-                            {name}
-                          </SelectItem>
-                        ))
-                      )}
+                      {['Atención al Cliente','Creativo','Marketing','Operaciones','Soporte Profesional','Tecnología y Automatizaciones','Ventas'].map((name) => (
+                        <SelectItem key={name} value={name}>
+                          {name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   {errors.category && (
@@ -364,7 +353,8 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
               <CardTitle className="text-lg">Precio y Entrega</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Primera fila: Precios y Moneda */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="price_min">Precio Mínimo *</Label>
                   <Input
@@ -406,7 +396,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Moneda</Label>
+                  <Label>Moneda *</Label>
                   <Select
                     value={formData.currency}
                     onValueChange={(value) => handleInputChange('currency', value)}
@@ -423,7 +413,10 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
+              {/* Segunda fila: Tiempo de Entrega */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Tiempo de Entrega *</Label>
                   <Select
