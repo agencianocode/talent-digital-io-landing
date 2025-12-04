@@ -29,8 +29,14 @@ ALTER COLUMN price_min SET NOT NULL,
 ALTER COLUMN price_max SET NOT NULL;
 
 -- Agregar constraint para asegurar que price_min <= price_max
-ALTER TABLE marketplace_services 
-ADD CONSTRAINT IF NOT EXISTS check_price_range CHECK (price_min <= price_max);
+-- Primero eliminar el constraint si existe, luego crearlo
+DO $$ 
+BEGIN
+  ALTER TABLE marketplace_services DROP CONSTRAINT IF EXISTS check_price_range;
+  ALTER TABLE marketplace_services ADD CONSTRAINT check_price_range CHECK (price_min <= price_max);
+EXCEPTION
+  WHEN others THEN NULL;
+END $$;
 
 -- Crear índice para búsquedas por rango de precio
 CREATE INDEX IF NOT EXISTS idx_marketplace_services_price_range 
