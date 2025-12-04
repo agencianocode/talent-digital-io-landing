@@ -5,12 +5,21 @@
 ALTER TABLE marketplace_services 
 ADD COLUMN IF NOT EXISTS company_id UUID;
 
--- Agregar foreign key constraint
-ALTER TABLE marketplace_services
-ADD CONSTRAINT marketplace_services_company_id_fkey 
-FOREIGN KEY (company_id) 
-REFERENCES companies(id) 
-ON DELETE CASCADE;
+-- Agregar foreign key constraint (eliminar primero si existe)
+DO $$ 
+BEGIN
+  -- Eliminar constraint si existe
+  ALTER TABLE marketplace_services DROP CONSTRAINT IF EXISTS marketplace_services_company_id_fkey;
+  
+  -- Crear constraint
+  ALTER TABLE marketplace_services
+  ADD CONSTRAINT marketplace_services_company_id_fkey 
+  FOREIGN KEY (company_id) 
+  REFERENCES companies(id) 
+  ON DELETE CASCADE;
+EXCEPTION
+  WHEN others THEN NULL;
+END $$;
 
 -- Crear índice para búsquedas por empresa
 CREATE INDEX IF NOT EXISTS idx_marketplace_services_company_id 
