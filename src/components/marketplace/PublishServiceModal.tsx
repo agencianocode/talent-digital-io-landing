@@ -175,12 +175,18 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
         // Determinar si se publica a nombre de empresa o personal
         const companyId = (formData.publishAsCompany && activeCompany?.id) ? activeCompany.id : null;
         
+        // Calcular precio promedio para campo legacy
+        const priceMin = parseFloat(formData.priceMin);
+        const priceMax = parseFloat(formData.priceMax);
+        const averagePrice = (priceMin + priceMax) / 2;
+        
         await marketplaceService.createService(user.id, {
           title: formData.title,
           description: formData.description,
           category: formData.serviceType,
-          price_min: parseFloat(formData.priceMin),
-          price_max: parseFloat(formData.priceMax),
+          price: averagePrice, // Campo legacy para compatibilidad
+          price_min: priceMin,
+          price_max: priceMax,
           currency: 'USD',
           delivery_time: formData.deliveryTime,
           location: formData.location,

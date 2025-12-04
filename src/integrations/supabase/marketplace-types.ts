@@ -77,7 +77,7 @@ export interface ServiceFormData {
   title: string;
   description: string;
   category: string;
-  price?: number; // Obsoleto: usar price_min y price_max
+  price?: number; // Campo legacy (promedio de price_min y price_max)
   price_min: number;
   price_max: number;
   currency: string;
