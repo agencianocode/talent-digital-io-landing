@@ -378,29 +378,65 @@ const UsersManagement = () => {
 
   // Approve membership request
   const handleApproveMembership = async (memberId: string) => {
+    // Validar que el ID no sea un ID falso (como owner-xxx)
+    if (memberId.startsWith('owner-')) {
+      console.error('❌ No se puede aprobar el owner, este es un ID falso');
+      toast.error('No se puede aprobar el propietario');
+      return;
+    }
+
     setIsLoading(true);
     try {
       console.log('✅ Aprobando solicitud:', { memberId, companyId: activeCompany?.id });
       
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('company_user_roles')
         .update({ 
           status: 'accepted',
-          accepted_at: new Date().toISOString()
+          accepted_at: now,
+          updated_at: now
         })
         .eq('id', memberId)
+        .eq('company_id', activeCompany?.id || '')
         .select();
 
       console.log('📡 Respuesta de Supabase:', { data, error, rowsAffected: data?.length });
 
       if (error) {
         console.error('❌ Error aprobando:', error);
+        toast.error(`Error: ${error.message}`);
         throw error;
       }
 
       if (!data || data.length === 0) {
-        console.warn('⚠️ No se actualizó ninguna fila. Puede que el registro no exista o no tengas permisos.');
-        toast.warning('No se pudo aprobar. Verifica que tengas permisos.');
+        console.warn('⚠️ No se actualizó ninguna fila. Verificando si el registro existe...');
+        
+        // Verificar si el registro existe
+        const { data: checkData, error: checkError } = await supabase
+          .from('company_user_roles')
+          .select('id, status, company_id')
+          .eq('id', memberId)
+          .maybeSingle();
+        
+        console.log('🔍 Verificación del registro:', { checkData, checkError });
+        
+        if (checkError) {
+          toast.error(`Error al verificar: ${checkError.message}`);
+          return;
+        }
+        
+        if (!checkData) {
+          toast.error('El registro no existe en la base de datos');
+          return;
+        }
+        
+        if (checkData.company_id !== activeCompany?.id) {
+          toast.error('No tienes permisos para aprobar esta solicitud');
+          return;
+        }
+        
+        toast.warning('No se pudo actualizar. Intenta recargar la página.');
         return;
       }
 
@@ -408,9 +444,9 @@ const UsersManagement = () => {
       toast.success('Solicitud aprobada correctamente');
       await loadTeamMembers();
       await refreshCompanies();
-    } catch (error) {
+    } catch (error: any) {
       console.error('💥 Error al aprobar solicitud:', error);
-      toast.error('Error al aprobar solicitud');
+      toast.error(`Error al aprobar solicitud: ${error?.message || 'Error desconocido'}`);
     } finally {
       setIsLoading(false);
     }
@@ -739,13 +775,16 @@ const UsersManagement = () => {
                            member.status === 'pending' ? 'Pendiente' : 'Rechazado'}
                         </Badge>
                         {(() => {
-                          const showMenu = member.role !== 'owner' && canManageUsers();
+                          // No mostrar menú para owners o IDs falsos (owner-xxx)
+                          const isValidId = !member.id.startsWith('owner-');
+                          const showMenu = member.role !== 'owner' && canManageUsers() && isValidId;
                           console.log('🔍 Menú de 3 puntos:', {
                             memberId: member.id,
                             memberName: member.user?.full_name,
                             role: member.role,
                             status: member.status,
                             isOwner: member.role === 'owner',
+                            isValidId,
                             canManage: canManageUsers(),
                             showMenu
                           });
