@@ -89,7 +89,7 @@ const AdvancedNotificationCenter = () => {
         suggestedActions = [
           {
             label: 'Ver equipo',
-            action: () => navigate('/business-dashboard/team'),
+            action: () => navigate('/business-dashboard/users'),
             icon: <Users className="h-4 w-4" />
           }
         ];

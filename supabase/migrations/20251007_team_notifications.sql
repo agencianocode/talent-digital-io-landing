@@ -106,7 +106,7 @@ BEGIN
     'team',
     '🔔 Solicitud de acceso',
     requester_name || ' solicitó unirse a ' || company_name_var || ' como ' || p_requested_role,
-    '/business-dashboard/team/requests',
+    '/business-dashboard/users',
     false
   );
 END;

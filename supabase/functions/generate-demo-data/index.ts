@@ -91,7 +91,7 @@ serve(async (req) => {
         type: 'team',
         title: '👥 Nuevo miembro en el equipo',
         message: 'DEMO: Juan Pérez se unió a tu empresa como Administrador',
-        action_url: '/business-dashboard/team',
+        action_url: '/business-dashboard/users',
         read: false,
       },
       {
