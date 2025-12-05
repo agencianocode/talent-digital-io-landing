@@ -11,10 +11,94 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { X, Plus, MapPin, Phone, User, Camera, Upload, ArrowLeft, Link as LinkIcon, Target } from 'lucide-react';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useSocialLinks } from '@/hooks/useSocialLinks';
-import { useProfessionalData } from '@/hooks/useProfessionalData';
 import { ProfileEditData } from '@/types/profile';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+
+// Categorías profesionales correctas con subcategorías
+const PROFESSIONAL_CATEGORIES = [
+  {
+    id: 'atencion-cliente',
+    name: 'Atención al Cliente',
+    subcategories: [
+      { id: 'customer-success', name: 'Customer Success' },
+      { id: 'support-agent', name: 'Support Agent' },
+      { id: 'community-manager', name: 'Community Manager' },
+      { id: 'customer-experience', name: 'Customer Experience' }
+    ]
+  },
+  {
+    id: 'creativo',
+    name: 'Creativo',
+    subcategories: [
+      { id: 'disenador-grafico', name: 'Diseñador Gráfico' },
+      { id: 'ui-ux-designer', name: 'UI/UX Designer' },
+      { id: 'video-editor', name: 'Video Editor' },
+      { id: 'fotografo', name: 'Fotógrafo' },
+      { id: 'ilustrador', name: 'Ilustrador' },
+      { id: 'copywriter', name: 'Copywriter' }
+    ]
+  },
+  {
+    id: 'marketing',
+    name: 'Marketing',
+    subcategories: [
+      { id: 'media-buyer', name: 'Media Buyer' },
+      { id: 'content-creator', name: 'Content Creator' },
+      { id: 'social-media', name: 'Social Media Manager' },
+      { id: 'seo-specialist', name: 'SEO Specialist' },
+      { id: 'email-marketing', name: 'Email Marketing' },
+      { id: 'brand-manager', name: 'Brand Manager' }
+    ]
+  },
+  {
+    id: 'operaciones',
+    name: 'Operaciones',
+    subcategories: [
+      { id: 'project-manager', name: 'Project Manager' },
+      { id: 'operations-manager', name: 'Operations Manager' },
+      { id: 'data-analyst', name: 'Data Analyst' },
+      { id: 'process-improvement', name: 'Process Improvement' },
+      { id: 'supply-chain', name: 'Supply Chain' },
+      { id: 'quality-assurance', name: 'Quality Assurance' }
+    ]
+  },
+  {
+    id: 'soporte-profesional',
+    name: 'Soporte Profesional',
+    subcategories: [
+      { id: 'asistente-administrativo', name: 'Asistente Administrativo' },
+      { id: 'contador', name: 'Contador' },
+      { id: 'abogado', name: 'Abogado' },
+      { id: 'recursos-humanos', name: 'Recursos Humanos' },
+      { id: 'virtual-assistant', name: 'Virtual Assistant' },
+      { id: 'bookkeeper', name: 'Bookkeeper' }
+    ]
+  },
+  {
+    id: 'tecnologia-automatizaciones',
+    name: 'Tecnología y Automatizaciones',
+    subcategories: [
+      { id: 'desarrollador-frontend', name: 'Desarrollador Frontend' },
+      { id: 'desarrollador-backend', name: 'Desarrollador Backend' },
+      { id: 'devops-engineer', name: 'DevOps Engineer' },
+      { id: 'data-engineer', name: 'Data Engineer' },
+      { id: 'automation-specialist', name: 'Automation Specialist' },
+      { id: 'system-administrator', name: 'System Administrator' },
+      { id: 'cybersecurity', name: 'Cybersecurity' }
+    ]
+  },
+  {
+    id: 'ventas',
+    name: 'Ventas',
+    subcategories: [
+      { id: 'closer', name: 'Closer' },
+      { id: 'sdr', name: 'SDR' },
+      { id: 'account-manager', name: 'Account Manager' },
+      { id: 'business-development', name: 'Business Development' }
+    ]
+  }
+];
 
 const EXPERIENCE_LEVELS = [
   { value: 'junior', label: 'Junior (0-2 años)' },
@@ -74,7 +158,6 @@ const TalentEditProfile = () => {
   const navigate = useNavigate();
   const { profile, userProfile, updateProfile, updateAvatar, validateProfile } = useProfileData();
   const { socialLinks, addSocialLink, deleteSocialLink } = useSocialLinks();
-  const { categories, loading: categoriesLoading } = useProfessionalData();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<ProfileEditData>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -461,13 +544,12 @@ const TalentEditProfile = () => {
                   <Select
                     value={(formData as any).primary_category_id || ''}
                     onValueChange={(value) => handleInputChange('primary_category_id' as any, value)}
-                    disabled={categoriesLoading}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={categoriesLoading ? "Cargando..." : "Selecciona una categoría"} />
+                      <SelectValue placeholder="Selecciona una categoría" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map(cat => (
+                      {PROFESSIONAL_CATEGORIES.map(cat => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.name}
                         </SelectItem>
@@ -482,13 +564,13 @@ const TalentEditProfile = () => {
                 <Select
                   value={(formData as any).secondary_category_id || ''}
                   onValueChange={(value) => handleInputChange('secondary_category_id' as any, value)}
-                  disabled={!(formData as any).primary_category_id || categoriesLoading}
+                  disabled={!(formData as any).primary_category_id}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={!(formData as any).primary_category_id ? "Selecciona primero una categoría" : "Selecciona una subcategoría"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories
+                    {PROFESSIONAL_CATEGORIES
                       .find(cat => cat.id === (formData as any).primary_category_id)
                       ?.subcategories?.map(sub => (
                         <SelectItem key={sub.id} value={sub.id}>
