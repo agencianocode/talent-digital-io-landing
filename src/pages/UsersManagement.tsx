@@ -728,7 +728,19 @@ const UsersManagement = () => {
                           {member.status === 'accepted' ? 'Activo' :
                            member.status === 'pending' ? 'Pendiente' : 'Rechazado'}
                         </Badge>
-                        {member.role !== 'owner' && canManageUsers() && (
+                        {(() => {
+                          const showMenu = member.role !== 'owner' && canManageUsers();
+                          console.log('🔍 Menú de 3 puntos:', {
+                            memberId: member.id,
+                            memberName: member.user?.full_name,
+                            role: member.role,
+                            status: member.status,
+                            isOwner: member.role === 'owner',
+                            canManage: canManageUsers(),
+                            showMenu
+                          });
+                          return showMenu;
+                        })() && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm">
@@ -737,7 +749,16 @@ const UsersManagement = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               {/* Aprobar solicitud - solo para pendientes */}
-                              {member.status === 'pending' && (
+                              {(() => {
+                                const isPending = member.status === 'pending';
+                                console.log('🔍 Opciones de menú para:', {
+                                  memberId: member.id,
+                                  status: member.status,
+                                  isPending,
+                                  shouldShowApprove: isPending
+                                });
+                                return isPending;
+                              })() && (
                                 <>
                                   <DropdownMenuItem 
                                     onClick={() => handleApproveMembership(member.id)}
