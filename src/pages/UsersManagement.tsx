@@ -385,12 +385,52 @@ const UsersManagement = () => {
       return;
     }
 
+    if (!activeCompany?.id) {
+      toast.error('No hay empresa activa');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      console.log('✅ Aprobando solicitud:', { memberId, companyId: activeCompany?.id });
+      console.log('✅ Aprobando solicitud:', { memberId, companyId: activeCompany.id });
       
+      // Primero verificar que el registro existe y pertenece a la empresa correcta
+      const { data: checkData, error: checkError } = await supabase
+        .from('company_user_roles')
+        .select('id, status, company_id, user_id')
+        .eq('id', memberId)
+        .maybeSingle();
+      
+      console.log('🔍 Verificación previa del registro:', { checkData, checkError });
+      
+      if (checkError) {
+        console.error('❌ Error verificando registro:', checkError);
+        toast.error(`Error al verificar: ${checkError.message}`);
+        return;
+      }
+      
+      if (!checkData) {
+        console.error('❌ El registro no existe');
+        toast.error('El registro no existe en la base de datos');
+        return;
+      }
+      
+      if (checkData.company_id !== activeCompany.id) {
+        console.error('❌ El registro no pertenece a esta empresa');
+        toast.error('No tienes permisos para aprobar esta solicitud');
+        return;
+      }
+      
+      if (checkData.status === 'accepted') {
+        console.warn('⚠️ La solicitud ya está aprobada');
+        toast.info('Esta solicitud ya está aprobada');
+        await loadTeamMembers();
+        return;
+      }
+      
+      // Hacer el update usando 'as any' como en otros lugares del código
       const now = new Date().toISOString();
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('company_user_roles')
         .update({ 
           status: 'accepted',
@@ -398,45 +438,25 @@ const UsersManagement = () => {
           updated_at: now
         })
         .eq('id', memberId)
-        .eq('company_id', activeCompany?.id || '')
         .select();
 
       console.log('📡 Respuesta de Supabase:', { data, error, rowsAffected: data?.length });
 
       if (error) {
         console.error('❌ Error aprobando:', error);
+        console.error('❌ Detalles del error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         toast.error(`Error: ${error.message}`);
         throw error;
       }
 
       if (!data || data.length === 0) {
-        console.warn('⚠️ No se actualizó ninguna fila. Verificando si el registro existe...');
-        
-        // Verificar si el registro existe
-        const { data: checkData, error: checkError } = await supabase
-          .from('company_user_roles')
-          .select('id, status, company_id')
-          .eq('id', memberId)
-          .maybeSingle();
-        
-        console.log('🔍 Verificación del registro:', { checkData, checkError });
-        
-        if (checkError) {
-          toast.error(`Error al verificar: ${checkError.message}`);
-          return;
-        }
-        
-        if (!checkData) {
-          toast.error('El registro no existe en la base de datos');
-          return;
-        }
-        
-        if (checkData.company_id !== activeCompany?.id) {
-          toast.error('No tienes permisos para aprobar esta solicitud');
-          return;
-        }
-        
-        toast.warning('No se pudo actualizar. Intenta recargar la página.');
+        console.error('❌ No se actualizó ninguna fila después de la verificación');
+        toast.error('No se pudo actualizar el registro. Verifica tus permisos o intenta recargar la página.');
         return;
       }
 
