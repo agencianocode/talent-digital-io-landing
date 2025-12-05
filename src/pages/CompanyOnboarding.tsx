@@ -475,7 +475,8 @@ const CompanyOnboarding = () => {
             company_id: companyData.existingCompanyId,
             role: 'viewer', // Rol por defecto (viewer es el más básico)
             status: 'pending',
-            invited_by: null // Auto-solicitud
+            invited_by: null, // Auto-solicitud
+            invited_email: user.email // ✅ GUARDAR EMAIL para mostrarlo en la UI
           });
 
         if (membershipError) {
