@@ -815,37 +815,28 @@ const UsersManagement = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               {/* Aprobar solicitud - solo para pendientes */}
-                              {(() => {
-                                const isPending = member.status === 'pending';
-                                console.log('🔍 Opciones de menú para:', {
-                                  memberId: member.id,
-                                  status: member.status,
-                                  isPending,
-                                  shouldShowApprove: isPending
-                                });
-                                return isPending;
-                              })() && (
+                              {member.status === 'pending' && (
                                 <>
-                                  <div 
-                                    onClick={() => {
-                                      console.log('🎯 Approve button clicked for:', member.id);
+                                  <DropdownMenuItem 
+                                    onSelect={() => {
+                                      console.log('🎯 Approve selected for member:', member.id);
                                       handleApproveMembership(member.id);
                                     }}
-                                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-green-600 hover:bg-accent hover:text-accent-foreground"
+                                    className="text-green-600 focus:text-green-600"
                                   >
                                     <Check className="mr-2 h-4 w-4" />
                                     Aprobar solicitud
-                                  </div>
-                                  <div
-                                    onClick={() => {
-                                      console.log('🎯 Reject button clicked for:', member.id);
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      console.log('🎯 Reject selected for member:', member.id);
                                       handleRejectMembership(member.id);
                                     }}
-                                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-red-600 hover:bg-accent hover:text-accent-foreground"
+                                    className="text-red-600 focus:text-red-600"
                                   >
                                     <X className="mr-2 h-4 w-4" />
                                     Rechazar solicitud
-                                  </div>
+                                  </DropdownMenuItem>
                                 </>
                               )}
                               
