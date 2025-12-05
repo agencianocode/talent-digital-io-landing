@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useCompany } from "@/contexts/CompanyContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +26,7 @@ const DashboardLayout = () => {
   const {
     unreadCount
   } = useSupabaseMessages();
+  const { activeCompany } = useCompany();
   const handleLogout = async () => {
     await signOut();
     navigate('/');
@@ -47,8 +49,9 @@ const DashboardLayout = () => {
     label: "Marketplace"
   }];
 
-  // Solo mostrar Mi Academia si el usuario tiene rol academy_premium
-  const navigationItems = userRole === 'academy_premium' ? [...baseNavigationItems, {
+  // Mostrar Mi Academia si el usuario tiene rol academy_premium O si la empresa activa es de tipo academy
+  const showAcademyMenu = userRole === 'academy_premium' || activeCompany?.business_type === 'academy';
+  const navigationItems = showAcademyMenu ? [...baseNavigationItems, {
     to: "/business-dashboard/academy",
     icon: GraduationCap,
     label: "Mi Academia"
