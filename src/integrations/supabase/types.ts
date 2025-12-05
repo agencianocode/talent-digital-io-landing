@@ -995,9 +995,9 @@ export type Database = {
           is_available: boolean
           location: string
           portfolio_url: string | null
-          price: number
-          price_min: number
+          price: number | null
           price_max: number
+          price_min: number
           rating: number | null
           requests_count: number
           reviews_count: number
@@ -1020,9 +1020,9 @@ export type Database = {
           is_available?: boolean
           location: string
           portfolio_url?: string | null
-          price?: number
-          price_min: number
+          price?: number | null
           price_max: number
+          price_min: number
           rating?: number | null
           requests_count?: number
           reviews_count?: number
@@ -1045,9 +1045,9 @@ export type Database = {
           is_available?: boolean
           location?: string
           portfolio_url?: string | null
-          price?: number
-          price_min?: number
+          price?: number | null
           price_max?: number
+          price_min?: number
           rating?: number | null
           requests_count?: number
           reviews_count?: number
@@ -1058,7 +1058,15 @@ export type Database = {
           user_id?: string
           views_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_services_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
