@@ -111,10 +111,10 @@ export default function PublicAcademyDirectory() {
 
       if (graduatesError) throw graduatesError;
 
-      // Filtrar solo estudiantes que han aceptado la invitación y están activos o graduados
-      // Excluir: invitaciones pendientes, inactivos, suspendidos, pausados
+      // Filtrar solo estudiantes que han aceptado la invitación (user_id no null) y están activos o graduados
+      // Excluir: invitaciones pendientes (sin user_id), inactivos, suspendidos, pausados
       const visibleStudents = (graduatesData || []).filter((student: Graduate) => 
-        student.status === 'enrolled' || student.status === 'graduated'
+        (student.status === 'enrolled' || student.status === 'graduated') && student.user_id !== null
       );
 
       console.log('📚 Total students from RPC:', graduatesData?.length || 0);
