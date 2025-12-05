@@ -895,14 +895,14 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const hasCompletedBusinessOnboarding = async (userId: string) => {
     try {
-      // Use RPC to check membership (bypasses RLS restrictions)
+      // Use RPC to check membership (accepted OR pending - bypasses RLS restrictions)
       const { data: hasMembership, error: rpcError } = await supabase.rpc(
-        'has_accepted_company_membership',
+        'has_company_membership',
         { p_user_id: userId }
       );
 
       if (!rpcError && hasMembership === true) {
-        console.log('✅ User has accepted company membership (via RPC)');
+        console.log('✅ User has company membership (accepted or pending via RPC)');
         return true;
       }
 

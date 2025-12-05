@@ -2482,6 +2482,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      has_company_membership: { Args: { p_user_id: string }; Returns: boolean }
       has_company_permission: {
         Args: {
           company_uuid: string
@@ -2492,6 +2493,10 @@ export type Database = {
       }
       has_meaningful_interaction_with_talent: {
         Args: { business_user_uuid: string; talent_user_uuid: string }
+        Returns: boolean
+      }
+      has_pending_company_membership: {
+        Args: { p_user_id: string }
         Returns: boolean
       }
       increment_job_title_usage: {
