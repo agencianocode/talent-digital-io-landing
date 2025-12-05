@@ -2010,22 +2010,7 @@ export type Database = {
           video_presentation_url?: string | null
           years_experience?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "talent_profiles_primary_category_id_fkey"
-            columns: ["primary_category_id"]
-            isOneToOne: false
-            referencedRelation: "professional_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "talent_profiles_secondary_category_id_fkey"
-            columns: ["secondary_category_id"]
-            isOneToOne: false
-            referencedRelation: "professional_subcategories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       talent_social_links: {
         Row: {
