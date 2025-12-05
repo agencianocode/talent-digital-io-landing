@@ -436,7 +436,11 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
       
       <CardContent>
         <div className="space-y-4">
-          {teamMembers.map((member) => (
+      {teamMembers.map((member) => {
+          // Debug: log each member's status
+          console.log('🔍 Rendering member:', member.user_profile?.full_name, 'status:', member.status, 'role:', member.role);
+          
+          return (
             <div 
               key={member.id}
               className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -536,7 +540,8 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                 )}
               </div>
             </div>
-          ))}
+          );
+        })}
           
           {teamMembers.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
