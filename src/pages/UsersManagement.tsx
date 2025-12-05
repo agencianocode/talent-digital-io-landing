@@ -378,57 +378,12 @@ const UsersManagement = () => {
 
   // Approve membership request
   const handleApproveMembership = async (memberId: string) => {
-    // Validar que el ID no sea un ID falso (como owner-xxx)
-    if (memberId.startsWith('owner-')) {
-      console.error('❌ No se puede aprobar el owner, este es un ID falso');
-      toast.error('No se puede aprobar el propietario');
-      return;
-    }
-
-    if (!activeCompany?.id) {
-      toast.error('No hay empresa activa');
+    if (memberId.startsWith('owner-') || !activeCompany?.id) {
       return;
     }
 
     setIsLoading(true);
     try {
-      console.log('✅ Aprobando solicitud:', { memberId, companyId: activeCompany.id });
-      
-      // Primero verificar que el registro existe y pertenece a la empresa correcta
-      const { data: checkData, error: checkError } = await supabase
-        .from('company_user_roles')
-        .select('id, status, company_id, user_id')
-        .eq('id', memberId)
-        .maybeSingle();
-      
-      console.log('🔍 Verificación previa del registro:', { checkData, checkError });
-      
-      if (checkError) {
-        console.error('❌ Error verificando registro:', checkError);
-        toast.error(`Error al verificar: ${checkError.message}`);
-        return;
-      }
-      
-      if (!checkData) {
-        console.error('❌ El registro no existe');
-        toast.error('El registro no existe en la base de datos');
-        return;
-      }
-      
-      if (checkData.company_id !== activeCompany.id) {
-        console.error('❌ El registro no pertenece a esta empresa');
-        toast.error('No tienes permisos para aprobar esta solicitud');
-        return;
-      }
-      
-      if (checkData.status === 'accepted') {
-        console.warn('⚠️ La solicitud ya está aprobada');
-        toast.info('Esta solicitud ya está aprobada');
-        await loadTeamMembers();
-        return;
-      }
-      
-      // Hacer el update usando 'as any' como en otros lugares del código
       const now = new Date().toISOString();
       const { data, error } = await (supabase as any)
         .from('company_user_roles')
@@ -440,33 +395,24 @@ const UsersManagement = () => {
         .eq('id', memberId)
         .select();
 
-      console.log('📡 Respuesta de Supabase:', { data, error, rowsAffected: data?.length });
-
       if (error) {
-        console.error('❌ Error aprobando:', error);
-        console.error('❌ Detalles del error:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
         toast.error(`Error: ${error.message}`);
-        throw error;
-      }
-
-      if (!data || data.length === 0) {
-        console.error('❌ No se actualizó ninguna fila después de la verificación');
-        toast.error('No se pudo actualizar el registro. Verifica tus permisos o intenta recargar la página.');
         return;
       }
 
-      console.log('✅ Solicitud aprobada exitosamente:', data[0]);
-      toast.success('Solicitud aprobada correctamente');
-      await loadTeamMembers();
-      await refreshCompanies();
+      if (!data || data.length === 0) {
+        toast.error('No se pudo actualizar');
+        return;
+      }
+
+      toast.success('Solicitud aprobada');
+      
+      // Actualizar estado local sin recargar todo
+      setTeamMembers(prev => prev.map(m => 
+        m.id === memberId ? { ...m, status: 'accepted' as const } : m
+      ));
     } catch (error: any) {
-      console.error('💥 Error al aprobar solicitud:', error);
-      toast.error(`Error al aprobar solicitud: ${error?.message || 'Error desconocido'}`);
+      toast.error(`Error: ${error?.message || 'Error desconocido'}`);
     } finally {
       setIsLoading(false);
     }
