@@ -126,100 +126,36 @@ serve(async (req) => {
       }
     }
 
-    // Disable problematic triggers and insert, then re-enable
-    // Using raw SQL to bypass trigger issues with auth.users access
-    console.log('📝 Inserting membership request with triggers disabled...');
-    
-    const { data: insertResult, error: rpcError } = await supabaseAdmin.rpc('exec_sql', {
-      sql: `
-        -- Disable triggers temporarily
-        ALTER TABLE company_user_roles DISABLE TRIGGER notify_new_team_member_trigger;
-        ALTER TABLE company_user_roles DISABLE TRIGGER notify_access_request_trigger;
-        
-        -- Insert the membership request
-        INSERT INTO company_user_roles (user_id, company_id, role, status, invited_by, invited_email)
-        VALUES ('${userId}', '${companyId}', 'viewer', 'pending', NULL, '${userEmail || user.email}')
-        RETURNING id;
-        
-        -- Re-enable triggers
-        ALTER TABLE company_user_roles ENABLE TRIGGER notify_new_team_member_trigger;
-        ALTER TABLE company_user_roles ENABLE TRIGGER notify_access_request_trigger;
-      `
-    });
+    // Insert membership request using admin client (bypasses RLS)
+    console.log('📝 Creating membership request...');
+    const { data: membershipData, error: membershipError } = await supabaseAdmin
+      .from('company_user_roles')
+      .insert({
+        user_id: userId,
+        company_id: companyId,
+        role: 'viewer',
+        status: 'pending',
+        invited_by: null,
+        invited_email: userEmail || user.email
+      })
+      .select()
+      .single();
 
-    // If RPC doesn't exist, try direct insert with a workaround
-    if (rpcError) {
-      console.log('RPC not available, trying direct insert with session config...');
-      
-      // Try using a direct insert - the service role should work, but we'll catch the error
-      // and provide a fallback
-      const { data: membershipData, error: membershipError } = await supabaseAdmin
-        .from('company_user_roles')
-        .insert({
-          user_id: userId,
-          company_id: companyId,
-          role: 'viewer',
-          status: 'pending',
-          invited_by: null,
-          invited_email: userEmail || user.email
-        })
-        .select()
-        .single();
-
-      if (membershipError) {
-        console.error('Error creating membership request:', membershipError);
-        
-        // If it's a trigger error, we need a different approach
-        if (membershipError.message?.includes('permission denied')) {
-          console.log('Trigger permission error detected, attempting raw SQL...');
-          
-          // Use a raw query approach
-          const insertSql = `
-            INSERT INTO public.company_user_roles (user_id, company_id, role, status, invited_by, invited_email, created_at, updated_at)
-            VALUES ($1, $2, 'viewer', 'pending', NULL, $3, NOW(), NOW())
-            RETURNING id, user_id, company_id, role, status, created_at
-          `;
-          
-          // Since we can't easily disable triggers, we'll return an error suggesting manual intervention
-          return new Response(
-            JSON.stringify({ 
-              error: 'Database trigger error. Please contact support.',
-              details: membershipError.message,
-              code: 'TRIGGER_ERROR'
-            }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        
-        return new Response(
-          JSON.stringify({ error: 'Error creating membership request', details: membershipError.message }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      console.log('✅ Membership request created:', membershipData?.id);
-
+    if (membershipError) {
+      console.error('Error creating membership request:', membershipError);
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          data: membershipData,
-          company: {
-            id: company.id,
-            name: company.name,
-            ownerId: company.user_id
-          }
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Error creating membership request', details: membershipError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('✅ Membership request created via RPC');
+    console.log('✅ Membership request created:', membershipData.id);
 
     // Return success with company info for notification handling
     return new Response(
       JSON.stringify({ 
         success: true, 
-        data: { id: insertResult },
+        data: membershipData,
         company: {
           id: company.id,
           name: company.name,
