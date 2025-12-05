@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
     // Get user details
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('full_name, email')
+      .select('full_name')
       .eq('user_id', notification.user_id)
       .single();
 
