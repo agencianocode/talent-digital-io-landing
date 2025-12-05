@@ -560,23 +560,20 @@ const TalentEditProfile = () => {
               </div>
 
               <div>
-                <Label htmlFor="secondary_category">Subcategoría *</Label>
+                <Label htmlFor="secondary_category">Categoría Secundaria *</Label>
                 <Select
                   value={(formData as any).secondary_category_id || ''}
                   onValueChange={(value) => handleInputChange('secondary_category_id' as any, value)}
-                  disabled={!(formData as any).primary_category_id}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={!(formData as any).primary_category_id ? "Selecciona primero una categoría" : "Selecciona una subcategoría"} />
+                    <SelectValue placeholder="Selecciona una categoría secundaria" />
                   </SelectTrigger>
                   <SelectContent>
-                    {PROFESSIONAL_CATEGORIES
-                      .find(cat => cat.id === (formData as any).primary_category_id)
-                      ?.subcategories?.map(sub => (
-                        <SelectItem key={sub.id} value={sub.id}>
-                          {sub.name}
-                        </SelectItem>
-                      )) || []}
+                    {PROFESSIONAL_CATEGORIES.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
