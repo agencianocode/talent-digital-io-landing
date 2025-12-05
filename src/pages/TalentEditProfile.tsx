@@ -101,11 +101,10 @@ const PROFESSIONAL_CATEGORIES = [
 ];
 
 const EXPERIENCE_LEVELS = [
-  { value: 'junior', label: 'Junior (0-2 años)' },
-  { value: 'mid_level', label: 'Mid-level (3-5 años)' },
-  { value: 'senior', label: 'Senior (6-10 años)' },
-  { value: 'lead', label: 'Lead (10+ años)' },
-  { value: 'experto', label: 'Experto (15+ años)' }
+  { value: '0-1', label: 'Principiante (0-1 años)' },
+  { value: '1-3', label: 'Junior (1-3 años)' },
+  { value: '3-6', label: 'Intermedio (3-6 años)' },
+  { value: '6+', label: 'Senior (6+ años)' }
 ];
 
 const SOCIAL_PLATFORMS = [
