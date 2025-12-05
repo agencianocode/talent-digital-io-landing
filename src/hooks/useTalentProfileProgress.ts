@@ -8,7 +8,8 @@ interface TalentProfileData {
   bio: string | null;
   skills: string[] | null;
   experience_level: string | null;
-  video_presentation_url: string | null;
+  primary_category_id: string | null;
+  secondary_category_id: string | null;
 }
 
 interface UserProfile {
@@ -30,7 +31,6 @@ export const useTalentProfileProgress = () => {
   const { user } = useSupabaseAuth();
   const [talentProfile, setTalentProfile] = useState<TalentProfileData | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [hasExperience, setHasExperience] = useState(false);
   const [hasEducation, setHasEducation] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -45,7 +45,7 @@ export const useTalentProfileProgress = () => {
         // Obtener perfil de talento
         const { data: talentData, error: talentError } = await supabase
           .from('talent_profiles')
-          .select('*')
+          .select('user_id, title, bio, skills, experience_level, primary_category_id, secondary_category_id')
           .eq('user_id', user.id)
           .single();
 
@@ -66,17 +66,6 @@ export const useTalentProfileProgress = () => {
           console.error('Error fetching user profile:', profileError);
         } else if (profileData) {
           setUserProfile(profileData);
-        }
-
-        // Verificar experiencia laboral
-        const { data: experienceData, error: expError } = await supabase
-          .from('talent_experiences')
-          .select('id')
-          .eq('user_id', user.id)
-          .limit(1);
-
-        if (!expError && experienceData && experienceData.length > 0) {
-          setHasExperience(true);
         }
 
         // Verificar educación
@@ -114,13 +103,6 @@ export const useTalentProfileProgress = () => {
 
     return [
       {
-        id: 'basic-info',
-        title: 'Información Básica',
-        completed: !!(userProfile.full_name && userProfile.country),
-        route: '/talent-dashboard/profile',
-        description: 'Completa tu nombre y ubicación'
-      },
-      {
         id: 'profile-photo',
         title: 'Foto de Perfil',
         completed: hasAvatar,
@@ -128,45 +110,53 @@ export const useTalentProfileProgress = () => {
         description: 'Agrega una foto profesional'
       },
       {
-        id: 'title-bio',
-        title: 'Título y Biografía',
-        completed: !!(talentProfile.title && talentProfile.bio && talentProfile.bio.length >= 50),
+        id: 'basic-info',
+        title: 'Información Básica',
+        completed: !!(userProfile.full_name && userProfile.country && userProfile.city),
         route: '/talent-dashboard/profile',
-        description: 'Define tu título profesional y escribe tu biografía (mín. 50 caracteres)'
+        description: 'Nombre completo, país y ciudad'
+      },
+      {
+        id: 'categories',
+        title: 'Categorías Profesionales',
+        completed: !!(talentProfile.primary_category_id && talentProfile.secondary_category_id),
+        route: '/talent-dashboard/profile',
+        description: 'Categoría principal y secundaria'
+      },
+      {
+        id: 'title-experience',
+        title: 'Título y Nivel',
+        completed: !!(talentProfile.title && talentProfile.experience_level),
+        route: '/talent-dashboard/profile',
+        description: 'Título profesional y nivel de experiencia'
       },
       {
         id: 'skills',
         title: 'Habilidades',
         completed: !!(talentProfile.skills && talentProfile.skills.length >= 3),
         route: '/talent-dashboard/profile',
-        description: 'Agrega al menos 3 habilidades'
+        description: 'Al menos 3 habilidades'
       },
       {
-        id: 'experience',
-        title: 'Experiencia Laboral',
-        completed: hasExperience,
+        id: 'bio',
+        title: 'Biografía',
+        completed: !!(talentProfile.bio && talentProfile.bio.length >= 50),
         route: '/talent-dashboard/profile',
-        description: 'Agrega al menos una experiencia laboral'
+        description: 'Mínimo 50 caracteres'
       },
       {
         id: 'education',
         title: 'Formación Académica',
         completed: hasEducation,
         route: '/talent-dashboard/profile',
-        description: 'Agrega al menos un título o certificación'
-      },
-      {
-        id: 'video',
-        title: 'Video de Presentación',
-        completed: !!talentProfile.video_presentation_url,
-        route: '/talent-dashboard/profile',
-        description: 'Agrega un video para destacar tu perfil'
+        description: 'Al menos un estudio o certificación'
       }
     ];
   };
 
   const getCompletionPercentage = (): number => {
     const tasks = getTasksStatus();
+    if (tasks.length === 0) return 0;
     const completedTasks = tasks.filter(task => task.completed).length;
     return Math.round((completedTasks / tasks.length) * 100);
   };
