@@ -827,8 +827,12 @@ const UsersManagement = () => {
                               })() && (
                                 <>
                                   <DropdownMenuItem 
-                                    onClick={() => handleApproveMembership(member.id)}
-                                    className="text-green-600"
+                                    onSelect={(e) => {
+                                      e.preventDefault();
+                                      console.log('🎯 DropdownMenuItem onSelect triggered for:', member.id);
+                                      handleApproveMembership(member.id);
+                                    }}
+                                    className="text-green-600 cursor-pointer"
                                   >
                                     <Check className="mr-2 h-4 w-4" />
                                     Aprobar solicitud
