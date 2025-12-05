@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -100,6 +100,13 @@ export const useTalentProfileProgress = () => {
     fetchData();
   }, [user]);
 
+  // Verificar avatar desde ambas fuentes: profiles.avatar_url y user_metadata.avatar_url
+  const hasAvatar = useMemo(() => {
+    const profileAvatar = userProfile?.avatar_url;
+    const metadataAvatar = user?.user_metadata?.avatar_url;
+    return !!(profileAvatar || metadataAvatar);
+  }, [userProfile?.avatar_url, user?.user_metadata?.avatar_url]);
+
   const getTasksStatus = (): TaskStatus[] => {
     if (!userProfile || !talentProfile) {
       return [];
@@ -116,7 +123,7 @@ export const useTalentProfileProgress = () => {
       {
         id: 'profile-photo',
         title: 'Foto de Perfil',
-        completed: !!userProfile.avatar_url,
+        completed: hasAvatar,
         route: '/talent-dashboard/profile',
         description: 'Agrega una foto profesional'
       },
