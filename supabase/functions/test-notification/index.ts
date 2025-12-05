@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
       team: {
         title: '👥 Nueva solicitud de equipo (prueba)',
         message: 'Carlos Rodríguez solicitó unirse a tu empresa como Viewer',
-        action_url: '/business-dashboard/team/requests',
+        action_url: '/business-dashboard/users',
       },
       marketplace: {
         title: '🛍️ Consulta sobre tu servicio (prueba)',

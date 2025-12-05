@@ -99,7 +99,7 @@ serve(async (req) => {
         type: 'team',
         title: '🔔 Solicitud de acceso',
         message: 'DEMO: María García solicitó unirse a tu empresa como Viewer',
-        action_url: '/business-dashboard/team/requests',
+        action_url: '/business-dashboard/users',
         read: false,
       },
       {
