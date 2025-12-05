@@ -238,39 +238,57 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
   // Approve membership request
   const approveMembershipRequest = async (memberId: string) => {
     try {
-      const { error } = await supabase
+      console.log('✅ Aprobando solicitud de membresía:', { memberId, companyId });
+      
+      const { data, error } = await supabase
         .from('company_user_roles')
         .update({ 
           status: 'accepted',
           accepted_at: new Date().toISOString()
         })
-        .eq('id', memberId);
+        .eq('id', memberId)
+        .select();
 
-      if (error) throw error;
+      console.log('📡 Respuesta de UPDATE:', { data, error });
 
+      if (error) {
+        console.error('❌ Error en UPDATE:', error);
+        throw error;
+      }
+
+      console.log('✅ Solicitud aprobada exitosamente');
       toast.success('Solicitud aprobada correctamente');
       loadTeamMembers();
     } catch (error) {
-      console.error('Error approving request:', error);
-      toast.error('Error al aprobar solicitud');
+      console.error('💥 Error completo al aprobar solicitud:', error);
+      toast.error('Error al aprobar solicitud. Revisa los logs de consola.');
     }
   };
 
   // Reject membership request
   const rejectMembershipRequest = async (memberId: string) => {
     try {
-      const { error } = await supabase
+      console.log('🚫 Rechazando solicitud de membresía:', { memberId, companyId });
+      
+      const { data, error } = await supabase
         .from('company_user_roles')
         .update({ status: 'rejected' })
-        .eq('id', memberId);
+        .eq('id', memberId)
+        .select();
 
-      if (error) throw error;
+      console.log('📡 Respuesta de UPDATE:', { data, error });
 
+      if (error) {
+        console.error('❌ Error en UPDATE:', error);
+        throw error;
+      }
+
+      console.log('✅ Solicitud rechazada exitosamente');
       toast.success('Solicitud rechazada');
       loadTeamMembers();
     } catch (error) {
-      console.error('Error rejecting request:', error);
-      toast.error('Error al rechazar solicitud');
+      console.error('💥 Error completo al rechazar solicitud:', error);
+      toast.error('Error al rechazar solicitud. Revisa los logs de consola.');
     }
   };
 
@@ -444,12 +462,15 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
               
               <div className="flex items-center gap-3">
                 {/* Botones de aprobar/rechazar para solicitudes pendientes */}
-                {member.status === 'pending' && member.user_id && (
+                {member.status === 'pending' && (
                   <>
                     <Button
                       size="sm"
                       variant="default"
-                      onClick={() => approveMembershipRequest(member.id)}
+                      onClick={() => {
+                        console.log('🔍 Aprobando solicitud:', { memberId: member.id, userId: member.user_id });
+                        approveMembershipRequest(member.id);
+                      }}
                       className="bg-green-600 hover:bg-green-700"
                     >
                       <CheckCircle className="h-4 w-4 mr-1" />
@@ -458,7 +479,10 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => rejectMembershipRequest(member.id)}
+                      onClick={() => {
+                        console.log('🔍 Rechazando solicitud:', { memberId: member.id, userId: member.user_id });
+                        rejectMembershipRequest(member.id);
+                      }}
                     >
                       <XCircle className="h-4 w-4 mr-1" />
                       Rechazar
