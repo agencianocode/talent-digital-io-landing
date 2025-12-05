@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ interface Notification {
 
 const BusinessNotificationsPage = () => {
   const { user } = useSupabaseAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -110,11 +112,15 @@ const BusinessNotificationsPage = () => {
     e.preventDefault();
     e.stopPropagation();
     
+    console.log('🔍 Navegando a notificación:', { actionUrl });
+    
     // Handle external URLs
     if (/^https?:\/\//i.test(actionUrl)) {
+      console.log('🌐 URL externa, abriendo en nueva pestaña');
       window.open(actionUrl, '_blank');
     } else {
-      window.location.href = actionUrl;
+      console.log('🔗 URL interna, usando navigate');
+      navigate(actionUrl);
     }
   };
 
