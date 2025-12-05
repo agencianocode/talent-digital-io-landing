@@ -18,11 +18,11 @@ Deno.serve(async (req) => {
 
     console.log('Processing pending notifications...');
 
-    // Get unread notifications from the last hour
+    // Get unprocessed notifications from the last hour
     const { data: notifications, error } = await supabase
       .from('notifications')
       .select('id, user_id, type, created_at')
-      .eq('read', false)
+      .eq('processed', false)
       .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: true })
       .limit(50);
