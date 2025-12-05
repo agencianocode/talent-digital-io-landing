@@ -501,7 +501,7 @@ const CompanyOnboarding = () => {
             type: 'membership_request',
             title: 'Nueva solicitud para unirse a tu empresa',
             message: `${requesterName} (${user.email}) ha solicitado unirse a ${companyInfo.name}`,
-            action_url: '/business-dashboard/team',
+            action_url: '/business-dashboard/users',
             metadata: {
               requester_id: user.id,
               requester_name: requesterName,
