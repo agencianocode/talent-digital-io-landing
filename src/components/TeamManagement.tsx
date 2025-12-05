@@ -499,7 +499,17 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                 {member.role !== 'owner' && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0"
+                        onClick={() => console.log('🔍 Menu abierto para:', { 
+                          memberId: member.id, 
+                          status: member.status, 
+                          role: member.role,
+                          isPending: member.status === 'pending'
+                        })}
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -507,13 +517,13 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                       {member.status === 'pending' && (
                         <DropdownMenuItem 
                           onClick={() => {
-                            console.log('🔍 Aprobando solicitud:', { memberId: member.id, userId: member.user_id });
+                            console.log('✅ Aprobando solicitud:', { memberId: member.id, userId: member.user_id });
                             approveMembershipRequest(member.id);
                           }}
                           className="text-green-600"
                         >
                           <UserCheck className="h-4 w-4 mr-2" />
-                          Aprobar
+                          Aprobar solicitud
                         </DropdownMenuItem>
                       )}
                       {member.status === 'accepted' && member.role !== 'admin' && (
