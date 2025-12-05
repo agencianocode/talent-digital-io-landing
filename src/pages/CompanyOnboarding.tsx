@@ -467,17 +467,15 @@ const CompanyOnboarding = () => {
           }
         }
 
-        // 3. Crear solicitud de membresía pendiente
-        const { error: membershipError } = await supabase
-          .from('company_user_roles')
-          .insert({
-            user_id: user.id,
-            company_id: companyData.existingCompanyId,
-            role: 'viewer', // Rol por defecto (viewer es el más básico)
-            status: 'pending',
-            invited_by: null, // Auto-solicitud
-            invited_email: user.email // ✅ GUARDAR EMAIL para mostrarlo en la UI
-          });
+        // 3. Crear solicitud de membresía usando Edge Function (evita problemas de RLS con triggers)
+        console.log('📝 Creando solicitud de membresía via Edge Function...');
+        const { data: membershipResult, error: membershipError } = await supabase.functions.invoke('request-membership', {
+          body: {
+            companyId: companyData.existingCompanyId,
+            userId: user.id,
+            userEmail: user.email
+          }
+        });
 
         if (membershipError) {
           console.error('Error creando solicitud de membresía:', membershipError);
@@ -485,11 +483,34 @@ const CompanyOnboarding = () => {
           return;
         }
 
-        // 4. Obtener información del propietario
+        // Check if user already member or has pending request
+        if (membershipResult?.alreadyMember) {
+          toast.info('Ya eres miembro de esta empresa');
+          navigate('/business-dashboard');
+          return;
+        }
+
+        if (membershipResult?.pendingRequest) {
+          toast.info('Ya tienes una solicitud pendiente para esta empresa');
+          navigate('/business-dashboard');
+          return;
+        }
+
+        if (!membershipResult?.success) {
+          console.error('Error en respuesta de membership:', membershipResult);
+          toast.error(membershipResult?.error || 'Error al enviar solicitud a la empresa');
+          return;
+        }
+
+        console.log('✅ Solicitud de membresía creada:', membershipResult);
+
+        // 4. Obtener información del propietario desde la respuesta de la Edge Function
+        const companyOwnerId = membershipResult.company?.ownerId || companyInfo.user_id;
+
         const { data: ownerProfile } = await supabase
           .from('profiles')
           .select('full_name, user_id')
-          .eq('user_id', companyInfo.user_id)
+          .eq('user_id', companyOwnerId)
           .single();
 
         const requesterName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Un usuario';

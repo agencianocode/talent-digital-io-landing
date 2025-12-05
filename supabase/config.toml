@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.approve-membership]
 verify_jwt = true
+
+[functions.request-membership]
+verify_jwt = true
