@@ -799,8 +799,9 @@ const UsersManagement = () => {
                               size="sm"
                               variant="outline"
                               className="text-green-600 border-green-600 hover:bg-green-50"
-                              onClick={() => {
-                                console.log('✅ Botón Aprobar clickeado para:', member.id);
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                alert('Aprobando a: ' + member.id);
                                 handleApproveMembership(member.id);
                               }}
                             >
@@ -811,8 +812,9 @@ const UsersManagement = () => {
                               size="sm"
                               variant="outline"
                               className="text-red-600 border-red-600 hover:bg-red-50"
-                              onClick={() => {
-                                console.log('❌ Botón Rechazar clickeado para:', member.id);
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                alert('Rechazando a: ' + member.id);
                                 handleRejectMembership(member.id);
                               }}
                             >
