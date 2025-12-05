@@ -499,45 +499,27 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                 {member.role !== 'owner' && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0"
-                        onClick={() => console.log('🔍 Menu abierto para:', { 
-                          memberId: member.id, 
-                          status: member.status, 
-                          role: member.role,
-                          isPending: member.status === 'pending'
-                        })}
-                      >
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {member.status === 'pending' && (
+                      {/* Aprobar - solo para pendientes */}
+                      {member.status === 'pending' ? (
                         <DropdownMenuItem 
-                          onClick={() => {
-                            console.log('✅ Aprobando solicitud:', { memberId: member.id, userId: member.user_id });
-                            approveMembershipRequest(member.id);
-                          }}
+                          onClick={() => approveMembershipRequest(member.id)}
                           className="text-green-600"
                         >
                           <UserCheck className="h-4 w-4 mr-2" />
                           Aprobar solicitud
                         </DropdownMenuItem>
-                      )}
-                      {member.status === 'accepted' && member.role !== 'admin' && (
-                        <DropdownMenuItem 
-                          onClick={() => updateMemberRole(member.id, 'admin')}
-                        >
+                      ) : member.role !== 'admin' ? (
+                        <DropdownMenuItem onClick={() => updateMemberRole(member.id, 'admin')}>
                           <Shield className="h-4 w-4 mr-2" />
                           Hacer Administrador
                         </DropdownMenuItem>
-                      )}
-                      {member.status === 'accepted' && member.role === 'admin' && (
-                        <DropdownMenuItem 
-                          onClick={() => updateMemberRole(member.id, 'viewer')}
-                        >
+                      ) : (
+                        <DropdownMenuItem onClick={() => updateMemberRole(member.id, 'viewer')}>
                           <Eye className="h-4 w-4 mr-2" />
                           Hacer Miembro
                         </DropdownMenuItem>
