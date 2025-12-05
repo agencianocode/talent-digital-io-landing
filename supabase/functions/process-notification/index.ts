@@ -242,11 +242,27 @@ Deno.serve(async (req) => {
 
     console.log('Notification processing results:', results);
 
+    // Marcar la notificación como procesada para evitar reenvíos
+    const anyChannelSent = results.email || results.push || results.sms;
+    if (anyChannelSent) {
+      const { error: updateError } = await supabase
+        .from('notifications')
+        .update({ processed: true })
+        .eq('id', notification_id);
+
+      if (updateError) {
+        console.error('Error marking notification as processed:', updateError);
+      } else {
+        console.log('Notification marked as processed');
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         notification_id,
         channels_sent: results,
+        processed: anyChannelSent,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -1153,6 +1153,7 @@ export type Database = {
           data: Json | null
           id: string
           message: string
+          processed: boolean | null
           read: boolean
           read_at: string | null
           title: string
@@ -1166,6 +1167,7 @@ export type Database = {
           data?: Json | null
           id?: string
           message: string
+          processed?: boolean | null
           read?: boolean
           read_at?: string | null
           title: string
@@ -1179,6 +1181,7 @@ export type Database = {
           data?: Json | null
           id?: string
           message?: string
+          processed?: boolean | null
           read?: boolean
           read_at?: string | null
           title?: string
