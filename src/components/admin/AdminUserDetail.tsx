@@ -270,7 +270,7 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
         throw new Error('No active session');
       }
 
-      console.log('✅ Sesión obtenida, invocando Edge Function...');
+      console.log('✅ Sesión obtenida, invocando Edge Function admin-delete-user...');
 
       const { data, error } = await supabase.functions.invoke('admin-delete-user', {
         body: { userId: user.id },
@@ -297,9 +297,7 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
       onClose();
     } catch (error) {
       console.error('💥 Error completo al eliminar usuario:', error);
-      console.error('💥 Error message:', error instanceof Error ? error.message : 'Unknown error');
-      
-      toast.error(error instanceof Error ? error.message : 'Error al eliminar usuario. Verifica los logs de consola.');
+      toast.error(error instanceof Error ? error.message : 'Error al eliminar usuario');
     } finally {
       setIsUpdating(false);
     }
