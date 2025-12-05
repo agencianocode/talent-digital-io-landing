@@ -826,24 +826,26 @@ const UsersManagement = () => {
                                 return isPending;
                               })() && (
                                 <>
-                                  <DropdownMenuItem 
-                                    onSelect={(e) => {
-                                      e.preventDefault();
-                                      console.log('🎯 DropdownMenuItem onSelect triggered for:', member.id);
+                                  <div 
+                                    onClick={() => {
+                                      console.log('🎯 Approve button clicked for:', member.id);
                                       handleApproveMembership(member.id);
                                     }}
-                                    className="text-green-600 cursor-pointer"
+                                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-green-600 hover:bg-accent hover:text-accent-foreground"
                                   >
                                     <Check className="mr-2 h-4 w-4" />
                                     Aprobar solicitud
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleRejectMembership(member.id)}
-                                    className="text-red-600"
+                                  </div>
+                                  <div
+                                    onClick={() => {
+                                      console.log('🎯 Reject button clicked for:', member.id);
+                                      handleRejectMembership(member.id);
+                                    }}
+                                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-red-600 hover:bg-accent hover:text-accent-foreground"
                                   >
                                     <X className="mr-2 h-4 w-4" />
                                     Rechazar solicitud
-                                  </DropdownMenuItem>
+                                  </div>
                                 </>
                               )}
                               
