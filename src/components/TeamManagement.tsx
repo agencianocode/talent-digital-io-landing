@@ -224,6 +224,45 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
     }
   };
 
+  // Approve membership request
+  const approveMembershipRequest = async (memberId: string) => {
+    try {
+      const { error } = await supabase
+        .from('company_user_roles')
+        .update({ 
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        })
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      toast.success('Solicitud aprobada correctamente');
+      loadTeamMembers();
+    } catch (error) {
+      console.error('Error approving request:', error);
+      toast.error('Error al aprobar solicitud');
+    }
+  };
+
+  // Reject membership request
+  const rejectMembershipRequest = async (memberId: string) => {
+    try {
+      const { error } = await supabase
+        .from('company_user_roles')
+        .update({ status: 'rejected' })
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      toast.success('Solicitud rechazada');
+      loadTeamMembers();
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+      toast.error('Error al rechazar solicitud');
+    }
+  };
+
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'owner': return <Crown className="h-4 w-4" />;
@@ -387,12 +426,35 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                     {member.invited_email || member.user_profile?.email}
                   </p>
                   {member.status === 'pending' && (
-                    <p className="text-xs text-yellow-600">Invitación pendiente</p>
+                    <p className="text-xs text-yellow-600">Solicitud pendiente de aprobación</p>
                   )}
                 </div>
               </div>
               
               <div className="flex items-center gap-3">
+                {/* Botones de aprobar/rechazar para solicitudes pendientes */}
+                {member.status === 'pending' && member.user_id && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => approveMembershipRequest(member.id)}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Aprobar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => rejectMembershipRequest(member.id)}
+                    >
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Rechazar
+                    </Button>
+                  </>
+                )}
+                
                 <Badge 
                   variant="secondary"
                   className={getRoleColor(member.role)}

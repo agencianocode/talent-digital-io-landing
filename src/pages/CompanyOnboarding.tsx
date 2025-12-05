@@ -511,27 +511,44 @@ const CompanyOnboarding = () => {
             }
           });
 
-        // 6. Enviar email al propietario
-        const { data: ownerAuth } = await supabase.auth.admin.getUserById(companyInfo.user_id);
-        const ownerEmail = ownerAuth?.user?.email;
+        // 6. Enviar email al propietario usando Edge Function
+        // Obtener email del propietario desde auth.users (usando RPC seguro)
+        const { data: userEmailsData } = await supabase
+          .rpc('get_user_emails_by_ids', { user_ids: [companyInfo.user_id] });
+
+        const ownerEmail = userEmailsData?.[0]?.email;
+
+        console.log('📧 Intentando enviar email a:', { ownerEmail, companyOwner: companyInfo.user_id });
 
         if (ownerEmail) {
-          await supabase.functions.invoke('send-email', {
-            body: {
-              to: ownerEmail,
-              subject: `Nueva solicitud para unirse a ${companyInfo.name}`,
-              html: `
-                <h2>Nueva solicitud de membresía</h2>
-                <p>Hola ${ownerProfile?.full_name || 'allí'},</p>
-                <p><strong>${requesterName}</strong> (${user.email}) ha solicitado unirse a <strong>${companyInfo.name}</strong>.</p>
-                <p>Puedes revisar y aprobar esta solicitud en tu panel de administración:</p>
-                <a href="https://talentodigital.io/business-dashboard/team" style="display: inline-block; padding: 12px 24px; background-color: #000; color: #fff; text-decoration: none; border-radius: 6px; margin: 16px 0;">
-                  Ver Solicitud
-                </a>
-                <p>Si no reconoces a este usuario o crees que esto es un error, puedes rechazar la solicitud desde tu panel.</p>
-              `
+          try {
+            const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-email', {
+              body: {
+                to: ownerEmail,
+                subject: `Nueva solicitud para unirse a ${companyInfo.name}`,
+                html: `
+                  <h2>Nueva solicitud de membresía</h2>
+                  <p>Hola ${ownerProfile?.full_name || 'allí'},</p>
+                  <p><strong>${requesterName}</strong> (${user.email}) ha solicitado unirse a <strong>${companyInfo.name}</strong>.</p>
+                  <p>Puedes revisar y aprobar esta solicitud en tu panel de administración:</p>
+                  <a href="https://app.talentodigital.io/business-dashboard/team" style="display: inline-block; padding: 12px 24px; background-color: #000; color: #fff; text-decoration: none; border-radius: 6px; margin: 16px 0;">
+                    Ver Solicitud
+                  </a>
+                  <p>Si no reconoces a este usuario o crees que esto es un error, puedes rechazar la solicitud desde tu panel.</p>
+                `
+              }
+            });
+
+            if (emailError) {
+              console.error('❌ Error enviando email:', emailError);
+            } else {
+              console.log('✅ Email enviado exitosamente:', emailResult);
             }
-          });
+          } catch (emailEx) {
+            console.error('💥 Excepción al enviar email:', emailEx);
+          }
+        } else {
+          console.warn('⚠️ No se pudo obtener email del propietario');
         }
 
         // 7. Asignar rol business al usuario
