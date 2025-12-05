@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useProfessionalData } from './useProfessionalData';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CompletenessBreakdown {
@@ -15,7 +14,7 @@ export interface CompletenessBreakdown {
 export const useProfileCompleteness = () => {
   const { user, profile } = useSupabaseAuth();
   const [talentProfile, setTalentProfile] = useState<any>(null);
-  const { updateProfileCompleteness } = useProfessionalData();
+  const [hasEducation, setHasEducation] = useState(false);
   const [completeness, setCompleteness] = useState<number>(0);
   const [breakdown, setBreakdown] = useState<CompletenessBreakdown>({
     basic_info: 0,
@@ -26,6 +25,13 @@ export const useProfileCompleteness = () => {
     suggestions: []
   });
   const [loading, setLoading] = useState(false);
+
+  // Verificar avatar desde ambas fuentes
+  const hasAvatar = useMemo(() => {
+    const profileAvatar = profile?.avatar_url;
+    const metadataAvatar = user?.user_metadata?.avatar_url;
+    return !!(profileAvatar || metadataAvatar);
+  }, [profile?.avatar_url, user?.user_metadata?.avatar_url]);
 
   const calculateDetailedCompleteness = () => {
     if (!profile || !user) {
@@ -41,83 +47,93 @@ export const useProfileCompleteness = () => {
       return;
     }
 
-    let basicInfo = 0;
-    let professionalInfo = 0;
-    let skillsAndBio = 0;
+    let total = 0;
     const missingFields: string[] = [];
     const suggestions: string[] = [];
 
-    // Basic Info (40% total)
-    if (profile.full_name) {
-      basicInfo += 10;
-    } else {
-      missingFields.push('Nombre completo');
-      suggestions.push('Agrega tu nombre completo para que otros puedan encontrarte');
-    }
-
-    if (profile.avatar_url) {
-      basicInfo += 5;
+    // === CRITERIOS DE COMPLETITUD (11 campos = 100%) ===
+    
+    // 1. Foto de perfil (10%)
+    if (hasAvatar) {
+      total += 10;
     } else {
       missingFields.push('Foto de perfil');
       suggestions.push('Sube una foto profesional para mejorar tu perfil');
     }
 
-    if (profile.phone) {
-      basicInfo += 5;
+    // 2. Nombre completo (10%)
+    if (profile.full_name) {
+      total += 10;
     } else {
-      missingFields.push('Teléfono');
-      suggestions.push('Agrega tu número de teléfono para contacto directo');
+      missingFields.push('Nombre completo');
+      suggestions.push('Agrega tu nombre completo para que otros puedan encontrarte');
     }
 
     const profileData = profile as any;
+
+    // 3. País (5%)
     if (profileData?.country) {
-      basicInfo += 5;
+      total += 5;
     } else {
       missingFields.push('País');
-      suggestions.push('Indica tu ubicación para oportunidades locales');
+      suggestions.push('Indica tu país para oportunidades locales');
     }
 
+    // 4. Ciudad (5%)
     if (profileData?.city) {
-      basicInfo += 5;
+      total += 5;
     } else {
       missingFields.push('Ciudad');
       suggestions.push('Especifica tu ciudad para oportunidades cercanas');
     }
 
-    if (profileData?.social_links && Object.keys(profileData.social_links || {}).length > 0) {
-      basicInfo += 10;
-    } else {
-      missingFields.push('Redes sociales');
-      suggestions.push('Conecta tus redes profesionales como LinkedIn');
-    }
-
-    // Professional Info (30% total) - includes bio
+    // Campos del talent_profile
     if (talentProfile) {
+      // 5. Categoría principal (10%)
       if (talentProfile.primary_category_id) {
-        professionalInfo += 15;
+        total += 10;
       } else {
-        missingFields.push('Categoría profesional');
+        missingFields.push('Categoría principal');
         suggestions.push('Selecciona tu área de especialización principal');
       }
 
+      // 6. Categoría secundaria (10%)
+      if (talentProfile.secondary_category_id) {
+        total += 10;
+      } else {
+        missingFields.push('Categoría secundaria');
+        suggestions.push('Selecciona una categoría secundaria');
+      }
+
+      // 7. Título profesional (10%)
       if (talentProfile.title) {
-        professionalInfo += 8;
+        total += 10;
       } else {
         missingFields.push('Título profesional');
         suggestions.push('Define un título que represente tu rol actual');
       }
 
+      // 8. Nivel de experiencia (10%)
       if (talentProfile.experience_level) {
-        professionalInfo += 4;
+        total += 10;
       } else {
         missingFields.push('Nivel de experiencia');
         suggestions.push('Indica tu nivel de experiencia profesional');
       }
 
-      if (talentProfile.bio) {
-        professionalInfo += 3;
+      // 9. Skills - mínimo 3 (15%)
+      if (talentProfile.skills && talentProfile.skills.length >= 3) {
+        total += 15;
       } else {
-        missingFields.push('Biografía profesional');
+        missingFields.push('Habilidades (mínimo 3)');
+        suggestions.push('Agrega al menos 3 habilidades que te destacan');
+      }
+
+      // 10. Bio/descripción - mínimo 50 caracteres (10%)
+      if (talentProfile.bio && talentProfile.bio.length >= 50) {
+        total += 10;
+      } else {
+        missingFields.push('Biografía (mínimo 50 caracteres)');
         suggestions.push('Escribe una descripción atractiva de tu experiencia');
       }
     } else {
@@ -125,51 +141,45 @@ export const useProfileCompleteness = () => {
       suggestions.push('Completa tu perfil profesional para mostrar tus habilidades');
     }
 
-    // Skills and Industries (20% total)
-    if (talentProfile) {
-      if (talentProfile.skills && talentProfile.skills.length > 0) {
-        skillsAndBio += 15;
-      } else {
-        missingFields.push('Habilidades');
-        suggestions.push('Lista las habilidades que te destacan');
-      }
-
-      if (talentProfile.industries_of_interest && talentProfile.industries_of_interest.length > 0) {
-        skillsAndBio += 5;
-      } else {
-        missingFields.push('Industrias de interés');
-        suggestions.push('Selecciona las industrias donde quieres trabajar');
-      }
-    }
-
-    // Portfolio and Multimedia (10% total) - estos campos son importantes
-    let portfolioAndMultimedia = 0;
-    if (profileData?.video_presentation_url) {
-      portfolioAndMultimedia += 5;
+    // 11. Educación - al menos 1 registro (5%)
+    if (hasEducation) {
+      total += 5;
     } else {
-      missingFields.push('Video de presentación');
-      suggestions.push('Sube un video de presentación para destacar');
+      missingFields.push('Formación académica');
+      suggestions.push('Agrega al menos un estudio o certificación');
     }
 
-    if (talentProfile?.portfolio_url) {
-      portfolioAndMultimedia += 5;
-    } else {
-      missingFields.push('Portfolio online');
-      suggestions.push('Agrega un enlace a tu portfolio o trabajos');
-    }
+    // Calcular porcentajes por sección para el breakdown
+    // Basic info: foto + nombre + país + ciudad = 30%
+    let basicInfoScore = 0;
+    if (hasAvatar) basicInfoScore += 33;
+    if (profile.full_name) basicInfoScore += 34;
+    if (profileData?.country) basicInfoScore += 16;
+    if (profileData?.city) basicInfoScore += 17;
 
-    const total = Math.min(basicInfo + professionalInfo + skillsAndBio + portfolioAndMultimedia, 100);
+    // Professional info: categorías + título + nivel = 40%
+    let professionalInfoScore = 0;
+    if (talentProfile?.primary_category_id) professionalInfoScore += 25;
+    if (talentProfile?.secondary_category_id) professionalInfoScore += 25;
+    if (talentProfile?.title) professionalInfoScore += 25;
+    if (talentProfile?.experience_level) professionalInfoScore += 25;
+
+    // Skills and bio: skills + bio + educación = 30%
+    let skillsAndBioScore = 0;
+    if (talentProfile?.skills && talentProfile.skills.length >= 3) skillsAndBioScore += 50;
+    if (talentProfile?.bio && talentProfile.bio.length >= 50) skillsAndBioScore += 33;
+    if (hasEducation) skillsAndBioScore += 17;
 
     setBreakdown({
-      basic_info: Math.round((basicInfo / 40) * 100), // Normalize to percentage
-      professional_info: Math.round((professionalInfo / 30) * 100), // Normalize to percentage  
-      skills_and_bio: Math.round(((skillsAndBio + portfolioAndMultimedia) / 30) * 100), // Include portfolio in skills section display
-      total,
+      basic_info: Math.min(basicInfoScore, 100),
+      professional_info: Math.min(professionalInfoScore, 100),
+      skills_and_bio: Math.min(skillsAndBioScore, 100),
+      total: Math.min(total, 100),
       missing_fields: missingFields,
       suggestions
     });
 
-    setCompleteness(total);
+    setCompleteness(Math.min(total, 100));
   };
 
   const refreshCompleteness = async () => {
@@ -180,16 +190,7 @@ export const useProfileCompleteness = () => {
     
     setLoading(true);
     try {
-      console.log('🔄 Refreshing profile completeness for user:', user.id);
-      
-      // First update the server-side completeness score
-      const score = await updateProfileCompleteness(user.id);
-      console.log('✅ Server completeness score updated:', score);
-      
-      // Add delay to allow DB propagation
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Re-fetch talent profile data to ensure we have latest
+      // Re-fetch talent profile data
       const { data: freshTalentProfile } = await supabase
         .from('talent_profiles')
         .select('*')
@@ -197,12 +198,17 @@ export const useProfileCompleteness = () => {
         .single();
       
       if (freshTalentProfile) {
-        console.log('🔄 Fresh talent profile data loaded');
         setTalentProfile(freshTalentProfile);
       }
+
+      // Re-fetch education
+      const { data: educationData } = await supabase
+        .from('talent_education')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
       
-      // Set the completeness score and calculate breakdown
-      setCompleteness(score || 0);
+      setHasEducation(!!(educationData && educationData.length > 0));
       
       // Force recalculation after state update
       setTimeout(() => {
@@ -210,17 +216,7 @@ export const useProfileCompleteness = () => {
       }, 100);
       
     } catch (error) {
-      console.error('❌ Error refreshing completeness:', error);
-      // Set default values on error
-      setCompleteness(0);
-      setBreakdown({
-        basic_info: 0,
-        professional_info: 0,
-        skills_and_bio: 0,
-        total: 0,
-        missing_fields: ['Error al cargar datos'],
-        suggestions: ['Intenta recargar la página']
-      });
+      console.error('Error refreshing completeness:', error);
     } finally {
       setLoading(false);
     }
@@ -228,36 +224,42 @@ export const useProfileCompleteness = () => {
 
   // Fetch talent profile
   useEffect(() => {
-    const fetchTalentProfile = async () => {
+    const fetchData = async () => {
       if (!user?.id) return;
       
       try {
-        const { data } = await supabase
-          .from('talent_profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-        setTalentProfile(data);
+        const [talentResult, educationResult] = await Promise.all([
+          supabase
+            .from('talent_profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single(),
+          supabase
+            .from('talent_education')
+            .select('id')
+            .eq('user_id', user.id)
+            .limit(1)
+        ]);
+
+        if (talentResult.data) {
+          setTalentProfile(talentResult.data);
+        }
+        
+        setHasEducation(!!(educationResult.data && educationResult.data.length > 0));
       } catch (error) {
-        console.error('Error fetching talent profile:', error);
+        console.error('Error fetching profile data:', error);
       }
     };
 
-    fetchTalentProfile();
+    fetchData();
   }, [user?.id]);
 
-  // Prioritize server-calculated completeness over client calculation
+  // Calculate completeness when data changes
   useEffect(() => {
-    if (profile && talentProfile) {
-      // Use server score if available, otherwise calculate client-side
-      const serverCompleteness = profile.profile_completeness;
-      if (serverCompleteness != null && serverCompleteness > 0) {
-        setCompleteness(serverCompleteness);
-      }
-      // Always calculate breakdown for detailed view
+    if (profile) {
       calculateDetailedCompleteness();
     }
-  }, [profile?.updated_at, profile?.profile_completeness, talentProfile, user]);
+  }, [profile, talentProfile, hasEducation, hasAvatar]);
 
   const getCompletenessColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
