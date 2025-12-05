@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { X, Plus, MapPin, Phone, User, Camera, Upload, ArrowLeft, Link as LinkIcon, Target } from 'lucide-react';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useSocialLinks } from '@/hooks/useSocialLinks';
+import { useProfessionalData } from '@/hooks/useProfessionalData';
 import { ProfileEditData } from '@/types/profile';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,16 +22,6 @@ const EXPERIENCE_LEVELS = [
   { value: 'senior', label: 'Senior (6-10 años)' },
   { value: 'lead', label: 'Lead (10+ años)' },
   { value: 'experto', label: 'Experto (15+ años)' }
-];
-
-const PROFESSIONAL_CATEGORIES = [
-  { value: 'atencion_cliente', label: 'Atención al cliente' },
-  { value: 'creativo', label: 'Creativo' },
-  { value: 'marketing', label: 'Marketing' },
-  { value: 'operaciones', label: 'Operaciones' },
-  { value: 'soporte_profesional', label: 'Soporte Profesional' },
-  { value: 'tecnologia_automatizaciones', label: 'Tecnología y Automatizaciones' },
-  { value: 'ventas', label: 'Ventas' }
 ];
 
 const SOCIAL_PLATFORMS = [
@@ -83,6 +74,7 @@ const TalentEditProfile = () => {
   const navigate = useNavigate();
   const { profile, userProfile, updateProfile, updateAvatar, validateProfile } = useProfileData();
   const { socialLinks, addSocialLink, deleteSocialLink } = useSocialLinks();
+  const { categories, loading: categoriesLoading } = useProfessionalData();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<ProfileEditData>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -469,14 +461,15 @@ const TalentEditProfile = () => {
                   <Select
                     value={(formData as any).primary_category_id || ''}
                     onValueChange={(value) => handleInputChange('primary_category_id' as any, value)}
+                    disabled={categoriesLoading}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una categoría" />
+                      <SelectValue placeholder={categoriesLoading ? "Cargando..." : "Selecciona una categoría"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {PROFESSIONAL_CATEGORIES.map(cat => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
+                      {categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -485,20 +478,23 @@ const TalentEditProfile = () => {
               </div>
 
               <div>
-                <Label htmlFor="secondary_category">Categoría Secundaria *</Label>
+                <Label htmlFor="secondary_category">Subcategoría *</Label>
                 <Select
                   value={(formData as any).secondary_category_id || ''}
                   onValueChange={(value) => handleInputChange('secondary_category_id' as any, value)}
+                  disabled={!(formData as any).primary_category_id || categoriesLoading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona una categoría secundaria" />
+                    <SelectValue placeholder={!(formData as any).primary_category_id ? "Selecciona primero una categoría" : "Selecciona una subcategoría"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {PROFESSIONAL_CATEGORIES.map(cat => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
+                    {categories
+                      .find(cat => cat.id === (formData as any).primary_category_id)
+                      ?.subcategories?.map(sub => (
+                        <SelectItem key={sub.id} value={sub.id}>
+                          {sub.name}
+                        </SelectItem>
+                      )) || []}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
