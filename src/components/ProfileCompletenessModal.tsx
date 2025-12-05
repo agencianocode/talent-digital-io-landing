@@ -52,11 +52,23 @@ const ProfileCompletenessModal = ({
           {/* Mensaje motivacional */}
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 space-y-2">
             <p className="text-sm font-semibold text-gray-900">
-              ¡Completa tu perfil para aplicar a oportunidades! 🚀
+              {minCompletenessRequired === 100 
+                ? '¡Completa tu perfil al 100% para aplicar! 🚀'
+                : '¡Completa tu perfil para aplicar a oportunidades! 🚀'
+              }
             </p>
             <p className="text-sm text-gray-700">
-              Necesitas al menos <strong className="text-blue-600">{minCompletenessRequired}%</strong> de tu perfil completo. 
-              Un perfil completo aumenta tus chances de hacer match con las mejores empresas.
+              {minCompletenessRequired === 100 ? (
+                <>
+                  Para aplicar a oportunidades, necesitas un <strong className="text-blue-600">perfil 100% completo</strong>. 
+                  Esto incluye: foto, nombre, ubicación, categorías, título, experiencia, skills y bio.
+                </>
+              ) : (
+                <>
+                  Necesitas al menos <strong className="text-blue-600">{minCompletenessRequired}%</strong> de tu perfil completo. 
+                  Un perfil completo aumenta tus chances de hacer match con las mejores empresas.
+                </>
+              )}
             </p>
           </div>
 

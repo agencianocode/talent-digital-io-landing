@@ -251,13 +251,15 @@ const TalentOpportunitiesSearch = () => {
       return;
     }
 
-    // Check profile completeness
-    const minCompleteness = 60;
-    if (completeness < minCompleteness) {
+    // 🚨 VALIDACIÓN: Verificar que el perfil esté 100% completo
+    if (completeness < 100) {
+      console.log('⚠️ Perfil incompleto, mostrando modal:', { completeness });
+      setSelectedOpportunity(opportunity);
       setShowCompletenessModal(true);
       return;
     }
 
+    // Perfil completo, abrir modal de aplicación
     setSelectedOpportunity(opportunity);
     setShowApplicationModal(true);
   };
@@ -525,8 +527,11 @@ const TalentOpportunitiesSearch = () => {
       {showCompletenessModal && (
         <ProfileCompletenessModal
           isOpen={showCompletenessModal}
-          onClose={() => setShowCompletenessModal(false)}
-          minCompletenessRequired={60}
+          onClose={() => {
+            setShowCompletenessModal(false);
+            setSelectedOpportunity(null);
+          }}
+          minCompletenessRequired={100}
         />
       )}
 
