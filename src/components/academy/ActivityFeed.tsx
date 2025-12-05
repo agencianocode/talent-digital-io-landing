@@ -62,14 +62,15 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ academyId }) => {
   };
 
   const getActivityBadge = (status?: string) => {
-    // El badge se basa en el status del estudiante, no en el tipo de actividad
     if (status === 'graduated') return 'Graduado';
+    if (status === 'pending_invitations') return 'Invitación Pendiente';
     if (status === 'enrolled' || status === 'active') return 'Estudiante';
-    return 'Estudiante'; // Por defecto
+    return 'Estudiante';
   };
 
   const getBadgeColor = (status?: string) => {
     if (status === 'graduated') return 'bg-blue-100 text-blue-800';
+    if (status === 'pending_invitations') return 'bg-yellow-100 text-yellow-800';
     if (status === 'enrolled' || status === 'active') return 'bg-green-100 text-green-800';
     return 'bg-gray-100 text-gray-800';
   };
