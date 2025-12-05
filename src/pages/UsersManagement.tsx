@@ -791,6 +791,36 @@ const UsersManagement = () => {
                           {member.status === 'accepted' ? 'Activo' :
                            member.status === 'pending' ? 'Pendiente' : 'Rechazado'}
                         </Badge>
+                        
+                        {/* Botones de acción directos para solicitudes pendientes */}
+                        {member.status === 'pending' && canManageUsers() && !member.id.startsWith('owner-') && (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 border-green-600 hover:bg-green-50"
+                              onClick={() => {
+                                console.log('✅ Botón Aprobar clickeado para:', member.id);
+                                handleApproveMembership(member.id);
+                              }}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Aprobar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 border-red-600 hover:bg-red-50"
+                              onClick={() => {
+                                console.log('❌ Botón Rechazar clickeado para:', member.id);
+                                handleRejectMembership(member.id);
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Rechazar
+                            </Button>
+                          </div>
+                        )}
                         {(() => {
                           // No mostrar menú para owners o IDs falsos (owner-xxx)
                           const isValidId = !member.id.startsWith('owner-');
