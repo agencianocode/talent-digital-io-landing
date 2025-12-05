@@ -552,12 +552,31 @@ const CompanyOnboarding = () => {
         }
 
         // 7. Asignar rol business al usuario
-        await supabase
+        const { error: roleError } = await supabase
           .from('user_roles')
           .upsert({
             user_id: user.id,
             role: 'freemium_business'
+          }, {
+            onConflict: 'user_id'
           });
+
+        if (roleError) {
+          console.error('❌ Error asignando rol business:', roleError);
+          // Intentar con UPDATE directo si el upsert falla
+          const { error: updateRoleError } = await supabase
+            .from('user_roles')
+            .update({ role: 'freemium_business' })
+            .eq('user_id', user.id);
+          
+          if (updateRoleError) {
+            console.error('❌ Error actualizando rol:', updateRoleError);
+          } else {
+            console.log('✅ Rol actualizado correctamente con UPDATE');
+          }
+        } else {
+          console.log('✅ Rol business asignado correctamente');
+        }
 
         // 8. Marcar onboarding como completado
         await supabase.auth.updateUser({
