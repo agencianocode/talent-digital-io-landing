@@ -8,6 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { 
   UserPlus, 
   Crown, 
   Shield, 
@@ -16,7 +22,9 @@ import {
   Send,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  MoreVertical,
+  UserCheck
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -461,35 +469,6 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
               </div>
               
               <div className="flex items-center gap-3">
-                {/* Botones de aprobar/rechazar para solicitudes pendientes */}
-                {member.status === 'pending' && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => {
-                        console.log('🔍 Aprobando solicitud:', { memberId: member.id, userId: member.user_id });
-                        approveMembershipRequest(member.id);
-                      }}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Aprobar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => {
-                        console.log('🔍 Rechazando solicitud:', { memberId: member.id, userId: member.user_id });
-                        rejectMembershipRequest(member.id);
-                      }}
-                    >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Rechazar
-                    </Button>
-                  </>
-                )}
-                
                 <Badge 
                   variant="secondary"
                   className={getRoleColor(member.role)}
@@ -499,33 +478,69 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
                     {member.role === 'owner' ? 'Propietario' : member.role === 'admin' ? 'Administrador' : 'Miembro'}
                   </span>
                 </Badge>
+
+                <Badge 
+                  variant={member.status === 'accepted' ? 'default' : member.status === 'pending' ? 'secondary' : 'destructive'}
+                  className={member.status === 'accepted' ? 'bg-green-100 text-green-700 border-green-200' : member.status === 'pending' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : ''}
+                >
+                  {member.status === 'accepted' ? (
+                    <>
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Activo
+                    </>
+                  ) : member.status === 'pending' ? (
+                    <>
+                      <Clock className="h-3 w-3 mr-1" />
+                      Pendiente
+                    </>
+                  ) : 'Rechazado'}
+                </Badge>
                 
                 {member.role !== 'owner' && (
-                  <div className="flex items-center gap-1">
-                    <Select
-                      value={member.role}
-                      onValueChange={(newRole: 'admin' | 'viewer') => 
-                        updateMemberRole(member.id, newRole)
-                      }
-                    >
-                      <SelectTrigger className="w-32 h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                        <SelectItem value="viewer">Miembro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeMember(member.id)}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {member.status === 'pending' && (
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            console.log('🔍 Aprobando solicitud:', { memberId: member.id, userId: member.user_id });
+                            approveMembershipRequest(member.id);
+                          }}
+                          className="text-green-600"
+                        >
+                          <UserCheck className="h-4 w-4 mr-2" />
+                          Aprobar
+                        </DropdownMenuItem>
+                      )}
+                      {member.status === 'accepted' && member.role !== 'admin' && (
+                        <DropdownMenuItem 
+                          onClick={() => updateMemberRole(member.id, 'admin')}
+                        >
+                          <Shield className="h-4 w-4 mr-2" />
+                          Hacer Administrador
+                        </DropdownMenuItem>
+                      )}
+                      {member.status === 'accepted' && member.role === 'admin' && (
+                        <DropdownMenuItem 
+                          onClick={() => updateMemberRole(member.id, 'viewer')}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Hacer Miembro
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem 
+                        onClick={() => member.status === 'pending' ? rejectMembershipRequest(member.id) : removeMember(member.id)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
               </div>
             </div>

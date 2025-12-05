@@ -2272,6 +2272,10 @@ export type Database = {
         }
         Returns: string
       }
+      admin_delete_user_safe: {
+        Args: { p_admin_user_id: string; p_user_id: string }
+        Returns: Json
+      }
       calculate_profile_completeness: {
         Args: { user_uuid: string }
         Returns: number
