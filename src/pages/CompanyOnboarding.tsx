@@ -513,43 +513,72 @@ const CompanyOnboarding = () => {
           });
 
         // 6. Enviar email al propietario usando Edge Function
+        console.log('📧 PASO 1: Obteniendo email del propietario...');
+        console.log('📧 Company info:', { companyId: companyInfo.id, ownerId: companyInfo.user_id });
+        
         // Obtener email del propietario desde auth.users (usando RPC seguro)
-        const { data: userEmailsData } = await supabase
+        const { data: userEmailsData, error: emailFetchError } = await supabase
           .rpc('get_user_emails_by_ids', { user_ids: [companyInfo.user_id] });
+
+        console.log('📧 PASO 2: Respuesta de get_user_emails_by_ids:', { 
+          data: userEmailsData, 
+          error: emailFetchError 
+        });
 
         const ownerEmail = userEmailsData?.[0]?.email;
 
-        console.log('📧 Intentando enviar email a:', { ownerEmail, companyOwner: companyInfo.user_id });
+        console.log('📧 PASO 3: Email del propietario:', { 
+          ownerEmail, 
+          hasEmail: !!ownerEmail,
+          rawData: userEmailsData 
+        });
 
         if (ownerEmail) {
           try {
-            const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-email', {
-              body: {
-                to: ownerEmail,
-                subject: `Nueva solicitud para unirse a ${companyInfo.name}`,
-                html: `
-                  <h2>Nueva solicitud de membresía</h2>
-                  <p>Hola ${ownerProfile?.full_name || 'allí'},</p>
-                  <p><strong>${requesterName}</strong> (${user.email}) ha solicitado unirse a <strong>${companyInfo.name}</strong>.</p>
-                  <p>Puedes revisar y aprobar esta solicitud en tu panel de administración:</p>
+            console.log('📧 PASO 4: Invocando send-email function...');
+            
+            const emailBody = {
+              to: ownerEmail,
+              subject: `Nueva solicitud para unirse a ${companyInfo.name}`,
+              html: `
+                <h2>Nueva solicitud de membresía</h2>
+                <p>Hola ${ownerProfile?.full_name || 'allí'},</p>
+                <p><strong>${requesterName}</strong> (${user.email}) ha solicitado unirse a <strong>${companyInfo.name}</strong>.</p>
+                <p>Puedes revisar y aprobar esta solicitud en tu panel de administración:</p>
                 <a href="https://app.talentodigital.io/business-dashboard/users" style="display: inline-block; padding: 12px 24px; background-color: #000; color: #fff; text-decoration: none; border-radius: 6px; margin: 16px 0;">
                   Ver Solicitud
                 </a>
-                  <p>Si no reconoces a este usuario o crees que esto es un error, puedes rechazar la solicitud desde tu panel.</p>
-                `
-              }
+                <p>Si no reconoces a este usuario o crees que esto es un error, puedes rechazar la solicitud desde tu panel.</p>
+              `
+            };
+
+            console.log('📧 PASO 5: Email body:', { to: emailBody.to, subject: emailBody.subject });
+
+            const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-email', {
+              body: emailBody
+            });
+
+            console.log('📧 PASO 6: Respuesta de send-email:', { 
+              result: emailResult, 
+              error: emailError,
+              hasError: !!emailError,
+              hasResult: !!emailResult
             });
 
             if (emailError) {
               console.error('❌ Error enviando email:', emailError);
+              toast.error('No se pudo enviar el email de notificación, pero la solicitud fue creada.');
             } else {
               console.log('✅ Email enviado exitosamente:', emailResult);
+              toast.success('Email de notificación enviado al propietario');
             }
           } catch (emailEx) {
             console.error('💥 Excepción al enviar email:', emailEx);
+            toast.error('Error al enviar email, pero la solicitud fue creada.');
           }
         } else {
-          console.warn('⚠️ No se pudo obtener email del propietario');
+          console.error('⚠️ No se pudo obtener email del propietario');
+          toast.warning('Solicitud creada, pero no se pudo enviar email al propietario.');
         }
 
         // 7. Asignar rol business al usuario
