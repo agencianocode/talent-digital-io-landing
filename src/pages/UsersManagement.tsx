@@ -378,13 +378,59 @@ const UsersManagement = () => {
 
   // Approve membership request
   const handleApproveMembership = async (memberId: string) => {
-    if (memberId.startsWith('owner-') || !activeCompany?.id) {
+    console.log('📋 handleApproveMembership called with:', { memberId, activeCompanyId: activeCompany?.id });
+    
+    if (memberId.startsWith('owner-')) {
+      console.warn('⚠️ Cannot approve owner - this is a fake ID');
+      return;
+    }
+    
+    if (!activeCompany?.id) {
+      console.warn('⚠️ No active company');
+      toast.error('No hay empresa activa');
       return;
     }
 
     setIsLoading(true);
     try {
+      // Verificar primero que el registro existe y pertenece a esta empresa
+      const { data: checkData, error: checkError } = await supabase
+        .from('company_user_roles')
+        .select('id, status, company_id, user_id')
+        .eq('id', memberId)
+        .maybeSingle();
+      
+      console.log('🔍 Pre-check result:', { checkData, checkError });
+      
+      if (checkError) {
+        console.error('❌ Check error:', checkError);
+        toast.error(`Error al verificar: ${checkError.message}`);
+        return;
+      }
+      
+      if (!checkData) {
+        console.error('❌ Record not found');
+        toast.error('El registro no existe');
+        return;
+      }
+      
+      if (checkData.company_id !== activeCompany.id) {
+        console.error('❌ Record belongs to different company');
+        toast.error('No tienes permisos para esta solicitud');
+        return;
+      }
+      
+      if (checkData.status === 'accepted') {
+        console.warn('⚠️ Already accepted');
+        toast.info('Esta solicitud ya fue aprobada');
+        await loadTeamMembers();
+        return;
+      }
+
+      // Hacer el update
       const now = new Date().toISOString();
+      console.log('📡 Attempting update with:', { memberId, status: 'accepted', accepted_at: now });
+      
       const { data, error } = await (supabase as any)
         .from('company_user_roles')
         .update({ 
@@ -395,23 +441,28 @@ const UsersManagement = () => {
         .eq('id', memberId)
         .select();
 
+      console.log('📡 Update result:', { data, error, rowsAffected: data?.length });
+
       if (error) {
+        console.error('❌ Update error:', error);
         toast.error(`Error: ${error.message}`);
         return;
       }
 
       if (!data || data.length === 0) {
-        toast.error('No se pudo actualizar');
+        console.error('❌ No rows updated - possible RLS issue');
+        toast.error('No se pudo actualizar. Verifica tus permisos.');
         return;
       }
 
-      toast.success('Solicitud aprobada');
+      console.log('✅ Successfully approved:', data[0]);
+      toast.success('Solicitud aprobada correctamente');
       
-      // Actualizar estado local sin recargar todo
-      setTeamMembers(prev => prev.map(m => 
-        m.id === memberId ? { ...m, status: 'accepted' as const } : m
-      ));
+      // Recargar datos para reflejar cambios
+      await loadTeamMembers();
+      await refreshCompanies();
     } catch (error: any) {
+      console.error('💥 Exception:', error);
       toast.error(`Error: ${error?.message || 'Error desconocido'}`);
     } finally {
       setIsLoading(false);
