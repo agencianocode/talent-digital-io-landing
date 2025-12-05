@@ -125,10 +125,15 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
         });
       }
 
-      // Add team members
+      // Add team members (incluyendo solicitudes pendientes)
       if (roles) {
         roles.forEach(role => {
           const profile = Array.isArray(role.profiles) ? role.profiles[0] : role.profiles;
+          
+          // Para solicitudes pendientes con user_id, obtener el nombre del perfil
+          const displayName = profile?.full_name || role.invited_email || 'Usuario';
+          const displayEmail = role.invited_email || 'Sin email';
+          
           members.push({
             id: role.id,
             user_id: role.user_id || undefined,
@@ -138,14 +143,20 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
             invited_by: role.invited_by || undefined,
             accepted_at: role.accepted_at || undefined,
             created_at: role.created_at,
-            user_profile: profile ? {
-              full_name: profile.full_name || 'Unknown User',
-              avatar_url: profile.avatar_url,
-              email: role.invited_email || 'unknown@email.com'
-            } : undefined
+            user_profile: {
+              full_name: displayName,
+              avatar_url: profile?.avatar_url,
+              email: displayEmail
+            }
           });
         });
       }
+
+      console.log('👥 Team members loaded:', {
+        total: members.length,
+        pending: members.filter(m => m.status === 'pending').length,
+        accepted: members.filter(m => m.status === 'accepted').length
+      });
 
       setTeamMembers(members);
     } catch (error) {
