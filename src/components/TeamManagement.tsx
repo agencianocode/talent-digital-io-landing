@@ -437,8 +437,8 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ companyId }) => 
       <CardContent>
         <div className="space-y-4">
       {teamMembers.map((member) => {
-          // Debug: log each member's status
-          console.log('🔍 Rendering member:', member.user_profile?.full_name, 'status:', member.status, 'role:', member.role);
+          // Debug v2: log each member's status to verify deployment
+          console.log('🔍 [v2] Rendering member:', member.user_profile?.full_name, 'status:', member.status, 'role:', member.role);
           
           return (
             <div 
