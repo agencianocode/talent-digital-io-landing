@@ -201,7 +201,7 @@ const ServiceDetail: React.FC = () => {
         title: serviceData.title,
         description: serviceData.description,
         category: serviceData.category,
-        price: serviceData.price,
+        price: serviceData.price ?? 0,
         price_min: serviceData.price_min,
         price_max: serviceData.price_max,
         currency: serviceData.currency,

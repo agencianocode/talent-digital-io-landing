@@ -175,6 +175,8 @@ export const useTalentServices = (): UseTalentServicesReturn => {
         description: originalService.description,
         category: originalService.category,
         price: originalService.price,
+        price_min: originalService.price_min,
+        price_max: originalService.price_max,
         currency: originalService.currency,
         delivery_time: originalService.delivery_time,
         location: originalService.location,
