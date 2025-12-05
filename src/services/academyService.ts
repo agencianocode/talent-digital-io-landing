@@ -71,31 +71,52 @@ export const academyService = {
   // Get academy statistics
   async getAcademyStats(academyId: string): Promise<AcademyStats> {
     try {
-      // Get total students
-      const { count: totalStudents } = await supabase
+      // Get all students for this academy
+      const { data: allStudents, error } = await supabase
         .from('academy_students')
-        .select('*', { count: 'exact', head: true })
+        .select('student_email, status')
         .eq('academy_id', academyId);
 
-      // Get active students
-      const { count: activeStudents } = await supabase
-        .from('academy_students')
-        .select('*', { count: 'exact', head: true })
-        .eq('academy_id', academyId)
-        .eq('status', 'enrolled');
+      if (error) throw error;
 
-      // Get graduated students
-      const { count: graduatedStudents } = await supabase
-        .from('academy_students')
-        .select('*', { count: 'exact', head: true })
-        .eq('academy_id', academyId)
-        .eq('status', 'graduated');
+      const students = allStudents || [];
+      
+      // Get enrolled student emails to check if they are registered
+      const enrolledEmails = students
+        .filter(s => s.status === 'enrolled')
+        .map(s => s.student_email);
+
+      // Check which enrolled students are actually registered in auth.users
+      let registeredEmails = new Set<string>();
+      if (enrolledEmails.length > 0) {
+        const { data: registeredUsers } = await supabase
+          .rpc('get_user_ids_by_emails', { user_emails: enrolledEmails }) as {
+            data: Array<{ email: string; user_id: string }> | null;
+            error: any;
+          };
+        registeredEmails = new Set(registeredUsers?.map(u => u.email) || []);
+      }
+
+      // Count active students (enrolled + registered)
+      const activeStudents = students.filter(
+        s => s.status === 'enrolled' && registeredEmails.has(s.student_email)
+      ).length;
+
+      // Count pending invitations (enrolled + NOT registered)
+      const pendingInvitations = students.filter(
+        s => s.status === 'enrolled' && !registeredEmails.has(s.student_email)
+      ).length;
+
+      // Count graduated students
+      const graduatedStudents = students.filter(
+        s => s.status === 'graduated'
+      ).length;
 
       return {
-        total_students: totalStudents || 0,
-        active_students: activeStudents || 0,
-        graduated_students: graduatedStudents || 0,
-        pending_invitations: 0,
+        total_students: students.length,
+        active_students: activeStudents,
+        graduated_students: graduatedStudents,
+        pending_invitations: pendingInvitations,
         total_applications: 0,
         exclusive_opportunities: 0,
         recent_activity_count: 0
@@ -359,7 +380,7 @@ export const academyService = {
   // Get recent activity feed
   async getActivity(academyId: string, limit: number = 20): Promise<AcademyActivity[]> {
     try {
-      // Get recent students joined
+      // Get recent students
       const { data: students, error } = await supabase
         .from('academy_students')
         .select('id, student_name, student_email, enrollment_date, graduation_date, status, created_at')
@@ -369,13 +390,13 @@ export const academyService = {
 
       if (error) throw error;
 
-      // Obtener todos los emails para obtener nombres y avatares
+      // Get all emails to fetch names and avatars
       const allStudentEmails = students?.map(s => s.student_email) || [];
       let profilesMap = new Map<string, string>();
       let avatarsMap = new Map<string, string | null>();
+      let registeredEmails = new Set<string>();
       
       if (allStudentEmails.length > 0) {
-        console.log('📧 Fetching profiles for emails:', allStudentEmails);
         const { data: userProfiles, error: profilesError } = await supabase
           .rpc('get_user_ids_by_emails', { 
             user_emails: allStudentEmails
@@ -393,6 +414,9 @@ export const academyService = {
           console.error('❌ Error getting user profiles:', profilesError);
         }
         
+        // Track registered emails
+        registeredEmails = new Set(userProfiles?.map(p => p.email) || []);
+        
         profilesMap = new Map(
           userProfiles?.map(p => [p.email, p.full_name || p.email]) || []
         );
@@ -400,19 +424,19 @@ export const academyService = {
         avatarsMap = new Map(
           userProfiles?.map(p => [p.email, p.avatar_url]) || []
         );
-        
-        console.log('✅ Profiles map:', Array.from(profilesMap.entries()));
-        console.log('✅ Avatars map:', Array.from(avatarsMap.entries()));
       }
 
       const activities: AcademyActivity[] = (students || []).map(student => {
-        // Función auxiliar para detectar si un string es un email
         const isEmail = (str: string | null) => {
           if (!str) return false;
           return str.includes('@') && str.includes('.');
         };
         
-        // Si student_name es un email, usar el nombre del perfil
+        const isRegistered = registeredEmails.has(student.student_email);
+        const isGraduated = student.status === 'graduated';
+        const isPendingInvitation = !isRegistered && student.status === 'enrolled';
+        
+        // Get display name
         let displayName = student.student_name;
         if (!displayName || isEmail(displayName)) {
           displayName = profilesMap.get(student.student_email) || student.student_email;
@@ -420,18 +444,34 @@ export const academyService = {
         
         const avatarUrl = avatarsMap.get(student.student_email);
         
-        console.log(`👤 Student: ${student.student_email} -> Display name: ${displayName}, Avatar: ${avatarUrl}`);
+        // Determine activity type and description
+        let type: 'invitation_sent' | 'new_member' | 'graduation' | 'application' | 'profile_update';
+        let description: string;
+        let activityStatus: string;
+
+        if (isPendingInvitation) {
+          type = 'invitation_sent';
+          description = `Invitación enviada a ${student.student_email}`;
+          activityStatus = 'pending_invitations';
+        } else if (isGraduated) {
+          type = 'graduation';
+          description = `${displayName} se graduó`;
+          activityStatus = 'graduated';
+        } else {
+          type = 'new_member';
+          description = `${displayName} se unió a la academia`;
+          activityStatus = 'active';
+        }
         
-        // Siempre mostrar solo "se unió a la academia", no importa si tiene graduation_date
         return {
           id: student.id,
           academy_id: academyId,
-          type: 'new_member', // Siempre es una unión, no mostramos graduaciones
-          description: `${displayName} se unió a la academia`,
+          type,
+          description,
           user_id: student.student_email,
-          created_at: student.created_at, // Usar siempre la fecha de creación (unión)
+          created_at: student.created_at,
           metadata: { 
-            status: student.status,
+            status: activityStatus,
             avatar_url: avatarUrl || undefined
           }
         };
