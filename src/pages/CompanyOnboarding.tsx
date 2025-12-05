@@ -531,9 +531,9 @@ const CompanyOnboarding = () => {
                   <p>Hola ${ownerProfile?.full_name || 'allí'},</p>
                   <p><strong>${requesterName}</strong> (${user.email}) ha solicitado unirse a <strong>${companyInfo.name}</strong>.</p>
                   <p>Puedes revisar y aprobar esta solicitud en tu panel de administración:</p>
-                  <a href="https://app.talentodigital.io/business-dashboard/team" style="display: inline-block; padding: 12px 24px; background-color: #000; color: #fff; text-decoration: none; border-radius: 6px; margin: 16px 0;">
-                    Ver Solicitud
-                  </a>
+                <a href="https://app.talentodigital.io/business-dashboard/users" style="display: inline-block; padding: 12px 24px; background-color: #000; color: #fff; text-decoration: none; border-radius: 6px; margin: 16px 0;">
+                  Ver Solicitud
+                </a>
                   <p>Si no reconoces a este usuario o crees que esto es un error, puedes rechazar la solicitud desde tu panel.</p>
                 `
               }

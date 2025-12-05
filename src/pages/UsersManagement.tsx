@@ -376,6 +376,67 @@ const UsersManagement = () => {
     }
   };
 
+  // Approve membership request
+  const handleApproveMembership = async (memberId: string) => {
+    setIsLoading(true);
+    try {
+      console.log('✅ Aprobando solicitud:', { memberId, companyId: activeCompany?.id });
+      
+      const { error } = await supabase
+        .from('company_user_roles')
+        .update({ 
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        })
+        .eq('id', memberId);
+
+      if (error) {
+        console.error('❌ Error aprobando:', error);
+        throw error;
+      }
+
+      toast.success('Solicitud aprobada correctamente');
+      await loadTeamMembers();
+      await refreshCompanies();
+    } catch (error) {
+      console.error('💥 Error al aprobar solicitud:', error);
+      toast.error('Error al aprobar solicitud');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Reject membership request
+  const handleRejectMembership = async (memberId: string) => {
+    if (!confirm('¿Estás seguro de que quieres rechazar esta solicitud?')) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log('🚫 Rechazando solicitud:', { memberId, companyId: activeCompany?.id });
+      
+      const { error } = await supabase
+        .from('company_user_roles')
+        .update({ status: 'rejected' })
+        .eq('id', memberId);
+
+      if (error) {
+        console.error('❌ Error rechazando:', error);
+        throw error;
+      }
+
+      toast.success('Solicitud rechazada');
+      await loadTeamMembers();
+      await refreshCompanies();
+    } catch (error) {
+      console.error('💥 Error al rechazar solicitud:', error);
+      toast.error('Error al rechazar solicitud');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     console.log('useEffect triggered for loadTeamMembers');
     console.log('activeCompany?.id:', activeCompany?.id);
@@ -675,18 +736,45 @@ const UsersManagement = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {member.role !== 'admin' && (
-                                <DropdownMenuItem onClick={() => handleUpdateRole(member.id, 'admin')}>
-                                  <UserCog className="mr-2 h-4 w-4" />
-                                  Hacer Administrador
-                                </DropdownMenuItem>
+                              {/* Aprobar solicitud - solo para pendientes */}
+                              {member.status === 'pending' && (
+                                <>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleApproveMembership(member.id)}
+                                    className="text-green-600"
+                                  >
+                                    <Check className="mr-2 h-4 w-4" />
+                                    Aprobar solicitud
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleRejectMembership(member.id)}
+                                    className="text-red-600"
+                                  >
+                                    <X className="mr-2 h-4 w-4" />
+                                    Rechazar solicitud
+                                  </DropdownMenuItem>
+                                </>
                               )}
-                              {member.role !== 'viewer' && (
-                                <DropdownMenuItem onClick={() => handleUpdateRole(member.id, 'viewer')}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  Hacer Miembro
-                                </DropdownMenuItem>
+                              
+                              {/* Opciones de rol - solo para miembros aceptados */}
+                              {member.status === 'accepted' && (
+                                <>
+                                  {member.role !== 'admin' && (
+                                    <DropdownMenuItem onClick={() => handleUpdateRole(member.id, 'admin')}>
+                                      <UserCog className="mr-2 h-4 w-4" />
+                                      Hacer Administrador
+                                    </DropdownMenuItem>
+                                  )}
+                                  {member.role !== 'viewer' && (
+                                    <DropdownMenuItem onClick={() => handleUpdateRole(member.id, 'viewer')}>
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      Hacer Miembro
+                                    </DropdownMenuItem>
+                                  )}
+                                </>
                               )}
+                              
+                              {/* Eliminar - disponible siempre */}
                               <DropdownMenuItem
                                 onClick={() => handleRemoveMember(member.id)}
                                 className="text-destructive"
