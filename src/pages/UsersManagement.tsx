@@ -393,70 +393,35 @@ const UsersManagement = () => {
 
     setIsLoading(true);
     try {
-      // Verificar primero que el registro existe y pertenece a esta empresa
-      const { data: checkData, error: checkError } = await supabase
-        .from('company_user_roles')
-        .select('id, status, company_id, user_id')
-        .eq('id', memberId)
-        .maybeSingle();
+      console.log('📡 Calling approve-membership edge function...');
       
-      console.log('🔍 Pre-check result:', { checkData, checkError });
-      
-      if (checkError) {
-        console.error('❌ Check error:', checkError);
-        toast.error(`Error al verificar: ${checkError.message}`);
-        return;
-      }
-      
-      if (!checkData) {
-        console.error('❌ Record not found');
-        toast.error('El registro no existe');
-        return;
-      }
-      
-      if (checkData.company_id !== activeCompany.id) {
-        console.error('❌ Record belongs to different company');
-        toast.error('No tienes permisos para esta solicitud');
-        return;
-      }
-      
-      if (checkData.status === 'accepted') {
-        console.warn('⚠️ Already accepted');
-        toast.info('Esta solicitud ya fue aprobada');
-        await loadTeamMembers();
-        return;
-      }
+      const { data, error } = await supabase.functions.invoke('approve-membership', {
+        body: { 
+          memberId, 
+          companyId: activeCompany.id,
+          action: 'approve'
+        }
+      });
 
-      // Hacer el update
-      const now = new Date().toISOString();
-      console.log('📡 Attempting update with:', { memberId, status: 'accepted', accepted_at: now });
-      
-      const { data, error } = await (supabase as any)
-        .from('company_user_roles')
-        .update({ 
-          status: 'accepted',
-          accepted_at: now,
-          updated_at: now
-        })
-        .eq('id', memberId)
-        .select();
-
-      console.log('📡 Update result:', { data, error, rowsAffected: data?.length });
+      console.log('📡 Edge function response:', { data, error });
 
       if (error) {
-        console.error('❌ Update error:', error);
+        console.error('❌ Edge function error:', error);
         toast.error(`Error: ${error.message}`);
         return;
       }
 
-      if (!data || data.length === 0) {
-        console.error('❌ No rows updated - possible RLS issue');
-        toast.error('No se pudo actualizar. Verifica tus permisos.');
+      if (data?.error) {
+        console.error('❌ API error:', data.error);
+        toast.error(data.error);
         return;
       }
 
-      console.log('✅ Successfully approved:', data[0]);
-      toast.success('Solicitud aprobada correctamente');
+      if (data?.alreadyProcessed) {
+        toast.info(data.message);
+      } else {
+        toast.success('Solicitud aprobada correctamente');
+      }
       
       // Recargar datos para reflejar cambios
       await loadTeamMembers();
@@ -477,16 +442,27 @@ const UsersManagement = () => {
 
     setIsLoading(true);
     try {
-      console.log('🚫 Rechazando solicitud:', { memberId, companyId: activeCompany?.id });
+      console.log('🚫 Calling approve-membership edge function for reject...');
       
-      const { error } = await supabase
-        .from('company_user_roles')
-        .update({ status: 'rejected' })
-        .eq('id', memberId);
+      const { data, error } = await supabase.functions.invoke('approve-membership', {
+        body: { 
+          memberId, 
+          companyId: activeCompany?.id,
+          action: 'reject'
+        }
+      });
+
+      console.log('📡 Edge function response:', { data, error });
 
       if (error) {
-        console.error('❌ Error rechazando:', error);
+        console.error('❌ Edge function error:', error);
         throw error;
+      }
+
+      if (data?.error) {
+        console.error('❌ API error:', data.error);
+        toast.error(data.error);
+        return;
       }
 
       toast.success('Solicitud rechazada');
@@ -799,11 +775,7 @@ const UsersManagement = () => {
                               size="sm"
                               variant="outline"
                               className="text-green-600 border-green-600 hover:bg-green-50"
-                              onMouseDown={(e) => {
-                                e.stopPropagation();
-                                alert('Aprobando a: ' + member.id);
-                                handleApproveMembership(member.id);
-                              }}
+                              onClick={() => handleApproveMembership(member.id)}
                             >
                               <Check className="h-4 w-4 mr-1" />
                               Aprobar
@@ -812,11 +784,7 @@ const UsersManagement = () => {
                               size="sm"
                               variant="outline"
                               className="text-red-600 border-red-600 hover:bg-red-50"
-                              onMouseDown={(e) => {
-                                e.stopPropagation();
-                                alert('Rechazando a: ' + member.id);
-                                handleRejectMembership(member.id);
-                              }}
+                              onClick={() => handleRejectMembership(member.id)}
                             >
                               <X className="h-4 w-4 mr-1" />
                               Rechazar
