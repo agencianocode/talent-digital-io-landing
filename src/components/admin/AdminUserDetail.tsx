@@ -262,8 +262,15 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
     setIsUpdating(true);
     try {
+      console.log('🗑️ Intentando eliminar usuario:', { userId: user.id, email: user.email });
+      
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No active session');
+      if (!session) {
+        console.error('❌ No hay sesión activa');
+        throw new Error('No active session');
+      }
+
+      console.log('✅ Sesión obtenida, invocando Edge Function...');
 
       const { data, error } = await supabase.functions.invoke('admin-delete-user', {
         body: { userId: user.id },
@@ -272,15 +279,27 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
         }
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      console.log('📡 Respuesta de Edge Function:', { data, error });
 
+      if (error) {
+        console.error('❌ Error en invocación:', error);
+        throw error;
+      }
+      
+      if (data?.error) {
+        console.error('❌ Error en respuesta:', data.error);
+        throw new Error(data.error);
+      }
+
+      console.log('✅ Usuario eliminado exitosamente');
       toast.success('Usuario eliminado correctamente');
       onUserUpdate();
       onClose();
     } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error(error instanceof Error ? error.message : 'Error al eliminar usuario');
+      console.error('💥 Error completo al eliminar usuario:', error);
+      console.error('💥 Error message:', error instanceof Error ? error.message : 'Unknown error');
+      
+      toast.error(error instanceof Error ? error.message : 'Error al eliminar usuario. Verifica los logs de consola.');
     } finally {
       setIsUpdating(false);
     }
