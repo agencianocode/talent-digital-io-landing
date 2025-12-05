@@ -814,32 +814,6 @@ const UsersManagement = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {/* Aprobar solicitud - solo para pendientes */}
-                              {member.status === 'pending' && (
-                                <>
-                                  <DropdownMenuItem 
-                                    onSelect={() => {
-                                      console.log('🎯 Approve selected for member:', member.id);
-                                      handleApproveMembership(member.id);
-                                    }}
-                                    className="text-green-600 focus:text-green-600"
-                                  >
-                                    <Check className="mr-2 h-4 w-4" />
-                                    Aprobar solicitud
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onSelect={() => {
-                                      console.log('🎯 Reject selected for member:', member.id);
-                                      handleRejectMembership(member.id);
-                                    }}
-                                    className="text-red-600 focus:text-red-600"
-                                  >
-                                    <X className="mr-2 h-4 w-4" />
-                                    Rechazar solicitud
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              
                               {/* Opciones de rol - solo para miembros aceptados */}
                               {member.status === 'accepted' && (
                                 <>
