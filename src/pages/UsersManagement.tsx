@@ -382,19 +382,29 @@ const UsersManagement = () => {
     try {
       console.log('✅ Aprobando solicitud:', { memberId, companyId: activeCompany?.id });
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('company_user_roles')
         .update({ 
           status: 'accepted',
           accepted_at: new Date().toISOString()
         })
-        .eq('id', memberId);
+        .eq('id', memberId)
+        .select();
+
+      console.log('📡 Respuesta de Supabase:', { data, error, rowsAffected: data?.length });
 
       if (error) {
         console.error('❌ Error aprobando:', error);
         throw error;
       }
 
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No se actualizó ninguna fila. Puede que el registro no exista o no tengas permisos.');
+        toast.warning('No se pudo aprobar. Verifica que tengas permisos.');
+        return;
+      }
+
+      console.log('✅ Solicitud aprobada exitosamente:', data[0]);
       toast.success('Solicitud aprobada correctamente');
       await loadTeamMembers();
       await refreshCompanies();
