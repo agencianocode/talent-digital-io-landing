@@ -385,9 +385,10 @@ export const useProfileData = () => {
     try {
       setError(null);
 
-      // Upload file to storage with proper folder structure
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
+      // Upload file to storage with unique name to avoid caching issues
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const timestamp = Date.now();
+      const fileName = `${user.id}/avatar_${timestamp}.${fileExt}`;
       
       console.log('🔍 Uploading avatar:', {
         fileName,
