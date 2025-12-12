@@ -111,8 +111,10 @@ export const useProfileProgress = () => {
     }
 
     const onboardingComplete = !!(companyData.name);
+    const isAcademy = companyData.business_type === 'academy';
     
     // Check required fields based on CompanyProfileWizard schema
+    // For academies, we have reduced requirements (no industry, size, revenue, social links needed)
     const requiredCompanyFields = {
       name: !!companyData.name,
       description: !!(companyData.description && companyData.description.length >= 10),
@@ -120,9 +122,9 @@ export const useProfileProgress = () => {
       // Optional but recommended fields
       logo_url: !!companyData.logo_url,
       website: !!companyData.website,
+      // These are NOT required for academies
       industry: !!companyData.industry,
       size: !!companyData.size,
-      // Additional fields for complete profile
       annual_revenue_range: !!companyData.annual_revenue_range,
       social_links: !!(companyData.social_links && Object.keys(companyData.social_links).length > 0),
     };
@@ -132,15 +134,17 @@ export const useProfileProgress = () => {
                                  requiredCompanyFields.description && 
                                  requiredCompanyFields.location;
     
-    const recommendedFieldsComplete = requiredFieldsComplete &&
-                                    requiredCompanyFields.logo_url &&
-                                    requiredCompanyFields.website &&
-                                    requiredCompanyFields.industry &&
-                                    requiredCompanyFields.size &&
-                                    requiredCompanyFields.annual_revenue_range &&
-                                    requiredCompanyFields.social_links;
-
-    const profileComplete = recommendedFieldsComplete;
+    // For academies: only require name, description, location, logo, and website
+    // For companies: require all fields including industry, size, revenue, and social links
+    const profileComplete = isAcademy
+      ? (requiredFieldsComplete && requiredCompanyFields.logo_url && requiredCompanyFields.website)
+      : (requiredFieldsComplete &&
+         requiredCompanyFields.logo_url &&
+         requiredCompanyFields.website &&
+         requiredCompanyFields.industry &&
+         requiredCompanyFields.size &&
+         requiredCompanyFields.annual_revenue_range &&
+         requiredCompanyFields.social_links);
 
     // Check if user has published any opportunities
     const hasPublishedOpportunity = false; // TODO: Implement this check when opportunities table is available
@@ -157,7 +161,7 @@ export const useProfileProgress = () => {
       },
       {
         id: 'profile',
-        title: profileComplete ? 'Perfil de Empresa Completo' : 'Perfil de Empresa Incompleto',
+        title: profileComplete ? (isAcademy ? 'Perfil de Academia Completo' : 'Perfil de Empresa Completo') : (isAcademy ? 'Perfil de Academia Incompleto' : 'Perfil de Empresa Incompleto'),
         completed: profileComplete,
         nextStepDescription: profileComplete ? undefined : (() => {
           const missing = [];
@@ -165,10 +169,13 @@ export const useProfileProgress = () => {
           if (!requiredCompanyFields.location) missing.push('ubicación');
           if (!requiredCompanyFields.logo_url) missing.push('logo');
           if (!requiredCompanyFields.website) missing.push('sitio web');
-          if (!requiredCompanyFields.industry) missing.push('industria');
-          if (!requiredCompanyFields.size) missing.push('tamaño de empresa');
-          if (!requiredCompanyFields.annual_revenue_range) missing.push('rango de ingresos');
-          if (!requiredCompanyFields.social_links) missing.push('redes sociales');
+          // Only add these fields as missing for non-academy companies
+          if (!isAcademy) {
+            if (!requiredCompanyFields.industry) missing.push('industria');
+            if (!requiredCompanyFields.size) missing.push('tamaño de empresa');
+            if (!requiredCompanyFields.annual_revenue_range) missing.push('rango de ingresos');
+            if (!requiredCompanyFields.social_links) missing.push('redes sociales');
+          }
           
           return `Completa en /profile?tab=corporate: ${missing.join(', ')}`;
         })()
@@ -191,19 +198,27 @@ export const useProfileProgress = () => {
   const getCompletionPercentage = (): number => {
     if (!companyData) return 0;
     
+    const isAcademy = companyData.business_type === 'academy';
+    
     // Calculate based on individual field completion for more granular percentage
+    // For academies: only 5 fields are required (name, description, location, logo, website)
+    // For companies: 9 fields are required
     let completedFields = 0;
-    let totalFields = 9; // Total important fields for a complete profile
+    const totalFields = isAcademy ? 5 : 9;
     
     if (companyData.name) completedFields++;
     if (companyData.description && companyData.description.length >= 10) completedFields++;
     if (companyData.location) completedFields++;
     if (companyData.logo_url) completedFields++;
     if (companyData.website) completedFields++;
-    if (companyData.industry) completedFields++;
-    if (companyData.size) completedFields++;
-    if (companyData.annual_revenue_range) completedFields++;
-    if (companyData.social_links && Object.keys(companyData.social_links).length > 0) completedFields++;
+    
+    // Only count these fields for non-academy companies
+    if (!isAcademy) {
+      if (companyData.industry) completedFields++;
+      if (companyData.size) completedFields++;
+      if (companyData.annual_revenue_range) completedFields++;
+      if (companyData.social_links && Object.keys(companyData.social_links).length > 0) completedFields++;
+    }
     
     return Math.round((completedFields / totalFields) * 100);
   };
