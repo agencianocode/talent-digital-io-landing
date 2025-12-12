@@ -54,6 +54,82 @@ interface ApplicationData {
   start_availability: string;
 }
 
+// Mapea skills/subcategorías a categorías principales para mostrar en la pregunta de experiencia
+const getCategoryDisplayName = (category: string | undefined): string => {
+  if (!category) return 'esta área';
+  
+  const categoryLower = category.toLowerCase().trim();
+  
+  // Mapeo de skills/subcategorías a categorías principales
+  const categoryMapping: Record<string, string> = {
+    // Ventas
+    'prospección': 'Ventas',
+    'ventas': 'Ventas',
+    'ventas b2b': 'Ventas',
+    'closer de ventas': 'Ventas',
+    'crm': 'Ventas',
+    'liderazgo comercial': 'Ventas',
+    'negociación': 'Ventas',
+    
+    // Marketing
+    'paid media': 'Marketing',
+    'seo': 'Marketing',
+    'google ads': 'Marketing',
+    'facebook ads': 'Marketing',
+    'marketing digital': 'Marketing',
+    'content marketing': 'Marketing',
+    'email marketing': 'Marketing',
+    'redes sociales': 'Marketing',
+    
+    // Atención al cliente
+    'customer success': 'Atención al Cliente',
+    'atención al cliente': 'Atención al Cliente',
+    'comunicación escrita': 'Atención al Cliente',
+    'comunicación efectiva': 'Atención al Cliente',
+    'soporte al cliente': 'Atención al Cliente',
+    
+    // Operaciones
+    'gestión administrativa': 'Operaciones',
+    'operaciones': 'Operaciones',
+    'logística': 'Operaciones',
+    'administración': 'Operaciones',
+    
+    // Creativo
+    'diseño gráfico': 'Creativo',
+    'diseño': 'Creativo',
+    'creativo': 'Creativo',
+    'video': 'Creativo',
+    'fotografía': 'Creativo',
+    
+    // Tecnología
+    'desarrollo web': 'Tecnología y Automatizaciones',
+    'programación': 'Tecnología y Automatizaciones',
+    'tecnología': 'Tecnología y Automatizaciones',
+    'automatización': 'Tecnología y Automatizaciones',
+    'tecnología y automatizaciones': 'Tecnología y Automatizaciones',
+    
+    // Soporte Profesional
+    'contabilidad': 'Soporte Profesional',
+    'legal': 'Soporte Profesional',
+    'recursos humanos': 'Soporte Profesional',
+    'soporte profesional': 'Soporte Profesional'
+  };
+  
+  // Buscar coincidencia exacta en el mapeo
+  if (categoryMapping[categoryLower]) {
+    return categoryMapping[categoryLower];
+  }
+  
+  // Si es una categoría principal válida, devolverla capitalizada
+  const mainCategories = ['ventas', 'marketing', 'atención al cliente', 'operaciones', 'creativo', 'tecnología y automatizaciones', 'soporte profesional'];
+  if (mainCategories.includes(categoryLower)) {
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  }
+  
+  // Fallback: devolver la categoría original o "esta área"
+  return category || 'esta área';
+};
+
 const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: ApplicationModalProps) => {
   const { applyToOpportunity } = useSupabaseOpportunities();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -278,7 +354,7 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
 
               <div>
                 <Label htmlFor="years_experience_category">
-                  ¿Cuántos años de experiencia tienes en {opportunity.category || 'esta área'}? *
+                  ¿Cuántos años de experiencia tienes en {getCategoryDisplayName(opportunity.category)}? *
                 </Label>
                 <Input
                   id="years_experience_category"
