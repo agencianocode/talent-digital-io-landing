@@ -407,13 +407,9 @@ export const CompanyProfileWizard: React.FC = () => {
     });
   };
 
-  const handleLogoCropComplete = async (croppedImageUrl: string) => {
+  const handleLogoCropComplete = async (blob: Blob) => {
     setIsLoading(true);
     try {
-      // Convert blob URL to actual file
-      const response = await fetch(croppedImageUrl);
-      const blob = await response.blob();
-      
       console.log('📊 Tamaño original:', (blob.size / 1024).toFixed(2), 'KB');
       
       // Comprimir la imagen antes de subir

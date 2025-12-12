@@ -14,8 +14,9 @@ interface ImageCropperProps {
   src: string;
   isOpen: boolean;
   onClose: () => void;
-  onCropComplete: (croppedImageUrl: string) => void;
+  onCropComplete: (croppedImageBlob: Blob) => void;
   aspect?: number;
+  circularCrop?: boolean;
 }
 
 function centerAspectCrop(
@@ -43,7 +44,8 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   isOpen,
   onClose,
   onCropComplete,
-  aspect = 1
+  aspect = 1,
+  circularCrop = false
 }) => {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
@@ -57,14 +59,14 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
     }
   }
 
-  const getCroppedImg = useCallback(async () => {
+  const getCroppedImg = useCallback(async (): Promise<Blob | null> => {
     if (!completedCrop || !imgRef.current || !previewCanvasRef.current) {
-      return;
+      return null;
     }
 
     const image = imgRef.current;
     const canvas = previewCanvasRef.current;
-    const crop = completedCrop;
+    const cropData = completedCrop;
 
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
@@ -75,42 +77,47 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
     }
 
     const pixelRatio = window.devicePixelRatio;
+    const cropWidth = cropData.width * scaleX;
+    const cropHeight = cropData.height * scaleY;
 
-    canvas.width = crop.width * pixelRatio * scaleX;
-    canvas.height = crop.height * pixelRatio * scaleY;
+    canvas.width = cropWidth * pixelRatio;
+    canvas.height = cropHeight * pixelRatio;
 
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.imageSmoothingQuality = 'high';
 
+    // If circular crop, apply circular clipping
+    if (circularCrop) {
+      ctx.beginPath();
+      ctx.arc(cropWidth / 2, cropHeight / 2, Math.min(cropWidth, cropHeight) / 2, 0, Math.PI * 2);
+      ctx.clip();
+    }
+
     ctx.drawImage(
       image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
+      cropData.x * scaleX,
+      cropData.y * scaleY,
+      cropWidth,
+      cropHeight,
       0,
       0,
-      crop.width * scaleX,
-      crop.height * scaleY,
+      cropWidth,
+      cropHeight,
     );
 
-    return new Promise<string>((resolve) => {
+    return new Promise<Blob | null>((resolve) => {
       canvas.toBlob((blob) => {
-        if (!blob) {
-          console.error('Canvas is empty');
-          return;
-        }
-        const fileUrl = URL.createObjectURL(blob);
-        resolve(fileUrl);
-      });
+        resolve(blob);
+      }, 'image/jpeg', 0.95);
     });
-  }, [completedCrop]);
+  }, [completedCrop, circularCrop]);
 
   const handleCropComplete = async () => {
     try {
-      const croppedImageUrl = await getCroppedImg();
-      if (croppedImageUrl) {
-        onCropComplete(croppedImageUrl);
+      const croppedBlob = await getCroppedImg();
+      if (croppedBlob) {
+        onCropComplete(croppedBlob);
+        onClose();
       }
     } catch (error) {
       console.error('Error cropping image:', error);
@@ -119,26 +126,33 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Recortar Imagen</DialogTitle>
+          <DialogTitle>Encuadrar Imagen</DialogTitle>
         </DialogHeader>
         
         <div className="flex flex-col items-center space-y-4">
-          <ReactCrop
-            crop={crop}
-            onChange={(_, percentCrop) => setCrop(percentCrop)}
-            onComplete={(c) => setCompletedCrop(convertToPixelCrop(c, imgRef.current?.width || 0, imgRef.current?.height || 0))}
-            aspect={aspect}
-          >
-            <img
-              ref={imgRef}
-              alt="Crop me"
-              src={src}
-              onLoad={onImageLoad}
-              style={{ maxHeight: '400px', maxWidth: '100%' }}
-            />
-          </ReactCrop>
+          <p className="text-sm text-muted-foreground text-center">
+            Arrastra para mover el área de recorte y ajusta el encuadre de tu foto
+          </p>
+          
+          <div className={circularCrop ? 'rounded-full overflow-hidden' : ''}>
+            <ReactCrop
+              crop={crop}
+              onChange={(_, percentCrop) => setCrop(percentCrop)}
+              onComplete={(c) => setCompletedCrop(convertToPixelCrop(c, imgRef.current?.width || 0, imgRef.current?.height || 0))}
+              aspect={aspect}
+              circularCrop={circularCrop}
+            >
+              <img
+                ref={imgRef}
+                alt="Imagen a recortar"
+                src={src}
+                onLoad={onImageLoad}
+                style={{ maxHeight: '60vh', maxWidth: '100%' }}
+              />
+            </ReactCrop>
+          </div>
           
           {/* Hidden canvas for cropping */}
           <canvas
@@ -147,7 +161,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
           />
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>

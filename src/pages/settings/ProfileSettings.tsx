@@ -19,6 +19,7 @@ import { UnsavedChangesModal } from '@/components/UnsavedChangesModal';
 import { toast } from 'sonner';
 import { Upload, Eye, EyeOff, Loader2, ArrowLeft, User, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { ImageCropper } from '@/components/ImageCropper';
 const profileSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.string().email('Ingresa un email válido'),
@@ -73,6 +74,9 @@ const ProfileSettings = () => {
     new: false,
     confirm: false
   });
+  // Image cropper state
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [selectedImageSrc, setSelectedImageSrc] = useState<string>('');
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -266,7 +270,7 @@ const ProfileSettings = () => {
       setIsLoading(false);
     }
   };
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
     if (!user || !file) return;
@@ -279,6 +283,19 @@ const ProfileSettings = () => {
       toast.error('Solo se permiten archivos de imagen.');
       return;
     }
+    
+    // Open cropper with selected image
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImageSrc(imageUrl);
+    setCropperOpen(true);
+    
+    // Reset input so the same file can be selected again
+    e.target.value = '';
+  };
+
+  const handleCroppedImage = async (blob: Blob) => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
       const {
@@ -290,9 +307,8 @@ const ProfileSettings = () => {
         toast.error('No estás autenticado');
         return;
       }
-      const fileExt = file?.name.split('.').pop() || 'jpg';
       const timestamp = Date.now();
-      const filePath = `${user.id}/${user.id}_${timestamp}.${fileExt}`;
+      const filePath = `${user.id}/${user.id}_${timestamp}.jpg`;
 
       // Try to delete existing files
       try {
@@ -308,18 +324,20 @@ const ProfileSettings = () => {
       }
       const {
         error: uploadError
-      } = await supabase.storage.from('avatars').upload(filePath, file!, {
-        upsert: true
+      } = await supabase.storage.from('avatars').upload(filePath, blob, {
+        upsert: true,
+        contentType: 'image/jpeg'
       });
       let publicUrl: string;
       if (uploadError) {
         console.error('Error al subir archivo:', uploadError);
         if (uploadError.message.includes('permission') || uploadError.message.includes('row-level security')) {
-          const alternativePath = `public/${user.id}.${fileExt}`;
+          const alternativePath = `public/${user.id}.jpg`;
           const {
             error: altUploadError
-          } = await supabase.storage.from('avatars').upload(alternativePath, file!, {
-            upsert: true
+          } = await supabase.storage.from('avatars').upload(alternativePath, blob, {
+            upsert: true,
+            contentType: 'image/jpeg'
           });
           if (altUploadError) {
             throw new Error(`Error de permisos: ${altUploadError.message}`);
@@ -342,8 +360,6 @@ const ProfileSettings = () => {
       }
       
       console.log('📸 Upload successful, public URL:', publicUrl);
-      console.log('📸 User ID:', user.id);
-      console.log('📸 User provider:', user.app_metadata?.provider);
       
       // Update profiles table first
       const {
@@ -373,7 +389,6 @@ const ProfileSettings = () => {
       
       if (metadataError) {
         console.warn('⚠️ Error updating user_metadata (non-critical):', metadataError);
-        // Continue even if metadata update fails, profile table is more important
       } else {
         console.log('✅ User metadata updated successfully');
       }
@@ -398,6 +413,12 @@ const ProfileSettings = () => {
       
       // Force a refresh of the user data
       await supabase.auth.refreshSession();
+      
+      // Clean up object URL
+      if (selectedImageSrc) {
+        URL.revokeObjectURL(selectedImageSrc);
+        setSelectedImageSrc('');
+      }
       
       console.log('✅ Foto actualizada exitosamente');
       toast.success('Foto actualizada correctamente');
@@ -499,7 +520,7 @@ const ProfileSettings = () => {
                         </Button>
                         <input id="avatar-upload" type="file" accept="image/*" style={{
                         display: 'none'
-                      }} onChange={handlePhotoUpload} disabled={isLoading} />
+                      }} onChange={handlePhotoSelect} disabled={isLoading} />
                       </label>
                       {isLoading && <div className="flex items-center mt-2 text-sm text-muted-foreground">
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -508,6 +529,22 @@ const ProfileSettings = () => {
                       <p className="text-sm text-muted-foreground mt-1">PNG, JPG hasta 2MB</p>
                     </div>
                   </div>
+                  
+                  {/* Image Cropper Modal */}
+                  <ImageCropper
+                    src={selectedImageSrc}
+                    isOpen={cropperOpen}
+                    onClose={() => {
+                      setCropperOpen(false);
+                      if (selectedImageSrc) {
+                        URL.revokeObjectURL(selectedImageSrc);
+                        setSelectedImageSrc('');
+                      }
+                    }}
+                    onCropComplete={handleCroppedImage}
+                    aspect={1}
+                    circularCrop={true}
+                  />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField control={profileForm.control} name="name" render={({
