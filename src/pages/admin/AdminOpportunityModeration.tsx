@@ -13,8 +13,19 @@ import {
   RefreshCw,
   Eye,
   AlertTriangle,
-  FileText
+  FileText,
+  Trash2
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -39,8 +50,28 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
     currentPage,
     totalPages,
     setCurrentPage,
+    deleteOpportunity,
     refetch
   } = useAdminOpportunities();
+
+  const [opportunityToDelete, setOpportunityToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteOpportunity = async () => {
+    if (!opportunityToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      await deleteOpportunity(opportunityToDelete.id);
+      toast.success(`Oportunidad "${opportunityToDelete.title}" eliminada correctamente`);
+      setOpportunityToDelete(null);
+    } catch (err) {
+      console.error('Error deleting opportunity:', err);
+      toast.error('No se pudo eliminar la oportunidad');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Apply company filter when provided
   React.useEffect(() => {
@@ -316,15 +347,25 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
                       </div>
                     </div>
 
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleViewOpportunity(opportunity.id)}
-                      className="h-8 px-3 ml-auto"
-                    >
-                      <Eye className="h-3.5 w-3.5 mr-1.5" />
-                      Ver Detalle
-                    </Button>
+                    <div className="flex items-center gap-2 ml-auto">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewOpportunity(opportunity.id)}
+                        className="h-8 px-3"
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-1.5" />
+                        Ver Detalle
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setOpportunityToDelete({ id: opportunity.id, title: opportunity.title })}
+                        className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -390,6 +431,28 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
           onOpportunityUpdate={handleOpportunityUpdate}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!opportunityToDelete} onOpenChange={(open) => !open && setOpportunityToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar oportunidad?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará permanentemente la oportunidad "{opportunityToDelete?.title}" junto con todas sus postulaciones y datos asociados. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteOpportunity}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Eliminando...' : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

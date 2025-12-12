@@ -276,6 +276,39 @@ export const useAdminOpportunities = () => {
 
   const deleteOpportunity = async (opportunityId: string) => {
     try {
+      // First delete related data
+      // Delete applications for this opportunity
+      await supabase
+        .from('applications')
+        .delete()
+        .eq('opportunity_id', opportunityId);
+
+      // Delete opportunity views
+      await supabase
+        .from('opportunity_views')
+        .delete()
+        .eq('opportunity_id', opportunityId);
+
+      // Delete opportunity shares
+      await supabase
+        .from('opportunity_shares')
+        .delete()
+        .eq('opportunity_id', opportunityId);
+
+      // Delete saved opportunities
+      await supabase
+        .from('saved_opportunities')
+        .delete()
+        .eq('opportunity_id', opportunityId);
+
+      // Finally delete the opportunity
+      const { error } = await supabase
+        .from('opportunities')
+        .delete()
+        .eq('id', opportunityId);
+
+      if (error) throw error;
+
       // Remove opportunity from local state
       setOpportunities(prev => prev.filter(opportunity => opportunity.id !== opportunityId));
     } catch (err) {
