@@ -177,7 +177,7 @@ export const useProfileProgress = () => {
             if (!requiredCompanyFields.social_links) missing.push('redes sociales');
           }
           
-          return `Completa en /profile?tab=corporate: ${missing.join(', ')}`;
+          return missing.join(', ');
         })()
       },
       {

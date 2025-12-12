@@ -260,14 +260,21 @@ const BusinessDashboard = () => {
                           </div>
                           
                           {task.id === 'profile' && !task.completed && (
-                            <Button 
-                              variant="link" 
-                              className="text-blue-600 p-0 h-auto ml-1 sm:ml-3 text-xs sm:text-sm"
-                              onClick={() => navigate('/business-dashboard/company-details')}
-                            >
-                              <span className="hidden sm:inline">Completar Perfil ahora</span>
-                              <span className="sm:hidden">Completar</span>
-                            </Button>
+                            <div className="flex flex-col items-end gap-1">
+                              <Button 
+                                variant="link" 
+                                className="text-blue-600 p-0 h-auto text-xs sm:text-sm"
+                                onClick={() => navigate('/business-dashboard/company-details')}
+                              >
+                                <span className="hidden sm:inline">Completar Perfil ahora</span>
+                                <span className="sm:hidden">Completar</span>
+                              </Button>
+                              {task.nextStepDescription && (
+                                <span className="text-xs text-amber-600 font-medium">
+                                  ⚠️ Falta: {task.nextStepDescription}
+                                </span>
+                              )}
+                            </div>
                           )}
                         </div>
                       );
