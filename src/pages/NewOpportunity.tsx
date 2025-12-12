@@ -215,8 +215,11 @@ const NewOpportunity = () => {
           'Tiempo Completo': 'tiempo_completo',
           'Medio Tiempo': 'medio_tiempo',
           'Freelance': 'freelance',
-          'Contrato': 'contrato',
-          'Prácticas': 'prácticas',
+          'Por Proyecto': 'por_proyecto',
+          'Consultoría': 'consultoria',
+          // Compatibilidad con datos antiguos:
+          'Contrato': 'por_proyecto',
+          'Prácticas': 'freelance',
         };
 
         // Mapeo correcto de tipo de contrato
@@ -367,8 +370,8 @@ const NewOpportunity = () => {
         'tiempo_completo': 'Tiempo Completo',
         'medio_tiempo': 'Medio Tiempo',
         'freelance': 'Freelance',
-        'contrato': 'Contrato',
-        'prácticas': 'Prácticas',
+        'por_proyecto': 'Por Proyecto',
+        'consultoria': 'Consultoría',
       };
 
       const opportunityData = {
@@ -442,13 +445,7 @@ const NewOpportunity = () => {
 
   const jobCategories = Object.keys(categoryTemplates);
 
-  const jobTypes = [
-    'Tiempo Completo',
-    'Medio Tiempo',
-    'Freelance',
-    'Contrato',
-    'Prácticas',
-  ];
+  // Usar contractTypes del archivo de templates para consistencia
 
 
   return (
@@ -603,8 +600,8 @@ const NewOpportunity = () => {
                       <SelectValue placeholder="Selecciona modalidad" />
                     </SelectTrigger>
                     <SelectContent>
-                      {jobTypes.map((type) => (
-                        <SelectItem key={type} value={type.toLowerCase().replace(/ /g, '_')}>
+                      {contractTypes.map((type) => (
+                        <SelectItem key={type} value={type.toLowerCase().replace(/ /g, '_').replace(/í/g, 'i')}>
                           {type}
                         </SelectItem>
                       ))}
