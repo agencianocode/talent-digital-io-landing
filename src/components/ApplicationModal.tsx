@@ -68,6 +68,7 @@ const getCategoryDisplayName = (category: string | undefined): string => {
     'ventas b2b': 'Ventas',
     'closer de ventas': 'Ventas',
     'crm': 'Ventas',
+    'liderazgo': 'Ventas',
     'liderazgo comercial': 'Ventas',
     'negociación': 'Ventas',
     
