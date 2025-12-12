@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
-import { Slider } from '@/components/ui/slider';
+
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Search, Filter, X, ChevronDown, RotateCcw } from 'lucide-react';
@@ -156,9 +156,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
     onFilterChange(newFilters);
   };
-  const handleSalaryChange = (range: number[]) => {
-    handleFilterChange('salaryRange', range);
-  };
 
   // Selección múltiple de categorías
   const selectedCategories = Array.isArray(filters.category)
@@ -246,9 +243,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
             break;
           case 'location':
             label = `Ubicación: ${LOCATIONS.find(l => l.value === value)?.label || value}`;
-            break;
-          case 'salaryRange':
-            label = `Salario: €${(value as number[])[0]}K - €${(value as number[])[1]}K`;
             break;
           default:
             label = `${key}: ${value as string}`;
@@ -462,21 +456,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-
-                  {/* Salary Range */}
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium">
-                      Rango salarial: €{filters.salaryRange?.[0] || 20}K - €{filters.salaryRange?.[1] || 100}K
-                    </label>
-                    <Slider
-                      value={filters.salaryRange || [20, 100]}
-                      onValueChange={handleSalaryChange}
-                      max={150}
-                      min={15}
-                      step={5}
-                      className="w-full"
-                    />
                   </div>
                 </div>
               ) : (

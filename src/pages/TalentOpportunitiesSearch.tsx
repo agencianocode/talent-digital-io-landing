@@ -33,7 +33,7 @@ interface FilterState {
   workMode?: string;
   location?: string;
   experience?: string | string[];
-  salaryRange?: number[];
+  
 }
 
 const TalentOpportunitiesSearch = () => {
@@ -220,17 +220,6 @@ const TalentOpportunitiesSearch = () => {
       );
       
       if (!hasMatch) return false;
-    }
-
-    // Filtro de rango salarial
-    if (filters.salaryRange && Array.isArray(filters.salaryRange) && filters.salaryRange.length === 2) {
-      const [minSalary, maxSalary] = filters.salaryRange;
-      if (minSalary !== undefined && maxSalary !== undefined && opportunity.salary_min && opportunity.salary_max) {
-        // Verificar que haya al menos alguna superposición en el rango
-        if (opportunity.salary_max < minSalary * 1000 || opportunity.salary_min > maxSalary * 1000) {
-          return false;
-        }
-      }
     }
 
     return true;
