@@ -359,6 +359,61 @@ export const useAdminCompanies = () => {
 
   const deleteCompany = async (companyId: string) => {
     try {
+      // First delete related data that might block deletion
+      // Delete company_user_roles
+      await supabase
+        .from('company_user_roles')
+        .delete()
+        .eq('company_id', companyId);
+
+      // Delete opportunities associated with the company
+      const { data: opportunities } = await supabase
+        .from('opportunities')
+        .select('id')
+        .eq('company_id', companyId);
+
+      if (opportunities && opportunities.length > 0) {
+        const opportunityIds = opportunities.map(o => o.id);
+        
+        // Delete applications for those opportunities
+        await supabase
+          .from('applications')
+          .delete()
+          .in('opportunity_id', opportunityIds);
+
+        // Delete the opportunities
+        await supabase
+          .from('opportunities')
+          .delete()
+          .eq('company_id', companyId);
+      }
+
+      // Delete academy students if it's an academy
+      await supabase
+        .from('academy_students')
+        .delete()
+        .eq('academy_id', companyId);
+
+      // Delete academy courses if it's an academy
+      await supabase
+        .from('academy_courses')
+        .delete()
+        .eq('academy_id', companyId);
+
+      // Delete marketplace services
+      await supabase
+        .from('marketplace_services')
+        .delete()
+        .eq('company_id', companyId);
+
+      // Finally delete the company
+      const { error } = await supabase
+        .from('companies')
+        .delete()
+        .eq('id', companyId);
+
+      if (error) throw error;
+
       // Remove company from local state
       setCompanies(prev => prev.filter(company => company.id !== companyId));
     } catch (err) {
