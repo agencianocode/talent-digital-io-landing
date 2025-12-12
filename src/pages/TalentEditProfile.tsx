@@ -14,6 +14,7 @@ import { useSocialLinks } from '@/hooks/useSocialLinks';
 import { ProfileEditData } from '@/types/profile';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { ImageCropper } from '@/components/ImageCropper';
 
 // Categorías profesionales correctas con subcategorías
 const PROFESSIONAL_CATEGORIES = [
@@ -173,6 +174,9 @@ const TalentEditProfile = () => {
     career_goals: '',
     deal_breakers: ''
   });
+  // Image cropper state
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [selectedImageSrc, setSelectedImageSrc] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize form data
@@ -346,7 +350,7 @@ const TalentEditProfile = () => {
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -360,9 +364,27 @@ const TalentEditProfile = () => {
       return;
     }
 
+    // Create URL for cropper and open it
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImageSrc(imageUrl);
+    setCropperOpen(true);
+    
+    // Reset input so the same file can be selected again
+    event.target.value = '';
+  };
+
+  const handleCroppedImage = async (blob: Blob) => {
     setAvatarLoading(true);
     try {
+      // Convert blob to File for upload
+      const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
       await updateAvatar(file);
+      
+      // Clean up the object URL
+      if (selectedImageSrc) {
+        URL.revokeObjectURL(selectedImageSrc);
+        setSelectedImageSrc('');
+      }
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast.error('Error al cargar la imagen');
@@ -450,8 +472,24 @@ const TalentEditProfile = () => {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                onChange={handleAvatarUpload}
+                onChange={handleAvatarSelect}
                 className="hidden"
+              />
+              
+              {/* Image Cropper Modal */}
+              <ImageCropper
+                src={selectedImageSrc}
+                isOpen={cropperOpen}
+                onClose={() => {
+                  setCropperOpen(false);
+                  if (selectedImageSrc) {
+                    URL.revokeObjectURL(selectedImageSrc);
+                    setSelectedImageSrc('');
+                  }
+                }}
+                onCropComplete={handleCroppedImage}
+                aspect={1}
+                circularCrop={true}
               />
             </CardContent>
           </Card>

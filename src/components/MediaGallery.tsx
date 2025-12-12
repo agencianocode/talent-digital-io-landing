@@ -130,7 +130,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     });
   };
 
-  const handleCropComplete = async (croppedImageUrl: string) => {
+  const handleCropComplete = async (blob: Blob) => {
     if (!user?.id) {
       toast.error('Usuario no autenticado');
       return;
@@ -138,10 +138,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
 
     setIsUploading(true);
     try {
-      // Convertir blob URL a archivo
-      const response = await fetch(croppedImageUrl);
-      const blob = await response.blob();
-      
       console.log('📊 Tamaño original:', (blob.size / 1024).toFixed(2), 'KB');
       
       // Comprimir la imagen antes de subir
