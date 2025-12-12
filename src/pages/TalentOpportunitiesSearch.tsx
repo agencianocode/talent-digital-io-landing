@@ -29,11 +29,10 @@ import { useDebounce } from "@/hooks/useDebounce";
 interface FilterState {
   category?: string | string[];
   subcategory?: string;
-  contractType?: string;
+  contractType?: string | string[];
   workMode?: string;
   location?: string;
   experience?: string | string[];
-  
 }
 
 const TalentOpportunitiesSearch = () => {
@@ -168,8 +167,16 @@ const TalentOpportunitiesSearch = () => {
       if (!matchesSubcategory) return false;
     }
 
-    // Filtro de tipo de contrato
-    if (filters.contractType && opportunity.type !== filters.contractType) return false;
+    // Filtro de tipo de contrato (multi-selección)
+    if (filters.contractType) {
+      const selectedTypes = Array.isArray(filters.contractType) 
+        ? filters.contractType 
+        : [filters.contractType];
+      
+      if (selectedTypes.length > 0 && !selectedTypes.includes(opportunity.type)) {
+        return false;
+      }
+    }
 
     // Filtro de modalidad de trabajo
     if (filters.workMode) {

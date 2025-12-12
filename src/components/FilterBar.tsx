@@ -95,8 +95,11 @@ const EXPERIENCE_LEVELS = [
 ];
 
 const CONTRACT_TYPES = [
-  { value: 'Contrato', label: 'Contrato' },
-  { value: 'Trabajo Continuo', label: 'Trabajo Continuo' }
+  { value: 'Tiempo Completo', label: 'Tiempo Completo' },
+  { value: 'Medio Tiempo', label: 'Medio Tiempo' },
+  { value: 'Freelance', label: 'Freelance' },
+  { value: 'Por Proyecto', label: 'Por Proyecto' },
+  { value: 'Consultoría', label: 'Consultoría' }
 ];
 
 const WORK_MODES = [
@@ -172,6 +175,21 @@ const FilterBar: React.FC<FilterBarProps> = ({
     handleFilterChange('category', updated.length > 0 ? updated : '');
   };
 
+  // Selección múltiple de tipos de contrato
+  const selectedContractTypes = Array.isArray(filters.contractType)
+    ? (filters.contractType as string[])
+    : (filters.contractType ? [filters.contractType] : []);
+
+  const setContractTypeSelection = (value: string, checked: boolean) => {
+    let updated = [...selectedContractTypes];
+    if (checked) {
+      if (!updated.includes(value)) updated.push(value);
+    } else {
+      updated = updated.filter(v => v !== value);
+    }
+    handleFilterChange('contractType', updated.length > 0 ? updated : '');
+  };
+
   const clearAllFilters = () => {
     onFilterChange({});
     setLocalSearchTerm('');
@@ -228,7 +246,20 @@ const FilterBar: React.FC<FilterBarProps> = ({
             label = `Subcategoría: ${value}`;
             break;
           case 'contractType':
-            label = `Tipo de contrato: ${CONTRACT_TYPES.find(t => t.value === value)?.label || value}`;
+            if (Array.isArray(value)) {
+              (value as string[]).forEach((v) => {
+                const lbl = CONTRACT_TYPES.find(t => t.value === v)?.label || v;
+                activeFilters.push(
+                  <Badge key={`contractType-${v}`} variant="secondary" className="gap-1">
+                    Tipo: {lbl}
+                    <X className="h-3 w-3 cursor-pointer" onClick={() => removeFilter('contractType', v)} />
+                  </Badge>
+                );
+              });
+              skipPush = true;
+            } else {
+              label = `Tipo de contrato: ${CONTRACT_TYPES.find(t => t.value === value)?.label || value}`;
+            }
             break;
           case 'workMode':
             label = `Modalidad: ${WORK_MODES.find(m => m.value === value)?.label || value}`;
@@ -380,20 +411,51 @@ const FilterBar: React.FC<FilterBarProps> = ({
                     </div>
                   )}
 
-                  {/* Contract Type */}
+                  {/* Contract Type (multi-select) */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Tipo de contrato</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          {selectedContractTypes.length > 0 
+                            ? `${selectedContractTypes.length} seleccionado${selectedContractTypes.length > 1 ? 's' : ''}` 
+                            : 'Todos los contratos'}
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[280px] p-3" align="start">
+                        <div className="space-y-2">
+                          {CONTRACT_TYPES.map((type) => (
+                            <div key={type.value} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`contract-${type.value}`}
+                                checked={selectedContractTypes.includes(type.value)}
+                                onCheckedChange={(checked) => setContractTypeSelection(type.value, !!checked)}
+                              />
+                              <label htmlFor={`contract-${type.value}`} className="text-sm cursor-pointer">
+                                {type.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Work Mode */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Modalidad de trabajo</label>
                     <Select
-                      value={filters.contractType || ''}
-                      onValueChange={(value) => handleFilterChange('contractType', value)}
+                      value={filters.workMode || ''}
+                      onValueChange={(value) => handleFilterChange('workMode', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Todos los contratos" />
+                        <SelectValue placeholder="Todas las modalidades" />
                       </SelectTrigger>
                       <SelectContent className="bg-background z-50">
-                        {CONTRACT_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
+                        {WORK_MODES.map((mode) => (
+                          <SelectItem key={mode.value} value={mode.value}>
+                            {mode.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
