@@ -262,10 +262,13 @@ const CompanyOnboarding = () => {
       }
 
       if (existingCompany) {
-        // Update existing company
+        // Update existing company - detect if user is an academy
+        const userMeta = user.user_metadata;
+        const isAcademy = userMeta?.original_user_type === 'academy_premium' || userMeta?.user_type === 'academy_premium';
+        
         const companyUpdates: any = {
           name: companyData.name,
-          business_type: companyData.isIndividual ? null : 'company',
+          business_type: companyData.isIndividual ? null : (isAcademy ? 'academy' : 'company'),
           updated_at: new Date().toISOString()
         };
 
@@ -290,11 +293,14 @@ const CompanyOnboarding = () => {
           throw updateError;
         }
       } else {
-        // Create new company
+        // Create new company - detect if user is an academy
+        const userMeta = user.user_metadata;
+        const isAcademy = userMeta?.original_user_type === 'academy_premium' || userMeta?.user_type === 'academy_premium';
+        
         const newCompanyData: any = {
           user_id: user.id,
           name: companyData.name,
-          business_type: companyData.isIndividual ? null : 'company',
+          business_type: companyData.isIndividual ? null : (isAcademy ? 'academy' : 'company'),
           description: data.description || '',
           website: data.url || '',
           location: data.location || ''
@@ -657,10 +663,13 @@ const CompanyOnboarding = () => {
       }
 
       if (existingCompany) {
-        // Update existing company
+        // Update existing company - detect if user is an academy
+        const userMeta = user.user_metadata;
+        const isAcademy = userMeta?.original_user_type === 'academy_premium' || userMeta?.user_type === 'academy_premium';
+        
         const companyUpdates: any = {
           name: companyData.name,
-          business_type: companyData.isIndividual ? null : 'company',
+          business_type: companyData.isIndividual ? null : (isAcademy ? 'academy' : 'company'),
           updated_at: new Date().toISOString()
         };
 
@@ -701,11 +710,14 @@ const CompanyOnboarding = () => {
           throw updateError;
         }
       } else {
-        // Create new company
+        // Create new company - detect if user is an academy
+        const userMeta = user.user_metadata;
+        const isAcademy = userMeta?.original_user_type === 'academy_premium' || userMeta?.user_type === 'academy_premium';
+        
         const newCompanyInsert: any = {
           user_id: user.id,
           name: companyData.name,
-          business_type: companyData.isIndividual ? null : 'company',
+          business_type: companyData.isIndividual ? null : (isAcademy ? 'academy' : 'company'),
           description: companyDetails.description || '',
           website: companyDetails.url || '',
           location: companyDetails.location || ''
@@ -736,16 +748,25 @@ const CompanyOnboarding = () => {
         }
       }
       
-      // Ensure user has business role assigned
-      const { error: roleError } = await supabase
+      // Ensure user has business role assigned (but don't overwrite academy_premium)
+      const { data: existingRole } = await supabase
         .from('user_roles')
-        .upsert({
-          user_id: user.id,
-          role: 'freemium_business'
-        });
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      // Only assign freemium_business if user doesn't already have academy_premium role
+      if (existingRole?.role !== 'academy_premium') {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .upsert({
+            user_id: user.id,
+            role: 'freemium_business'
+          });
 
-      if (roleError) {
-        console.error('Error ensuring business role:', roleError);
+        if (roleError) {
+          console.error('Error ensuring business role:', roleError);
+        }
       }
       
       toast.success('¡Onboarding completado exitosamente!');
