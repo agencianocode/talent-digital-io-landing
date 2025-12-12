@@ -14,8 +14,19 @@ import {
   RefreshCw,
   Eye,
   AlertTriangle,
-  Crown
+  Crown,
+  Trash2
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -39,11 +50,30 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
     currentPage,
     totalPages,
     setCurrentPage,
+    deleteCompany,
     refetch
   } = useAdminCompanies();
 
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteCompany = async () => {
+    if (!companyToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      await deleteCompany(companyToDelete.id);
+      toast.success(`Empresa "${companyToDelete.name}" eliminada correctamente`);
+      setCompanyToDelete(null);
+    } catch (err) {
+      console.error('Error deleting company:', err);
+      toast.error('No se pudo eliminar la empresa');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleViewCompany = (companyId: string) => {
     setSelectedCompanyId(companyId);
@@ -290,15 +320,24 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
                     </div>
 
                     {/* Actions */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewCompany(company.id)}
-                      className="flex-shrink-0"
-                    >
-                      <Eye className="h-4 w-4 md:mr-2" />
-                      <span className="hidden md:inline">Ver Detalles</span>
-                    </Button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewCompany(company.id)}
+                      >
+                        <Eye className="h-4 w-4 md:mr-2" />
+                        <span className="hidden md:inline">Ver Detalles</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCompanyToDelete({ id: company.id, name: company.name })}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -365,6 +404,29 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
           onNavigateToOpportunities={onNavigateToOpportunities}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!companyToDelete} onOpenChange={(open) => !open && setCompanyToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar empresa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará permanentemente la empresa "{companyToDelete?.name}" junto con todas sus oportunidades, 
+              postulaciones, cursos y miembros asociados. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCompany}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Eliminando...' : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
