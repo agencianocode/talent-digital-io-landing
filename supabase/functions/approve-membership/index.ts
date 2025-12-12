@@ -58,7 +58,7 @@ serve(async (req) => {
     // Verify user is owner or admin of the company using admin client
     const { data: companyData, error: companyError } = await supabaseAdmin
       .from('companies')
-      .select('user_id')
+      .select('user_id, business_type')
       .eq('id', companyId)
       .single();
 
@@ -169,6 +169,22 @@ serve(async (req) => {
     }
 
     console.log('✅ Successfully updated:', updated);
+
+    // If company is an academy and action is approve, update user role to academy_premium
+    if (action !== 'reject' && companyData.business_type === 'academy' && memberData.user_id) {
+      console.log('🎓 Company is an Academy - updating user role to academy_premium');
+      
+      const { error: roleUpdateError } = await supabaseAdmin
+        .from('user_roles')
+        .update({ role: 'academy_premium' })
+        .eq('user_id', memberData.user_id);
+      
+      if (roleUpdateError) {
+        console.error('⚠️ Error updating user role to academy_premium:', roleUpdateError);
+      } else {
+        console.log('✅ User role updated to academy_premium for user:', memberData.user_id);
+      }
+    }
 
     return new Response(
       JSON.stringify({ 

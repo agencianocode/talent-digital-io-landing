@@ -476,19 +476,22 @@ const Auth = () => {
           }
         }
 
-        // Assign business role based on company status (invitation or regular)
-        let userRole: 'freemium_business' | 'premium_business' = 'freemium_business'; // Default for non-invitation
+        // Assign business role based on company status and type (invitation or regular)
+        let userRole: 'freemium_business' | 'premium_business' | 'academy_premium' = 'freemium_business'; // Default for non-invitation
         
         if (isInvitationFlow && invitationId) {
-          // Get invitation details to determine company tier
+          // Get invitation details to determine company tier and type
           const { data: invitation } = await supabase
             .from('company_user_roles')
-            .select('company_id, companies(status)')
+            .select('company_id, companies(status, business_type)')
             .eq('id', invitationId)
             .eq('invited_email', formData.email)
             .single();
           
-          if (invitation?.companies?.status === 'premium') {
+          // Check if company is an academy first (takes priority)
+          if (invitation?.companies?.business_type === 'academy') {
+            userRole = 'academy_premium';
+          } else if (invitation?.companies?.status === 'premium') {
             userRole = 'premium_business';
           } else {
             userRole = 'freemium_business';
