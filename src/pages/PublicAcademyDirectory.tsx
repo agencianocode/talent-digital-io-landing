@@ -122,6 +122,36 @@ export default function PublicAcademyDirectory() {
       console.log('🚫 Hidden students (pending/inactive/etc):', (graduatesData?.length || 0) - visibleStudents.length);
 
       // Obtener skills de talent_profiles para los estudiantes visibles
+      // Función para calcular completitud del perfil
+      const calculateProfileCompleteness = (student: Graduate): number => {
+        let score = 0;
+        
+        // Tiene nombre real (no solo email)
+        if (student.student_name && !student.student_name.includes('@')) score += 20;
+        
+        // Tiene foto de perfil
+        if (student.avatar_url) score += 20;
+        
+        // Tiene título profesional
+        if (student.title) score += 20;
+        
+        // Tiene ubicación
+        if (student.city || student.country) score += 15;
+        
+        // Tiene bio
+        if (student.bio && student.bio.length > 0) score += 15;
+        
+        // Tiene skills
+        if (student.skills && student.skills.length > 0) score += 10;
+        
+        return score;
+      };
+
+      // Ordenar por completitud (más completos primero)
+      const sortByCompleteness = (students: Graduate[]): Graduate[] => {
+        return [...students].sort((a, b) => calculateProfileCompleteness(b) - calculateProfileCompleteness(a));
+      };
+
       if (visibleStudents.length > 0) {
         const userIds = visibleStudents.map((s: Graduate) => s.user_id).filter(Boolean) as string[];
         
@@ -141,12 +171,12 @@ export default function PublicAcademyDirectory() {
               };
             });
             
-            setGraduates(studentsWithSkills);
+            setGraduates(sortByCompleteness(studentsWithSkills));
           } else {
-            setGraduates(visibleStudents);
+            setGraduates(sortByCompleteness(visibleStudents));
           }
         } else {
-          setGraduates(visibleStudents);
+          setGraduates(sortByCompleteness(visibleStudents));
         }
       } else {
         setGraduates(visibleStudents);
