@@ -359,60 +359,30 @@ export const useAdminCompanies = () => {
 
   const deleteCompany = async (companyId: string) => {
     try {
-      // First delete related data that might block deletion
-      // Delete company_user_roles
-      await supabase
-        .from('company_user_roles')
-        .delete()
-        .eq('company_id', companyId);
-
-      // Delete opportunities associated with the company
-      const { data: opportunities } = await supabase
-        .from('opportunities')
-        .select('id')
-        .eq('company_id', companyId);
-
-      if (opportunities && opportunities.length > 0) {
-        const opportunityIds = opportunities.map(o => o.id);
-        
-        // Delete applications for those opportunities
-        await supabase
-          .from('applications')
-          .delete()
-          .in('opportunity_id', opportunityIds);
-
-        // Delete the opportunities
-        await supabase
-          .from('opportunities')
-          .delete()
-          .eq('company_id', companyId);
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No authenticated session');
       }
 
-      // Delete academy students if it's an academy
-      await supabase
-        .from('academy_students')
-        .delete()
-        .eq('academy_id', companyId);
+      // Call Edge Function with service_role to delete company
+      const response = await fetch(
+        `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/admin-delete-company`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ companyId }),
+        }
+      );
 
-      // Delete academy courses if it's an academy
-      await supabase
-        .from('academy_courses')
-        .delete()
-        .eq('academy_id', companyId);
-
-      // Delete marketplace services
-      await supabase
-        .from('marketplace_services')
-        .delete()
-        .eq('company_id', companyId);
-
-      // Finally delete the company
-      const { error } = await supabase
-        .from('companies')
-        .delete()
-        .eq('id', companyId);
-
-      if (error) throw error;
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete company');
+      }
 
       // Remove company from local state
       setCompanies(prev => prev.filter(company => company.id !== companyId));
