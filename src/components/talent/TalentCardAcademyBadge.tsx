@@ -99,9 +99,10 @@ export const TalentCardAcademyBadge = ({
     return null;
   }
 
-  // Modo compacto: mostrar chips separados para cada academia
+  // Modo compacto: mostrar chips separados para cada academia (máximo 2)
   if (compact && affiliations.length > 0) {
-    const maxVisible = affiliations.length <= 2 ? affiliations.length : 1;
+    // Siempre mostrar hasta 2 academias como chips separados
+    const maxVisible = Math.min(affiliations.length, 2);
     const remaining = affiliations.length - maxVisible;
     
     return (
