@@ -118,10 +118,10 @@ export const useTalentProfileProgress = () => {
       },
       {
         id: 'categories',
-        title: 'Categorías Profesionales',
-        completed: !!(talentProfile.primary_category_id && talentProfile.secondary_category_id),
+        title: 'Categoría Profesional',
+        completed: !!(talentProfile.primary_category_id),
         route: '/talent-dashboard/profile',
-        description: 'Categoría principal y secundaria'
+        description: 'Categoría principal (secundaria opcional)'
       },
       {
         id: 'title-experience',

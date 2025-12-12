@@ -97,15 +97,7 @@ export const useProfileCompleteness = () => {
         suggestions.push('Selecciona tu área de especialización principal');
       }
 
-      // 6. Categoría secundaria (10%)
-      if (talentProfile.secondary_category_id) {
-        total += 10;
-      } else {
-        missingFields.push('Categoría secundaria');
-        suggestions.push('Selecciona una categoría secundaria');
-      }
-
-      // 7. Título profesional (10%)
+      // 6. Título profesional (10%)
       if (talentProfile.title) {
         total += 10;
       } else {
@@ -113,7 +105,7 @@ export const useProfileCompleteness = () => {
         suggestions.push('Define un título que represente tu rol actual');
       }
 
-      // 8. Nivel de experiencia (10%)
+      // 7. Nivel de experiencia (10%)
       if (talentProfile.experience_level) {
         total += 10;
       } else {
@@ -121,17 +113,17 @@ export const useProfileCompleteness = () => {
         suggestions.push('Indica tu nivel de experiencia profesional');
       }
 
-      // 9. Skills - mínimo 3 (15%)
+      // 8. Skills - mínimo 3 (20%)
       if (talentProfile.skills && talentProfile.skills.length >= 3) {
-        total += 15;
+        total += 20;
       } else {
         missingFields.push('Habilidades (mínimo 3)');
         suggestions.push('Agrega al menos 3 habilidades que te destacan');
       }
 
-      // 10. Bio/descripción - mínimo 50 caracteres (10%)
+      // 9. Bio/descripción - mínimo 50 caracteres (15%)
       if (talentProfile.bio && talentProfile.bio.length >= 50) {
-        total += 10;
+        total += 15;
       } else {
         missingFields.push('Biografía (mínimo 50 caracteres)');
         suggestions.push('Escribe una descripción atractiva de tu experiencia');
@@ -157,12 +149,11 @@ export const useProfileCompleteness = () => {
     if (profileData?.country) basicInfoScore += 16;
     if (profileData?.city) basicInfoScore += 17;
 
-    // Professional info: categorías + título + nivel = 40%
+    // Professional info: categoría principal + título + nivel = 30%
     let professionalInfoScore = 0;
-    if (talentProfile?.primary_category_id) professionalInfoScore += 25;
-    if (talentProfile?.secondary_category_id) professionalInfoScore += 25;
-    if (talentProfile?.title) professionalInfoScore += 25;
-    if (talentProfile?.experience_level) professionalInfoScore += 25;
+    if (talentProfile?.primary_category_id) professionalInfoScore += 34;
+    if (talentProfile?.title) professionalInfoScore += 33;
+    if (talentProfile?.experience_level) professionalInfoScore += 33;
 
     // Skills and bio: skills + bio + educación = 30%
     let skillsAndBioScore = 0;
