@@ -99,20 +99,31 @@ export const TalentCardAcademyBadge = ({
     return null;
   }
 
-  // Modo compacto: solo muestra un icono pequeño con el nombre de la primera academia
+  // Modo compacto: mostrar chips separados para cada academia
   if (compact && affiliations.length > 0) {
-    const firstAffiliation = affiliations[0];
+    const maxVisible = affiliations.length <= 2 ? affiliations.length : 1;
+    const remaining = affiliations.length - maxVisible;
+    
     return (
-      <div 
-        className="flex items-center gap-1 text-xs whitespace-nowrap px-2 py-1 rounded-md font-medium flex-shrink-0" 
-        style={{ 
-          backgroundColor: '#f6efff',
-          color: firstAffiliation?.brand_color || '#7c3aed'
-        }}
-      >
-        <GraduationCap className="h-3 w-3 flex-shrink-0" />
-        <span>{firstAffiliation?.academy_name}</span>
-        {affiliations.length > 1 && <span className="opacity-60">+{affiliations.length - 1}</span>}
+      <div className="flex items-center gap-1 flex-wrap">
+        {affiliations.slice(0, maxVisible).map((affiliation) => (
+          <div 
+            key={affiliation.academy_id}
+            className="flex items-center gap-1 text-xs whitespace-nowrap px-2 py-1 rounded-md font-medium flex-shrink-0" 
+            style={{ 
+              backgroundColor: '#f6efff',
+              color: affiliation?.brand_color || '#7c3aed'
+            }}
+          >
+            <GraduationCap className="h-3 w-3 flex-shrink-0" />
+            <span>{affiliation?.academy_name}</span>
+          </div>
+        ))}
+        {remaining > 0 && (
+          <div className="text-xs whitespace-nowrap px-2 py-1 rounded-md font-medium text-purple-600 bg-purple-50 flex-shrink-0">
+            +{remaining}
+          </div>
+        )}
       </div>
     );
   }
