@@ -287,10 +287,6 @@ const TalentOnboarding = () => {
                     initialData={professionalInfo}
                   />
                 )}
-                {/* Debug info */}
-                <div className="fixed bottom-4 right-4 bg-black text-white p-2 rounded text-xs">
-                  Current Step: {currentStep}
-                </div>
               </div>
             </div>
           </div>
