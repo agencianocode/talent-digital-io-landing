@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Users, 
   User, 
@@ -15,7 +16,8 @@ import {
   RefreshCw,
   Eye,
   AlertTriangle,
-  GraduationCap
+  GraduationCap,
+  UserCog
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -23,6 +25,7 @@ import { toast } from 'sonner';
 import AdminUserFilters from '@/components/admin/AdminUserFilters';
 import AdminUserDetail from '@/components/admin/AdminUserDetail';
 import AdminCompanyDetail from '@/components/admin/AdminCompanyDetail';
+import BulkRoleChangeModal from '@/components/admin/BulkRoleChangeModal';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 
@@ -45,6 +48,10 @@ const AdminUserManagement: React.FC = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [isCompanyDetailOpen, setIsCompanyDetailOpen] = useState(false);
+  
+  // Bulk selection state
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [isBulkRoleModalOpen, setIsBulkRoleModalOpen] = useState(false);
 
   const handleViewUser = (userId: string) => {
     setSelectedUserId(userId);
@@ -82,6 +89,31 @@ const AdminUserManagement: React.FC = () => {
     await refetch();
     toast.success('Usuarios actualizados correctamente', { id: 'refresh-users' });
   };
+
+  // Bulk selection handlers
+  const handleSelectUser = (userId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedUserIds(prev => [...prev, userId]);
+    } else {
+      setSelectedUserIds(prev => prev.filter(id => id !== userId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedUserIds(users.map(u => u.id));
+    } else {
+      setSelectedUserIds([]);
+    }
+  };
+
+  const handleBulkRoleSuccess = () => {
+    setSelectedUserIds([]);
+    refetch();
+  };
+
+  const isAllSelected = users.length > 0 && selectedUserIds.length === users.length;
+  const isSomeSelected = selectedUserIds.length > 0 && selectedUserIds.length < users.length;
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -189,13 +221,52 @@ const AdminUserManagement: React.FC = () => {
         isLoading={isLoading}
       />
 
+      {/* Bulk Action Bar */}
+      {selectedUserIds.length > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg flex items-center gap-4">
+          <span className="font-medium">
+            {selectedUserIds.length} usuario{selectedUserIds.length > 1 ? 's' : ''} seleccionado{selectedUserIds.length > 1 ? 's' : ''}
+          </span>
+          <Button 
+            variant="secondary" 
+            size="sm"
+            onClick={() => setIsBulkRoleModalOpen(true)}
+          >
+            <UserCog className="h-4 w-4 mr-2" />
+            Cambiar rol
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setSelectedUserIds([])}
+            className="text-primary-foreground hover:text-primary-foreground/80"
+          >
+            Cancelar
+          </Button>
+        </div>
+      )}
+
       {/* Users List */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
             Lista de Usuarios
           </CardTitle>
+          {users.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={isAllSelected}
+                ref={(ref) => {
+                  if (ref) {
+                    (ref as any).indeterminate = isSomeSelected;
+                  }
+                }}
+                onCheckedChange={handleSelectAll}
+              />
+              <span className="text-sm text-muted-foreground">Seleccionar todos</span>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -225,7 +296,14 @@ const AdminUserManagement: React.FC = () => {
           ) : (
             <div className="space-y-3">
               {users.map((user) => (
-                <div key={user.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                <div key={user.id} className={`flex flex-col sm:flex-row sm:items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors ${selectedUserIds.includes(user.id) ? 'bg-primary/5 border-primary/30' : ''}`}>
+                  {/* Checkbox */}
+                  <div className="flex-shrink-0">
+                    <Checkbox
+                      checked={selectedUserIds.includes(user.id)}
+                      onCheckedChange={(checked) => handleSelectUser(user.id, !!checked)}
+                    />
+                  </div>
                   {/* Avatar and Basic Info */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="flex-shrink-0">
@@ -373,6 +451,14 @@ const AdminUserManagement: React.FC = () => {
           onCompanyUpdate={handleCompanyUpdate}
         />
       )}
+
+      {/* Bulk Role Change Modal */}
+      <BulkRoleChangeModal
+        isOpen={isBulkRoleModalOpen}
+        onClose={() => setIsBulkRoleModalOpen(false)}
+        selectedUserIds={selectedUserIds}
+        onSuccess={handleBulkRoleSuccess}
+      />
     </div>
   );
 };

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSupabaseAuth, isTalentRole } from '@/contexts/SupabaseAuthContext';
-import { Loader2, Eye, EyeOff, Users, ArrowLeft } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Users, ArrowLeft, Star } from 'lucide-react';
 
 const RegisterTalent = () => {
   const navigate = useNavigate();
@@ -15,6 +15,24 @@ const RegisterTalent = () => {
   
   // Guardar redirect parameter para usarlo después del onboarding
   const redirectParam = searchParams.get('redirect');
+  
+  // Check if user is registering via academy invitation
+  const [isAcademyInvitation, setIsAcademyInvitation] = useState(false);
+  
+  useEffect(() => {
+    const pendingInvitation = localStorage.getItem('pendingAcademyInvitation');
+    if (pendingInvitation) {
+      try {
+        const invitation = JSON.parse(pendingInvitation);
+        // Check if invitation is not too old (24 hours)
+        if (invitation.timestamp && Date.now() - invitation.timestamp < 24 * 60 * 60 * 1000) {
+          setIsAcademyInvitation(true);
+        }
+      } catch (e) {
+        console.error('Error parsing academy invitation:', e);
+      }
+    }
+  }, []);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -68,8 +86,11 @@ const RegisterTalent = () => {
       return;
     }
 
+    // If registering via academy invitation, use premium_talent role
+    const userType = isAcademyInvitation ? 'premium_talent' : 'freemium_talent';
+    
     const signUpResult = await signUp(formData.email, formData.password, {
-      user_type: 'freemium_talent'
+      user_type: userType
     });
     
     if (signUpResult.error) {
@@ -101,7 +122,9 @@ const RegisterTalent = () => {
       sessionStorage.setItem('post_onboarding_redirect', redirectParam);
     }
 
-    const { error } = await signUpWithGoogle('freemium_talent');
+    // If registering via academy invitation, use premium_talent role
+    const userType = isAcademyInvitation ? 'premium_talent' : 'freemium_talent';
+    const { error } = await signUpWithGoogle(userType);
     
     if (error) {
       setError('Error al registrarse con Google. Intenta nuevamente.');
@@ -132,15 +155,30 @@ const RegisterTalent = () => {
         </Button>
 
         <div className="text-center mb-6 sm:mb-8">
-          <div className="bg-primary/10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-            <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+          <div className={`${isAcademyInvitation ? 'bg-orange-100' : 'bg-primary/10'} w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4`}>
+            {isAcademyInvitation ? (
+              <Star className="h-7 w-7 sm:h-8 sm:w-8 text-orange-600" />
+            ) : (
+              <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Talento Freemium
+            {isAcademyInvitation ? 'Talento Premium' : 'Talento Freemium'}
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
-            Encuentra las mejores oportunidades laborales
+            {isAcademyInvitation 
+              ? 'Registro especial para estudiantes de academia'
+              : 'Encuentra las mejores oportunidades laborales'
+            }
           </p>
+          {isAcademyInvitation && (
+            <Alert className="mt-4 bg-orange-50 border-orange-200 text-left">
+              <Star className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-orange-800">
+                Tu cuenta tendrá acceso Premium al Marketplace por ser parte de una academia
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         <Card>
