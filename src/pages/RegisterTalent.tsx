@@ -35,8 +35,6 @@ const RegisterTalent = () => {
   }, []);
   
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -70,8 +68,8 @@ const RegisterTalent = () => {
     setError('');
     setMessage('');
 
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-      setError('Por favor completa todos los campos');
+    if (!formData.email || !formData.password) {
+      setError('Por favor completa email y contraseña');
       setIsSubmitting(false);
       return;
     }
@@ -92,7 +90,6 @@ const RegisterTalent = () => {
     const userType = isAcademyInvitation ? 'premium_talent' : 'freemium_talent';
     
     const signUpResult = await signUp(formData.email, formData.password, {
-      full_name: `${formData.firstName} ${formData.lastName}`.trim(),
       user_type: userType
     });
     
@@ -187,33 +184,6 @@ const RegisterTalent = () => {
         <Card>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">Nombre *</Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    placeholder="Tu nombre"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Apellido *</Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    placeholder="Tu apellido"
-                    required
-                  />
-                </div>
-              </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
                 <Input
