@@ -483,13 +483,51 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             .maybeSingle();
 
           // Obtener el nombre del usuario (de metadata, perfil existente o email)
-          const userName = existingProfile?.full_name && 
-                           existingProfile.full_name.trim() !== '' && 
-                           existingProfile.full_name !== 'Sin nombre'
-            ? existingProfile.full_name
-            : (authState.user!.user_metadata as any)?.full_name || 
-              (authState.user!.user_metadata as any)?.name || 
-              ((authState.user!.email as string)?.split('@')[0] || authState.user!.email as string);
+          const getUserName = () => {
+            // 1. Si ya tiene un nombre válido en el perfil, usarlo
+            if (existingProfile?.full_name && 
+                existingProfile.full_name.trim() !== '' && 
+                existingProfile.full_name !== 'Sin nombre') {
+              return existingProfile.full_name;
+            }
+            
+            // 2. Intentar obtener de user_metadata (Google OAuth puede usar diferentes campos)
+            const metadata = authState.user!.user_metadata as any;
+            
+            // 2a. full_name directo
+            if (metadata?.full_name && metadata.full_name.trim() !== '') {
+              return metadata.full_name;
+            }
+            
+            // 2b. name directo
+            if (metadata?.name && metadata.name.trim() !== '') {
+              return metadata.name;
+            }
+            
+            // 2c. Combinar first_name y last_name (Google OAuth a veces usa estos)
+            const firstName = metadata?.first_name || '';
+            const lastName = metadata?.last_name || '';
+            if (firstName || lastName) {
+              return `${firstName} ${lastName}`.trim();
+            }
+            
+            // 3. Fallback: extraer del email de manera inteligente
+            const email = authState.user!.email as string;
+            if (email) {
+              const localPart = email.split('@')[0];
+              if (localPart.includes('.') || localPart.includes('_') || localPart.includes('-')) {
+                return localPart
+                  .split(/[._-]/)
+                  .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+                  .join(' ');
+              }
+              return localPart.charAt(0).toUpperCase() + localPart.slice(1).toLowerCase();
+            }
+            
+            return email || 'Sin nombre';
+          };
+
+          const userName = getUserName();
 
           // Solo actualizar si no tiene nombre o tiene 'Sin nombre'
           if (!existingProfile?.full_name || 
