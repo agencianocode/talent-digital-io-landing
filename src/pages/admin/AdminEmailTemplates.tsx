@@ -230,84 +230,146 @@ const AdminEmailTemplates: React.FC = () => {
   const renderPreview = () => {
     if (!editedTemplate) return null;
     const content = editedTemplate.content;
+    const templateId = editedTemplate.id;
+
+    // Estilos que replican exactamente los templates de React Email
+    const emailStyles = {
+      container: { maxWidth: '600px', margin: '0 auto', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif" },
+      headerSection: { padding: '20px 30px', borderBottom: '2px solid #f0f0f0' },
+      h1: { color: '#1976d2', fontSize: '28px', fontWeight: 'bold', margin: '0 0 15px 0' },
+      h2: { color: '#1a1a1a', fontSize: '20px', fontWeight: '600', margin: '0' },
+      contentSection: { padding: '30px' },
+      text: { color: '#555', fontSize: '16px', lineHeight: '1.6', margin: '0 0 20px 0' },
+      textBold: { color: '#1a1a1a', fontWeight: '600' },
+      listItem: { color: '#555', fontSize: '16px', lineHeight: '1.8', margin: '0 0 8px 0', paddingLeft: '5px' },
+      button: { backgroundColor: '#1976d2', borderRadius: '5px', color: '#fff', fontSize: '16px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center' as const, display: 'inline-block', padding: '14px 30px', marginTop: '20px', marginBottom: '20px' },
+      signature: { color: '#555', fontSize: '16px', lineHeight: '1.6', marginTop: '30px' },
+      footer: { padding: '20px 30px', borderTop: '2px solid #f0f0f0', textAlign: 'center' as const },
+      footerText: { color: '#888', fontSize: '14px', margin: '0' },
+    };
+
+    // Detectar tipo de template para renderizado específico
+    const isWelcomeBusiness = templateId === 'welcome-business';
+    const isWelcomeTalent = templateId === 'welcome-talent';
 
     return (
       <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded-lg">
-        <div className="bg-white dark:bg-slate-800 max-w-xl mx-auto rounded-lg shadow-lg overflow-hidden">
-          {/* Email Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 text-center">
-            <h1 className="text-2xl font-bold text-white">
-              {content.title || '🚀 TalentoDigital'}
-            </h1>
+        <div className="bg-white max-w-xl mx-auto rounded-lg shadow-lg overflow-hidden" style={emailStyles.container}>
+          {/* Email Header - Replica Header.tsx */}
+          <div style={emailStyles.headerSection}>
+            <h1 style={emailStyles.h1}>TalentoDigital</h1>
+            <h2 style={emailStyles.h2}>Hola {content.greeting?.replace('Hola ', '').replace(',', '') || 'Usuario'},</h2>
           </div>
           
           {/* Email Body */}
-          <div className="p-6 space-y-4">
-            <h2 className="text-xl font-bold text-foreground">
-              {content.heading || 'Título del email'}
-            </h2>
-            
-            {content.greeting && (
-              <p className="text-muted-foreground">{content.greeting}</p>
-            )}
-            
+          <div style={emailStyles.contentSection}>
             {content.intro && (
-              <p className="text-muted-foreground">{content.intro}</p>
+              <p style={emailStyles.text}>{content.intro}</p>
             )}
 
-            {content.steps && Array.isArray(content.steps) && (
-              <div className="space-y-3 my-4">
-                <p className="font-medium">{content.steps_title || 'Pasos:'}</p>
-                {content.steps.map((step: any, idx: number) => (
-                  <div key={idx} className="flex gap-3 p-3 bg-slate-50 dark:bg-slate-700 rounded">
-                    <span className="text-2xl">{step.icon}</span>
-                    <div>
-                      <p className="font-medium">{step.title}</p>
-                      <p className="text-sm text-muted-foreground">{step.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Steps con checkmarks para welcome-business */}
+            {isWelcomeBusiness && (
+              <>
+                {content.steps_title && (
+                  <p style={{ ...emailStyles.text, ...emailStyles.textBold }}>{content.steps_title}</p>
+                )}
+                <div style={{ marginBottom: '20px' }}>
+                  {content.step1 && (
+                    <p style={emailStyles.listItem}>
+                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
+                      <strong>{content.step1.split(':')[0]}:</strong> {content.step1.split(':').slice(1).join(':')}
+                    </p>
+                  )}
+                  {content.step2 && (
+                    <p style={emailStyles.listItem}>
+                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
+                      <strong>{content.step2.split(':')[0]}:</strong> {content.step2.split(':').slice(1).join(':')}
+                    </p>
+                  )}
+                  {content.step3 && (
+                    <p style={emailStyles.listItem}>
+                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
+                      <strong>{content.step3.split(':')[0]}:</strong> {content.step3.split(':').slice(1).join(':')}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
 
-            {content.benefits && Array.isArray(content.benefits) && (
-              <div className="space-y-2 my-4">
-                <p className="font-medium">{content.benefits_title || 'Beneficios:'}</p>
-                <ul className="list-disc list-inside space-y-1">
-                  {content.benefits.map((benefit: string, idx: number) => (
-                    <li key={idx} className="text-muted-foreground">{benefit}</li>
-                  ))}
-                </ul>
-              </div>
+            {/* Steps con checkmarks para welcome-talent */}
+            {isWelcomeTalent && (
+              <>
+                {content.steps_title && (
+                  <p style={{ ...emailStyles.text, ...emailStyles.textBold }}>{content.steps_title}</p>
+                )}
+                <div style={{ marginBottom: '20px' }}>
+                  {content.step1 && (
+                    <p style={emailStyles.listItem}>
+                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
+                      <strong>{content.step1.split(':')[0]}:</strong> {content.step1.split(':').slice(1).join(':')}
+                    </p>
+                  )}
+                  {content.step2 && (
+                    <p style={emailStyles.listItem}>
+                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
+                      <strong>{content.step2.split(':')[0]}:</strong> {content.step2.split(':').slice(1).join(':')}
+                    </p>
+                  )}
+                  {content.step3 && (
+                    <p style={emailStyles.listItem}>
+                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
+                      <strong>{content.step3.split(':')[0]}:</strong> {content.step3.split(':').slice(1).join(':')}
+                    </p>
+                  )}
+                  {content.step4 && (
+                    <p style={emailStyles.listItem}>
+                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
+                      <strong>{content.step4.split(':')[0]}:</strong> {content.step4.split(':').slice(1).join(':')}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
 
+            {/* Botón - Replica NotificationButton.tsx */}
             {content.button_text && (
-              <div className="text-center my-6">
-                <button className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium">
+              <div style={{ textAlign: 'center', margin: '20px 0' }}>
+                <span style={emailStyles.button}>
                   {content.button_text}
-                </button>
+                </span>
               </div>
+            )}
+
+            {/* Closing text */}
+            {content.closing && (
+              <p style={emailStyles.text}>{content.closing}</p>
+            )}
+
+            {/* Signature */}
+            {content.signature && (
+              <p style={emailStyles.signature}>
+                {content.signature.split('\n').map((line: string, idx: number) => (
+                  <span key={idx}>
+                    {idx === 0 ? <strong>{line}</strong> : line}
+                    {idx < content.signature.split('\n').length - 1 && <br />}
+                  </span>
+                ))}
+              </p>
             )}
 
             {content.security_notice && (
-              <p className="text-sm text-muted-foreground">{content.security_notice}</p>
+              <p style={{ ...emailStyles.text, fontSize: '14px', color: '#888' }}>{content.security_notice}</p>
             )}
 
             {content.expiry_notice && (
-              <p className="text-sm text-muted-foreground">{content.expiry_notice}</p>
-            )}
-
-            {content.signature && (
-              <p className="text-muted-foreground whitespace-pre-line mt-4">
-                {content.signature}
-              </p>
+              <p style={{ ...emailStyles.text, fontSize: '14px', color: '#888' }}>{content.expiry_notice}</p>
             )}
           </div>
 
-          {/* Email Footer */}
-          <div className="border-t p-4 text-center">
-            <p className="text-xs text-muted-foreground">
-              {content.footer_text || '© 2024 TalentoDigital'}
+          {/* Email Footer - Replica Footer.tsx */}
+          <div style={emailStyles.footer}>
+            <p style={emailStyles.footerText}>
+              {content.footer_text || '© 2024 TalentoDigital. Todos los derechos reservados.'}
             </p>
           </div>
         </div>
