@@ -174,10 +174,17 @@ serve(async (req) => {
         const prefix = email.split('@')[0];
         // Replace common separators with spaces
         const nameParts = prefix.split(/[._-]+/);
-        // Capitalize each part
-        return nameParts
-          .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-          .join(' ');
+        // Capitalize each part and remove trailing numbers
+        const cleanedParts = nameParts
+          .map(part => {
+            // Remove trailing numbers from each part
+            const cleanPart = part.replace(/\d+$/, '');
+            if (!cleanPart) return null;
+            return cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1).toLowerCase();
+          })
+          .filter(Boolean);
+        
+        return cleanedParts.length > 0 ? cleanedParts.join(' ') : 'Sin nombre';
       };
 
       // Extract name from multiple sources with better fallback
@@ -235,6 +242,16 @@ serve(async (req) => {
 
       const fullName = extractName();
       const avatarUrl = extractAvatar();
+      
+      // Check if user has completed onboarding (has real name and avatar)
+      const emailPrefix = user.email?.split('@')[0]?.toLowerCase() || '';
+      const hasRealName = profile?.full_name && 
+        profile.full_name.trim() !== '' && 
+        profile.full_name.toLowerCase() !== 'sin nombre' &&
+        profile.full_name.toLowerCase() !== emailPrefix;
+      const hasAvatar = !!(profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture);
+      const hasTalentProfile = !!talentProfile;
+      const hasCompletedOnboarding = hasRealName && hasAvatar && (userRole.includes('business') || hasTalentProfile);
 
       return {
         id: user.id,
@@ -251,7 +268,8 @@ serve(async (req) => {
         companies_count,
         company_roles: companyRoles,
         is_company_admin: isCompanyAdmin,
-        has_companies: hasCompanies
+        has_companies: hasCompanies,
+        has_completed_onboarding: hasCompletedOnboarding
       };
     });
 
