@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { Resend } from 'npm:resend@2.0.0';
 import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import * as React from 'npm:react@18.3.1';
@@ -30,10 +31,28 @@ interface NotificationEmailRequest {
   message: string;
   actionUrl?: string;
   actionText?: string;
-  // For complete-profile-reminder
   missingItems?: string[];
   reminderType?: 'first' | 'second';
 }
+
+// Map notification types to template IDs in database
+const getTemplateId = (type: string): string => {
+  const mapping: Record<string, string> = {
+    'application': 'new-application',
+    'opportunity': 'new-opportunity',
+    'academy-exclusive': 'new-opportunity',
+    'message': 'new-message',
+    'team': 'membership-request',
+    'marketplace': 'new-message',
+    'marketplace_request': 'new-message',
+    'moderation': 'new-message',
+    'welcome-talent': 'welcome-talent',
+    'welcome-business': 'welcome-business',
+    'welcome-academy': 'welcome-business',
+    'complete-profile-reminder': 'onboarding-reminder',
+  };
+  return mapping[type] || type;
+};
 
 const getTemplateComponent = (type: string) => {
   switch (type) {
@@ -62,7 +81,7 @@ const getTemplateComponent = (type: string) => {
     case 'complete-profile-reminder':
       return CompleteProfileReminder;
     default:
-      return ApplicationNotification; // Fallback
+      return ApplicationNotification;
   }
 };
 
@@ -76,6 +95,32 @@ const handler = async (req: Request): Promise<Response> => {
       await req.json();
 
     console.log('Sending notification email:', { to, type, title });
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Try to get custom template content from database
+    const templateId = getTemplateId(type);
+    let dbContent: Record<string, string> | null = null;
+    let customSubject: string | null = null;
+
+    try {
+      const { data: dbTemplate } = await supabase
+        .from('email_templates')
+        .select('content, subject, is_active')
+        .eq('id', templateId)
+        .single();
+
+      if (dbTemplate && dbTemplate.is_active) {
+        dbContent = dbTemplate.content as Record<string, string>;
+        customSubject = dbTemplate.subject;
+        console.log('Using custom template from database:', templateId);
+      }
+    } catch (dbError) {
+      console.log('No custom template found, using defaults:', dbError);
+    }
 
     // Get the appropriate template component
     const TemplateComponent = getTemplateComponent(type);
@@ -98,15 +143,23 @@ const handler = async (req: Request): Promise<Response> => {
       };
     }
 
+    // Merge database content with template props (DB overrides defaults)
+    if (dbContent) {
+      templateProps = { ...templateProps, ...dbContent };
+    }
+
     // Render the React Email template
     const html = await renderAsync(
       React.createElement(TemplateComponent, templateProps)
     );
 
+    // Use custom subject from DB if available, otherwise use provided title
+    const emailSubject = customSubject || title;
+
     const emailResponse = await resend.emails.send({
       from: 'TalentoDigital Notificaciones <notificaciones@app.talentodigital.io>',
       to: [to],
-      subject: title,
+      subject: emailSubject,
       html,
     });
 
