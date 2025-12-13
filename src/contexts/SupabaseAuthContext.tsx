@@ -537,6 +537,24 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             enrollment_date: new Date().toISOString().split('T')[0],
             ...(status === 'graduated' ? { graduation_date: new Date().toISOString().split('T')[0] } : {})
           });
+
+          // Upgrade role to premium_talent if user is freemium_talent and academy is valid
+          try {
+            const { data: upgradeResult, error: upgradeError } = await supabase.functions.invoke('upgrade-academy-student-role', {
+              body: {
+                userId: authState.user!.id,
+                academyId: academyId
+              }
+            });
+
+            if (upgradeError) {
+              console.error('Error upgrading role after academy enrollment:', upgradeError);
+            } else {
+              console.log('Academy student role upgrade result:', upgradeResult);
+            }
+          } catch (upgradeErr) {
+            console.error('Exception upgrading academy student role:', upgradeErr);
+          }
         }
         localStorage.removeItem('pendingAcademyInvitation');
       } catch (e) {
