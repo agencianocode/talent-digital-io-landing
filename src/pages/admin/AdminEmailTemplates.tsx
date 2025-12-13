@@ -255,21 +255,23 @@ const AdminEmailTemplates: React.FC = () => {
       return 'Usuario';
     };
 
-    // Detectar si es un step (step1, step2, etc.)
+    // Detectar si es un step (step1, step2, etc.) - formato legacy
     const isStepField = (key: string) => /^step\d+$/.test(key);
     
-    // Obtener todos los steps ordenados
-    const getSteps = () => {
+    // Obtener steps en formato legacy (step1, step2, etc.)
+    const getLegacySteps = () => {
       return Object.entries(content)
         .filter(([key]) => isStepField(key))
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([, value]) => value as string);
     };
 
-    const steps = getSteps();
+    // Verificar si hay steps en formato array de objetos
+    const hasArraySteps = content.steps && Array.isArray(content.steps);
+    const legacySteps = getLegacySteps();
 
-    // Renderizar un step con formato correcto
-    const renderStep = (step: string, idx: number) => {
+    // Renderizar step en formato legacy (string)
+    const renderLegacyStep = (step: string, idx: number) => {
       const parts = step.split(':');
       const title = parts[0];
       const description = parts.slice(1).join(':').trim();
@@ -284,6 +286,16 @@ const AdminEmailTemplates: React.FC = () => {
           ) : (
             <span>{title}</span>
           )}
+        </p>
+      );
+    };
+
+    // Renderizar step en formato array de objetos {title, description, icon}
+    const renderArrayStep = (step: { title: string; description: string; icon?: string }, idx: number) => {
+      return (
+        <p key={idx} style={emailStyles.listItem}>
+          <span style={{ color: '#1976d2', marginRight: '8px' }}>{step.icon || '✓'}</span>
+          <strong>{step.title}:</strong> {step.description}
         </p>
       );
     };
@@ -305,14 +317,23 @@ const AdminEmailTemplates: React.FC = () => {
             )}
 
             {/* Steps Title */}
-            {content.steps_title && steps.length > 0 && (
+            {content.steps_title && (hasArraySteps || legacySteps.length > 0) && (
               <p style={{ ...emailStyles.text, ...emailStyles.textBold }}>{content.steps_title}</p>
             )}
 
-            {/* Steps */}
-            {steps.length > 0 && (
+            {/* Steps - formato array de objetos */}
+            {hasArraySteps && (
               <div style={{ marginBottom: '20px' }}>
-                {steps.map((step, idx) => renderStep(step, idx))}
+                {content.steps.map((step: { title: string; description: string; icon?: string }, idx: number) => 
+                  renderArrayStep(step, idx)
+                )}
+              </div>
+            )}
+
+            {/* Steps - formato legacy (step1, step2, etc.) */}
+            {!hasArraySteps && legacySteps.length > 0 && (
+              <div style={{ marginBottom: '20px' }}>
+                {legacySteps.map((step, idx) => renderLegacyStep(step, idx))}
               </div>
             )}
 
