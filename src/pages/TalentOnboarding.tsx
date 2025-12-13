@@ -79,6 +79,17 @@ const TalentOnboarding = () => {
     console.log('🚀 STEP 1 COMPLETE - currentStep should now be 2');
   };
 
+  // Mapear el valor del formulario al valor que acepta la base de datos
+  const mapExperienceLevel = (formValue: string): string => {
+    const mapping: Record<string, string> = {
+      'Principiante: 0-1 año': 'principiante',
+      'Intermedio: 1-3 años': 'intermedio',
+      'Avanzado: 3-6 años': 'avanzado',
+      'Experto: +6 años': 'experto'
+    };
+    return mapping[formValue] || formValue.toLowerCase(); // Fallback: convertir a minúsculas
+  };
+
   const handleStep2Complete = async (data: ProfessionalInfo) => {
     console.log('🚀 STEP 2 COMPLETE - Starting process...');
     
@@ -98,7 +109,7 @@ const TalentOnboarding = () => {
             title: data.title,
             bio: data.bio,
             skills: data.skills,
-            experience_level: data.experience,
+            experience_level: mapExperienceLevel(data.experience),
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
 
@@ -122,7 +133,7 @@ const TalentOnboarding = () => {
             category: data.category,
             category2: data.category2 || null,
             title: data.title,
-            experience_level: data.experience,
+            experience_level: mapExperienceLevel(data.experience),
             bio: data.bio,
             skills: data.skills,
             updated_at: new Date().toISOString()
