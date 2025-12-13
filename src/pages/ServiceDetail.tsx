@@ -487,9 +487,10 @@ const ServiceDetail: React.FC = () => {
               {/* Description */}
               <div>
                 <h2 className="text-xl font-semibold mb-3">Descripción</h2>
-                <p className="text-muted-foreground whitespace-pre-wrap">
-                  {service.description}
-                </p>
+                <div 
+                  className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: service.description }}
+                />
               </div>
 
               {/* Tags */}

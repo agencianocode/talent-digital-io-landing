@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { stripHtml } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -233,7 +234,7 @@ const AdminMarketplaceManagement: React.FC = () => {
                       
                       {service.description && (
                         <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-2">
-                          {service.description}
+                          {stripHtml(service.description)}
                         </p>
                       )}
                       
