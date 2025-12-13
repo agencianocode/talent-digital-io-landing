@@ -25,15 +25,43 @@ serve(async (req) => {
 
     console.log('Fetching all users from auth...');
 
-    // Get all users from auth.users
-    const { data: { users }, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    // Get all users from auth.users with pagination
+    let allAuthUsers: any[] = [];
+    let page = 1;
+    const perPage = 1000; // Maximum per page
+    let hasMore = true;
 
-    if (authError) {
-      console.error('Auth error:', authError);
-      throw authError;
+    while (hasMore) {
+      console.log(`Fetching users page ${page}...`);
+      const { data: { users }, error: authError } = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage
+      });
+
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw authError;
+      }
+
+      if (users && users.length > 0) {
+        allAuthUsers = allAuthUsers.concat(users);
+        console.log(`Page ${page}: Found ${users.length} users (Total so far: ${allAuthUsers.length})`);
+        
+        // If we got fewer users than perPage, we've reached the end
+        if (users.length < perPage) {
+          hasMore = false;
+        } else {
+          page++;
+        }
+      } else {
+        hasMore = false;
+      }
     }
 
-    console.log(`Found ${users?.length || 0} auth users`);
+    console.log(`Found ${allAuthUsers.length} total auth users`);
+
+    // Use allAuthUsers instead of users
+    const users = allAuthUsers;
 
     // Get all profiles
     const { data: profiles, error: profilesError } = await supabaseAdmin
