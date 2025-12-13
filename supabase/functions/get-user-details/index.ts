@@ -146,13 +146,17 @@ serve(async (req) => {
       }
     }
 
+    // Get avatar_url with fallback to user_metadata, filter out blob URLs
+    const rawAvatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.profile_photo_url || null;
+    const filteredAvatarUrl = rawAvatarUrl && !rawAvatarUrl.startsWith('blob:') ? rawAvatarUrl : null;
+
     const userDetails = {
       user_id: actualUserId,
       id: actualUserId,
       email: user?.email || '',
       full_name: profile?.full_name || user?.user_metadata?.full_name || 'Sin nombre',
       phone: profile?.phone || null,
-      avatar_url: profile?.avatar_url || null,
+      avatar_url: filteredAvatarUrl,
       role: userRole,
       created_at: profile?.created_at || user?.created_at || new Date().toISOString(),
       updated_at: profile?.updated_at || new Date().toISOString(),

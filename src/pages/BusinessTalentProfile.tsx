@@ -104,7 +104,38 @@ const BusinessTalentProfile = () => {
       console.log('🔗 social_links field:', profileData.social_links);
       console.log('🎥 Expected URL: https://youtu.be/kcOrTOT7Kko');
       console.log('🎥 URLs match:', profileData.video_presentation_url === 'https://youtu.be/kcOrTOT7Kko');
-      setUserProfile(profileData);
+      
+      // Get avatar_url with fallback to user_metadata using edge function
+      let enrichedAvatarUrl = profileData.avatar_url;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && id) {
+          const { data: userDetails, error: userDetailsError } = await supabase.functions.invoke('get-user-details', {
+            body: { userId: id },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`
+            }
+          });
+          
+          if (!userDetailsError && userDetails?.avatar_url) {
+            enrichedAvatarUrl = userDetails.avatar_url;
+            console.log('✅ Found avatar_url from edge function (with user_metadata fallback):', enrichedAvatarUrl);
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not fetch avatar_url from edge function, using profile data only:', error);
+      }
+      
+      // Filter out blob URLs
+      const filteredAvatarUrl = enrichedAvatarUrl && !enrichedAvatarUrl.startsWith('blob:') ? enrichedAvatarUrl : null;
+      
+      // Update profileData with enriched avatar_url
+      const enrichedProfileData = {
+        ...profileData,
+        avatar_url: filteredAvatarUrl
+      };
+      
+      setUserProfile(enrichedProfileData);
       
       // Get user email using RPC function for academy affiliations
       if (id) {
