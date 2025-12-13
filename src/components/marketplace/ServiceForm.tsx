@@ -183,7 +183,14 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
       return;
     }
 
-    const success = await onSubmit(formData);
+    // Limpiar URLs vacías para que no sobrescriban valores existentes
+    const dataToSubmit: ServiceFormData = {
+      ...formData,
+      portfolio_url: formData.portfolio_url?.trim() || undefined,
+      demo_url: formData.demo_url?.trim() || undefined,
+    };
+
+    const success = await onSubmit(dataToSubmit);
     if (success) {
       toast({
         title: "Servicio guardado",
