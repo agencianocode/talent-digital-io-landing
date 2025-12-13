@@ -523,14 +523,17 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
           // Obtener el nombre del usuario SOLO de fuentes reales (NO derivar del email)
           const getRealUserName = () => {
-            // 1. Si ya tiene un nombre válido en el perfil (y no es derivado del email)
-            const emailPrefix = (authState.user!.email || '').split('@')[0]?.toLowerCase() || '';
+            // 1. Si ya tiene un nombre válido en el perfil
+            const emailPrefix = (authState.user!.email || '').split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
+            const existingName = existingProfile?.full_name || '';
+            const nameWords = existingName.trim().split(/\s+/).filter(w => w.length > 0);
+            const cleanName = existingName.toLowerCase().replace(/[^a-z0-9]/g, '');
             
-            if (existingProfile?.full_name && 
-                existingProfile.full_name.trim() !== '' && 
-                existingProfile.full_name !== 'Sin nombre' &&
-                existingProfile.full_name.toLowerCase() !== emailPrefix) {
-              return existingProfile.full_name;
+            // Nombre válido si: no vacío, no "Sin nombre", y tiene 2+ palabras O es diferente del email
+            if (existingName.trim() !== '' && 
+                existingName !== 'Sin nombre' &&
+                (nameWords.length >= 2 || cleanName !== emailPrefix)) {
+              return existingName;
             }
             
             // 2. Intentar obtener de user_metadata (Google OAuth puede usar diferentes campos)

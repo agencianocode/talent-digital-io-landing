@@ -189,14 +189,18 @@ serve(async (req) => {
 
       // Extract name from multiple sources with better fallback
       const extractName = () => {
-        const emailPrefix = user.email?.split('@')[0] || '';
+        const emailPrefix = user.email?.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
         
         // 1. Profile full_name es la fuente principal (datos actualizados por el usuario)
-        if (profile?.full_name && 
-            profile.full_name.trim() !== '' && 
-            profile.full_name.toLowerCase() !== 'sin nombre' &&
-            profile.full_name.toLowerCase() !== emailPrefix.toLowerCase()) {
-          return profile.full_name;
+        if (profile?.full_name && profile.full_name.trim() !== '') {
+          const nameWords = profile.full_name.trim().split(/\s+/).filter((w: string) => w.length > 0);
+          const cleanName = profile.full_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          
+          // Nombre válido si: no "sin nombre", y tiene 2+ palabras O es diferente del email
+          if (profile.full_name.toLowerCase() !== 'sin nombre' &&
+              (nameWords.length >= 2 || cleanName !== emailPrefix)) {
+            return profile.full_name;
+          }
         }
         
         // 2. Priorizar metadata full_name (viene de registro o Google auth)
@@ -244,11 +248,15 @@ serve(async (req) => {
       const avatarUrl = extractAvatar();
       
       // Check if user has completed onboarding (has real name and avatar)
-      const emailPrefix = user.email?.split('@')[0]?.toLowerCase() || '';
+      const emailPrefix = user.email?.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
+      const nameWords = (profile?.full_name || '').trim().split(/\s+/).filter((w: string) => w.length > 0);
+      const cleanName = (profile?.full_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      
+      // Nombre válido si: no vacío, no "sin nombre", y tiene 2+ palabras O es diferente del email
       const hasRealName = profile?.full_name && 
         profile.full_name.trim() !== '' && 
         profile.full_name.toLowerCase() !== 'sin nombre' &&
-        profile.full_name.toLowerCase() !== emailPrefix;
+        (nameWords.length >= 2 || cleanName !== emailPrefix);
       const hasAvatar = !!(profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture);
       const hasTalentProfile = !!talentProfile;
       const hasCompletedOnboarding = hasRealName && hasAvatar && (userRole.includes('business') || hasTalentProfile);
