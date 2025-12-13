@@ -89,7 +89,7 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  signUp: (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, metadata?: { full_name?: string; user_type?: string; first_name?: string; last_name?: string }) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   signUpWithGoogle: (userType: 'business' | 'talent' | 'freemium_talent' | 'freemium_business' | 'academy_premium' | 'premium_talent') => Promise<{ error: Error | null }>;
@@ -609,7 +609,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     })();
   }, [authState.isAuthenticated, authState.user?.email]);
 
-  const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
+  const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string; first_name?: string; last_name?: string }) => {
     // For academy registrations, normalize to 'business' for compatibility
     // but keep the original intent in metadata
     // Preserve freemium_business and freemium_talent as-is
