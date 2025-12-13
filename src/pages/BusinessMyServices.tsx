@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Package, Plus } from 'lucide-react';
-import MyPublishingRequests from '@/components/marketplace/MyPublishingRequests';
+
 import { useTalentServices } from '@/hooks/useTalentServices';
 import { useCompany } from '@/contexts/CompanyContext';
 import TalentServiceCard from '@/components/marketplace/TalentServiceCard';
@@ -232,17 +232,6 @@ const BusinessMyServices: React.FC = () => {
           </CardContent>
         </Card>
       )}
-
-      {/* My Publishing Requests */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Package className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold">Solicitudes de Publicación</h2>
-          </div>
-          <MyPublishingRequests />
-        </CardContent>
-      </Card>
 
       {/* Edit Service Modal */}
       {editingService && (
