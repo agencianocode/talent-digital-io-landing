@@ -23,8 +23,11 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  MoreVertical
+  MoreVertical,
+  Play
 } from 'lucide-react';
+import VideoThumbnail from '@/components/VideoThumbnail';
+import VideoPlayerModal from '@/components/VideoPlayerModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
@@ -90,6 +93,7 @@ const ServiceDetail: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   
@@ -793,33 +797,53 @@ const ServiceDetail: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Links Card */}
-          {(service.portfolio_url || service.demo_url) && (
+          {/* Video Demo Card */}
+          {service.demo_url && (
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">Video Demo</h3>
+                  <Badge variant="secondary" className="text-xs">
+                    {service.demo_url.includes('youtube') || service.demo_url.includes('youtu.be') ? 'YouTube' :
+                     service.demo_url.includes('loom') ? 'Loom' :
+                     service.demo_url.includes('vimeo') ? 'Vimeo' :
+                     service.demo_url.includes('drive.google') ? 'Google Drive' :
+                     service.demo_url.includes('dropbox') ? 'Dropbox' : 'Video'}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div 
+                  className="relative cursor-pointer group rounded-lg overflow-hidden"
+                  onClick={() => setIsVideoModalOpen(true)}
+                >
+                  <VideoThumbnail url={service.demo_url} />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button variant="secondary" size="sm" className="gap-2">
+                      <Play className="h-4 w-4" />
+                      Reproducir
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Portfolio Link Card */}
+          {service.portfolio_url && (
             <Card>
               <CardHeader>
-                <h3 className="font-semibold">Enlaces</h3>
+                <h3 className="font-semibold">Portfolio</h3>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {service.portfolio_url && (
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => window.open(service.portfolio_url!, '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Ver Portfolio
-                  </Button>
-                )}
-                {service.demo_url && (
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => window.open(service.demo_url!, '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Ver Demo
-                  </Button>
-                )}
+              <CardContent>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.open(service.portfolio_url!, '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Ver Portfolio
+                </Button>
               </CardContent>
             </Card>
           )}
@@ -870,6 +894,16 @@ const ServiceDetail: React.FC = () => {
           }}
           isSubmitting={false}
           mode="edit"
+        />
+      )}
+
+      {/* Video Player Modal */}
+      {service?.demo_url && (
+        <VideoPlayerModal
+          isOpen={isVideoModalOpen}
+          onClose={() => setIsVideoModalOpen(false)}
+          videoUrl={service.demo_url}
+          title="Video Demo del Servicio"
         />
       )}
     </div>

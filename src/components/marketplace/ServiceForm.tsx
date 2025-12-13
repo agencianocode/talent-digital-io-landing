@@ -444,14 +444,17 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="demo_url">URL de Demo</Label>
+                  <Label htmlFor="demo_url">URL de Video Demo</Label>
                   <Input
                     id="demo_url"
                     type="url"
                     value={formData.demo_url}
                     onChange={(e) => handleInputChange('demo_url', e.target.value)}
-                    placeholder="https://demo.com"
+                    placeholder="https://youtube.com/watch?v=... o https://loom.com/share/..."
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Plataformas soportadas: YouTube, Loom, Vimeo, Google Drive, Dropbox
+                  </p>
                 </div>
               </div>
 

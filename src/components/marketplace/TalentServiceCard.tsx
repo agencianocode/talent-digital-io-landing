@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { stripHtml } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -25,12 +25,15 @@ import {
   DollarSign,
   MapPin,
   MessageSquare,
-  ExternalLink
+  ExternalLink,
+  Video
 } from 'lucide-react';
 import { TalentService, ServiceRequest } from '@/hooks/useTalentServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import { normalizeDeliveryTime, formatPriceRange } from '@/lib/marketplace-utils';
 import ServiceRequestsSection from './ServiceRequestsSection';
+import VideoThumbnail from '@/components/VideoThumbnail';
+import VideoPlayerModal from '@/components/VideoPlayerModal';
 
 interface TalentServiceCardProps {
   service: TalentService;
@@ -58,6 +61,7 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
   const navigate = useNavigate();
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   const category = marketplaceCategories.find((cat) => cat.name === service.category);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -176,6 +180,12 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
                   Ver Portfolio
                 </DropdownMenuItem>
               )}
+              {service.demo_url && (
+                <DropdownMenuItem onClick={() => setIsVideoModalOpen(true)}>
+                  <Video className="h-4 w-4 mr-2" />
+                  Ver Video Demo
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={() => onDelete(service)}
@@ -258,6 +268,28 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
           </div>
         </div>
 
+        {/* Video Demo Preview */}
+        {service.demo_url && (
+          <div 
+            className="mt-4 pt-4 border-t cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsVideoModalOpen(true);
+            }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Video className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Video Demo</span>
+            </div>
+            <div className="relative rounded-lg overflow-hidden group">
+              <VideoThumbnail url={service.demo_url} />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Play className="h-8 w-8 text-white" />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Service Requests Section */}
         {onUpdateRequestStatus && (
           <ServiceRequestsSection
@@ -269,6 +301,16 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
           />
         )}
       </CardContent>
+
+      {/* Video Player Modal */}
+      {service.demo_url && (
+        <VideoPlayerModal
+          isOpen={isVideoModalOpen}
+          onClose={() => setIsVideoModalOpen(false)}
+          videoUrl={service.demo_url}
+          title={`Demo: ${service.title}`}
+        />
+      )}
     </Card>
   );
 };
