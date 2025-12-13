@@ -814,7 +814,7 @@ const ServiceDetail: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div 
-                  className="relative cursor-pointer group rounded-lg overflow-hidden"
+                  className="relative cursor-pointer group rounded-lg overflow-hidden aspect-video"
                   onClick={() => setIsVideoModalOpen(true)}
                 >
                   <VideoThumbnail url={service.demo_url} />
