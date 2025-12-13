@@ -71,12 +71,94 @@ const TalentOnboarding = () => {
     );
   }
 
-  const handleStep1Complete = (data: TalentProfile) => {
+  const handleStep1Complete = async (data: TalentProfile) => {
     console.log('🚀 STEP 1 COMPLETE - Data received:', data);
+    
+    try {
+      // Get user session to save data immediately
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // Upload profile photo if exists
+        let avatarUrl: string | null = null;
+        if (data.profilePhoto) {
+          console.log('📸 Uploading profile photo in Step 1...');
+          const fileExt = data.profilePhoto.name.split('.').pop();
+          const fileName = `${session.user.id}/avatar.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, data.profilePhoto, { upsert: true });
+
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(fileName);
+            
+            avatarUrl = publicUrl;
+            console.log('📸 Photo uploaded successfully in Step 1:', publicUrl);
+          } else {
+            console.error('❌ Photo upload error in Step 1:', uploadError);
+          }
+        }
+        
+        const fullName = `${data.firstName} ${data.lastName}`.trim();
+        
+        // Save to profiles table IMMEDIATELY
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            user_id: session.user.id,
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            phone: data.phone,
+            country: data.country,
+            city: data.city,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
+
+        if (profileError) {
+          console.error('❌ Error saving profile in Step 1:', profileError);
+        } else {
+          console.log('✅ Profile saved successfully in Step 1');
+        }
+        
+        // Also update auth user metadata IMMEDIATELY
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: {
+            first_name: data.firstName,
+            last_name: data.lastName,
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            country: data.country,
+            city: data.city,
+            phone: data.phone,
+            phone_country_code: data.phoneCountryCode
+          }
+        });
+
+        if (metadataError) {
+          console.error('❌ Error updating user metadata in Step 1:', metadataError);
+        } else {
+          console.log('✅ User metadata updated successfully in Step 1');
+        }
+
+        // Update academy_students if applicable
+        if (session.user.email) {
+          await supabase
+            .from('academy_students')
+            .update({ student_name: fullName })
+            .eq('student_email', session.user.email)
+            .eq('student_name', session.user.email);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error in handleStep1Complete:', error);
+      // Don't block navigation on error, just log it
+    }
+    
     setTalentProfile(data);
-    console.log('🚀 STEP 1 COMPLETE - Setting currentStep to 2');
     setCurrentStep(2);
-    console.log('🚀 STEP 1 COMPLETE - currentStep should now be 2');
   };
 
   // Mapear el valor del formulario al valor que acepta la base de datos

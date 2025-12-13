@@ -346,6 +346,45 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             
             if (!isMounted) return;
             
+            // Sync Google OAuth avatar and name to profiles table if missing
+            const metadata = session.user.user_metadata;
+            const googleAvatar = metadata?.avatar_url || metadata?.picture;
+            const googleName = metadata?.full_name || metadata?.name;
+            
+            if (googleAvatar || googleName) {
+              const profileAvatar = userData.profile?.avatar_url;
+              const profileName = userData.profile?.full_name;
+              
+              const updates: Record<string, any> = {};
+              if (googleAvatar && !profileAvatar) {
+                updates.avatar_url = googleAvatar;
+              }
+              if (googleName && !profileName) {
+                updates.full_name = googleName;
+              }
+              
+              if (Object.keys(updates).length > 0) {
+                console.log('🔄 Syncing Google OAuth data to profiles:', updates);
+                const { error: syncError } = await supabase
+                  .from('profiles')
+                  .upsert({
+                    user_id: session.user.id,
+                    ...updates,
+                    updated_at: new Date().toISOString()
+                  }, { onConflict: 'user_id' });
+                  
+                if (syncError) {
+                  console.error('❌ Error syncing Google OAuth data:', syncError);
+                } else {
+                  console.log('✅ Google OAuth data synced to profiles');
+                  // Update local userData with synced values
+                  if (userData.profile) {
+                    userData.profile = { ...userData.profile, ...updates };
+                  }
+                }
+              }
+            }
+            
             logger.debug('SupabaseAuth: User data fetched:', {
               profile: !!userData.profile,
               role: userData.role,
