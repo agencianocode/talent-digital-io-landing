@@ -12,6 +12,15 @@ serve(async (req) => {
   }
 
   try {
+    // Get the authenticated user from the request
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -23,6 +32,22 @@ serve(async (req) => {
       }
     );
 
+    // Create a client with the user's token to verify authentication
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Get the authenticated user
+    const { data: { user: requestingUser }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !requestingUser) {
+      return new Response(
+        JSON.stringify({ error: 'No autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { userId, email } = await req.json();
 
     if (!userId && !email) {
@@ -30,7 +55,7 @@ serve(async (req) => {
     }
 
     let user;
-    let authError;
+    let getUserError;
 
     if (email) {
       console.log(`Searching for user by email: ${email.substring(0, 3)}***`);
@@ -77,14 +102,116 @@ serve(async (req) => {
       // Get user by ID
       const response = await supabaseAdmin.auth.admin.getUserById(userId);
       user = response.data.user;
-      authError = response.error;
+      getUserError = response.error;
       
-      if (authError) {
-        throw authError;
+      if (getUserError) {
+        throw getUserError;
       }
     }
 
     const actualUserId = user.id;
+
+    // Permission check: Verify the requesting user has permission to view this profile
+    // Rules:
+    // 1. User can view their own profile
+    // 2. Business users can view talent profiles (for talent discovery)
+    // 3. Admins can view any profile
+    // 4. Users in the same company can view each other's profiles
+
+    const isOwnProfile = requestingUser.id === actualUserId;
+    
+    // Get requesting user's role
+    const { data: requestingUserRole } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', requestingUser.id)
+      .maybeSingle();
+    
+    const requestingRole = requestingUserRole?.role || 
+                          requestingUser.user_metadata?.user_type || 
+                          requestingUser.user_metadata?.original_user_type || 
+                          'freemium_talent';
+    
+    const isAdmin = requestingRole === 'admin';
+    
+    // Check if requesting user is a business user
+    const isBusinessUser = requestingRole === 'freemium_business' || 
+                          requestingRole === 'premium_business' || 
+                          requestingRole === 'academy_premium' ||
+                          requestingRole === 'business';
+    
+    // Get target user's role to check if they're a talent
+    const { data: targetUserRole } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', actualUserId)
+      .maybeSingle();
+    
+    const targetRole = targetUserRole?.role || 
+                      user.user_metadata?.user_type || 
+                      user.user_metadata?.original_user_type || 
+                      'freemium_talent';
+    
+    const isTargetTalent = targetRole === 'freemium_talent' || 
+                          targetRole === 'premium_talent' || 
+                          targetRole === 'talent' ||
+                          targetRole === 'academy_premium';
+    
+    // Check if users are in the same company
+    const { data: sharedCompanies } = await supabaseAdmin
+      .from('company_user_roles')
+      .select('company_id')
+      .eq('user_id', requestingUser.id)
+      .eq('status', 'accepted');
+    
+    const requestingCompanyIds = sharedCompanies?.map(c => c.company_id) || [];
+    
+    let isSameCompany = false;
+    if (requestingCompanyIds.length > 0) {
+      const { data: targetCompanies } = await supabaseAdmin
+        .from('company_user_roles')
+        .select('company_id')
+        .eq('user_id', actualUserId)
+        .eq('status', 'accepted')
+        .in('company_id', requestingCompanyIds);
+      
+      isSameCompany = (targetCompanies?.length || 0) > 0;
+    }
+
+    // Permission check
+    const hasPermission = isOwnProfile || 
+                         isAdmin || 
+                         (isBusinessUser && isTargetTalent) || 
+                         isSameCompany;
+
+    if (!hasPermission) {
+      console.log('❌ Permission denied:', {
+        requestingUserId: requestingUser.id,
+        targetUserId: actualUserId,
+        requestingRole,
+        targetRole,
+        isOwnProfile,
+        isAdmin,
+        isBusinessUser,
+        isTargetTalent,
+        isSameCompany
+      });
+      return new Response(
+        JSON.stringify({ error: 'No tienes permisos para ver este perfil' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('✅ Permission granted:', {
+      requestingUserId: requestingUser.id,
+      targetUserId: actualUserId,
+      requestingRole,
+      targetRole,
+      reason: isOwnProfile ? 'own_profile' : 
+              isAdmin ? 'admin' : 
+              (isBusinessUser && isTargetTalent) ? 'business_viewing_talent' : 
+              isSameCompany ? 'same_company' : 'unknown'
+    });
 
     // Get profile data
     const { data: profile, error: profileError } = await supabaseAdmin
