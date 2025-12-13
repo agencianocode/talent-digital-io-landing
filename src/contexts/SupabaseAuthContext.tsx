@@ -1097,11 +1097,15 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Check if the full_name is a REAL name (not derived from email)
       const fullName = profile?.full_name || '';
       const cleanFullName = fullName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const nameWords = fullName.trim().split(/\s+/).filter(w => w.length > 0);
       
-      // Name is considered "real" if it exists and is NOT the email prefix
+      // Name is considered "real" if:
+      // 1. Not empty and not "Sin nombre"
+      // 2. Has at least 2 words (nombre + apellido) OR is different from email prefix
+      // This allows "Wendy Mardigian" even if email is wendy.mardigian@gmail.com
       const hasRealName = fullName.trim() !== '' && 
                           fullName !== 'Sin nombre' && 
-                          cleanFullName !== emailPrefix;
+                          (nameWords.length >= 2 || cleanFullName !== emailPrefix);
 
       // Check avatar from profiles or user_metadata (Google OAuth stores it there)
       const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || '';
