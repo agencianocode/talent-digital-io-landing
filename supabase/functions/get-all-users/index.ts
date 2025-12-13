@@ -23,61 +23,37 @@ serve(async (req) => {
       }
     );
 
-    console.log('Fetching all users from auth...');
+    console.log('Fetching all users from auth with pagination...');
 
-    // Get all users from auth.users with pagination
+    // Get ALL users from auth.users with pagination
     let allAuthUsers: any[] = [];
     let page = 1;
-    const perPage = 1000; // Maximum per page
-    const maxPages = 100; // Safety limit to prevent infinite loops
-    let hasMore = true;
+    const perPage = 1000; // Maximum allowed by Supabase
 
-    while (hasMore && page <= maxPages) {
-      console.log(`Fetching users page ${page}...`);
-      const response = await supabaseAdmin.auth.admin.listUsers({
-        page,
-        perPage
-      });
-
-      const { data, error: authError } = response;
+    while (true) {
+      const { data: { users: pageUsers }, error: authError } = 
+        await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage
+        });
 
       if (authError) {
-        console.error('Auth error:', authError);
+        console.error('Auth error on page', page, ':', authError);
         throw authError;
       }
-
-      const users = data?.users || [];
       
-      if (users.length > 0) {
-        allAuthUsers = allAuthUsers.concat(users);
-        console.log(`Page ${page}: Found ${users.length} users (Total so far: ${allAuthUsers.length})`);
-        
-        // Check if there are more pages
-        // Supabase returns users array, if length < perPage, we've reached the end
-        if (users.length < perPage) {
-          console.log(`Reached end of users list (got ${users.length} < ${perPage})`);
-          hasMore = false;
-        } else {
-          page++;
-          // Add a small delay to avoid rate limiting
-          if (page <= maxPages) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        }
-      } else {
-        console.log(`No users found on page ${page}, stopping pagination`);
-        hasMore = false;
-      }
+      if (!pageUsers || pageUsers.length === 0) break;
+      
+      allAuthUsers = [...allAuthUsers, ...pageUsers];
+      console.log(`Fetched page ${page}: ${pageUsers.length} users`);
+      
+      // If page has fewer users than perPage, it's the last page
+      if (pageUsers.length < perPage) break;
+      
+      page++;
     }
 
-    if (page > maxPages) {
-      console.warn(`⚠️ Reached maximum page limit (${maxPages}). Total users fetched: ${allAuthUsers.length}`);
-    }
-
-    console.log(`✅ Found ${allAuthUsers.length} total auth users after pagination`);
-
-    // Use allAuthUsers instead of users
-    const users = allAuthUsers;
+    console.log(`Total auth users fetched: ${allAuthUsers.length}`);
 
     // Get all profiles
     const { data: profiles, error: profilesError } = await supabaseAdmin
@@ -134,7 +110,7 @@ serve(async (req) => {
     });
 
     // Combine all data
-    const allUsers = users?.map(user => {
+    const allUsers = allAuthUsers.map(user => {
       const profile = profiles?.find(p => p.user_id === user.id);
       const talentProfile = talentProfiles?.find(tp => tp.user_id === user.id);
       const role = roles?.find(r => r.user_id === user.id);
@@ -145,11 +121,6 @@ serve(async (req) => {
       const companyRoles = userCompanyRoles.map(cr => cr.role);
       const isCompanyAdmin = companyRoles.some(r => r === 'owner' || r === 'admin');
       const hasCompanies = companies_count > 0;
-
-      // Check if user registered with Google Auth
-      const googleIdentity = user.identities?.find((identity: any) => identity.provider === 'google');
-      const isGoogleAuth = !!googleIdentity;
-      const authProvider = googleIdentity ? 'google' : (user.identities?.[0]?.provider || 'email');
 
       // Determine user role: prefer role from user_roles table, fallback to metadata, then default
       let userRole = role?.role;
@@ -201,22 +172,7 @@ serve(async (req) => {
         if (firstName || lastName) {
           return `${firstName} ${lastName}`.trim();
         }
-        // 5. Extract from email as last resort
-        if (user.email) {
-          const localPart = user.email.split('@')[0];
-          if (localPart) {
-            // If has separators (., _, -), split and capitalize
-            if (localPart.includes('.') || localPart.includes('_') || localPart.includes('-')) {
-              return localPart
-                .split(/[._-]/)
-                .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-                .join(' ');
-            }
-            // Otherwise, just capitalize first letter
-            return localPart.charAt(0).toUpperCase() + localPart.slice(1).toLowerCase();
-          }
-        }
-        // 6. No name found
+        // 5. No name found
         return null;
       };
 
@@ -237,20 +193,17 @@ serve(async (req) => {
         companies_count,
         company_roles: companyRoles,
         is_company_admin: isCompanyAdmin,
-        has_companies: hasCompanies,
-        auth_provider: authProvider,
-        is_google_auth: isGoogleAuth
+        has_companies: hasCompanies
       };
-    }) || [];
+    });
 
-    console.log(`✅ Returning ${allUsers.length} users to client`);
-    console.log(`📊 Response size: ${JSON.stringify({ users: allUsers }).length} bytes`);
+    console.log(`Returning ${allUsers.length} users`);
 
     return new Response(
       JSON.stringify({ 
         users: allUsers,
         total: allUsers.length,
-        fetched_from_auth: allAuthUsers.length
+        pages_fetched: page
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
