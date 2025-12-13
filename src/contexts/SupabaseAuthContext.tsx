@@ -514,14 +514,17 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             // 3. Fallback: extraer del email de manera inteligente
             const email = authState.user!.email as string;
             if (email) {
-              const localPart = email.split('@')[0];
-              if (localPart.includes('.') || localPart.includes('_') || localPart.includes('-')) {
-                return localPart
-                  .split(/[._-]/)
-                  .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-                  .join(' ');
+              const emailParts = email.split('@');
+              if (emailParts.length > 0 && emailParts[0]) {
+                const localPart = emailParts[0];
+                if (localPart.includes('.') || localPart.includes('_') || localPart.includes('-')) {
+                  return localPart
+                    .split(/[._-]/)
+                    .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+                    .join(' ');
+                }
+                return localPart.charAt(0).toUpperCase() + localPart.slice(1).toLowerCase();
               }
-              return localPart.charAt(0).toUpperCase() + localPart.slice(1).toLowerCase();
             }
             
             return email || 'Sin nombre';
