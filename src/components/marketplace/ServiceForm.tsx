@@ -70,13 +70,6 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
   const [newTag, setNewTag] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const currencies = [
-    { value: 'USD', label: 'USD ($)' },
-    { value: 'EUR', label: 'EUR (€)' },
-    { value: 'MXN', label: 'MXN ($)' },
-    { value: 'ARS', label: 'ARS ($)' },
-    { value: 'COP', label: 'COP ($)' }
-  ];
 
   const deliveryTimes = [
     { value: '1-2 días', label: '1-2 días' },
@@ -353,10 +346,10 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
               <CardTitle className="text-lg">Precio y Entrega</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Primera fila: Precios y Moneda */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Precios en USD */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price_min">Precio Mínimo *</Label>
+                  <Label htmlFor="price_min">Precio Mínimo (USD) *</Label>
                   <Input
                     id="price_min"
                     type="number"
@@ -376,7 +369,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="price_max">Precio Máximo *</Label>
+                  <Label htmlFor="price_max">Precio Máximo (USD) *</Label>
                   <Input
                     id="price_max"
                     type="number"
@@ -393,25 +386,6 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                       {errors.price_max}
                     </p>
                   )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Moneda *</Label>
-                  <Select
-                    value={formData.currency}
-                    onValueChange={(value) => handleInputChange('currency', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currencies.map((currency) => (
-                        <SelectItem key={currency.value} value={currency.value}>
-                          {currency.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
