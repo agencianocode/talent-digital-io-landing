@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -534,15 +535,13 @@ const TalentEditProfile = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="bio">Biografía *</Label>
-                <Textarea
-                  id="bio"
+                <RichTextEditor
                   value={formData.bio || ''}
-                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  onChange={(value) => handleInputChange('bio', value)}
                   placeholder="Cuéntanos sobre ti, tu experiencia y lo que te apasiona..."
-                  rows={4}
-                  className={errors.bio ? 'border-destructive' : ''}
+                  error={!!errors.bio}
                 />
                 {errors.bio && (
                   <p className="text-sm text-destructive mt-1">{errors.bio}</p>

@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -601,10 +601,11 @@ export const CompanyProfileWizard: React.FC = () => {
                   <FormItem>
                     <FormLabel>Descripción de la Empresa</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Describí brevemente a qué se dedica tu empresa, su propósito o qué la hace diferente." 
-                        className="min-h-[100px]" 
-                        {...field} 
+                      <RichTextEditor
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        placeholder="Describí brevemente a qué se dedica tu empresa, su propósito o qué la hace diferente."
+                        error={!!form.formState.errors.description}
                       />
                     </FormControl>
                     <FormMessage />
