@@ -219,7 +219,10 @@ const TalentMyProfile = () => {
                     )}
 
                     {/* Bio */}
-                    <p className="text-foreground/80 leading-relaxed">{bio}</p>
+                    <div 
+                      className="text-foreground/80 leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: bio || '' }}
+                    />
                   </div>
                 </div>
               </CardContent>

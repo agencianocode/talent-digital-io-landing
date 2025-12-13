@@ -484,9 +484,10 @@ const PublicTalentProfile = () => {
                   <CardTitle>Biografía</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 leading-relaxed">
-                    {talentProfile.bio}
-                  </p>
+                  <div 
+                    className="text-foreground/80 leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: talentProfile.bio || '' }}
+                  />
                 </CardContent>
               </Card>
             )}
