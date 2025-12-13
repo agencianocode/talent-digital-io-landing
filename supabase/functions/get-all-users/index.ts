@@ -64,6 +64,10 @@ serve(async (req) => {
       console.error('Profiles error:', profilesError);
     }
 
+    // Debug: Count profiles with avatars
+    const profilesWithAvatars = profiles?.filter(p => p.avatar_url) || [];
+    console.log(`DEBUG: Total profiles: ${profiles?.length || 0}, Profiles with avatars: ${profilesWithAvatars.length}`);
+
     // Get all talent profiles (for country data)
     const { data: talentProfiles, error: talentError } = await supabaseAdmin
       .from('talent_profiles')
@@ -115,6 +119,18 @@ serve(async (req) => {
       const talentProfile = talentProfiles?.find(tp => tp.user_id === user.id);
       const role = roles?.find(r => r.user_id === user.id);
       const companies_count = companyCountsMap.get(user.id) || 0;
+
+      // Debug specific user
+      if (user.email === 'isebas15cr@gmail.com') {
+        console.log('DEBUG isebas15cr@gmail.com:', {
+          user_id: user.id,
+          profile_found: !!profile,
+          profile_user_id: profile?.user_id,
+          profile_avatar: profile?.avatar_url,
+          metadata_avatar: user.user_metadata?.avatar_url,
+          metadata_picture: user.user_metadata?.picture
+        });
+      }
 
       // Get company roles for this user
       const userCompanyRoles = companyRolesData?.filter(cr => cr.user_id === user.id) || [];
