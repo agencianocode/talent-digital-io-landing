@@ -247,12 +247,27 @@ const AdminEmailTemplates: React.FC = () => {
       footerText: { color: '#888', fontSize: '14px', margin: '0' },
     };
 
-    // Extraer nombre del greeting
+    // Extraer nombre del greeting o heading
     const extractName = () => {
       if (content.greeting) {
         return content.greeting.replace(/^Hola\s*/i, '').replace(/,\s*$/, '').trim() || 'Usuario';
       }
+      // Fallback a heading si no hay greeting (para templates de auth)
+      if (content.heading) {
+        return content.heading;
+      }
       return 'Usuario';
+    };
+
+    // Determinar si usar greeting o heading como saludo
+    const getGreeting = () => {
+      if (content.greeting) {
+        return `Hola ${extractName()},`;
+      }
+      if (content.heading) {
+        return content.heading;
+      }
+      return 'Hola Usuario,';
     };
 
     // Detectar si es un step (step1, step2, etc.) - formato legacy
@@ -306,7 +321,7 @@ const AdminEmailTemplates: React.FC = () => {
           {/* Email Header - Replica Header.tsx */}
           <div style={emailStyles.headerSection}>
             <h1 style={emailStyles.h1}>TalentoDigital</h1>
-            <h2 style={emailStyles.h2}>Hola {extractName()},</h2>
+            <h2 style={emailStyles.h2}>{getGreeting()}</h2>
           </div>
           
           {/* Email Body */}
@@ -314,6 +329,13 @@ const AdminEmailTemplates: React.FC = () => {
             {/* Intro */}
             {content.intro && (
               <p style={emailStyles.text}>{content.intro}</p>
+            )}
+
+            {/* Urgency text - para onboarding-reminder */}
+            {content.urgency_text && (
+              <p style={{ ...emailStyles.text, fontWeight: '600', color: '#e65100' }}>
+                ⚠️ {content.urgency_text}
+              </p>
             )}
 
             {/* Steps Title */}
@@ -352,6 +374,19 @@ const AdminEmailTemplates: React.FC = () => {
               </div>
             )}
 
+            {/* Tip - para profile-view */}
+            {content.tip && (
+              <p style={{ 
+                ...emailStyles.text, 
+                backgroundColor: '#f5f5f5', 
+                padding: '12px 16px', 
+                borderRadius: '6px', 
+                borderLeft: '3px solid #1976d2' 
+              }}>
+                💡 {content.tip}
+              </p>
+            )}
+
             {/* Botón - Replica NotificationButton.tsx */}
             {content.button_text && (
               <div style={{ textAlign: 'center', margin: '20px 0' }}>
@@ -359,6 +394,13 @@ const AdminEmailTemplates: React.FC = () => {
                   {content.button_text}
                 </span>
               </div>
+            )}
+
+            {/* Link instruction - para confirm-signup, magic-link, reset-password */}
+            {content.link_instruction && (
+              <p style={{ ...emailStyles.text, fontSize: '14px', color: '#666' }}>
+                {content.link_instruction}
+              </p>
             )}
 
             {/* Closing text */}
@@ -387,6 +429,13 @@ const AdminEmailTemplates: React.FC = () => {
             {content.expiry_notice && (
               <p style={{ ...emailStyles.text, fontSize: '14px', color: '#888' }}>{content.expiry_notice}</p>
             )}
+
+            {/* Help text */}
+            {content.help_text && (
+              <p style={{ ...emailStyles.text, fontSize: '14px', color: '#888', marginTop: '20px' }}>
+                {content.help_text}
+              </p>
+            )}
           </div>
 
           {/* Email Footer - Replica Footer.tsx */}
@@ -394,6 +443,14 @@ const AdminEmailTemplates: React.FC = () => {
             <p style={emailStyles.footerText}>
               {content.footer_text || '© 2024 TalentoDigital. Todos los derechos reservados.'}
             </p>
+            {/* Footer link text */}
+            {content.footer_link_text && (
+              <p style={{ ...emailStyles.footerText, marginTop: '8px' }}>
+                <span style={{ color: '#1976d2', textDecoration: 'underline', cursor: 'pointer' }}>
+                  {content.footer_link_text}
+                </span>
+              </p>
+            )}
           </div>
         </div>
       </div>
