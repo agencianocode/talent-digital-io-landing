@@ -307,8 +307,21 @@ const AdminUserManagement: React.FC = () => {
                   {/* Avatar and Basic Info */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="flex-shrink-0">
-                      <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
-                        <AvatarImage src={user.avatar_url || undefined} alt={user.full_name} />
+                      <Avatar className="h-10 w-10 sm:h-12 sm:w-12" key={`avatar-${user.id}-${user.avatar_url || 'no-avatar'}`}>
+                        {user.avatar_url ? (
+                          <AvatarImage 
+                            src={user.avatar_url} 
+                            alt={user.full_name}
+                            onError={() => {
+                              console.log(`❌ Error loading avatar for ${user.email}:`, user.avatar_url);
+                            }}
+                            onLoad={() => {
+                              if (user.email === 'isebas15cr@gmail.com') {
+                                console.log(`✅ Avatar loaded for ${user.email}`);
+                              }
+                            }}
+                          />
+                        ) : null}
                         <AvatarFallback className="bg-primary/10 text-xs sm:text-sm">
                           {user.full_name?.charAt(0)?.toUpperCase() || getRoleIcon(user.role)}
                         </AvatarFallback>
