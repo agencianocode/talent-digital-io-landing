@@ -258,32 +258,7 @@ export const useSupabaseOpportunities = () => {
 
       if (error) throw error;
       
-      // Get opportunity details and company owner to send notification
-      const { data: opportunityData } = await supabase
-        .from('opportunities')
-        .select('title, company_id, companies(user_id)')
-        .eq('id', opportunityId)
-        .single();
-      
-      if (opportunityData && (opportunityData.companies as any)?.user_id) {
-        const companyOwnerId = (opportunityData.companies as any).user_id;
-        
-        // Create notification for company owner
-        try {
-          await supabase
-            .from('notifications' as any)
-            .insert({
-              user_id: companyOwnerId,
-              type: 'opportunity',
-              title: '¡Nuevo postulante!',
-              message: `${profile?.full_name || 'Un talento'} se ha postulado a "${opportunityData.title}"`,
-              action_url: `/business-dashboard/applications?opportunity=${opportunityId}`,
-              read: false
-            });
-        } catch (notifError) {
-          console.warn('Failed to create notification:', notifError);
-        }
-      }
+      // Notification is handled by database trigger (notify_new_applicant)
       
       // Refresh applications
       await fetchUserApplications();
