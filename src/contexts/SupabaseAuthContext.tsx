@@ -475,10 +475,21 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           .eq('student_email', authState.user!.email as string)
           .maybeSingle();
         if (!existing) {
+          // Obtener el nombre del usuario (de metadata o email sin @)
+          const userName = (authState.user!.user_metadata as any)?.full_name || 
+                           (authState.user!.user_metadata as any)?.name || 
+                           ((authState.user!.email as string)?.split('@')[0] || authState.user!.email as string);
+
+          // Actualizar o crear el perfil con el nombre correcto
+          await supabase.from('profiles').upsert({
+            user_id: authState.user!.id,
+            full_name: userName
+          }, { onConflict: 'user_id' });
+
           await supabase.from('academy_students').insert({
             academy_id: academyId,
             student_email: authState.user!.email as string,
-            student_name: (authState.user!.user_metadata as any)?.full_name || (authState.user!.email as string),
+            student_name: userName,
             status: status === 'graduated' ? 'graduated' : 'enrolled',
             enrollment_date: new Date().toISOString().split('T')[0],
             ...(status === 'graduated' ? { graduation_date: new Date().toISOString().split('T')[0] } : {})
