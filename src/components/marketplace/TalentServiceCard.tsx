@@ -98,7 +98,19 @@ const TalentServiceCard: React.FC<TalentServiceCardProps> = ({
     }
   };
 
-  const statusInfo = getStatusInfo(service.status);
+  // Determinar el estado efectivo considerando is_available
+  const getEffectiveStatus = () => {
+    if (!service.is_available) {
+      return { 
+        label: 'No Activo', 
+        color: 'bg-gray-100 text-gray-800',
+        icon: EyeOff
+      };
+    }
+    return getStatusInfo(service.status);
+  };
+
+  const statusInfo = getEffectiveStatus();
   const StatusIcon = statusInfo.icon;
 
   const handleCardClick = (e: React.MouseEvent) => {
