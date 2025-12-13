@@ -414,7 +414,10 @@ const AdminMarketplaceDetail: React.FC<AdminMarketplaceDetailProps> = ({
                       className="mt-1 resize-none"
                     />
                   ) : (
-                    <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-wrap mt-1 break-words">{service.description}</p>
+                    <div 
+                      className="text-xs sm:text-sm text-muted-foreground mt-1 break-words prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: service.description }}
+                    />
                   )}
                 </div>
 

@@ -15,6 +15,7 @@ import {
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
 import { normalizeDeliveryTime, formatPriceRange } from '@/lib/marketplace-utils';
+import { stripHtml } from '@/lib/utils';
 
 interface ServiceCardProps {
   service: MarketplaceService;
@@ -66,8 +67,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             <h3 className="font-semibold text-lg line-clamp-2 mb-2">
               {service.title}
             </h3>
-            <p className="text-sm text-muted-foreground line-clamp-3 whitespace-pre-line">
-              {service.description}
+            <p className="text-sm text-muted-foreground line-clamp-3">
+              {stripHtml(service.description)}
             </p>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { stripHtml } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -299,8 +300,8 @@ Puedes responder a esta conversación para continuar la comunicación.
                 </Badge>
               </div>
               <h3 className="font-semibold text-lg mb-2">{service.title}</h3>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2 whitespace-pre-line">
-                {service.description}
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                {stripHtml(service.description)}
               </p>
               
               <div className="flex items-center gap-4 text-sm">
