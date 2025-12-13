@@ -993,29 +993,63 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const hasCompletedTalentOnboarding = async (userId: string): Promise<boolean> => {
     try {
-      // Check if user has a record in talent_profiles table (marks onboarding completion)
+      // Check if user has a record in talent_profiles table with REAL data
       // Note: 406 errors for business users are expected and handled silently
-      const { data, error } = await supabase
+      const { data: talentProfile, error: talentError } = await supabase
         .from('talent_profiles')
-        .select('id')
+        .select('id, title, bio')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (error) {
+      if (talentError) {
         // Silently handle 406 errors (expected for non-talent users)
-        if (error.code === 'PGRST116') {
+        if (talentError.code === 'PGRST116') {
           return false;
         }
-        console.error('Error checking talent onboarding:', error);
+        console.error('Error checking talent onboarding:', talentError);
         return false;
       }
 
-      // If we found a record, onboarding is complete
-      const isComplete = !!data;
+      // If no talent_profiles record exists, onboarding is not complete
+      if (!talentProfile) {
+        console.log('Talent onboarding check: No talent_profiles record found');
+        return false;
+      }
+
+      // Also check if the user has a REAL name in profiles (not derived from email)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error checking profile:', profileError);
+      }
+
+      // Get user email to check if name is derived from it
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || '';
+      const emailPrefix = userEmail.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
+
+      // Check if the full_name is a REAL name (not derived from email)
+      const fullName = profile?.full_name || '';
+      const cleanFullName = fullName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      
+      // Name is considered "real" if it exists and is NOT the email prefix
+      const hasRealName = fullName.trim() !== '' && 
+                          fullName !== 'Sin nombre' && 
+                          cleanFullName !== emailPrefix;
+
+      // Onboarding is complete ONLY if we have talent_profile AND a real name
+      const isComplete = hasRealName;
       
       console.log('Talent onboarding check:', {
         userId,
-        hasRecord: !!data,
+        hasTalentProfile: !!talentProfile,
+        fullName,
+        emailPrefix,
+        hasRealName,
         isComplete
       });
 
