@@ -2408,6 +2408,7 @@ export type Database = {
           graduation_date: string
           linkedin: string
           program_name: string
+          skills: string[]
           status: string
           student_email: string
           student_id: string
