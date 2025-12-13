@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor, getPlainTextLength } from '@/components/ui/rich-text-editor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -105,9 +105,10 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
       newErrors.title = 'El título debe tener al menos 10 caracteres';
     }
 
-    if (!formData.description.trim()) {
+    const descriptionLength = getPlainTextLength(formData.description);
+    if (!formData.description.trim() || descriptionLength === 0) {
       newErrors.description = 'La descripción es requerida';
-    } else if (formData.description.length < 50) {
+    } else if (descriptionLength < 50) {
       newErrors.description = 'La descripción debe tener al menos 50 caracteres';
     }
 
@@ -265,16 +266,14 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
 
               <div className="space-y-2">
                 <Label htmlFor="description">Descripción *</Label>
-                <Textarea
-                  id="description"
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Describe detalladamente tu servicio, qué incluye, proceso de trabajo, etc. Puedes usar viñetas (•, -, *) y se mantendrán al publicar."
-                  rows={4}
-                  className={`whitespace-pre-wrap ${errors.description ? 'border-red-500' : ''}`}
+                  onChange={(value) => handleInputChange('description', value)}
+                  placeholder="Describe detalladamente tu servicio, qué incluye, proceso de trabajo, etc."
+                  error={!!errors.description}
                 />
                 <p className="text-xs text-muted-foreground">
-                  💡 Puedes copiar y pegar texto con viñetas desde Word, Google Docs, etc. El formato se mantendrá.
+                  ✨ Usa la barra de herramientas para dar formato: <strong>negrita</strong>, <em>cursiva</em> y listas con viñetas.
                 </p>
                 <div className="flex justify-between items-center">
                   {errors.description ? (
@@ -284,11 +283,11 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      {formData.description.length}/50 caracteres mínimos
+                      {getPlainTextLength(formData.description)}/50 caracteres mínimos
                     </p>
                   )}
                   <p className="text-sm text-muted-foreground">
-                    {formData.description.length} caracteres
+                    {getPlainTextLength(formData.description)} caracteres
                   </p>
                 </div>
               </div>
