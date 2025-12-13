@@ -62,7 +62,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     currency: 'USD',
     delivery_time: '',
     location: 'Remoto',
-    is_available: false,
+    is_available: true,
     portfolio_url: '',
     demo_url: '',
     tags: []
