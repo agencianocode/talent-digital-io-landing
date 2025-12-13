@@ -133,13 +133,18 @@ const AcceptAcademyInvitation = () => {
 
       const realUserName = getRealUserName();
 
-      // Solo actualizar perfil si tenemos un nombre REAL
-      if (realUserName) {
+      // Obtener avatar de OAuth si existe
+      const oauthAvatarUrl = (user.user_metadata as any)?.avatar_url || 
+                             (user.user_metadata as any)?.picture;
+      
+      // Actualizar perfil si tenemos nombre REAL o avatar de OAuth
+      if (realUserName || oauthAvatarUrl) {
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
             user_id: user.id,
-            full_name: realUserName
+            ...(realUserName && { full_name: realUserName }),
+            ...(oauthAvatarUrl && { avatar_url: oauthAvatarUrl })
           }, { onConflict: 'user_id' });
 
         if (profileError) {
