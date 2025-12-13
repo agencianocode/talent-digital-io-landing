@@ -315,6 +315,115 @@ const AdminEmailTemplates: React.FC = () => {
       );
     };
 
+    // Check if this is the company-invitation template (special layout)
+    const isInvitationTemplate = selectedTemplate?.id === 'company-invitation';
+
+    if (isInvitationTemplate) {
+      return (
+        <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded-lg">
+          <div className="bg-white max-w-xl mx-auto rounded-lg shadow-lg overflow-hidden" style={emailStyles.container}>
+            {/* Invitation Header with gradient */}
+            <div style={{ 
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #D946EF 100%)', 
+              padding: '40px 20px', 
+              textAlign: 'center' as const,
+              borderRadius: '10px 10px 0 0'
+            }}>
+              <h1 style={{ color: 'white', margin: '0', fontSize: '28px', fontWeight: 'bold' }}>
+                {content.greeting || '¡Has sido invitado!'}
+              </h1>
+              <p style={{ color: 'rgba(255,255,255,0.9)', margin: '10px 0 0 0', fontSize: '16px' }}>
+                TalentoDigital - Plataforma de Gestión de Talento
+              </p>
+            </div>
+            
+            <div style={{ padding: '40px 30px', backgroundColor: 'white' }}>
+              <h2 style={{ color: '#333', marginTop: '0', marginBottom: '20px', fontSize: '20px', fontWeight: 'bold' }}>
+                Invitación para unirte como ADMINISTRADOR
+              </h2>
+              
+              <p style={emailStyles.text}>Hola,</p>
+              <p style={emailStyles.text}>{content.intro || '{{invited_by}} te ha invitado a unirte...'}</p>
+              
+              {/* Capabilities Box */}
+              <div style={{ 
+                margin: '30px 0', 
+                padding: '20px', 
+                backgroundColor: '#f8f9fa', 
+                borderRadius: '8px', 
+                borderLeft: '4px solid #8B5CF6' 
+              }}>
+                <h3 style={{ marginTop: '0', marginBottom: '12px', color: '#333', fontSize: '16px', fontWeight: 'bold' }}>
+                  {content.admin_title || '¿Qué puedes hacer como Administrador?'}
+                </h3>
+                <p style={{ margin: '0', color: '#555', fontSize: '14px' }}>
+                  {content.admin_intro || 'Tendrás acceso completo, incluyendo:'}
+                </p>
+                <ul style={{ margin: '10px 0 0 0', paddingLeft: '20px', color: '#555' }}>
+                  {(content.admin_capabilities || [
+                    'Crear y gestionar oportunidades de trabajo',
+                    'Revisar y gestionar aplicaciones',
+                    'Remover miembros del equipo',
+                    'Editar permisos de otros usuarios',
+                    'Gestionar configuraciones de la empresa',
+                    'Acceder a reportes y análisis'
+                  ]).map((item: string, idx: number) => (
+                    <li key={idx} style={{ marginBottom: '4px', fontSize: '14px' }}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Buttons */}
+              <div style={{ textAlign: 'center', margin: '40px 0' }}>
+                <span style={{ 
+                  display: 'inline-block', 
+                  backgroundColor: '#8B5CF6', 
+                  color: 'white', 
+                  padding: '15px 30px', 
+                  textDecoration: 'none', 
+                  borderRadius: '6px', 
+                  fontWeight: 'bold', 
+                  marginRight: '10px' 
+                }}>
+                  {content.button_accept_text || 'Aceptar Invitación'}
+                </span>
+                <span style={{ 
+                  display: 'inline-block', 
+                  backgroundColor: '#6c757d', 
+                  color: 'white', 
+                  padding: '15px 30px', 
+                  textDecoration: 'none', 
+                  borderRadius: '6px', 
+                  fontWeight: 'bold' 
+                }}>
+                  {content.button_decline_text || 'Rechazar'}
+                </span>
+              </div>
+
+              <hr style={{ marginTop: '40px', border: 'none', borderTop: '1px solid #e9ecef' }} />
+
+              {/* Help Section */}
+              <p style={{ marginTop: '20px', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: '#6c757d' }}>
+                {content.help_title || '¿Necesitas ayuda?'}
+              </p>
+              <p style={{ margin: '0 0 20px 0', fontSize: '14px', color: '#6c757d' }}>
+                {content.help_text || 'Si tienes problemas para aceptar la invitación...'}
+              </p>
+              <p style={{ marginTop: '20px', fontSize: '12px', color: '#999' }}>
+                {content.footer_text || 'Esta invitación fue enviada desde TalentoDigital...'}
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div style={emailStyles.footer}>
+              <p style={emailStyles.footerText}>© 2024 TalentoDigital. Todos los derechos reservados.</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Standard template layout
     return (
       <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded-lg">
         <div className="bg-white max-w-xl mx-auto rounded-lg shadow-lg overflow-hidden" style={emailStyles.container}>
