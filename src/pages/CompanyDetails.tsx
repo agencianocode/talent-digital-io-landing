@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -225,9 +225,10 @@ const CompanyDetails = () => {
                       <span>{activeCompany.location || 'Costa Rica'}</span>
                     </div>
                     
-                    <p className="text-gray-700 mb-4">
-                      {activeCompany.description || 'Academia de ventas high ticket. Ayudamos a personas a escapar del 9-5 convirtiéndose en vendedores remotos'}
-                    </p>
+                    <div 
+                      className="text-foreground/80 mb-4 prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: activeCompany.description || 'Academia de ventas high ticket. Ayudamos a personas a escapar del 9-5 convirtiéndose en vendedores remotos' }}
+                    />
                     
                     {/* Metrics */}
                     {(activeCompany.employee_count_range || activeCompany.annual_revenue_range) && (
@@ -441,11 +442,10 @@ const CompanyDetails = () => {
                         <label className="block text-sm font-semibold text-gray-800 mb-3">
                           Beneficios que ofrece la empresa
                         </label>
-                        <Textarea
-                          placeholder="Ej: Seguro médico, trabajo remoto, días libres adicionales, capacitaciones..."
+                        <RichTextEditor
                           value={formData.benefits}
-                          onChange={(e) => setFormData(prev => ({ ...prev, benefits: e.target.value }))}
-                          className="min-h-[120px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          onChange={(value) => setFormData(prev => ({ ...prev, benefits: value }))}
+                          placeholder="Ej: Seguro médico, trabajo remoto, días libres adicionales, capacitaciones..."
                         />
                       </div>
                       
@@ -454,11 +454,10 @@ const CompanyDetails = () => {
                         <label className="block text-sm font-semibold text-gray-800 mb-3">
                           ¿Cómo describirías tu cultura de trabajo?
                         </label>
-                        <Textarea
-                          placeholder="Ej: Somos un equipo colaborativo y flexible, valoramos la autonomía y el aprendizaje continuo..."
+                        <RichTextEditor
                           value={formData.work_culture}
-                          onChange={(e) => setFormData(prev => ({ ...prev, work_culture: e.target.value }))}
-                          className="min-h-[120px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          onChange={(value) => setFormData(prev => ({ ...prev, work_culture: value }))}
+                          placeholder="Ej: Somos un equipo colaborativo y flexible, valoramos la autonomía y el aprendizaje continuo..."
                         />
                       </div>
                       
@@ -467,11 +466,10 @@ const CompanyDetails = () => {
                         <label className="block text-sm font-semibold text-gray-800 mb-3">
                           ¿Qué impacto querés generar con tu negocio?
                         </label>
-                        <Textarea
-                          placeholder="Ej: Queremos democratizar el acceso a la educación digital y ayudar a personas a alcanzar su máximo potencial..."
+                        <RichTextEditor
                           value={formData.business_impact}
-                          onChange={(e) => setFormData(prev => ({ ...prev, business_impact: e.target.value }))}
-                          className="min-h-[120px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          onChange={(value) => setFormData(prev => ({ ...prev, business_impact: value }))}
+                          placeholder="Ej: Queremos democratizar el acceso a la educación digital y ayudar a personas a alcanzar su máximo potencial..."
                         />
                       </div>
                       
@@ -480,11 +478,10 @@ const CompanyDetails = () => {
                         <label className="block text-sm font-semibold text-gray-800 mb-3">
                           ¿Qué valores son innegociables en tu equipo?
                         </label>
-                        <Textarea
-                          placeholder="Ej: Integridad, compromiso con la excelencia, respeto mutuo, innovación..."
+                        <RichTextEditor
                           value={formData.team_values}
-                          onChange={(e) => setFormData(prev => ({ ...prev, team_values: e.target.value }))}
-                          className="min-h-[120px] border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          onChange={(value) => setFormData(prev => ({ ...prev, team_values: value }))}
+                          placeholder="Ej: Integridad, compromiso con la excelencia, respeto mutuo, innovación..."
                         />
                       </div>
                     </div>
