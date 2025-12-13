@@ -114,6 +114,7 @@ const SOCIAL_PLATFORMS = [
   { value: 'twitter', label: 'Twitter', placeholder: 'https://twitter.com/tu-usuario' },
   { value: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/tu-perfil' },
   { value: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/tu-usuario' },
+  { value: 'youtube', label: 'YouTube', placeholder: 'https://youtube.com/@tu-canal' },
   { value: 'behance', label: 'Behance', placeholder: 'https://behance.net/tu-perfil' },
   { value: 'dribbble', label: 'Dribbble', placeholder: 'https://dribbble.com/tu-perfil' }
 ];
