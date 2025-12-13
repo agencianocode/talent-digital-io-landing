@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Camera } from 'lucide-react';
-import ProfilePhotoEditModal from './ProfilePhotoEditModal';
+import { ImageCropper } from './ImageCropper';
 
 interface TalentProfile {
   firstName: string;
@@ -30,7 +30,11 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
   const [phoneCountryCode, setPhoneCountryCode] = useState(initialData.phoneCountryCode || '+57');
   const [profilePhoto, setProfilePhoto] = useState<File | null>(initialData.profilePhoto || null);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(initialData.profilePhotoUrl || null);
-  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  
+  // Image cropper state
+  const [showCropper, setShowCropper] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Países de LATAM con códigos y banderas (igual que business)
   const latinAmericaCountries = [
@@ -64,7 +68,27 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
     'Estados Unidos', 'España'
   ];
 
-  const handlePhotoSave = (croppedImageBlob: Blob) => {
+  const handlePhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageToCrop(reader.result as string);
+        setShowCropper(true);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset input so same file can be selected again
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  const handleCropComplete = (croppedImageBlob: Blob) => {
     const file = new File([croppedImageBlob], 'profile-photo.jpg', { type: 'image/jpeg' });
     setProfilePhoto(file);
     
@@ -72,7 +96,8 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
     const previewUrl = URL.createObjectURL(croppedImageBlob);
     setProfilePhotoUrl(previewUrl);
     
-    setShowPhotoModal(false);
+    setShowCropper(false);
+    setImageToCrop(null);
   };
 
   const handleCountryCodeChange = (value: string) => {
@@ -115,10 +140,19 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
         <h2 className="text-2xl font-bold text-gray-900 font-['Inter']">Contanos quién sos</h2>
       </div>
 
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
       {/* Profile Photo Upload */}
       <div className="flex flex-col items-center space-y-2">
         <div
-          onClick={() => setShowPhotoModal(true)}
+          onClick={handlePhotoClick}
           className={`w-24 h-24 border-2 border-dashed ${profilePhoto ? 'border-green-400' : 'border-red-400'} hover:border-gray-400 bg-white rounded-full cursor-pointer overflow-hidden relative`}
         >
           {profilePhotoUrl ? (
@@ -254,13 +288,18 @@ const TalentOnboardingStep1 = ({ onComplete, initialData }: TalentOnboardingStep
         )}
       </div>
 
-      {/* Photo Edit Modal */}
-      {showPhotoModal && (
-        <ProfilePhotoEditModal
-          isOpen={showPhotoModal}
-          onClose={() => setShowPhotoModal(false)}
-          onSave={handlePhotoSave}
-          imageFile={profilePhoto}
+      {/* Image Cropper Modal */}
+      {imageToCrop && (
+        <ImageCropper
+          src={imageToCrop}
+          isOpen={showCropper}
+          onClose={() => {
+            setShowCropper(false);
+            setImageToCrop(null);
+          }}
+          onCropComplete={handleCropComplete}
+          aspect={1}
+          circularCrop={true}
         />
       )}
     </div>
