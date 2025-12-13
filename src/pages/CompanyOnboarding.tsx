@@ -521,23 +521,7 @@ const CompanyOnboarding = () => {
 
         const requesterName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Un usuario';
 
-        // 5. Crear notificación para el propietario
-        await supabase
-          .from('notifications')
-          .insert({
-            user_id: companyInfo.user_id,
-            type: 'membership_request',
-            title: 'Nueva solicitud para unirse a tu empresa',
-            message: `${requesterName} (${user.email}) ha solicitado unirse a ${companyInfo.name}`,
-            action_url: '/business-dashboard/users',
-            metadata: {
-              requester_id: user.id,
-              requester_name: requesterName,
-              requester_email: user.email,
-              company_id: companyData.existingCompanyId,
-              company_name: companyInfo.name
-            }
-          });
+        // Notification is handled by database trigger (notify_access_request_auto)
 
         // 6. Enviar email al propietario usando Edge Function
         console.log('📧 PASO 1: Obteniendo email del propietario...');
