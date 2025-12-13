@@ -475,16 +475,27 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           .eq('student_email', authState.user!.email as string)
           .maybeSingle();
         if (!existing) {
-          // Obtener el nombre del usuario (de metadata o email sin @)
-          const userName = (authState.user!.user_metadata as any)?.full_name || 
-                           (authState.user!.user_metadata as any)?.name || 
-                           ((authState.user!.email as string)?.split('@')[0] || authState.user!.email as string);
+          // Verificar si ya tiene un nombre válido en el perfil
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('user_id', authState.user!.id)
+            .maybeSingle();
 
-          // Actualizar o crear el perfil con el nombre correcto
-          await supabase.from('profiles').upsert({
-            user_id: authState.user!.id,
-            full_name: userName
-          }, { onConflict: 'user_id' });
+          // Solo actualizar si no tiene nombre o tiene 'Sin nombre'
+          if (!existingProfile?.full_name || 
+              existingProfile.full_name.trim() === '' || 
+              existingProfile.full_name === 'Sin nombre') {
+            const userName = (authState.user!.user_metadata as any)?.full_name || 
+                             (authState.user!.user_metadata as any)?.name || 
+                             ((authState.user!.email as string)?.split('@')[0] || authState.user!.email as string);
+
+            // Actualizar o crear el perfil con el nombre correcto
+            await supabase.from('profiles').upsert({
+              user_id: authState.user!.id,
+              full_name: userName
+            }, { onConflict: 'user_id' });
+          }
 
           await supabase.from('academy_students').insert({
             academy_id: academyId,

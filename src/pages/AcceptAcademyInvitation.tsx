@@ -90,18 +90,34 @@ const AcceptAcademyInvitation = () => {
 
       // Proceed without requiring a talent profile; only authentication is needed
 
+      // Verificar si ya tiene un nombre válido en el perfil
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       // Obtener el nombre del usuario (de metadata o email sin @)
       const userName = user.user_metadata?.full_name || 
                        user.user_metadata?.name || 
                        (user.email?.split('@')[0] || user.email);
 
-      // Actualizar o crear el perfil con el nombre correcto
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          full_name: userName
-        }, { onConflict: 'user_id' });
+      // Solo actualizar si no tiene nombre o tiene 'Sin nombre'
+      if (!existingProfile?.full_name || 
+          existingProfile.full_name.trim() === '' || 
+          existingProfile.full_name === 'Sin nombre') {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            user_id: user.id,
+            full_name: userName
+          }, { onConflict: 'user_id' });
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+          // No lanzar error, continuar con el proceso
+        }
+      }
 
       if (profileError) {
         console.error('Error updating profile:', profileError);

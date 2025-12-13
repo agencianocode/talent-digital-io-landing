@@ -165,7 +165,7 @@ const TalentOnboarding = () => {
             country: talentProfile.country,
             city: talentProfile.city,
             updated_at: new Date().toISOString()
-          });
+          }, { onConflict: 'user_id' });
 
         if (profileError) {
           console.error('❌ Error updating profile:', profileError);
