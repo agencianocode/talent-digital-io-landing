@@ -623,3 +623,16 @@
     }
   }
 }
+
+/* Negritas en negro puro para descripciones del marketplace */
+.prose strong,
+.prose b {
+  color: hsl(0 0% 0%);
+  font-weight: 700;
+}
+
+/* Mantener negritas blancas en modo oscuro */
+.dark .prose strong,
+.dark .prose b {
+  color: hsl(0 0% 100%);
+}
