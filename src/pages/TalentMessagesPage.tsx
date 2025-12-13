@@ -140,7 +140,7 @@ const TalentMessagesPage = () => {
   );
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-[calc(100vh-4rem)]">
       <ConversationsList
         key={conversationsKey}
         conversations={conversations as any}
