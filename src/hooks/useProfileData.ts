@@ -294,12 +294,12 @@ export const useProfileData = () => {
         updated_at: new Date().toISOString()
       };
       
-      // Agregar campos opcionales si existen
-      if (data.social_links) {
-        profileUpdatesData.social_links = data.social_links;
+      // Agregar campos opcionales - usar !== undefined para permitir borrar valores
+      if (data.social_links !== undefined) {
+        profileUpdatesData.social_links = data.social_links || null;
       }
-      if (data.video_presentation_url) {
-        profileUpdatesData.video_presentation_url = data.video_presentation_url;
+      if (data.video_presentation_url !== undefined) {
+        profileUpdatesData.video_presentation_url = data.video_presentation_url || null;
       }
       
       const { error: profileError } = await supabase
