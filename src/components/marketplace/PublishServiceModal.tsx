@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { 
   Select,
   SelectContent,
@@ -532,18 +532,11 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                 
                 <div className="space-y-2">
                   <Label htmlFor="description">Descripción del servicio *</Label>
-                  <Textarea
-                    id="description"
+                  <RichTextEditor
                     value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Describe en detalle tu servicio, qué incluye, tu experiencia... Puedes usar viñetas (•, -, *) y se mantendrán al publicar."
-                    rows={6}
-                    required
-                    className="whitespace-pre-wrap"
+                    onChange={(value) => handleInputChange('description', value)}
+                    placeholder="Describe en detalle tu servicio, qué incluye, tu experiencia..."
                   />
-                  <p className="text-xs text-muted-foreground">
-                    💡 Puedes copiar y pegar texto con viñetas desde Word, Google Docs, etc. El formato se mantendrá.
-                  </p>
                 </div>
               </div>
             </>
@@ -654,18 +647,11 @@ const PublishServiceModal: React.FC<PublishServiceModalProps> = ({
                 <h3 className="text-lg font-semibold">Descripción del Servicio</h3>
                 <div className="space-y-2">
                   <Label htmlFor="description">Descripción del servicio *</Label>
-                  <Textarea
-                    id="description"
+                  <RichTextEditor
                     value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Describe detalladamente el servicio que quieres publicar... Puedes usar viñetas (•, -, *) y se mantendrán al publicar."
-                    rows={4}
-                    required
-                    className="whitespace-pre-wrap"
+                    onChange={(value) => handleInputChange('description', value)}
+                    placeholder="Describe detalladamente el servicio que quieres publicar..."
                   />
-                  <p className="text-xs text-muted-foreground">
-                    💡 Puedes copiar y pegar texto con viñetas desde Word, Google Docs, etc. El formato se mantendrá.
-                  </p>
                 </div>
               </div>
 
