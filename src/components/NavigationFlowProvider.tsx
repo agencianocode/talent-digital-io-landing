@@ -267,7 +267,9 @@ export const NavigationFlowProvider: React.FC<NavigationFlowProviderProps> = ({ 
         (currentPath.includes('/register') && user) || // Redirect if authenticated and on registration
         (currentPath.includes('/onboarding') && !shouldShowOnboarding) ||
         (currentPath.includes('/onboarding') && userRole && ['business', 'freemium_business'].includes(userRole)) || // Redirect business users away from onboarding
-        (currentPath === '/' && user && userRole && idealRoute.includes('/talent-dashboard')) // Force redirect from home to talent dashboard for authenticated talent users
+        (currentPath === '/' && user && userRole && idealRoute.includes('/talent-dashboard')) || // Force redirect from home to talent dashboard for authenticated talent users
+        // Force redirect talent users to onboarding if they haven't completed it
+        (currentPath.includes('/talent-dashboard') && isTalentRole(userRole) && talentOnboardingComplete === false && idealRoute === '/talent-onboarding')
       )
     );
 
