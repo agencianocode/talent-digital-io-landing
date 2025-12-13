@@ -1,30 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { Resend } from 'npm:resend@2.0.0';
+import { renderAsync } from 'npm:@react-email/components@0.0.22';
+import * as React from 'npm:react@18.3.1';
+import { CompanyInvitation } from '../send-notification-email/_templates/company-invitation.tsx';
 
-const resendApiKey = Deno.env.get("RESEND_API_KEY");
-
-// Use fetch for email sending instead of Resend SDK
-const sendEmail = async (to: string, subject: string, html: string) => {
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${resendApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: 'TalentoDigital Invitaciones <invitaciones@app.talentodigital.io>',
-      to: [to],
-      subject,
-      html,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Email sending failed: ${error}`);
-  }
-
-  return response.json();
-};
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     // Check for RESEND_API_KEY
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       console.error("❌ RESEND_API_KEY is not configured");
       return new Response(
@@ -67,73 +49,66 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`👤 Invited by: ${invited_by}`);
     console.log(`🌐 Redirect base: ${redirect_base || 'not provided'}`);
 
+    // Build accept/decline URLs
     const redirectParam = redirect_base ? `&redirect=${encodeURIComponent(redirect_base)}` : '';
     const acceptUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/accept-invitation?id=${invitation_id}${redirectParam}`;
     const declineUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/decline-invitation?id=${invitation_id}${redirectParam}`;
 
-    const emailResponse = await sendEmail(
+    // Initialize Supabase client to fetch template content
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Try to get custom template content from database
+    let dbContent: Record<string, any> | null = null;
+    let customSubject: string | null = null;
+
+    try {
+      const { data: dbTemplate } = await supabase
+        .from('email_templates')
+        .select('content, subject, is_active')
+        .eq('id', 'company-invitation')
+        .single();
+
+      if (dbTemplate && dbTemplate.is_active) {
+        dbContent = dbTemplate.content as Record<string, any>;
+        customSubject = dbTemplate.subject;
+        console.log('📄 Using custom template from database: company-invitation');
+      }
+    } catch (dbError) {
+      console.log('⚠️ No custom template found, using defaults:', dbError);
+    }
+
+    // Build template props
+    const roleDisplay = role === 'admin' ? 'Administrador' : 'Miembro';
+    const templateProps: any = {
       email,
-      `Invitación para unirte a la empresa como ${role === 'admin' ? 'Administrador' : 'Miembro'}`,
-      `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Invitación a TalentFlow</title>
-        </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">¡Has sido invitado!</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">TalentFlow - Plataforma de Gestión de Talento</p>
-          </div>
-          
-          <div style="background: white; padding: 40px 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h2 style="color: #333; margin-top: 0;">Invitación para unirte como ${role === 'admin' ? 'ADMINISTRADOR' : 'MIEMBRO'}</h2>
-            
-            <p>Hola,</p>
-            <p><strong>${invited_by}</strong> te ha invitado a unirte a su empresa en TalentFlow con el rol de <strong>${role === 'admin' ? 'Administrador' : 'Miembro'}</strong>.</p>
-            
-            <div style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
-              <h3 style="margin-top: 0; color: #333;">¿Qué puedes hacer como ${role === 'admin' ? 'Administrador' : 'Miembro'}?</h3>
-              ${role === 'admin' ? `
-                <p style="margin: 0; color: #555;">Tendrás acceso completo, incluyendo:</p>
-                <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #555;">
-                  <li>Crear y gestionar oportunidades de trabajo</li>
-                  <li>Revisar y gestionar aplicaciones</li>
-                  <li>Remover miembros del equipo</li>
-                  <li>Editar permisos de otros usuarios</li>
-                  <li>Gestionar configuraciones de la empresa</li>
-                  <li>Acceder a reportes y análisis</li>
-                </ul>
-              ` : `
-                <p style="margin: 0; color: #555;">Tendrás acceso completo para ver y gestionar aplicaciones, pero no podrás:</p>
-                <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #555;">
-                  <li>Remover miembros del equipo</li>
-                  <li>Editar permisos de otros usuarios</li>
-                  <li>Crear nuevas oportunidades de trabajo</li>
-                </ul>
-                <p style="margin-top: 10px; color: #555;"><strong>Sí podrás:</strong> Ver oportunidades, revisar aplicaciones y acceder a reportes.</p>
-              `}
-            </div>
-            
-            <div style="text-align: center; margin: 40px 0;">
-              <a href="${acceptUrl}" style="display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-right: 10px;">Aceptar Invitación</a>
-              <a href="${declineUrl}" style="display: inline-block; background: #6c757d; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">Rechazar</a>
-            </div>
-            
-            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e9ecef; font-size: 14px; color: #6c757d;">
-              <p><strong>¿Necesitas ayuda?</strong></p>
-              <p>Si tienes problemas para aceptar la invitación o tienes preguntas sobre tu rol, contacta a ${invited_by} directamente.</p>
-              <p style="margin-top: 20px;">
-                <small>Esta invitación fue enviada desde TalentFlow. Si no esperabas esta invitación, puedes ignorar este email.</small>
-              </p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `
+      role,
+      invitedBy: invited_by,
+      acceptUrl,
+      declineUrl,
+    };
+
+    // Merge database content with template props (DB overrides defaults)
+    if (dbContent) {
+      Object.assign(templateProps, dbContent);
+    }
+
+    // Render the React Email template
+    const html = await renderAsync(
+      React.createElement(CompanyInvitation, templateProps)
     );
+
+    // Build subject - replace placeholders
+    let emailSubject = customSubject || `Invitación para unirte a la empresa como ${roleDisplay}`;
+    emailSubject = emailSubject.replace('{{role}}', roleDisplay);
+
+    const emailResponse = await resend.emails.send({
+      from: 'TalentoDigital Invitaciones <invitaciones@app.talentodigital.io>',
+      to: [email],
+      subject: emailSubject,
+      html,
+    });
 
     console.log("✅ Email sent successfully via Resend");
     console.log("📨 Resend response:", JSON.stringify(emailResponse));
