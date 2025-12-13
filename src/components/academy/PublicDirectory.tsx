@@ -107,6 +107,17 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [academyId, studentsFilter]);
 
+  // Helper: Check if name is a "real" name (not email-derived)
+  const hasRealName = (name: string | null): boolean => {
+    if (!name) return false;
+    // Exclude if contains @ (is an email)
+    if (name.includes('@')) return false;
+    // Exclude if looks like email-derived name (only lowercase letters and numbers, no spaces)
+    const trimmedName = name.trim();
+    if (!trimmedName.includes(' ') && /^[a-z0-9]+$/i.test(trimmedName)) return false;
+    return true;
+  };
+
   const loadGraduates = async () => {
     try {
       const { data, error } = await supabase.rpc('get_public_academy_directory', {
@@ -115,7 +126,16 @@ export const PublicDirectory: React.FC<PublicDirectoryProps> = ({ academyId }) =
       });
 
       if (error) throw error;
-      setGraduates(data || []);
+      
+      // Filter: only show students with real name AND avatar (completed onboarding)
+      const visibleStudents = (data || []).filter((student: any) => 
+        (student.status === 'enrolled' || student.status === 'graduated') &&
+        student.user_id !== null &&
+        hasRealName(student.student_name) &&
+        student.avatar_url !== null
+      );
+      
+      setGraduates(visibleStudents);
     } catch (error) {
       console.error('Error loading graduates:', error);
     }

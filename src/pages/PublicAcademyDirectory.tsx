@@ -111,15 +111,43 @@ export default function PublicAcademyDirectory() {
 
       if (graduatesError) throw graduatesError;
 
-      // Filtrar solo estudiantes que han aceptado la invitación (user_id no null) y están activos o graduados
-      // Excluir: invitaciones pendientes (sin user_id), inactivos, suspendidos, pausados
+      // Helper: Check if name is a "real" name (not email-derived)
+      const hasRealName = (name: string | null): boolean => {
+        if (!name) return false;
+        // Exclude if contains @ (is an email)
+        if (name.includes('@')) return false;
+        // Exclude if looks like email-derived name (only lowercase letters and numbers, no spaces)
+        const trimmedName = name.trim();
+        if (!trimmedName.includes(' ') && /^[a-z0-9]+$/i.test(trimmedName)) return false;
+        return true;
+      };
+
+      // Filtrar solo estudiantes que:
+      // 1. Están activos o graduados
+      // 2. Han aceptado la invitación (user_id no null)
+      // 3. Tienen nombre REAL (no email-derived)
+      // 4. Tienen foto de perfil
       const visibleStudents = (graduatesData || []).filter((student: Graduate) => 
-        (student.status === 'enrolled' || student.status === 'graduated') && student.user_id !== null
+        (student.status === 'enrolled' || student.status === 'graduated') && 
+        student.user_id !== null &&
+        hasRealName(student.student_name) &&
+        student.avatar_url !== null
       );
 
+      // Count hidden students by reason for logging
+      const pendingOrInactive = (graduatesData || []).filter((s: Graduate) => 
+        s.status !== 'enrolled' && s.status !== 'graduated' || s.user_id === null
+      ).length;
+      const incompleteOnboarding = (graduatesData || []).filter((s: Graduate) => 
+        (s.status === 'enrolled' || s.status === 'graduated') && 
+        s.user_id !== null &&
+        (!hasRealName(s.student_name) || s.avatar_url === null)
+      ).length;
+
       console.log('📚 Total students from RPC:', graduatesData?.length || 0);
-      console.log('✅ Visible students (enrolled/graduated):', visibleStudents.length);
-      console.log('🚫 Hidden students (pending/inactive/etc):', (graduatesData?.length || 0) - visibleStudents.length);
+      console.log('✅ Visible students (complete profile):', visibleStudents.length);
+      console.log('🚫 Hidden (pending/inactive):', pendingOrInactive);
+      console.log('🚫 Hidden (incomplete onboarding - no real name or photo):', incompleteOnboarding);
 
       // Obtener skills de talent_profiles para los estudiantes visibles
       // Función para calcular completitud del perfil
