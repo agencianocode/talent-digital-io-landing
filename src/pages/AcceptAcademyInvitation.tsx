@@ -119,11 +119,6 @@ const AcceptAcademyInvitation = () => {
         }
       }
 
-      if (profileError) {
-        console.error('Error updating profile:', profileError);
-        // No lanzar error, continuar con el proceso
-      }
-
       // Insert into academy_students
       const { error: insertError } = await supabase
         .from('academy_students')

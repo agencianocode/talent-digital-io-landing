@@ -482,14 +482,19 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             .eq('user_id', authState.user!.id)
             .maybeSingle();
 
+          // Obtener el nombre del usuario (de metadata, perfil existente o email)
+          const userName = existingProfile?.full_name && 
+                           existingProfile.full_name.trim() !== '' && 
+                           existingProfile.full_name !== 'Sin nombre'
+            ? existingProfile.full_name
+            : (authState.user!.user_metadata as any)?.full_name || 
+              (authState.user!.user_metadata as any)?.name || 
+              ((authState.user!.email as string)?.split('@')[0] || authState.user!.email as string);
+
           // Solo actualizar si no tiene nombre o tiene 'Sin nombre'
           if (!existingProfile?.full_name || 
               existingProfile.full_name.trim() === '' || 
               existingProfile.full_name === 'Sin nombre') {
-            const userName = (authState.user!.user_metadata as any)?.full_name || 
-                             (authState.user!.user_metadata as any)?.name || 
-                             ((authState.user!.email as string)?.split('@')[0] || authState.user!.email as string);
-
             // Actualizar o crear el perfil con el nombre correcto
             await supabase.from('profiles').upsert({
               user_id: authState.user!.id,
