@@ -325,6 +325,13 @@ const TalentDiscovery = () => {
           });
         }
         
+        // #region agent log
+        const isMarcoPerez = userEmail?.toLowerCase().includes('loroh99230@discounp.com') || profile.full_name?.toLowerCase().includes('marco perez');
+        if (isMarcoPerez) {
+          fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentDiscovery.tsx:328',message:'Marco Perez data before mapping',data:{email:userEmail,fullName:profile.full_name,title:talentProfile?.title,bio:talentProfile?.bio,bioLength:talentProfile?.bio?.length,hasTalentProfile:!!talentProfile},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        }
+        // #endregion
+        
         return {
           id: profile.id,
           user_id: profile.user_id,
@@ -395,12 +402,33 @@ const TalentDiscovery = () => {
       // Filtrar talentos que tengan información mínima para mostrarse
       // Excluir perfiles prácticamente vacíos
       const talentsWithMinimumInfo = talents.filter(talent => {
-        const hasName = talent.full_name && talent.full_name.trim() !== '' && talent.full_name !== 'Sin nombre';
-        const hasBio = talent.bio && talent.bio.trim().length >= 20;
-        const hasTitle = talent.title && talent.title.trim() !== '' && talent.title !== 'Talento Digital';
+        // Validar nombre: no vacío, no "Sin nombre", y no solo espacios
+        const hasName = talent.full_name && 
+                       talent.full_name.trim() !== '' && 
+                       talent.full_name.trim() !== 'Sin nombre' &&
+                       talent.full_name.trim().length >= 2;
         
-        // Requiere al menos nombre, bio mínima, y título
+        // Validar bio: al menos 20 caracteres, no "Sin descripción", y no solo espacios
+        const bioTrimmed = talent.bio?.trim() || '';
+        const hasBio = bioTrimmed.length >= 20 && 
+                      bioTrimmed !== 'Sin descripción' &&
+                      bioTrimmed !== 'Sin descripcion'; // Sin tilde también
+        
+        // Validar título: no vacío, no "Talento Digital", y no solo espacios
+        const titleTrimmed = talent.title?.trim() || '';
+        const hasTitle = titleTrimmed !== '' && 
+                        titleTrimmed !== 'Talento Digital' &&
+                        titleTrimmed.length >= 3; // Mínimo 3 caracteres para un título válido
+        
+        // Requiere al menos nombre válido, bio válida (>=20 chars), y título válido
         const meetsMinimum = hasName && hasBio && hasTitle;
+        
+        // #region agent log
+        const isMarcoPerez = talent.email?.toLowerCase().includes('loroh99230@discounp.com') || talent.full_name?.toLowerCase().includes('marco perez');
+        if (isMarcoPerez || !meetsMinimum) {
+          fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentDiscovery.tsx:404',message:'Filter check for talent',data:{email:talent.email,fullName:talent.full_name,title:talent.title,bio:talent.bio,bioLength:bioTrimmed.length,titleLength:titleTrimmed.length,hasName,hasBio,hasTitle,meetsMinimum,isMarcoPerez},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+        }
+        // #endregion
         
         if (!meetsMinimum) {
           console.log('🚫 Perfil filtrado por información mínima insuficiente:', {
@@ -408,7 +436,8 @@ const TalentDiscovery = () => {
             hasName,
             hasBio,
             hasTitle,
-            bio_length: talent.bio?.length || 0
+            bio_length: bioTrimmed.length,
+            title_length: titleTrimmed.length
           });
         }
         
