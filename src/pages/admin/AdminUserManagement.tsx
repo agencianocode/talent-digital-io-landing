@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
+import { 
   Users, 
   User, 
   Building, 
@@ -322,6 +322,12 @@ const AdminUserManagement: React.FC = () => {
                         <div className="flex flex-wrap gap-1">
                           {getRoleBadge(user.role)}
                           {getStatusBadge(user)}
+                          {/* Badge de Google Auth */}
+                          {user.is_google_auth && (
+                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                              🔵 Google Auth
+                            </Badge>
+                          )}
                           {/* Badge de Academia - junto a otros badges */}
                           {user.email && (
                             <TalentCardAcademyBadge 

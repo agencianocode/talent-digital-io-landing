@@ -102,6 +102,11 @@ serve(async (req) => {
       const isCompanyAdmin = companyRoles.some(r => r === 'owner' || r === 'admin');
       const hasCompanies = companies_count > 0;
 
+      // Check if user registered with Google Auth
+      const googleIdentity = user.identities?.find((identity: any) => identity.provider === 'google');
+      const isGoogleAuth = !!googleIdentity;
+      const authProvider = googleIdentity ? 'google' : (user.identities?.[0]?.provider || 'email');
+
       // Determine user role: prefer role from user_roles table, fallback to metadata, then default
       let userRole = role?.role;
       
@@ -188,7 +193,9 @@ serve(async (req) => {
         companies_count,
         company_roles: companyRoles,
         is_company_admin: isCompanyAdmin,
-        has_companies: hasCompanies
+        has_companies: hasCompanies,
+        auth_provider: authProvider,
+        is_google_auth: isGoogleAuth
       };
     }) || [];
 

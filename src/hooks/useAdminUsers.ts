@@ -27,6 +27,8 @@ interface UserData {
   company_roles?: string[];
   is_company_admin?: boolean;
   has_companies?: boolean;
+  auth_provider?: string;
+  is_google_auth?: boolean;
 }
 
 export const useAdminUsers = () => {
@@ -87,7 +89,9 @@ export const useAdminUsers = () => {
         avatar_url: user.avatar_url,
         company_roles: user.company_roles || [],
         is_company_admin: user.is_company_admin || false,
-        has_companies: user.has_companies || false
+        has_companies: user.has_companies || false,
+        auth_provider: user.auth_provider,
+        is_google_auth: user.is_google_auth || false
       }));
 
       setUsers(usersData);
