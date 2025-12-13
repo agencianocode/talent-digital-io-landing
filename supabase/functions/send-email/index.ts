@@ -1,5 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Webhook } from 'https://esm.sh/standardwebhooks@1.0.0'
+import React from 'npm:react@18.3.1'
+import { renderAsync } from 'npm:@react-email/components@0.0.22'
+import { ConfirmSignupEmail } from './_templates/confirm-signup.tsx'
+import { MagicLinkEmail } from './_templates/magic-link.tsx'
+import { ResetPasswordEmail } from './_templates/reset-password.tsx'
 
 // Initialize with better error handling
 const resendApiKey = Deno.env.get('RESEND_API_KEY')
@@ -32,7 +37,7 @@ const sendEmail = async (to: string, subject: string, html: string) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'TalentoDigital Auth <auth@app.talentodigital.io>',
+      from: 'TalentoDigital <auth@app.talentodigital.io>',
       to: [to],
       subject,
       html,
@@ -91,9 +96,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Processing ${email_action_type} email for ${user.email}`)
 
-    // Add timeout protection
+    // Add timeout protection (increased for React Email rendering)
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Email processing timeout')), 3000)
+      setTimeout(() => reject(new Error('Email processing timeout')), 8000)
     })
 
     // Generate and send email with race condition for timeout
@@ -103,101 +108,63 @@ const handler = async (req: Request): Promise<Response> => {
 
       console.log('Generating email template...')
 
-      // Generate appropriate email based on type
+      // Generate appropriate email based on type using React Email templates
       switch (email_action_type) {
         case 'signup':
-          html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Confirma tu cuenta - TalentFlow</title>
-              <meta charset="utf-8">
-            </head>
-            <body style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: #f8f9fa; padding: 40px; border-radius: 10px; text-align: center;">
-                <h1 style="color: #333;">¡Bienvenido a TalentFlow!</h1>
-                <p>Haz clic en el siguiente enlace para confirmar tu cuenta:</p>
-                <a href="${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
-                   style="background: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
-                  Confirmar Cuenta
-                </a>
-                <p style="color: #666; font-size: 14px;">Si no solicitaste esta cuenta, puedes ignorar este email.</p>
-              </div>
-            </body>
-            </html>
-          `
-          subject = '¡Bienvenido a TalentFlow! Confirma tu cuenta'
+          html = await renderAsync(
+            React.createElement(ConfirmSignupEmail, {
+              supabase_url: SUPABASE_URL,
+              token,
+              token_hash,
+              redirect_to,
+              email_action_type,
+              userEmail: user.email,
+            })
+          )
+          subject = '¡Bienvenido a TalentoDigital! Confirma tu cuenta'
           break
 
         case 'magiclink':
-          html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Enlace de acceso - TalentFlow</title>
-              <meta charset="utf-8">
-            </head>
-            <body style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: #f8f9fa; padding: 40px; border-radius: 10px; text-align: center;">
-                <h1 style="color: #333;">Accede a TalentFlow</h1>
-                <p>Haz clic en el siguiente enlace para acceder a tu cuenta:</p>
-                <a href="${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
-                   style="background: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
-                  Acceder
-                </a>
-                <p style="color: #666; font-size: 14px;">Este enlace expirará en 1 hora.</p>
-              </div>
-            </body>
-            </html>
-          `
-          subject = 'Accede a TalentFlow con tu enlace mágico'
+          html = await renderAsync(
+            React.createElement(MagicLinkEmail, {
+              supabase_url: SUPABASE_URL,
+              token,
+              token_hash,
+              redirect_to,
+              email_action_type,
+              userEmail: user.email,
+            })
+          )
+          subject = 'Accede a TalentoDigital con tu enlace mágico'
           break
 
         case 'recovery':
-          html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Restablece tu contraseña - TalentFlow</title>
-              <meta charset="utf-8">
-            </head>
-            <body style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: #f8f9fa; padding: 40px; border-radius: 10px; text-align: center;">
-                <h1 style="color: #333;">Restablece tu contraseña</h1>
-                <p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
-                <a href="${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
-                   style="background: #dc3545; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
-                  Restablecer Contraseña
-                </a>
-                <p style="color: #666; font-size: 14px;">Si no solicitaste este cambio, puedes ignorar este email.</p>
-              </div>
-            </body>
-            </html>
-          `
-          subject = 'Restablece tu contraseña en TalentFlow'
+          html = await renderAsync(
+            React.createElement(ResetPasswordEmail, {
+              supabase_url: SUPABASE_URL,
+              token,
+              token_hash,
+              redirect_to,
+              email_action_type,
+              userEmail: user.email,
+            })
+          )
+          subject = 'Restablece tu contraseña en TalentoDigital'
           break
 
         default:
-          html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Acceso a TalentFlow</title>
-              <meta charset="utf-8">
-            </head>
-            <body style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: #f8f9fa; padding: 40px; border-radius: 10px; text-align: center;">
-                <h1 style="color: #333;">Acceso a TalentFlow</h1>
-                <p>Haz clic en el siguiente enlace:</p>
-                <a href="${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}" 
-                   style="background: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
-                  Continuar
-                </a>
-              </div>
-            </body>
-            </html>
-          `
-          subject = 'Acceso a TalentFlow'
+          // Fallback for unknown types - use magic link template
+          html = await renderAsync(
+            React.createElement(MagicLinkEmail, {
+              supabase_url: SUPABASE_URL,
+              token,
+              token_hash,
+              redirect_to,
+              email_action_type,
+              userEmail: user.email,
+            })
+          )
+          subject = 'Acceso a TalentoDigital'
       }
 
       console.log('Sending email via Resend...')
