@@ -74,9 +74,13 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   if (!user) return null;
 
   const getOtherParticipantName = (conversation: Conversation) => {
-    // Try to get from participantNames first, then fallback to a default
-    if (conversation.participantNames && conversation.participantNames.length > 0) {
-      return conversation.participantNames.find(name => name !== user.email) || 'Usuario';
+    if (!conversation.participants || !conversation.participantNames) {
+      return 'Usuario';
+    }
+    // Find the index of the other participant using user.id (same logic as avatar)
+    const otherIndex = conversation.participants.findIndex(id => id !== user.id);
+    if (otherIndex >= 0 && conversation.participantNames[otherIndex]) {
+      return conversation.participantNames[otherIndex];
     }
     return 'Usuario';
   };
