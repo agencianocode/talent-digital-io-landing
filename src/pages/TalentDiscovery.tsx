@@ -139,11 +139,12 @@ const TalentDiscovery = () => {
       }
 
       // 🚀 OPTIMIZACIÓN: Ejecutar queries en paralelo para mejorar velocidad
-      console.log('⚡ Fetching profiles, roles, and emails in parallel...');
+      console.log('⚡ Fetching profiles, roles, emails and education in parallel...');
       const [
         { data: profiles, error: profilesError },
         { data: talentRoles },
-        { data: userEmails, error: emailsError }
+        { data: userEmails, error: emailsError },
+        { data: educationData }
       ] = await Promise.all([
         // Get profiles data (without phone - use secure function when needed)
         supabase
@@ -177,8 +178,20 @@ const TalentDiscovery = () => {
           .rpc('get_user_emails_by_ids', { user_ids: talentUserIds }) as unknown as Promise<{ 
             data: Array<{ user_id: string; email: string; avatar_url: string | null }> | null;
             error: any;
-          }>
+          }>,
+        
+        // Get education records to filter users with at least one education entry
+        supabase
+          .from('talent_education')
+          .select('user_id')
+          .in('user_id', talentUserIds)
       ]);
+      
+      // Create Set of user_ids with education for O(1) lookup
+      const usersWithEducation = new Set(
+        educationData?.map(e => e.user_id) || []
+      );
+      console.log('🎓 Users with education records:', usersWithEducation.size);
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
@@ -325,12 +338,6 @@ const TalentDiscovery = () => {
           });
         }
         
-        // #region agent log
-        const isMarcoPerez = userEmail?.toLowerCase().includes('loroh99230@discounp.com') || profile.full_name?.toLowerCase().includes('marco perez');
-        if (isMarcoPerez) {
-          fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentDiscovery.tsx:328',message:'Marco Perez data before mapping',data:{email:userEmail,fullName:profile.full_name,title:talentProfile?.title,bio:talentProfile?.bio,bioLength:talentProfile?.bio?.length,hasTalentProfile:!!talentProfile},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        }
-        // #endregion
         
         return {
           id: profile.id,
@@ -400,7 +407,7 @@ const TalentDiscovery = () => {
       }) || [];
 
       // Filtrar talentos que tengan información mínima para mostrarse
-      // Excluir perfiles prácticamente vacíos
+      // Excluir perfiles prácticamente vacíos o sin formación académica
       const talentsWithMinimumInfo = talents.filter(talent => {
         // Validar nombre: no vacío, no "Sin nombre", y no solo espacios
         const hasName = talent.full_name && 
@@ -408,36 +415,31 @@ const TalentDiscovery = () => {
                        talent.full_name.trim() !== 'Sin nombre' &&
                        talent.full_name.trim().length >= 2;
         
-        // Validar bio: al menos 20 caracteres, no "Sin descripción", y no solo espacios
+        // Validar bio: al menos 50 caracteres, no "Sin descripción", y no solo espacios
         const bioTrimmed = talent.bio?.trim() || '';
-        const hasBio = bioTrimmed.length >= 20 && 
+        const hasBio = bioTrimmed.length >= 50 && 
                       bioTrimmed !== 'Sin descripción' &&
-                      bioTrimmed !== 'Sin descripcion'; // Sin tilde también
+                      bioTrimmed !== 'Sin descripcion';
         
         // Validar título: no vacío, no "Talento Digital", y no solo espacios
         const titleTrimmed = talent.title?.trim() || '';
         const hasTitle = titleTrimmed !== '' && 
                         titleTrimmed !== 'Talento Digital' &&
-                        titleTrimmed.length >= 3; // Mínimo 3 caracteres para un título válido
+                        titleTrimmed.length >= 3;
         
-        // Requiere al menos nombre válido, bio válida (>=20 chars), y título válido
-        const meetsMinimum = hasName && hasBio && hasTitle;
+        // Validar educación: debe tener al menos un registro de formación académica
+        const hasEducation = usersWithEducation.has(talent.user_id);
         
-        // #region agent log
-        const isMarcoPerez = talent.email?.toLowerCase().includes('loroh99230@discounp.com') || talent.full_name?.toLowerCase().includes('marco perez');
-        if (isMarcoPerez || !meetsMinimum) {
-          fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentDiscovery.tsx:404',message:'Filter check for talent',data:{email:talent.email,fullName:talent.full_name,title:talent.title,bio:talent.bio,bioLength:bioTrimmed.length,titleLength:titleTrimmed.length,hasName,hasBio,hasTitle,meetsMinimum,isMarcoPerez},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-        }
-        // #endregion
+        // Requiere nombre, bio (>=50 chars), título, y educación
+        const meetsMinimum = hasName && hasBio && hasTitle && hasEducation;
         
         if (!meetsMinimum) {
-          console.log('🚫 Perfil filtrado por información mínima insuficiente:', {
+          console.log('🚫 Perfil filtrado:', {
             name: talent.full_name,
             hasName,
-            hasBio,
+            hasBio: `${hasBio} (${bioTrimmed.length} chars)`,
             hasTitle,
-            bio_length: bioTrimmed.length,
-            title_length: titleTrimmed.length
+            hasEducation
           });
         }
         
