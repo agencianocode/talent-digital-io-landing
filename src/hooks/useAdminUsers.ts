@@ -79,8 +79,16 @@ export const useAdminUsers = () => {
       console.log('📊 Usuarios recibidos de get-all-users:', {
         total: data.total,
         fetched_from_auth: data.fetched_from_auth,
-        users_count: data.users?.length || 0
+        users_count: data.users?.length || 0,
       });
+
+      // Debug específico para ver avatar y nombre de algunos usuarios
+      const debugUsers = (data.users || []).filter((u: any) =>
+        u.email === 'carmen.mora.fallas@gmail.com' ||
+        u.email === 'isebas15cr@gmail.com'
+      );
+      console.log('🐞 Debug usuarios específicos (crudos desde edge function):', debugUsers);
+
 
       const usersData: UserData[] = data.users.map((user: any) => ({
         id: user.id,
