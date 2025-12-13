@@ -326,6 +326,12 @@ const AdminUserManagement: React.FC = () => {
                         <div className="flex flex-wrap gap-1">
                           {getRoleBadge(user.role)}
                           {getStatusBadge(user)}
+                          {/* Badge de onboarding incompleto */}
+                          {user.has_completed_onboarding === false && (
+                            <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                              ⚠️ Sin completar
+                            </Badge>
+                          )}
                           {/* Badge de Google Auth */}
                           {user.is_google_auth && (
                             <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">

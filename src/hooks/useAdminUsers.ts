@@ -29,6 +29,7 @@ interface UserData {
   has_companies?: boolean;
   auth_provider?: string;
   is_google_auth?: boolean;
+  has_completed_onboarding?: boolean;
 }
 
 export const useAdminUsers = () => {
@@ -106,7 +107,8 @@ export const useAdminUsers = () => {
         is_company_admin: user.is_company_admin || false,
         has_companies: user.has_companies || false,
         auth_provider: user.auth_provider,
-        is_google_auth: user.is_google_auth || false
+        is_google_auth: user.is_google_auth || false,
+        has_completed_onboarding: user.has_completed_onboarding
       }));
 
       // Debug después del mapeo para ver qué llega finalmente al frontend
