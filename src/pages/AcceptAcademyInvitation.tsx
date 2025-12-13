@@ -119,12 +119,16 @@ const AcceptAcademyInvitation = () => {
           return metadata.name;
         }
         
-        // 4. Verificar perfil existente (si no es derivado del email)
-        if (existingProfile?.full_name && 
-            existingProfile.full_name.trim() !== '' && 
-            existingProfile.full_name !== 'Sin nombre' &&
-            existingProfile.full_name.toLowerCase() !== emailPrefix) {
-          return existingProfile.full_name;
+        // 4. Verificar perfil existente (nombre real con 2+ palabras o diferente del email)
+        if (existingProfile?.full_name && existingProfile.full_name.trim() !== '') {
+          const nameWords = existingProfile.full_name.trim().split(/\s+/).filter(w => w.length > 0);
+          const cleanName = existingProfile.full_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const cleanEmailPrefix = emailPrefix.toLowerCase().replace(/[^a-z0-9]/g, '');
+          
+          if (existingProfile.full_name !== 'Sin nombre' &&
+              (nameWords.length >= 2 || cleanName !== cleanEmailPrefix)) {
+            return existingProfile.full_name;
+          }
         }
         
         // NO derivar del email - retornar null
