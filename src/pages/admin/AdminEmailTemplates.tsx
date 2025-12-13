@@ -230,7 +230,6 @@ const AdminEmailTemplates: React.FC = () => {
   const renderPreview = () => {
     if (!editedTemplate) return null;
     const content = editedTemplate.content;
-    const templateId = editedTemplate.id;
 
     // Estilos que replican exactamente los templates de React Email
     const emailStyles = {
@@ -240,17 +239,54 @@ const AdminEmailTemplates: React.FC = () => {
       h2: { color: '#1a1a1a', fontSize: '20px', fontWeight: '600', margin: '0' },
       contentSection: { padding: '30px' },
       text: { color: '#555', fontSize: '16px', lineHeight: '1.6', margin: '0 0 20px 0' },
-      textBold: { color: '#1a1a1a', fontWeight: '600' },
+      textBold: { color: '#1a1a1a', fontWeight: '600' as const },
       listItem: { color: '#555', fontSize: '16px', lineHeight: '1.8', margin: '0 0 8px 0', paddingLeft: '5px' },
-      button: { backgroundColor: '#1976d2', borderRadius: '5px', color: '#fff', fontSize: '16px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center' as const, display: 'inline-block', padding: '14px 30px', marginTop: '20px', marginBottom: '20px' },
+      button: { backgroundColor: '#1976d2', borderRadius: '5px', color: '#fff', fontSize: '16px', fontWeight: 'bold' as const, textDecoration: 'none', textAlign: 'center' as const, display: 'inline-block', padding: '14px 30px', marginTop: '20px', marginBottom: '20px' },
       signature: { color: '#555', fontSize: '16px', lineHeight: '1.6', marginTop: '30px' },
       footer: { padding: '20px 30px', borderTop: '2px solid #f0f0f0', textAlign: 'center' as const },
       footerText: { color: '#888', fontSize: '14px', margin: '0' },
     };
 
-    // Detectar tipo de template para renderizado específico
-    const isWelcomeBusiness = templateId === 'welcome-business';
-    const isWelcomeTalent = templateId === 'welcome-talent';
+    // Extraer nombre del greeting
+    const extractName = () => {
+      if (content.greeting) {
+        return content.greeting.replace(/^Hola\s*/i, '').replace(/,\s*$/, '').trim() || 'Usuario';
+      }
+      return 'Usuario';
+    };
+
+    // Detectar si es un step (step1, step2, etc.)
+    const isStepField = (key: string) => /^step\d+$/.test(key);
+    
+    // Obtener todos los steps ordenados
+    const getSteps = () => {
+      return Object.entries(content)
+        .filter(([key]) => isStepField(key))
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([, value]) => value as string);
+    };
+
+    const steps = getSteps();
+
+    // Renderizar un step con formato correcto
+    const renderStep = (step: string, idx: number) => {
+      const parts = step.split(':');
+      const title = parts[0];
+      const description = parts.slice(1).join(':').trim();
+      
+      return (
+        <p key={idx} style={emailStyles.listItem}>
+          <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
+          {description ? (
+            <>
+              <strong>{title}:</strong> {description}
+            </>
+          ) : (
+            <span>{title}</span>
+          )}
+        </p>
+      );
+    };
 
     return (
       <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded-lg">
@@ -258,77 +294,41 @@ const AdminEmailTemplates: React.FC = () => {
           {/* Email Header - Replica Header.tsx */}
           <div style={emailStyles.headerSection}>
             <h1 style={emailStyles.h1}>TalentoDigital</h1>
-            <h2 style={emailStyles.h2}>Hola {content.greeting?.replace('Hola ', '').replace(',', '') || 'Usuario'},</h2>
+            <h2 style={emailStyles.h2}>Hola {extractName()},</h2>
           </div>
           
           {/* Email Body */}
           <div style={emailStyles.contentSection}>
+            {/* Intro */}
             {content.intro && (
               <p style={emailStyles.text}>{content.intro}</p>
             )}
 
-            {/* Steps con checkmarks para welcome-business */}
-            {isWelcomeBusiness && (
-              <>
-                {content.steps_title && (
-                  <p style={{ ...emailStyles.text, ...emailStyles.textBold }}>{content.steps_title}</p>
-                )}
-                <div style={{ marginBottom: '20px' }}>
-                  {content.step1 && (
-                    <p style={emailStyles.listItem}>
-                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
-                      <strong>{content.step1.split(':')[0]}:</strong> {content.step1.split(':').slice(1).join(':')}
-                    </p>
-                  )}
-                  {content.step2 && (
-                    <p style={emailStyles.listItem}>
-                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
-                      <strong>{content.step2.split(':')[0]}:</strong> {content.step2.split(':').slice(1).join(':')}
-                    </p>
-                  )}
-                  {content.step3 && (
-                    <p style={emailStyles.listItem}>
-                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
-                      <strong>{content.step3.split(':')[0]}:</strong> {content.step3.split(':').slice(1).join(':')}
-                    </p>
-                  )}
-                </div>
-              </>
+            {/* Steps Title */}
+            {content.steps_title && steps.length > 0 && (
+              <p style={{ ...emailStyles.text, ...emailStyles.textBold }}>{content.steps_title}</p>
             )}
 
-            {/* Steps con checkmarks para welcome-talent */}
-            {isWelcomeTalent && (
-              <>
-                {content.steps_title && (
-                  <p style={{ ...emailStyles.text, ...emailStyles.textBold }}>{content.steps_title}</p>
+            {/* Steps */}
+            {steps.length > 0 && (
+              <div style={{ marginBottom: '20px' }}>
+                {steps.map((step, idx) => renderStep(step, idx))}
+              </div>
+            )}
+
+            {/* Benefits (array format) */}
+            {content.benefits && Array.isArray(content.benefits) && (
+              <div style={{ marginBottom: '20px' }}>
+                {content.benefits_title && (
+                  <p style={{ ...emailStyles.text, ...emailStyles.textBold }}>{content.benefits_title}</p>
                 )}
-                <div style={{ marginBottom: '20px' }}>
-                  {content.step1 && (
-                    <p style={emailStyles.listItem}>
-                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
-                      <strong>{content.step1.split(':')[0]}:</strong> {content.step1.split(':').slice(1).join(':')}
-                    </p>
-                  )}
-                  {content.step2 && (
-                    <p style={emailStyles.listItem}>
-                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
-                      <strong>{content.step2.split(':')[0]}:</strong> {content.step2.split(':').slice(1).join(':')}
-                    </p>
-                  )}
-                  {content.step3 && (
-                    <p style={emailStyles.listItem}>
-                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
-                      <strong>{content.step3.split(':')[0]}:</strong> {content.step3.split(':').slice(1).join(':')}
-                    </p>
-                  )}
-                  {content.step4 && (
-                    <p style={emailStyles.listItem}>
-                      <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
-                      <strong>{content.step4.split(':')[0]}:</strong> {content.step4.split(':').slice(1).join(':')}
-                    </p>
-                  )}
-                </div>
-              </>
+                {content.benefits.map((benefit: string, idx: number) => (
+                  <p key={idx} style={emailStyles.listItem}>
+                    <span style={{ color: '#1976d2', marginRight: '8px' }}>✓</span>
+                    {benefit}
+                  </p>
+                ))}
+              </div>
             )}
 
             {/* Botón - Replica NotificationButton.tsx */}
@@ -357,10 +357,12 @@ const AdminEmailTemplates: React.FC = () => {
               </p>
             )}
 
+            {/* Security notice */}
             {content.security_notice && (
               <p style={{ ...emailStyles.text, fontSize: '14px', color: '#888' }}>{content.security_notice}</p>
             )}
 
+            {/* Expiry notice */}
             {content.expiry_notice && (
               <p style={{ ...emailStyles.text, fontSize: '14px', color: '#888' }}>{content.expiry_notice}</p>
             )}
