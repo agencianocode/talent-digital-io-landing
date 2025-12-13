@@ -154,25 +154,32 @@ serve(async (req) => {
 
       // Extract name from multiple sources with better fallback
       const extractName = () => {
-        // 1. Profile full_name (if not empty)
-        if (profile?.full_name && profile.full_name.trim() !== '') {
-          return profile.full_name;
-        }
-        // 2. User metadata full_name
+        const emailPrefix = user.email?.split('@')[0] || '';
+        
+        // 1. Priorizar metadata full_name (viene de registro o Google auth)
         if (user.user_metadata?.full_name && user.user_metadata.full_name.trim() !== '') {
           return user.user_metadata.full_name;
         }
-        // 3. User metadata name (Google auth sometimes uses this)
-        if (user.user_metadata?.name && user.user_metadata.name.trim() !== '') {
-          return user.user_metadata.name;
-        }
-        // 4. Combine first_name and last_name from metadata
+        
+        // 2. Combinar first_name y last_name de metadata
         const firstName = user.user_metadata?.first_name || '';
         const lastName = user.user_metadata?.last_name || '';
         if (firstName || lastName) {
           return `${firstName} ${lastName}`.trim();
         }
-        // 5. No name found
+        
+        // 3. User metadata name (Google auth sometimes uses this)
+        if (user.user_metadata?.name && user.user_metadata.name.trim() !== '') {
+          return user.user_metadata.name;
+        }
+        
+        // 4. Profile full_name solo si NO es el prefijo del email
+        if (profile?.full_name && profile.full_name.trim() !== '' && 
+            profile.full_name.toLowerCase() !== emailPrefix.toLowerCase()) {
+          return profile.full_name;
+        }
+        
+        // 5. No hay nombre real
         return null;
       };
 
