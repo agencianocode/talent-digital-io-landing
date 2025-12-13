@@ -152,7 +152,22 @@ serve(async (req) => {
         if (firstName || lastName) {
           return `${firstName} ${lastName}`.trim();
         }
-        // 5. No name found
+        // 5. Extract from email as last resort
+        if (user.email) {
+          const localPart = user.email.split('@')[0];
+          if (localPart) {
+            // If has separators (., _, -), split and capitalize
+            if (localPart.includes('.') || localPart.includes('_') || localPart.includes('-')) {
+              return localPart
+                .split(/[._-]/)
+                .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+                .join(' ');
+            }
+            // Otherwise, just capitalize first letter
+            return localPart.charAt(0).toUpperCase() + localPart.slice(1).toLowerCase();
+          }
+        }
+        // 6. No name found
         return null;
       };
 
