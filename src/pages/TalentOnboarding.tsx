@@ -80,18 +80,33 @@ const TalentOnboarding = () => {
   };
 
   // Mapear el valor del formulario al valor que acepta la base de datos
+  // La base de datos acepta: '0-1', '1-3', '3-6', '6+' (según TalentEditProfile.tsx)
   const mapExperienceLevel = (formValue: string): string => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentOnboarding.tsx:83',message:'mapExperienceLevel called',data:{formValue,formValueType:typeof formValue,formValueLength:formValue?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
     const mapping: Record<string, string> = {
-      'Principiante: 0-1 año': 'principiante',
-      'Intermedio: 1-3 años': 'intermedio',
-      'Avanzado: 3-6 años': 'avanzado',
-      'Experto: +6 años': 'experto'
+      'Principiante: 0-1 año': '0-1',
+      'Intermedio: 1-3 años': '1-3',
+      'Avanzado: 3-6 años': '3-6',
+      'Experto: +6 años': '6+'
     };
-    return mapping[formValue] || formValue.toLowerCase(); // Fallback: convertir a minúsculas
+    
+    // #region agent log
+    const mappedValue = mapping[formValue] || formValue;
+    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentOnboarding.tsx:95',message:'mapExperienceLevel result',data:{formValue,mappedValue,hasMapping:!!mapping[formValue]},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
+    return mappedValue;
   };
 
   const handleStep2Complete = async (data: ProfessionalInfo) => {
     console.log('🚀 STEP 2 COMPLETE - Starting process...');
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentOnboarding.tsx:93',message:'handleStep2Complete entry',data:{experience:data.experience,experienceType:typeof data.experience},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     
     try {
       console.log('🔍 Setting professional info...');
@@ -101,6 +116,12 @@ const TalentOnboarding = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
+        const mappedExperience = mapExperienceLevel(data.experience);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentOnboarding.tsx:112',message:'Before upsert talent_profiles',data:{originalExperience:data.experience,mappedExperience,userId:session.user.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        
         // Save to talent_profiles table with title, bio, skills, and experience_level
         const { error: talentProfileError } = await supabase
           .from('talent_profiles')
@@ -109,9 +130,13 @@ const TalentOnboarding = () => {
             title: data.title,
             bio: data.bio,
             skills: data.skills,
-            experience_level: mapExperienceLevel(data.experience),
+            experience_level: mappedExperience,
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentOnboarding.tsx:125',message:'After upsert talent_profiles',data:{error:talentProfileError?.message,errorCode:talentProfileError?.code,experienceLevelSent:mappedExperience},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
 
         if (talentProfileError) {
           console.error('❌ Error saving talent profile:', talentProfileError);
