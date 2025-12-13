@@ -13,6 +13,7 @@ import { WelcomeBusiness } from './_templates/welcome-business.tsx';
 import { WelcomeAcademy } from './_templates/welcome-academy.tsx';
 import { AcademyExclusiveOpportunityEmail } from './_templates/academy-exclusive-opportunity.tsx';
 import { MarketplaceRequest } from './_templates/marketplace-request.tsx';
+import { CompleteProfileReminder } from './_templates/complete-profile-reminder.tsx';
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
@@ -29,6 +30,9 @@ interface NotificationEmailRequest {
   message: string;
   actionUrl?: string;
   actionText?: string;
+  // For complete-profile-reminder
+  missingItems?: string[];
+  reminderType?: 'first' | 'second';
 }
 
 const getTemplateComponent = (type: string) => {
@@ -55,6 +59,8 @@ const getTemplateComponent = (type: string) => {
       return WelcomeBusiness;
     case 'welcome-academy':
       return WelcomeAcademy;
+    case 'complete-profile-reminder':
+      return CompleteProfileReminder;
     default:
       return ApplicationNotification; // Fallback
   }
@@ -66,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, userName, type, title, message, actionUrl, actionText }: NotificationEmailRequest =
+    const { to, userName, type, title, message, actionUrl, actionText, missingItems, reminderType }: NotificationEmailRequest =
       await req.json();
 
     console.log('Sending notification email:', { to, type, title });
@@ -74,15 +80,27 @@ const handler = async (req: Request): Promise<Response> => {
     // Get the appropriate template component
     const TemplateComponent = getTemplateComponent(type);
 
+    // Build props based on template type
+    let templateProps: any = {
+      userName,
+      title,
+      message,
+      actionUrl: actionUrl ? `https://app.talentodigital.io${actionUrl}` : undefined,
+      actionText,
+    };
+
+    // Add specific props for complete-profile-reminder
+    if (type === 'complete-profile-reminder') {
+      templateProps = {
+        userName,
+        missingItems: missingItems || [],
+        reminderType: reminderType || 'first',
+      };
+    }
+
     // Render the React Email template
     const html = await renderAsync(
-      React.createElement(TemplateComponent, {
-        userName,
-        title,
-        message,
-        actionUrl: actionUrl ? `https://app.talentodigital.io${actionUrl}` : undefined,
-        actionText,
-      })
+      React.createElement(TemplateComponent, templateProps)
     );
 
     const emailResponse = await resend.emails.send({

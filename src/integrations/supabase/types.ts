@@ -1190,6 +1190,33 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_reminder_logs: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          reminder_type: string
+          sent_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          reminder_type: string
+          sent_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          reminder_type?: string
+          sent_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       opportunities: {
         Row: {
           auto_saved_at: string | null
