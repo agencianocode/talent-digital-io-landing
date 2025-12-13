@@ -184,24 +184,7 @@ serve(async (req) => {
       const extractName = () => {
         const emailPrefix = user.email?.split('@')[0] || '';
         
-        // 1. Priorizar metadata full_name (viene de registro o Google auth)
-        if (user.user_metadata?.full_name && user.user_metadata.full_name.trim() !== '') {
-          return user.user_metadata.full_name;
-        }
-        
-        // 2. Combinar first_name y last_name de metadata
-        const firstName = user.user_metadata?.first_name || '';
-        const lastName = user.user_metadata?.last_name || '';
-        if (firstName || lastName) {
-          return `${firstName} ${lastName}`.trim();
-        }
-        
-        // 3. User metadata name (Google auth sometimes uses this)
-        if (user.user_metadata?.name && user.user_metadata.name.trim() !== '') {
-          return user.user_metadata.name;
-        }
-        
-        // 4. Profile full_name solo si NO es el prefijo del email y no está vacío
+        // 1. Profile full_name es la fuente principal (datos actualizados por el usuario)
         if (profile?.full_name && 
             profile.full_name.trim() !== '' && 
             profile.full_name.toLowerCase() !== 'sin nombre' &&
@@ -209,17 +192,55 @@ serve(async (req) => {
           return profile.full_name;
         }
         
+        // 2. Priorizar metadata full_name (viene de registro o Google auth)
+        if (user.user_metadata?.full_name && user.user_metadata.full_name.trim() !== '') {
+          return user.user_metadata.full_name;
+        }
+        
+        // 3. Combinar first_name y last_name de metadata
+        const firstName = user.user_metadata?.first_name || '';
+        const lastName = user.user_metadata?.last_name || '';
+        if (firstName || lastName) {
+          return `${firstName} ${lastName}`.trim();
+        }
+        
+        // 4. User metadata name (Google auth sometimes uses this)
+        if (user.user_metadata?.name && user.user_metadata.name.trim() !== '') {
+          return user.user_metadata.name;
+        }
+        
         // 5. Fallback: Extraer nombre legible del email
         return extractNameFromEmail(user.email);
       };
 
+      // Extract avatar from multiple sources
+      const extractAvatar = () => {
+        // 1. Profile avatar_url es la fuente principal
+        if (profile?.avatar_url && profile.avatar_url.trim() !== '') {
+          return profile.avatar_url;
+        }
+        
+        // 2. User metadata avatar_url (Google auth)
+        if (user.user_metadata?.avatar_url && user.user_metadata.avatar_url.trim() !== '') {
+          return user.user_metadata.avatar_url;
+        }
+        
+        // 3. User metadata picture (otra variante de Google auth)
+        if (user.user_metadata?.picture && user.user_metadata.picture.trim() !== '') {
+          return user.user_metadata.picture;
+        }
+        
+        return null;
+      };
+
       const fullName = extractName();
+      const avatarUrl = extractAvatar();
 
       return {
         id: user.id,
         email: user.email,
         full_name: fullName,
-        avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || null,
+        avatar_url: avatarUrl,
         role: userRole,
         created_at: profile?.created_at || user.created_at,
         updated_at: profile?.updated_at || user.updated_at,

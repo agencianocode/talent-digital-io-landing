@@ -20,12 +20,18 @@ Avatar.displayName = AvatarPrimitive.Root.displayName
 
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image> & { loading?: "lazy" | "eager" }
->(({ className, loading = "lazy", ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image> & { 
+    loading?: "lazy" | "eager"
+    referrerPolicy?: React.HTMLAttributeReferrerPolicy
+    crossOrigin?: "anonymous" | "use-credentials" | ""
+  }
+>(({ className, loading = "lazy", referrerPolicy = "no-referrer", crossOrigin = "anonymous", ...props }, ref) => (
   <AvatarPrimitive.Image
     ref={ref}
     className={cn("aspect-square h-full w-full object-cover", className)}
     loading={loading}
+    referrerPolicy={referrerPolicy}
+    crossOrigin={crossOrigin}
     {...props}
   />
 ))
