@@ -702,9 +702,12 @@ const AdminEmailTemplates: React.FC = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ScrollArea className="h-[500px] pr-4">
+                  <ScrollArea className="h-[600px] pr-4">
                     {renderContentEditor(editedTemplate.content)}
                   </ScrollArea>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {Object.keys(editedTemplate.content).length} campos editables - Desplázate para ver todos
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
