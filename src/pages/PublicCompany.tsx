@@ -249,7 +249,10 @@ const PublicCompany = () => {
               </div>
 
               {company.description && (
-                <p className="text-gray-700 mb-4">{company.description}</p>
+                <div 
+                  className="text-foreground/80 mb-4 prose prose-sm dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: company.description }}
+                />
               )}
 
               {/* Links */}

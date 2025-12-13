@@ -349,7 +349,10 @@ const TalentProfilePage = () => {
               {talentProfile?.bio && (
                 <div className="mb-4">
                   <h3 className="font-semibold mb-2">Biografía</h3>
-                  <p className="text-muted-foreground">{talentProfile.bio}</p>
+                  <div 
+                    className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: talentProfile.bio || '' }}
+                  />
                 </div>
               )}
               
