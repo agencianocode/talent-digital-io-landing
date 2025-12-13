@@ -311,7 +311,7 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
         hide_location: data.hide_location,
         phone: data.phone,
         social_links: data.social_links,
-        video_presentation_url: data.video_presentation_url,
+        video_presentation_url: data.video_presentation_url || null,
       };
 
       const { error: profileError } = await supabase
@@ -339,6 +339,7 @@ export const TalentProfileWizard: React.FC<TalentProfileWizardProps> = ({ onComp
         hourly_rate_max: data.hourly_rate_max,
         currency: data.currency,
         availability: data.availability,
+        video_presentation_url: data.video_presentation_url || null,
       };
 
       const { data: existingTalentProfile } = await supabase

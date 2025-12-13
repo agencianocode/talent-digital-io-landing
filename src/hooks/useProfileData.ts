@@ -320,7 +320,7 @@ export const useProfileData = () => {
         phone: data.phone,
         country: data.country,
         city: data.city,
-        video_presentation_url: data.video_presentation_url,
+        video_presentation_url: data.video_presentation_url || null,
         availability: data.availability,
         updated_at: new Date().toISOString()
       };
