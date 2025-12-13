@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { categoryTemplates } from '@/lib/opportunityTemplates';
 
 interface ProfessionalInfo {
@@ -130,9 +130,12 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
         <div className="space-y-4">
           {/* Categoría Principal */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-['Inter']">
-              Categoría principal en la que desarrollas tu actividad *
-            </label>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-sm font-medium text-gray-700 font-['Inter']">
+                Categoría principal en la que desarrollas tu actividad *
+              </label>
+              {category && <Check className="w-4 h-4 text-green-600" />}
+            </div>
             <Select value={category} onValueChange={handleCategoryChange}>
               <SelectTrigger className="h-11 text-sm border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white">
                 <SelectValue placeholder="Selecciona tu área principal" />
@@ -175,8 +178,9 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
 
         {/* Title */}
         <div>
-          <div className="mb-1">
-            <label className="text-sm font-medium text-gray-700 font-['Inter']">Título profesional</label>
+          <div className="mb-1 flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700 font-['Inter']">Título profesional *</label>
+            {title.trim() && <Check className="w-4 h-4 text-green-600" />}
           </div>
           <Input
             type="text"
@@ -194,8 +198,9 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
 
         {/* Experience Level */}
         <div>
-          <div className="mb-1">
-            <label className="text-sm font-medium text-gray-700 font-['Inter']">Nivel de Experiencia</label>
+          <div className="mb-1 flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700 font-['Inter']">Nivel de Experiencia *</label>
+            {experience && <Check className="w-4 h-4 text-green-600" />}
           </div>
           <Select value={experience} onValueChange={setExperience}>
             <SelectTrigger className="h-11 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white">
@@ -214,8 +219,9 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
 
         {/* Bio */}
         <div>
-          <div className="mb-1">
-            <label className="text-sm font-medium text-gray-700 font-['Inter']">Bio</label>
+          <div className="mb-1 flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700 font-['Inter']">Bio *</label>
+            {bio.trim().length >= 50 && <Check className="w-4 h-4 text-green-600" />}
           </div>
           <Textarea
             value={bio}
@@ -321,6 +327,16 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
           >
             Completar perfil
           </Button>
+          
+          {/* Feedback message for missing fields */}
+          {!isFormValid && (
+            <p className="text-xs text-amber-600 text-center mt-2 font-['Inter']">
+              {!category ? "⚠️ Por favor selecciona tu categoría principal" :
+               !title.trim() ? "⚠️ Por favor ingresa tu título profesional" :
+               !experience ? "⚠️ Por favor selecciona tu nivel de experiencia" :
+               bio.trim().length < 50 ? `⚠️ Tu bio necesita ${50 - bio.trim().length} caracteres más` : ""}
+            </p>
+          )}
         </div>
       </div>
     </div>
