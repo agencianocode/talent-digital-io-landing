@@ -82,13 +82,13 @@ export const useAdminUsers = () => {
         users_count: data.users?.length || 0,
       });
 
-      // Debug específico para ver avatar y nombre de algunos usuarios
-      const debugUsers = (data.users || []).filter((u: any) =>
+      // Debug específico para ver avatar y nombre de algunos usuarios problemáticos (datos crudos)
+      const rawDebugUsers = (data.users || []).filter((u: any) =>
         u.email === 'carmen.mora.fallas@gmail.com' ||
-        u.email === 'isebas15cr@gmail.com'
+        u.email === 'isebas15cr@gmail.com' ||
+        u.email === 'carlosdccfly@outlook.com'
       );
-      console.log('🐞 Debug usuarios específicos (crudos desde edge function):', debugUsers);
-
+      console.log('🐞 Debug usuarios específicos (crudos desde edge function):', rawDebugUsers);
 
       const usersData: UserData[] = data.users.map((user: any) => ({
         id: user.id,
@@ -108,6 +108,14 @@ export const useAdminUsers = () => {
         auth_provider: user.auth_provider,
         is_google_auth: user.is_google_auth || false
       }));
+
+      // Debug después del mapeo para ver qué llega finalmente al frontend
+      const mappedDebugUsers = usersData.filter((u) =>
+        u.email === 'carmen.mora.fallas@gmail.com' ||
+        u.email === 'isebas15cr@gmail.com' ||
+        u.email === 'carlosdccfly@outlook.com'
+      );
+      console.log('🐞 Debug usuarios específicos (después del mapeo a UserData):', mappedDebugUsers);
 
       setUsers(usersData);
     } catch (err) {
