@@ -90,13 +90,17 @@ const TalentOnboarding = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // Save to talent_profiles table (only user_id to mark completion)
+        // Save to talent_profiles table with title, bio, skills, and experience_level
         const { error: talentProfileError } = await supabase
           .from('talent_profiles')
           .upsert({
             user_id: session.user.id,
+            title: data.title,
+            bio: data.bio,
+            skills: data.skills,
+            experience_level: data.experience,
             updated_at: new Date().toISOString()
-          });
+          }, { onConflict: 'user_id' });
 
         if (talentProfileError) {
           console.error('❌ Error saving talent profile:', talentProfileError);
