@@ -312,19 +312,7 @@ class MarketplaceService {
 
       if (error) throw error;
 
-      // Increment requests count
-      const { data: service } = await supabase
-        .from('marketplace_services')
-        .select('requests_count')
-        .eq('id', serviceId)
-        .single();
-
-      if (service) {
-        await supabase
-          .from('marketplace_services')
-          .update({ requests_count: service.requests_count + 1 })
-          .eq('id', serviceId);
-      }
+      // requests_count se incrementa automáticamente via trigger en PostgreSQL
 
       return data as ServiceRequest;
     } catch (error) {
