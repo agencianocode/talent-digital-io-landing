@@ -163,29 +163,25 @@ const AcceptAcademyInvitation = () => {
 
       if (insertError) throw insertError;
 
-      // Check if user has freemium_talent role and upgrade to premium_talent
-      const { data: currentRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (currentRole?.role === 'freemium_talent') {
-        // Upgrade to premium_talent using an edge function
-        const { error: upgradeError } = await supabase.functions.invoke('admin-change-user-role', {
+      // Upgrade role to premium_talent if needed (uses dedicated edge function that doesn't require admin)
+      try {
+        const { data: upgradeResult, error: upgradeError } = await supabase.functions.invoke('upgrade-academy-student-role', {
           body: {
             userId: user.id,
-            newRole: 'premium_talent',
-            reason: 'Auto-upgrade: Unido a academia como estudiante'
+            academyId: academyId
           }
         });
 
         if (upgradeError) {
           console.error('Error upgrading role:', upgradeError);
-          // Don't fail the whole process, just log the error
         } else {
-          console.log('Successfully upgraded user to premium_talent');
+          console.log('Role upgrade result:', upgradeResult);
+          if (upgradeResult?.upgraded) {
+            toast.success('¡Ahora tienes acceso Premium!');
+          }
         }
+      } catch (upgradeErr) {
+        console.error('Exception upgrading role:', upgradeErr);
       }
 
       // Clear the pending invitation from localStorage
