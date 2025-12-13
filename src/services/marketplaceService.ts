@@ -160,6 +160,27 @@ class MarketplaceService {
   }
 
   /**
+   * Get public services for a specific user (only available and active)
+   */
+  async getPublicUserServices(userId: string): Promise<TalentService[]> {
+    try {
+      const { data, error } = await supabase
+        .from('marketplace_services')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_available', true)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as TalentService[];
+    } catch (error) {
+      console.error('Error fetching public user services:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create a new service
    */
   async createService(userId: string, serviceData: ServiceFormData): Promise<TalentService> {

@@ -47,7 +47,7 @@ export const TalentServices = ({
   const fetchServices = async () => {
     try {
       setIsLoading(true);
-      const fetchedServices = await marketplaceService.getUserServices(userId);
+      const fetchedServices = await marketplaceService.getPublicUserServices(userId);
       setServices(fetchedServices);
     } catch (error) {
       console.error('Error fetching services:', error);
