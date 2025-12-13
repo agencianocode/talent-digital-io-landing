@@ -97,72 +97,63 @@ const AcceptAcademyInvitation = () => {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      // Obtener el nombre del usuario (de metadata o email)
-      const getUserName = () => {
+      // Obtener el nombre del usuario SOLO de fuentes reales (NO derivar del email)
+      const getRealUserName = () => {
         const metadata = user.user_metadata as any;
+        const emailPrefix = (user.email || '').split('@')[0]?.toLowerCase() || '';
         
-        // 1. full_name directo
+        // 1. full_name directo de metadata
         if (metadata?.full_name && metadata.full_name.trim() !== '') {
           return metadata.full_name;
         }
         
-        // 2. name directo
-        if (metadata?.name && metadata.name.trim() !== '') {
-          return metadata.name;
-        }
-        
-        // 3. Combinar first_name y last_name (Google OAuth a veces usa estos)
+        // 2. Combinar first_name y last_name (del formulario de registro o Google OAuth)
         const firstName = metadata?.first_name || '';
         const lastName = metadata?.last_name || '';
         if (firstName || lastName) {
           return `${firstName} ${lastName}`.trim();
         }
         
-        // 4. Fallback: extraer del email de manera inteligente
-        const email = user.email || '';
-        if (email) {
-          const emailParts = email.split('@');
-          if (emailParts.length > 0 && emailParts[0]) {
-            const localPart = emailParts[0];
-            if (localPart.includes('.') || localPart.includes('_') || localPart.includes('-')) {
-              return localPart
-                .split(/[._-]/)
-                .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-                .join(' ');
-            }
-            return localPart.charAt(0).toUpperCase() + localPart.slice(1).toLowerCase();
-          }
+        // 3. name directo (Google OAuth)
+        if (metadata?.name && metadata.name.trim() !== '') {
+          return metadata.name;
         }
         
-        return email || 'Sin nombre';
+        // 4. Verificar perfil existente (si no es derivado del email)
+        if (existingProfile?.full_name && 
+            existingProfile.full_name.trim() !== '' && 
+            existingProfile.full_name !== 'Sin nombre' &&
+            existingProfile.full_name.toLowerCase() !== emailPrefix) {
+          return existingProfile.full_name;
+        }
+        
+        // NO derivar del email - retornar null
+        return null;
       };
 
-      const userName = getUserName();
+      const realUserName = getRealUserName();
 
-      // Solo actualizar si no tiene nombre o tiene 'Sin nombre'
-      if (!existingProfile?.full_name || 
-          existingProfile.full_name.trim() === '' || 
-          existingProfile.full_name === 'Sin nombre') {
+      // Solo actualizar perfil si tenemos un nombre REAL
+      if (realUserName) {
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
             user_id: user.id,
-            full_name: userName
+            full_name: realUserName
           }, { onConflict: 'user_id' });
 
         if (profileError) {
           console.error('Error updating profile:', profileError);
-          // No lanzar error, continuar con el proceso
         }
       }
 
-      // Insert into academy_students
+      // Insert into academy_students (usar email como placeholder si no hay nombre real)
       const { error: insertError } = await supabase
         .from('academy_students')
         .insert({
           academy_id: academyId,
           student_email: user.email,
-          student_name: userName,
+          student_name: realUserName || user.email, // Email como placeholder temporal
           status: status === 'graduated' ? 'graduated' : 'enrolled',
           enrollment_date: new Date().toISOString().split('T')[0],
           ...(status === 'graduated' && {
@@ -203,9 +194,17 @@ const AcceptAcademyInvitation = () => {
       setSuccess(true);
       toast.success('¡Te has unido a la academia exitosamente!');
       
+      // Verificar si el usuario tiene un nombre real para decidir redirección
+      const hasRealName = realUserName !== null;
+      
       // Redirect after a short delay
       setTimeout(() => {
-        navigate('/talent-dashboard');
+        if (!hasRealName) {
+          // Forzar onboarding para capturar nombre real
+          navigate('/talent-onboarding');
+        } else {
+          navigate('/talent-dashboard');
+        }
       }, 2000);
 
     } catch (err: any) {

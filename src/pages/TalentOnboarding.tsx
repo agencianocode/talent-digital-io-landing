@@ -223,6 +223,23 @@ const TalentOnboarding = () => {
           });
         }
 
+        // Actualizar academy_students si el usuario vino de una invitación de academia
+        // y su nombre actual es el email (placeholder temporal)
+        const fullName = `${talentProfile.firstName} ${talentProfile.lastName}`.trim();
+        if (session.user.email) {
+          const { error: academyUpdateError } = await supabase
+            .from('academy_students')
+            .update({ student_name: fullName })
+            .eq('student_email', session.user.email)
+            .eq('student_name', session.user.email); // Solo actualizar si el nombre actual es el email
+
+          if (academyUpdateError) {
+            console.error('Error updating academy student name:', academyUpdateError);
+          } else {
+            console.log('✅ Academy student name updated (if applicable)');
+          }
+        }
+
         // Verificar si hay una oportunidad pendiente para redirigir
         const pendingOpportunity = localStorage.getItem('pending_opportunity');
         const postOnboardingRedirect = sessionStorage.getItem('post_onboarding_redirect');

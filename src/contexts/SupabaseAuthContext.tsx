@@ -482,12 +482,15 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             .eq('user_id', authState.user!.id)
             .maybeSingle();
 
-          // Obtener el nombre del usuario (de metadata, perfil existente o email)
-          const getUserName = () => {
-            // 1. Si ya tiene un nombre válido en el perfil, usarlo
+          // Obtener el nombre del usuario SOLO de fuentes reales (NO derivar del email)
+          const getRealUserName = () => {
+            // 1. Si ya tiene un nombre válido en el perfil (y no es derivado del email)
+            const emailPrefix = (authState.user!.email || '').split('@')[0]?.toLowerCase() || '';
+            
             if (existingProfile?.full_name && 
                 existingProfile.full_name.trim() !== '' && 
-                existingProfile.full_name !== 'Sin nombre') {
+                existingProfile.full_name !== 'Sin nombre' &&
+                existingProfile.full_name.toLowerCase() !== emailPrefix) {
               return existingProfile.full_name;
             }
             
@@ -499,54 +502,37 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
               return metadata.full_name;
             }
             
-            // 2b. name directo
-            if (metadata?.name && metadata.name.trim() !== '') {
-              return metadata.name;
-            }
-            
-            // 2c. Combinar first_name y last_name (Google OAuth a veces usa estos)
+            // 2b. Combinar first_name y last_name (del formulario de registro o Google OAuth)
             const firstName = metadata?.first_name || '';
             const lastName = metadata?.last_name || '';
             if (firstName || lastName) {
               return `${firstName} ${lastName}`.trim();
             }
             
-            // 3. Fallback: extraer del email de manera inteligente
-            const email = authState.user!.email as string;
-            if (email) {
-              const emailParts = email.split('@');
-              if (emailParts.length > 0 && emailParts[0]) {
-                const localPart = emailParts[0];
-                if (localPart.includes('.') || localPart.includes('_') || localPart.includes('-')) {
-                  return localPart
-                    .split(/[._-]/)
-                    .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-                    .join(' ');
-                }
-                return localPart.charAt(0).toUpperCase() + localPart.slice(1).toLowerCase();
-              }
+            // 2c. name directo (Google OAuth)
+            if (metadata?.name && metadata.name.trim() !== '') {
+              return metadata.name;
             }
             
-            return email || 'Sin nombre';
+            // NO derivar del email - retornar null para forzar onboarding
+            return null;
           };
 
-          const userName = getUserName();
+          const realUserName = getRealUserName();
 
-          // Solo actualizar si no tiene nombre o tiene 'Sin nombre'
-          if (!existingProfile?.full_name || 
-              existingProfile.full_name.trim() === '' || 
-              existingProfile.full_name === 'Sin nombre') {
-            // Actualizar o crear el perfil con el nombre correcto
+          // Solo actualizar perfil si tenemos un nombre REAL (no derivado del email)
+          if (realUserName) {
             await supabase.from('profiles').upsert({
               user_id: authState.user!.id,
-              full_name: userName
+              full_name: realUserName
             }, { onConflict: 'user_id' });
           }
 
+          // En academy_students, guardar el email como placeholder si no hay nombre real
           await supabase.from('academy_students').insert({
             academy_id: academyId,
             student_email: authState.user!.email as string,
-            student_name: userName,
+            student_name: realUserName || authState.user!.email, // Usar email como placeholder temporal
             status: status === 'graduated' ? 'graduated' : 'enrolled',
             enrollment_date: new Date().toISOString().split('T')[0],
             ...(status === 'graduated' ? { graduation_date: new Date().toISOString().split('T')[0] } : {})
