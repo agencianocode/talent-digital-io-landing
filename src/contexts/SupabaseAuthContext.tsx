@@ -520,11 +520,16 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
           const realUserName = getRealUserName();
 
-          // Solo actualizar perfil si tenemos un nombre REAL (no derivado del email)
-          if (realUserName) {
+          // Obtener avatar de OAuth si existe
+          const oauthAvatarUrl = (authState.user!.user_metadata as any)?.avatar_url || 
+                                 (authState.user!.user_metadata as any)?.picture;
+          
+          // Actualizar perfil si tenemos nombre REAL o avatar de OAuth
+          if (realUserName || oauthAvatarUrl) {
             await supabase.from('profiles').upsert({
               user_id: authState.user!.id,
-              full_name: realUserName
+              ...(realUserName && { full_name: realUserName }),
+              ...(oauthAvatarUrl && { avatar_url: oauthAvatarUrl })
             }, { onConflict: 'user_id' });
           }
 
