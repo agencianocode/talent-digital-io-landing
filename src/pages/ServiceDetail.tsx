@@ -488,7 +488,7 @@ const ServiceDetail: React.FC = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">Descripción</h2>
                 <div 
-                  className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none"
+                  className="text-foreground prose prose-sm dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: service.description }}
                 />
               </div>
