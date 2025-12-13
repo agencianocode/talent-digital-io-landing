@@ -132,10 +132,36 @@ serve(async (req) => {
         }
       }
 
+      // Extract name from multiple sources with better fallback
+      const extractName = () => {
+        // 1. Profile full_name (if not empty)
+        if (profile?.full_name && profile.full_name.trim() !== '') {
+          return profile.full_name;
+        }
+        // 2. User metadata full_name
+        if (user.user_metadata?.full_name && user.user_metadata.full_name.trim() !== '') {
+          return user.user_metadata.full_name;
+        }
+        // 3. User metadata name (Google auth sometimes uses this)
+        if (user.user_metadata?.name && user.user_metadata.name.trim() !== '') {
+          return user.user_metadata.name;
+        }
+        // 4. Combine first_name and last_name from metadata
+        const firstName = user.user_metadata?.first_name || '';
+        const lastName = user.user_metadata?.last_name || '';
+        if (firstName || lastName) {
+          return `${firstName} ${lastName}`.trim();
+        }
+        // 5. No name found
+        return null;
+      };
+
+      const fullName = extractName();
+
       return {
         id: user.id,
         email: user.email,
-        full_name: profile?.full_name || user.user_metadata?.full_name || 'Sin nombre',
+        full_name: fullName || 'Sin nombre',
         avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || null,
         role: userRole,
         created_at: profile?.created_at || user.created_at,
