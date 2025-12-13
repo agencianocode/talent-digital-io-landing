@@ -192,7 +192,7 @@ const TalentEditProfile = () => {
         country: profile?.country || '',
         city: profile?.city || '',
         phone: userProfile.phone || profile?.phone || '',
-        video_presentation_url: profile?.video_presentation_url || '',
+        video_presentation_url: profile?.video_presentation_url || (userProfile as any)?.video_presentation_url || '',
         availability: profile?.availability || '',
         primary_category_id: profileData?.primary_category_id || '',
         secondary_category_id: profileData?.secondary_category_id || '',

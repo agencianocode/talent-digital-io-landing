@@ -158,7 +158,7 @@ export const useProfileData = () => {
           country: country || null,
           city: city || null,
           phone: (talentData as any)?.phone || userData?.phone || user?.user_metadata?.phone || null,
-          video_presentation_url: (talentData as any)?.video_presentation_url || user?.user_metadata?.video_presentation_url || null,
+          video_presentation_url: (talentData as any)?.video_presentation_url || userData?.video_presentation_url || user?.user_metadata?.video_presentation_url || null,
           created_at: sourceData?.created_at || userData?.created_at || new Date().toISOString(),
           updated_at: sourceData?.updated_at || userData?.updated_at || new Date().toISOString()
         };
