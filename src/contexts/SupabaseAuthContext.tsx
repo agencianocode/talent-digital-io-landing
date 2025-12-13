@@ -1016,10 +1016,10 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return false;
       }
 
-      // Also check if the user has a REAL name in profiles (not derived from email)
+      // Check if the user has a REAL name AND avatar in profiles
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, avatar_url')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -1027,7 +1027,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.error('Error checking profile:', profileError);
       }
 
-      // Get user email to check if name is derived from it
+      // Get user data to check email and user_metadata avatar
       const { data: { user } } = await supabase.auth.getUser();
       const userEmail = user?.email || '';
       const emailPrefix = userEmail.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
@@ -1041,8 +1041,12 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
                           fullName !== 'Sin nombre' && 
                           cleanFullName !== emailPrefix;
 
-      // Onboarding is complete ONLY if we have talent_profile AND a real name
-      const isComplete = hasRealName;
+      // Check avatar from profiles or user_metadata (Google OAuth stores it there)
+      const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || '';
+      const hasAvatar = avatarUrl.trim() !== '';
+
+      // Onboarding is complete ONLY if we have talent_profile AND real name AND avatar
+      const isComplete = hasRealName && hasAvatar;
       
       console.log('Talent onboarding check:', {
         userId,
@@ -1050,6 +1054,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         fullName,
         emailPrefix,
         hasRealName,
+        hasAvatar,
         isComplete
       });
 
