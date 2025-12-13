@@ -22,21 +22,27 @@ import ServiceCard from '@/components/marketplace/ServiceCard';
 import ServiceFilters from '@/components/marketplace/ServiceFilters';
 import ServiceRequestModal from '@/components/marketplace/ServiceRequestModal';
 import PublishServiceModal from '@/components/marketplace/PublishServiceModal';
+import ServiceForm from '@/components/marketplace/ServiceForm';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { AcademyCoursesSection } from '@/components/marketplace/AcademyCoursesSection';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { marketplaceService } from '@/services/marketplaceService';
+import { useTalentServices, ServiceFormData } from '@/hooks/useTalentServices';
 
 const TalentMarketplace: React.FC = () => {
   const navigate = useNavigate();
-  const { userRole } = useSupabaseAuth();
+  const { userRole, user } = useSupabaseAuth();
+  const { createService, isLoading: isCreatingService } = useTalentServices();
   const [selectedService, setSelectedService] = useState<MarketplaceService | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [isServiceFormOpen, setIsServiceFormOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [publishingRequestStatus, setPublishingRequestStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
   const [showAlert, setShowAlert] = useState(false);
-  const { user } = useSupabaseAuth();
+
+  // Determinar si es usuario Premium (puede publicar directamente)
+  const isPremiumUser = userRole === 'premium_talent' || userRole === 'academy_premium' || userRole === 'admin';
 
   const {
     services,
@@ -108,7 +114,25 @@ const TalentMarketplace: React.FC = () => {
   };
 
   const handlePublishService = () => {
-    setIsPublishModalOpen(true);
+    if (isPremiumUser) {
+      // Usuarios Premium usan el formulario completo
+      setIsServiceFormOpen(true);
+    } else {
+      // Usuarios Freemium usan el modal de solicitud
+      setIsPublishModalOpen(true);
+    }
+  };
+
+  const handleCreateService = async (formData: ServiceFormData): Promise<boolean> => {
+    try {
+      await createService(formData);
+      setIsServiceFormOpen(false);
+      await refreshServices();
+      return true;
+    } catch (error) {
+      console.error('Error creating service:', error);
+      return false;
+    }
   };
 
   const handleManageServices = () => {
@@ -388,11 +412,20 @@ const TalentMarketplace: React.FC = () => {
         onRequestSent={handleRequestSent}
       />
 
-      {/* Publish Service Modal */}
+      {/* Publish Service Modal (para Freemium) */}
       <PublishServiceModal 
         isOpen={isPublishModalOpen} 
         onClose={() => setIsPublishModalOpen(false)}
         onSuccess={refreshServices}
+      />
+
+      {/* Service Form (para Premium) */}
+      <ServiceForm
+        isOpen={isServiceFormOpen}
+        onClose={() => setIsServiceFormOpen(false)}
+        onSubmit={handleCreateService}
+        isSubmitting={isCreatingService}
+        mode="create"
       />
     </div>
   );
