@@ -29,36 +29,52 @@ serve(async (req) => {
     let allAuthUsers: any[] = [];
     let page = 1;
     const perPage = 1000; // Maximum per page
+    const maxPages = 100; // Safety limit to prevent infinite loops
     let hasMore = true;
 
-    while (hasMore) {
+    while (hasMore && page <= maxPages) {
       console.log(`Fetching users page ${page}...`);
-      const { data: { users }, error: authError } = await supabaseAdmin.auth.admin.listUsers({
+      const response = await supabaseAdmin.auth.admin.listUsers({
         page,
         perPage
       });
+
+      const { data, error: authError } = response;
 
       if (authError) {
         console.error('Auth error:', authError);
         throw authError;
       }
 
-      if (users && users.length > 0) {
+      const users = data?.users || [];
+      
+      if (users.length > 0) {
         allAuthUsers = allAuthUsers.concat(users);
         console.log(`Page ${page}: Found ${users.length} users (Total so far: ${allAuthUsers.length})`);
         
-        // If we got fewer users than perPage, we've reached the end
+        // Check if there are more pages
+        // Supabase returns users array, if length < perPage, we've reached the end
         if (users.length < perPage) {
+          console.log(`Reached end of users list (got ${users.length} < ${perPage})`);
           hasMore = false;
         } else {
           page++;
+          // Add a small delay to avoid rate limiting
+          if (page <= maxPages) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
         }
       } else {
+        console.log(`No users found on page ${page}, stopping pagination`);
         hasMore = false;
       }
     }
 
-    console.log(`Found ${allAuthUsers.length} total auth users`);
+    if (page > maxPages) {
+      console.warn(`⚠️ Reached maximum page limit (${maxPages}). Total users fetched: ${allAuthUsers.length}`);
+    }
+
+    console.log(`✅ Found ${allAuthUsers.length} total auth users after pagination`);
 
     // Use allAuthUsers instead of users
     const users = allAuthUsers;
@@ -227,10 +243,15 @@ serve(async (req) => {
       };
     }) || [];
 
-    console.log(`Returning ${allUsers.length} users`);
+    console.log(`✅ Returning ${allUsers.length} users to client`);
+    console.log(`📊 Response size: ${JSON.stringify({ users: allUsers }).length} bytes`);
 
     return new Response(
-      JSON.stringify({ users: allUsers }),
+      JSON.stringify({ 
+        users: allUsers,
+        total: allUsers.length,
+        fetched_from_auth: allAuthUsers.length
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
