@@ -168,6 +168,18 @@ serve(async (req) => {
         }
       }
 
+      // Helper to extract readable name from email
+      const extractNameFromEmail = (email: string): string => {
+        if (!email) return 'Sin nombre';
+        const prefix = email.split('@')[0];
+        // Replace common separators with spaces
+        const nameParts = prefix.split(/[._-]+/);
+        // Capitalize each part
+        return nameParts
+          .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+          .join(' ');
+      };
+
       // Extract name from multiple sources with better fallback
       const extractName = () => {
         const emailPrefix = user.email?.split('@')[0] || '';
@@ -189,14 +201,16 @@ serve(async (req) => {
           return user.user_metadata.name;
         }
         
-        // 4. Profile full_name solo si NO es el prefijo del email
-        if (profile?.full_name && profile.full_name.trim() !== '' && 
+        // 4. Profile full_name solo si NO es el prefijo del email y no está vacío
+        if (profile?.full_name && 
+            profile.full_name.trim() !== '' && 
+            profile.full_name.toLowerCase() !== 'sin nombre' &&
             profile.full_name.toLowerCase() !== emailPrefix.toLowerCase()) {
           return profile.full_name;
         }
         
-        // 5. No hay nombre real
-        return null;
+        // 5. Fallback: Extraer nombre legible del email
+        return extractNameFromEmail(user.email);
       };
 
       const fullName = extractName();
@@ -204,7 +218,7 @@ serve(async (req) => {
       return {
         id: user.id,
         email: user.email,
-        full_name: fullName || 'Sin nombre',
+        full_name: fullName,
         avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || null,
         role: userRole,
         created_at: profile?.created_at || user.created_at,
