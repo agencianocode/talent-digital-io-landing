@@ -75,6 +75,13 @@ export const useAdminUsers = () => {
         throw new Error('No se pudieron cargar los usuarios');
       }
 
+      // Log para debugging
+      console.log('📊 Usuarios recibidos de get-all-users:', {
+        total: data.total,
+        fetched_from_auth: data.fetched_from_auth,
+        users_count: data.users?.length || 0
+      });
+
       const usersData: UserData[] = data.users.map((user: any) => ({
         id: user.id,
         full_name: user.full_name,
