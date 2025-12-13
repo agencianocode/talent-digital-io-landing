@@ -2577,14 +2577,6 @@ export type Database = {
       }
       migrate_existing_conversations: { Args: never; Returns: undefined }
       migrate_existing_talent_profiles: { Args: never; Returns: string }
-      notify_access_request: {
-        Args: {
-          p_company_id: string
-          p_requested_role?: string
-          p_requester_id: string
-        }
-        Returns: undefined
-      }
       notify_company_warning: {
         Args: {
           p_company_id: string
