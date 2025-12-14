@@ -115,28 +115,7 @@ export const TalentServices = ({
   }
 
   if (services.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5" />
-            Servicios Ofrecidos
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">
-              {talentName} aún no ha publicado servicios
-            </p>
-            <Button variant="outline" onClick={onContact}>
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Contactar directamente
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   return (
