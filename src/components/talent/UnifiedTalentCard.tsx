@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MapPin, Eye, MessageSquare, Clock } from 'lucide-react';
+import { stripHtml } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TalentCardAcademyBadge } from './TalentCardAcademyBadge';
@@ -85,8 +86,9 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
   const visibleSkills = skills.slice(0, maxSkills);
   const remainingSkills = skills.length - maxSkills;
 
-  // Truncar bio a 120 caracteres para mantener altura consistente
-  const truncatedBio = bio && bio.length > 120 ? `${bio.substring(0, 120)}...` : bio;
+  // Limpiar HTML y truncar bio a 120 caracteres para mantener altura consistente
+  const cleanBio = bio ? stripHtml(bio) : '';
+  const truncatedBio = cleanBio && cleanBio.length > 120 ? `${cleanBio.substring(0, 120)}...` : cleanBio;
 
   return (
     <Card className={`h-full flex flex-col hover:shadow-lg transition-all duration-200 ${className}`}>
