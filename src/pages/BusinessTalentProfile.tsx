@@ -494,9 +494,10 @@ const BusinessTalentProfile = () => {
                 <CardTitle>Biografía</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-gray-700 leading-relaxed">
-                  {talentProfile?.bio || 'Industrial Tech Translator | Transformando Plantas Industriales y Talleres Manufactureros en Ecosistemas Digitales con No Code | Especialista en Automatización...'}
-                </p>
+                <div 
+                  className="text-muted-foreground leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: talentProfile?.bio || 'Sin biografía disponible' }}
+                />
             </CardContent>
           </Card>
 
