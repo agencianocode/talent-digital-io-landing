@@ -278,7 +278,7 @@ export default function PublicAcademyDirectory() {
           // Mostrar 2 columnas: Activos a la izquierda, Graduados a la derecha
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Estudiantes Activos */}
-            <div>
+            <div className="order-2 lg:order-1">
               <div className="flex items-center gap-3 mb-6">
                 <GraduationCap className="h-6 w-6" style={{ color: brandColor }} />
                 <h2 className="text-2xl font-bold">
@@ -318,7 +318,7 @@ export default function PublicAcademyDirectory() {
             </div>
 
             {/* Graduados */}
-            <div>
+            <div className="order-1 lg:order-2">
               <div className="flex items-center gap-3 mb-6">
                 <Award className="h-6 w-6" style={{ color: brandColor }} />
                 <h2 className="text-2xl font-bold">
