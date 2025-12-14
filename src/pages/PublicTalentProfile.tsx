@@ -477,20 +477,6 @@ const PublicTalentProfile = () => {
               </CardContent>
             </Card>
 
-            {/* Bio */}
-            {talentProfile?.bio && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Biografía</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div 
-                    className="text-foreground/80 leading-relaxed prose prose-sm dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: talentProfile.bio || '' }}
-                  />
-                </CardContent>
-              </Card>
-            )}
 
             {/* Portfolio - Only show if there are portfolios */}
             {portfolios && portfolios.length > 0 && (
@@ -584,6 +570,21 @@ const PublicTalentProfile = () => {
                       </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Bio */}
+            {talentProfile?.bio && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Biografía</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div 
+                    className="text-foreground/80 leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: talentProfile.bio }}
+                  />
                 </CardContent>
               </Card>
             )}
