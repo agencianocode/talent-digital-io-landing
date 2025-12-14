@@ -488,18 +488,6 @@ const BusinessTalentProfile = () => {
               </CardContent>
             </Card>
 
-            {/* Bio */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Biografía</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div 
-                  className="text-muted-foreground leading-relaxed prose prose-sm dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: talentProfile?.bio || 'Sin biografía disponible' }}
-                />
-            </CardContent>
-          </Card>
 
 
             {/* Portfolio - Only show if there are portfolios */}
@@ -569,6 +557,21 @@ const BusinessTalentProfile = () => {
               </CardContent>
             </Card>
           )}
+
+            {/* Bio */}
+            {talentProfile?.bio && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Biografía</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div 
+                    className="text-muted-foreground leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: talentProfile.bio }}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Experience */}
           <Card>
