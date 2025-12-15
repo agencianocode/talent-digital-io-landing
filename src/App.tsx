@@ -89,6 +89,7 @@ const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const PublicOpportunity = lazy(() => import('./pages/PublicOpportunity'));
 const PublicCompany = lazy(() => import('./pages/PublicCompany'));
 const PublicAcademyDirectory = lazy(() => import('./pages/PublicAcademyDirectory'));
+const AcademyLandingPage = lazy(() => import('./pages/AcademyLandingPage'));
 const WelcomePage = lazy(() => import('./pages/WelcomePage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -185,6 +186,11 @@ function App() {
                       <Route path="/oportunidades-laborales" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <OpportunitiesLanding />
+                        </Suspense>
+                      } />
+                      <Route path="/academias" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <AcademyLandingPage />
                         </Suspense>
                       } />
 
