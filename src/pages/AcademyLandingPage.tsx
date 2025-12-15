@@ -1,4 +1,4 @@
-import { Users, Award, Briefcase, BarChart3, ShoppingBag, CheckCircle, Play, Handshake, ArrowRight } from 'lucide-react';
+import { Users, Award, Briefcase, BarChart3, ShoppingBag, CheckCircle, Play, ArrowRight } from 'lucide-react';
 import academyHeroMockups from '@/assets/academy-hero-mockups.png';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -8,49 +8,48 @@ const AcademyLandingPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header - Simplified */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <span className="text-xl font-bold tracking-tight">TalentoDigital.io</span>
+      {/* Header - Clean and minimal */}
+      <header className="absolute top-0 left-0 right-0 z-50">
+        <div className="container mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="flex items-center h-20">
+            <span className="text-xl font-semibold italic tracking-tight text-foreground">TalentoDigital.io</span>
           </div>
         </div>
       </header>
 
       {/* Hero Section - Two Columns */}
-      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        {/* Background decorative blobs */}
-        <div className="absolute top-20 right-0 w-96 h-96 bg-pink-200/30 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute bottom-0 right-40 w-72 h-72 bg-green-200/30 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute top-40 right-60 w-64 h-64 bg-blue-200/30 rounded-full blur-3xl -z-10"></div>
+      <section className="min-h-screen pt-20 pb-16 px-6 sm:px-8 lg:px-12 relative overflow-hidden flex items-center">
+        {/* Background decorative gradient blobs */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-pink-200/40 via-purple-200/30 to-transparent rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-20 right-20 w-[400px] h-[400px] bg-gradient-to-br from-teal-200/40 via-emerald-200/30 to-transparent rounded-full blur-3xl -z-10"></div>
+        <div className="absolute top-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-br from-blue-100/30 to-transparent rounded-full blur-3xl -z-10"></div>
         
         <div className="container mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Column - Text */}
             <div className="max-w-xl">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-[1.1]">
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-6xl font-bold tracking-tight mb-6 leading-[1.1] text-foreground">
                 Diferenciá tu academia con casos de éxito reales
               </h1>
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                Tu plataforma para mostrar el impacto de tu academia: directorio de talento verificado, 
-                oportunidades exclusivas y métricas de empleabilidad que demuestran resultados.
+              <p className="text-lg sm:text-xl text-muted-foreground mb-10 leading-relaxed">
+                TalentoDigital ayuda a academias de habilidades digitales a conectar a sus estudiantes y graduados con empresas reales, convirtiendo la formación en resultados visibles.
               </p>
-              <div className="flex flex-col sm:flex-row items-start gap-3 mb-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-5">
                 <Button 
                   size="lg" 
-                  className="w-full sm:w-auto text-base px-6 bg-yellow-400 hover:bg-yellow-500 text-black font-medium"
+                  className="h-14 px-8 text-base font-medium rounded-xl bg-gradient-to-r from-pink-300 via-pink-200 to-purple-200 hover:from-pink-400 hover:via-pink-300 hover:to-purple-300 text-foreground border-0 shadow-sm"
                   onClick={() => navigate('/register-academy')}
                 >
-                  <Handshake className="mr-2 h-5 w-5" />
+                  <span className="mr-2">👉</span>
                   Registrar mi academia gratis
                 </Button>
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="w-full sm:w-auto text-base px-6 border-foreground text-foreground hover:bg-foreground hover:text-background"
+                  className="h-14 px-8 text-base font-medium rounded-xl border-2 border-border bg-background hover:bg-muted/50"
                   onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}
                 >
-                  <Play className="mr-2 h-4 w-4" />
+                  <Play className="mr-2 h-4 w-4 fill-current" />
                   Ver Demo
                 </Button>
               </div>
@@ -64,7 +63,7 @@ const AcademyLandingPage = () => {
               <img 
                 src={academyHeroMockups} 
                 alt="TalentoDigital - Estadísticas de empleabilidad, directorio de talento y oportunidades"
-                className="w-full max-w-lg lg:max-w-xl xl:max-w-2xl h-auto"
+                className="w-full max-w-2xl lg:max-w-none lg:w-[140%] h-auto drop-shadow-2xl"
               />
             </div>
           </div>
