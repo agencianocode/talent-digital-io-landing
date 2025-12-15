@@ -87,7 +87,12 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
     }
   }, [newSkill, suggestions, localSkills]);
 
+  const MAX_SKILL_LENGTH = 30;
+
   const addSkill = useCallback((skill: string) => {
+    if (skill.length > MAX_SKILL_LENGTH) {
+      return;
+    }
     const currentSkills = form.getValues('skills');
     if (!currentSkills.includes(skill)) {
       const newSkills = [...currentSkills, skill];
@@ -169,13 +174,15 @@ export const SkillsAndExperienceStep: React.FC<SkillsAndExperienceStepProps> = (
               {/* Add Skill Input */}
               <div className="space-y-2">
                 <div className="flex gap-2">
-                  <div className="flex-1 relative">
+                  <div className="flex-1 relative space-y-1">
                     <Input
-                      placeholder="Ej: JavaScript, Marketing Digital, CRM..."
+                      placeholder="Ej: JavaScript, Marketing Digital (máx. 30 caracteres)"
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
                       onKeyPress={handleKeyPress}
+                      maxLength={30}
                     />
+                    <p className="text-xs text-muted-foreground text-right">{newSkill.length}/30</p>
                     
                     {/* Skill Suggestions Dropdown */}
                     {filteredSkills.length > 0 && (
