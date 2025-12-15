@@ -150,6 +150,24 @@ serve(async (req) => {
         accepted_at: now,
         updated_at: now
       };
+
+      // Si no tiene user_id pero tiene invited_email, buscar y asignar el user_id
+      if (!memberData.user_id && memberData.invited_email) {
+        console.log('🔍 Looking up user_id for invited_email:', memberData.invited_email);
+        
+        // Usar Admin API para buscar usuario por email
+        const { data: usersData } = await supabaseAdmin.auth.admin.listUsers();
+        const matchedUser = usersData?.users?.find(
+          (u: any) => u.email?.toLowerCase() === memberData.invited_email?.toLowerCase()
+        );
+        
+        if (matchedUser?.id) {
+          updateData.user_id = matchedUser.id;
+          console.log('✅ Found and assigning user_id:', matchedUser.id);
+        } else {
+          console.log('⚠️ No user found for email:', memberData.invited_email);
+        }
+      }
     }
 
     // Perform the update with admin privileges
@@ -171,18 +189,19 @@ serve(async (req) => {
     console.log('✅ Successfully updated:', updated);
 
     // If company is an academy and action is approve, update user role to academy_premium
-    if (action !== 'reject' && companyData.business_type === 'academy' && memberData.user_id) {
-      console.log('🎓 Company is an Academy - updating user role to academy_premium');
+    const finalUserId = updated?.user_id || memberData.user_id;
+    if (action !== 'reject' && companyData.business_type === 'academy' && finalUserId) {
+      console.log('🎓 Company is an Academy - updating user role to academy_premium for:', finalUserId);
       
       const { error: roleUpdateError } = await supabaseAdmin
         .from('user_roles')
         .update({ role: 'academy_premium' })
-        .eq('user_id', memberData.user_id);
+        .eq('user_id', finalUserId);
       
       if (roleUpdateError) {
         console.error('⚠️ Error updating user role to academy_premium:', roleUpdateError);
       } else {
-        console.log('✅ User role updated to academy_premium for user:', memberData.user_id);
+        console.log('✅ User role updated to academy_premium for user:', finalUserId);
       }
     }
 
