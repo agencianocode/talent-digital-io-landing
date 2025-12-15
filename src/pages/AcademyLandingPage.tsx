@@ -59,11 +59,11 @@ const AcademyLandingPage = () => {
             </div>
 
             {/* Right Column - Hero Image */}
-            <div className="relative flex justify-center lg:justify-end">
+            <div className="relative flex justify-end lg:translate-x-16">
               <img 
                 src={academyHeroMockups} 
                 alt="TalentoDigital - Estadísticas de empleabilidad, directorio de talento y oportunidades"
-                className="w-full max-w-2xl lg:max-w-none lg:w-[140%] h-auto drop-shadow-2xl"
+                className="w-full max-w-2xl lg:max-w-none lg:w-[130%] h-auto drop-shadow-2xl"
               />
             </div>
           </div>
