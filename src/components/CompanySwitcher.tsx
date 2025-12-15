@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Building, Crown, Shield, Eye, Plus, ChevronDown, Users, FileText } from 'lucide-react';
+import { Building, Crown, Shield, Eye, Plus, ChevronDown, Users, FileText, GraduationCap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,6 +46,12 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
     }
   };
 
+  const getCompanyTypeIcon = (businessType?: string) => {
+    if (businessType === 'academy') {
+      return <GraduationCap className="h-3 w-3 text-purple-500" />;
+    }
+    return <Building className="h-3 w-3 text-muted-foreground" />;
+  };
 
   if (isLoading) {
     return (
@@ -106,6 +112,7 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
                 <p className="text-sm font-medium">{activeCompany?.name || 'Seleccionar empresa'}</p>
                 {currentUserRole && (
                   <div className="flex items-center gap-1">
+                    {getCompanyTypeIcon(activeCompany?.business_type)}
                     {getRoleIcon(currentUserRole.role)}
                     <span className="text-xs text-muted-foreground capitalize">
                       {currentUserRole.role}
@@ -141,6 +148,7 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
                       {company.name}
                     </div>
                     <div className="flex items-center gap-1">
+                      {getCompanyTypeIcon(company.business_type)}
                       {getRoleIcon(userRole)}
                       <span className="text-xs text-muted-foreground capitalize">
                         {userRole}
