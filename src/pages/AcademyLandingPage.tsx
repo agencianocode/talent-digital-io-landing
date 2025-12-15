@@ -37,7 +37,7 @@ const AcademyLandingPage = () => {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-5">
                 <Button 
                   size="lg" 
-                  className="h-14 px-8 text-base font-medium rounded-xl bg-gradient-to-r from-pink-300 via-pink-200 to-purple-200 hover:from-pink-400 hover:via-pink-300 hover:to-purple-300 text-foreground border-0 shadow-sm"
+                  className="h-[51px] px-[30px] text-base font-bold rounded-xl bg-gradient-to-l from-[rgba(22,255,201,0.12)] to-[rgba(234,0,255,0.12)] hover:from-[rgba(22,255,201,0.2)] hover:to-[rgba(234,0,255,0.2)] text-foreground border-0"
                   onClick={() => navigate('/register-academy')}
                 >
                   <span className="mr-2">👉</span>
@@ -46,7 +46,7 @@ const AcademyLandingPage = () => {
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="h-14 px-8 text-base font-medium rounded-xl border-2 border-border bg-background hover:bg-muted/50"
+                  className="h-[51px] px-[30px] text-base font-bold rounded-xl border border-foreground/20 bg-transparent hover:bg-muted/30"
                   onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}
                 >
                   <Play className="mr-2 h-4 w-4 fill-current" />
