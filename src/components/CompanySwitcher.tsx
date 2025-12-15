@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Building, Crown, Shield, Eye, Plus, ChevronDown, Users, FileText, GraduationCap } from 'lucide-react';
+import { Building, Plus, ChevronDown, Users, FileText, GraduationCap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,22 +33,9 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'owner':
-        return <Crown className="h-3 w-3 text-yellow-500" />;
-      case 'admin':
-        return <Shield className="h-3 w-3 text-blue-500" />;
-      case 'viewer':
-        return <Eye className="h-3 w-3 text-gray-500" />;
-      default:
-        return <Building className="h-3 w-3" />;
-    }
-  };
-
   const getCompanyTypeIcon = (businessType?: string) => {
     if (businessType === 'academy') {
-      return <GraduationCap className="h-3 w-3 text-purple-500" />;
+      return <GraduationCap className="h-3 w-3 text-muted-foreground" />;
     }
     return <Building className="h-3 w-3 text-muted-foreground" />;
   };
@@ -113,7 +100,6 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
                 {currentUserRole && (
                   <div className="flex items-center gap-1">
                     {getCompanyTypeIcon(activeCompany?.business_type)}
-                    {getRoleIcon(currentUserRole.role)}
                     <span className="text-xs text-muted-foreground capitalize">
                       {currentUserRole.role}
                     </span>
@@ -149,7 +135,6 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
                     </div>
                     <div className="flex items-center gap-1">
                       {getCompanyTypeIcon(company.business_type)}
-                      {getRoleIcon(userRole)}
                       <span className="text-xs text-muted-foreground capitalize">
                         {userRole}
                       </span>
