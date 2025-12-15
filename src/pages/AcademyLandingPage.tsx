@@ -1,4 +1,5 @@
 import { Users, Award, Briefcase, BarChart3, ShoppingBag, CheckCircle, Play, Handshake, ArrowRight } from 'lucide-react';
+import academyHeroMockups from '@/assets/academy-hero-mockups.png';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -58,83 +59,13 @@ const AcademyLandingPage = () => {
               </p>
             </div>
 
-            {/* Right Column - Mockups Collage */}
-            <div className="relative h-[500px] lg:h-[550px]">
-              {/* Stats Card - Top Right */}
-              <div className="absolute top-0 right-0 w-72 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-20">
-                <div className="bg-muted/30 px-4 py-2 border-b border-border">
-                  <span className="text-sm font-medium">Estadísticas de Empleabilidad</span>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-foreground">256</div>
-                      <div className="text-xs text-muted-foreground">Estudiantes</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-foreground">148</div>
-                      <div className="text-xs text-muted-foreground">Graduados</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">58%</div>
-                      <div className="text-xs text-muted-foreground">Empleados</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Directory Card - Center */}
-              <div className="absolute top-24 left-0 w-80 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-10">
-                <div className="bg-muted/30 px-4 py-2 border-b border-border flex items-center justify-between">
-                  <span className="text-sm font-medium">Directorio de Talento</span>
-                  <span className="text-xs text-muted-foreground">12 perfiles</span>
-                </div>
-                <div className="p-3 space-y-2">
-                  {[
-                    { name: 'Tayshaun Edwards', role: 'Full Stack Developer', color: 'bg-purple-100' },
-                    { name: 'Joyce Ruiz Padilla', role: 'UX Designer', color: 'bg-pink-100' },
-                    { name: 'Ricardo Quesada', role: 'Data Analyst', color: 'bg-blue-100' },
-                  ].map((person, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className={`w-10 h-10 rounded-full ${person.color} flex items-center justify-center text-sm font-medium`}>
-                        {person.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{person.name}</div>
-                        <div className="text-xs text-muted-foreground truncate">{person.role}</div>
-                      </div>
-                      <div className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
-                        Verificado
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Opportunity Card - Bottom Right */}
-              <div className="absolute bottom-0 right-8 w-72 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-30">
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-sm">
-                        TC
-                      </div>
-                      <div>
-                        <div className="font-semibold text-sm">Closer de Ventas</div>
-                        <div className="text-xs text-muted-foreground">TechCorp • Remoto</div>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
-                      Activo
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="px-2 py-1 bg-muted rounded">Ventas</span>
-                    <span className="px-2 py-1 bg-muted rounded">B2B</span>
-                    <span className="px-2 py-1 bg-muted rounded">SaaS</span>
-                  </div>
-                </div>
-              </div>
+            {/* Right Column - Hero Image */}
+            <div className="relative flex justify-center lg:justify-end">
+              <img 
+                src={academyHeroMockups} 
+                alt="TalentoDigital - Estadísticas de empleabilidad, directorio de talento y oportunidades"
+                className="w-full max-w-lg lg:max-w-xl xl:max-w-2xl h-auto"
+              />
             </div>
           </div>
         </div>
