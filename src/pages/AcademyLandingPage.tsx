@@ -1,4 +1,4 @@
-import { ArrowRight, Users, Award, Briefcase, BarChart3, ShoppingBag, CheckCircle } from 'lucide-react';
+import { Users, Award, Briefcase, BarChart3, ShoppingBag, CheckCircle, Play, Handshake, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,88 +7,131 @@ const AcademyLandingPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Header - Simplified */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold tracking-tight">TalentoDigital</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Funcionalidades</a>
-              <a href="#stats" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Resultados</a>
-              <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contacto</a>
-            </nav>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
-                Iniciar Sesión
-              </Button>
-              <Button size="sm" onClick={() => navigate('/register-academy')}>
-                Comenzar Gratis
-              </Button>
-            </div>
+          <div className="flex items-center h-16">
+            <span className="text-xl font-bold tracking-tight">TalentoDigital.io</span>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-tight">
-              Diferenciá tu academia con
-              <br />
-              <span className="text-primary">casos de éxito reales</span>
-            </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Tu plataforma para mostrar el impacto de tu academia: directorio de talento verificado, 
-              oportunidades exclusivas y métricas de empleabilidad que demuestran resultados.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="w-full sm:w-auto text-base px-8" onClick={() => navigate('/register-academy')}>
-                Comenzar Gratis
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-base px-8" onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}>
-                Agendar Demo
-              </Button>
+      {/* Hero Section - Two Columns */}
+      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Background decorative blobs */}
+        <div className="absolute top-20 right-0 w-96 h-96 bg-pink-200/30 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-0 right-40 w-72 h-72 bg-green-200/30 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute top-40 right-60 w-64 h-64 bg-blue-200/30 rounded-full blur-3xl -z-10"></div>
+        
+        <div className="container mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left Column - Text */}
+            <div className="max-w-xl">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-[1.1]">
+                Diferenciá tu academia con casos de éxito reales
+              </h1>
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                Tu plataforma para mostrar el impacto de tu academia: directorio de talento verificado, 
+                oportunidades exclusivas y métricas de empleabilidad que demuestran resultados.
+              </p>
+              <div className="flex flex-col sm:flex-row items-start gap-3 mb-4">
+                <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto text-base px-6 bg-yellow-400 hover:bg-yellow-500 text-black font-medium"
+                  onClick={() => navigate('/register-academy')}
+                >
+                  <Handshake className="mr-2 h-5 w-5" />
+                  Registrar mi academia gratis
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="w-full sm:w-auto text-base px-6 border-foreground text-foreground hover:bg-foreground hover:text-background"
+                  onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}
+                >
+                  <Play className="mr-2 h-4 w-4" />
+                  Ver Demo
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Exclusivo para academias de habilidades digitales. Servicio Gratuito de TalentoDigital
+              </p>
             </div>
-          </div>
 
-          {/* Hero Mockup */}
-          <div className="relative mt-12">
-            <div className="bg-gradient-to-b from-muted/50 to-transparent rounded-2xl p-4 sm:p-8">
-              <div className="bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
-                <div className="bg-muted/30 px-4 py-3 border-b border-border flex items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-destructive/60"></div>
-                    <div className="w-3 h-3 rounded-full bg-muted-foreground/40"></div>
-                    <div className="w-3 h-3 rounded-full bg-muted-foreground/40"></div>
-                  </div>
-                  <span className="text-xs text-muted-foreground ml-4">talentodigital.io/academy/tu-academia</span>
+            {/* Right Column - Mockups Collage */}
+            <div className="relative h-[500px] lg:h-[550px]">
+              {/* Stats Card - Top Right */}
+              <div className="absolute top-0 right-0 w-72 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-20">
+                <div className="bg-muted/30 px-4 py-2 border-b border-border">
+                  <span className="text-sm font-medium">Estadísticas de Empleabilidad</span>
                 </div>
-                <div className="p-6 sm:p-8">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    {[
-                      { icon: Users, label: 'Estudiantes', value: '256' },
-                      { icon: Award, label: 'Graduados', value: '148' },
-                      { icon: Briefcase, label: 'Empleados', value: '58%' },
-                    ].map((stat, i) => (
-                      <div key={i} className="bg-muted/30 rounded-lg p-4 text-center">
-                        <stat.icon className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-                        <div className="text-2xl font-bold">{stat.value}</div>
-                        <div className="text-sm text-muted-foreground">{stat.label}</div>
-                      </div>
-                    ))}
+                <div className="p-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-foreground">256</div>
+                      <div className="text-xs text-muted-foreground">Estudiantes</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-foreground">148</div>
+                      <div className="text-xs text-muted-foreground">Graduados</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-primary">58%</div>
+                      <div className="text-xs text-muted-foreground">Empleados</div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="bg-muted/20 rounded-lg p-4 flex flex-col items-center">
-                        <div className="w-12 h-12 rounded-full bg-muted mb-2"></div>
-                        <div className="h-3 w-16 bg-muted rounded mb-1"></div>
-                        <div className="h-2 w-12 bg-muted/60 rounded"></div>
+                </div>
+              </div>
+
+              {/* Directory Card - Center */}
+              <div className="absolute top-24 left-0 w-80 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-10">
+                <div className="bg-muted/30 px-4 py-2 border-b border-border flex items-center justify-between">
+                  <span className="text-sm font-medium">Directorio de Talento</span>
+                  <span className="text-xs text-muted-foreground">12 perfiles</span>
+                </div>
+                <div className="p-3 space-y-2">
+                  {[
+                    { name: 'Tayshaun Edwards', role: 'Full Stack Developer', color: 'bg-purple-100' },
+                    { name: 'Joyce Ruiz Padilla', role: 'UX Designer', color: 'bg-pink-100' },
+                    { name: 'Ricardo Quesada', role: 'Data Analyst', color: 'bg-blue-100' },
+                  ].map((person, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className={`w-10 h-10 rounded-full ${person.color} flex items-center justify-center text-sm font-medium`}>
+                        {person.name.split(' ').map(n => n[0]).join('')}
                       </div>
-                    ))}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">{person.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">{person.role}</div>
+                      </div>
+                      <div className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
+                        Verificado
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Opportunity Card - Bottom Right */}
+              <div className="absolute bottom-0 right-8 w-72 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-30">
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-sm">
+                        TC
+                      </div>
+                      <div>
+                        <div className="font-semibold text-sm">Closer de Ventas</div>
+                        <div className="text-xs text-muted-foreground">TechCorp • Remoto</div>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
+                      Activo
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="px-2 py-1 bg-muted rounded">Ventas</span>
+                    <span className="px-2 py-1 bg-muted rounded">B2B</span>
+                    <span className="px-2 py-1 bg-muted rounded">SaaS</span>
                   </div>
                 </div>
               </div>
