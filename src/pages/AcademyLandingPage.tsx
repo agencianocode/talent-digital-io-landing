@@ -37,16 +37,15 @@ const AcademyLandingPage = () => {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-5">
                 <Button 
                   size="lg" 
-                  className="h-[51px] px-[30px] text-base font-bold rounded-xl bg-gradient-to-l from-[rgba(22,255,201,0.12)] to-[rgba(234,0,255,0.12)] hover:from-[rgba(22,255,201,0.2)] hover:to-[rgba(234,0,255,0.2)] text-foreground border-0"
+                  className="h-[51px] px-[30px] text-base font-bold rounded-xl bg-gradient-to-l from-[rgba(22,255,201,0.12)] to-[rgba(234,0,255,0.12)] hover:from-[rgba(22,255,201,0.2)] hover:to-[rgba(234,0,255,0.2)] text-foreground border-2 border-black/40"
                   onClick={() => navigate('/register-academy')}
                 >
                   <span className="mr-2">👉</span>
                   Registrar mi academia gratis
                 </Button>
                 <Button 
-                  variant="outline" 
                   size="lg" 
-                  className="h-[51px] px-[30px] text-base font-bold rounded-xl border border-foreground/20 bg-transparent hover:bg-muted/30"
+                  className="h-[51px] px-[30px] text-base font-bold rounded-xl bg-gradient-to-l from-[rgba(22,255,201,0.12)] to-[rgba(234,0,255,0.12)] hover:from-[rgba(22,255,201,0.2)] hover:to-[rgba(234,0,255,0.2)] text-foreground border-2 border-black/40"
                   onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}
                 >
                   <Play className="mr-2 h-4 w-4 fill-current" />
