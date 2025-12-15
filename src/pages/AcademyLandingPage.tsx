@@ -20,9 +20,9 @@ const AcademyLandingPage = () => {
       {/* Hero Section - Two Columns */}
       <section className="min-h-screen pt-20 pb-16 px-6 sm:px-8 lg:px-12 relative overflow-hidden flex items-center">
         {/* Background decorative gradient blobs */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-pink-200/40 via-purple-200/30 to-transparent rounded-full blur-3xl -z-10"></div>
-        <div className="absolute bottom-20 right-20 w-[400px] h-[400px] bg-gradient-to-br from-teal-200/40 via-emerald-200/30 to-transparent rounded-full blur-3xl -z-10"></div>
-        <div className="absolute top-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-br from-blue-100/30 to-transparent rounded-full blur-3xl -z-10"></div>
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-muted via-secondary/50 to-transparent rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-20 right-20 w-[400px] h-[400px] bg-gradient-to-br from-muted via-secondary/30 to-transparent rounded-full blur-3xl -z-10"></div>
+        <div className="absolute top-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-br from-secondary/40 to-transparent rounded-full blur-3xl -z-10"></div>
         
         <div className="container mx-auto max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -37,7 +37,7 @@ const AcademyLandingPage = () => {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-5">
                 <Button 
                   size="lg" 
-                  className="h-14 px-8 text-base font-medium rounded-xl bg-gradient-to-r from-pink-300 via-pink-200 to-purple-200 hover:from-pink-400 hover:via-pink-300 hover:to-purple-300 text-foreground border-0 shadow-sm"
+                  className="h-14 px-8 text-base font-medium rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-sm"
                   onClick={() => navigate('/register-academy')}
                 >
                   <span className="mr-2">👉</span>
