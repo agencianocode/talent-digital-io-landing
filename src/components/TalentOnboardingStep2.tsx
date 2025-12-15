@@ -66,8 +66,13 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
   };
 
   // Funciones para manejar habilidades
+  const MAX_SKILL_LENGTH = 30;
+
   const addSkill = () => {
     const trimmedSkill = skillInput.trim();
+    if (trimmedSkill.length > MAX_SKILL_LENGTH) {
+      return;
+    }
     if (trimmedSkill && skills.length < 3 && !skills.includes(trimmedSkill)) {
       setSkills([...skills, trimmedSkill]);
       setSkillInput('');
@@ -291,14 +296,18 @@ const TalentOnboardingStep2 = ({ onComplete, initialData }: TalentOnboardingStep
           {/* Input para agregar habilidades */}
           {skills.length < 3 && (
             <div className="flex gap-2">
-              <Input
-                type="text"
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyPress={handleSkillKeyPress}
-                placeholder="Añade una habilidad personalizada"
-                className="flex-1 h-11 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white"
-              />
+              <div className="flex-1 space-y-1">
+                <Input
+                  type="text"
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyPress={handleSkillKeyPress}
+                  placeholder="Añade una habilidad (máx. 30 caracteres)"
+                  maxLength={30}
+                  className="h-11 text-base border border-gray-300 rounded-lg px-4 focus:border-gray-400 focus:ring-0 font-['Inter'] bg-white"
+                />
+                <p className="text-xs text-gray-400 text-right font-['Inter']">{skillInput.length}/30</p>
+              </div>
               <Button
                 type="button"
                 onClick={addSkill}

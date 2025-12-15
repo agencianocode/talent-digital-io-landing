@@ -252,9 +252,16 @@ const TalentEditProfile = () => {
     }
   };
 
+  const MAX_SKILL_LENGTH = 30;
+
   const handleAddSkill = () => {
-    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
-      const updatedSkills = [...skills, newSkill.trim()];
+    const trimmedSkill = newSkill.trim();
+    if (trimmedSkill.length > MAX_SKILL_LENGTH) {
+      toast.error(`La habilidad no puede tener más de ${MAX_SKILL_LENGTH} caracteres`);
+      return;
+    }
+    if (trimmedSkill && !skills.includes(trimmedSkill)) {
+      const updatedSkills = [...skills, trimmedSkill];
       setSkills(updatedSkills);
       setFormData(prev => ({ ...prev, skills: updatedSkills }));
       setNewSkill('');
@@ -646,13 +653,17 @@ const TalentEditProfile = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
-                <Input
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  placeholder="Agregar habilidad"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
-                />
-                <Button type="button" onClick={handleAddSkill} size="sm">
+                <div className="flex-1 space-y-1">
+                  <Input
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    placeholder="Agregar habilidad (máx. 30 caracteres)"
+                    maxLength={30}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
+                  />
+                  <p className="text-xs text-muted-foreground text-right">{newSkill.length}/30</p>
+                </div>
+                <Button type="button" onClick={handleAddSkill} size="sm" disabled={newSkill.trim().length === 0}>
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>

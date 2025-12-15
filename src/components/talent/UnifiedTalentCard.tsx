@@ -130,8 +130,13 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
         {skills.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
             {visibleSkills.map((skill, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {skill}
+              <Badge 
+                key={index} 
+                variant="secondary" 
+                className="text-xs max-w-[150px] truncate"
+                title={skill}
+              >
+                {skill.length > 25 ? `${skill.substring(0, 25)}...` : skill}
               </Badge>
             ))}
             {remainingSkills > 0 && (
