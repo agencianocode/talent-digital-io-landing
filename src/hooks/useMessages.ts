@@ -56,7 +56,7 @@ export interface SendMessageData {
   file_size?: number;
 }
 
-export const useMessages = () => {
+export const useMessages = (companyId?: string) => {
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -72,17 +72,18 @@ export const useMessages = () => {
     });
   }, [conversations]);
 
-  // Load conversations on mount and setup realtime subscription
+  // Load conversations on mount, when companyId changes, and setup realtime subscription
   useEffect(() => {
     if (!user) return;
     
+    console.log('[useMessages] Company changed to:', companyId, '- reloading conversations');
     loadConversations();
     loadUnreadCount();
     
       // Setup Realtime subscription for new messages (both as sender and recipient)
       console.log('[useMessages] Setting up Realtime subscription for messages');
       const messagesSubscription = supabase
-        .channel('messages_channel')
+        .channel(`messages_channel_${companyId || 'all'}`)
         .on(
           'postgres_changes',
           {
@@ -93,6 +94,12 @@ export const useMessages = () => {
           },
           (payload) => {
             console.log('[useMessages] New message received via Realtime:', payload);
+            // Check if message is for the current company
+            const newMessage = payload.new as any;
+            if (companyId && newMessage.company_id && newMessage.company_id !== companyId) {
+              console.log('[useMessages] Message for different company, skipping');
+              return;
+            }
             loadConversations();
             loadUnreadCount();
           }
@@ -115,7 +122,7 @@ export const useMessages = () => {
 
     // Setup Realtime subscription for conversation overrides
     const overridesSubscription = supabase
-      .channel('conversation_overrides_channel')
+      .channel(`conversation_overrides_channel_${companyId || 'all'}`)
       .on(
         'postgres_changes',
         {
@@ -153,7 +160,7 @@ export const useMessages = () => {
       clearInterval(interval);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, companyId]);
 
 
   // Fetch messages for a conversation
@@ -211,7 +218,7 @@ export const useMessages = () => {
     }
   }, [toast]);
 
-  // Fetch conversations for a user
+  // Fetch conversations for a user, filtered by company_id
   const fetchConversations = useCallback(async (): Promise<Conversation[]> => {
     if (!user) return [];
 
@@ -219,12 +226,20 @@ export const useMessages = () => {
       setIsLoading(true);
       
       // Get all messages where user is sender or recipient
-      console.log('[fetchConversations] Fetching messages for user:', user.id);
-      const { data: messages, error } = await supabase
+      console.log('[fetchConversations] Fetching messages for user:', user.id, 'company:', companyId);
+      
+      // Build query with company_id filter
+      let query = supabase
         .from('messages' as any)
         .select('*')
-        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
+      
+      // Filter by company_id if provided
+      if (companyId) {
+        query = query.or(`company_id.eq.${companyId},company_id.is.null`);
+      }
+      
+      const { data: messages, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('[fetchConversations] Error fetching messages:', error);
@@ -380,7 +395,7 @@ export const useMessages = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, companyId]);
 
   // Send a message
   const sendMessage = useCallback(async (messageData: SendMessageData): Promise<Message | null> => {
@@ -584,16 +599,23 @@ export const useMessages = () => {
     if (!user) return 0;
 
     try {
-      console.log('[getUnreadCount] Fetching unread count for user:', user.id);
+      console.log('[getUnreadCount] Fetching unread count for user:', user.id, 'company:', companyId);
       
-      // Get unique conversation IDs with unread messages (excluding welcome messages)
-      const { data: unreadMessages, error: messagesError } = await supabase
+      // Build query with company_id filter
+      let query = supabase
         .from('messages' as any)
         .select('conversation_id, label')
         .eq('recipient_id', user.id)
         .eq('is_read', false)
         .neq('label', 'welcome') // Exclude welcome messages from system
         .not('archived_by', 'cs', `{${user.id}}`);
+      
+      // Filter by company_id if provided
+      if (companyId) {
+        query = query.or(`company_id.eq.${companyId},company_id.is.null`);
+      }
+      
+      const { data: unreadMessages, error: messagesError } = await query;
 
       if (messagesError) throw messagesError;
 
@@ -639,7 +661,7 @@ export const useMessages = () => {
       console.error('Error getting unread count:', error);
       return 0;
     }
-  }, [user]);
+  }, [user, companyId]);
 
   // Load conversations
   const loadConversations = useCallback(async () => {

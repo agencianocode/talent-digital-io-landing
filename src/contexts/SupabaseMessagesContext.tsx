@@ -1,12 +1,17 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useMessages as useMessagesHook } from '@/hooks/useMessages';
+import { useCompany } from '@/contexts/CompanyContext';
 
 type MessagesContextType = ReturnType<typeof useMessagesHook>;
 
 const SupabaseMessagesContext = createContext<MessagesContextType | undefined>(undefined);
 
 export const SupabaseMessagesProvider = ({ children }: { children: ReactNode }) => {
-  const messages = useMessagesHook();
+  // Get active company from context to filter messages per workspace
+  const { activeCompany } = useCompany();
+  
+  // Pass the active company ID to the messages hook
+  const messages = useMessagesHook(activeCompany?.id);
   
   return (
     <SupabaseMessagesContext.Provider value={messages}>

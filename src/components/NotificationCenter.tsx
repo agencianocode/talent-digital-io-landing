@@ -1,8 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useCompany } from '@/contexts/CompanyContext';
 
 const NotificationCenter = () => {
-  const { unreadCount } = useNotifications();
+  const { activeCompany } = useCompany();
+  const { unreadCount } = useNotifications(activeCompany?.id);
 
   if (unreadCount === 0) return null;
 
