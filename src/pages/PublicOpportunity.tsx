@@ -213,44 +213,60 @@ const PublicOpportunity = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
-        <div className="mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-24 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-24 py-4 sm:py-6">
+          {/* Mobile: Back button on top */}
+          {user && (
+            <div className="mb-3 sm:hidden">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/talent-dashboard/opportunities')}
+                className="px-0"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver al Dashboard
+              </Button>
+            </div>
+          )}
+          
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* Desktop: Back button inline */}
               {user && (
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => navigate('/talent-dashboard/opportunities')}
+                  className="hidden sm:flex"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Volver al Dashboard
                 </Button>
               )}
-              <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={opportunity.companies?.logo_url} />
-                  <AvatarFallback>
-                    <Building2 className="h-6 w-6" />
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{opportunity.title}</h1>
-                  <p className="text-gray-600">{opportunity.companies?.name}</p>
-                </div>
+              <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
+                <AvatarImage src={opportunity.companies?.logo_url} />
+                <AvatarFallback>
+                  <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{opportunity.title}</h1>
+                <p className="text-sm sm:text-base text-gray-600">{opportunity.companies?.name}</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleShare('whatsapp')}
+                className="flex-1 sm:flex-none"
               >
                 <Share2 className="h-4 w-4 mr-2" />
                 Compartir
               </Button>
-              <Button onClick={handleApply}>
-                {user ? 'Aplicar Ahora' : 'Regístrate para Aplicar'}
+              <Button onClick={handleApply} className="flex-1 sm:flex-none text-sm sm:text-base">
+                {user ? 'Aplicar' : 'Regístrate'}
               </Button>
             </div>
           </div>
