@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from 'date-fns';
+import { stripHtml } from '@/lib/utils';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import AdminCompanyFilters from '@/components/admin/AdminCompanyFilters';
@@ -265,7 +266,7 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
                       
                       {company.description && (
                         <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-2">
-                          {company.description}
+                          {stripHtml(company.description)}
                         </p>
                       )}
                       
