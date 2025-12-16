@@ -335,7 +335,7 @@ const PublicCompany = () => {
                 <CardTitle>Beneficios que ofrece la empresa</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 whitespace-pre-wrap">{company.benefits}</p>
+                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: company.benefits }} />
               </CardContent>
             </Card>
           )}
@@ -347,7 +347,7 @@ const PublicCompany = () => {
                 <CardTitle>Cultura de trabajo</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 whitespace-pre-wrap">{company.work_culture}</p>
+                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: company.work_culture }} />
               </CardContent>
             </Card>
           )}
@@ -359,7 +359,7 @@ const PublicCompany = () => {
                 <CardTitle>Impacto del negocio</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 whitespace-pre-wrap">{company.business_impact}</p>
+                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: company.business_impact }} />
               </CardContent>
             </Card>
           )}
@@ -371,7 +371,7 @@ const PublicCompany = () => {
                 <CardTitle>Valores del equipo</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 whitespace-pre-wrap">{company.team_values}</p>
+                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: company.team_values }} />
               </CardContent>
             </Card>
           )}
