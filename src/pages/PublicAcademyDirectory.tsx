@@ -23,6 +23,11 @@ interface Graduate {
   bio?: string | null;
   linkedin?: string | null;
   skills?: string[];
+  // Extended profile data for sorting
+  video_presentation_url?: string | null;
+  education_count?: number;
+  experience_count?: number;
+  social_links_count?: number;
 }
 
 interface AcademyInfo {
@@ -149,28 +154,39 @@ export default function PublicAcademyDirectory() {
       console.log('🚫 Hidden (pending/inactive):', pendingOrInactive);
       console.log('🚫 Hidden (incomplete onboarding - no real name or photo):', incompleteOnboarding);
 
-      // Obtener skills de talent_profiles para los estudiantes visibles
-      // Función para calcular completitud del perfil
+      // Función para calcular completitud expandida del perfil
       const calculateProfileCompleteness = (student: Graduate): number => {
         let score = 0;
         
-        // Tiene nombre real (no solo email)
-        if (student.student_name && !student.student_name.includes('@')) score += 20;
+        // Nombre real (10 pts)
+        if (student.student_name && !student.student_name.includes('@')) score += 10;
         
-        // Tiene foto de perfil
-        if (student.avatar_url) score += 20;
+        // Foto de perfil (15 pts)
+        if (student.avatar_url) score += 15;
         
-        // Tiene título profesional
-        if (student.title) score += 20;
+        // Título profesional (15 pts)
+        if (student.title) score += 15;
         
-        // Tiene ubicación
-        if (student.city || student.country) score += 15;
+        // Ubicación (10 pts)
+        if (student.city || student.country) score += 10;
         
-        // Tiene bio
-        if (student.bio && student.bio.length > 0) score += 15;
+        // Bio (10 pts)
+        if (student.bio && student.bio.length > 0) score += 10;
         
-        // Tiene skills
-        if (student.skills && student.skills.length > 0) score += 10;
+        // Skills - al menos 3 (10 pts)
+        if (student.skills && student.skills.length >= 3) score += 10;
+        
+        // Video presentación (10 pts)
+        if (student.video_presentation_url) score += 10;
+        
+        // Experiencia laboral - al menos 1 (10 pts)
+        if (student.experience_count && student.experience_count >= 1) score += 10;
+        
+        // Educación - al menos 1 (5 pts)
+        if (student.education_count && student.education_count >= 1) score += 5;
+        
+        // Redes sociales - al menos 1 (5 pts)
+        if (student.social_links_count && student.social_links_count >= 1) score += 5;
         
         return score;
       };
@@ -184,25 +200,61 @@ export default function PublicAcademyDirectory() {
         const userIds = visibleStudents.map((s: Graduate) => s.user_id).filter(Boolean) as string[];
         
         if (userIds.length > 0) {
-          const { data: talentProfilesData } = await supabase
-            .from('talent_profiles')
-            .select('user_id, skills')
-            .in('user_id', userIds);
+          // Fetch all extended profile data in parallel
+          const [
+            talentProfilesResult,
+            educationResult,
+            experienceResult,
+            socialLinksResult
+          ] = await Promise.all([
+            supabase
+              .from('talent_profiles')
+              .select('user_id, skills, video_presentation_url')
+              .in('user_id', userIds),
+            supabase
+              .from('talent_education')
+              .select('user_id')
+              .in('user_id', userIds),
+            supabase
+              .from('talent_experiences')
+              .select('user_id')
+              .in('user_id', userIds),
+            supabase
+              .from('talent_social_links')
+              .select('user_id')
+              .in('user_id', userIds)
+          ]);
 
-          if (talentProfilesData) {
-            // Agregar skills a cada estudiante
-            const studentsWithSkills = visibleStudents.map((student: Graduate) => {
-              const talentProfile = talentProfilesData.find(tp => tp.user_id === student.user_id);
-              return {
-                ...student,
-                skills: talentProfile?.skills || []
-              };
-            });
-            
-            setGraduates(sortByCompleteness(studentsWithSkills));
-          } else {
-            setGraduates(sortByCompleteness(visibleStudents));
-          }
+          // Count records per user
+          const educationCounts = new Map<string, number>();
+          (educationResult.data || []).forEach((e) => {
+            educationCounts.set(e.user_id, (educationCounts.get(e.user_id) || 0) + 1);
+          });
+
+          const experienceCounts = new Map<string, number>();
+          (experienceResult.data || []).forEach((e) => {
+            experienceCounts.set(e.user_id, (experienceCounts.get(e.user_id) || 0) + 1);
+          });
+
+          const socialLinksCounts = new Map<string, number>();
+          (socialLinksResult.data || []).forEach((s) => {
+            socialLinksCounts.set(s.user_id, (socialLinksCounts.get(s.user_id) || 0) + 1);
+          });
+
+          // Combine all data
+          const studentsWithAllData = visibleStudents.map((student: Graduate) => {
+            const talentProfile = (talentProfilesResult.data || []).find(tp => tp.user_id === student.user_id);
+            return {
+              ...student,
+              skills: talentProfile?.skills || [],
+              video_presentation_url: talentProfile?.video_presentation_url,
+              education_count: educationCounts.get(student.user_id || '') || 0,
+              experience_count: experienceCounts.get(student.user_id || '') || 0,
+              social_links_count: socialLinksCounts.get(student.user_id || '') || 0
+            };
+          });
+          
+          setGraduates(sortByCompleteness(studentsWithAllData));
         } else {
           setGraduates(sortByCompleteness(visibleStudents));
         }
