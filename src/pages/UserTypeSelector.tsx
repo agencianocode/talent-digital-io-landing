@@ -1,15 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-
 const UserTypeSelector = () => {
   const navigate = useNavigate();
-
-  return (
-    <div className="h-[100dvh] sm:min-h-screen sm:h-auto bg-background flex items-center justify-center px-4 py-4 sm:py-12">
+  return <div className="h-[100dvh] sm:min-h-screen sm:h-auto bg-background flex items-center justify-center px-4 py-4 sm:py-12">
       <div className="max-w-2xl w-full text-center space-y-3 sm:space-y-6 md:space-y-8">
         <div>
           <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-1 sm:mb-4">
-            ¿Qué buscas?
+            ¿Qué estás buscando hoy?
           </h1>
           <p className="text-sm sm:text-lg md:text-xl text-muted-foreground mb-3 sm:mb-8 md:mb-12 px-2">
             Selecciona el tipo de cuenta que mejor se adapte a tus necesidades
@@ -18,10 +15,7 @@ const UserTypeSelector = () => {
         
         <div className="grid sm:grid-cols-2 gap-3 sm:gap-6">
           {/* Business Card */}
-          <div 
-            className="p-3 sm:p-6 md:p-8 rounded-2xl cursor-pointer transition-all group border border-border bg-background hover:bg-[#f4e8ff] active:bg-[#f4e8ff]/80 shadow-md hover:shadow-lg active:shadow-md touch-manipulation"
-            onClick={() => navigate('/register-business')}
-          >
+          <div className="p-3 sm:p-6 md:p-8 rounded-2xl cursor-pointer transition-all group border border-border bg-background hover:bg-[#f4e8ff] active:bg-[#f4e8ff]/80 shadow-md hover:shadow-lg active:shadow-md touch-manipulation" onClick={() => navigate('/register-business')}>
             <div className="text-center space-y-2 sm:space-y-4">
               <div className="w-10 h-10 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4">
                 <svg className="w-5 h-5 sm:w-8 sm:h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,10 +32,7 @@ const UserTypeSelector = () => {
           </div>
 
           {/* Talent Card */}
-          <div 
-            className="p-3 sm:p-6 md:p-8 rounded-2xl cursor-pointer transition-all group border border-border bg-background hover:bg-[#f4e8ff] active:bg-[#f4e8ff]/80 shadow-md hover:shadow-lg active:shadow-md touch-manipulation"
-            onClick={() => navigate('/register-talent')}
-          >
+          <div className="p-3 sm:p-6 md:p-8 rounded-2xl cursor-pointer transition-all group border border-border bg-background hover:bg-[#f4e8ff] active:bg-[#f4e8ff]/80 shadow-md hover:shadow-lg active:shadow-md touch-manipulation" onClick={() => navigate('/register-talent')}>
             <div className="text-center space-y-2 sm:space-y-4">
               <div className="w-10 h-10 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4">
                 <svg className="w-5 h-5 sm:w-8 sm:h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,17 +51,11 @@ const UserTypeSelector = () => {
 
         <div className="pt-3 sm:pt-6 border-t border-border">
           <p className="text-xs sm:text-base text-muted-foreground mb-2 sm:mb-4">¿Ya tienes una cuenta?</p>
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/auth')}
-            className="w-full max-w-sm text-sm sm:text-lg py-2.5 sm:py-4 h-auto font-semibold"
-          >
+          <Button variant="outline" onClick={() => navigate('/auth')} className="w-full max-w-sm text-sm sm:text-lg py-2.5 sm:py-4 h-auto font-semibold">
             Iniciar Sesión
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default UserTypeSelector;
