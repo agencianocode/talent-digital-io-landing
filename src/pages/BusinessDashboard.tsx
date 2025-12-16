@@ -150,9 +150,11 @@ const BusinessDashboard = () => {
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
                     Hola {userProfile?.full_name || 'Usuario'}! 👋
                   </h1>
-                  <p className="text-sm sm:text-base text-slate-600 mt-1">
-                    {customization?.banner_welcome_text || 'Empezá a construir tu equipo en TalentoDigital.io'}
-                  </p>
+                  {(customization?.banner_show_welcome_text !== false) && (
+                    <p className="text-sm sm:text-base text-slate-600 mt-1">
+                      {customization?.banner_welcome_text || 'Empezá a construir tu equipo en TalentoDigital.io'}
+                    </p>
+                  )}
                 </div>
               </div>
               

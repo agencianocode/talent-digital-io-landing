@@ -190,6 +190,7 @@ export type Database = {
           banner_call_url: string | null
           banner_show_call_button: boolean | null
           banner_show_video: boolean | null
+          banner_show_welcome_text: boolean | null
           banner_video_url: string | null
           banner_welcome_text: string | null
           contact_email: string | null
@@ -228,6 +229,7 @@ export type Database = {
           banner_call_url?: string | null
           banner_show_call_button?: boolean | null
           banner_show_video?: boolean | null
+          banner_show_welcome_text?: boolean | null
           banner_video_url?: string | null
           banner_welcome_text?: string | null
           contact_email?: string | null
@@ -266,6 +268,7 @@ export type Database = {
           banner_call_url?: string | null
           banner_show_call_button?: boolean | null
           banner_show_video?: boolean | null
+          banner_show_welcome_text?: boolean | null
           banner_video_url?: string | null
           banner_welcome_text?: string | null
           contact_email?: string | null

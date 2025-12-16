@@ -107,9 +107,11 @@ const AdminBannerSettings: React.FC = () => {
                   <h2 className="text-2xl font-bold text-slate-900 mb-2">
                     Hola Usuario! 👋
                   </h2>
-                  <p className="text-base text-slate-600">
-                    {getValue('banner_welcome_text')}
-                  </p>
+                  {getValue('banner_show_welcome_text') && (
+                    <p className="text-base text-slate-600">
+                      {getValue('banner_welcome_text')}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -212,6 +214,21 @@ const AdminBannerSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Mostrar texto de bienvenida</Label>
+              <p className="text-sm text-muted-foreground">
+                Activa o desactiva el mensaje de bienvenida en el banner
+              </p>
+            </div>
+            <div className="switch-mobile-oval">
+              <Switch
+                checked={getValue('banner_show_welcome_text')}
+                onCheckedChange={(checked) => handleChange('banner_show_welcome_text', checked)}
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="banner_welcome_text">Mensaje de Bienvenida</Label>
             <Input
@@ -220,6 +237,7 @@ const AdminBannerSettings: React.FC = () => {
               onChange={(e) => handleChange('banner_welcome_text', e.target.value)}
               placeholder="Empezá a construir tu equipo..."
               maxLength={100}
+              disabled={!getValue('banner_show_welcome_text')}
             />
             <p className="text-xs text-muted-foreground">
               {getValue('banner_welcome_text').length}/100 caracteres

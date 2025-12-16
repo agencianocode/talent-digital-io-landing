@@ -38,6 +38,7 @@ export interface AdminCustomization {
   banner_call_button_text: string;
   banner_show_video: boolean;
   banner_show_call_button: boolean;
+  banner_show_welcome_text: boolean;
 }
 
 export const useAdminCustomization = () => {
