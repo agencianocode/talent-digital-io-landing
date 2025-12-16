@@ -228,15 +228,24 @@ export const useMessages = (companyId?: string) => {
       // Get all messages where user is sender or recipient
       console.log('[fetchConversations] Fetching messages for user:', user.id, 'company:', companyId);
       
-      // Build query with company_id filter
+      // Build query with proper company_id filter
+      // To achieve (sender = user OR recipient = user) AND (company_id = X OR company_id IS NULL)
+      // We expand to: (sender AND company) OR (sender AND null) OR (recipient AND company) OR (recipient AND null)
       let query = supabase
         .from('messages' as any)
-        .select('*')
-        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
+        .select('*');
       
-      // Filter by company_id if provided
       if (companyId) {
-        query = query.or(`company_id.eq.${companyId},company_id.is.null`);
+        // Expand the condition to properly filter by company
+        query = query.or(
+          `and(sender_id.eq.${user.id},company_id.eq.${companyId}),` +
+          `and(sender_id.eq.${user.id},company_id.is.null),` +
+          `and(recipient_id.eq.${user.id},company_id.eq.${companyId}),` +
+          `and(recipient_id.eq.${user.id},company_id.is.null)`
+        );
+      } else {
+        // No company filter, just filter by user participation
+        query = query.or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
       }
       
       const { data: messages, error } = await query.order('created_at', { ascending: false });
@@ -418,7 +427,8 @@ export const useMessages = (companyId?: string) => {
         content: messageData.content,
         file_url: messageData.file_url,
         file_name: messageData.file_name,
-        file_size: messageData.file_size
+        file_size: messageData.file_size,
+        company_id: companyId
       });
 
       const { data, error } = await supabase
@@ -433,7 +443,8 @@ export const useMessages = (companyId?: string) => {
           file_name: messageData.file_name,
           attachment_name: messageData.file_name,
           attachment_size: messageData.file_size,
-          attachment_type: messageData.file_url ? 'file' : undefined
+          attachment_type: messageData.file_url ? 'file' : undefined,
+          company_id: companyId || null
         })
         .select('*')
         .single();
@@ -466,7 +477,7 @@ export const useMessages = (companyId?: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, companyId]);
 
   // Mark messages as read
   const markMessagesAsRead = useCallback(async (conversationId: string): Promise<boolean> => {
@@ -601,27 +612,30 @@ export const useMessages = (companyId?: string) => {
     try {
       console.log('[getUnreadCount] Fetching unread count for user:', user.id, 'company:', companyId);
       
-      // Build query with company_id filter
+      // Build query with proper company_id filter
       let query = supabase
         .from('messages' as any)
-        .select('conversation_id, label')
+        .select('conversation_id, label, company_id')
         .eq('recipient_id', user.id)
         .eq('is_read', false)
-        .neq('label', 'welcome') // Exclude welcome messages from system
+        .neq('label', 'welcome')
         .not('archived_by', 'cs', `{${user.id}}`);
       
-      // Filter by company_id if provided
-      if (companyId) {
-        query = query.or(`company_id.eq.${companyId},company_id.is.null`);
-      }
-      
       const { data: unreadMessages, error: messagesError } = await query;
+      
+      // Filter by company_id in memory since combining .eq and .or is complex in PostgREST
+      let filteredMessages = unreadMessages || [];
+      if (companyId && filteredMessages.length > 0) {
+        filteredMessages = filteredMessages.filter((m: any) => 
+          m.company_id === companyId || m.company_id === null
+        );
+      }
 
       if (messagesError) throw messagesError;
 
       // Count unique conversations with unread messages
       const unreadConvIds = new Set(
-        (unreadMessages || []).map((m: any) => m.conversation_id)
+        filteredMessages.map((m: any) => m.conversation_id)
       );
       
       const messagesCount = unreadConvIds.size;
