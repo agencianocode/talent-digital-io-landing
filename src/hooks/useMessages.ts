@@ -236,13 +236,10 @@ export const useMessages = (companyId?: string) => {
         .select('*');
       
       if (companyId) {
-        // Expand the condition to properly filter by company
-        query = query.or(
-          `and(sender_id.eq.${user.id},company_id.eq.${companyId}),` +
-          `and(sender_id.eq.${user.id},company_id.is.null),` +
-          `and(recipient_id.eq.${user.id},company_id.eq.${companyId}),` +
-          `and(recipient_id.eq.${user.id},company_id.is.null)`
-        );
+        // Filter strictly by company_id - no NULL messages
+        query = query
+          .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+          .eq('company_id', companyId);
       } else {
         // No company filter, just filter by user participation
         query = query.or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
@@ -623,11 +620,11 @@ export const useMessages = (companyId?: string) => {
       
       const { data: unreadMessages, error: messagesError } = await query;
       
-      // Filter by company_id in memory since combining .eq and .or is complex in PostgREST
+      // Filter by company_id strictly - no NULL messages
       let filteredMessages = unreadMessages || [];
       if (companyId && filteredMessages.length > 0) {
         filteredMessages = filteredMessages.filter((m: any) => 
-          m.company_id === companyId || m.company_id === null
+          m.company_id === companyId
         );
       }
 
