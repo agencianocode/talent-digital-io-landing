@@ -116,18 +116,20 @@ const AdminBannerSettings: React.FC = () => {
               </div>
 
               {/* Right Column - Video/Button */}
-              {getValue('banner_show_video') && (
+              {(getValue('banner_show_video') || getValue('banner_show_call_button')) && (
                 <div className="space-y-3">
-                  <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50 w-full h-48">
-                    <iframe
-                      className="w-full h-full"
-                      src={getValue('banner_video_url')}
-                      title="Preview"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
+                  {getValue('banner_show_video') && (
+                    <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50 w-full h-48">
+                      <iframe
+                        className="w-full h-full"
+                        src={getValue('banner_video_url')}
+                        title="Preview"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
                   {getValue('banner_show_call_button') && (
                     <Button
                       variant="outline"
