@@ -5,7 +5,7 @@ const UserTypeSelector = () => {
   return <div className="h-[100dvh] sm:min-h-screen sm:h-auto bg-background flex items-center justify-center px-4 py-4 sm:py-12">
       <div className="max-w-2xl w-full text-center space-y-3 sm:space-y-6 md:space-y-8">
         <div>
-          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-1 sm:mb-4">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-foreground mb-1 sm:mb-4 lg:text-5xl">
             ¿Qué estás buscando hoy?
           </h1>
           <p className="text-sm sm:text-lg md:text-xl text-muted-foreground mb-3 sm:mb-8 md:mb-12 px-2">
