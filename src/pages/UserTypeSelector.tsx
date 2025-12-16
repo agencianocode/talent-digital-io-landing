@@ -9,7 +9,7 @@ const UserTypeSelector = () => {
             ¿Qué estás buscando hoy?
           </h1>
           <p className="text-sm sm:text-lg md:text-xl text-muted-foreground mb-3 sm:mb-8 md:mb-12 px-2">
-            Selecciona el tipo de cuenta que mejor se adapte a tus necesidades
+            Elegí cómo querés usar Talento Digital     
           </p>
         </div>
         
