@@ -606,15 +606,15 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({ academyId,
                             <Calendar className="w-4 h-4" />
                             <span>
                               {isPendingInvitation 
-                                ? `Invitación enviada: ${new Date(student.joined_at).toLocaleDateString()}`
-                                : `Se unió: ${new Date(student.joined_at).toLocaleDateString()}`
+                                ? `Invitación enviada: ${new Date(student.joined_at + 'T12:00:00').toLocaleDateString()}`
+                                : `Se unió: ${new Date(student.joined_at + 'T12:00:00').toLocaleDateString()}`
                               }
                             </span>
                             {!isPendingInvitation && student.graduation_date && (
                               <>
                                 <span>•</span>
                                 <span>
-                                  Graduado: {new Date(student.graduation_date).toLocaleDateString()}
+                                  Graduado: {new Date(student.graduation_date + 'T12:00:00').toLocaleDateString()}
                                 </span>
                               </>
                             )}

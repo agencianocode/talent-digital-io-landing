@@ -197,13 +197,13 @@ export const StudentDirectory: React.FC<StudentDirectoryProps> = ({ academyId, o
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Calendar className="w-4 h-4" />
                           <span>
-                            Se unió: {new Date(student.joined_at).toLocaleDateString()}
+                            Se unió: {new Date(student.joined_at + 'T12:00:00').toLocaleDateString()}
                           </span>
                           {student.graduation_date && (
                             <>
                               <span>•</span>
                               <span>
-                                Graduado: {new Date(student.graduation_date).toLocaleDateString()}
+                                Graduado: {new Date(student.graduation_date + 'T12:00:00').toLocaleDateString()}
                               </span>
                             </>
                           )}

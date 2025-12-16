@@ -77,7 +77,7 @@ const AdminCharts: React.FC<AdminChartsProps> = ({ chartData, isLoading = false 
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(item.date).toLocaleDateString('es', { day: 'numeric', month: 'short' })}
+                  {new Date(item.date + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short' })}
                 </span>
               </div>
             );
