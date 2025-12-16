@@ -22,7 +22,8 @@ import {
   durationUnits, 
   salaryPeriods, 
   experienceLevelOptions,
-  timezones 
+  timezones,
+  locationTypes
 } from '@/lib/opportunityTemplates';
 
 interface OpportunityData {
@@ -208,18 +209,19 @@ const NewOpportunity = () => {
           'Soporte Profesional': 'Soporte Profesional',
         };
 
-        // Mapeo correcto de modalidad (type)
+        // Mapeo correcto de modalidad de trabajo (type)
         const typeMap: Record<string, string> = {
-          'Trabajo Continuo': 'tiempo_completo',
-          'Proyecto Una Vez': 'freelance',
-          'Tiempo Completo': 'tiempo_completo',
-          'Medio Tiempo': 'medio_tiempo',
-          'Freelance': 'freelance',
-          'Por Proyecto': 'por_proyecto',
-          'Consultoría': 'consultoria',
-          // Compatibilidad con datos antiguos:
-          'Contrato': 'por_proyecto',
-          'Prácticas': 'freelance',
+          // Valores nuevos (ya correctos)
+          'remote': 'remote',
+          'onsite': 'onsite',
+          'hybrid': 'hybrid',
+          // Valores en español (compatibilidad con datos antiguos)
+          'Remoto': 'remote',
+          'Presencial': 'onsite',
+          'Híbrido': 'hybrid',
+          // Valores de contract_type antiguos que pueden estar en type (fallback)
+          'Tiempo Completo': 'onsite',
+          'Trabajo Continuo': 'remote',
         };
 
         // Mapeo correcto de tipo de contrato
@@ -366,12 +368,11 @@ const NewOpportunity = () => {
         'Soporte Profesional': 'Soporte Profesional',
       };
 
+      // Mapeo para guardar modalidad de trabajo
       const typeReverseMap: Record<string, string> = {
-        'tiempo_completo': 'Tiempo Completo',
-        'medio_tiempo': 'Medio Tiempo',
-        'freelance': 'Freelance',
-        'por_proyecto': 'Por Proyecto',
-        'consultoria': 'Consultoría',
+        'remote': 'Remoto',
+        'onsite': 'Presencial',
+        'hybrid': 'Híbrido',
       };
 
       const opportunityData = {
@@ -600,9 +601,9 @@ const NewOpportunity = () => {
                       <SelectValue placeholder="Selecciona modalidad" />
                     </SelectTrigger>
                     <SelectContent>
-                      {contractTypes.map((type) => (
-                        <SelectItem key={type} value={type.toLowerCase().replace(/ /g, '_').replace(/í/g, 'i')}>
-                          {type}
+                      {locationTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
