@@ -224,7 +224,26 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No hay usuario autenticado');
 
-      // Insert new message
+      // Get recipient's company_id
+      const { data: recipientCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('user_id', conversation.user_id)
+        .maybeSingle();
+
+      // If no owned company, try company_user_roles
+      let companyId = recipientCompany?.id;
+      if (!companyId) {
+        const { data: memberRole } = await supabase
+          .from('company_user_roles')
+          .select('company_id')
+          .eq('user_id', conversation.user_id)
+          .eq('status', 'accepted')
+          .maybeSingle();
+        companyId = memberRole?.company_id;
+      }
+
+      // Insert new message with company_id
       const { data: insertedMessage, error: insertError } = await supabase
         .from('messages')
         .insert({
@@ -234,7 +253,8 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
           conversation_uuid: conversationId,
           content: newMessage,
           message_type: 'text',
-          is_read: false
+          is_read: false,
+          company_id: companyId || null
         })
         .select()
         .single();
