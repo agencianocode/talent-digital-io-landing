@@ -179,28 +179,30 @@ const BusinessDashboard = () => {
               </div>
             </div>
 
-            {/* Right Column - Video Tutorial Real */}
-            {(customization?.banner_show_video !== false) && (
+            {/* Right Column - Video Tutorial and/or Call Button */}
+            {(customization?.banner_show_video !== false || customization?.banner_show_call_button !== false) && (
               <div className="hidden lg:flex justify-center">
-                <div className="relative w-full max-w-sm">
+                <div className="relative w-full max-w-sm space-y-3">
                   {/* Video Tutorial */}
-                  <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50 w-full h-48">
-                    <iframe
-                      className="w-full h-full"
-                      src={customization?.banner_video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}
-                      title="Tutorial TalentoDigital"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
+                  {(customization?.banner_show_video !== false) && (
+                    <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/50 w-full h-48">
+                      <iframe
+                        className="w-full h-full"
+                        src={customization?.banner_video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}
+                        title="Tutorial TalentoDigital"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
                   
                   {/* Botón alternativo para llamada personalizada */}
                   {(customization?.banner_show_call_button !== false) && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="mt-3 w-full text-xs"
+                      className="w-full text-xs"
                       onClick={() => window.open(customization?.banner_call_url || 'https://calendly.com/talentodigital', '_blank')}
                     >
                       {customization?.banner_call_button_text || '📞 Agendar llamada personalizada'}
