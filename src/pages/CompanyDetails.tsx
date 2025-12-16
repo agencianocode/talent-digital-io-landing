@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { stripHtml } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -598,7 +599,7 @@ const CompanyDetails = () => {
 
                             {opportunity.description && (
                               <p className="text-gray-700 mb-4 line-clamp-2">
-                                {opportunity.description}
+                                {stripHtml(opportunity.description)}
                               </p>
                             )}
 

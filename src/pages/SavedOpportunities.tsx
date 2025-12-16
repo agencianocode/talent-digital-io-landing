@@ -7,6 +7,7 @@ import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { Bookmark, Eye, Briefcase, MapPin, DollarSign } from "lucide-react";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import EmptyState from "@/components/EmptyState";
+import { stripHtml } from "@/lib/utils";
 
 const SavedOpportunities = () => {
   const navigate = useNavigate();
@@ -161,7 +162,7 @@ const SavedOpportunities = () => {
                   </div>
 
                   <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
-                    {opportunity.description}
+                    {stripHtml(opportunity.description)}
                   </p>
 
                   <div className="text-xs text-muted-foreground">

@@ -16,6 +16,7 @@ import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
 import ApplicationModal from "@/components/ApplicationModal";
 import { FormattedOpportunityText } from "@/lib/markdown-formatter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { stripHtml } from "@/lib/utils";
 
 const OpportunityDetail = () => {
   const navigate = useNavigate();
@@ -427,7 +428,7 @@ const OpportunityDetail = () => {
                 </div>
 
                 {company.description && (
-                  <p className="text-sm text-muted-foreground">{company.description}</p>
+                  <p className="text-sm text-muted-foreground">{stripHtml(company.description)}</p>
                 )}
 
                 {company.industry && (

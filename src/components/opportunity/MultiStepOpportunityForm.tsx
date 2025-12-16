@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, Save } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, stripHtml } from '@/lib/utils';
 import { Tooltip } from '@/components/ui/tooltip';
 import OpportunityStep1 from './OpportunityStep1';
 import OpportunityStep2 from './OpportunityStep2';
@@ -463,7 +463,7 @@ const MultiStepOpportunityForm = ({
                 </h3>
                 {company.description && (
                   <p className="text-gray-600 text-sm mb-2">
-                    {company.description}
+                    {stripHtml(company.description)}
                   </p>
                 )}
                 {company.location && (
