@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, DollarSign, Briefcase, Clock, Heart, Mail, Linkedin, Instagram, Youtube, Twitter, ExternalLink, GraduationCap } from "lucide-react";
+import ShareOpportunity from "@/components/ShareOpportunity";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { useSavedOpportunities } from "@/hooks/useSavedOpportunities";
 import { useSupabaseAuth, isTalentRole } from "@/contexts/SupabaseAuthContext";
@@ -309,24 +310,33 @@ const OpportunityDetail = () => {
           )}
         </div>
         
-        {isTalentRole(userRole) && (
-          <div className="flex items-center gap-2 self-start">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleSaveToggle}
-              className={saved ? "text-red-600 hover:text-red-700" : ""}
-            >
-              <Heart className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
-            </Button>
-            
-            {!applied && opportunity.status === 'active' && (
-              <Button className="gap-2" onClick={handleApplyClick}>
-                Aplicar
+        <div className="flex items-center gap-2 self-start">
+          {/* Share button - visible for all users */}
+          <ShareOpportunity 
+            opportunityId={opportunity.id} 
+            opportunityTitle={opportunity.title}
+            variant="button"
+          />
+          
+          {isTalentRole(userRole) && (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleSaveToggle}
+                className={saved ? "text-red-600 hover:text-red-700" : ""}
+              >
+                <Heart className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
               </Button>
-            )}
-          </div>
-        )}
+              
+              {!applied && opportunity.status === 'active' && (
+                <Button className="gap-2" onClick={handleApplyClick}>
+                  Aplicar
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Main Content */}
