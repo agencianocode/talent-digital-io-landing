@@ -369,7 +369,7 @@ const PublicOpportunity = () => {
                 </div>
 
                 {opportunity.companies?.description && (
-                  <p className="text-sm text-gray-600">{opportunity.companies.description}</p>
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: opportunity.companies.description }} />
                 )}
 
                 {/* Social Media Links */}
