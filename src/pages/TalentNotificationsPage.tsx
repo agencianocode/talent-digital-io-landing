@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,10 +19,12 @@ interface Notification {
   read: boolean;
   created_at: string;
   read_at?: string;
+  company_id?: string;
 }
 
 const TalentNotificationsPage = () => {
   const { user } = useSupabaseAuth();
+  const { activeCompany } = useCompany();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -30,11 +33,19 @@ const TalentNotificationsPage = () => {
 
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      
+      // Build query with company_id filter
+      let query = supabase
         .from('notifications' as any)
         .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .eq('user_id', user.id);
+      
+      // Filter by active company: show notifications for this company OR global (null company_id)
+      if (activeCompany?.id) {
+        query = query.or(`company_id.eq.${activeCompany.id},company_id.is.null`);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setNotifications((data as any) || []);
@@ -47,7 +58,7 @@ const TalentNotificationsPage = () => {
 
   useEffect(() => {
     loadNotifications();
-  }, [user]);
+  }, [user, activeCompany?.id]);
 
   const markAsRead = async (id: string) => {
     try {
@@ -71,11 +82,19 @@ const TalentNotificationsPage = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      // Build query with company_id filter
+      let query = supabase
         .from('notifications' as any)
         .update({ read: true, read_at: new Date().toISOString() })
         .eq('user_id', user.id)
         .eq('read', false);
+      
+      // Only mark as read notifications for this company OR global
+      if (activeCompany?.id) {
+        query = query.or(`company_id.eq.${activeCompany.id},company_id.is.null`);
+      }
+      
+      const { error } = await query;
 
       if (error) throw error;
 

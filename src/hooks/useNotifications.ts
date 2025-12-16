@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
-export const useNotifications = () => {
+export const useNotifications = (companyId?: string) => {
   const { user } = useSupabaseAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch unread count from Supabase
+  // Fetch unread count from Supabase filtered by company_id
   const fetchUnreadCount = useCallback(async () => {
     if (!user) {
       setUnreadCount(0);
@@ -17,12 +17,20 @@ export const useNotifications = () => {
     try {
       setIsLoading(true);
       
-      // Check if notifications table exists and has data
-      const { count, error } = await supabase
+      // Build query with optional company_id filter
+      let query = supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('read', false);
+      
+      // Filter by company_id if provided
+      if (companyId) {
+        // Include notifications for this company OR global notifications (company_id is null)
+        query = query.or(`company_id.eq.${companyId},company_id.is.null`);
+      }
+
+      const { count, error } = await query;
 
       if (error) {
         console.log('[useNotifications] Error fetching notifications:', error.message);
@@ -31,16 +39,16 @@ export const useNotifications = () => {
       }
       
       setUnreadCount(count || 0);
-      console.log('[useNotifications] Unread count:', count || 0);
+      console.log('[useNotifications] Unread count for company', companyId, ':', count || 0);
     } catch (error) {
       console.error('[useNotifications] Error fetching unread count:', error);
       setUnreadCount(0);
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, companyId]);
 
-  // Load unread count on mount and setup realtime subscription
+  // Load unread count on mount and when companyId changes
   useEffect(() => {
     fetchUnreadCount();
     
@@ -49,7 +57,7 @@ export const useNotifications = () => {
     // Setup Realtime subscription for new notifications
     console.log('[useNotifications] Setting up Realtime subscription for notifications');
     const notificationsSubscription = supabase
-      .channel('notifications_channel')
+      .channel(`notifications_channel_${companyId || 'all'}`)
       .on(
         'postgres_changes',
         {
@@ -61,8 +69,15 @@ export const useNotifications = () => {
         async (payload) => {
           console.log('[useNotifications] New notification received via Realtime:', payload);
           
+          // Check if notification is for the current company
+          const newNotification = payload.new as any;
+          if (companyId && newNotification.company_id && newNotification.company_id !== companyId) {
+            console.log('[useNotifications] Notification for different company, skipping');
+            return;
+          }
+          
           // Automatically process the notification to send emails
-          const notificationId = payload.new?.id;
+          const notificationId = newNotification?.id;
           if (notificationId) {
             try {
               console.log('[useNotifications] Auto-processing notification:', notificationId);
@@ -130,7 +145,7 @@ export const useNotifications = () => {
       window.removeEventListener('focus', handleFocus);
       clearInterval(interval);
     };
-  }, [fetchUnreadCount, user]);
+  }, [fetchUnreadCount, user, companyId]);
 
   // Reload unread count (can be called externally)
   const reload = useCallback(() => {
@@ -143,4 +158,3 @@ export const useNotifications = () => {
     reload
   };
 };
-

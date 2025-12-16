@@ -26,7 +26,7 @@ const TalentTopNavigation = () => {
   const isPremium = isPremiumRole(userRole);
   const { userProfile, refreshProfile } = useProfileData();
   const { unreadCount: unreadMessagesCount } = useSupabaseMessages();
-  const { unreadCount: unreadNotificationsCount } = useNotifications();
+  const { unreadCount: unreadNotificationsCount } = useNotifications(); // Talent doesn't filter by company
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 

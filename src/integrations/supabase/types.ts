@@ -1110,6 +1110,7 @@ export type Database = {
           attachment_name: string | null
           attachment_size: number | null
           attachment_type: string | null
+          company_id: string | null
           content: string | null
           conversation_id: string
           conversation_uuid: string | null
@@ -1132,6 +1133,7 @@ export type Database = {
           attachment_name?: string | null
           attachment_size?: number | null
           attachment_type?: string | null
+          company_id?: string | null
           content?: string | null
           conversation_id: string
           conversation_uuid?: string | null
@@ -1154,6 +1156,7 @@ export type Database = {
           attachment_name?: string | null
           attachment_size?: number | null
           attachment_type?: string | null
+          company_id?: string | null
           content?: string | null
           conversation_id?: string
           conversation_uuid?: string | null
@@ -1173,6 +1176,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "messages_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "messages_conversation_uuid_fkey"
             columns: ["conversation_uuid"]
             isOneToOne: false
@@ -1185,6 +1195,7 @@ export type Database = {
         Row: {
           action_text: string | null
           action_url: string | null
+          company_id: string | null
           created_at: string
           data: Json | null
           id: string
@@ -1199,6 +1210,7 @@ export type Database = {
         Insert: {
           action_text?: string | null
           action_url?: string | null
+          company_id?: string | null
           created_at?: string
           data?: Json | null
           id?: string
@@ -1213,6 +1225,7 @@ export type Database = {
         Update: {
           action_text?: string | null
           action_url?: string | null
+          company_id?: string | null
           created_at?: string
           data?: Json | null
           id?: string
@@ -1224,7 +1237,15 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       onboarding_reminder_logs: {
         Row: {
@@ -2622,17 +2643,30 @@ export type Database = {
           usage_count: number
         }[]
       }
-      send_notification: {
-        Args: {
-          p_action_url?: string
-          p_data?: Json
-          p_message: string
-          p_title: string
-          p_type: string
-          p_user_id: string
-        }
-        Returns: string
-      }
+      send_notification:
+        | {
+            Args: {
+              p_action_url?: string
+              p_data?: Json
+              p_message: string
+              p_title: string
+              p_type: string
+              p_user_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_action_url?: string
+              p_company_id?: string
+              p_data?: Json
+              p_message: string
+              p_title: string
+              p_type: string
+              p_user_id: string
+            }
+            Returns: string
+          }
       should_send_notification: {
         Args: { channel?: string; notification_type: string }
         Returns: boolean
