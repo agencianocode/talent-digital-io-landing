@@ -43,7 +43,7 @@ const UserTypeSelector = () => {
                 Soy talento digital  
               </h2>
               <p className="text-xs sm:text-base text-muted-foreground">
-                Soy un profesional digital
+                Creá tu perfil y aplicá a oportunidades reales       
               </p>
             </div>
           </div>
