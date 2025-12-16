@@ -28,6 +28,7 @@ interface Graduate {
   education_count?: number;
   experience_count?: number;
   social_links_count?: number;
+  services_count?: number;
 }
 
 interface AcademyInfo {
@@ -176,8 +177,8 @@ export default function PublicAcademyDirectory() {
         // Skills - al menos 3 (10 pts)
         if (student.skills && student.skills.length >= 3) score += 10;
         
-        // Video presentación (10 pts)
-        if (student.video_presentation_url) score += 10;
+        // Video presentación (15 pts)
+        if (student.video_presentation_url) score += 15;
         
         // Experiencia laboral - al menos 1 (10 pts)
         if (student.experience_count && student.experience_count >= 1) score += 10;
@@ -187,6 +188,9 @@ export default function PublicAcademyDirectory() {
         
         // Redes sociales - al menos 1 (5 pts)
         if (student.social_links_count && student.social_links_count >= 1) score += 5;
+        
+        // Servicios ofrecidos - al menos 1 (10 pts)
+        if (student.services_count && student.services_count >= 1) score += 10;
         
         return score;
       };
@@ -205,7 +209,8 @@ export default function PublicAcademyDirectory() {
             talentProfilesResult,
             educationResult,
             experienceResult,
-            socialLinksResult
+            socialLinksResult,
+            servicesResult
           ] = await Promise.all([
             supabase
               .from('talent_profiles')
@@ -222,7 +227,13 @@ export default function PublicAcademyDirectory() {
             supabase
               .from('talent_social_links')
               .select('user_id')
+              .in('user_id', userIds),
+            supabase
+              .from('marketplace_services')
+              .select('user_id')
               .in('user_id', userIds)
+              .eq('status', 'active')
+              .eq('is_available', true)
           ]);
 
           // Count records per user
@@ -241,6 +252,11 @@ export default function PublicAcademyDirectory() {
             socialLinksCounts.set(s.user_id, (socialLinksCounts.get(s.user_id) || 0) + 1);
           });
 
+          const servicesCounts = new Map<string, number>();
+          (servicesResult.data || []).forEach((s) => {
+            servicesCounts.set(s.user_id, (servicesCounts.get(s.user_id) || 0) + 1);
+          });
+
           // Combine all data
           const studentsWithAllData = visibleStudents.map((student: Graduate) => {
             const talentProfile = (talentProfilesResult.data || []).find(tp => tp.user_id === student.user_id);
@@ -250,7 +266,8 @@ export default function PublicAcademyDirectory() {
               video_presentation_url: talentProfile?.video_presentation_url,
               education_count: educationCounts.get(student.user_id || '') || 0,
               experience_count: experienceCounts.get(student.user_id || '') || 0,
-              social_links_count: socialLinksCounts.get(student.user_id || '') || 0
+              social_links_count: socialLinksCounts.get(student.user_id || '') || 0,
+              services_count: servicesCounts.get(student.user_id || '') || 0
             };
           });
           
