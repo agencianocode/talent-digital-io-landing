@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Users, MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
+import { stripHtml } from '@/lib/utils';
 
 interface RecommendedProfile {
   id: string;
@@ -374,7 +375,7 @@ const RecommendedProfiles: React.FC = () => {
                     <div className="flex-1 mb-3">
                       {profile.bio && (
                         <p className="text-xs text-muted-foreground line-clamp-3">
-                          {profile.bio}
+                          {stripHtml(profile.bio)}
                         </p>
                       )}
                     </div>

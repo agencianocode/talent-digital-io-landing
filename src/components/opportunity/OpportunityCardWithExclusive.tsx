@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ExclusiveOpportunityBadge } from './ExclusiveOpportunityBadge';
 import { MapPin, Briefcase, DollarSign, Clock, Building } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { stripHtml } from '@/lib/utils';
 
 interface OpportunityCardWithExclusiveProps {
   opportunity: {
@@ -76,7 +77,7 @@ export const OpportunityCardWithExclusive = ({
               </div>
             )}
             <CardDescription className="line-clamp-2">
-              {opportunity.description}
+              {stripHtml(opportunity.description)}
             </CardDescription>
           </div>
           {opportunity.company?.logo_url && (

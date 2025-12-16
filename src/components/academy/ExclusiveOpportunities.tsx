@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ExclusiveOpportunityBadge } from '@/components/opportunity/ExclusiveOpportunityBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { stripHtml } from '@/lib/utils';
 import { 
   Briefcase, 
   Plus, 
@@ -164,7 +165,7 @@ export const ExclusiveOpportunities: React.FC<ExclusiveOpportunitiesProps> = ({ 
                     </p>
                     
                     <p className="text-sm text-foreground mb-4 line-clamp-2">
-                      {opportunity.description}
+                      {stripHtml(opportunity.description)}
                     </p>
                     
                     <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">

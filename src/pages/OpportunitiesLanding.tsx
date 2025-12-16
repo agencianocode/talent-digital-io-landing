@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { MapPin, Clock, DollarSign, Briefcase, Building } from "lucide-react";
+import { stripHtml } from "@/lib/utils";
 
 const OpportunitiesLanding = () => {
   const navigate = useNavigate();
@@ -165,7 +166,7 @@ const OpportunitiesLanding = () => {
                   )}
                   
                   <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                    {opportunity.description}
+                    {stripHtml(opportunity.description)}
                   </p>
                   
                   <Button 

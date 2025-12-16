@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { stripHtml } from '@/lib/utils';
 import { 
   Briefcase, 
   Building, 
@@ -300,7 +301,7 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
                       
                       {opportunity.description && (
                         <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
-                          {opportunity.description}
+                          {stripHtml(opportunity.description)}
                         </p>
                       )}
                       
