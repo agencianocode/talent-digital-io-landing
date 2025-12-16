@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import ConversationsList from '@/components/ConversationsList';
 import ChatView from '@/components/ChatView';
-import { useMessages } from '@/hooks/useMessages';
+import { useSupabaseMessages } from '@/contexts/SupabaseMessagesContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const BusinessMessagesPage = () => {
@@ -21,7 +21,7 @@ const BusinessMessagesPage = () => {
     archiveConversation,
     unarchiveConversation,
     getOrCreateConversation,
-  } = useMessages();
+  } = useSupabaseMessages();
   
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isResolvingId, setIsResolvingId] = useState(false);
