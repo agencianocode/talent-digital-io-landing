@@ -139,9 +139,9 @@ const PublicOpportunity = () => {
       // Guardar la intención de aplicación para redirección post-onboarding
       if (opportunityId) {
         localStorage.setItem('pending_opportunity', opportunityId);
-        navigate(`/auth?redirect=/opportunity/${opportunityId}`);
+        navigate(`/register-talent?redirect=/opportunity/${opportunityId}`);
       } else {
-        navigate('/auth');
+        navigate('/register-talent');
       }
       return;
     }
@@ -216,14 +216,16 @@ const PublicOpportunity = () => {
         <div className="mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-24 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate(-1)}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver
-              </Button>
+              {user && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/talent-dashboard/opportunities')}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Volver al Dashboard
+                </Button>
+              )}
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={opportunity.companies?.logo_url} />
@@ -248,7 +250,7 @@ const PublicOpportunity = () => {
                 Compartir
               </Button>
               <Button onClick={handleApply}>
-                Aplicar Ahora
+                {user ? 'Aplicar Ahora' : 'Regístrate para Aplicar'}
               </Button>
             </div>
           </div>
@@ -444,10 +446,10 @@ const PublicOpportunity = () => {
                   className="w-full"
                   size="lg"
                 >
-                  Aplicar a esta Oportunidad
+                  {user ? 'Aplicar a esta Oportunidad' : 'Regístrate para Aplicar'}
                 </Button>
                 <p className="text-xs text-gray-500 text-center mt-2">
-                  Aplicación gratuita • Respuesta rápida
+                  {user ? 'Aplicación gratuita • Respuesta rápida' : 'Crea tu cuenta gratis y aplica en segundos'}
                 </p>
               </CardContent>
             </Card>
