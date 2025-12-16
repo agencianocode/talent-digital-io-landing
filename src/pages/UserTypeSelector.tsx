@@ -26,7 +26,7 @@ const UserTypeSelector = () => {
                 Soy una empresa  
               </h2>
               <p className="text-xs sm:text-base text-muted-foreground">
-                Para mi negocio o empresa
+                Publicá oportunidades y conectá con talento digital verificado       
               </p>
             </div>
           </div>
