@@ -40,7 +40,7 @@ const UserTypeSelector = () => {
                 </svg>
               </div>
               <h2 className="text-lg sm:text-2xl font-bold text-foreground">
-                Talento Freemium
+                Soy talento digital  
               </h2>
               <p className="text-xs sm:text-base text-muted-foreground">
                 Soy un profesional digital
