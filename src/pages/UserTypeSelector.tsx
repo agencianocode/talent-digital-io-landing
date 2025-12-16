@@ -23,7 +23,7 @@ const UserTypeSelector = () => {
                 </svg>
               </div>
               <h2 className="text-lg sm:text-2xl font-bold text-foreground">
-                Empresa Freemium
+                Soy una empresa  
               </h2>
               <p className="text-xs sm:text-base text-muted-foreground">
                 Para mi negocio o empresa
