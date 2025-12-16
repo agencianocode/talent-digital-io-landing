@@ -254,7 +254,10 @@ export default function PublicAcademyDirectory() {
               <p className="text-xl text-white/90">{academy.academy_tagline}</p>
             )}
             {showDescription && academy.description && (
-              <p className="text-white/80 max-w-2xl">{academy.description}</p>
+              <div 
+                className="prose prose-sm prose-invert max-w-2xl text-white/80 [&_p]:text-white/80 [&_li]:text-white/80"
+                dangerouslySetInnerHTML={{ __html: academy.description }}
+              />
             )}
             {academy.website && (
               <Button 
