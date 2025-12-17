@@ -73,21 +73,17 @@ const BusinessMessagesPage = () => {
         
         setTempConversation(tempConv);
         setActiveId(convId);
+        setIsResolvingId(false); // Ya tenemos la conversación temporal, podemos mostrar la UI
         
         // Reload conversations to ensure the new one appears in the list
         await loadConversations();
         
-        // Wait a bit and reload again, then clear temp conversation
+        // Wait a bit and reload again, then clear query param
         setTimeout(async () => {
           await loadConversations();
-          // Clear temp conversation after a delay to allow real conversation to load
-          setTimeout(() => {
-            setTempConversation(null);
-            setIsResolvingId(false);
-          }, 300);
-          // Clear the query param from URL
+          // Clear the query param from URL (pero mantener activeId y tempConversation)
           setSearchParams({}, { replace: true });
-        }, 500);
+        }, 300);
       } catch (error) {
         console.error('Error creating conversation:', error);
         setTempConversation(null);
@@ -101,8 +97,8 @@ const BusinessMessagesPage = () => {
   // Resolve conversationId from URL parameter
   useEffect(() => {
     if (!conversationId) {
-      // Don't reset activeId if we have a pending user conversation
-      if (!searchParams.get('user')) {
+      // Don't reset activeId if we have a pending user conversation or temp conversation
+      if (!searchParams.get('user') && !tempConversation && !pendingRecipientId) {
         setActiveId(null);
       }
       return;
@@ -111,7 +107,7 @@ const BusinessMessagesPage = () => {
     setIsResolvingId(true);
     setActiveId(conversationId);
     setIsResolvingId(false);
-  }, [conversationId, searchParams]);
+  }, [conversationId, searchParams, tempConversation, pendingRecipientId]);
 
   // Load conversations on mount only if user is authenticated
   useEffect(() => {
@@ -120,6 +116,16 @@ const BusinessMessagesPage = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Clear temp conversation when real conversation becomes available
+  useEffect(() => {
+    if (tempConversation && activeId === tempConversation.id) {
+      const realConvExists = conversations.some(c => c.id === tempConversation.id);
+      if (realConvExists) {
+        setTempConversation(null);
+      }
+    }
+  }, [conversations, tempConversation, activeId]);
 
   const activeConversation = useMemo(() => {
     // Use temp conversation if available, otherwise find in conversations
