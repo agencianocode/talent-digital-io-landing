@@ -61,6 +61,7 @@ export const useAdminUsers = () => {
       }
 
       // Call edge function to get all users with real emails
+      console.log('🔄 Llamando a get-all-users edge function...');
       const { data, error: usersError } = await supabase.functions.invoke('get-all-users', {
         headers: {
           Authorization: `Bearer ${session.access_token}`
@@ -68,18 +69,25 @@ export const useAdminUsers = () => {
       });
 
       if (usersError) {
-        console.error('Error from get-all-users:', usersError);
+        console.error('❌ Error from get-all-users:', usersError);
         throw usersError;
       }
 
-      if (!data?.users) {
-        throw new Error('No se pudieron cargar los usuarios');
+      if (!data) {
+        console.error('❌ No data received from get-all-users');
+        throw new Error('No se recibieron datos de la función');
+      }
+
+      if (!data.users || !Array.isArray(data.users)) {
+        console.error('❌ Invalid data structure:', data);
+        throw new Error('Estructura de datos inválida: users no es un array');
       }
 
       // Log para debugging
       console.log('📊 Usuarios recibidos de get-all-users:', {
         total: data.total,
-        fetched_from_auth: data.fetched_from_auth,
+        pages_fetched: data.pages_fetched,
+        fetched_from_auth: data.fetched_from_auth, // Legacy, puede no existir
         users_count: data.users?.length || 0,
       });
 

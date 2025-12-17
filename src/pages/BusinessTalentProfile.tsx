@@ -650,10 +650,14 @@ const BusinessTalentProfile = () => {
                       console.log('🔍 Rendering education item:', index, edu);
                       return (
                         <div key={index} className="border-l-4 border-green-500 pl-4">
-                          <h4 className="font-semibold text-gray-900">{edu.degree || 'Ingeniería Informática'}</h4>
-                          <p className="text-gray-600">{edu.institution || 'Universidad Test'}</p>
-                          <p className="text-sm text-gray-500 mb-2">{edu.field_of_study || edu.field || 'Desarrollo de Software'}</p>
-                          <p className="text-sm text-gray-500 whitespace-pre-line">{edu.description || 'Especialización en desarrollo web'}</p>
+                          <h4 className="font-semibold text-gray-900">{edu.degree || 'Sin título especificado'}</h4>
+                          <p className="text-gray-600">{edu.institution || 'Institución no especificada'}</p>
+                          {((edu.field_of_study || edu.field) && (
+                            <p className="text-sm text-gray-500 mb-2">{edu.field_of_study || edu.field}</p>
+                          ))}
+                          {edu.description && (
+                            <p className="text-sm text-gray-500 whitespace-pre-line">{edu.description}</p>
+                          )}
                           {edu.graduation_year && (
                             <div className="flex items-center text-sm text-gray-500 mt-2">
                               <Calendar className="h-4 w-4 mr-1" />

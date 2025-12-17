@@ -31,24 +31,31 @@ serve(async (req) => {
     const perPage = 1000; // Maximum allowed by Supabase
 
     while (true) {
-      const { data: { users: pageUsers }, error: authError } = 
-        await supabaseAdmin.auth.admin.listUsers({
-          page,
-          perPage
-        });
+      const response = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage
+      });
 
-      if (authError) {
-        console.error('Auth error on page', page, ':', authError);
-        throw authError;
+      if (response.error) {
+        console.error('Auth error on page', page, ':', response.error);
+        throw response.error;
+      }
+
+      const pageUsers = response.data?.users || [];
+      
+      if (!pageUsers || pageUsers.length === 0) {
+        console.log(`No users found on page ${page}, stopping pagination`);
+        break;
       }
       
-      if (!pageUsers || pageUsers.length === 0) break;
-      
       allAuthUsers = [...allAuthUsers, ...pageUsers];
-      console.log(`Fetched page ${page}: ${pageUsers.length} users`);
+      console.log(`Fetched page ${page}: ${pageUsers.length} users (Total so far: ${allAuthUsers.length})`);
       
       // If page has fewer users than perPage, it's the last page
-      if (pageUsers.length < perPage) break;
+      if (pageUsers.length < perPage) {
+        console.log(`Reached last page (got ${pageUsers.length} < ${perPage})`);
+        break;
+      }
       
       page++;
     }
