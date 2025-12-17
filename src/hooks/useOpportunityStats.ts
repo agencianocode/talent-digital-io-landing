@@ -25,18 +25,28 @@ export const useOpportunityStats = (opportunityIds: string[]) => {
       setIsLoading(true);
       try {
         // 1. Obtener postulaciones sin revisar por oportunidad
-        const { data: applications, error: appsError } = await supabase
-          .from('applications' as any)
-          .select('opportunity_id, is_viewed')
-          .in('opportunity_id', opportunityIds)
-          .eq('is_viewed', false);
+        // Dividir en lotes si hay demasiados IDs para evitar URLs demasiado largas
+        const BATCH_SIZE = 100;
+        const allApplications: any[] = [];
+        
+        for (let i = 0; i < opportunityIds.length; i += BATCH_SIZE) {
+          const batch = opportunityIds.slice(i, i + BATCH_SIZE);
+          
+          const { data: batchApplications, error: appsError } = await supabase
+            .from('applications' as any)
+            .select('opportunity_id, is_viewed')
+            .in('opportunity_id', batch)
+            .eq('is_viewed', false);
 
-        if (appsError) {
-          console.error('Error fetching unviewed applications:', appsError);
+          if (appsError) {
+            console.error('Error fetching unviewed applications batch:', appsError);
+          } else if (batchApplications) {
+            allApplications.push(...batchApplications);
+          }
         }
 
         const unviewedByOpportunity: Record<string, number> = {};
-        (applications || []).forEach((app: any) => {
+        allApplications.forEach((app: any) => {
           unviewedByOpportunity[app.opportunity_id] = 
             (unviewedByOpportunity[app.opportunity_id] || 0) + 1;
         });
