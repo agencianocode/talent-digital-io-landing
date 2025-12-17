@@ -157,31 +157,53 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
       setIsSending(true);
       setSendProgress(10);
 
-      // Insert students into academy_students table
-      const studentsToInsert = emails.map(email => ({
-        academy_id: academyId,
-        student_email: email,
-        student_name: null, // Will be set when they register
-        status: 'enrolled',
-        enrollment_date: new Date().toISOString().split('T')[0]
-      }));
+      // First, check which emails already exist in this academy
+      const { data: existingStudents } = await supabase
+        .from('academy_students')
+        .select('student_email')
+        .eq('academy_id', academyId)
+        .in('student_email', emails);
+
+      const existingEmails = new Set(existingStudents?.map(s => s.student_email.toLowerCase()) || []);
+      const newEmails = emails.filter(email => !existingEmails.has(email.toLowerCase()));
+      const duplicateCount = emails.length - newEmails.length;
 
       setSendProgress(20);
 
-      const { error: dbError } = await supabase
-        .from('academy_students')
-        .insert(studentsToInsert);
+      // Only insert new emails
+      if (newEmails.length > 0) {
+        const studentsToInsert = newEmails.map(email => ({
+          academy_id: academyId,
+          student_email: email,
+          student_name: null,
+          status: 'enrolled',
+          enrollment_date: new Date().toISOString().split('T')[0]
+        }));
 
-      if (dbError) {
-        // Check if it's a duplicate error
-        if (dbError.code === '23505') {
-          toast.error('Algunos emails ya están registrados en la academia');
-        } else {
+        const { error: dbError } = await supabase
+          .from('academy_students')
+          .insert(studentsToInsert);
+
+        if (dbError) {
           throw dbError;
         }
       }
 
+      // Show info about duplicates
+      if (duplicateCount > 0) {
+        toast.info(`${duplicateCount} email(s) ya estaban registrados`, { duration: 3000 });
+      }
+
       setSendProgress(40);
+
+      // If no new emails to send, just reload and finish
+      if (newEmails.length === 0) {
+        setSendProgress(100);
+        toast.warning('Todos los emails ya estaban registrados en la academia');
+        setEmailList('');
+        loadInvitations();
+        return;
+      }
 
       // Get academy name for the email
       const { data: academyData } = await supabase
@@ -192,9 +214,9 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
 
       setSendProgress(50);
 
-      // Send invitation emails via Edge Function
+      // Send invitation emails via Edge Function (only to new emails)
       console.log('📧 Calling send-academy-invitations edge function...', {
-        emailCount: emails.length,
+        emailCount: newEmails.length,
         academyId,
         academyName: academyData?.name
       });
@@ -203,7 +225,7 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         'send-academy-invitations',
         {
           body: {
-            emails,
+            emails: newEmails,
             academyId,
             academyName: academyData?.name || 'Tu Academia',
             customMessage: message.trim() || undefined
@@ -241,9 +263,9 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
           toast.success(
             `🎉 ¡${data.sent} invitación(es) enviada(s)!`,
             {
-              description: emails.length > 3 
-                ? `Enviado a: ${emails.slice(0, 3).join(', ')}... y ${emails.length - 3} más`
-                : `Enviado a: ${emails.join(', ')}`,
+              description: newEmails.length > 3 
+                ? `Enviado a: ${newEmails.slice(0, 3).join(', ')}... y ${newEmails.length - 3} más`
+                : `Enviado a: ${newEmails.join(', ')}`,
               duration: 5000
             }
           );
