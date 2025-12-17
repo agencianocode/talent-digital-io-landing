@@ -39,12 +39,15 @@ const BusinessMessagesPage = () => {
         // Get or create conversation with the target user
         const convId = await getOrCreateConversation(targetUserId, 'profile_contact');
         console.log('[BusinessMessagesPage] Conversation ID:', convId);
-        setActiveId(convId);
         setPendingRecipientId(targetUserId);
         // Reload conversations to ensure the new one appears in the list
         await loadConversations();
-        // Clear the query param from URL
-        setSearchParams({}, { replace: true });
+        // Set activeId after conversations are loaded to ensure activeConversation is available
+        setActiveId(convId);
+        // Wait a bit to ensure the conversation is in the list before clearing the param
+        setTimeout(() => {
+          setSearchParams({}, { replace: true });
+        }, 100);
       } catch (error) {
         console.error('Error creating conversation:', error);
       } finally {

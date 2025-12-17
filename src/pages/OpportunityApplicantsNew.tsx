@@ -913,12 +913,25 @@ const OpportunityApplicantsNew = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleUpdateStatus(application.id, 'reviewed')}
+                        onClick={() => {
+                          const newStatus = application.status === 'reviewed' ? 'pending' : 'reviewed';
+                          handleUpdateStatus(application.id, newStatus);
+                        }}
                         className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9"
                       >
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span className="hidden sm:inline">Marcar como Revisada</span>
-                        <span className="sm:hidden">Revisada</span>
+                        {application.status === 'reviewed' ? (
+                          <>
+                            <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline">Desmarcar como Revisada</span>
+                            <span className="sm:hidden">No Revisada</span>
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline">Marcar como Revisada</span>
+                            <span className="sm:hidden">Revisada</span>
+                          </>
+                        )}
                       </Button>
 
                       <DropdownMenu>
