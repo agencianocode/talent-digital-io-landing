@@ -247,8 +247,13 @@ const OpportunityApplicantsNew = () => {
         return;
       }
 
+      if (!fetchApplicationRatings || !createRating || !updateRating) {
+        toast.error('Error al inicializar funciones de calificación');
+        return;
+      }
+
       const existingRatings = await fetchApplicationRatings(applicationId);
-      const userRating = existingRatings.find(r => r.rated_by_user_id === user.id);
+      const userRating = existingRatings?.find((r: any) => r.rated_by_user_id === user.id);
       
       if (userRating) {
         await updateRating(userRating.id, {
@@ -266,7 +271,7 @@ const OpportunityApplicantsNew = () => {
       }
       
       // Recargar las aplicaciones para mostrar la nueva calificación
-      const { data: applicationsData } = await supabase
+      const { data: applicationsData, error: appsError } = await supabase
         .from("applications")
         .select(`
           id, 
@@ -278,6 +283,12 @@ const OpportunityApplicantsNew = () => {
         `)
         .eq("opportunity_id", opportunityId)
         .order("created_at", { ascending: false });
+      
+      if (appsError) {
+        console.error('Error reloading applications:', appsError);
+        toast.error('Error al recargar aplicaciones');
+        return;
+      }
       
       if (applicationsData) {
         const enrichedApplications = await Promise.all(
