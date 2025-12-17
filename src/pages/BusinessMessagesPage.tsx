@@ -5,6 +5,7 @@ import ConversationsList from '@/components/ConversationsList';
 import ChatView from '@/components/ChatView';
 import { useSupabaseMessages } from '@/contexts/SupabaseMessagesContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const BusinessMessagesPage = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
@@ -26,6 +27,7 @@ const BusinessMessagesPage = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isResolvingId, setIsResolvingId] = useState(false);
   const [pendingRecipientId, setPendingRecipientId] = useState<string | null>(null);
+  const [tempConversation, setTempConversation] = useState<any>(null);
 
   // Handle ?user= query param to start conversation with specific user
   useEffect(() => {
@@ -36,21 +38,59 @@ const BusinessMessagesPage = () => {
       setIsResolvingId(true);
       try {
         console.log('[BusinessMessagesPage] Creating conversation with user:', targetUserId);
+        
         // Get or create conversation with the target user
         const convId = await getOrCreateConversation(targetUserId, 'profile_contact');
         console.log('[BusinessMessagesPage] Conversation ID:', convId);
         setPendingRecipientId(targetUserId);
+        
+        // Fetch target user profile to create temp conversation
+        const { data: targetProfile } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('user_id', targetUserId)
+          .single();
+        
+        // Create temporary conversation object to show chat interface
+        const tempConv = {
+          id: convId,
+          participants: [user.id, targetUserId],
+          participantNames: [
+            user.email || 'Usuario',
+            targetProfile?.full_name || 'Usuario'
+          ],
+          participantAvatars: [
+            null,
+            targetProfile?.avatar_url || null
+          ],
+          lastMessage: '',
+          lastMessageAt: new Date().toISOString(),
+          unread_count: 0,
+          type: 'profile_contact' as const,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        setTempConversation(tempConv);
+        setActiveId(convId);
+        
         // Reload conversations to ensure the new one appears in the list
         await loadConversations();
-        // Set activeId after conversations are loaded to ensure activeConversation is available
-        setActiveId(convId);
-        // Wait a bit to ensure the conversation is in the list before clearing the param
-        setTimeout(() => {
+        
+        // Wait a bit and reload again, then clear temp conversation
+        setTimeout(async () => {
+          await loadConversations();
+          // Clear temp conversation after a delay to allow real conversation to load
+          setTimeout(() => {
+            setTempConversation(null);
+            setIsResolvingId(false);
+          }, 300);
+          // Clear the query param from URL
           setSearchParams({}, { replace: true });
-        }, 100);
+        }, 500);
       } catch (error) {
         console.error('Error creating conversation:', error);
-      } finally {
+        setTempConversation(null);
         setIsResolvingId(false);
       }
     };
@@ -81,10 +121,13 @@ const BusinessMessagesPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const activeConversation = useMemo(() => 
-    conversations.find(c => c.id === activeId) || null, 
-    [conversations, activeId]
-  );
+  const activeConversation = useMemo(() => {
+    // Use temp conversation if available, otherwise find in conversations
+    if (tempConversation && tempConversation.id === activeId) {
+      return tempConversation;
+    }
+    return conversations.find(c => c.id === activeId) || null;
+  }, [conversations, activeId, tempConversation]);
   
   const activeMessages = messagesByConversation[activeId || ''] || [];
 
@@ -127,10 +170,12 @@ const BusinessMessagesPage = () => {
       fileType
     );
     
-    // Clear pending recipient after first message and reload conversations
+    // Clear pending recipient and temp conversation after first message
     if (pendingRecipientId) {
       setPendingRecipientId(null);
-      loadConversations();
+      setTempConversation(null);
+      // Reload conversations to get the real conversation with the message
+      await loadConversations();
     }
   };
 
