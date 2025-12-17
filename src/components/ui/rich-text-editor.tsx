@@ -21,6 +21,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   className,
   error = false,
 }) => {
+  const editorRef = React.useRef<HTMLDivElement>(null);
+  const minHeight = 360; // Altura mínima en píxeles
+  const maxHeight = 800; // Altura máxima en píxeles
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -40,20 +44,54 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     content: value,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+      // Ajustar altura después de actualizar
+      adjustHeight();
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[100px] px-3 py-2',
+        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none px-3 py-2',
       },
     },
   });
+
+  // Función para ajustar la altura del editor
+  const adjustHeight = React.useCallback(() => {
+    if (!editor || !editorRef.current) return;
+    
+    const editorElement = editorRef.current.querySelector('.ProseMirror');
+    if (!editorElement) return;
+
+    // Resetear altura para obtener el scrollHeight correcto
+    (editorElement as HTMLElement).style.height = 'auto';
+    const scrollHeight = (editorElement as HTMLElement).scrollHeight;
+    
+    // Calcular nueva altura (mínimo minHeight, máximo maxHeight)
+    const newHeight = Math.max(minHeight, Math.min(scrollHeight + 20, maxHeight));
+    (editorElement as HTMLElement).style.height = `${newHeight}px`;
+    
+    // Si excede maxHeight, activar scroll
+    if (scrollHeight > maxHeight) {
+      (editorElement as HTMLElement).style.overflowY = 'auto';
+    } else {
+      (editorElement as HTMLElement).style.overflowY = 'hidden';
+    }
+  }, [editor, minHeight, maxHeight]);
+
+  // Ajustar altura cuando cambia el contenido
+  React.useEffect(() => {
+    if (editor) {
+      adjustHeight();
+    }
+  }, [editor, adjustHeight]);
 
   // Sync external value changes
   React.useEffect(() => {
     if (editor && value !== editor.getHTML()) {
       editor.commands.setContent(value);
+      // Ajustar altura después de cambiar el contenido
+      setTimeout(adjustHeight, 0);
     }
-  }, [value, editor]);
+  }, [value, editor, adjustHeight]);
 
   if (!editor) {
     return null;
@@ -107,7 +145,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       </div>
       
       {/* Editor Content */}
-      <EditorContent editor={editor} />
+      <div ref={editorRef}>
+        <EditorContent editor={editor} />
+      </div>
       
       {/* Styles for placeholder and lists */}
       <style>{`

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -19,6 +18,7 @@ import {
   experienceLevelOptions
 } from '@/lib/opportunityTemplates';
 import { OpportunityTemplates, JobTemplate, JOB_TEMPLATES } from '@/components/OpportunityTemplates';
+import { RichTextEditor, getPlainTextLength } from '@/components/ui/rich-text-editor';
 
 interface OpportunityStep1Data {
   category: string;
@@ -864,13 +864,17 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
         <Label htmlFor="description" className="text-sm font-medium text-gray-900">
           Descripción del trabajo
         </Label>
-        <Textarea
-          id="description"
-          placeholder="Enter text or type '/' for commands"
-          value={data.description}
-          onChange={(e) => onChange({ description: e.target.value })}
-          className="min-h-[120px] resize-none"
-        />
+        <div className="space-y-1">
+          <RichTextEditor
+            value={data.description || ''}
+            onChange={(html) => onChange({ description: html })}
+            placeholder="Describe las responsabilidades, objetivos y detalles del puesto. Puedes usar formato de texto (negrita, listas, etc.)"
+            className="min-h-[360px]"
+          />
+          <div className="text-xs text-gray-500 text-right">
+            {getPlainTextLength(data.description || '')} caracteres
+          </div>
+        </div>
       </div>
 
       {/* Skills */}
