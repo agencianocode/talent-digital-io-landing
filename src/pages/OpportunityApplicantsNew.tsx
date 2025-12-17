@@ -19,13 +19,15 @@ import {
   Edit,
   DollarSign,
   Clock,
-  MessageSquare
+  MessageSquare,
+  MoreVertical,
+  Check
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ApplicationRatingModal } from '@/components/ApplicationRating/ApplicationRatingModal';
 import { ApplicationRatingDisplay } from '@/components/ApplicationRating/ApplicationRatingDisplay';
 import { useApplicationRatings } from '@/hooks/useApplicationRatings';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { ApplicationsEmptyState } from '@/components/EmptyStates/ApplicationsEmptyState';
 import ShareOpportunity from '@/components/ShareOpportunity';
 import OpportunityRecommendedTalents from '@/components/opportunity/OpportunityRecommendedTalents';
@@ -45,8 +47,6 @@ const OpportunityApplicantsNew = () => {
   const [applications, setApplications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showRatingModal, setShowRatingModal] = useState(false);
-  const [selectedApplicationForRating, setSelectedApplicationForRating] = useState<any>(null);
   
   // Estados de filtros
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -55,7 +55,28 @@ const OpportunityApplicantsNew = () => {
   // Estado para expandir cartas de presentación
   const [expandedCoverLetters, setExpandedCoverLetters] = useState<Set<string>>(new Set());
   
-  const { fetchApplicationRatings } = useApplicationRatings();
+  // Estado para selector de estrellas inline
+  const [quickRatingAppId, setQuickRatingAppId] = useState<string | null>(null);
+  
+  const { user } = useSupabaseAuth();
+  const { fetchApplicationRatings, createRating, updateRating } = useApplicationRatings();
+  
+  // Cerrar selector de estrellas al hacer clic fuera
+  useEffect(() => {
+    if (!quickRatingAppId) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.rating-selector-container')) {
+        setQuickRatingAppId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [quickRatingAppId]);
   
   useEffect(() => {
     if (!opportunityId) {
@@ -214,14 +235,87 @@ const OpportunityApplicantsNew = () => {
     });
   };
 
-  const handleOpenRatingModal = (application: any) => {
-    setSelectedApplicationForRating(application);
-    setShowRatingModal(true);
-  };
+  const handleQuickRating = async (applicationId: string, rating: number) => {
+    try {
+      if (!user) {
+        toast.error('Debes estar autenticado para calificar');
+        return;
+      }
 
-  const handleSaveRating = async () => {
-    // Recargar las aplicaciones para mostrar la nueva calificación
-    window.location.reload();
+      if (!opportunityId) {
+        toast.error('ID de oportunidad no encontrado');
+        return;
+      }
+
+      const existingRatings = await fetchApplicationRatings(applicationId);
+      const userRating = existingRatings.find(r => r.rated_by_user_id === user.id);
+      
+      if (userRating) {
+        await updateRating(userRating.id, {
+          overall_rating: rating,
+          criteria_ratings: {},
+          recommendation: rating >= 4 ? 'hire' : rating >= 3 ? 'no_hire' : 'strong_no_hire',
+        });
+      } else {
+        await createRating({
+          application_id: applicationId,
+          overall_rating: rating,
+          criteria_ratings: {},
+          recommendation: rating >= 4 ? 'hire' : rating >= 3 ? 'no_hire' : 'strong_no_hire',
+        });
+      }
+      
+      // Recargar las aplicaciones para mostrar la nueva calificación
+      const { data: applicationsData } = await supabase
+        .from("applications")
+        .select(`
+          id, 
+          user_id, 
+          status, 
+          created_at,
+          cover_letter,
+          resume_url
+        `)
+        .eq("opportunity_id", opportunityId)
+        .order("created_at", { ascending: false });
+      
+      if (applicationsData) {
+        const enrichedApplications = await Promise.all(
+          applicationsData.map(async (application) => {
+            try {
+              const { data: profileData } = await supabase
+                .from("profiles")
+                .select("full_name, avatar_url, position, city, country, linkedin, phone")
+                .eq("user_id", application.user_id)
+                .single();
+
+              const ratings = await fetchApplicationRatings(application.id);
+
+              return {
+                ...application,
+                profiles: profileData,
+                ratings: ratings || []
+              };
+            } catch (error) {
+              console.warn('Error fetching data for application:', application.id, error);
+              return {
+                ...application,
+                profiles: null,
+                ratings: []
+              };
+            }
+          })
+        );
+        
+        setApplications(enrichedApplications);
+      }
+      
+      setQuickRatingAppId(null);
+      toast.success('Calificación guardada');
+    } catch (error) {
+      console.error('Error saving quick rating:', error);
+      toast.error('Error al guardar la calificación');
+    }
   };
 
   // Calcular contadores de filtros
@@ -740,23 +834,50 @@ const OpportunityApplicantsNew = () => {
                         </Button>
                       )}
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenRatingModal(application)}
-                        className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
-                      >
-                        ⭐ <span className="hidden sm:inline">Calificar</span>
-                      </Button>
+                      {/* Selector de estrellas inline */}
+                      <div className="relative rating-selector-container">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setQuickRatingAppId(quickRatingAppId === application.id ? null : application.id)}
+                          className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                        >
+                          <Star className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">Calificar</span>
+                        </Button>
+                        
+                        {quickRatingAppId === application.id && (
+                          <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50 flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => {
+                              const currentRating = application.ratings?.[0]?.overall_rating || 0;
+                              return (
+                                <button
+                                  key={star}
+                                  onClick={() => handleQuickRating(application.id, star)}
+                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                  title={`${star} estrella${star > 1 ? 's' : ''}`}
+                                >
+                                  <Star
+                                    className={`w-5 h-5 ${
+                                      star <= currentRating
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-gray-300'
+                                    }`}
+                                  />
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Botones de estado */}
-                    <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3">
+                    {/* Botones de estado a la derecha */}
+                    <div className="flex flex-row gap-2 sm:gap-3">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          // Iniciar conversación con el talento
                           navigate(`/business-dashboard/messages?user=${application.user_id}`);
                         }}
                         className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9"
@@ -765,27 +886,45 @@ const OpportunityApplicantsNew = () => {
                         Contactar
                       </Button>
 
-                      {application.status === 'pending' && (
-                        <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleUpdateStatus(application.id, 'reviewed')}
+                        className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9"
+                      >
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Marcar como Revisada</span>
+                        <span className="sm:hidden">Revisada</span>
+                      </Button>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleUpdateStatus(application.id, 'rejected')}
-                            className="flex items-center justify-center gap-1 sm:gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs sm:text-sm h-9"
+                            className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm h-9"
                           >
-                            <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                            Descartar
+                            <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline">Opciones</span>
                           </Button>
-                          <Button
-                            size="sm"
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
                             onClick={() => handleUpdateStatus(application.id, 'accepted')}
-                            className="flex items-center justify-center gap-1 sm:gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm h-9"
+                            className="cursor-pointer"
                           >
-                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                            Contratar
-                          </Button>
-                        </>
-                      )}
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Marcar aplicación Aceptada
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleUpdateStatus(application.id, 'accepted')}
+                            className="cursor-pointer"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Marcar como Contratado
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>
@@ -794,16 +933,6 @@ const OpportunityApplicantsNew = () => {
           ))
         )}
       </div>
-
-      {/* Modal de Calificación */}
-      {showRatingModal && selectedApplicationForRating && (
-        <ApplicationRatingModal
-          isOpen={showRatingModal}
-          onClose={() => setShowRatingModal(false)}
-          application={selectedApplicationForRating}
-          onSaveRating={handleSaveRating}
-        />
-      )}
     </div>
   );
 };
