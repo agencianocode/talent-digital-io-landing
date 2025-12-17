@@ -88,27 +88,40 @@ export const useRealApplications = () => {
       }
 
       // Obtener aplicaciones para esas oportunidades
-      console.log('📡 useRealApplications - Buscando aplicaciones para', oppIds.length, 'oportunidades');
-      const { data: applicationsData, error: applicationsError } = await supabase
-        .from('applications')
-        .select(`
-          *,
-          opportunities (
-            id,
-            title,
-            company_id
-          )
-        `)
-        .in('opportunity_id', oppIds);
+      // Dividir en lotes si hay demasiados IDs para evitar URLs demasiado largas
+      const BATCH_SIZE = 100; // Supabase tiene límites en la longitud de URL
+      const apps: Application[] = [];
+      
+      console.log('📡 useRealApplications - Buscando aplicaciones para', oppIds.length, 'oportunidades (en lotes de', BATCH_SIZE, ')');
+      
+      for (let i = 0; i < oppIds.length; i += BATCH_SIZE) {
+        const batch = oppIds.slice(i, i + BATCH_SIZE);
+        console.log(`📡 useRealApplications - Procesando lote ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(oppIds.length / BATCH_SIZE)} (${batch.length} oportunidades)`);
+        
+        const { data: batchData, error: batchError } = await supabase
+          .from('applications')
+          .select(`
+            *,
+            opportunities (
+              id,
+              title,
+              company_id
+            )
+          `)
+          .in('opportunity_id', batch);
 
-      if (applicationsError) {
-        console.error('❌ useRealApplications - Error fetching applications:', applicationsError);
-        throw applicationsError;
+        if (batchError) {
+          console.error(`❌ useRealApplications - Error fetching applications batch ${Math.floor(i / BATCH_SIZE) + 1}:`, batchError);
+          throw batchError;
+        }
+
+        if (batchData) {
+          apps.push(...(batchData as Application[]));
+        }
       }
 
-      console.log('📡 useRealApplications - Aplicaciones recibidas de Supabase:', applicationsData?.length || 0);
+      console.log('📡 useRealApplications - Aplicaciones recibidas de Supabase (total):', apps.length);
 
-      const apps = (applicationsData || []) as Application[];
       setApplications(apps);
 
       // Calcular métricas reales
