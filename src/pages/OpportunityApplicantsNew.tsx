@@ -52,6 +52,9 @@ const OpportunityApplicantsNew = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [ratingFilter, setRatingFilter] = useState<number>(0);
   
+  // Estado para expandir cartas de presentación
+  const [expandedCoverLetters, setExpandedCoverLetters] = useState<Set<string>>(new Set());
+  
   const { fetchApplicationRatings } = useApplicationRatings();
   
   useEffect(() => {
@@ -674,9 +677,27 @@ const OpportunityApplicantsNew = () => {
                       <div className={application.profiles?.linkedin ? '' : 'sm:col-span-2'}>
                         <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">Carta de presentación:</p>
                         <div className="bg-gray-50 p-2 sm:p-3 rounded-lg">
-                          <p className="text-xs sm:text-sm text-gray-700 line-clamp-3">
+                          <p className={`text-xs sm:text-sm text-gray-700 whitespace-pre-wrap ${!expandedCoverLetters.has(application.id) ? 'line-clamp-3' : ''}`}>
                             {application.cover_letter}
                           </p>
+                          {application.cover_letter.length > 150 && (
+                            <button
+                              onClick={() => {
+                                setExpandedCoverLetters(prev => {
+                                  const newSet = new Set(prev);
+                                  if (newSet.has(application.id)) {
+                                    newSet.delete(application.id);
+                                  } else {
+                                    newSet.add(application.id);
+                                  }
+                                  return newSet;
+                                });
+                              }}
+                              className="text-xs text-blue-600 hover:text-blue-800 mt-2 font-medium"
+                            >
+                              {expandedCoverLetters.has(application.id) ? 'Ver menos' : 'Ver más'}
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}
