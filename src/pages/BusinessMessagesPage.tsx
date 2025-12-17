@@ -97,8 +97,12 @@ const BusinessMessagesPage = () => {
   // Resolve conversationId from URL parameter
   useEffect(() => {
     if (!conversationId) {
-      // Don't reset activeId if we have a pending user conversation or temp conversation
-      if (!searchParams.get('user') && !tempConversation && !pendingRecipientId) {
+      // Don't reset activeId if we have an active conversation (temp or real)
+      const hasActiveConversation = tempConversation || 
+                                    pendingRecipientId || 
+                                    (activeId && conversations.some(c => c.id === activeId));
+      
+      if (!searchParams.get('user') && !hasActiveConversation) {
         setActiveId(null);
       }
       return;
@@ -107,7 +111,7 @@ const BusinessMessagesPage = () => {
     setIsResolvingId(true);
     setActiveId(conversationId);
     setIsResolvingId(false);
-  }, [conversationId, searchParams, tempConversation, pendingRecipientId]);
+  }, [conversationId, searchParams, tempConversation, pendingRecipientId, activeId, conversations]);
 
   // Load conversations on mount only if user is authenticated
   useEffect(() => {
@@ -117,15 +121,22 @@ const BusinessMessagesPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Clear temp conversation when real conversation becomes available
+  // Clear temp conversation when real conversation becomes available and has messages
   useEffect(() => {
     if (tempConversation && activeId === tempConversation.id) {
-      const realConvExists = conversations.some(c => c.id === tempConversation.id);
-      if (realConvExists) {
-        setTempConversation(null);
+      const realConv = conversations.find(c => c.id === tempConversation.id);
+      if (realConv) {
+        // Solo limpiar temp si la conversación real tiene mensajes o esperar un poco más
+        const hasMessages = (messagesByConversation[tempConversation.id]?.length ?? 0) > 0;
+        if (hasMessages) {
+          // Esperar un poco más para asegurar que todo esté cargado
+          setTimeout(() => {
+            setTempConversation(null);
+          }, 500);
+        }
       }
     }
-  }, [conversations, tempConversation, activeId]);
+  }, [conversations, tempConversation, activeId, messagesByConversation]);
 
   const activeConversation = useMemo(() => {
     // Use temp conversation if available, otherwise find in conversations
@@ -235,11 +246,20 @@ const BusinessMessagesPage = () => {
         onArchive={archiveConversation}
         onUnarchive={unarchiveConversation}
       />
-      <ChatView
-        conversation={activeConversation as any}
-        messages={activeMessages as any}
-        onSendMessage={handleSendMessage}
-      />
+      {activeConversation ? (
+        <ChatView
+          conversation={activeConversation as any}
+          messages={activeMessages as any}
+          onSendMessage={handleSendMessage}
+        />
+      ) : (
+        <div className="flex-1 flex items-center justify-center bg-background">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Cargando conversación...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
