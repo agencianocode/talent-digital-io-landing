@@ -70,8 +70,10 @@ export const useRealApplications = () => {
       }
 
       const oppIds = opportunityIds?.map(opp => opp.id) || [];
+      console.log('📊 useRealApplications - Oportunidades encontradas para empresa:', oppIds.length, oppIds);
 
       if (oppIds.length === 0) {
+        console.log('⚠️ useRealApplications - No hay oportunidades para esta empresa, estableciendo métricas en 0');
         setApplications([]);
         setMetrics({
           totalApplications: 0,
@@ -81,10 +83,12 @@ export const useRealApplications = () => {
           conversionRate: 0,
           applicationsByOpportunity: {}
         });
+        setIsLoading(false);
         return;
       }
 
       // Obtener aplicaciones para esas oportunidades
+      console.log('📡 useRealApplications - Buscando aplicaciones para', oppIds.length, 'oportunidades');
       const { data: applicationsData, error: applicationsError } = await supabase
         .from('applications')
         .select(`
@@ -98,9 +102,11 @@ export const useRealApplications = () => {
         .in('opportunity_id', oppIds);
 
       if (applicationsError) {
-        console.error('Error fetching applications:', applicationsError);
+        console.error('❌ useRealApplications - Error fetching applications:', applicationsError);
         throw applicationsError;
       }
+
+      console.log('📡 useRealApplications - Aplicaciones recibidas de Supabase:', applicationsData?.length || 0);
 
       const apps = (applicationsData || []) as Application[];
       setApplications(apps);
@@ -154,9 +160,20 @@ export const useRealApplications = () => {
       });
 
     } catch (error) {
-      console.error('Error in fetchApplications:', error);
+      console.error('❌ useRealApplications - Error in fetchApplications:', error);
+      // Asegurar que se establezcan métricas vacías en caso de error
+      setApplications([]);
+      setMetrics({
+        totalApplications: 0,
+        unreadApplications: 0,
+        thisWeekApplications: 0,
+        contactedCandidates: 0,
+        conversionRate: 0,
+        applicationsByOpportunity: {}
+      });
     } finally {
       setIsLoading(false);
+      console.log('✅ useRealApplications - fetchApplications completado para empresa:', activeCompany?.id);
     }
   }, [activeCompany?.id]);
 
