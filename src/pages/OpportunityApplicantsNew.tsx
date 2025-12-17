@@ -812,7 +812,20 @@ const OpportunityApplicantsNew = () => {
                   {application.ratings && application.ratings.length > 0 && (
                     <>
                       <Separator className="my-3 sm:my-4" />
-                      <ApplicationRatingDisplay ratings={application.ratings} />
+                      <ApplicationRatingDisplay 
+                        ratings={application.ratings.map((rating: any) => ({
+                          id: rating.id,
+                          overallRating: rating.overall_rating || 0,
+                          criteriaRatings: rating.criteria_ratings || {},
+                          comments: rating.comments || '',
+                          recommendation: rating.recommendation || 'no_hire',
+                          ratedBy: {
+                            name: rating.rated_by?.full_name || 'Usuario',
+                            avatar: rating.rated_by?.avatar_url || undefined
+                          },
+                          ratedAt: rating.created_at || new Date().toISOString()
+                        }))} 
+                      />
                     </>
                   )}
 

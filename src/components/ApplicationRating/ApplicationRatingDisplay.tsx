@@ -173,24 +173,26 @@ export const ApplicationRatingDisplay = ({
 
       {/* Individual Ratings */}
       <div className="space-y-4">
-        {ratings.map((rating) => (
-          <Card key={rating.id}>
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={rating.ratedBy.avatar} />
-                    <AvatarFallback>
-                      {rating.ratedBy.name?.charAt(0) || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-base">{rating.ratedBy.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(rating.ratedAt), 'dd MMM yyyy, HH:mm', { locale: es })}
-                    </p>
+        {ratings.map((rating) => {
+          const ratedBy = rating.ratedBy || { name: 'Usuario', avatar: undefined };
+          return (
+            <Card key={rating.id}>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={ratedBy.avatar} />
+                      <AvatarFallback>
+                        {ratedBy.name?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-base">{ratedBy.name || 'Usuario'}</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(rating.ratedAt), 'dd MMM yyyy, HH:mm', { locale: es })}
+                      </p>
+                    </div>
                   </div>
-                </div>
                 
                 <div className="text-right">
                   <div className="flex items-center gap-1 mb-1">
@@ -248,7 +250,8 @@ export const ApplicationRatingDisplay = ({
               )}
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
