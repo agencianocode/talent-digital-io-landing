@@ -127,6 +127,18 @@ export const useRealApplications = () => {
         }
       });
 
+      // Agregar logging para debug
+      console.log('📊 useRealApplications - Total aplicaciones:', totalApplications);
+      console.log('📊 useRealApplications - IDs de oportunidades de la empresa:', oppIds);
+      console.log('📊 useRealApplications - Aplicaciones encontradas:', apps.length);
+      console.log('📊 useRealApplications - Aplicaciones por oportunidad:', applicationsByOpportunity);
+      console.log('📊 useRealApplications - Detalle de aplicaciones:', apps.map(app => ({
+        id: app.id,
+        opportunity_id: app.opportunity_id,
+        status: app.status,
+        created_at: app.created_at
+      })));
+
       setMetrics({
         totalApplications,
         unreadApplications,

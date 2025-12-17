@@ -33,8 +33,16 @@ const BusinessDashboard = () => {
 
   // Map de postulantes por oportunidad desde métricas reales
   const applicantsByOpportunity = useMemo<Record<string, number>>(() => {
-    return applicationMetrics?.applicationsByOpportunity || {};
-  }, [applicationMetrics]);
+    const result = applicationMetrics?.applicationsByOpportunity || {};
+    console.log('📊 BusinessDashboard - applicationMetrics completo:', applicationMetrics);
+    console.log('📊 BusinessDashboard - applicationsByOpportunity:', result);
+    console.log('📊 BusinessDashboard - Oportunidades activas:', opportunities.filter(opp => opp.status === 'active').map(opp => ({
+      id: opp.id,
+      title: opp.title,
+      applicants: result[opp.id] || 0
+    })));
+    return result;
+  }, [applicationMetrics, opportunities]);
 
   // Vistas por oportunidad (conteo de registros en opportunity_views o suma de shares)
   const [viewsByOpportunity, setViewsByOpportunity] = useState<Record<string, number>>({});
