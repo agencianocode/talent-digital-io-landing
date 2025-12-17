@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +25,9 @@ import {
   Copy,
   CheckCircle2,
   Link as LinkIcon,
-  Loader2
+  Loader2,
+  AlertCircle,
+  User
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -32,10 +35,31 @@ interface InvitationManagerProps {
   academyId: string;
 }
 
+// Helper to format a student display name
+const formatStudentName = (email: string, name?: string | null): string => {
+  // If name exists and is different from the email prefix, use it
+  const emailPrefix = email.split('@')[0] || '';
+  if (name && name !== emailPrefix) {
+    return name;
+  }
+  // Otherwise, format email prefix nicely
+  // Capitalize words and replace underscores/dots with spaces
+  return emailPrefix
+    .replace(/[._-]/g, ' ')
+    .split(' ')
+    .filter(word => word.length > 0)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ') || email;
+};
+
+// Email validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId }) => {
   const [emailList, setEmailList] = useState('');
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [sendProgress, setSendProgress] = useState(0);
   const [copiedActive, setCopiedActive] = useState(false);
   const [copiedGraduated, setCopiedGraduated] = useState(false);
   const [invitations, setInvitations] = useState<any[]>([]);
@@ -86,37 +110,78 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
     }
   };
 
+  const parseEmails = (text: string): { valid: string[]; invalid: string[] } => {
+    const allEmails = text
+      .split(/[,;\n\r\t]+/)
+      .map(email => email.trim().toLowerCase())
+      .filter(email => email.length > 0);
+
+    // Remove duplicates
+    const uniqueEmails = [...new Set(allEmails)];
+
+    const valid: string[] = [];
+    const invalid: string[] = [];
+
+    for (const email of uniqueEmails) {
+      if (EMAIL_REGEX.test(email)) {
+        valid.push(email);
+      } else {
+        invalid.push(email);
+      }
+    }
+
+    return { valid, invalid };
+  };
+
   const handleSendInvitations = async () => {
     if (!emailList.trim()) return;
 
+    const { valid: emails, invalid: invalidEmails } = parseEmails(emailList);
+
+    if (invalidEmails.length > 0) {
+      toast.warning(
+        `${invalidEmails.length} email(s) con formato inválido`,
+        {
+          description: invalidEmails.slice(0, 3).join(', ') + (invalidEmails.length > 3 ? '...' : ''),
+          duration: 5000
+        }
+      );
+    }
+
+    if (emails.length === 0) {
+      toast.error('No se encontraron emails válidos');
+      return;
+    }
+
     try {
       setIsSending(true);
-      
-      // Parse emails (split by comma, semicolon, or new line)
-      const emails = emailList
-        .split(/[,;\n]/)
-        .map(email => email.trim())
-        .filter(email => email.length > 0);
-
-      if (emails.length === 0) {
-        toast.error('No se encontraron emails válidos');
-        return;
-      }
+      setSendProgress(10);
 
       // Insert students into academy_students table
       const studentsToInsert = emails.map(email => ({
         academy_id: academyId,
         student_email: email,
-        student_name: email.split('@')[0], // Temporary name
+        student_name: null, // Will be set when they register
         status: 'enrolled',
         enrollment_date: new Date().toISOString().split('T')[0]
       }));
+
+      setSendProgress(20);
 
       const { error: dbError } = await supabase
         .from('academy_students')
         .insert(studentsToInsert);
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        // Check if it's a duplicate error
+        if (dbError.code === '23505') {
+          toast.error('Algunos emails ya están registrados en la academia');
+        } else {
+          throw dbError;
+        }
+      }
+
+      setSendProgress(40);
 
       // Get academy name for the email
       const { data: academyData } = await supabase
@@ -125,9 +190,11 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         .eq('id', academyId)
         .single();
 
+      setSendProgress(50);
+
       // Send invitation emails via Edge Function
       console.log('📧 Calling send-academy-invitations edge function...', {
-        emails,
+        emailCount: emails.length,
         academyId,
         academyName: academyData?.name
       });
@@ -144,31 +211,48 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         }
       );
 
+      setSendProgress(90);
+
       console.log('📧 Edge function response:', { data, emailError });
 
       if (emailError) {
         console.error('❌ Error sending emails:', emailError);
         toast.error(
-          `Error al enviar emails: ${emailError.message}`,
+          `Error al enviar emails`,
           {
             description: 'Los estudiantes fueron agregados a la base de datos, pero no se enviaron los emails de invitación.',
             duration: 6000
           }
         );
-      } else {
-        console.log('✅ Emails sent successfully:', data);
-        toast.success(
-          `🎉 ¡Invitaciones enviadas correctamente!`,
-          {
-            description: `Se enviaron ${emails.length} email(s) de invitación a: ${emails.slice(0, 3).join(', ')}${emails.length > 3 ? '...' : ''}`,
-            duration: 5000
-          }
-        );
+      } else if (data) {
+        setSendProgress(100);
+        
+        if (data.failed > 0) {
+          // Partial success
+          toast.warning(
+            `${data.sent}/${data.total} emails enviados`,
+            {
+              description: `${data.failed} email(s) no pudieron ser enviados. Los estudiantes fueron agregados a la base de datos.`,
+              duration: 6000
+            }
+          );
+        } else {
+          // Full success
+          toast.success(
+            `🎉 ¡${data.sent} invitación(es) enviada(s)!`,
+            {
+              description: emails.length > 3 
+                ? `Enviado a: ${emails.slice(0, 3).join(', ')}... y ${emails.length - 3} más`
+                : `Enviado a: ${emails.join(', ')}`,
+              duration: 5000
+            }
+          );
+        }
       }
 
       setEmailList('');
       setMessage('');
-      loadInvitations(); // Reload the list
+      loadInvitations();
     } catch (error: any) {
       console.error('Error sending invitations:', error);
       toast.error(
@@ -180,6 +264,7 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
       );
     } finally {
       setIsSending(false);
+      setSendProgress(0);
     }
   };
 
@@ -193,23 +278,18 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
 
     try {
       setIsDeleting(true);
-      console.log('🗑️ Deleting student:', studentToDelete.id);
       
       const { error } = await supabase
         .from('academy_students')
         .delete()
         .eq('id', studentToDelete.id);
 
-      if (error) {
-        console.error('❌ Error deleting student:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Student deleted successfully');
       toast.success(
-        `🗑️ Estudiante eliminado`,
+        `Estudiante eliminado`,
         {
-          description: `${studentToDelete.email} ha sido eliminado de tu academia correctamente.`,
+          description: `${studentToDelete.email} ha sido eliminado de tu academia.`,
           duration: 4000
         }
       );
@@ -217,11 +297,10 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
       setDeleteDialogOpen(false);
       setStudentToDelete(null);
     } catch (error: any) {
-      console.error('❌ Error al eliminar estudiante:', error);
       toast.error(
         'Error al eliminar estudiante',
         {
-          description: error.message || 'No se pudo eliminar el estudiante. Por favor, intenta de nuevo.',
+          description: error.message || 'No se pudo eliminar el estudiante.',
           duration: 5000
         }
       );
@@ -229,6 +308,10 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
       setIsDeleting(false);
     }
   };
+
+  // Count parsed emails for display
+  const { valid: validEmailsPreview } = parseEmails(emailList);
+  const emailCount = validEmailsPreview.length;
 
   return (
     <div className="space-y-6">
@@ -281,8 +364,8 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
                     )}
                   </Button>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
-                  <p className="text-sm text-blue-800">
+                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-3">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
                     <strong>Nota:</strong> Los estudiantes que usen este link serán registrados con el estado "Activo"
                   </p>
                 </div>
@@ -313,8 +396,8 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
                     )}
                   </Button>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">
-                  <p className="text-sm text-green-800">
+                <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-3 mt-3">
+                  <p className="text-sm text-green-800 dark:text-green-200">
                     <strong>Nota:</strong> Los estudiantes que usen este link serán registrados con el estado "Graduado"
                   </p>
                 </div>
@@ -334,16 +417,24 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="emails">Emails de Estudiantes</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label htmlFor="emails">Emails de Estudiantes</Label>
+              {emailCount > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  {emailCount} email{emailCount !== 1 ? 's' : ''} válido{emailCount !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
             <Textarea
               id="emails"
-              placeholder="Ingresa los emails separados por comas o líneas nuevas..."
+              placeholder="Ingresa los emails separados por comas, punto y coma, o líneas nuevas...&#10;&#10;Ejemplo:&#10;estudiante1@email.com&#10;estudiante2@email.com, estudiante3@email.com"
               value={emailList}
               onChange={(e) => setEmailList(e.target.value)}
-              rows={4}
+              rows={6}
+              className="font-mono text-sm"
             />
             <p className="text-sm text-muted-foreground mt-1">
-              Separa múltiples emails con comas o líneas nuevas
+              Puedes pegar listas de emails directamente desde Excel o Google Sheets
             </p>
           </div>
           
@@ -357,15 +448,43 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
               rows={3}
             />
           </div>
+
+          {isSending && sendProgress > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Enviando invitaciones...</span>
+                <span className="font-medium">{sendProgress}%</span>
+              </div>
+              <Progress value={sendProgress} className="h-2" />
+            </div>
+          )}
           
           <Button 
             onClick={handleSendInvitations}
-            disabled={!emailList.trim() || isSending}
+            disabled={!emailList.trim() || isSending || emailCount === 0}
             className="w-full"
           >
-            <Send className="h-4 w-4 mr-2" />
-            {isSending ? 'Enviando...' : 'Enviar Invitaciones'}
+            {isSending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Enviando {emailCount} invitación{emailCount !== 1 ? 'es' : ''}...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4 mr-2" />
+                Enviar {emailCount > 0 ? `${emailCount} ` : ''}Invitación{emailCount !== 1 ? 'es' : ''}
+              </>
+            )}
           </Button>
+
+          {emailCount > 50 && (
+            <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                Estás enviando {emailCount} invitaciones. El proceso puede tomar algunos minutos debido a límites de envío.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -374,7 +493,7 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
-            Estudiantes Invitados
+            Estudiantes Invitados ({invitations.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -388,24 +507,28 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
               <p className="text-muted-foreground">No hay estudiantes invitados</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {invitations.map((invitation) => (
                 <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                    </div>
                     <div>
-                      <p className="font-medium">{invitation.student_email}</p>
+                      <p className="font-medium">
+                        {formatStudentName(invitation.student_email, invitation.student_name)}
+                      </p>
                       <p className="text-sm text-muted-foreground">
-                        Agregado: {new Date(invitation.created_at).toLocaleDateString()}
+                        {invitation.student_email}
                       </p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <Badge className={`text-xs ${
-                      invitation.status === 'enrolled' ? 'bg-blue-100 text-blue-800' :
-                      invitation.status === 'graduated' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'
+                      invitation.status === 'enrolled' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                      invitation.status === 'graduated' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                      'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
                     }`}>
                       {invitation.status === 'enrolled' ? 'Activo' : 
                        invitation.status === 'graduated' ? 'Graduado' : 
@@ -418,7 +541,7 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
                       onClick={() => openDeleteDialog(invitation.id, invitation.student_email)}
                       disabled={isDeleting}
                     >
-                      {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar'}
+                      Eliminar
                     </Button>
                   </div>
                 </div>
