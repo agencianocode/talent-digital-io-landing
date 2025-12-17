@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSupabaseOpportunities } from './useSupabaseOpportunities';
 import { useRealApplications } from './useRealApplications';
+import { useCompany } from '@/contexts/CompanyContext';
 import { mockOpportunityData, getMockOpportunities, getMockMetrics } from '@/components/dashboard/MockOpportunityData';
 
 interface DashboardMetrics {
@@ -72,8 +73,12 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
   // Hook para aplicaciones reales
   const { 
     metrics: realApplicationMetrics, 
-    isLoading: applicationsLoading 
+    isLoading: applicationsLoading,
+    refreshApplications
   } = useRealApplications();
+
+  // Obtener activeCompany para detectar cambios
+  const { activeCompany } = useCompany();
 
   useEffect(() => {
     const loadData = async () => {
@@ -168,6 +173,7 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
           });
 
           // Usar conteos reales de aplicaciones por oportunidad
+          console.log('📊 useOpportunityDashboard - Estableciendo applicationCounts para empresa:', activeCompany?.id, realApplicationMetrics.applicationsByOpportunity);
           setApplicationCounts(realApplicationMetrics.applicationsByOpportunity);
 
           // Obtener conteos de vistas reales desde la base de datos
@@ -202,7 +208,15 @@ export const useOpportunityDashboard = (useMockData: boolean = false) => {
     }
 
     loadData();
-  }, [useMockData, realOpportunities, realLoading, realApplicationMetrics, applicationsLoading]);
+  }, [useMockData, realOpportunities, realLoading, realApplicationMetrics, applicationsLoading, activeCompany?.id]);
+
+  // Refrescar aplicaciones cuando cambia la empresa activa
+  useEffect(() => {
+    if (activeCompany?.id && !useMockData) {
+      console.log('🔄 useOpportunityDashboard - Empresa activa cambió, refrescando aplicaciones:', activeCompany.id, activeCompany.name);
+      refreshApplications();
+    }
+  }, [activeCompany?.id, useMockData, refreshApplications]);
 
   return {
     opportunities: opportunitiesWithExtras,

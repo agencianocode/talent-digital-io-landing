@@ -46,13 +46,17 @@ export const useRealApplications = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchApplications = useCallback(async () => {
+    console.log('🔄 useRealApplications - fetchApplications llamado para empresa:', activeCompany?.id, activeCompany?.name);
+    
     if (!activeCompany?.id) {
+      console.log('⚠️ useRealApplications - No hay empresa activa, cancelando fetch');
       setIsLoading(false);
       return;
     }
 
     try {
       setIsLoading(true);
+      console.log('📡 useRealApplications - Obteniendo oportunidades para empresa:', activeCompany.id);
       
       // Primero obtener los IDs de oportunidades de la empresa
       const { data: opportunityIds, error: opportunityError } = await supabase
@@ -128,6 +132,7 @@ export const useRealApplications = () => {
       });
 
       // Agregar logging para debug
+      console.log('📊 useRealApplications - Empresa:', activeCompany.id, activeCompany.name);
       console.log('📊 useRealApplications - Total aplicaciones:', totalApplications);
       console.log('📊 useRealApplications - IDs de oportunidades de la empresa:', oppIds);
       console.log('📊 useRealApplications - Aplicaciones encontradas:', apps.length);
@@ -158,6 +163,11 @@ export const useRealApplications = () => {
   useEffect(() => {
     fetchApplications();
   }, [fetchApplications]);
+
+  // Agregar logging cuando cambia activeCompany
+  useEffect(() => {
+    console.log('🔄 useRealApplications - activeCompany cambió:', activeCompany?.id, activeCompany?.name);
+  }, [activeCompany?.id]);
 
   return {
     applications,
