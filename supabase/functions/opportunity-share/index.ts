@@ -20,23 +20,23 @@ function escapeHtml(text: string): string {
 function stripHtml(html: string): string {
   if (!html) return '';
   return String(html)
-    .replace(/<[^>]*>/g, '') // Eliminar tags HTML
-    .replace(/\*\*([^*]+)\*\*/g, '$1') // Eliminar markdown bold **texto**
-    .replace(/\*([^*]+)\*/g, '$1') // Eliminar markdown italic *texto*
-    .replace(/__([^_]+)__/g, '$1') // Eliminar markdown bold __texto__
-    .replace(/_([^_]+)_/g, '$1') // Eliminar markdown italic _texto_
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Eliminar markdown links [texto](url)
-    .replace(/#{1,6}\s+/g, '') // Eliminar markdown headers
-    .replace(/`([^`]+)`/g, '$1') // Eliminar markdown code `codigo`
-    .replace(/```[\s\S]*?```/g, '') // Eliminar markdown code blocks
+    .replace(/<[^>]*>/g, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+    .replace(/#{1,6}\s+/g, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/```[\s\S]*?```/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'")
-    .replace(/\n+/g, ' ') // Reemplazar saltos de línea con espacios
-    .replace(/\s+/g, ' ') // Normalizar espacios múltiples
+    .replace(/\n+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -46,7 +46,6 @@ function ensureAbsoluteUrl(url: string): string {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  // Si es una URL relativa, asumimos que está en Supabase Storage
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
   if (url.startsWith('/')) {
     return `${supabaseUrl}${url}`;
@@ -55,10 +54,6 @@ function ensureAbsoluteUrl(url: string): string {
 }
 
 Deno.serve(async (req) => {
-  // Detectar si es un crawler de redes sociales
-  const userAgent = req.headers.get('user-agent') || '';
-  const isCrawler = /facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|Slackbot|SkypeUriPreview|Applebot|Googlebot/i.test(userAgent);
-
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -69,12 +64,17 @@ Deno.serve(async (req) => {
     const opportunityId = url.pathname.split('/').pop();
 
     if (!opportunityId) {
-      return new Response('Missing opportunity ID', { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: 'Missing opportunity ID' }), { 
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    
     // Create Supabase client with service role
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
+      supabaseUrl,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
@@ -99,7 +99,10 @@ Deno.serve(async (req) => {
 
     if (error || !opportunity) {
       console.error('Error fetching opportunity:', error);
-      return new Response('Opportunity not found', { status: 404, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: 'Opportunity not found' }), { 
+        status: 404, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
     }
 
     const company = opportunity.companies as any;
@@ -112,7 +115,7 @@ Deno.serve(async (req) => {
     const description = rawDescription.substring(0, 160).trim() || 'Nueva oportunidad laboral disponible';
     
     const appUrl = `https://app.talentodigital.io/opportunity/${opportunityId}`;
-    const shareUrl = `https://share.talentodigital.io/functions/v1/opportunity-share/${opportunityId}`;
+    const storageUrl = `${supabaseUrl}/storage/v1/object/public/share-pages/opportunity-${opportunityId}.html`;
     
     // Preparar valores escapados
     const escapedTitle = escapeHtml(opportunity.title || 'Oportunidad laboral');
@@ -130,9 +133,9 @@ Deno.serve(async (req) => {
   <title>${escapedTitle} - ${escapedCompanyName}</title>
   <meta name="description" content="${escapedDescription}">
   
-  <!-- Open Graph / Facebook -->
+  <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${shareUrl}">
+  <meta property="og:url" content="${storageUrl}">
   <meta property="og:title" content="${ogTitle}">
   <meta property="og:description" content="${escapedDescription}">
   ${ogImage ? `<meta property="og:image" content="${ogImage}">` : ''}
@@ -143,16 +146,13 @@ Deno.serve(async (req) => {
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${shareUrl}">
+  <meta name="twitter:url" content="${storageUrl}">
   <meta name="twitter:title" content="${ogTitle}">
   <meta name="twitter:description" content="${escapedDescription}">
   ${ogImage ? `<meta name="twitter:image" content="${ogImage}">` : ''}
   
-  <!-- WhatsApp -->
-  <meta property="og:image:type" content="image/png">
-  
-  ${!isCrawler ? `<!-- Redirect to SPA - Solo para usuarios normales, no para crawlers -->
-  <meta http-equiv="refresh" content="0;url=${appUrl}">` : ''}
+  <!-- Redirect to SPA -->
+  <meta http-equiv="refresh" content="0;url=${appUrl}">
   
   <style>
     body {
@@ -169,13 +169,8 @@ Deno.serve(async (req) => {
       text-align: center;
       padding: 2rem;
     }
-    h1 {
-      margin-bottom: 1rem;
-    }
-    p {
-      margin-bottom: 1.5rem;
-      opacity: 0.9;
-    }
+    h1 { margin-bottom: 1rem; }
+    p { margin-bottom: 1.5rem; opacity: 0.9; }
     a {
       display: inline-block;
       padding: 0.75rem 2rem;
@@ -184,10 +179,6 @@ Deno.serve(async (req) => {
       text-decoration: none;
       border-radius: 0.5rem;
       font-weight: 600;
-      transition: transform 0.2s;
-    }
-    a:hover {
-      transform: scale(1.05);
     }
   </style>
 </head>
@@ -197,31 +188,39 @@ Deno.serve(async (req) => {
     <p>${escapedCompanyName} • ${opportunity.type || ''} ${opportunity.location ? `• ${escapeHtml(opportunity.location)}` : ''}</p>
     <a href="${appUrl}">Ver oportunidad completa</a>
   </div>
-  ${!isCrawler ? `<script>
-    // Redirect immediately - Solo para usuarios normales, no para crawlers
-    window.location.href = "${appUrl}";
-  </script>` : ''}
+  <script>window.location.href = "${appUrl}";</script>
 </body>
 </html>`;
 
-    // Crear headers explícitamente para asegurar Content-Type correcto
-    const responseHeaders = new Headers();
-    responseHeaders.set('Content-Type', 'text/html; charset=utf-8');
-    responseHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    responseHeaders.set('Access-Control-Allow-Origin', '*');
-    responseHeaders.set('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type');
+    // Upload HTML to Storage
+    const fileName = `opportunity-${opportunityId}.html`;
+    const { error: uploadError } = await supabase.storage
+      .from('share-pages')
+      .upload(fileName, html, {
+        contentType: 'text/html',
+        upsert: true,
+      });
 
-    console.log('Returning HTML response for opportunity:', opportunityId);
-    console.log('Response headers:', {
-      'Content-Type': responseHeaders.get('Content-Type'),
-      'Cache-Control': responseHeaders.get('Cache-Control'),
-    });
-    console.log('User-Agent:', userAgent);
-    console.log('Is Crawler:', isCrawler);
+    if (uploadError) {
+      console.error('Error uploading HTML to storage:', uploadError);
+      return new Response(JSON.stringify({ error: 'Failed to generate share page' }), { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
+    }
 
-    return new Response(html, {
+    console.log('Successfully uploaded share page for opportunity:', opportunityId);
+    console.log('Storage URL:', storageUrl);
+
+    // Return the storage URL
+    return new Response(JSON.stringify({ 
+      success: true,
+      shareUrl: storageUrl,
+      opportunityId,
+      title: opportunity.title
+    }), {
       status: 200,
-      headers: responseHeaders,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error in opportunity-share function:', error);

@@ -29,11 +29,26 @@ const StaticShareButton: React.FC<StaticShareButtonProps> = ({
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   const generatePublicUrl = (opportunityId: string) => {
-    // Use custom subdomain for sharing - shows share.talentodigital.io in social media previews
-    return `https://share.talentodigital.io/functions/v1/opportunity-share/${opportunityId}`;
+    // Use Supabase Storage URL - serves HTML with correct Content-Type for social media crawlers
+    return `https://wyrieetebfzmgffxecpz.supabase.co/storage/v1/object/public/share-pages/opportunity-${opportunityId}.html`;
+  };
+
+  // Ensure share page exists by calling Edge Function
+  const ensureSharePageExists = async (opportunityId: string) => {
+    try {
+      await fetch(
+        `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/opportunity-share/${opportunityId}`,
+        { method: 'GET' }
+      );
+    } catch (error) {
+      console.error('Error ensuring share page exists:', error);
+    }
   };
 
   const handleShare = async (shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email') => {
+    // First ensure the share page exists in Storage
+    await ensureSharePageExists(opportunityId);
+    
     const shareUrl = generatePublicUrl(opportunityId);
     
     try {
