@@ -233,36 +233,77 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
   };
 
   const handleStatusChange = async (newStatus: string) => {
-    if (!opportunity) return;
+    if (!opportunity) {
+      console.warn('[AdminOpportunityDetail] No opportunity available');
+      return;
+    }
+
+    // Prevent changing to the same status
+    if (opportunity.status === newStatus) {
+      console.log('[AdminOpportunityDetail] Status is already:', newStatus);
+      return;
+    }
+
+    console.log('[AdminOpportunityDetail] handleStatusChange called:', {
+      opportunityId,
+      currentStatus: opportunity.status,
+      newStatus,
+      isActive: newStatus === 'active'
+    });
 
     setIsUpdating(true);
     try {
-      console.log('[AdminOpportunityDetail] Changing status:', {
-        opportunityId,
-        currentStatus: opportunity.status,
-        newStatus,
-        isActive: newStatus === 'active'
-      });
+      const updateData = { 
+        status: newStatus as any,
+        is_active: newStatus === 'active',
+        updated_at: new Date().toISOString()
+      };
 
-      const { error, data } = await supabase
+      console.log('[AdminOpportunityDetail] Updating with data:', updateData);
+
+      const { error, data, count } = await supabase
         .from('opportunities')
-        .update({ 
-          status: newStatus as any,
-          is_active: newStatus === 'active'
-        })
+        .update(updateData)
         .eq('id', opportunityId)
         .select();
 
+      console.log('[AdminOpportunityDetail] Update response:', { error, data, count });
+
       if (error) {
         console.error('[AdminOpportunityDetail] Error updating status:', error);
+        console.error('[AdminOpportunityDetail] Error details:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
         toast.error(`Error al cambiar el estado: ${error.message || error.code || 'Error desconocido'}`);
+        setIsUpdating(false);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        console.error('[AdminOpportunityDetail] No data returned from update');
+        toast.error('Error: No se pudo actualizar el estado. Verifica los permisos.');
+        setIsUpdating(false);
         return;
       }
 
       console.log('[AdminOpportunityDetail] Status updated successfully:', data);
+      
+      // Update local state immediately for better UX
+      setOpportunity(prev => prev ? { 
+        ...prev, 
+        status: newStatus, 
+        is_active: newStatus === 'active',
+        updated_at: new Date().toISOString()
+      } : null);
+      
       toast.success(`Oportunidad ${newStatus === 'active' ? 'activada' : 'pausada'} correctamente`);
       onOpportunityUpdate();
-      loadOpportunityDetail();
+      
+      // Reload to get fresh data from server
+      await loadOpportunityDetail();
     } catch (error) {
       console.error('[AdminOpportunityDetail] Exception updating status:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
@@ -1007,7 +1048,14 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
                 <div className="flex items-center gap-4">
                   <Label className="w-32">Estado:</Label>
-                  <Select value={opportunity.status} onValueChange={handleStatusChange}>
+                  <Select 
+                    value={opportunity.status} 
+                    onValueChange={(value) => {
+                      console.log('[AdminOpportunityDetail] Select onValueChange triggered:', value);
+                      handleStatusChange(value);
+                    }}
+                    disabled={isUpdating}
+                  >
                     <SelectTrigger className="w-48">
                       <SelectValue />
                     </SelectTrigger>
