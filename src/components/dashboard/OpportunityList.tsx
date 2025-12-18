@@ -161,7 +161,7 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
   };
 
   const handleShareOpportunity = async (opportunity: any, shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email' = 'link') => {
-    const publicUrl = `${window.location.origin}/opportunity/${opportunity.id}`;
+    const publicUrl = `${window.location.origin}/opportunity/${opportunity.slug || opportunity.id}`;
     
     if (shareType === 'link') {
       try {

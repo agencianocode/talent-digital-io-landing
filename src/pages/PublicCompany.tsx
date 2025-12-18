@@ -98,6 +98,7 @@ const PublicCompany = () => {
         .from('opportunities')
         .select(`
           id,
+          slug,
           title,
           description,
           location,
@@ -483,7 +484,7 @@ const PublicCompany = () => {
                     <div
                       key={opp.id}
                       className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => navigate(`/opportunity/${opp.id}`)}
+                      onClick={() => navigate(`/opportunity/${opp.slug || opp.id}`)}
                     >
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex-1">

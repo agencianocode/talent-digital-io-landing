@@ -26,12 +26,14 @@ import {
 interface ShareOpportunityProps {
   opportunityId: string;
   opportunityTitle: string;
+  opportunitySlug?: string;
   variant?: 'button' | 'dropdown' | 'card';
 }
 
 const ShareOpportunity: React.FC<ShareOpportunityProps> = React.memo(({ 
   opportunityId, 
   opportunityTitle,
+  opportunitySlug,
   variant = 'button' 
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -39,7 +41,7 @@ const ShareOpportunity: React.FC<ShareOpportunityProps> = React.memo(({
 
   const handleShare = async (shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email') => {
     try {
-      await shareOpportunity(opportunityId, shareType);
+      await shareOpportunity(opportunityId, shareType, undefined, opportunitySlug);
       if (shareType === 'link') {
         setIsDialogOpen(false);
       }
