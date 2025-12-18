@@ -16,17 +16,27 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;');
 }
 
-// Función para limpiar HTML tags de la descripción
+// Función para limpiar HTML tags y markdown de la descripción
 function stripHtml(html: string): string {
   if (!html) return '';
   return String(html)
     .replace(/<[^>]*>/g, '') // Eliminar tags HTML
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // Eliminar markdown bold **texto**
+    .replace(/\*([^*]+)\*/g, '$1') // Eliminar markdown italic *texto*
+    .replace(/__([^_]+)__/g, '$1') // Eliminar markdown bold __texto__
+    .replace(/_([^_]+)_/g, '$1') // Eliminar markdown italic _texto_
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Eliminar markdown links [texto](url)
+    .replace(/#{1,6}\s+/g, '') // Eliminar markdown headers
+    .replace(/`([^`]+)`/g, '$1') // Eliminar markdown code `codigo`
+    .replace(/```[\s\S]*?```/g, '') // Eliminar markdown code blocks
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'")
+    .replace(/\n+/g, ' ') // Reemplazar saltos de línea con espacios
+    .replace(/\s+/g, ' ') // Normalizar espacios múltiples
     .trim();
 }
 
@@ -45,6 +55,10 @@ function ensureAbsoluteUrl(url: string): string {
 }
 
 Deno.serve(async (req) => {
+  // Detectar si es un crawler de redes sociales
+  const userAgent = req.headers.get('user-agent') || '';
+  const isCrawler = /facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|Slackbot|SkypeUriPreview|Applebot|Googlebot/i.test(userAgent);
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -137,8 +151,8 @@ Deno.serve(async (req) => {
   <!-- WhatsApp -->
   <meta property="og:image:type" content="image/png">
   
-  <!-- Redirect to SPA -->
-  <meta http-equiv="refresh" content="0;url=${appUrl}">
+  ${!isCrawler ? `<!-- Redirect to SPA - Solo para usuarios normales, no para crawlers -->
+  <meta http-equiv="refresh" content="0;url=${appUrl}">` : ''}
   
   <style>
     body {
@@ -183,10 +197,10 @@ Deno.serve(async (req) => {
     <p>${escapedCompanyName} • ${opportunity.type || ''} ${opportunity.location ? `• ${escapeHtml(opportunity.location)}` : ''}</p>
     <a href="${appUrl}">Ver oportunidad completa</a>
   </div>
-  <script>
-    // Redirect immediately
+  ${!isCrawler ? `<script>
+    // Redirect immediately - Solo para usuarios normales, no para crawlers
     window.location.href = "${appUrl}";
-  </script>
+  </script>` : ''}
 </body>
 </html>`;
 
