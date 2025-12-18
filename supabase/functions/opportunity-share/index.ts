@@ -192,15 +192,18 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-    // Upload HTML to Storage as a proper file with correct content type
+    // Upload HTML to Storage - first delete existing file to force correct Content-Type
     const fileName = `opportunity-${opportunityId}.html`;
-    const htmlBlob = new Blob([html], { type: 'text/html' });
     
+    // Remove existing file first (ignore errors if doesn't exist)
+    await supabase.storage.from('share-pages').remove([fileName]);
+    
+    // Now upload fresh file with correct Content-Type
+    const htmlBlob = new Blob([html], { type: 'text/html' });
     const { error: uploadError } = await supabase.storage
       .from('share-pages')
       .upload(fileName, htmlBlob, {
         contentType: 'text/html; charset=utf-8',
-        upsert: true,
         cacheControl: '3600',
       });
 
