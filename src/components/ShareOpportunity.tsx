@@ -19,8 +19,7 @@ import {
   Link, 
   MessageCircle, 
   Linkedin, 
-  Twitter, 
-  Mail
+  Twitter
 } from 'lucide-react';
 
 interface ShareOpportunityProps {
@@ -74,12 +73,6 @@ const ShareOpportunity: React.FC<ShareOpportunityProps> = React.memo(({
       label: 'Twitter',
       icon: Twitter,
       description: 'Compartir en Twitter'
-    },
-    {
-      type: 'email' as const,
-      label: 'Email',
-      icon: Mail,
-      description: 'Enviar por email'
     }
   ];
 
