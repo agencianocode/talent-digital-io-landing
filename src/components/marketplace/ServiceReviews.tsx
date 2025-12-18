@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Star, ThumbsUp, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,20 +36,72 @@ export const ServiceReviews = ({ serviceId, canReview }: ServiceReviewsProps) =>
 
   const loadReviews = async () => {
     try {
-      const { data, error } = await supabase
+      setIsLoading(true);
+      
+      // Cargar reseñas
+      const { data: reviewsData, error: reviewsError } = await supabase
         .from('service_reviews')
         .select('*')
         .eq('service_id', serviceId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setReviews(data as any || []);
+      if (reviewsError) throw reviewsError;
+
+      if (!reviewsData || reviewsData.length === 0) {
+        setReviews([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Obtener IDs únicos de los revisores
+      const reviewerIds = [...new Set(reviewsData.map(r => r.reviewer_id))];
+
+      // Cargar perfiles de los revisores
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', reviewerIds);
+
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError);
+      }
+
+      // Crear un mapa de perfiles por user_id
+      const profilesMap = new Map(
+        (profilesData || []).map(profile => [profile.user_id, profile])
+      );
+
+      // Combinar reseñas con perfiles
+      const reviewsWithProfiles: Review[] = reviewsData.map(review => {
+        const profile = profilesMap.get(review.reviewer_id);
+        return {
+          ...review,
+          profiles: profile ? {
+            full_name: profile.full_name || 'Usuario',
+            avatar_url: profile.avatar_url || undefined
+          } : undefined
+        };
+      });
+
+      console.log('Reviews loaded with profiles:', reviewsWithProfiles);
+      setReviews(reviewsWithProfiles);
     } catch (error) {
       console.error('Error loading reviews:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar las reseñas',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (serviceId) {
+      loadReviews();
+    }
+  }, [serviceId]);
 
   const handleSubmitReview = async () => {
     if (rating === 0) {
@@ -82,7 +134,7 @@ export const ServiceReviews = ({ serviceId, canReview }: ServiceReviewsProps) =>
 
       setRating(0);
       setComment('');
-      loadReviews();
+      await loadReviews();
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -148,7 +200,10 @@ export const ServiceReviews = ({ serviceId, canReview }: ServiceReviewsProps) =>
                 <Avatar>
                   <AvatarImage src={review.profiles?.avatar_url} />
                   <AvatarFallback>
-                    <User className="h-4 w-4" />
+                    {review.profiles?.full_name 
+                      ? review.profiles.full_name.charAt(0).toUpperCase()
+                      : <User className="h-4 w-4" />
+                    }
                   </AvatarFallback>
                 </Avatar>
 
@@ -172,7 +227,11 @@ export const ServiceReviews = ({ serviceId, canReview }: ServiceReviewsProps) =>
                       </div>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {review.created_at ? new Date(review.created_at).toLocaleDateString() : ''}
+                      {review.created_at ? new Date(review.created_at).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : ''}
                     </span>
                   </div>
 
