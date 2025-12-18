@@ -7,6 +7,7 @@ import { filterOpportunitiesForTalent } from '@/lib/country-restrictions';
 
 interface SupabaseOpportunity {
   id: string;
+  slug?: string | null;
   title: string;
   description: string;
   requirements: string | null;

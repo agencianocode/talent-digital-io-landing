@@ -346,7 +346,7 @@ const TalentDashboard = () => {
                             size="sm"
                             variant="default"
                             className="font-['Inter'] flex-1 sm:flex-none text-xs sm:text-sm"
-                            onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
+                            onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.slug || opportunity.id}`)}
                           >
                             Ver Detalles
                           </Button>
