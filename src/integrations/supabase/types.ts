@@ -1304,6 +1304,7 @@ export type Database = {
           salary_max: number | null
           salary_min: number | null
           skills: string[] | null
+          slug: string | null
           status: Database["public"]["Enums"]["opportunity_status"] | null
           timezone_preference: string | null
           title: string
@@ -1336,6 +1337,7 @@ export type Database = {
           salary_max?: number | null
           salary_min?: number | null
           skills?: string[] | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["opportunity_status"] | null
           timezone_preference?: string | null
           title: string
@@ -1368,6 +1370,7 @@ export type Database = {
           salary_max?: number | null
           salary_min?: number | null
           skills?: string[] | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["opportunity_status"] | null
           timezone_preference?: string | null
           title?: string
@@ -2363,6 +2366,10 @@ export type Database = {
       ensure_premium_academy_role: {
         Args: { user_id_param: string }
         Returns: Json
+      }
+      generate_opportunity_slug: {
+        Args: { opp_id: string; title: string }
+        Returns: string
       }
       get_academy_graduate_applications: {
         Args: { p_academy_id: string }

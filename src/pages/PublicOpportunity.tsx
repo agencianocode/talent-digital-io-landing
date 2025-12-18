@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useOpportunitySharing } from '@/hooks/useOpportunitySharing';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { isUUID } from '@/lib/slug-utils';
 import { 
   Building2, 
   MapPin, 
@@ -43,8 +44,11 @@ const PublicOpportunity = () => {
 
     setIsLoading(true);
     try {
-      // Fetch opportunity directly from database
-      const { data, error } = await supabase
+      // Determine if the identifier is a UUID or a slug
+      const isUUIDFormat = isUUID(opportunityId);
+      
+      // Build query based on identifier type
+      let query = supabase
         .from('opportunities')
         .select(`
           *,
@@ -59,13 +63,25 @@ const PublicOpportunity = () => {
             social_links
           )
         `)
-        .eq('id', opportunityId)
-        .eq('status', 'active')
-        .maybeSingle();
+        .eq('status', 'active');
+
+      if (isUUIDFormat) {
+        query = query.eq('id', opportunityId);
+      } else {
+        query = query.eq('slug', opportunityId);
+      }
+
+      const { data, error } = await query.maybeSingle();
       
       if (error) throw error;
 
       if (data) {
+        // If accessed by UUID but has a slug, redirect to canonical URL
+        if (isUUIDFormat && data.slug) {
+          navigate(`/opportunity/${data.slug}`, { replace: true });
+          return;
+        }
+        
         setOpportunity(data);
         
         // Update page meta tags
@@ -78,7 +94,7 @@ const PublicOpportunity = () => {
             await supabase
               .from('opportunity_views')
               .insert({ 
-                opportunity_id: opportunityId,
+                opportunity_id: data.id,
                 viewer_id: currentUser.id 
               });
           } catch (viewErr) {
@@ -100,7 +116,9 @@ const PublicOpportunity = () => {
     const companyName = opportunity.companies?.name || 'Empresa';
     const title = `${opportunity.title} - ${companyName}`;
     const description = opportunity.description?.substring(0, 160) || 'Oportunidad laboral disponible';
-    const url = `${window.location.origin}/opportunity/${opportunity.id}`;
+    // Use slug for canonical URL if available
+    const identifier = opportunity.slug || opportunity.id;
+    const url = `${window.location.origin}/opportunity/${identifier}`;
     const logoUrl = opportunity.companies?.logo_url || `${window.location.origin}/og-image.png`;
     
     // Update document title
@@ -137,21 +155,25 @@ const PublicOpportunity = () => {
   const handleApply = () => {
     if (!user) {
       // Guardar la intención de aplicación para redirección post-onboarding
+      // Use slug for URL if available, but store ID for internal use
+      const urlIdentifier = opportunity?.slug || opportunityId;
       if (opportunityId) {
-        localStorage.setItem('pending_opportunity', opportunityId);
-        navigate(`/register-talent?redirect=/opportunity/${opportunityId}`);
+        localStorage.setItem('pending_opportunity', opportunity?.id || opportunityId);
+        navigate(`/register-talent?redirect=/opportunity/${urlIdentifier}`);
       } else {
         navigate('/register-talent');
       }
       return;
     }
-    navigate(`/talent-dashboard/opportunities/${opportunityId}`);
+    // Use ID for internal dashboard navigation
+    navigate(`/talent-dashboard/opportunities/${opportunity?.id || opportunityId}`);
   };
 
   const handleShare = async (type: 'whatsapp' | 'linkedin' | 'twitter' | 'email') => {
-    if (!opportunityId) return;
+    if (!opportunity) return;
     
-    await shareOpportunity(opportunityId, type);
+    // Pass slug for sharing URLs
+    await shareOpportunity(opportunity.id, type, undefined, opportunity.slug);
   };
 
   const getJobTypeLabel = (type: string) => {
