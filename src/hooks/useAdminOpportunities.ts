@@ -49,7 +49,7 @@ export const useAdminOpportunities = () => {
     searchQuery: '',
     companyFilter: 'all',
     categoryFilter: 'all',
-    statusFilter: 'all',
+    statusFilter: 'active',
     dateRange: 'all',
     priorityFilter: 'all'
   });
