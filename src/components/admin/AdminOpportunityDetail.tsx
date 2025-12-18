@@ -237,22 +237,36 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
     setIsUpdating(true);
     try {
-      const { error } = await supabase
+      console.log('[AdminOpportunityDetail] Changing status:', {
+        opportunityId,
+        currentStatus: opportunity.status,
+        newStatus,
+        isActive: newStatus === 'active'
+      });
+
+      const { error, data } = await supabase
         .from('opportunities')
         .update({ 
           status: newStatus as any,
           is_active: newStatus === 'active'
         })
-        .eq('id', opportunityId);
+        .eq('id', opportunityId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[AdminOpportunityDetail] Error updating status:', error);
+        toast.error(`Error al cambiar el estado: ${error.message || error.code || 'Error desconocido'}`);
+        return;
+      }
 
+      console.log('[AdminOpportunityDetail] Status updated successfully:', data);
       toast.success(`Oportunidad ${newStatus === 'active' ? 'activada' : 'pausada'} correctamente`);
       onOpportunityUpdate();
       loadOpportunityDetail();
     } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Error al cambiar el estado');
+      console.error('[AdminOpportunityDetail] Exception updating status:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al cambiar el estado: ${errorMessage}`);
     } finally {
       setIsUpdating(false);
     }
