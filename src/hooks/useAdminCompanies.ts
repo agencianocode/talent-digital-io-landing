@@ -107,10 +107,11 @@ export const useAdminCompanies = () => {
         console.error('Error loading company users:', usersError);
       }
 
-      // Load opportunities count for each company (only those with title - excludes empty drafts)
+      // Load opportunities count for each company (only active opportunities with title)
       const { data: opportunitiesData, error: oppError } = await supabase
         .from('opportunities')
         .select('company_id, title, status')
+        .eq('status', 'active')
         .not('title', 'is', null);
 
       if (oppError) {
