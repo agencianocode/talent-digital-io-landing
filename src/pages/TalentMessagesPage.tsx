@@ -61,6 +61,12 @@ const TalentMessagesPage = () => {
   
   const activeMessages = messagesByConversation[activeId || ''] || [];
 
+  // Create a key that changes when conversations change - must be before any returns
+  const conversationsKey = useMemo(() => 
+    conversations.map(c => `${c.id}-${c.unread_count}`).join(','),
+    [conversations]
+  );
+
   useEffect(() => {
     if (!activeId) return;
     
@@ -132,12 +138,6 @@ const TalentMessagesPage = () => {
       </div>
     );
   }
-
-  // Create a key that changes when conversations change
-  const conversationsKey = useMemo(() => 
-    conversations.map(c => `${c.id}-${c.unread_count}`).join(','),
-    [conversations]
-  );
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
