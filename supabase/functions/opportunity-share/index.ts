@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
     const description = rawDescription.substring(0, 160).trim() || 'Nueva oportunidad laboral disponible';
     
     const appUrl = `https://app.talentodigital.io/opportunity/${opportunityId}`;
-    const shareUrl = `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/opportunity-share/${opportunityId}`;
+    const shareUrl = `https://share.talentodigital.io/functions/v1/opportunity-share/${opportunityId}`;
     
     // Preparar valores escapados
     const escapedTitle = escapeHtml(opportunity.title || 'Oportunidad laboral');
