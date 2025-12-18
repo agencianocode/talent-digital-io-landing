@@ -41,7 +41,7 @@ const ShareOpportunity: React.FC<ShareOpportunityProps> = React.memo(({
 
   const handleShare = async (shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email') => {
     try {
-      await shareOpportunity(opportunityId, shareType, undefined, opportunitySlug);
+      await shareOpportunity(opportunityId, shareType, undefined, opportunitySlug, opportunityTitle);
       if (shareType === 'link') {
         setIsDialogOpen(false);
       }

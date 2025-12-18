@@ -41,7 +41,8 @@ export const useOpportunitySharing = () => {
     opportunityId: string, 
     shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email',
     customUrl?: string,
-    slug?: string
+    slug?: string,
+    title?: string
   ) => {
     if (!user) return false;
 
@@ -49,22 +50,31 @@ export const useOpportunitySharing = () => {
     try {
       const shareUrl = customUrl || generatePublicUrl(opportunityId, slug);
       
-      console.log('Sharing opportunity:', { opportunityId, shareType, shareUrl });
+      console.log('Sharing opportunity:', { opportunityId, shareType, shareUrl, title });
 
       // Handle different share types
       switch (shareType) {
         case 'whatsapp':
-          // Solo URL para evitar duplicación - WhatsApp genera vista previa automáticamente
-          window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
+          const whatsappText = title 
+            ? `🚀 *${title}*\n\n¡Mira esta oportunidad de trabajo!\n\n${shareUrl}`
+            : `¡Mira esta oportunidad! ${shareUrl}`;
+          window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText)}`, '_blank');
           break;
         case 'linkedin':
           window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank');
           break;
         case 'twitter':
-          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`¡Mira esta oportunidad! ${shareUrl}`)}`, '_blank');
+          const twitterText = title
+            ? `🚀 ${title} - ¡Mira esta oportunidad! ${shareUrl}`
+            : `¡Mira esta oportunidad! ${shareUrl}`;
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}`, '_blank');
           break;
         case 'email':
-          window.open(`mailto:?subject=${encodeURIComponent('Oportunidad de trabajo')}&body=${encodeURIComponent(`¡Mira esta oportunidad! ${shareUrl}`)}`, '_blank');
+          const emailSubject = title ? `Oportunidad: ${title}` : 'Oportunidad de trabajo';
+          const emailBody = title
+            ? `¡Hola!\n\nTe comparto esta oportunidad de trabajo:\n\n📋 ${title}\n\n${shareUrl}\n\n¡Saludos!`
+            : `¡Mira esta oportunidad! ${shareUrl}`;
+          window.location.href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
           break;
         case 'link':
           await navigator.clipboard.writeText(shareUrl);
@@ -72,7 +82,9 @@ export const useOpportunitySharing = () => {
           break;
       }
 
-      toast.success(`Oportunidad compartida por ${shareType}`);
+      if (shareType !== 'link') {
+        toast.success(`Oportunidad compartida por ${shareType}`);
+      }
       return shareUrl;
 
     } catch (error) {
