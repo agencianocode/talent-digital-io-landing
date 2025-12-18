@@ -20,21 +20,24 @@ import { toast } from 'sonner';
 interface StaticShareButtonProps {
   opportunityId: string;
   opportunityTitle: string;
+  opportunitySlug?: string;
 }
 
 const StaticShareButton: React.FC<StaticShareButtonProps> = ({ 
   opportunityId, 
-  opportunityTitle
+  opportunityTitle,
+  opportunitySlug
 }) => {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
-  const generatePublicUrl = (opportunityId: string) => {
-    // URL directa a la app - WhatsApp leerá las meta tags del index.html
-    return `https://app.talentodigital.io/opportunity/${opportunityId}`;
+  const generatePublicUrl = () => {
+    // Use slug for cleaner URLs if available
+    const identifier = opportunitySlug || opportunityId;
+    return `https://app.talentodigital.io/opportunity/${identifier}`;
   };
 
   const handleShare = async (shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email') => {
-    const shareUrl = generatePublicUrl(opportunityId);
+    const shareUrl = generatePublicUrl();
     
     try {
       switch (shareType) {

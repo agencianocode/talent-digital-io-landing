@@ -29,23 +29,25 @@ export const useOpportunitySharing = () => {
   const { user } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Generate public URL for opportunity - direct app URL
-  const generatePublicUrl = useCallback((opportunityId: string) => {
-    // URL directa a la app - WhatsApp leerá las meta tags del index.html
-    return `https://app.talentodigital.io/opportunity/${opportunityId}`;
+  // Generate public URL for opportunity - uses slug if available
+  const generatePublicUrl = useCallback((opportunityId: string, slug?: string) => {
+    // Use slug for cleaner URLs if available, otherwise fall back to ID
+    const identifier = slug || opportunityId;
+    return `https://app.talentodigital.io/opportunity/${identifier}`;
   }, []);
 
   // Share opportunity
   const shareOpportunity = useCallback(async (
     opportunityId: string, 
     shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email',
-    customUrl?: string
+    customUrl?: string,
+    slug?: string
   ) => {
     if (!user) return false;
 
     setIsLoading(true);
     try {
-      const shareUrl = customUrl || generatePublicUrl(opportunityId);
+      const shareUrl = customUrl || generatePublicUrl(opportunityId, slug);
       
       console.log('Sharing opportunity:', { opportunityId, shareType, shareUrl });
 
