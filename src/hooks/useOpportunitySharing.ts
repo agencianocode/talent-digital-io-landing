@@ -29,10 +29,25 @@ export const useOpportunitySharing = () => {
   const { user } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Generate public URL for opportunity - uses custom subdomain with Edge Function for proper OG meta tags
+  // Generate public URL for opportunity - uses Storage for proper OG meta tags
   const generatePublicUrl = useCallback((opportunityId: string) => {
-    // Use custom subdomain for sharing - shows share.talentodigital.io in social media previews
-    return `https://share.talentodigital.io/functions/v1/opportunity-share/${opportunityId}`;
+    // Use Supabase Storage URL - serves HTML with correct Content-Type for social media crawlers
+    return `https://wyrieetebfzmgffxecpz.supabase.co/storage/v1/object/public/share-pages/opportunity-${opportunityId}.html`;
+  }, []);
+
+  // Ensure share page exists in Storage by calling Edge Function
+  const ensureSharePageExists = useCallback(async (opportunityId: string) => {
+    try {
+      const response = await fetch(
+        `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/opportunity-share/${opportunityId}`,
+        { method: 'GET' }
+      );
+      if (!response.ok) {
+        console.error('Failed to generate share page');
+      }
+    } catch (error) {
+      console.error('Error ensuring share page exists:', error);
+    }
   }, []);
 
   // Share opportunity
@@ -45,6 +60,9 @@ export const useOpportunitySharing = () => {
 
     setIsLoading(true);
     try {
+      // First, ensure the share page exists in Storage
+      await ensureSharePageExists(opportunityId);
+      
       const shareUrl = customUrl || generatePublicUrl(opportunityId);
       
       console.log('Sharing opportunity:', { opportunityId, shareType, shareUrl });
@@ -80,7 +98,7 @@ export const useOpportunitySharing = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, generatePublicUrl]);
+  }, [user, generatePublicUrl, ensureSharePageExists]);
 
   // Get share statistics
   const getShareStats = useCallback(async (): Promise<ShareStats | null> => {
