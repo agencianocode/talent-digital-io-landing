@@ -52,7 +52,8 @@ export const useOpportunitySharing = () => {
       // Handle different share types
       switch (shareType) {
         case 'whatsapp':
-          window.open(`https://wa.me/?text=${encodeURIComponent(`¡Mira esta oportunidad! ${shareUrl}`)}`, '_blank');
+          // Solo URL para evitar duplicación - WhatsApp genera vista previa automáticamente
+          window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
           break;
         case 'linkedin':
           window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank');
