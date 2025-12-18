@@ -125,7 +125,28 @@ const NewOpportunity = () => {
           .update(opportunityData)
           .eq('id', id);
       } else {
-        // Insertar nueva oportunidad y capturar el ID
+        // PRIMERO: Verificar cuántos borradores ya existen para esta empresa
+        const { data: existingDrafts } = await supabase
+          .from('opportunities')
+          .select('id, created_at')
+          .eq('company_id', activeCompany.id)
+          .eq('status', 'draft')
+          .order('created_at', { ascending: false });
+        
+        const MAX_DRAFTS = 3;
+        
+        // Si ya hay MAX_DRAFTS o más, eliminar los más antiguos para hacer espacio
+        if (existingDrafts && existingDrafts.length >= MAX_DRAFTS) {
+          const draftsToDelete = existingDrafts.slice(MAX_DRAFTS - 1).map(d => d.id);
+          console.log(`🗑️ Eliminando ${draftsToDelete.length} borradores antiguos (límite: ${MAX_DRAFTS})`);
+          
+          await supabase
+            .from('opportunities')
+            .delete()
+            .in('id', draftsToDelete);
+        }
+        
+        // Insertar nueva oportunidad
         const { data: insertedData, error } = await supabase
           .from('opportunities')
           .insert({
@@ -140,25 +161,6 @@ const NewOpportunity = () => {
         // CRÍTICO: Guardar el ID y cambiar a modo edición para evitar duplicados
         if (insertedData?.id) {
           console.log('✅ Borrador creado con ID:', insertedData.id);
-          
-          // Eliminar borradores antiguos de esta empresa (excepto el recién creado)
-          try {
-            const { error: deleteError } = await supabase
-              .from('opportunities')
-              .delete()
-              .eq('company_id', activeCompany.id)
-              .eq('status', 'draft')
-              .neq('id', insertedData.id);
-            
-            if (deleteError) {
-              console.warn('⚠️ Error al eliminar borradores antiguos:', deleteError);
-            } else {
-              console.log('✅ Borradores antiguos eliminados');
-            }
-          } catch (cleanupError) {
-            console.warn('⚠️ Error al limpiar borradores antiguos:', cleanupError);
-          }
-          
           setIsEditing(true);
           // Actualizar la URL para reflejar que ahora estamos editando
           window.history.replaceState(null, '', `/business-dashboard/opportunities/edit/${insertedData.id}`);
