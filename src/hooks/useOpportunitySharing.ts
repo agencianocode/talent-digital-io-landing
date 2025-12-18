@@ -44,8 +44,6 @@ export const useOpportunitySharing = () => {
     slug?: string,
     title?: string
   ) => {
-    if (!user) return false;
-
     setIsLoading(true);
     try {
       const shareUrl = customUrl || generatePublicUrl(opportunityId, slug);
@@ -74,7 +72,9 @@ export const useOpportunitySharing = () => {
           const emailBody = title
             ? `¡Hola!\n\nTe comparto esta oportunidad de trabajo:\n\n📋 ${title}\n\n${shareUrl}\n\n¡Saludos!`
             : `¡Mira esta oportunidad! ${shareUrl}`;
-          window.location.href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+          const mailtoLink = document.createElement('a');
+          mailtoLink.href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+          mailtoLink.click();
           break;
         case 'link':
           await navigator.clipboard.writeText(shareUrl);
