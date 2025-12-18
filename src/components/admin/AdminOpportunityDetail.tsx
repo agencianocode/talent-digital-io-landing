@@ -478,7 +478,8 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                 <Edit className="h-3 w-3 mr-1" />
                 {isEditing ? 'Cancelar' : 'Editar'}
               </Button>
-              {opportunity.status === 'active' ? (
+              {/* Mostrar botón Pausar si la oportunidad puede ser pausada (no está pausada ni cerrada) */}
+              {opportunity.status !== 'paused' && opportunity.status !== 'closed' ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -489,7 +490,7 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                   <Pause className="h-3 w-3 mr-1" />
                   Pausar
                 </Button>
-              ) : (
+              ) : opportunity.status === 'paused' || opportunity.status === 'draft' ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -500,7 +501,7 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
                   <Play className="h-3 w-3 mr-1" />
                   Activar
                 </Button>
-              )}
+              ) : null}
               <Button
                 variant="destructive"
                 size="sm"

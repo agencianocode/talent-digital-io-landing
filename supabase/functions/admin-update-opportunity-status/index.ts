@@ -1,12 +1,35 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://app.talentodigital.io',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Función para obtener los headers CORS permitidos
+function getCorsHeaders(origin: string | null) {
+  // Orígenes permitidos
+  const allowedOrigins = [
+    'https://app.talentodigital.io',
+    'http://localhost:8081',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:8081',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000'
+  ];
+
+  // Si el origen está en la lista de permitidos, usarlo; si no, usar el de producción
+  const allowedOrigin = origin && allowedOrigins.includes(origin) 
+    ? origin 
+    : 'https://app.talentodigital.io';
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+}
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
