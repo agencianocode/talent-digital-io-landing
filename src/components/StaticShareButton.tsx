@@ -29,8 +29,8 @@ const StaticShareButton: React.FC<StaticShareButtonProps> = ({
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   const generatePublicUrl = (opportunityId: string) => {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/opportunity/${opportunityId}`;
+    // Use Edge Function URL for sharing - returns proper OG meta tags for social media crawlers
+    return `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/opportunity-share/${opportunityId}`;
   };
 
   const handleShare = async (shareType: 'link' | 'whatsapp' | 'linkedin' | 'twitter' | 'email') => {

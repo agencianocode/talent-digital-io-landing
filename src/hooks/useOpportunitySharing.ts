@@ -29,10 +29,10 @@ export const useOpportunitySharing = () => {
   const { user } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Generate public URL for opportunity
+  // Generate public URL for opportunity - uses Edge Function for proper OG meta tags
   const generatePublicUrl = useCallback((opportunityId: string) => {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/opportunity/${opportunityId}`;
+    // Use Edge Function URL for sharing - this returns proper OG meta tags for social media crawlers
+    return `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/opportunity-share/${opportunityId}`;
   }, []);
 
   // Share opportunity
