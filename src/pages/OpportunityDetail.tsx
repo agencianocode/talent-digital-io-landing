@@ -331,6 +331,7 @@ const OpportunityDetail = () => {
           <ShareOpportunity 
             opportunityId={opportunity.id} 
             opportunityTitle={opportunity.title}
+            opportunitySlug={opportunity.slug}
             variant="button"
           />
           
