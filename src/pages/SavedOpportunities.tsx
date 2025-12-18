@@ -174,7 +174,7 @@ const SavedOpportunities = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
+                    onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.slug || opportunity.id}`)}
                     title="Ver detalles"
                     className="hover:bg-muted/50"
                   >

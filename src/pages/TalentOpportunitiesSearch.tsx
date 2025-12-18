@@ -368,7 +368,7 @@ const TalentOpportunitiesSearch = () => {
             <Card 
               key={opportunity.id} 
               className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
+              onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.slug || opportunity.id}`)}
             >
               <CardContent className="p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

@@ -9,6 +9,7 @@ import { stripHtml } from '@/lib/utils';
 interface OpportunityCardWithExclusiveProps {
   opportunity: {
     id: string;
+    slug?: string | null;
     title: string;
     description: string;
     location?: string;
@@ -52,7 +53,7 @@ export const OpportunityCardWithExclusive = ({
       className={`hover:shadow-lg transition-all cursor-pointer ${
         isExclusive ? 'border-2 border-purple-200 bg-gradient-to-br from-purple-50/30 to-blue-50/30' : ''
       }`}
-      onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.id}`)}
+      onClick={() => navigate(`/talent-dashboard/opportunities/${opportunity.slug || opportunity.id}`)}
     >
       {isExclusive && (
         <div className="absolute -top-3 left-4 z-10">

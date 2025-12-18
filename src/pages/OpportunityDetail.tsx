@@ -18,6 +18,7 @@ import ApplicationModal from "@/components/ApplicationModal";
 import { FormattedOpportunityText } from "@/lib/markdown-formatter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { stripHtml } from "@/lib/utils";
+import { isUUID } from "@/lib/slug-utils";
 
 const OpportunityDetail = () => {
   const navigate = useNavigate();
@@ -62,7 +63,8 @@ const OpportunityDetail = () => {
       
       setIsLoading(true);
       try {
-        const { data: opportunityData, error: opportunityError } = await supabase
+        // Búsqueda dual: por UUID o por slug
+        let query = supabase
           .from('opportunities')
           .select(`
             *,
@@ -75,11 +77,25 @@ const OpportunityDetail = () => {
               industry,
               social_links
             )
-          `)
-          .eq('id', id)
-          .single();
+          `);
+        
+        if (isUUID(id)) {
+          query = query.eq('id', id);
+        } else {
+          query = query.eq('slug', id);
+        }
+        
+        const { data: opportunityData, error: opportunityError } = await query.single();
 
         if (opportunityError) throw opportunityError;
+        
+        // Redirect canónico de UUID a slug
+        if (isUUID(id) && opportunityData?.slug) {
+          const currentPath = location.pathname;
+          const newPath = currentPath.replace(id, opportunityData.slug);
+          navigate(newPath, { replace: true });
+          return;
+        }
         
         setOpportunity(opportunityData);
         setCompany(opportunityData.companies);
