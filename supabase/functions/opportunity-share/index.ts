@@ -5,6 +5,45 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Función para escapar caracteres HTML
+function escapeHtml(text: string): string {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Función para limpiar HTML tags de la descripción
+function stripHtml(html: string): string {
+  if (!html) return '';
+  return String(html)
+    .replace(/<[^>]*>/g, '') // Eliminar tags HTML
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .trim();
+}
+
+// Función para asegurar URL absoluta
+function ensureAbsoluteUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // Si es una URL relativa, asumimos que está en Supabase Storage
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  if (url.startsWith('/')) {
+    return `${supabaseUrl}${url}`;
+  }
+  return `${supabaseUrl}/${url}`;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -52,32 +91,51 @@ Deno.serve(async (req) => {
     const company = opportunity.companies as any;
     const companyName = company?.name || 'Empresa';
     const companyLogo = company?.logo_url || '';
-    const description = opportunity.description?.substring(0, 160) || 'Nueva oportunidad laboral disponible';
+    
+    // Limpiar y preparar descripción
+    let rawDescription = opportunity.description || 'Nueva oportunidad laboral disponible';
+    rawDescription = stripHtml(rawDescription);
+    const description = rawDescription.substring(0, 160).trim() || 'Nueva oportunidad laboral disponible';
+    
     const appUrl = `https://app.talentodigital.io/opportunity/${opportunityId}`;
+    const shareUrl = `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/opportunity-share/${opportunityId}`;
+    
+    // Preparar valores escapados
+    const escapedTitle = escapeHtml(opportunity.title || 'Oportunidad laboral');
+    const escapedCompanyName = escapeHtml(companyName);
+    const escapedDescription = escapeHtml(description);
+    const ogTitle = `${escapedTitle} - ${escapedCompanyName}`;
+    const ogImage = companyLogo ? ensureAbsoluteUrl(companyLogo) : '';
 
     // Generate HTML with Open Graph and Twitter meta tags
     const html = `<!DOCTYPE html>
-<html lang="es">
+<html lang="es" prefix="og: https://ogp.me/ns#">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${opportunity.title} - ${companyName}</title>
-  <meta name="description" content="${description}">
+  <title>${escapedTitle} - ${escapedCompanyName}</title>
+  <meta name="description" content="${escapedDescription}">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${appUrl}">
-  <meta property="og:title" content="${opportunity.title} en ${companyName}">
-  <meta property="og:description" content="${description}">
-  ${companyLogo ? `<meta property="og:image" content="${companyLogo}">` : ''}
+  <meta property="og:url" content="${shareUrl}">
+  <meta property="og:title" content="${ogTitle}">
+  <meta property="og:description" content="${escapedDescription}">
+  ${ogImage ? `<meta property="og:image" content="${ogImage}">` : ''}
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="TalentoDigital">
+  <meta property="og:locale" content="es_ES">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${appUrl}">
-  <meta name="twitter:title" content="${opportunity.title} en ${companyName}">
-  <meta name="twitter:description" content="${description}">
-  ${companyLogo ? `<meta name="twitter:image" content="${companyLogo}">` : ''}
+  <meta name="twitter:url" content="${shareUrl}">
+  <meta name="twitter:title" content="${ogTitle}">
+  <meta name="twitter:description" content="${escapedDescription}">
+  ${ogImage ? `<meta name="twitter:image" content="${ogImage}">` : ''}
+  
+  <!-- WhatsApp -->
+  <meta property="og:image:type" content="image/png">
   
   <!-- Redirect to SPA -->
   <meta http-equiv="refresh" content="0;url=${appUrl}">
@@ -121,8 +179,8 @@ Deno.serve(async (req) => {
 </head>
 <body>
   <div class="container">
-    <h1>${opportunity.title}</h1>
-    <p>${companyName} • ${opportunity.type} ${opportunity.location ? `• ${opportunity.location}` : ''}</p>
+    <h1>${escapedTitle}</h1>
+    <p>${escapedCompanyName} • ${opportunity.type || ''} ${opportunity.location ? `• ${escapeHtml(opportunity.location)}` : ''}</p>
     <a href="${appUrl}">Ver oportunidad completa</a>
   </div>
   <script>
