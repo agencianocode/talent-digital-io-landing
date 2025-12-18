@@ -61,7 +61,9 @@ export const useAdminOpportunities = () => {
       setIsLoading(true);
       setError(null);
 
-      // Load opportunities with their companies
+      console.log('[useAdminOpportunities] Loading all opportunities (including paused)...');
+
+      // Load opportunities with their companies - NO FILTERS to get all statuses including paused
       const { data: opportunitiesData, error: opportunitiesError } = await supabase
         .from('opportunities')
         .select(`
@@ -73,6 +75,14 @@ export const useAdminOpportunities = () => {
           )
         `)
         .order('created_at', { ascending: false });
+
+      console.log('[useAdminOpportunities] Opportunities loaded:', {
+        total: opportunitiesData?.length || 0,
+        byStatus: opportunitiesData?.reduce((acc: any, opp: any) => {
+          acc[opp.status || 'unknown'] = (acc[opp.status || 'unknown'] || 0) + 1;
+          return acc;
+        }, {}) || {}
+      });
 
       if (opportunitiesError) throw opportunitiesError;
 

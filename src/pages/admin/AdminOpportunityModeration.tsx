@@ -95,6 +95,7 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
   };
 
   const handleOpportunityUpdate = () => {
+    console.log('[AdminOpportunityModeration] handleOpportunityUpdate called, refreshing opportunities list');
     refetch();
   };
 

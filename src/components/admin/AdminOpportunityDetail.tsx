@@ -299,9 +299,16 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
       } : null);
       
       toast.success(`Oportunidad ${newStatus === 'active' ? 'activada' : 'pausada'} correctamente`);
+      
+      // IMPORTANTE: Recargar la lista de oportunidades primero
+      console.log('[AdminOpportunityDetail] Calling onOpportunityUpdate to refresh list');
       onOpportunityUpdate();
       
+      // Esperar un momento para que la base de datos se actualice y la lista se recargue
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Reload to get fresh data from server
+      console.log('[AdminOpportunityDetail] Reloading opportunity detail');
       await loadOpportunityDetail();
     } catch (error) {
       console.error('[AdminOpportunityDetail] Exception updating status:', error);
