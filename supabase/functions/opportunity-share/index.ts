@@ -204,13 +204,24 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
+    // Crear headers explícitamente para asegurar Content-Type correcto
+    const responseHeaders = new Headers();
+    responseHeaders.set('Content-Type', 'text/html; charset=utf-8');
+    responseHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    responseHeaders.set('Access-Control-Allow-Origin', '*');
+    responseHeaders.set('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type');
+
+    console.log('Returning HTML response for opportunity:', opportunityId);
+    console.log('Response headers:', {
+      'Content-Type': responseHeaders.get('Content-Type'),
+      'Cache-Control': responseHeaders.get('Cache-Control'),
+    });
+    console.log('User-Agent:', userAgent);
+    console.log('Is Crawler:', isCrawler);
+
     return new Response(html, {
       status: 200,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600',
-      },
+      headers: responseHeaders,
     });
   } catch (error) {
     console.error('Error in opportunity-share function:', error);
