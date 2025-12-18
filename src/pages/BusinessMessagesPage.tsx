@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import ConversationsList from '@/components/ConversationsList';
@@ -28,36 +28,33 @@ const BusinessMessagesPage = () => {
   const [isResolvingId, setIsResolvingId] = useState(false);
   const [pendingRecipientId, setPendingRecipientId] = useState<string | null>(null);
   const [tempConversation, setTempConversation] = useState<any>(null);
-  const [isInitializingFromQuery, setIsInitializingFromQuery] = useState(false);
+  
+  // Use ref to track initialization state without causing re-renders
+  const initializedFromQueryRef = useRef(false);
 
   // Handle ?user= query param to start conversation with specific user
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:33',message:'useEffect user query param - ENTRY',data:{targetUserId:searchParams.get('user'),userExists:!!user,currentUrl:window.location.href},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     const targetUserId = searchParams.get('user');
     if (!targetUserId || !user) {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:36',message:'useEffect user query param - EARLY RETURN',data:{targetUserId,userExists:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      return;
+    }
+
+    // Prevent re-initialization if already initialized
+    if (initializedFromQueryRef.current) {
       return;
     }
 
     const initConversation = async () => {
       setIsResolvingId(true);
-      setIsInitializingFromQuery(true);
+      initializedFromQueryRef.current = true;
+      
       try {
         console.log('[BusinessMessagesPage] Creating conversation with user:', targetUserId);
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:42',message:'BEFORE getOrCreateConversation',data:{targetUserId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         
         // Get or create conversation with the target user
         const convId = await getOrCreateConversation(targetUserId, 'profile_contact');
         console.log('[BusinessMessagesPage] Conversation ID:', convId);
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:45',message:'AFTER getOrCreateConversation',data:{convId,targetUserId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
+        
         setPendingRecipientId(targetUserId);
         
         // Fetch target user profile to create temp conversation
@@ -87,83 +84,34 @@ const BusinessMessagesPage = () => {
           updated_at: new Date().toISOString()
         };
         
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:74',message:'BEFORE setTempConversation and setActiveId',data:{tempConvId:tempConv.id,convId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         setTempConversation(tempConv);
         setActiveId(convId);
-        setIsResolvingId(false); // Ya tenemos la conversación temporal, podemos mostrar la UI
-        // Mark initialization as complete after query param is cleared
-        // This ensures tempConversation is available when the second useEffect runs
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:76',message:'AFTER setTempConversation and setActiveId',data:{tempConvId:tempConv.id,activeId:convId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
+        setIsResolvingId(false);
         
-        // Reload conversations to ensure the new one appears in the list
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:79',message:'BEFORE loadConversations',data:{convId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
+        // Reload conversations
         await loadConversations();
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:80',message:'AFTER loadConversations',data:{convId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
         
-        // Wait a bit and reload again, then clear query param
-        // Increase timeout to ensure tempConversation is fully set before clearing query param
-        setTimeout(async () => {
-          await loadConversations();
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:85',message:'BEFORE clear query param',data:{expectedConvId:convId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
-          // Clear the query param from URL (pero mantener activeId y tempConversation)
-          // The activeId should already be set to convId, so we can safely clear the query param
-          setSearchParams({}, { replace: true });
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:86',message:'AFTER clear query param',data:{expectedConvId:convId,currentUrl:window.location.href},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
-          // Mark initialization as complete after clearing query param
-          // Give it a bit more time to ensure the second useEffect has run
-          setTimeout(() => {
-            setIsInitializingFromQuery(false);
-          }, 200);
-        }, 500);
+        // Clear the query param from URL after everything is set up
+        // Use replace to avoid adding to history
+        setSearchParams({}, { replace: true });
+        
       } catch (error) {
         console.error('Error creating conversation:', error);
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:88',message:'ERROR in initConversation',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         setTempConversation(null);
         setIsResolvingId(false);
+        initializedFromQueryRef.current = false;
       }
     };
 
     initConversation();
   }, [searchParams, user, getOrCreateConversation, setSearchParams, loadConversations]);
 
-  // Resolve conversationId from URL parameter
+  // Resolve conversationId from URL parameter (path param, not query param)
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:98',message:'useEffect conversationId - ENTRY',data:{conversationId,hasTempConv:!!tempConversation,pendingRecipientId,activeId,userParam:searchParams.get('user')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     if (!conversationId) {
-      // Don't reset activeId if we have an active conversation (temp or real)
-      // Also, don't reset if activeId already has a value - it might be from a temp conversation
-      const hasActiveConversation = tempConversation || 
-                                    pendingRecipientId || 
-                                    (activeId && conversations.some(c => c.id === activeId));
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:103',message:'Checking hasActiveConversation',data:{hasActiveConversation,tempConversation:!!tempConversation,pendingRecipientId,activeId,conversationsCount:conversations.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      
-      // Only reset activeId if:
-      // 1. There's no user query param
-      // 2. There's no active conversation (temp or real)
-      // 3. activeId is currently null (don't reset if it already has a value)
-      // 4. We're not currently initializing from a query param
-      if (!searchParams.get('user') && !hasActiveConversation && !activeId && !isInitializingFromQuery) {
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:106',message:'RESETTING activeId to null',data:{activeIdBefore:activeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
+      // Only reset activeId if we don't have any active state
+      // This prevents clearing when initialized from query param
+      if (!tempConversation && !pendingRecipientId && !activeId) {
         setActiveId(null);
       }
       return;
@@ -172,7 +120,7 @@ const BusinessMessagesPage = () => {
     setIsResolvingId(true);
     setActiveId(conversationId);
     setIsResolvingId(false);
-  }, [conversationId, searchParams, tempConversation, pendingRecipientId, activeId, conversations, isInitializingFromQuery]);
+  }, [conversationId, tempConversation, pendingRecipientId, activeId]);
 
   // Load conversations on mount only if user is authenticated
   useEffect(() => {
@@ -183,67 +131,39 @@ const BusinessMessagesPage = () => {
   }, [user]);
 
   // Clear temp conversation when real conversation becomes available
-  // Only clear if the real conversation is fully loaded and we have messages or the conversation is stable
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:125',message:'useEffect clear tempConversation - ENTRY',data:{hasTempConv:!!tempConversation,tempConvId:tempConversation?.id,activeId,conversationsCount:conversations.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     if (tempConversation && activeId === tempConversation.id) {
       const realConv = conversations.find(c => c.id === tempConversation.id);
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:128',message:'Checking real conversation',data:{hasRealConv:!!realConv,tempConvId:tempConversation.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       if (realConv) {
-        // Wait longer before clearing to ensure everything is stable
-        // Only clear if we're not currently initializing from query param
-        if (!isInitializingFromQuery) {
-          const hasMessages = (messagesByConversation[tempConversation.id]?.length ?? 0) > 0;
-          // #region agent log
-          fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:131',message:'Checking messages before clearing temp',data:{hasMessages,messageCount:messagesByConversation[tempConversation.id]?.length??0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
-          // Clear temp conversation after a delay, but only if we have messages or enough time has passed
-          setTimeout(() => {
-            // Double-check that real conversation still exists before clearing
-            const stillHasRealConv = conversations.some(c => c.id === tempConversation.id);
-            if (stillHasRealConv) {
-              // #region agent log
-              fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:134',message:'CLEARING tempConversation',data:{tempConvId:tempConversation.id,activeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-              // #endregion
-              setTempConversation(null);
-            }
-          }, 1000);
+        // Wait a bit before clearing to ensure stability
+        const hasMessages = (messagesByConversation[tempConversation.id]?.length ?? 0) > 0;
+        if (hasMessages) {
+          setTempConversation(null);
         }
       }
     }
-  }, [conversations, tempConversation, activeId, messagesByConversation, isInitializingFromQuery]);
+  }, [conversations, tempConversation, activeId, messagesByConversation]);
 
   const activeConversation = useMemo(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:141',message:'activeConversation useMemo - ENTRY',data:{activeId,hasTempConv:!!tempConversation,tempConvId:tempConversation?.id,conversationsCount:conversations.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     if (!activeId) return null;
     
     // Use temp conversation if available and matches activeId
     if (tempConversation && tempConversation.id === activeId) {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:144',message:'activeConversation - USING TEMP',data:{tempConvId:tempConversation.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       return tempConversation;
     }
     
     // Try to find in real conversations
     const realConv = conversations.find(c => c.id === activeId);
     if (realConv) {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:147',message:'activeConversation - USING REAL',data:{resultId:realConv.id,activeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       return realConv;
     }
     
-    // If activeId is set but no conversation found, return null (will show loading)
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:147',message:'activeConversation - NULL (no conversation found)',data:{activeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
+    // If activeId is set but no conversation found, return temp if it exists
+    // This handles the case where conversations haven't loaded yet
+    if (tempConversation) {
+      return tempConversation;
+    }
+    
     return null;
   }, [conversations, activeId, tempConversation]);
   
@@ -254,7 +174,6 @@ const BusinessMessagesPage = () => {
     
     const loadConversationData = async () => {
       await loadMessages(activeId);
-      // Marcar automáticamente como leído al seleccionar la conversación
       await markAsRead(activeId);
     };
     
@@ -292,6 +211,7 @@ const BusinessMessagesPage = () => {
     if (pendingRecipientId) {
       setPendingRecipientId(null);
       setTempConversation(null);
+      initializedFromQueryRef.current = false;
       // Reload conversations to get the real conversation with the message
       await loadConversations();
     }
@@ -335,9 +255,6 @@ const BusinessMessagesPage = () => {
     [conversations]
   );
 
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BusinessMessagesPage.tsx:237',message:'RENDER - Final state',data:{activeId,hasActiveConv:!!activeConversation,activeConvId:activeConversation?.id,hasTempConv:!!tempConversation,tempConvId:tempConversation?.id,pendingRecipientId,isResolvingId,currentUrl:window.location.href},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   return (
     <div className="flex h-[calc(100vh-64px)]">
       <ConversationsList
@@ -358,10 +275,7 @@ const BusinessMessagesPage = () => {
         />
       ) : (
         <div className="flex-1 flex items-center justify-center bg-background">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Cargando conversación...</p>
-          </div>
+          <p className="text-muted-foreground">Selecciona una conversación para ver los mensajes</p>
         </div>
       )}
     </div>
