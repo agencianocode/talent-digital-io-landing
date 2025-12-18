@@ -253,43 +253,42 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
 
     setIsUpdating(true);
     try {
-      const updateData = { 
-        status: newStatus as any,
-        is_active: newStatus === 'active',
-        updated_at: new Date().toISOString()
-      };
+      // Get session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
 
-      console.log('[AdminOpportunityDetail] Updating with data:', updateData);
+      console.log('[AdminOpportunityDetail] Calling Edge Function to update status');
 
-      const { error, data, count } = await supabase
-        .from('opportunities')
-        .update(updateData)
-        .eq('id', opportunityId)
-        .select();
+      // Call Edge Function to update status (bypasses RLS)
+      const { data, error } = await supabase.functions.invoke('admin-update-opportunity-status', {
+        body: {
+          opportunityId,
+          status: newStatus
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
-      console.log('[AdminOpportunityDetail] Update response:', { error, data, count });
+      console.log('[AdminOpportunityDetail] Edge Function response:', { data, error });
 
       if (error) {
-        console.error('[AdminOpportunityDetail] Error updating status:', error);
-        console.error('[AdminOpportunityDetail] Error details:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint
-        });
-        toast.error(`Error al cambiar el estado: ${error.message || error.code || 'Error desconocido'}`);
+        console.error('[AdminOpportunityDetail] Error from Edge Function:', error);
+        toast.error(`Error al cambiar el estado: ${error.message || 'Error desconocido'}`);
         setIsUpdating(false);
         return;
       }
 
-      if (!data || data.length === 0) {
-        console.error('[AdminOpportunityDetail] No data returned from update');
-        toast.error('Error: No se pudo actualizar el estado. Verifica los permisos.');
+      if (!data || !data.success) {
+        console.error('[AdminOpportunityDetail] Edge Function returned error:', data);
+        toast.error(data?.error || 'Error: No se pudo actualizar el estado');
         setIsUpdating(false);
         return;
       }
 
-      console.log('[AdminOpportunityDetail] Status updated successfully:', data);
+      console.log('[AdminOpportunityDetail] Status updated successfully:', data.opportunity);
       
       // Update local state immediately for better UX
       setOpportunity(prev => prev ? { 

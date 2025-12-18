@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.send-academy-invitations]
 verify_jwt = false
+
+[functions.admin-update-opportunity-status]
+verify_jwt = true
