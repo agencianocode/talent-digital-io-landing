@@ -29,25 +29,10 @@ export const useOpportunitySharing = () => {
   const { user } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Generate public URL for opportunity - uses Storage for proper OG meta tags
+  // Generate public URL for opportunity - direct app URL
   const generatePublicUrl = useCallback((opportunityId: string) => {
-    // Use Supabase Storage URL - serves HTML with correct Content-Type for social media crawlers
-    return `https://wyrieetebfzmgffxecpz.supabase.co/storage/v1/object/public/share-pages/opportunity-${opportunityId}.html`;
-  }, []);
-
-  // Ensure share page exists in Storage by calling Edge Function
-  const ensureSharePageExists = useCallback(async (opportunityId: string) => {
-    try {
-      const response = await fetch(
-        `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/opportunity-share/${opportunityId}`,
-        { method: 'GET' }
-      );
-      if (!response.ok) {
-        console.error('Failed to generate share page');
-      }
-    } catch (error) {
-      console.error('Error ensuring share page exists:', error);
-    }
+    // URL directa a la app - WhatsApp leerá las meta tags del index.html
+    return `https://app.talentodigital.io/opportunity/${opportunityId}`;
   }, []);
 
   // Share opportunity
@@ -60,9 +45,6 @@ export const useOpportunitySharing = () => {
 
     setIsLoading(true);
     try {
-      // First, ensure the share page exists in Storage
-      await ensureSharePageExists(opportunityId);
-      
       const shareUrl = customUrl || generatePublicUrl(opportunityId);
       
       console.log('Sharing opportunity:', { opportunityId, shareType, shareUrl });
@@ -98,7 +80,7 @@ export const useOpportunitySharing = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, generatePublicUrl, ensureSharePageExists]);
+  }, [user, generatePublicUrl]);
 
   // Get share statistics
   const getShareStats = useCallback(async (): Promise<ShareStats | null> => {
