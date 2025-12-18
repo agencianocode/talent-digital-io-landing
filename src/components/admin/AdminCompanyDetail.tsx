@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { 
   Building, 
   Users, 
@@ -477,9 +478,9 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
                   </div>
                   <div>
                     <Label>Descripción</Label>
-                    <Textarea
+                    <RichTextEditor
                       value={editData.description || ''}
-                      onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                      onChange={(value) => setEditData({ ...editData, description: value })}
                     />
                   </div>
                   <div>
@@ -519,7 +520,10 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
                     <span className="font-medium">{companyData.name}</span>
                   </div>
                   {companyData.description && (
-                    <p className="text-sm text-muted-foreground">{companyData.description}</p>
+                    <div 
+                      className="text-sm text-muted-foreground prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: companyData.description }}
+                    />
                   )}
                   {companyData.website && (
                     <div className="flex items-center gap-2">

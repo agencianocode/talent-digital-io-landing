@@ -107,10 +107,11 @@ export const useAdminCompanies = () => {
         console.error('Error loading company users:', usersError);
       }
 
-      // Load opportunities count for each company
+      // Load opportunities count for each company (only those with title - excludes empty drafts)
       const { data: opportunitiesData, error: oppError } = await supabase
         .from('opportunities')
-        .select('company_id');
+        .select('company_id, title, status')
+        .not('title', 'is', null);
 
       if (oppError) {
         console.error('Error loading opportunities:', oppError);
@@ -119,7 +120,12 @@ export const useAdminCompanies = () => {
       // Combine all data
       const companiesWithStats: CompanyData[] = companiesData?.map(company => {
         const usersCount = usersData?.filter(u => u.company_id === company.id).length || 0;
-        const opportunitiesCount = opportunitiesData?.filter(o => o.company_id === company.id).length || 0;
+        // Only count opportunities with a real title (not empty drafts)
+        const opportunitiesCount = opportunitiesData?.filter(o => 
+          o.company_id === company.id && 
+          o.title && 
+          o.title.trim() !== ''
+        ).length || 0;
         const ownerName = companyOwners.get(company.user_id) || 'Sin nombre';
 
         return {
