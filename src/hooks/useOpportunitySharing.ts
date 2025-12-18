@@ -29,10 +29,10 @@ export const useOpportunitySharing = () => {
   const { user } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Generate public URL for opportunity - uses Edge Function for proper OG meta tags
+  // Generate public URL for opportunity - uses custom subdomain with Edge Function for proper OG meta tags
   const generatePublicUrl = useCallback((opportunityId: string) => {
-    // Use Edge Function URL for sharing - this returns proper OG meta tags for social media crawlers
-    return `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/opportunity-share/${opportunityId}`;
+    // Use custom subdomain for sharing - shows share.talentodigital.io in social media previews
+    return `https://share.talentodigital.io/functions/v1/opportunity-share/${opportunityId}`;
   }, []);
 
   // Share opportunity
