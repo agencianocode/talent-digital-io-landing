@@ -94,9 +94,10 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
     setSelectedOpportunityId(null);
   };
 
-  const handleOpportunityUpdate = () => {
+  const handleOpportunityUpdate = async () => {
     console.log('[AdminOpportunityModeration] handleOpportunityUpdate called, refreshing opportunities list');
-    refetch();
+    await refetch();
+    console.log('[AdminOpportunityModeration] Opportunities list refreshed');
   };
 
   const handleRefresh = async () => {

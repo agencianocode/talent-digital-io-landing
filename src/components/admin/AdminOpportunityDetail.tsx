@@ -72,7 +72,7 @@ interface AdminOpportunityDetailProps {
   opportunityId: string;
   isOpen: boolean;
   onClose: () => void;
-  onOpportunityUpdate: () => void;
+  onOpportunityUpdate: () => Promise<void>;
 }
 
 const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
@@ -300,12 +300,13 @@ const AdminOpportunityDetail: React.FC<AdminOpportunityDetailProps> = ({
       
       toast.success(`Oportunidad ${newStatus === 'active' ? 'activada' : 'pausada'} correctamente`);
       
-      // IMPORTANTE: Recargar la lista de oportunidades primero
+      // IMPORTANTE: Recargar la lista de oportunidades y esperar a que termine
       console.log('[AdminOpportunityDetail] Calling onOpportunityUpdate to refresh list');
-      onOpportunityUpdate();
+      await onOpportunityUpdate();
+      console.log('[AdminOpportunityDetail] List refreshed, waiting for DB to sync...');
       
-      // Esperar un momento para que la base de datos se actualice y la lista se recargue
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Esperar un momento adicional para que la base de datos se sincronice completamente
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Reload to get fresh data from server
       console.log('[AdminOpportunityDetail] Reloading opportunity detail');
