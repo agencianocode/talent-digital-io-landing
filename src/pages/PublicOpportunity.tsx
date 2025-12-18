@@ -172,8 +172,8 @@ const PublicOpportunity = () => {
   const handleShare = async (type: 'whatsapp' | 'linkedin' | 'twitter' | 'email') => {
     if (!opportunity) return;
     
-    // Pass slug for sharing URLs
-    await shareOpportunity(opportunity.id, type, undefined, opportunity.slug);
+    // Pass slug and title for sharing URLs and personalized messages
+    await shareOpportunity(opportunity.id, type, undefined, opportunity.slug, opportunity.title);
   };
 
   const getJobTypeLabel = (type: string) => {
