@@ -236,10 +236,10 @@ export const useMessages = (companyId?: string) => {
         .select('*');
       
       if (companyId) {
-        // Filter strictly by company_id - no NULL messages
+        // Filter by company_id OR NULL (to include historical messages without company)
         query = query
           .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-          .eq('company_id', companyId);
+          .or(`company_id.eq.${companyId},company_id.is.null`);
       } else {
         // No company filter, just filter by user participation
         query = query.or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
@@ -620,11 +620,11 @@ export const useMessages = (companyId?: string) => {
       
       const { data: unreadMessages, error: messagesError } = await query;
       
-      // Filter by company_id strictly - no NULL messages
+      // Filter by company_id OR NULL (to include historical messages without company)
       let filteredMessages = unreadMessages || [];
       if (companyId && filteredMessages.length > 0) {
         filteredMessages = filteredMessages.filter((m: any) => 
-          m.company_id === companyId
+          m.company_id === companyId || m.company_id === null
         );
       }
 
