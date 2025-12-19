@@ -25,6 +25,7 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
   const { 
     activeCompany, 
     userCompanies, 
+    userRoles,
     currentUserRole,
     switchCompany, 
     isLoading,
@@ -113,8 +114,9 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
         <DropdownMenuContent align="start" className="w-56">
           {/* Company Selection - Only show other companies */}
           {userCompanies.filter(company => company.id !== activeCompany?.id).map((company) => {
-            const userRole = company.user_id === activeCompany?.user_id ? 'owner' : 
-              currentUserRole?.company_id === company.id ? currentUserRole.role : 'viewer';
+            // Get role from userRoles for this specific company
+            const companyRole = userRoles.find(r => r.company_id === company.id);
+            const userRole = companyRole?.role || (company.user_id === activeCompany?.user_id ? 'owner' : 'viewer');
             
             return (
               <DropdownMenuItem 
