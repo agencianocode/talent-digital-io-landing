@@ -159,8 +159,31 @@ const Auth = () => {
       console.log('Auth.tsx: Redirecting user with role:', userRole);
       setHasRedirected(true);
       
-      // Check for invitation parameter
+      // PRIORITY 1: Check for pending invitation in sessionStorage (from Google Auth)
+      const pendingInvitationStr = sessionStorage.getItem('pending_invitation');
+      if (pendingInvitationStr) {
+        try {
+          const pendingInvitation = JSON.parse(pendingInvitationStr);
+          if (pendingInvitation.invitationId) {
+            console.log('Auth.tsx: Found pending invitation in sessionStorage:', pendingInvitation.invitationId);
+            sessionStorage.removeItem('pending_invitation');
+            navigate(`/accept-invitation?id=${pendingInvitation.invitationId}`, { replace: true });
+            return;
+          }
+        } catch (e) {
+          console.error('Auth.tsx: Error parsing pending invitation:', e);
+          sessionStorage.removeItem('pending_invitation');
+        }
+      }
+      
+      // PRIORITY 2: Check for invitation parameter in URL
       const invitationId = searchParams.get('invitation');
+      if (invitationId) {
+        console.log('Auth.tsx: Found invitation in URL params:', invitationId);
+        navigate(`/accept-invitation?id=${invitationId}`, { replace: true });
+        return;
+      }
+      
       let redirectPath = '/talent-dashboard'; // default
       
       if (isAdminRole(userRole)) {
@@ -186,9 +209,6 @@ const Auth = () => {
             if (onboardingComplete) {
               redirectPath = '/business-dashboard';
               console.log('Auth.tsx: Redirecting business to dashboard:', redirectPath);
-            } else if (invitationId) {
-              redirectPath = `/company-onboarding?invitation=${invitationId}`;
-              console.log('Auth.tsx: Redirecting business to onboarding with invitation:', redirectPath);
             } else {
               redirectPath = '/company-onboarding';
               console.log('Auth.tsx: Redirecting business to onboarding:', redirectPath);

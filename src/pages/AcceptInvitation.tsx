@@ -199,7 +199,14 @@ const AcceptInvitation = () => {
             </p>
             <div className="space-y-2">
               <Button 
-                onClick={() => navigate(`/auth?invitation=${invitationId}`)} 
+                onClick={() => {
+                  // Save invitation ID to sessionStorage before redirecting to auth
+                  sessionStorage.setItem('pending_invitation', JSON.stringify({ 
+                    invitationId, 
+                    invitedEmail: invitation.invited_email 
+                  }));
+                  navigate(`/auth?invitation=${invitationId}&email=${encodeURIComponent(invitation.invited_email || '')}`);
+                }} 
                 className="w-full"
               >
                 Iniciar Sesión / Registrarse
