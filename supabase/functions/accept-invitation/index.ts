@@ -60,9 +60,9 @@ const handler = async (req: Request): Promise<Response> => {
     // Keep invitation as 'pending' - it will be accepted after user completes registration/login
     // No need to update status here, just validate and redirect
 
-    // Calculate redirect URL
+    // Calculate redirect URL - redirect to AcceptInvitation page, NOT auth
     const appUrl = redirectBase || Deno.env.get('APP_BASE_URL') || 'https://talent-digital-io-landing.lovable.app';
-    const redirectUrl = `${appUrl}/auth?invitation=${invitation.id}&email=${encodeURIComponent(invitation.invited_email || '')}`;
+    const redirectUrl = `${appUrl}/accept-invitation?id=${invitation.id}`;
 
     console.log(`✅ Invitation accepted, redirecting to: ${redirectUrl}`);
 
