@@ -2598,6 +2598,10 @@ export type Database = {
         Args: { academy_uuid: string; user_uuid: string }
         Returns: boolean
       }
+      is_company_admin_for_update: {
+        Args: { p_company_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_company_member: {
         Args: { company_uuid: string; user_uuid: string }
         Returns: boolean
