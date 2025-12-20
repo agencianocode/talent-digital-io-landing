@@ -320,6 +320,17 @@ export const useMessages = (companyId?: string) => {
           const senderCompany = companyMap.get(message.sender_id);
           const recipientCompany = companyMap.get(message.recipient_id);
           
+          // Helper function to format participant name with company
+          const formatParticipantName = (profile: any, company: any) => {
+            const personName = profile?.full_name;
+            const companyName = company?.name;
+            
+            if (personName && companyName) {
+              return `${personName} (${companyName})`;
+            }
+            return companyName || personName || 'Usuario';
+          };
+          
           const senderAvatar = senderCompany?.logo_url || senderProfile?.avatar_url;
           const recipientAvatar = recipientCompany?.logo_url || recipientProfile?.avatar_url;
           
@@ -339,8 +350,8 @@ export const useMessages = (companyId?: string) => {
             id: conversationId,
             participants: [message.sender_id, message.recipient_id],
             participantNames: [
-              senderCompany?.name || senderProfile?.full_name || 'Usuario',
-              recipientCompany?.name || recipientProfile?.full_name || 'Usuario'
+              formatParticipantName(senderProfile, senderCompany),
+              formatParticipantName(recipientProfile, recipientCompany)
             ],
             participantAvatars: [senderAvatar, recipientAvatar],
             lastMessage: message.content || 'Conversación iniciada',
