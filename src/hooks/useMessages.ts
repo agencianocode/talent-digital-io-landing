@@ -192,16 +192,40 @@ export const useMessages = (companyId?: string) => {
         .select('user_id, full_name, avatar_url')
         .in('user_id', Array.from(userIds));
       
-      // Crear un mapa para búsqueda rápida
+      // También obtener empresas para mostrar logos de empresas
+      const { data: companies } = await supabase
+        .from('companies')
+        .select('user_id, name, logo_url')
+        .in('user_id', Array.from(userIds));
+      
+      // Crear mapas para búsqueda rápida
       const profilesMap = new Map(
         (profiles || []).map(p => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }])
       );
       
-      // Mapear mensajes con info de usuarios
+      const companiesMap = new Map(
+        (companies || []).map((c: any) => [c.user_id, { name: c.name, logo_url: c.logo_url }])
+      );
+      
+      // Helper para construir datos del participante con nombre y avatar correcto
+      const buildParticipantData = (userId: string) => {
+        const profile = profilesMap.get(userId);
+        const company = companiesMap.get(userId);
+        
+        const personName = profile?.full_name;
+        const companyName = company?.name;
+        
+        return {
+          full_name: personName && companyName ? `${personName} (${companyName})` : (companyName || personName || 'Usuario'),
+          avatar_url: company?.logo_url || profile?.avatar_url || null
+        };
+      };
+      
+      // Mapear mensajes con info de usuarios (incluyendo empresa)
       const messagesWithUsers = messages.map((message: any) => ({
         ...message,
-        sender: profilesMap.get(message.sender_id) || { full_name: 'Usuario', avatar_url: null },
-        recipient: profilesMap.get(message.recipient_id) || { full_name: 'Usuario', avatar_url: null }
+        sender: buildParticipantData(message.sender_id),
+        recipient: buildParticipantData(message.recipient_id)
       }));
       
       return messagesWithUsers;

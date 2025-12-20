@@ -87,7 +87,10 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
     );
   }
 
-  const otherParticipantName = conversation.participantNames?.find(name => name !== user.email) || 'Usuario';
+  // Find the other participant by index (not by comparing to email)
+  const currentUserIndex = conversation.participants.findIndex(id => id === user.id);
+  const otherIndex = currentUserIndex === 0 ? 1 : 0;
+  const otherParticipantName = conversation.participantNames?.[otherIndex] || 'Usuario';
   
   const getOtherParticipantAvatar = () => {
     if (!conversation.participantAvatars || conversation.participantAvatars.length === 0) {
