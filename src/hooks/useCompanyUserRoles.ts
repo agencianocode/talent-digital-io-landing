@@ -97,15 +97,12 @@ export const useCompanyUserRoles = (companyId?: string) => {
     if (!user) return;
 
     try {
-      // Create invitation record with proper fields
-      // Generate a real UUID for pending invitations
-      const tempUserId = crypto.randomUUID();
-      
+      // Create invitation record with null user_id - will be linked when user accepts
       const { data, error } = await (supabase as any)
         .from('company_user_roles')
         .insert({
           company_id: inviteData.company_id,
-          user_id: tempUserId, // Temporary UUID for pending invitations
+          user_id: null, // Will be linked when user accepts invitation
           invited_email: inviteData.email,
           role: inviteData.role,
           invited_by: user.id,
