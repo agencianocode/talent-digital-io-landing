@@ -140,9 +140,8 @@ const OpportunityDetail = () => {
   const handleApplyClick = () => {
     if (!opportunity) return;
     
-    // Verificar completitud del perfil antes de mostrar el modal
-    const minCompleteness = 60;
-    if (completeness < minCompleteness) {
+    // Verificar completitud del perfil antes de mostrar el modal (100% requerido)
+    if (completeness < 100) {
       setShowCompletenessModal(true);
       return;
     }

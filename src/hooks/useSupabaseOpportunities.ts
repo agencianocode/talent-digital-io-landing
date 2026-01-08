@@ -213,7 +213,13 @@ export const useSupabaseOpportunities = () => {
   }, [user, userRole]);
 
   // Apply to opportunity
-  const applyToOpportunity = useCallback(async (opportunityId: string, coverLetter: string) => {
+  const applyToOpportunity = useCallback(async (
+    opportunityId: string, 
+    coverLetter: string,
+    additionalData?: {
+      external_form_completed?: boolean | null;
+    }
+  ) => {
     if (!user || !isTalentRole(userRole)) {
       throw new Error('Only talent users can apply to opportunities');
     }
@@ -254,7 +260,8 @@ export const useSupabaseOpportunities = () => {
           opportunity_id: opportunityId,
           user_id: user.id,
           cover_letter: coverLetter,
-          status: 'pending'
+          status: 'pending',
+          external_form_completed: additionalData?.external_form_completed ?? null
         });
 
       if (error) throw error;
