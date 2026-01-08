@@ -392,11 +392,16 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
 
               <div>
                 <Label htmlFor="cover_letter">Carta de Presentación *</Label>
+                {opportunity.application_instructions && (
+                  <p className="text-sm text-muted-foreground mt-1 mb-2">
+                    {opportunity.application_instructions}
+                  </p>
+                )}
                 <Textarea
                   id="cover_letter"
                   value={applicationData.cover_letter}
                   onChange={(e) => setApplicationData(prev => ({ ...prev, cover_letter: e.target.value }))}
-                  placeholder={opportunity.application_instructions || "Presenta tu perfil profesional, destaca tus fortalezas y explica por qué eres el candidato ideal para esta posición..."}
+                  placeholder="Presenta tu perfil profesional, destaca tus fortalezas y explica por qué eres el candidato ideal para esta posición..."
                   rows={8}
                   className="mt-1"
                 />
