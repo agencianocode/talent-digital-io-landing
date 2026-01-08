@@ -398,18 +398,18 @@ const TalentOpportunitiesSearch = () => {
                           </p>
                         </div>
 
-                        {/* Línea de estadísticas: postulantes y vistas */}
+                        {/* Línea de estadísticas: vistas primero, luego postulantes */}
                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
-                          <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            <span>
-                              {(opportunity as any).applications_count || 0} postulante{(opportunity as any).applications_count !== 1 ? 's' : ''}
-                            </span>
-                          </div>
                           <div className="flex items-center gap-1">
                             <Eye className="h-4 w-4" />
                             <span>
                               {(opportunity as any).views_count || 0} vista{(opportunity as any).views_count !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            <span>
+                              {(opportunity as any).applications_count || 0} postulante{(opportunity as any).applications_count !== 1 ? 's' : ''}
                             </span>
                           </div>
 
