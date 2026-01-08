@@ -40,6 +40,11 @@ interface MultiStepFormData {
   maxHoursPerWeek: number;
   maxHoursPerMonth: number;
   
+  // Step 3 - Aplicación
+  applicationInstructions: string;
+  isExternalApplication: boolean;
+  externalApplicationUrl: string;
+  
   // Publicación
   publishToFeed?: boolean;
 }
@@ -185,7 +190,11 @@ const NewOpportunityMultiStep = () => {
         // salary_is_public: true,
         is_academy_exclusive: (formData as any).isAcademyExclusive || false,
         company_id: activeCompany.id,
-        status: formData.publishToFeed ? 'active' : ((formData as any).status === 'draft' ? 'draft' : 'active') as 'active'
+        status: formData.publishToFeed ? 'active' : ((formData as any).status === 'draft' ? 'draft' : 'active') as 'active',
+        // Step 3 - Aplicación
+        application_instructions: formData.applicationInstructions,
+        is_external_application: formData.isExternalApplication,
+        external_application_url: formData.externalApplicationUrl || null,
         // Campos de restricción de país se agregarán cuando se ejecute la migración
         // country_restriction_enabled: formData.usOnlyApplicants,
         // allowed_country: formData.usOnlyApplicants ? companyCountry : null

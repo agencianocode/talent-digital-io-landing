@@ -1279,6 +1279,7 @@ export type Database = {
       }
       opportunities: {
         Row: {
+          application_instructions: string | null
           auto_saved_at: string | null
           category: string
           commission_percentage: number | null
@@ -1292,9 +1293,11 @@ export type Database = {
           duration_unit: string | null
           duration_value: number | null
           experience_levels: string[] | null
+          external_application_url: string | null
           id: string
           is_academy_exclusive: boolean | null
           is_active: boolean | null
+          is_external_application: boolean | null
           is_public: boolean | null
           location: string | null
           payment_type: string | null
@@ -1312,6 +1315,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          application_instructions?: string | null
           auto_saved_at?: string | null
           category: string
           commission_percentage?: number | null
@@ -1325,9 +1329,11 @@ export type Database = {
           duration_unit?: string | null
           duration_value?: number | null
           experience_levels?: string[] | null
+          external_application_url?: string | null
           id?: string
           is_academy_exclusive?: boolean | null
           is_active?: boolean | null
+          is_external_application?: boolean | null
           is_public?: boolean | null
           location?: string | null
           payment_type?: string | null
@@ -1345,6 +1351,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          application_instructions?: string | null
           auto_saved_at?: string | null
           category?: string
           commission_percentage?: number | null
@@ -1358,9 +1365,11 @@ export type Database = {
           duration_unit?: string | null
           duration_value?: number | null
           experience_levels?: string[] | null
+          external_application_url?: string | null
           id?: string
           is_academy_exclusive?: boolean | null
           is_active?: boolean | null
+          is_external_application?: boolean | null
           is_public?: boolean | null
           location?: string | null
           payment_type?: string | null
