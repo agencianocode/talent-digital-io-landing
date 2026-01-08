@@ -390,6 +390,7 @@ export type Database = {
           contacted_at: string | null
           cover_letter: string | null
           created_at: string
+          external_form_completed: boolean | null
           id: string
           internal_rating: number | null
           is_viewed: boolean | null
@@ -406,6 +407,7 @@ export type Database = {
           contacted_at?: string | null
           cover_letter?: string | null
           created_at?: string
+          external_form_completed?: boolean | null
           id?: string
           internal_rating?: number | null
           is_viewed?: boolean | null
@@ -422,6 +424,7 @@ export type Database = {
           contacted_at?: string | null
           cover_letter?: string | null
           created_at?: string
+          external_form_completed?: boolean | null
           id?: string
           internal_rating?: number | null
           is_viewed?: boolean | null

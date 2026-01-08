@@ -11,13 +11,15 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
   Building,
   MapPin,
   DollarSign,
   Clock,
   Briefcase,
-  Calendar
+  Calendar,
+  ExternalLink
 } from 'lucide-react';
 import { useSupabaseOpportunities } from '@/hooks/useSupabaseOpportunities';
 import { toast } from 'sonner';
@@ -34,6 +36,9 @@ interface SupabaseOpportunity {
   currency?: string;
   status?: string;
   deadline_date?: string;
+  is_external_application?: boolean;
+  external_application_url?: string;
+  application_instructions?: string;
   companies?: {
     name: string;
     logo_url?: string;
@@ -52,6 +57,7 @@ interface ApplicationData {
   cover_letter: string;
   video_presentation_url: string;
   start_availability: string;
+  external_form_completed: boolean | null;
 }
 
 // Mapea skills/subcategorías a categorías principales para mostrar en la pregunta de experiencia
@@ -135,7 +141,10 @@ const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: A
   const { applyToOpportunity } = useSupabaseOpportunities();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 2;
+  
+  // Determinar si es aplicación externa
+  const hasExternalApplication = opportunity?.is_external_application && opportunity?.external_application_url;
+  const totalSteps = hasExternalApplication ? 2 : 1;
 
   // Check if opportunity is closed or expired
   const isOpportunityClosed = opportunity?.status === 'closed';
@@ -145,7 +154,8 @@ const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: A
     years_experience_category: null,
     cover_letter: '',
     video_presentation_url: '',
-    start_availability: ''
+    start_availability: '',
+    external_form_completed: null
   });
 
   const resetForm = () => {
@@ -153,7 +163,8 @@ const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: A
       years_experience_category: null,
       cover_letter: '',
       video_presentation_url: '',
-      start_availability: ''
+      start_availability: '',
+      external_form_completed: null
     });
     setCurrentStep(1);
   };
@@ -180,9 +191,11 @@ const ApplicationModal = ({ isOpen, onClose, opportunity, onApplicationSent }: A
       case 1:
         return applicationData.years_experience_category !== null && 
                applicationData.years_experience_category >= 0 &&
-               applicationData.cover_letter.trim().length >= 50;
+               applicationData.cover_letter.trim().length >= 50 &&
+               applicationData.start_availability.trim().length > 0;
       case 2:
-        return applicationData.start_availability.trim().length > 0;
+        // En paso 2 (solo si hay aplicación externa), debe seleccionar sí o no
+        return applicationData.external_form_completed !== null;
       default:
         return true;
     }
@@ -205,7 +218,9 @@ ${applicationData.video_presentation_url ? `VIDEO DE PRESENTACIÓN: ${applicatio
 DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
       `.trim();
 
-      await applyToOpportunity(opportunity.id, fullCoverLetter);
+      await applyToOpportunity(opportunity.id, fullCoverLetter, {
+        external_form_completed: hasExternalApplication ? applicationData.external_form_completed : null
+      });
       
       toast.success('¡Aplicación enviada correctamente!');
       onApplicationSent();
@@ -324,27 +339,29 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
           </div>
         </div>
 
-        {/* Indicador de progreso */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              Paso {currentStep} de 2
-            </span>
-            <span className="text-sm text-gray-500">
-              {Math.round((currentStep / 2) * 100)}% completado
-            </span>
+        {/* Indicador de progreso - solo si hay más de 1 paso */}
+        {totalSteps > 1 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">
+                Paso {currentStep} de {totalSteps}
+              </span>
+              <span className="text-sm text-gray-500">
+                {Math.round((currentStep / totalSteps) * 100)}% completado
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+              ></div>
+            </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / 2) * 100}%` }}
-            ></div>
-          </div>
-        </div>
+        )}
 
         {/* Formulario por pasos */}
         <div className="space-y-6">
-          {/* Paso 1: Experiencia y Carta de Presentación */}
+          {/* Paso 1: Experiencia, Presentación y Disponibilidad */}
           {currentStep === 1 && (
             <div className="space-y-4">
               <div className="text-center mb-4">
@@ -360,7 +377,7 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
                 <Input
                   id="years_experience_category"
                   type="number"
-                  value={applicationData.years_experience_category || ''}
+                  value={applicationData.years_experience_category ?? ''}
                   onChange={(e) => setApplicationData(prev => ({ 
                     ...prev, 
                     years_experience_category: e.target.value ? parseInt(e.target.value) : null 
@@ -379,7 +396,7 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
                   id="cover_letter"
                   value={applicationData.cover_letter}
                   onChange={(e) => setApplicationData(prev => ({ ...prev, cover_letter: e.target.value }))}
-                  placeholder="Presenta tu perfil profesional, destaca tus fortalezas y explica por qué eres el candidato ideal para esta posición..."
+                  placeholder={opportunity.application_instructions || "Presenta tu perfil profesional, destaca tus fortalezas y explica por qué eres el candidato ideal para esta posición..."}
                   rows={8}
                   className="mt-1"
                 />
@@ -405,18 +422,8 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
                   Comparte un video donde te presentes profesionalmente (YouTube, Vimeo, Loom, Google Drive, Dropbox)
                 </p>
               </div>
-            </div>
-          )}
 
-          {/* Paso 2: Disponibilidad */}
-          {currentStep === 2 && (
-            <div className="space-y-4">
-              <div className="text-center mb-4">
-                <Calendar className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                <h3 className="text-lg font-semibold">Disponibilidad</h3>
-                <p className="text-gray-600 text-sm">¿Cuándo puedes comenzar?</p>
-              </div>
-
+              {/* Disponibilidad - ahora en paso 1 */}
               <div>
                 <Label htmlFor="start_availability">¿Cuándo puedes empezar? *</Label>
                 <Input
@@ -430,17 +437,66 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
                   Indica cuándo estarías disponible para comenzar a trabajar
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Paso 2: Aplicación Externa (solo si tiene formulario externo) */}
+          {currentStep === 2 && hasExternalApplication && (
+            <div className="space-y-4">
+              <div className="text-center mb-4">
+                <ExternalLink className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                <h3 className="text-lg font-semibold">Aplicación</h3>
+                <p className="text-gray-600 text-sm">Completa el formulario para aplicar a la oportunidad</p>
+              </div>
+
+              {/* Sección formulario externo */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <Label className="text-sm font-medium text-gray-700">Formulario Externo para aplicar</Label>
+                <a 
+                  href={opportunity.external_application_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 underline flex items-center gap-1 mt-2 break-all"
+                >
+                  {opportunity.external_application_url}
+                  <ExternalLink className="h-4 w-4 flex-shrink-0" />
+                </a>
+              </div>
+
+              {/* Single Select: ¿Completaste el formulario? */}
+              <div className="space-y-3">
+                <Label>¿Completaste el formulario? *</Label>
+                <RadioGroup 
+                  value={applicationData.external_form_completed === true ? 'yes' : 
+                         applicationData.external_form_completed === false ? 'no' : ''}
+                  onValueChange={(val) => setApplicationData(prev => ({
+                    ...prev,
+                    external_form_completed: val === 'yes'
+                  }))}
+                  className="flex flex-col space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="form-yes" />
+                    <Label htmlFor="form-yes" className="font-normal cursor-pointer">Sí</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="form-no" />
+                    <Label htmlFor="form-no" className="font-normal cursor-pointer">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
 
               {/* Resumen de la aplicación */}
               <div className="bg-gray-50 rounded-lg p-4 mt-6">
                 <h4 className="font-medium text-gray-900 mb-3">Resumen de tu aplicación:</h4>
                 <div className="space-y-2 text-sm text-gray-600">
-                  <div><strong>Años de experiencia en {opportunity.category}:</strong> {applicationData.years_experience_category || 'No especificado'} años</div>
+                  <div><strong>Años de experiencia en {opportunity.category}:</strong> {applicationData.years_experience_category ?? 'No especificado'} años</div>
                   <div><strong>Carta de presentación:</strong> {applicationData.cover_letter.substring(0, 100)}...</div>
                   {applicationData.video_presentation_url && (
                     <div><strong>Video:</strong> {applicationData.video_presentation_url}</div>
                   )}
                   <div><strong>Disponibilidad:</strong> {applicationData.start_availability || 'No especificada'}</div>
+                  <div><strong>Formulario externo completado:</strong> {applicationData.external_form_completed === true ? 'Sí' : applicationData.external_form_completed === false ? 'No' : 'No especificado'}</div>
                 </div>
               </div>
             </div>
