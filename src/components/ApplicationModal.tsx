@@ -401,7 +401,6 @@ DISPONIBILIDAD PARA COMENZAR: ${applicationData.start_availability}
                   id="cover_letter"
                   value={applicationData.cover_letter}
                   onChange={(e) => setApplicationData(prev => ({ ...prev, cover_letter: e.target.value }))}
-                  placeholder="Presenta tu perfil profesional, destaca tus fortalezas y explica por qué eres el candidato ideal para esta posición..."
                   rows={8}
                   className="mt-1"
                 />
