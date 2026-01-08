@@ -332,7 +332,7 @@ const BusinessDashboard = () => {
                   </ul>
                   <Button 
                     className="w-full bg-black hover:bg-gray-800 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
-                    onClick={() => window.open('https://calendly.com/talentodigital', '_blank')}
+                    onClick={() => window.open('https://calendly.com/wendy_mardigian/onboarding-talentodigital-io', '_blank')}
                   >
                     Agendar Llamada
                   </Button>
