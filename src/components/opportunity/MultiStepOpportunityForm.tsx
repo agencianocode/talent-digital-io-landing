@@ -6,6 +6,7 @@ import { cn, stripHtml } from '@/lib/utils';
 import { Tooltip } from '@/components/ui/tooltip';
 import OpportunityStep1 from './OpportunityStep1';
 import OpportunityStep2 from './OpportunityStep2';
+import OpportunityStep3Application from './OpportunityStep3Application';
 import PublishJobModal from './PublishJobModal';
 import { type Company } from '@/contexts/CompanyContext';
 // Los imports se utilizan en los componentes hijos
@@ -64,6 +65,11 @@ interface FormData {
   // Estado y publicación
   status: 'draft' | 'published';
   publishToFeed?: boolean;
+  
+  // Step 3 - Aplicación
+  applicationInstructions: string;
+  isExternalApplication: boolean;
+  externalApplicationUrl: string;
 }
 
 interface MultiStepOpportunityFormProps {
@@ -83,6 +89,11 @@ const steps = [
     id: 2,
     title: 'Presupuesto y duración',
     subtitle: 'Budget & Duration'
+  },
+  {
+    id: 3,
+    title: 'Aplicación',
+    subtitle: 'Application'
   }
 ];
 
@@ -148,6 +159,11 @@ const MultiStepOpportunityForm = ({
     
     // Estado por defecto como borrador
     status: 'draft',
+    
+    // Step 3 defaults
+    applicationInstructions: 'Cuéntanos por qué eres el candidato ideal para el puesto',
+    isExternalApplication: false,
+    externalApplicationUrl: '',
     
     // Override with initial data
     ...initialData
@@ -252,6 +268,12 @@ const MultiStepOpportunityForm = ({
         }
         
         return !!(hasDuration && hasValidPayment);
+      case 3:
+        // Si isExternalApplication está activo, externalApplicationUrl es requerido
+        if (formData.isExternalApplication) {
+          return !!formData.externalApplicationUrl?.trim();
+        }
+        return true; // Los campos son opcionales
       default:
         return true;
     }
@@ -259,10 +281,10 @@ const MultiStepOpportunityForm = ({
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      if (currentStep < 2) {
+      if (currentStep < 3) {
         setCurrentStep(currentStep + 1);
       } else {
-        // Show publish modal instead of submitting directly
+        // Show publish modal on step 3
         setShowPublishModal(true);
       }
     }
@@ -353,6 +375,17 @@ const MultiStepOpportunityForm = ({
               salaryIsPublic: formData.salaryIsPublic,
               maxHoursPerWeek: formData.maxHoursPerWeek,
               maxHoursPerMonth: formData.maxHoursPerMonth
+            }}
+            onChange={updateFormData}
+          />
+        );
+      case 3:
+        return (
+          <OpportunityStep3Application
+            data={{
+              applicationInstructions: formData.applicationInstructions,
+              isExternalApplication: formData.isExternalApplication,
+              externalApplicationUrl: formData.externalApplicationUrl,
             }}
             onChange={updateFormData}
           />
@@ -577,7 +610,7 @@ const MultiStepOpportunityForm = ({
         >
           {isLoading 
             ? 'Publicando...' 
-            : currentStep === 2 
+            : currentStep === 3 
             ? 'Publicar' 
             : 'Próximo'
           }
