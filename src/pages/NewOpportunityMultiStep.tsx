@@ -186,29 +186,24 @@ const NewOpportunityMultiStep = () => {
         location: formData.preferredTimezone || 'Remoto',
         salary_min: salaryMin,
         salary_max: salaryMax,
-        // Campos existentes en el esquema actual
         skills: formData.skills,
-        // Campos que se agregarán con las migraciones:
-        // contract_type: formData.projectType === 'ongoing' ? 'ongoing' : 'project',
-        // duration_type: formData.noEndDate ? 'indefinite' : 'fixed',
-        // duration_value: formData.noEndDate ? null : formData.jobDuration,
-        // duration_unit: formData.jobDurationUnit || 'months',
-        // experience_levels: ['mid'],
-        // timezone_preference: formData.preferredTimezone,
-        // deadline_date: null,
-        // payment_type: formData.paymentMethod === 'hourly' ? 'hourly' : 'fixed',
-        // commission_percentage: null,
-        // salary_is_public: true,
+        // Campos adicionales
+        contract_type: formData.contractType || null,
+        duration_type: (formData as any).durationType || 'indefinite',
+        duration_value: (formData as any).durationType === 'fixed' ? ((formData as any).durationValue || null) : null,
+        duration_unit: (formData as any).durationType === 'fixed' ? ((formData as any).durationUnit || 'months') : null,
+        experience_levels: (formData as any).experienceLevels || [],
+        timezone_preference: formData.preferredTimezone || null,
+        deadline_date: (formData as any).deadlineDate ? (formData as any).deadlineDate.toISOString().split('T')[0] : null,
+        payment_type: formData.paymentMethod || 'monthly',
+        commission_percentage: formData.commissionPercentage ? parseInt(formData.commissionPercentage) : null,
+        salary_is_public: (formData as any).salaryIsPublic !== false,
         is_academy_exclusive: (formData as any).isAcademyExclusive || false,
         company_id: activeCompany.id,
         status: formData.publishToFeed ? 'active' : ((formData as any).status === 'draft' ? 'draft' : 'active') as 'active',
-        // Step 3 - Aplicación
         application_instructions: formData.applicationInstructions,
         is_external_application: formData.isExternalApplication,
         external_application_url: formData.externalApplicationUrl || null,
-        // Campos de restricción de país se agregarán cuando se ejecute la migración
-        // country_restriction_enabled: formData.usOnlyApplicants,
-        // allowed_country: formData.usOnlyApplicants ? companyCountry : null
       };
 
       const { data: insertedData, error } = await supabase
