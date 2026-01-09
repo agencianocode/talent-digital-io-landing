@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,11 +9,13 @@ import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { ImageCropper } from '@/components/ImageCropper';
 import { MediaGallery } from '@/components/MediaGallery';
 import { useProfessionalData } from '@/hooks/useProfessionalData';
+import { useProfileProgress } from '@/hooks/useProfileProgress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -34,7 +36,10 @@ import {
   Edit,
   Plus,
   Users2,
-  ArrowLeft
+  ArrowLeft,
+  Eye,
+  Share2,
+  Trash2
 } from 'lucide-react';
 
 const companySchema = z.object({
@@ -45,15 +50,14 @@ const companySchema = z.object({
   industry: z.string().optional(),
   size: z.string().optional(),
   annual_revenue_range: z.string().optional(),
+  employee_count_range: z.string().optional(),
   website: z.string()
     .optional()
     .transform((val) => {
       if (!val || val === '') return '';
-      // Si ya tiene protocolo, devolverlo tal cual
       if (val.startsWith('http://') || val.startsWith('https://')) {
         return val;
       }
-      // Si no tiene protocolo, agregar https://
       return `https://${val}`;
     })
     .pipe(z.string().url('Debe ser una URL válida').optional().or(z.literal(''))),
@@ -100,7 +104,6 @@ const companySchema = z.object({
 
 type CompanyFormData = z.infer<typeof companySchema>;
 
-// Import MediaItem from the component
 import type { MediaItem } from '@/components/MediaGallery';
 
 const companySizeOptions = [
@@ -121,13 +124,17 @@ const revenueOptions = [
   { value: '50m_plus', label: 'Más de $50M' },
 ];
 
+const STORAGE_KEY = 'company-profile-draft';
+
 export const CompanyProfileWizard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useSupabaseAuth();
   const { activeCompany: company, refreshCompanies } = useCompany();
   const { createCompany } = useSupabaseAuth();
   const { industries } = useProfessionalData();
+  const { getCompletionPercentage } = useProfileProgress();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSavingSection, setIsSavingSection] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
@@ -137,7 +144,6 @@ export const CompanyProfileWizard: React.FC = () => {
   const [hasGalleryChanges, setHasGalleryChanges] = useState(false);
   const [initialMediaItemsCount, setInitialMediaItemsCount] = useState(0);
 
-  // Handle social link editing
   const handleEditSocialLink = (platform: string, currentUrl: string) => {
     setEditingSocialLink(platform);
     setTempSocialUrl(currentUrl || '');
@@ -151,8 +157,6 @@ export const CompanyProfileWizard: React.FC = () => {
         shouldValidate: true 
       });
       setHasSocialLinksChanges(true);
-      console.log(`Saving social link ${editingSocialLink}:`, tempSocialUrl);
-      console.log('Current form values:', form.getValues());
       setEditingSocialLink(null);
       setTempSocialUrl('');
     }
@@ -172,18 +176,10 @@ export const CompanyProfileWizard: React.FC = () => {
     setHasSocialLinksChanges(true);
   };
 
-  // Local function to update company directly
   const updateCompanyDirectly = async (data: any) => {
     if (!company?.id) {
       throw new Error('No company ID available');
     }
-
-    console.log('=== UPDATING COMPANY IN DATABASE ===');
-    console.log('Updating company with ID:', company.id);
-    console.log('Data being sent to database:', data);
-    console.log('Social links in data:', data.social_links);
-    console.log('Media gallery in data:', data.media_gallery);
-    console.log('Media gallery items count:', data.media_gallery?.length || 0);
 
     const { error } = await supabase
       .from('companies')
@@ -191,11 +187,9 @@ export const CompanyProfileWizard: React.FC = () => {
       .eq('id', company.id);
 
     if (error) {
-      console.error('❌ Error updating company:', error);
       throw error;
     }
 
-    console.log('✅ Company updated successfully');
     return { error: null };
   };
 
@@ -209,6 +203,7 @@ export const CompanyProfileWizard: React.FC = () => {
       industry: company?.industry || '',
       size: company?.size || '',
       annual_revenue_range: company?.annual_revenue_range || '',
+      employee_count_range: (company as any)?.employee_count_range || '',
       website: company?.website || '',
       social_links: company?.social_links || {
         linkedin: '',
@@ -218,6 +213,67 @@ export const CompanyProfileWizard: React.FC = () => {
       },
     }
   });
+
+  // Save to localStorage when visibility changes
+  const saveToLocalStorage = useCallback(() => {
+    if (form.formState.isDirty || hasSocialLinksChanges || hasGalleryChanges) {
+      const draft = {
+        data: form.getValues(),
+        mediaItems,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+    }
+  }, [form, mediaItems, hasSocialLinksChanges, hasGalleryChanges]);
+
+  // Handle visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        saveToLocalStorage();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', saveToLocalStorage);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', saveToLocalStorage);
+    };
+  }, [saveToLocalStorage]);
+
+  // Check for saved draft on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(STORAGE_KEY);
+    if (savedDraft && company) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        const draftTime = new Date(draft.timestamp);
+        const hoursSinceSave = (Date.now() - draftTime.getTime()) / (1000 * 60 * 60);
+        
+        // Only restore if draft is less than 24 hours old
+        if (hoursSinceSave < 24) {
+          const shouldRestore = window.confirm(
+            '¿Querés restaurar los cambios no guardados del perfil de empresa?'
+          );
+          if (shouldRestore) {
+            form.reset(draft.data);
+            if (draft.mediaItems) {
+              setMediaItems(draft.mediaItems);
+            }
+            toast.info('Cambios restaurados');
+          } else {
+            localStorage.removeItem(STORAGE_KEY);
+          }
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      } catch (e) {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }, [company]);
 
   // Refresh company data on component mount
   useEffect(() => {
@@ -237,6 +293,7 @@ export const CompanyProfileWizard: React.FC = () => {
         industry: company.industry || '',
         size: company.size || '',
         annual_revenue_range: company.annual_revenue_range || '',
+        employee_count_range: (company as any).employee_count_range || '',
         website: company.website || '',
         social_links: company.social_links || {
           linkedin: '',
@@ -246,7 +303,6 @@ export const CompanyProfileWizard: React.FC = () => {
         },
       });
 
-      // Load gallery items from company
       const galleryData = (company as any).media_gallery || (company as any).gallery_urls || [];
       if (galleryData && galleryData.length > 0) {
         setMediaItems(galleryData);
@@ -256,13 +312,11 @@ export const CompanyProfileWizard: React.FC = () => {
         setInitialMediaItemsCount(0);
       }
       
-      // Reset social links changes state when company data loads
       setHasSocialLinksChanges(false);
       setHasGalleryChanges(false);
     }
   }, [company, form]);
 
-  // Detectar cambios en la galería comparando con el estado inicial
   useEffect(() => {
     if (mediaItems.length !== initialMediaItemsCount) {
       setHasGalleryChanges(true);
@@ -272,7 +326,6 @@ export const CompanyProfileWizard: React.FC = () => {
   const onSubmit = async (data: CompanyFormData) => {
     setIsLoading(true);
     try {
-      // Convert media items to gallery format
       const media_gallery = mediaItems;
 
       const companyData = {
@@ -280,29 +333,17 @@ export const CompanyProfileWizard: React.FC = () => {
         media_gallery,
       };
 
-      console.log('=== SUBMITTING COMPANY DATA ===');
-      console.log('Submitting company data:', companyData);
-      console.log('Social links data:', data.social_links);
-      console.log('Media gallery:', media_gallery);
-      console.log('Media items count:', mediaItems.length);
-      console.log('Form is dirty:', form.formState.isDirty);
-      console.log('Has social links changes:', hasSocialLinksChanges);
-      console.log('Has gallery changes:', hasGalleryChanges);
-
       if (company?.id) {
-        // Update existing company directly
         const result = await updateCompanyDirectly(companyData);
         if (result.error) {
-          console.error('Error updating company:', result.error);
           throw result.error;
         }
-        // Refresh company data to show updated information
         await refreshCompanies();
         setHasSocialLinksChanges(false);
         setHasGalleryChanges(false);
+        localStorage.removeItem(STORAGE_KEY);
         toast.success('Perfil corporativo actualizado');
       } else {
-        // Create new company - ensure name is provided
         const result = await createCompany({
           name: data.name,
           description: data.description,
@@ -311,6 +352,7 @@ export const CompanyProfileWizard: React.FC = () => {
           industry: data.industry,
           size: data.size,
           annual_revenue_range: data.annual_revenue_range,
+          employee_count_range: data.employee_count_range,
           website: data.website,
           social_links: data.social_links,
         } as any);
@@ -318,8 +360,8 @@ export const CompanyProfileWizard: React.FC = () => {
           throw result.error;
         }
         
-        // Refresh company context to load the new company
         await refreshCompanies();
+        localStorage.removeItem(STORAGE_KEY);
         toast.success('Empresa creada exitosamente');
       }
       
@@ -332,17 +374,39 @@ export const CompanyProfileWizard: React.FC = () => {
     }
   };
 
+  const handleSaveSection = async (sectionName: string) => {
+    setIsSavingSection(sectionName);
+    try {
+      const data = form.getValues();
+      const media_gallery = mediaItems;
+      const companyData = { ...data, media_gallery };
+
+      if (company?.id) {
+        await updateCompanyDirectly(companyData);
+        await refreshCompanies();
+        setHasSocialLinksChanges(false);
+        setHasGalleryChanges(false);
+        localStorage.removeItem(STORAGE_KEY);
+        form.reset(data);
+        toast.success(`Sección "${sectionName}" guardada`);
+      }
+    } catch (error) {
+      console.error('Error saving section:', error);
+      toast.error(`Error al guardar la sección "${sectionName}"`);
+    } finally {
+      setIsSavingSection(null);
+    }
+  };
+
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validar tipo de archivo
       const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
       if (!allowedTypes.includes(file.type)) {
         toast.error('Tipo de archivo no admitido. Tipos permitidos: PNG, JPG');
         return;
       }
       
-      // Validar tamaño del archivo
       if (file.size > 2 * 1024 * 1024) {
         toast.error('El archivo excede el tamaño permitido. Máximo: 2MB');
         return;
@@ -354,7 +418,11 @@ export const CompanyProfileWizard: React.FC = () => {
     }
   };
 
-  // Función helper para comprimir imágenes
+  const handleDeleteLogo = () => {
+    form.setValue('logo_url', '', { shouldDirty: true, shouldTouch: true });
+    toast.info('Logo eliminado. Guardá los cambios para confirmar.');
+  };
+
   const compressImage = async (blob: Blob, quality: number = 0.7): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       const img = new window.Image() as HTMLImageElement;
@@ -364,7 +432,6 @@ export const CompanyProfileWizard: React.FC = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // Redimensionar si es muy grande (máx 1200px)
         let width = img.width;
         let height = img.height;
         const maxSize = 1200;
@@ -410,23 +477,15 @@ export const CompanyProfileWizard: React.FC = () => {
   const handleLogoCropComplete = async (blob: Blob) => {
     setIsLoading(true);
     try {
-      console.log('📊 Tamaño original:', (blob.size / 1024).toFixed(2), 'KB');
+      const compressedBlob = await compressImage(blob, 0.7);
       
-      // Comprimir la imagen antes de subir
-      const compressedBlob = await compressImage(blob, 0.7); // 70% calidad
-      
-      console.log('📊 Tamaño comprimido:', (compressedBlob.size / 1024).toFixed(2), 'KB');
-      
-      // Verificar que no exceda el límite después de comprimir
       if (compressedBlob.size > 2 * 1024 * 1024) {
         toast.error('La imagen es demasiado grande incluso después de comprimir. Usa una imagen más pequeña.');
         return;
       }
       
-      // Create file from compressed blob
       const file = new File([compressedBlob], 'company-logo.jpg', { type: 'image/jpeg' });
       
-      // Upload to Supabase storage
       const fileExt = 'jpg';
       const timestamp = Date.now();
       const filePath = `company-logos/${user?.id}_${timestamp}.${fileExt}`;
@@ -439,12 +498,10 @@ export const CompanyProfileWizard: React.FC = () => {
         throw uploadError;
       }
       
-      // Get public URL
       const { data } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
       
-      // Set the permanent URL in the form and mark as dirty
       form.setValue('logo_url', data.publicUrl, { 
         shouldDirty: true, 
         shouldTouch: true 
@@ -466,14 +523,8 @@ export const CompanyProfileWizard: React.FC = () => {
       ...item,
       id: `media-${Date.now()}`,
     };
-    console.log('Adding media item:', newItem);
-    setMediaItems(prev => {
-      const updated = [...prev, newItem];
-      console.log('Updated media items:', updated);
-      return updated;
-    });
+    setMediaItems(prev => [...prev, newItem]);
     setHasGalleryChanges(true);
-    console.log('hasGalleryChanges set to true');
   };
 
   const handleRemoveMediaItem = (itemId: string) => {
@@ -488,26 +539,97 @@ export const CompanyProfileWizard: React.FC = () => {
     setHasGalleryChanges(true);
   };
 
+  const handlePreview = () => {
+    if (company?.id) {
+      window.open(`/company/${company.id}`, '_blank');
+    }
+  };
+
+  const handleShareProfile = () => {
+    if (company?.id) {
+      const url = `${window.location.origin}/company/${company.id}`;
+      navigator.clipboard.writeText(url);
+      toast.success('Link copiado al portapapeles');
+    }
+  };
+
+  const completionPercentage = getCompletionPercentage();
+  const hasChanges = form.formState.isDirty || hasSocialLinksChanges || hasGalleryChanges;
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Back Button */}
       <Button
         type="button"
         variant="ghost"
-        onClick={() => navigate('/business-dashboard/company-details')}
+        onClick={() => navigate('/business-dashboard')}
         className="flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver a Detalles
+        Volver al Dashboard
       </Button>
 
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <Building className="h-12 w-12 mx-auto text-primary" />
-        <h1 className="text-2xl font-bold">Perfil Corporativo</h1>
-        <p className="text-muted-foreground">
-          Administra la información completa de tu empresa
-        </p>
+      {/* Header - Redesigned */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-card rounded-lg border">
+        {/* Left side - Action buttons */}
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handlePreview}
+            className="flex items-center gap-2"
+            disabled={!company?.id}
+          >
+            <Eye className="h-4 w-4" />
+            Vista previa
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleShareProfile}
+            className="flex items-center gap-2"
+            disabled={!company?.id}
+          >
+            <Share2 className="h-4 w-4" />
+            Compartir perfil
+          </Button>
+        </div>
+
+        {/* Right side - Icon, title, subtitle */}
+        <div className="flex items-center gap-3 text-right">
+          <div className="text-right">
+            <h1 className="text-xl font-bold">Perfil Corporativo</h1>
+            <p className="text-sm text-muted-foreground">
+              Administra la información de tu empresa
+            </p>
+          </div>
+          <Building className="h-10 w-10 text-primary" />
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="p-4 bg-card rounded-lg border">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium">Completitud del perfil</span>
+          <span className={`text-sm font-bold ${
+            completionPercentage < 50 ? 'text-destructive' : 
+            completionPercentage < 80 ? 'text-yellow-600' : 'text-green-600'
+          }`}>
+            {completionPercentage}%
+          </span>
+        </div>
+        <Progress 
+          value={completionPercentage} 
+          className={`h-2 ${
+            completionPercentage < 50 ? '[&>div]:bg-destructive' : 
+            completionPercentage < 80 ? '[&>div]:bg-yellow-500' : '[&>div]:bg-green-500'
+          }`}
+        />
+        {completionPercentage < 100 && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Completá todos los campos para mejorar tu visibilidad y atraer más talento
+          </p>
+        )}
       </div>
 
       <Form {...form}>
@@ -536,25 +658,38 @@ export const CompanyProfileWizard: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <div>
-                  <label htmlFor="logo-upload">
-                    <Button type="button" variant="outline" asChild disabled={isLoading}>
-                      <span className="flex items-center cursor-pointer">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Cambiar Logo
-                        {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                      </span>
-                    </Button>
-                    <input 
-                      id="logo-upload" 
-                      type="file" 
-                      accept="image/*" 
-                      style={{ display: 'none' }} 
-                      onChange={handleLogoUpload} 
-                      disabled={isLoading} 
-                    />
-                  </label>
-                  <p className="text-sm text-muted-foreground mt-1">
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <label htmlFor="logo-upload">
+                      <Button type="button" variant="outline" asChild disabled={isLoading}>
+                        <span className="flex items-center cursor-pointer">
+                          <Upload className="h-4 w-4 mr-2" />
+                          {form.watch('logo_url') ? 'Cambiar Logo' : 'Subir Logo'}
+                          {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                        </span>
+                      </Button>
+                      <input 
+                        id="logo-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={handleLogoUpload} 
+                        disabled={isLoading} 
+                      />
+                    </label>
+                    {form.watch('logo_url') && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={handleDeleteLogo}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Eliminar
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
                     PNG, JPG hasta 2MB
                   </p>
                 </div>
@@ -612,6 +747,23 @@ export const CompanyProfileWizard: React.FC = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Section Save Button */}
+              <Button 
+                type="button"
+                onClick={() => handleSaveSection('General')}
+                disabled={isSavingSection === 'General' || !hasChanges}
+                className="w-full sm:w-auto"
+              >
+                {isSavingSection === 'General' ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  'Guardar cambios de General'
+                )}
+              </Button>
             </CardContent>
           </Card>
 
@@ -682,6 +834,35 @@ export const CompanyProfileWizard: React.FC = () => {
                 )}
               />
 
+              {/* Employee Count Range */}
+              <FormField
+                control={form.control}
+                name="employee_count_range"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Users2 className="h-4 w-4" />
+                      Cantidad de Empleados
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona la cantidad de empleados" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {companySizeOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {/* Annual Revenue */}
               <FormField
                 control={form.control}
@@ -710,6 +891,23 @@ export const CompanyProfileWizard: React.FC = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Section Save Button */}
+              <Button 
+                type="button"
+                onClick={() => handleSaveSection('Clasificación')}
+                disabled={isSavingSection === 'Clasificación' || !hasChanges}
+                className="w-full sm:w-auto"
+              >
+                {isSavingSection === 'Clasificación' ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  'Guardar cambios de Clasificación'
+                )}
+              </Button>
             </CardContent>
           </Card>
 
@@ -747,8 +945,7 @@ export const CompanyProfileWizard: React.FC = () => {
                   Redes Sociales
                 </h3>
                 
-                {/* Social Media Icons Display */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
                     { key: 'linkedin', label: 'LinkedIn', icon: Linkedin, color: 'text-blue-600', placeholder: 'https://linkedin.com/company/miempresa' },
                     { key: 'instagram', label: 'Instagram', icon: Instagram, color: 'text-pink-600', placeholder: 'https://instagram.com/miempresa' },
@@ -848,6 +1045,23 @@ export const CompanyProfileWizard: React.FC = () => {
                   })}
                 </div>
               </div>
+
+              {/* Section Save Button */}
+              <Button 
+                type="button"
+                onClick={() => handleSaveSection('Presencia Digital')}
+                disabled={isSavingSection === 'Presencia Digital' || !hasChanges}
+                className="w-full sm:w-auto"
+              >
+                {isSavingSection === 'Presencia Digital' ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  'Guardar cambios de Presencia Digital'
+                )}
+              </Button>
             </CardContent>
           </Card>
 
@@ -859,7 +1073,7 @@ export const CompanyProfileWizard: React.FC = () => {
                 Galería
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <MediaGallery
                 items={mediaItems}
                 onAddItem={handleAddMediaItem}
@@ -867,6 +1081,23 @@ export const CompanyProfileWizard: React.FC = () => {
                 onUpdateItem={handleUpdateMediaItem}
                 maxItems={10}
               />
+
+              {/* Section Save Button */}
+              <Button 
+                type="button"
+                onClick={() => handleSaveSection('Galería')}
+                disabled={isSavingSection === 'Galería' || !hasChanges}
+                className="w-full sm:w-auto"
+              >
+                {isSavingSection === 'Galería' ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  'Guardar cambios de Galería'
+                )}
+              </Button>
             </CardContent>
           </Card>
 
@@ -879,22 +1110,15 @@ export const CompanyProfileWizard: React.FC = () => {
                 form.reset();
                 setHasSocialLinksChanges(false);
                 setHasGalleryChanges(false);
+                localStorage.removeItem(STORAGE_KEY);
               }}
-              disabled={isLoading}
+              disabled={isLoading || !hasChanges}
             >
               Descartar Cambios
             </Button>
             <Button 
               type="submit" 
-              disabled={isLoading || (!form.formState.isDirty && !hasSocialLinksChanges && !hasGalleryChanges)}
-              onClick={() => {
-                console.log('=== SAVE BUTTON STATE ===');
-                console.log('Form is dirty:', form.formState.isDirty);
-                console.log('Has social links changes:', hasSocialLinksChanges);
-                console.log('Has gallery changes:', hasGalleryChanges);
-                console.log('Media items count:', mediaItems.length);
-                console.log('Button should be enabled:', form.formState.isDirty || hasSocialLinksChanges || hasGalleryChanges);
-              }}
+              disabled={isLoading || !hasChanges}
             >
               {isLoading ? (
                 <>
@@ -902,13 +1126,12 @@ export const CompanyProfileWizard: React.FC = () => {
                   Guardando...
                 </>
               ) : (
-                'Guardar Cambios'
+                'Guardar Todo'
               )}
             </Button>
           </div>
         </form>
       </Form>
-
 
       {/* Image Cropper */}
       {logoFile && (

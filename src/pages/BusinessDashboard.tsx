@@ -276,7 +276,7 @@ const BusinessDashboard = () => {
                               <Button 
                                 variant="link" 
                                 className="text-blue-600 p-0 h-auto text-xs sm:text-sm"
-                                onClick={() => navigate('/business-dashboard/company-details')}
+                                onClick={() => navigate('/business-dashboard/company-profile')}
                               >
                                 <span className="hidden sm:inline">Completar Perfil ahora</span>
                                 <span className="sm:hidden">Completar</span>

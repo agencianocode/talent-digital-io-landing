@@ -161,7 +161,7 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
           {activeCompany && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/business-dashboard/company-details')}>
+              <DropdownMenuItem onClick={() => navigate('/business-dashboard/company-profile')}>
                 <FileText className="h-4 w-4 mr-2" />
                 Detalles del negocio
               </DropdownMenuItem>
