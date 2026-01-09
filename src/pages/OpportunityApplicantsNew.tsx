@@ -520,7 +520,7 @@ const OpportunityApplicantsNew = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate(`/business-dashboard/company/${company?.id}/edit`)}
+              onClick={() => navigate('/business-dashboard/company-profile')}
             >
               <Briefcase className="w-4 h-4 mr-2" />
               Editar Perfil de Empresa
