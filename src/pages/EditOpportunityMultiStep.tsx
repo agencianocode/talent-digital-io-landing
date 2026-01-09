@@ -104,6 +104,16 @@ const EditOpportunityMultiStep = () => {
           return;
         }
 
+        // Extract tools from requirements field
+        const extractTools = (requirements: string | null): string[] => {
+          if (!requirements) return [];
+          const toolsMatch = requirements.match(/Herramientas:\s*([^\n]+)/);
+          if (toolsMatch && toolsMatch[1]) {
+            return toolsMatch[1].split(',').map(t => t.trim()).filter(t => t);
+          }
+          return [];
+        };
+
         // Map database data to form data
         const mappedData: Partial<MultiStepFormData> = {
           // Step 1
@@ -112,7 +122,7 @@ const EditOpportunityMultiStep = () => {
           description: data.description || '',
           contractType: data.contract_type || data.type || '',
           skills: data.skills || [],
-          tools: [],
+          tools: extractTools(data.requirements),
           experienceLevels: data.experience_levels || [],
           locationType: mapLocationType(data.location),
           location: data.location || '',
@@ -326,6 +336,17 @@ const EditOpportunityMultiStep = () => {
         salary_min: salaryMin,
         salary_max: salaryMax,
         skills: formData.skills,
+        // Campos adicionales
+        contract_type: formData.contractType || null,
+        duration_type: formData.durationType || 'indefinite',
+        duration_value: formData.durationType === 'fixed' ? (formData.durationValue || null) : null,
+        duration_unit: formData.durationType === 'fixed' ? (formData.durationUnit || 'months') : null,
+        experience_levels: formData.experienceLevels || [],
+        timezone_preference: formData.preferredTimezone || null,
+        deadline_date: formData.deadlineDate ? formData.deadlineDate.toISOString().split('T')[0] : null,
+        payment_type: formData.paymentMethod || 'monthly',
+        commission_percentage: formData.commissionPercentage ? parseInt(formData.commissionPercentage) : null,
+        salary_is_public: formData.salaryIsPublic !== false,
         is_academy_exclusive: formData.isAcademyExclusive || false,
         status: formData.publishToFeed ? 'active' : ((formData as any).status === 'draft' ? 'draft' : 'active') as 'active',
         application_instructions: formData.applicationInstructions,
