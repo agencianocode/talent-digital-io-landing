@@ -14,7 +14,7 @@ interface OpportunityStep2Data {
   durationValue: number;
   durationUnit: 'days' | 'weeks' | 'months';
   paymentType: 'fixed' | 'commission' | 'fixed_plus_commission';
-  paymentMethod: 'hourly' | 'weekly' | 'monthly' | 'one-time';
+  paymentMethod: 'hourly' | 'weekly' | 'biweekly' | 'monthly' | 'one-time';
   
   // Budget fields
   showBudgetRange: boolean;
@@ -23,6 +23,8 @@ interface OpportunityStep2Data {
   hourlyMaxRate: string;
   weeklyMinBudget: string;
   weeklyMaxBudget: string;
+  biweeklyMinBudget: string;
+  biweeklyMaxBudget: string;
   monthlyMinBudget: string;
   monthlyMaxBudget: string;
   
@@ -48,6 +50,7 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
     switch (data.paymentMethod) {
       case 'hourly': return data.showBudgetRange ? 'Tarifa por hora' : 'Tarifa por hora';
       case 'weekly': return data.showBudgetRange ? 'Presupuesto semanal' : 'Presupuesto semanal';
+      case 'biweekly': return data.showBudgetRange ? 'Presupuesto quincenal' : 'Presupuesto quincenal';
       case 'monthly': return data.showBudgetRange ? 'Presupuesto mensual' : 'Presupuesto mensual';
       case 'one-time': return data.showBudgetRange ? 'Presupuesto' : 'Presupuesto';
       default: return 'Presupuesto';
@@ -58,6 +61,7 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
     switch (data.paymentMethod) {
       case 'hourly': return '/ hora';
       case 'weekly': return '/ semana';
+      case 'biweekly': return '/ quincena';
       case 'monthly': return '/ mes';
       case 'one-time': return '';
       default: return '';
@@ -83,6 +87,10 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
         case 'weekly':
           value = data.weeklyMinBudget;
           onChangeHandler = (val) => onChange({ weeklyMinBudget: val });
+          break;
+        case 'biweekly':
+          value = data.biweeklyMinBudget;
+          onChangeHandler = (val) => onChange({ biweeklyMinBudget: val });
           break;
         case 'monthly':
           value = data.monthlyMinBudget;
@@ -145,6 +153,12 @@ const OpportunityStep2 = ({ data, onChange }: OpportunityStep2Props) => {
           maxValue = data.weeklyMaxBudget;
           onChangeMin = (val) => onChange({ weeklyMinBudget: val });
           onChangeMax = (val) => onChange({ weeklyMaxBudget: val });
+          break;
+        case 'biweekly':
+          minValue = data.biweeklyMinBudget;
+          maxValue = data.biweeklyMaxBudget;
+          onChangeMin = (val) => onChange({ biweeklyMinBudget: val });
+          onChangeMax = (val) => onChange({ biweeklyMaxBudget: val });
           break;
         case 'monthly':
           minValue = data.monthlyMinBudget;

@@ -211,6 +211,7 @@ export const paymentTypes = [
 export const salaryPeriods = [
   { value: 'hourly', label: 'Por hora' },
   { value: 'weekly', label: 'Semanal' },
+  { value: 'biweekly', label: 'Quincenal' },
   { value: 'monthly', label: 'Mensual' },
   { value: 'one-time', label: 'Único' }
 ];
