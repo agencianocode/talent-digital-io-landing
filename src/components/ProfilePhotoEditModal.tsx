@@ -172,18 +172,19 @@ const ProfilePhotoEditModal = ({ isOpen, onClose, onSave, imageFile }: ProfilePh
               <div className="text-center">
                 <div
                   ref={containerRef}
-                  className="relative w-48 h-48 mx-auto border-2 border-gray-300 rounded-full overflow-hidden cursor-move"
+                  className="relative w-64 h-64 mx-auto bg-black/90 cursor-move overflow-hidden"
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
                   onWheel={handleWheel}
                 >
+                  {/* Full image */}
                   <img
                     ref={imageRef}
                     src={imageUrl}
                     alt="Preview"
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-contain"
                     style={{
                       transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                       transformOrigin: 'center center'
@@ -191,9 +192,25 @@ const ProfilePhotoEditModal = ({ isOpen, onClose, onSave, imageFile }: ProfilePh
                     draggable={false}
                   />
                   
-                  {/* Circular overlay */}
-                  <div className="absolute inset-0 rounded-full border-4 border-white shadow-lg pointer-events-none" />
+                  {/* Circular crop overlay - shows darkened area outside circle */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {/* Dark overlay with circular cutout using CSS mask */}
+                    <div 
+                      className="absolute inset-0 bg-black/50"
+                      style={{
+                        maskImage: 'radial-gradient(circle at center, transparent 45%, black 45%)',
+                        WebkitMaskImage: 'radial-gradient(circle at center, transparent 45%, black 45%)'
+                      }}
+                    />
+                    {/* Circular border indicator */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-[90%] h-[90%] rounded-full border-2 border-white/80 border-dashed" />
+                    </div>
+                  </div>
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Arrastra para mover • Usa la rueda del mouse para zoom
+                </p>
               </div>
 
               {/* Controls */}
