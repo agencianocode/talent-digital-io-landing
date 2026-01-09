@@ -40,7 +40,7 @@ interface FormData {
   durationValue: number;
   durationUnit: 'days' | 'weeks' | 'months';
   paymentType: 'fixed' | 'commission' | 'fixed_plus_commission';
-  paymentMethod: 'hourly' | 'weekly' | 'monthly' | 'one-time';
+  paymentMethod: 'hourly' | 'weekly' | 'biweekly' | 'monthly' | 'one-time';
   
   // Budget fields
   showBudgetRange: boolean;
@@ -49,6 +49,8 @@ interface FormData {
   hourlyMaxRate: string;
   weeklyMinBudget: string;
   weeklyMaxBudget: string;
+  biweeklyMinBudget: string;
+  biweeklyMaxBudget: string;
   monthlyMinBudget: string;
   monthlyMaxBudget: string;
   
@@ -77,6 +79,7 @@ interface MultiStepOpportunityFormProps {
   onSubmit: (data: FormData) => void;
   isLoading?: boolean;
   company?: Company | null;
+  isEditing?: boolean;
 }
 
 const steps = [
@@ -101,7 +104,8 @@ const MultiStepOpportunityForm = ({
   initialData = {}, 
   onSubmit, 
   isLoading = false,
-  company
+  company,
+  isEditing = false
 }: MultiStepOpportunityFormProps) => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -144,6 +148,8 @@ const MultiStepOpportunityForm = ({
     hourlyMaxRate: '',
     weeklyMinBudget: '',
     weeklyMaxBudget: '',
+    biweeklyMinBudget: '',
+    biweeklyMaxBudget: '',
     monthlyMinBudget: '',
     monthlyMaxBudget: '',
     
@@ -232,6 +238,9 @@ const MultiStepOpportunityForm = ({
               case 'weekly':
                 hasBudget = !!(formData.weeklyMinBudget?.trim() && formData.weeklyMaxBudget?.trim());
                 break;
+              case 'biweekly':
+                hasBudget = !!(formData.biweeklyMinBudget?.trim() && formData.biweeklyMaxBudget?.trim());
+                break;
               case 'monthly':
                 hasBudget = !!(formData.monthlyMinBudget?.trim() && formData.monthlyMaxBudget?.trim());
                 break;
@@ -246,6 +255,9 @@ const MultiStepOpportunityForm = ({
                 break;
               case 'weekly':
                 hasBudget = !!formData.weeklyMinBudget?.trim();
+                break;
+              case 'biweekly':
+                hasBudget = !!formData.biweeklyMinBudget?.trim();
                 break;
               case 'monthly':
                 hasBudget = !!formData.monthlyMinBudget?.trim();
@@ -363,6 +375,8 @@ const MultiStepOpportunityForm = ({
               hourlyMaxRate: formData.hourlyMaxRate,
               weeklyMinBudget: formData.weeklyMinBudget,
               weeklyMaxBudget: formData.weeklyMaxBudget,
+              biweeklyMinBudget: formData.biweeklyMinBudget,
+              biweeklyMaxBudget: formData.biweeklyMaxBudget,
               monthlyMinBudget: formData.monthlyMinBudget,
               monthlyMaxBudget: formData.monthlyMaxBudget,
               
@@ -410,10 +424,10 @@ const MultiStepOpportunityForm = ({
         </div>
         
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Crear Nueva Oportunidad de Trabajo
+          {isEditing ? 'Editar Oportunidad' : 'Crear Nueva Oportunidad de Trabajo'}
         </h1>
         <p className="text-gray-600">
-          Completa los detalles a continuación para crear tu publicación de trabajo
+          {isEditing ? 'Modifica los detalles de tu oportunidad' : 'Completa los detalles a continuación para crear tu publicación de trabajo'}
         </p>
       </div>
 
