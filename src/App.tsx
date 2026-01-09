@@ -50,7 +50,7 @@ const TalentProfilePage = lazy(() => import('./pages/TalentProfilePage'));
 const OpportunityApplicants = lazy(() => import('./pages/OpportunityApplicantsNew'));
 const TalentDiscovery = lazy(() => import('./pages/TalentDiscovery'));
 const PublicTalentProfile = lazy(() => import('./pages/PublicTalentProfile'));
-const CompanyDetails = lazy(() => import('./pages/CompanyDetails'));
+// CompanyDetails removed - redirects to company-profile
 const BusinessProfile = lazy(() => import('./pages/BusinessProfile'));
 const BusinessMarketplace = lazy(() => import('./pages/BusinessMarketplace'));
 const BusinessMyServices = lazy(() => import('./pages/BusinessMyServices'));
@@ -360,7 +360,7 @@ function App() {
                         } />
                         <Route path="company-details" element={
                           <Suspense fallback={<LoadingSkeleton type="card" />}>
-                            <CompanyDetails />
+                            <CompanyProfileWizard />
                           </Suspense>
                         } />
                         <Route path="marketplace" element={

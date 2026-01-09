@@ -14,6 +14,7 @@ interface CompanyData {
   industry: string | null;
   size: string | null;
   annual_revenue_range: string | null;
+  employee_count_range: string | null;
   social_links: any;
 }
 
@@ -126,6 +127,7 @@ export const useProfileProgress = () => {
       industry: !!companyData.industry,
       size: !!companyData.size,
       annual_revenue_range: !!companyData.annual_revenue_range,
+      employee_count_range: !!companyData.employee_count_range,
       social_links: !!(companyData.social_links && Object.keys(companyData.social_links).length > 0),
     };
 
@@ -135,7 +137,7 @@ export const useProfileProgress = () => {
                                  requiredCompanyFields.location;
     
     // For academies: only require name, description, location, logo, and website
-    // For companies: require all fields including industry, size, revenue, and social links
+    // For companies: require all fields including industry, size, revenue, employee count, and social links
     const profileComplete = isAcademy
       ? (requiredFieldsComplete && requiredCompanyFields.logo_url && requiredCompanyFields.website)
       : (requiredFieldsComplete &&
@@ -144,6 +146,7 @@ export const useProfileProgress = () => {
          requiredCompanyFields.industry &&
          requiredCompanyFields.size &&
          requiredCompanyFields.annual_revenue_range &&
+         requiredCompanyFields.employee_count_range &&
          requiredCompanyFields.social_links);
 
     // Check if user has published any opportunities
@@ -173,7 +176,8 @@ export const useProfileProgress = () => {
           if (!isAcademy) {
             if (!requiredCompanyFields.industry) missing.push('industria');
             if (!requiredCompanyFields.size) missing.push('tamaño de empresa');
-            if (!requiredCompanyFields.annual_revenue_range) missing.push('rango de ingresos');
+            if (!requiredCompanyFields.annual_revenue_range) missing.push('facturación anual');
+            if (!requiredCompanyFields.employee_count_range) missing.push('cantidad de empleados');
             if (!requiredCompanyFields.social_links) missing.push('redes sociales');
           }
           
@@ -202,9 +206,9 @@ export const useProfileProgress = () => {
     
     // Calculate based on individual field completion for more granular percentage
     // For academies: only 5 fields are required (name, description, location, logo, website)
-    // For companies: 9 fields are required
+    // For companies: 10 fields are required (10% each)
     let completedFields = 0;
-    const totalFields = isAcademy ? 5 : 9;
+    const totalFields = isAcademy ? 5 : 10;
     
     if (companyData.name) completedFields++;
     if (companyData.description && companyData.description.length >= 10) completedFields++;
@@ -217,6 +221,7 @@ export const useProfileProgress = () => {
       if (companyData.industry) completedFields++;
       if (companyData.size) completedFields++;
       if (companyData.annual_revenue_range) completedFields++;
+      if (companyData.employee_count_range) completedFields++;
       if (companyData.social_links && Object.keys(companyData.social_links).length > 0) completedFields++;
     }
     
