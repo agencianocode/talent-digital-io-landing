@@ -136,7 +136,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
             Arrastra para mover el área de recorte y ajusta el encuadre de tu foto
           </p>
           
-          <div className={circularCrop ? 'rounded-full overflow-hidden' : ''}>
+          <div>
             <ReactCrop
               crop={crop}
               onChange={(_, percentCrop) => setCrop(percentCrop)}
