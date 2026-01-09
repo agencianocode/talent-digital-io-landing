@@ -21,7 +21,9 @@ import {
   Calendar,
   Image as ImageIcon,
   Play,
-  ExternalLink
+  ExternalLink,
+  Star,
+  ShoppingBag
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { FormattedOpportunityText } from '@/lib/markdown-formatter';
@@ -31,6 +33,7 @@ const PublicCompany = () => {
   const navigate = useNavigate();
   const [company, setCompany] = useState<any>(null);
   const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,10 +60,8 @@ const PublicCompany = () => {
           location,
           employee_count_range,
           annual_revenue_range,
-          benefits,
-          work_culture,
-          business_impact,
-          team_values,
+          industry,
+          business_type,
           media_gallery
         `)
         .eq('id', companyId)
@@ -72,6 +73,7 @@ const PublicCompany = () => {
         setCompany(data);
         updateMetaTags(data);
         loadOpportunities();
+        loadServices();
       } else {
         setError('Empresa no encontrada');
       }
@@ -118,6 +120,37 @@ const PublicCompany = () => {
       setOpportunities(data || []);
     } catch (error) {
       console.error('Error loading opportunities:', error);
+    }
+  };
+
+  const loadServices = async () => {
+    if (!companyId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('marketplace_services')
+        .select(`
+          id,
+          title,
+          description,
+          category,
+          price_min,
+          price_max,
+          currency,
+          delivery_time,
+          location,
+          rating,
+          reviews_count
+        `)
+        .eq('company_id', companyId)
+        .eq('status', 'active')
+        .eq('is_available', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setServices(data || []);
+    } catch (error) {
+      console.error('Error loading services:', error);
     }
   };
 
@@ -209,17 +242,17 @@ const PublicCompany = () => {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-start gap-6">
-            {/* Square Logo */}
+            {/* Logo más grande */}
             <div className="flex-shrink-0">
               {company.logo_url ? (
                 <img 
                   src={company.logo_url} 
                   alt={`${company.name} logo`}
-                  className="w-24 h-24 object-cover rounded-lg border-2 border-gray-200"
+                  className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-lg border-2 border-gray-200"
                 />
               ) : (
-                <div className="w-24 h-24 bg-gray-100 rounded-lg border-2 border-gray-200 flex items-center justify-center">
-                  <Building2 className="w-12 h-12 text-gray-400" />
+                <div className="w-32 h-32 md:w-40 md:h-40 bg-gray-100 rounded-lg border-2 border-gray-200 flex items-center justify-center">
+                  <Building2 className="w-16 h-16 text-gray-400" />
                 </div>
               )}
             </div>
@@ -228,24 +261,37 @@ const PublicCompany = () => {
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{company.name}</h1>
               
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
-                {company.location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    <span>{company.location}</span>
-                  </div>
+              {/* Ubicación */}
+              {company.location && (
+                <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+                  <MapPin className="h-4 w-4" />
+                  <span>{company.location}</span>
+                </div>
+              )}
+
+              {/* Chips de clasificación */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {company.industry && (
+                  <Badge variant="secondary" className="text-xs">
+                    {company.industry}
+                  </Badge>
+                )}
+                {company.business_type && (
+                  <Badge variant="secondary" className="text-xs">
+                    {company.business_type}
+                  </Badge>
                 )}
                 {company.employee_count_range && (
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>{company.employee_count_range}</span>
-                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    <Users className="h-3 w-3 mr-1" />
+                    {company.employee_count_range}
+                  </Badge>
                 )}
                 {company.annual_revenue_range && (
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="h-4 w-4" />
-                    <span>{company.annual_revenue_range}</span>
-                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    <DollarSign className="h-3 w-3 mr-1" />
+                    {company.annual_revenue_range}
+                  </Badge>
                 )}
               </div>
 
@@ -329,55 +375,7 @@ const PublicCompany = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="space-y-6">
-          {/* Benefits */}
-          {company.benefits && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Beneficios que ofrece la empresa</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: company.benefits }} />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Work Culture */}
-          {company.work_culture && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Cultura de trabajo</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: company.work_culture }} />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Business Impact */}
-          {company.business_impact && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Impacto del negocio</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: company.business_impact }} />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Team Values */}
-          {company.team_values && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Valores del equipo</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: company.team_values }} />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Media Gallery */}
+          {/* Media Gallery - solo si hay contenido */}
           {company.media_gallery && Array.isArray(company.media_gallery) && company.media_gallery.length > 0 && (
             <Card>
               <CardHeader>
@@ -544,6 +542,67 @@ const PublicCompany = () => {
                       <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
                         <Calendar className="h-3 w-3" />
                         <span>Publicado el {new Date(opp.created_at).toLocaleDateString('es-ES')}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Services Section */}
+          {services.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5" />
+                  Servicios
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {services.map((service) => (
+                    <div
+                      key={service.id}
+                      className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => navigate(`/marketplace/service/${service.id}`)}
+                    >
+                      <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                        {service.title}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-2">
+                        {service.category && (
+                          <Badge variant="secondary" className="text-xs">
+                            {service.category}
+                          </Badge>
+                        )}
+                        {service.rating && (
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <span>{service.rating.toFixed(1)}</span>
+                            {service.reviews_count > 0 && (
+                              <span className="text-gray-400">({service.reviews_count})</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {service.description && (
+                        <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                          {service.description}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        {(service.price_min || service.price_max) && (
+                          <span className="text-sm font-medium text-primary">
+                            {formatSalary(service.price_min, service.price_max, service.currency)}
+                          </span>
+                        )}
+                        {service.delivery_time && (
+                          <span className="text-xs text-gray-500">
+                            <Clock className="h-3 w-3 inline mr-1" />
+                            {service.delivery_time}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
