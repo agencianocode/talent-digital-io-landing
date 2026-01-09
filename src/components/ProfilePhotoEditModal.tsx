@@ -172,7 +172,7 @@ const ProfilePhotoEditModal = ({ isOpen, onClose, onSave, imageFile }: ProfilePh
               <div className="text-center">
                 <div
                   ref={containerRef}
-                  className="relative w-64 h-64 mx-auto bg-black/90 cursor-move overflow-hidden"
+                  className="relative w-64 h-64 mx-auto bg-black/90 cursor-move overflow-hidden rounded-none"
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
@@ -184,7 +184,7 @@ const ProfilePhotoEditModal = ({ isOpen, onClose, onSave, imageFile }: ProfilePh
                     ref={imageRef}
                     src={imageUrl}
                     alt="Preview"
-                    className="absolute inset-0 w-full h-full object-contain"
+                    className="absolute inset-0 w-full h-full object-contain rounded-none"
                     style={{
                       transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                       transformOrigin: 'center center'
