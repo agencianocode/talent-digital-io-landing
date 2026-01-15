@@ -164,10 +164,6 @@ const TalentOnboarding = () => {
   // Mapear el valor del formulario al valor que acepta la base de datos
   // La base de datos acepta: '0-1', '1-3', '3-6', '6+' (según TalentEditProfile.tsx)
   const mapExperienceLevel = (formValue: string): string => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentOnboarding.tsx:83',message:'mapExperienceLevel called',data:{formValue,formValueType:typeof formValue,formValueLength:formValue?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
     const mapping: Record<string, string> = {
       'Principiante: 0-1 año': '0-1',
       'Intermedio: 1-3 años': '1-3',
@@ -175,20 +171,11 @@ const TalentOnboarding = () => {
       'Experto: +6 años': '6+'
     };
     
-    // #region agent log
-    const mappedValue = mapping[formValue] || formValue;
-    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentOnboarding.tsx:95',message:'mapExperienceLevel result',data:{formValue,mappedValue,hasMapping:!!mapping[formValue]},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
-    return mappedValue;
+    return mapping[formValue] || formValue;
   };
 
   const handleStep2Complete = async (data: ProfessionalInfo) => {
     console.log('🚀 STEP 2 COMPLETE - Starting process...');
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentOnboarding.tsx:93',message:'handleStep2Complete entry',data:{experience:data.experience,experienceType:typeof data.experience},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     
     try {
       console.log('🔍 Setting professional info...');
@@ -200,11 +187,7 @@ const TalentOnboarding = () => {
       if (session?.user) {
         const mappedExperience = mapExperienceLevel(data.experience);
         
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentOnboarding.tsx:112',message:'Before upsert talent_profiles',data:{originalExperience:data.experience,mappedExperience,userId:session.user.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
-        // Save to talent_profiles table with title, bio, skills, and experience_level
+        // Save to talent_profiles table with title, bio, skills, experience_level AND categories
         const { error: talentProfileError } = await supabase
           .from('talent_profiles')
           .upsert({
@@ -213,12 +196,10 @@ const TalentOnboarding = () => {
             bio: data.bio,
             skills: data.skills,
             experience_level: mappedExperience,
+            primary_category_id: data.category || null,
+            secondary_category_id: data.category2 || null,
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/73b4eba3-5756-4c0a-8df1-ac27537707cc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TalentOnboarding.tsx:125',message:'After upsert talent_profiles',data:{error:talentProfileError?.message,errorCode:talentProfileError?.code,experienceLevelSent:mappedExperience},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
 
         if (talentProfileError) {
           console.error('❌ Error saving talent profile:', talentProfileError);
