@@ -2,14 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Obtener variables de entorno con fallbacks para desarrollo
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://wyrieetebfzmgffxecpz.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5cmllZXRlYmZ6bWdmZnhlY3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMjUzMjUsImV4cCI6MjA2ODgwMTMyNX0.CsRKGWid5IzIEIBSArkg99fEoDiXDQ8zHfRuQVEgtCw";
-
-// Verificar que las variables críticas estén configuradas
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error('❌ Variables de entorno de Supabase no configuradas. Verifica tu archivo .env.local');
-}
+const SUPABASE_URL = "https://wyrieetebfzmgffxecpz.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5cmllZXRlYmZ6bWdmZnhlY3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMjUzMjUsImV4cCI6MjA2ODgwMTMyNX0.CsRKGWid5IzIEIBSArkg99fEoDiXDQ8zHfRuQVEgtCw";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
