@@ -92,14 +92,16 @@ Deno.serve(async (req) => {
 
     // Map notification type to config ID
     const typeToConfigMap: Record<string, string> = {
-      'application': 'new_user_registration',
-      'team': 'company_upgrade_request',
+      'application': 'new_application',
+      'team': 'team_member_added',
       'marketplace': 'marketplace_reports',
       'opportunity': 'opportunity_reports',
       'moderation': 'content_approval',
       'system': 'system_errors',
+      'security': 'security_alerts',
+      'membership': 'membership_request',
       'welcome-talent': 'new_user_registration',
-      'welcome-business': 'new_user_registration',
+      'welcome-business': 'new_company_registration',
       'welcome-academy': 'new_user_registration',
     };
 
