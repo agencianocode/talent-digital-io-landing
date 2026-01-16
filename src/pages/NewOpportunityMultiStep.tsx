@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
@@ -59,6 +59,11 @@ const NewOpportunityMultiStep = () => {
   const [showInvitationModal, setShowInvitationModal] = useState(false);
   const [invitationLink, setInvitationLink] = useState('');
   const [opportunityTitle, setOpportunityTitle] = useState('');
+  
+  // Estado para rastrear si ya existe un borrador (previene duplicados)
+  const [opportunityId, setOpportunityId] = useState<string | null>(null);
+  // Ref para prevenir doble-clic
+  const isSubmittingRef = useRef(false);
 
   // Debug: Log company info
   console.log('🏢 NewOpportunityMultiStep - activeCompany:', activeCompany);
@@ -105,6 +110,13 @@ const NewOpportunityMultiStep = () => {
   }
 
   const handleSubmit = async (formData: MultiStepFormData) => {
+    // Prevenir doble-clic y envíos múltiples
+    if (isSubmittingRef.current || loading) {
+      console.log('⚠️ Submission already in progress, ignoring...');
+      return;
+    }
+    
+    isSubmittingRef.current = true;
     setLoading(true);
     
     try {
@@ -206,15 +218,39 @@ const NewOpportunityMultiStep = () => {
         external_application_url: formData.externalApplicationUrl || null,
       };
 
-      const { data: insertedData, error } = await supabase
-        .from('opportunities')
-        .insert([opportunityData])
-        .select()
-        .single();
+      let insertedOpportunityId = opportunityId;
 
-      if (error) {
-        console.error('Error creating opportunity:', error);
-        throw error;
+      // Si ya existe un borrador, hacer UPDATE en lugar de INSERT
+      if (opportunityId) {
+        console.log('📝 Updating existing opportunity:', opportunityId);
+        const { error } = await supabase
+          .from('opportunities')
+          .update(opportunityData)
+          .eq('id', opportunityId);
+
+        if (error) {
+          console.error('Error updating opportunity:', error);
+          throw error;
+        }
+      } else {
+        // INSERT solo la primera vez
+        console.log('🆕 Creating new opportunity');
+        const { data: insertedData, error } = await supabase
+          .from('opportunities')
+          .insert([opportunityData])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error creating opportunity:', error);
+          throw error;
+        }
+
+        // Guardar el ID para futuros updates
+        if (insertedData) {
+          setOpportunityId(insertedData.id);
+          insertedOpportunityId = insertedData.id;
+        }
       }
 
       // Check if this is a draft save (only when explicitly saving as draft, not when publishing)
@@ -231,14 +267,14 @@ const NewOpportunityMultiStep = () => {
         navigate('/business-dashboard/opportunities');
       } else {
         // Generar enlace de invitación para oportunidades privadas
-        if (insertedData) {
-          const inviteLink = generateInvitationLink(insertedData.id);
+        if (insertedOpportunityId) {
+          const inviteLink = generateInvitationLink(insertedOpportunityId);
           
           // Actualizar la oportunidad con el enlace de invitación
           await supabase
             .from('opportunities')
             .update({ invitation_link: inviteLink } as any)
-            .eq('id', insertedData.id);
+            .eq('id', insertedOpportunityId);
           
           // Mostrar modal con enlace de invitación
           setInvitationLink(inviteLink);
@@ -253,6 +289,7 @@ const NewOpportunityMultiStep = () => {
       toast.error(`Error al publicar la oportunidad: ${error.message || 'Error desconocido'}`);
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
