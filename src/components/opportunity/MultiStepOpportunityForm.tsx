@@ -194,12 +194,12 @@ const MultiStepOpportunityForm = ({
     }
   };
 
-  // Autoguardado cada 2 minutos
+  // Autoguardado cada 2 minutos - deshabilitado mientras se está guardando/publicando
   const autoSaveData = useAutoSave({
     data: formData,
     onSave: saveDraft,
     interval: 120000, // 2 minutos
-    enabled: true,
+    enabled: !isLoading && !isSaving, // Deshabilitar durante submit
     storageKey: 'opportunity-draft'
   });
 
