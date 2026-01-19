@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
@@ -117,6 +117,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     isLoading: true
   });
   const pendingInviteProcessedRef = useRef(false);
+  // Ref para prevenir doble-clic en creación de empresa
+  const isCreatingCompanyRef = useRef(false);
 
   // Fetch user profile and role with retry mechanism
   const fetchUserData = async (userId: string, userType?: string, retryCount = 0) => {
@@ -888,92 +890,108 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return { error };
   };
 
-  const createCompany = async (data: Omit<Company, 'id' | 'user_id' | 'created_at' | 'updated_at'>, retryCount = 0) => {
+  const createCompany = useCallback(async (data: Omit<Company, 'id' | 'user_id' | 'created_at' | 'updated_at'>, retryCount = 0): Promise<{ error: Error | null }> => {
+    // Prevenir doble-clic y llamadas concurrentes
+    if (isCreatingCompanyRef.current) {
+      console.log('⚠️ Company creation already in progress, ignoring duplicate call...');
+      return { error: new Error('Ya hay una creación de empresa en progreso') };
+    }
+    
     if (!authState.user) return { error: new Error('User not authenticated') };
 
-    // Ensure user has a profile and role before creating company
-    if (!authState.profile || !authState.userRole) {
-      if (retryCount < 3) {
-        console.log(`Profile/role missing, retrying company creation (attempt ${retryCount + 1})`);
-        try {
-          const userData = await fetchUserData(authState.user.id, undefined, 0);
-          setAuthState(prev => ({
-            ...prev,
-            profile: userData.profile as UserProfile | null,
-            userRole: userData.role,
-            company: userData.company as Company | null
-          }));
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return createCompany(data, retryCount + 1);
-        } catch (error) {
-          console.error('Error fetching user data during company creation retry:', error);
+    // Solo marcar como "creando" si no es un retry
+    if (retryCount === 0) {
+      isCreatingCompanyRef.current = true;
+    }
+    
+    try {
+      // Ensure user has a profile and role before creating company
+      if (!authState.profile || !authState.userRole) {
+        if (retryCount < 3) {
+          console.log(`Profile/role missing, retrying company creation (attempt ${retryCount + 1})`);
+          try {
+            const userData = await fetchUserData(authState.user.id, undefined, 0);
+            setAuthState(prev => ({
+              ...prev,
+              profile: userData.profile as UserProfile | null,
+              userRole: userData.role,
+              company: userData.company as Company | null
+            }));
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return createCompany(data, retryCount + 1);
+          } catch (error) {
+            console.error('Error fetching user data during company creation retry:', error);
+          }
+        } else {
+          return { error: new Error('Profile configuration incomplete. Please refresh and try again.') };
         }
-      } else {
-        return { error: new Error('Profile configuration incomplete. Please refresh and try again.') };
+      }
+
+      const { data: company, error: companyError } = await supabase
+        .from('companies')
+        .insert({ ...data, user_id: authState.user.id })
+        .select()
+        .single();
+
+      if (companyError) {
+        // Si es error de duplicado, dar un mensaje más amigable
+        if (companyError.code === '23505') {
+          return { error: new Error('Ya existe una empresa con este nombre. Por favor usa un nombre diferente.') };
+        }
+        return { error: companyError };
+      }
+
+      if (!company) {
+        return { error: new Error('Company creation failed') };
+      }
+
+      // Crear el rol de owner en company_user_roles
+      const { error: roleError } = await supabase
+        .from('company_user_roles')
+        .insert({
+          company_id: company.id,
+          user_id: authState.user.id,
+          role: 'owner',
+          status: 'accepted',
+          accepted_at: new Date().toISOString(),
+          invited_at: new Date().toISOString()
+        });
+
+      if (roleError) {
+        console.error('Error creating owner role:', roleError);
+        if (roleError.code !== '23505') {
+          console.warn('Owner role creation failed, but company was created. Error:', roleError);
+        }
+      }
+
+      // Solo actualizar si no hay empresa actual (primera empresa del usuario)
+      if (!authState.company) {
+        setAuthState(prev => ({
+          ...prev,
+          company: {
+            ...company,
+            user_id: authState.user!.id,
+            social_links: (company.social_links as Record<string, string>) || {},
+            gallery_urls: ((company.gallery_urls as any[]) || []).map((item: any) => ({
+              id: item?.id || Math.random().toString(),
+              type: item?.type || 'image',
+              url: item?.url || '',
+              title: item?.title || 'Sin título',
+              description: item?.description,
+              thumbnail: item?.thumbnail
+            }))
+          } as Company
+        }));
+      }
+
+      return { error: null };
+    } finally {
+      // Solo liberar el ref si es la llamada original (no un retry)
+      if (retryCount === 0) {
+        isCreatingCompanyRef.current = false;
       }
     }
-
-    const { data: company, error: companyError } = await supabase
-      .from('companies')
-      .insert({ ...data, user_id: authState.user.id })
-      .select()
-      .single();
-
-    if (companyError) {
-      return { error: companyError };
-    }
-
-    if (!company) {
-      return { error: new Error('Company creation failed') };
-    }
-
-    // Crear el rol de owner en company_user_roles
-    const { error: roleError } = await supabase
-      .from('company_user_roles')
-      .insert({
-        company_id: company.id,
-        user_id: authState.user.id,
-        role: 'owner',
-        status: 'accepted',
-        accepted_at: new Date().toISOString(),
-        invited_at: new Date().toISOString()
-      });
-
-    if (roleError) {
-      console.error('Error creating owner role:', roleError);
-      // Si falla la creación del rol, intentar crear la empresa de todos modos
-      // pero mostrar un warning al usuario
-      // Podría ser que ya existe el rol o hay un problema de permisos
-      // Nota: El rol podría ser creado por un trigger en la base de datos
-      if (roleError.code !== '23505') { // 23505 = unique_violation, significa que el rol ya existe
-        console.warn('Owner role creation failed, but company was created. Error:', roleError);
-      }
-    }
-
-    // NO actualizar authState.company automáticamente cuando se crea una nueva empresa
-    // El CompanyContext se encargará de manejar la empresa activa
-    // Solo actualizar si no hay empresa actual (primera empresa del usuario)
-    if (!authState.company) {
-      setAuthState(prev => ({
-        ...prev,
-        company: {
-          ...company,
-          user_id: authState.user!.id,
-          social_links: (company.social_links as Record<string, string>) || {},
-          gallery_urls: ((company.gallery_urls as any[]) || []).map((item: any) => ({
-            id: item?.id || Math.random().toString(),
-            type: item?.type || 'image',
-            url: item?.url || '',
-            title: item?.title || 'Sin título',
-            description: item?.description,
-            thumbnail: item?.thumbnail
-          }))
-        } as Company
-      }));
-    }
-
-    return { error: null };
-  };
+  }, [authState.user, authState.profile, authState.userRole, authState.company]);
 
   const switchUserType = async (newRole: UserRole) => {
     if (!authState.user) return { error: new Error('User not authenticated') };

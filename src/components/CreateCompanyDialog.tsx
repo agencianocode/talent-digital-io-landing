@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -50,6 +50,8 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({
   const { createCompany } = useSupabaseAuth();
   const { refreshCompanies } = useCompany();
   const [isCreating, setIsCreating] = useState(false);
+  // Ref para prevenir doble-clic
+  const isSubmittingRef = useRef(false);
 
   const form = useForm<CreateCompanyFormData>({
     resolver: zodResolver(createCompanySchema),
@@ -65,6 +67,13 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({
   const isAcademy = form.watch('isAcademy');
 
   const onSubmit = async (data: CreateCompanyFormData) => {
+    // Prevenir doble-clic
+    if (isSubmittingRef.current || isCreating) {
+      console.log('⚠️ Form submission already in progress, ignoring...');
+      return;
+    }
+    
+    isSubmittingRef.current = true;
     setIsCreating(true);
     try {
       const companyData = {
@@ -98,6 +107,7 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({
       toast.error('Error inesperado. Intenta nuevamente.');
     } finally {
       setIsCreating(false);
+      isSubmittingRef.current = false;
     }
   };
 
