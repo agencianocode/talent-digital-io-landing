@@ -121,11 +121,15 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
     return (
       <div
         key={conversation.id}
+        onClick={() => {
+          console.log('[ConversationsList] Selecting conversation:', conversation.id);
+          onSelectConversation(conversation.id);
+        }}
         className={`relative p-4 border-b border-border cursor-pointer hover:bg-secondary/50 transition-colors ${
           isActive ? 'bg-secondary' : ''
         }`}
       >
-        <div className="flex items-start space-x-3" onClick={() => onSelectConversation(conversation.id)}>
+        <div className="flex items-start space-x-3">
           <Avatar className="h-10 w-10">
             <AvatarImage src={otherParticipantAvatar || undefined} alt={otherParticipantName} />
             <AvatarFallback className="text-xs">

@@ -111,16 +111,16 @@ const BusinessMessagesPage = () => {
     if (!conversationId) {
       // Only reset activeId if we don't have any active state
       // This prevents clearing when initialized from query param
-      if (!tempConversation && !pendingRecipientId && !activeId) {
-        setActiveId(null);
+      if (!tempConversation && !pendingRecipientId) {
+        // Don't reset if we have an activeId already set
+        return;
       }
       return;
     }
 
-    setIsResolvingId(true);
+    console.log('[BusinessMessagesPage] Setting activeId from URL:', conversationId);
     setActiveId(conversationId);
-    setIsResolvingId(false);
-  }, [conversationId, tempConversation, pendingRecipientId, activeId]);
+  }, [conversationId, tempConversation, pendingRecipientId]);
 
   // Load conversations on mount only if user is authenticated
   useEffect(() => {
@@ -169,9 +169,10 @@ const BusinessMessagesPage = () => {
   
   const activeMessages = messagesByConversation[activeId || ''] || [];
 
-  // Create a key that changes when conversations change - must be before any returns
+  // Create a stable key based only on conversation IDs - must be before any returns
+  // Do NOT include unread_count as it causes destructive re-renders when marking as read
   const conversationsKey = useMemo(() => 
-    conversations.map(c => `${c.id}-${c.unread_count}`).join(','),
+    conversations.map(c => c.id).join(','),
     [conversations]
   );
 
