@@ -61,9 +61,10 @@ const TalentMessagesPage = () => {
   
   const activeMessages = messagesByConversation[activeId || ''] || [];
 
-  // Create a key that changes when conversations change - must be before any returns
+  // Create a stable key based only on conversation IDs - must be before any returns
+  // Do NOT include unread_count as it causes destructive re-renders when marking as read
   const conversationsKey = useMemo(() => 
-    conversations.map(c => `${c.id}-${c.unread_count}`).join(','),
+    conversations.map(c => c.id).join(','),
     [conversations]
   );
 
