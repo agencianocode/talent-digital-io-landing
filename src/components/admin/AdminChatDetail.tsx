@@ -16,6 +16,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useDraftProtection } from '@/hooks/useDraftProtection';
 
 interface ChatMessage {
   id: string;
@@ -68,6 +69,18 @@ const AdminChatDetail: React.FC<AdminChatDetailProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+
+  // Draft protection - saves message when switching windows
+  useDraftProtection({
+    storageKey: `admin-chat-draft-${conversationId}`,
+    data: { newMessage },
+    onRestore: (data) => {
+      if (data.newMessage) {
+        setNewMessage(data.newMessage);
+      }
+    },
+    autoPromptRestore: true, // Auto-restore for admin chat
+  });
 
   const loadConversationDetail = async () => {
     if (!conversationId) return;
