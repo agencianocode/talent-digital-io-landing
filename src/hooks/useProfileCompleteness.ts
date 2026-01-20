@@ -50,8 +50,10 @@ export const useProfileCompleteness = () => {
     let total = 0;
     const missingFields: string[] = [];
     const suggestions: string[] = [];
+    const profileData = profile as any;
 
-    // === CRITERIOS DE COMPLETITUD (11 campos = 100%) ===
+    // === CÁLCULO UNIFICADO DE COMPLETITUD (10 campos = 10% cada uno) ===
+    // Misma lógica que get-all-users edge function
     
     // 1. Foto de perfil (10%)
     if (hasAvatar) {
@@ -61,93 +63,94 @@ export const useProfileCompleteness = () => {
       suggestions.push('Sube una foto profesional para mejorar tu perfil');
     }
 
-    // 2. Nombre completo (10%)
-    if (profile.full_name) {
+    // 2. Nombre real - no derivado del email (10%)
+    const emailPrefix = user?.email?.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
+    const nameWords = (profile.full_name || '').trim().split(/\s+/).filter((w: string) => w.length > 0);
+    const cleanName = (profile.full_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const hasRealName = profile.full_name && 
+      profile.full_name.trim() !== '' && 
+      profile.full_name.toLowerCase() !== 'sin nombre' &&
+      (nameWords.length >= 2 || cleanName !== emailPrefix);
+    
+    if (hasRealName) {
       total += 10;
     } else {
-      missingFields.push('Nombre completo');
-      suggestions.push('Agrega tu nombre completo para que otros puedan encontrarte');
+      missingFields.push('Nombre real (nombre y apellido)');
+      suggestions.push('Agrega tu nombre y apellido completos');
     }
 
-    const profileData = profile as any;
-
-    // 3. País (5%)
-    if (profileData?.country) {
-      total += 5;
+    // 3. País (10%)
+    if (profileData?.country || talentProfile?.country) {
+      total += 10;
     } else {
       missingFields.push('País');
       suggestions.push('Indica tu país para oportunidades locales');
     }
 
-    // 4. Ciudad (5%)
-    if (profileData?.city) {
-      total += 5;
+    // 4. Ciudad (10%)
+    if (profileData?.city || talentProfile?.city) {
+      total += 10;
     } else {
       missingFields.push('Ciudad');
       suggestions.push('Especifica tu ciudad para oportunidades cercanas');
     }
 
-    // Campos del talent_profile
-    if (talentProfile) {
-      // 5. Categoría principal (10%)
-      if (talentProfile.primary_category_id) {
-        total += 10;
-      } else {
-        missingFields.push('Categoría principal');
-        suggestions.push('Selecciona tu área de especialización principal');
-      }
-
-      // 6. Título profesional (10%)
-      if (talentProfile.title) {
-        total += 10;
-      } else {
-        missingFields.push('Título profesional');
-        suggestions.push('Define un título que represente tu rol actual');
-      }
-
-      // 7. Nivel de experiencia (10%)
-      if (talentProfile.experience_level) {
-        total += 10;
-      } else {
-        missingFields.push('Nivel de experiencia');
-        suggestions.push('Indica tu nivel de experiencia profesional');
-      }
-
-      // 8. Skills - mínimo 3 (20%)
-      if (talentProfile.skills && talentProfile.skills.length >= 3) {
-        total += 20;
-      } else {
-        missingFields.push('Habilidades (mínimo 3)');
-        suggestions.push('Agrega al menos 3 habilidades que te destacan');
-      }
-
-      // 9. Bio/descripción - mínimo 50 caracteres (15%)
-      if (talentProfile.bio && talentProfile.bio.length >= 50) {
-        total += 15;
-      } else {
-        missingFields.push('Biografía (mínimo 50 caracteres)');
-        suggestions.push('Escribe una descripción atractiva de tu experiencia');
-      }
+    // 5. Categoría principal (10%)
+    if (talentProfile?.primary_category_id) {
+      total += 10;
     } else {
-      missingFields.push('Perfil de talento');
-      suggestions.push('Completa tu perfil profesional para mostrar tus habilidades');
+      missingFields.push('Categoría principal');
+      suggestions.push('Selecciona tu área de especialización principal');
     }
 
-    // 11. Educación - al menos 1 registro (5%)
+    // 6. Título profesional (10%)
+    if (talentProfile?.title) {
+      total += 10;
+    } else {
+      missingFields.push('Título profesional');
+      suggestions.push('Define un título que represente tu rol actual');
+    }
+
+    // 7. Nivel de experiencia válido (10%)
+    const validExperienceLevels = ['0-1', '1-3', '3-6', '6+'];
+    if (talentProfile?.experience_level && validExperienceLevels.includes(talentProfile.experience_level)) {
+      total += 10;
+    } else {
+      missingFields.push('Nivel de experiencia');
+      suggestions.push('Indica tu nivel de experiencia profesional');
+    }
+
+    // 8. Skills - mínimo 3 (10%)
+    if (talentProfile?.skills && talentProfile.skills.length >= 3) {
+      total += 10;
+    } else {
+      missingFields.push('Habilidades (mínimo 3)');
+      suggestions.push('Agrega al menos 3 habilidades que te destacan');
+    }
+
+    // 9. Bio - mínimo 50 caracteres (10%)
+    if (talentProfile?.bio && talentProfile.bio.length >= 50) {
+      total += 10;
+    } else {
+      missingFields.push('Biografía (mínimo 50 caracteres)');
+      suggestions.push('Escribe una descripción atractiva de tu experiencia');
+    }
+
+    // 10. Educación académica - mínimo 1 registro (10%)
     if (hasEducation) {
-      total += 5;
+      total += 10;
     } else {
       missingFields.push('Formación académica');
       suggestions.push('Agrega al menos un estudio o certificación');
     }
 
     // Calcular porcentajes por sección para el breakdown
-    // Basic info: foto + nombre + país + ciudad = 30%
+    // Basic info: foto + nombre + país + ciudad = 40%
     let basicInfoScore = 0;
-    if (hasAvatar) basicInfoScore += 33;
-    if (profile.full_name) basicInfoScore += 34;
-    if (profileData?.country) basicInfoScore += 16;
-    if (profileData?.city) basicInfoScore += 17;
+    if (hasAvatar) basicInfoScore += 25;
+    if (hasRealName) basicInfoScore += 25;
+    if (profileData?.country || talentProfile?.country) basicInfoScore += 25;
+    if (profileData?.city || talentProfile?.city) basicInfoScore += 25;
 
     // Professional info: categoría principal + título + nivel = 30%
     let professionalInfoScore = 0;
