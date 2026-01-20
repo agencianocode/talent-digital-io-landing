@@ -252,6 +252,11 @@ const NewOpportunityMultiStep = () => {
             if (error.message?.includes('opportunities_slug_unique')) {
               console.log(`⚠️ Slug conflict, retrying... (${retries} attempts left)`);
               retries--;
+              if (retries === 0) {
+                // Capturar el error cuando se agotan los reintentos
+                insertError = error;
+                break;
+              }
               // Pequeña espera para permitir que el trigger genere un slug diferente
               await new Promise(resolve => setTimeout(resolve, 100));
               continue;
@@ -269,11 +274,14 @@ const NewOpportunityMultiStep = () => {
           throw insertError;
         }
 
-        // Guardar el ID para futuros updates
-        if (insertedData) {
-          setOpportunityId(insertedData.id);
-          insertedOpportunityId = insertedData.id;
+        // Validar que la inserción fue exitosa
+        if (!insertedData) {
+          throw new Error('No se pudo crear la oportunidad. Por favor intenta de nuevo.');
         }
+
+        // Guardar el ID para futuros updates
+        setOpportunityId(insertedData.id);
+        insertedOpportunityId = insertedData.id;
       }
 
       // Check if this is a draft save (only when explicitly saving as draft, not when publishing)
