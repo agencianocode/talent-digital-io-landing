@@ -830,15 +830,27 @@ const OpportunityStep1 = ({ data, onChange, company, showErrors = false }: Oppor
         )}
       </div>
 
-      {/* Category Templates */}
-      {data.category && (
-        <div className="space-y-2">
-          <OpportunityTemplates 
-            category={data.category}
-            onSelectTemplate={handleTemplateSelect}
-          />
+      {/* Title */}
+      <div className="space-y-2">
+        <Label htmlFor="title" className="text-sm font-medium text-gray-900">
+          Título *
+        </Label>
+        <Input
+          id="title"
+          placeholder="Añadir un título descriptivo para tu oportunidad"
+          value={data.title}
+          onChange={(e) => onChange({ title: e.target.value })}
+          className={`h-12 ${hasError.title ? 'border-destructive ring-1 ring-destructive' : ''}`}
+        />
+        <div className="flex justify-between">
+          {hasError.title && (
+            <p className="text-xs text-destructive">Este campo es obligatorio</p>
+          )}
+          <div className="text-xs text-gray-500 text-right ml-auto">
+            {data.title.length} / 100
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Contract Type */}
       <div className="space-y-2">
@@ -862,27 +874,15 @@ const OpportunityStep1 = ({ data, onChange, company, showErrors = false }: Oppor
         )}
       </div>
 
-      {/* Professional Title */}
-      <div className="space-y-2">
-        <Label htmlFor="title" className="text-sm font-medium text-gray-900">
-          Título profesional *
-        </Label>
-        <Input
-          id="title"
-          placeholder="Añadir un título descriptivo"
-          value={data.title}
-          onChange={(e) => onChange({ title: e.target.value })}
-          className={`h-12 ${hasError.title ? 'border-destructive ring-1 ring-destructive' : ''}`}
-        />
-        <div className="flex justify-between">
-          {hasError.title && (
-            <p className="text-xs text-destructive">Este campo es obligatorio</p>
-          )}
-          <div className="text-xs text-gray-500 text-right ml-auto">
-            {data.title.length} / 100
-          </div>
+      {/* Category Templates */}
+      {data.category && (
+        <div className="space-y-2">
+          <OpportunityTemplates 
+            category={data.category}
+            onSelectTemplate={handleTemplateSelect}
+          />
         </div>
-      </div>
+      )}
 
       {/* Job Description */}
       <div className="space-y-2">
