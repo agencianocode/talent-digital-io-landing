@@ -327,6 +327,117 @@ export const useAdminOpportunities = () => {
     }
   };
 
+  // Bulk pause opportunities
+  const bulkPauseOpportunities = async (opportunityIds: string[], message?: string) => {
+    try {
+      // Update all opportunities to paused status
+      const { error } = await supabase
+        .from('opportunities')
+        .update({ status: 'paused', is_active: false })
+        .in('id', opportunityIds);
+
+      if (error) throw error;
+
+      // Update local state
+      setOpportunities(prev => prev.map(opp => 
+        opportunityIds.includes(opp.id) 
+          ? { ...opp, status: 'paused', is_active: false } 
+          : opp
+      ));
+
+      // If message provided, create notifications for each company
+      if (message) {
+        const affectedOpportunities = opportunities.filter(o => opportunityIds.includes(o.id));
+        const uniqueCompanyIds = [...new Set(affectedOpportunities.map(o => o.company_id))];
+        
+        // Get company owner user IDs
+        const { data: companies } = await supabase
+          .from('companies')
+          .select('id, user_id')
+          .in('id', uniqueCompanyIds);
+
+        if (companies) {
+          const notifications = companies.map(company => ({
+            user_id: company.user_id,
+            title: 'Oportunidades Pausadas',
+            message: message,
+            type: 'opportunity_status',
+            company_id: company.id,
+          }));
+
+          await supabase.from('notifications').insert(notifications);
+        }
+      }
+    } catch (err) {
+      console.error('Error pausing opportunities:', err);
+      throw err;
+    }
+  };
+
+  // Bulk delete opportunities
+  const bulkDeleteOpportunities = async (opportunityIds: string[], message?: string) => {
+    try {
+      // Get opportunity details before deletion for notifications
+      const affectedOpportunities = opportunities.filter(o => opportunityIds.includes(o.id));
+      const uniqueCompanyIds = [...new Set(affectedOpportunities.map(o => o.company_id))];
+
+      // Delete related data for all opportunities
+      await supabase
+        .from('applications')
+        .delete()
+        .in('opportunity_id', opportunityIds);
+
+      await supabase
+        .from('opportunity_views')
+        .delete()
+        .in('opportunity_id', opportunityIds);
+
+      await supabase
+        .from('opportunity_shares')
+        .delete()
+        .in('opportunity_id', opportunityIds);
+
+      await supabase
+        .from('saved_opportunities')
+        .delete()
+        .in('opportunity_id', opportunityIds);
+
+      // Delete the opportunities
+      const { error } = await supabase
+        .from('opportunities')
+        .delete()
+        .in('id', opportunityIds);
+
+      if (error) throw error;
+
+      // Update local state
+      setOpportunities(prev => prev.filter(opp => !opportunityIds.includes(opp.id)));
+
+      // If message provided, create notifications for each company
+      if (message) {
+        const { data: companies } = await supabase
+          .from('companies')
+          .select('id, user_id')
+          .in('id', uniqueCompanyIds);
+
+        if (companies) {
+          const notifications = companies.map(company => ({
+            user_id: company.user_id,
+            title: 'Oportunidades Eliminadas',
+            message: message,
+            type: 'opportunity_status',
+            company_id: company.id,
+          }));
+
+          await supabase.from('notifications').insert(notifications);
+        }
+      }
+    } catch (err) {
+      console.error('Error deleting opportunities:', err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     loadOpportunities();
   }, []);
@@ -346,6 +457,8 @@ export const useAdminOpportunities = () => {
     setCurrentPage,
     updateOpportunity,
     deleteOpportunity,
+    bulkPauseOpportunities,
+    bulkDeleteOpportunities,
     refetch: loadOpportunities
   };
 };
