@@ -127,11 +127,11 @@ const RecommendedProfiles: React.FC = () => {
           }
         }
 
-        // Step 2: Get verified students (academy students with active status)
+        // Step 2: Get verified students (academy students enrolled or graduated)
         const { data: academyStudents } = await supabase
           .from('academy_students')
           .select('student_email')
-          .eq('status', 'active');
+          .in('status', ['enrolled', 'graduated']);
 
         const verifiedEmails = new Set((academyStudents || []).map(s => s.student_email.toLowerCase()));
 
@@ -263,14 +263,14 @@ const RecommendedProfiles: React.FC = () => {
         }
 
         // Step 9: Apply default sorting (same as TalentDiscovery)
-        // 1st: Profile 100% complete (>=98)
+        // 1st: Profile 100% complete (=100)
         // 2nd: Last activity (latest first)
         // 3rd: Verified (all are verified here)
         // 4th: Has video
         const sortedProfiles = filteredProfiles.sort((a, b) => {
-          // 1. Profile complete first
-          const aComplete = (a.profile_completeness || 0) >= 98 ? 1 : 0;
-          const bComplete = (b.profile_completeness || 0) >= 98 ? 1 : 0;
+          // 1. Profile complete first (usando cálculo unificado de 10 campos = 100%)
+          const aComplete = (a.profile_completeness || 0) === 100 ? 1 : 0;
+          const bComplete = (b.profile_completeness || 0) === 100 ? 1 : 0;
           if (aComplete !== bComplete) return bComplete - aComplete;
 
           // 2. Last activity (most recent first)
