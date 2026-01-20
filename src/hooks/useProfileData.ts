@@ -178,80 +178,81 @@ export const useProfileData = () => {
   // Recalculate profile completeness
   const recalculateProfileCompleteness = async (userId: string) => {
     try {
-      // Fetch current data
-      const [{ data: profileData }, { data: talentData }] = await Promise.all([
+      // Fetch current data including education
+      const [{ data: profileData }, { data: talentData }, { data: educationData }] = await Promise.all([
         supabase.from('profiles').select('*').eq('user_id', userId).single(),
-        supabase.from('talent_profiles').select('*').eq('user_id', userId).single()
+        supabase.from('talent_profiles').select('*').eq('user_id', userId).single(),
+        supabase.from('talent_education').select('id').eq('user_id', userId).limit(1)
       ]);
       
       if (!profileData) return;
       
-      // NUEVOS REQUISITOS PARA PERFIL COMPLETO (100%)
-      // Campos OBLIGATORIOS para perfil completo:
-      // 1. Foto de perfil
-      // 2. Nombre y apellido
-      // 3. País y ciudad
-      // 4. Categoría principal
-      // 5. Categoría secundaria
-      // 6. Título
-      // 7. Nivel de experiencia
-      // 8. Skills (al menos 1)
-      // 9. Bio / descripción
-      
+      // === CÁLCULO UNIFICADO DE COMPLETITUD (10 campos = 100%) ===
+      // Misma lógica que get-all-users edge function
       let score = 0;
-      const requiredFields = 9; // Total de campos obligatorios
-      const pointsPerField = Math.floor(100 / requiredFields); // ~11 puntos por campo
       
-      // 1. Foto de perfil (11%)
-      if (profileData.avatar_url) score += pointsPerField;
+      // 1. Foto de perfil (10%)
+      const hasAvatar = !!profileData.avatar_url;
+      if (hasAvatar) score += 10;
       
-      // 2. Nombre y apellido (11%)
-      if (profileData.full_name && profileData.full_name.trim().length >= 2) score += pointsPerField;
+      // 2. Nombre real - no derivado del email (10%)
+      const emailPrefix = user?.email?.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
+      const nameWords = (profileData.full_name || '').trim().split(/\s+/).filter((w: string) => w.length > 0);
+      const cleanName = (profileData.full_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const hasRealName = profileData.full_name && 
+        profileData.full_name.trim() !== '' && 
+        profileData.full_name.toLowerCase() !== 'sin nombre' &&
+        (nameWords.length >= 2 || cleanName !== emailPrefix);
+      if (hasRealName) score += 10;
       
-      // 3. País (6%)
-      if (profileData.country) score += Math.floor(pointsPerField / 2);
+      // 3. País (10%)
+      if (profileData.country || talentData?.country) score += 10;
       
-      // 4. Ciudad (5%)
-      if (profileData.city) score += Math.floor(pointsPerField / 2);
+      // 4. Ciudad (10%)
+      if (profileData.city || talentData?.city) score += 10;
       
-      // 5. Categoría principal (11%)
-      if (talentData?.primary_category_id) score += pointsPerField;
+      // 5. Categoría principal (10%)
+      if (talentData?.primary_category_id) score += 10;
       
-      // 6. Categoría secundaria (11%)
-      if (talentData?.secondary_category_id) score += pointsPerField;
+      // 6. Título profesional (10%)
+      if (talentData?.title) score += 10;
       
-      // 7. Título (11%)
-      if (talentData?.title && talentData.title.trim().length >= 3) score += pointsPerField;
+      // 7. Nivel de experiencia válido (10%)
+      const validExperienceLevels = ['0-1', '1-3', '3-6', '6+'];
+      if (talentData?.experience_level && validExperienceLevels.includes(talentData.experience_level)) {
+        score += 10;
+      }
       
-      // 8. Nivel de experiencia (11%)
-      if (talentData?.experience_level) score += pointsPerField;
+      // 8. Skills - mínimo 3 (10%)
+      if (Array.isArray(talentData?.skills) && talentData.skills.length >= 3) {
+        score += 10;
+      }
       
-      // 9. Skills - al menos 1 (11%)
-      if (talentData?.skills && talentData.skills.length > 0) score += pointsPerField;
+      // 9. Bio - mínimo 50 caracteres (10%)
+      if (talentData?.bio && talentData.bio.length >= 50) score += 10;
       
-      // 10. Bio / descripción (11%)
-      if (talentData?.bio && talentData.bio.trim().length >= 50) score += pointsPerField;
-      
-      const finalScore = Math.min(score, 100);
+      // 10. Educación académica - mínimo 1 registro (10%)
+      const hasEducation = educationData && educationData.length > 0;
+      if (hasEducation) score += 10;
       
       // Update profile_completeness
       await supabase
         .from('profiles')
-        .update({ profile_completeness: finalScore })
+        .update({ profile_completeness: score })
         .eq('user_id', userId);
       
-      console.log(`✅ Profile completeness recalculated: ${finalScore}%`);
+      console.log(`✅ Profile completeness recalculated: ${score}%`);
       console.log('📋 Campos completos:', {
-        avatar: !!profileData.avatar_url,
-        full_name: !!profileData.full_name,
-        country: !!profileData.country,
-        city: !!profileData.city,
+        avatar: hasAvatar,
+        real_name: hasRealName,
+        country: !!(profileData.country || talentData?.country),
+        city: !!(profileData.city || talentData?.city),
         primary_category: !!talentData?.primary_category_id,
-        secondary_category: !!talentData?.secondary_category_id,
         title: !!talentData?.title,
-        experience_level: !!talentData?.experience_level,
-        skills: talentData?.skills?.length || 0,
-        bio: talentData?.bio?.length || 0
+        experience_level: !!(talentData?.experience_level && validExperienceLevels.includes(talentData.experience_level)),
+        skills_3: Array.isArray(talentData?.skills) && talentData.skills.length >= 3,
+        bio_50: (talentData?.bio?.length || 0) >= 50,
+        education: hasEducation
       });
     } catch (error) {
       console.error('Error recalculating profile completeness:', error);
