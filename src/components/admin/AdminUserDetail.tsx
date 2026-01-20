@@ -593,6 +593,20 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
                   </Button>
                 </div>
 
+                {/* Ver Perfil Público */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <Label className="w-full sm:w-32 text-sm font-medium">Perfil Público:</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open(`/talent/${user.id}`, '_blank')}
+                    className="w-full sm:w-auto"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Ver Perfil
+                  </Button>
+                </div>
+
                 {/* Resetear Contraseña */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <Label className="w-full sm:w-32 text-sm font-medium">Contraseña:</Label>

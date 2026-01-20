@@ -6,6 +6,8 @@ import ChatView from '@/components/ChatView';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
 interface AdminConversation {
   id: string;
@@ -374,48 +376,69 @@ const AdminMessagesPage = () => {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-4">Acceso restringido</h2>
-          <p className="text-muted-foreground">
-            Necesitas permisos de administrador para acceder a esta sección.
-          </p>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AdminSidebar activeTab="messages" onTabChange={() => {}} />
+          <div className="flex-1 flex flex-col min-w-0">
+            <header className="h-14 md:h-16 border-b flex items-center px-3 md:px-4 bg-card sticky top-0 z-10">
+              <SidebarTrigger className="flex-shrink-0" />
+            </header>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-2xl font-semibold mb-4">Acceso restringido</h2>
+                <p className="text-muted-foreground">
+                  Necesitas permisos de administrador para acceder a esta sección.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </SidebarProvider>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
-      <ConversationsList
-        key={conversationsKey}
-        conversations={conversations as any}
-        activeConversationId={activeId}
-        onSelectConversation={setActiveId}
-        onMarkAsUnread={async () => {}}
-        onMarkAsRead={markAsRead}
-        onArchive={async () => {}}
-        onUnarchive={async () => {}}
-      />
-      {activeConversation ? (
-        <ChatView
-          conversation={activeConversation as any}
-          messages={activeMessages as any}
-          onSendMessage={handleSendMessage}
-          onEditMessage={updateMessage}
-          onDeleteMessage={deleteMessage}
-        />
-      ) : (
-        <div className="flex-1 flex items-center justify-center bg-background">
-          <div className="text-center">
-            <p className="text-muted-foreground mb-2">Selecciona una conversación</p>
-            <p className="text-sm text-muted-foreground">
-              {isLoading ? 'Cargando...' : `${conversations.length} conversaciones disponibles`}
-            </p>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AdminSidebar activeTab="messages" onTabChange={() => {}} />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 md:h-16 border-b flex items-center px-3 md:px-4 bg-card sticky top-0 z-10">
+            <SidebarTrigger className="flex-shrink-0" />
+            <h1 className="ml-4 text-lg font-semibold">Mensajes</h1>
+          </header>
+          <div className="flex flex-1 h-[calc(100vh-4rem)] overflow-hidden">
+            <ConversationsList
+              key={conversationsKey}
+              conversations={conversations as any}
+              activeConversationId={activeId}
+              onSelectConversation={setActiveId}
+              onMarkAsUnread={async () => {}}
+              onMarkAsRead={markAsRead}
+              onArchive={async () => {}}
+              onUnarchive={async () => {}}
+            />
+            {activeConversation ? (
+              <ChatView
+                conversation={activeConversation as any}
+                messages={activeMessages as any}
+                onSendMessage={handleSendMessage}
+                onEditMessage={updateMessage}
+                onDeleteMessage={deleteMessage}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center bg-background">
+                <div className="text-center">
+                  <p className="text-muted-foreground mb-2">Selecciona una conversación</p>
+                  <p className="text-sm text-muted-foreground">
+                    {isLoading ? 'Cargando...' : `${conversations.length} conversaciones disponibles`}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };
 

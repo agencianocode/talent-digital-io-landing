@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X, Users, Building, User, GraduationCap, Shield, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, Filter, X, Users, Building, User, GraduationCap, Shield, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, AlertCircle, Clock, CircleSlash } from 'lucide-react';
 
 interface UserFilters {
   searchQuery: string;
@@ -13,7 +13,8 @@ interface UserFilters {
   countryFilter: string;
   dateRange: string;
   companyRoleFilter: string;
-  sortBy: 'name' | 'date';
+  completenessFilter: string;
+  sortBy: 'name' | 'date' | 'last_activity';
   sortOrder: 'asc' | 'desc';
 }
 
@@ -47,6 +48,7 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
       countryFilter: 'all',
       dateRange: 'all',
       companyRoleFilter: 'all',
+      completenessFilter: 'all',
       sortBy: 'date',
       sortOrder: 'desc'
     });
@@ -176,6 +178,49 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
             </Select>
           </div>
 
+          {/* Filtro por Completitud de Perfil */}
+          <div>
+            <Select
+              value={filters.completenessFilter}
+              onValueChange={(value) => handleFilterChange('completenessFilter', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Completitud de perfil" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los perfiles</SelectItem>
+                <SelectItem value="complete">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    Perfil 100% completo
+                  </div>
+                </SelectItem>
+                <SelectItem value="incomplete">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                    Perfil Incompleto
+                  </div>
+                </SelectItem>
+                <SelectItem value="unverified">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-orange-600" />
+                    Perfil sin verificar
+                  </div>
+                </SelectItem>
+                <SelectItem value="zero">
+                  <div className="flex items-center gap-2">
+                    <CircleSlash className="h-4 w-4 text-red-600" />
+                    Perfil 0%
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Second row: Country and Company Role filters */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Filtro por País */}
           <div>
             <Select
@@ -262,7 +307,7 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
           <div>
             <Select
               value={filters.sortBy}
-              onValueChange={(value: 'name' | 'date') => handleFilterChange('sortBy', value)}
+              onValueChange={(value: 'name' | 'date' | 'last_activity') => handleFilterChange('sortBy', value)}
               disabled={isLoading}
             >
               <SelectTrigger>
@@ -273,6 +318,12 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
                   <div className="flex items-center gap-2">
                     <ArrowUpDown className="h-4 w-4" />
                     Fecha de registro
+                  </div>
+                </SelectItem>
+                <SelectItem value="last_activity">
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-4 w-4" />
+                    Última actividad
                   </div>
                 </SelectItem>
                 <SelectItem value="name">
@@ -365,9 +416,22 @@ const AdminUserFilters: React.FC<AdminUserFiltersProps> = ({
                 />
               </Badge>
             )}
+            {filters.completenessFilter !== 'all' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Completitud: {
+                  filters.completenessFilter === 'complete' ? '100%' :
+                  filters.completenessFilter === 'incomplete' ? 'Incompleto' :
+                  filters.completenessFilter === 'unverified' ? 'Sin verificar' : '0%'
+                }
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => handleFilterChange('completenessFilter', 'all')}
+                />
+              </Badge>
+            )}
             {(filters.sortBy !== 'date' || filters.sortOrder !== 'desc') && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Orden: {filters.sortBy === 'date' ? 'Fecha' : 'Nombre'} ({filters.sortOrder === 'asc' ? 'Asc' : 'Desc'})
+                Orden: {filters.sortBy === 'date' ? 'Fecha' : filters.sortBy === 'last_activity' ? 'Actividad' : 'Nombre'} ({filters.sortOrder === 'asc' ? 'Asc' : 'Desc'})
               </Badge>
             )}
           </div>

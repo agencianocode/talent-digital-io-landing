@@ -4,6 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
   Users, 
   User, 
@@ -17,7 +23,10 @@ import {
   Eye,
   AlertTriangle,
   GraduationCap,
-  UserCog
+  UserCog,
+  ChevronDown,
+  MessageSquare,
+  Mail
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -26,6 +35,7 @@ import AdminUserFilters from '@/components/admin/AdminUserFilters';
 import AdminUserDetail from '@/components/admin/AdminUserDetail';
 import AdminCompanyDetail from '@/components/admin/AdminCompanyDetail';
 import BulkRoleChangeModal from '@/components/admin/BulkRoleChangeModal';
+import BulkMessageModal from '@/components/admin/BulkMessageModal';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 
@@ -52,6 +62,7 @@ const AdminUserManagement: React.FC = () => {
   // Bulk selection state
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [isBulkRoleModalOpen, setIsBulkRoleModalOpen] = useState(false);
+  const [isBulkMessageModalOpen, setIsBulkMessageModalOpen] = useState(false);
 
   const handleViewUser = (userId: string) => {
     setSelectedUserId(userId);
@@ -110,6 +121,17 @@ const AdminUserManagement: React.FC = () => {
   const handleBulkRoleSuccess = () => {
     setSelectedUserIds([]);
     refetch();
+  };
+
+  const handleBulkMessageSuccess = () => {
+    setSelectedUserIds([]);
+  };
+
+  const handleBulkEmail = () => {
+    // Get emails of selected users
+    const selectedUsers = users.filter(u => selectedUserIds.includes(u.id));
+    const emails = selectedUsers.map(u => u.email).join(',');
+    window.open(`mailto:${emails}`, '_blank');
   };
 
   const isAllSelected = users.length > 0 && selectedUserIds.length === users.length;
@@ -221,29 +243,48 @@ const AdminUserManagement: React.FC = () => {
         isLoading={isLoading}
       />
 
-      {/* Bulk Action Bar */}
+      {/* Bulk Actions Bar - Between filters and list */}
       {selectedUserIds.length > 0 && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg flex items-center gap-4">
-          <span className="font-medium">
-            {selectedUserIds.length} usuario{selectedUserIds.length > 1 ? 's' : ''} seleccionado{selectedUserIds.length > 1 ? 's' : ''}
-          </span>
-          <Button 
-            variant="secondary" 
-            size="sm"
-            onClick={() => setIsBulkRoleModalOpen(true)}
-          >
-            <UserCog className="h-4 w-4 mr-2" />
-            Cambiar rol
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => setSelectedUserIds([])}
-            className="text-primary-foreground hover:text-primary-foreground/80"
-          >
-            Cancelar
-          </Button>
-        </div>
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-3 px-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <span className="font-medium text-sm">
+                {selectedUserIds.length} usuario{selectedUserIds.length > 1 ? 's' : ''} seleccionado{selectedUserIds.length > 1 ? 's' : ''}
+              </span>
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="default" size="sm">
+                      Acciones
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setIsBulkRoleModalOpen(true)}>
+                      <UserCog className="h-4 w-4 mr-2" />
+                      Cambiar Rol
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsBulkMessageModalOpen(true)}>
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Enviar Mensaje
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleBulkEmail}>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Enviar Correo
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setSelectedUserIds([])}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Users List */}
@@ -474,6 +515,14 @@ const AdminUserManagement: React.FC = () => {
         onClose={() => setIsBulkRoleModalOpen(false)}
         selectedUserIds={selectedUserIds}
         onSuccess={handleBulkRoleSuccess}
+      />
+
+      {/* Bulk Message Modal */}
+      <BulkMessageModal
+        isOpen={isBulkMessageModalOpen}
+        onClose={() => setIsBulkMessageModalOpen(false)}
+        selectedUserIds={selectedUserIds}
+        onSuccess={handleBulkMessageSuccess}
       />
     </div>
   );
