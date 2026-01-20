@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Trash2, Edit2, ArrowLeft, Building2, GraduationCap, User, Briefcase, Megaphone } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, Trash2, Edit2, ArrowLeft, Building2, GraduationCap, User, Briefcase, Megaphone, ChevronDown, Info, Eye } from 'lucide-react';
+import { MESSAGE_VARIABLES, VARIABLES_BY_TRIGGER, RECIPIENT_NOTES, generatePreview } from '@/utils/messageVariables';
 
 interface AutomatedMessage {
   id: string;
@@ -47,6 +49,9 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMessage, setEditingMessage] = useState<AutomatedMessage | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [variablesOpen, setVariablesOpen] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -122,12 +127,14 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
         is_active: true,
       });
     }
+    setShowPreview(false);
     setIsFormOpen(true);
   };
 
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingMessage(null);
+    setShowPreview(false);
     setFormData({
       trigger_type: '',
       sender_id: '',
@@ -223,6 +230,38 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
     return admin?.full_name || 'Admin';
   };
 
+  const insertVariable = (variableKey: string) => {
+    const variable = MESSAGE_VARIABLES[variableKey as keyof typeof MESSAGE_VARIABLES];
+    if (!variable) return;
+
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = formData.message_content;
+      const newText = text.substring(0, start) + variable.key + text.substring(end);
+      setFormData(prev => ({ ...prev, message_content: newText }));
+      
+      // Restore cursor position after the inserted variable
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + variable.key.length, start + variable.key.length);
+      }, 0);
+    } else {
+      setFormData(prev => ({ ...prev, message_content: prev.message_content + variable.key }));
+    }
+  };
+
+  const getAvailableVariables = () => {
+    if (!formData.trigger_type) return [];
+    return VARIABLES_BY_TRIGGER[formData.trigger_type] || [];
+  };
+
+  const getRecipientNote = () => {
+    if (!formData.trigger_type) return null;
+    return RECIPIENT_NOTES[formData.trigger_type];
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -269,6 +308,7 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
             {messages.map((message) => {
               const triggerInfo = getTriggerInfo(message.trigger_type);
               const TriggerIcon = triggerInfo?.icon || Megaphone;
+              const recipientNote = RECIPIENT_NOTES[message.trigger_type];
               
               return (
                 <Card key={message.id} className={!message.is_active ? 'opacity-60' : ''}>
@@ -298,6 +338,12 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
+                      {recipientNote && (
+                        <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded-md">
+                          <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                          <span>{recipientNote}</span>
+                        </div>
+                      )}
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">Remitente</p>
                         <p className="text-sm font-medium">{getSenderName(message.sender_id)}</p>
@@ -337,7 +383,7 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
 
       {/* Create/Edit Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingMessage ? 'Editar mensaje automatizado' : 'Nuevo mensaje automatizado'}
@@ -368,6 +414,14 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
                   ))}
                 </SelectContent>
               </Select>
+              
+              {/* Recipient Note */}
+              {getRecipientNote() && (
+                <div className="flex items-start gap-2 text-xs text-muted-foreground bg-accent/50 border border-border p-2.5 rounded-md">
+                  <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span>{getRecipientNote()}</span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -392,11 +446,74 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
             <div className="space-y-2">
               <Label>Mensaje</Label>
               <Textarea
+                ref={textareaRef}
                 value={formData.message_content}
                 onChange={(e) => setFormData(prev => ({ ...prev, message_content: e.target.value }))}
                 placeholder="Escribe el mensaje que se enviará automáticamente..."
                 rows={5}
               />
+              
+              {/* Variables Section */}
+              {formData.trigger_type && (
+                <Collapsible open={variablesOpen} onOpenChange={setVariablesOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground hover:text-foreground">
+                      <span className="text-xs">Variables disponibles</span>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${variablesOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Haz clic en una variable para insertarla en el mensaje:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {getAvailableVariables().map((varKey) => {
+                          const variable = MESSAGE_VARIABLES[varKey];
+                          return (
+                            <Button
+                              key={varKey}
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-auto py-1.5 px-2 text-xs"
+                              onClick={() => insertVariable(varKey)}
+                            >
+                              <code className="bg-primary/10 px-1 rounded mr-1.5">{variable.key}</code>
+                              <span className="text-muted-foreground">{variable.label}</span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+
+              {/* Preview Toggle */}
+              {formData.message_content && (
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-muted-foreground"
+                    onClick={() => setShowPreview(!showPreview)}
+                  >
+                    <Eye className="h-3.5 w-3.5 mr-1.5" />
+                    {showPreview ? 'Ocultar vista previa' : 'Ver vista previa'}
+                  </Button>
+                  
+                  {showPreview && (
+                    <div className="bg-muted/50 rounded-lg p-3 border">
+                      <p className="text-xs text-muted-foreground mb-2">Vista previa con datos de ejemplo:</p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {generatePreview(formData.message_content)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between">
