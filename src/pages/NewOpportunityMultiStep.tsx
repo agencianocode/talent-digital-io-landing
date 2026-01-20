@@ -109,11 +109,11 @@ const NewOpportunityMultiStep = () => {
     );
   }
 
-  const handleSubmit = async (formData: MultiStepFormData) => {
+  const handleSubmit = async (formData: MultiStepFormData): Promise<string | null> => {
     // Prevenir doble-clic y envíos múltiples
     if (isSubmittingRef.current || loading) {
       console.log('⚠️ Submission already in progress, ignoring...');
-      return;
+      return null;
     }
     
     isSubmittingRef.current = true;
@@ -293,7 +293,8 @@ const NewOpportunityMultiStep = () => {
         // No redirect for drafts - let user continue editing
         setLoading(false);
         isSubmittingRef.current = false;
-        return;
+        // Retornar el ID para que el formulario hijo pueda rastrearlo
+        return insertedOpportunityId;
       }
       
       if (formData.publishToFeed) {
@@ -318,9 +319,12 @@ const NewOpportunityMultiStep = () => {
         }
       }
       
+      return insertedOpportunityId;
+      
     } catch (error: any) {
       console.error('Error saving opportunity:', error);
       toast.error(`Error al publicar la oportunidad: ${error.message || 'Error desconocido'}`);
+      return null;
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
@@ -346,6 +350,8 @@ const NewOpportunityMultiStep = () => {
           onSubmit={handleSubmit}
           isLoading={loading}
           company={activeCompany}
+          opportunityId={opportunityId}
+          onOpportunityIdChange={setOpportunityId}
         />
         </div>
       </div>

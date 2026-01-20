@@ -76,10 +76,12 @@ interface FormData {
 
 interface MultiStepOpportunityFormProps {
   initialData?: Partial<FormData>;
-  onSubmit: (data: FormData) => void;
+  onSubmit: (data: FormData) => Promise<string | null | void> | void;
   isLoading?: boolean;
   company?: Company | null;
   isEditing?: boolean;
+  opportunityId?: string | null;
+  onOpportunityIdChange?: (id: string) => void;
 }
 
 const steps = [
@@ -105,7 +107,9 @@ const MultiStepOpportunityForm = ({
   onSubmit, 
   isLoading = false,
   company,
-  isEditing = false
+  isEditing = false,
+  opportunityId,
+  onOpportunityIdChange
 }: MultiStepOpportunityFormProps) => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -188,11 +192,23 @@ const MultiStepOpportunityForm = ({
 
   // Función para guardar como borrador
   const saveDraft = async (data: FormData) => {
+    // No guardar si el título está vacío (evita crear borradores huérfanos)
+    if (!data.title?.trim()) {
+      console.log('⏭️ Skipping auto-save: title is empty');
+      return;
+    }
+    
     setIsSaving(true);
     try {
       // Guardar como borrador
       const draftData = { ...data, status: 'draft' as const };
-      await onSubmit(draftData);
+      const result = await onSubmit(draftData);
+      
+      // Si onSubmit retorna un ID (nuevo borrador creado), guardarlo
+      if (result && typeof result === 'string' && onOpportunityIdChange) {
+        onOpportunityIdChange(result);
+      }
+      
       setLastSaved(new Date());
     } catch (error) {
       console.error('Error saving draft:', error);
@@ -202,12 +218,13 @@ const MultiStepOpportunityForm = ({
   };
 
   // Autoguardado cada 2 minutos - deshabilitado mientras se está guardando/publicando
+  // También deshabilitado si ya existe un opportunityId (el padre manejará las actualizaciones)
   const autoSaveData = useAutoSave({
     data: formData,
     onSave: saveDraft,
     interval: 120000, // 2 minutos
-    enabled: !isLoading && !isSaving, // Deshabilitar durante submit
-    storageKey: 'opportunity-draft'
+    enabled: !isLoading && !isSaving && !opportunityId, // Deshabilitar si ya existe un draft
+    storageKey: opportunityId ? undefined : 'opportunity-draft' // No usar localStorage si ya hay un ID
   });
 
   const validateStep = (step: number): boolean => {

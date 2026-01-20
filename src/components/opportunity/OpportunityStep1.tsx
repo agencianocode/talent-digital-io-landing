@@ -830,6 +830,16 @@ const OpportunityStep1 = ({ data, onChange, company, showErrors = false }: Oppor
         )}
       </div>
 
+      {/* Category Templates - Shown immediately after category selection */}
+      {data.category && (
+        <div className="space-y-2">
+          <OpportunityTemplates 
+            category={data.category}
+            onSelectTemplate={handleTemplateSelect}
+          />
+        </div>
+      )}
+
       {/* Title */}
       <div className="space-y-2">
         <Label htmlFor="title" className="text-sm font-medium text-gray-900">
@@ -846,7 +856,7 @@ const OpportunityStep1 = ({ data, onChange, company, showErrors = false }: Oppor
           {hasError.title && (
             <p className="text-xs text-destructive">Este campo es obligatorio</p>
           )}
-          <div className="text-xs text-gray-500 text-right ml-auto">
+          <div className="text-xs text-muted-foreground text-right ml-auto">
             {data.title.length} / 100
           </div>
         </div>
@@ -873,16 +883,6 @@ const OpportunityStep1 = ({ data, onChange, company, showErrors = false }: Oppor
           <p className="text-xs text-destructive">Este campo es obligatorio</p>
         )}
       </div>
-
-      {/* Category Templates */}
-      {data.category && (
-        <div className="space-y-2">
-          <OpportunityTemplates 
-            category={data.category}
-            onSelectTemplate={handleTemplateSelect}
-          />
-        </div>
-      )}
 
       {/* Job Description */}
       <div className="space-y-2">
