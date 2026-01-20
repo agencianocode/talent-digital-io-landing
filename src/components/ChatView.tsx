@@ -352,6 +352,7 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
           ) : (
             messages.map((message) => {
               const isOwnMessage = message.sender_id === user.id;
+              console.log('[ChatView Debug]', { messageId: message.id, senderId: message.sender_id, currentUserId: user.id, isOwnMessage });
               
               return (
                 <div
