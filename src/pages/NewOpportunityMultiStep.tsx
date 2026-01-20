@@ -171,7 +171,7 @@ const NewOpportunityMultiStep = () => {
           break;
       }
 
-      const selectedCategory: string = (formData.skills && formData.skills.length > 0) ? (formData.skills[0] ?? 'General') : 'General';
+      const selectedCategory: string = (formData as any).category || 'General';
 
       // Construir descripción de requisitos más detallada
       let requirements = '';
