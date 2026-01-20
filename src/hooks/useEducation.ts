@@ -68,6 +68,11 @@ export const useEducation = () => {
       console.log('✅ Education added successfully:', insertedData);
       toast.success('Educación agregada exitosamente');
       
+      // Track activity
+      try {
+        await supabase.rpc('update_last_activity');
+      } catch (e) { /* silent */ }
+      
       // Update state immediately with the new data
       setEducation(prev => {
         const newEducation = [...prev, insertedData as any];

@@ -393,6 +393,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
               company: !!userData.company
             });
             
+            // Track user activity on login
+            try {
+              await supabase.rpc('update_last_activity');
+            } catch (e) { /* silent */ }
+            
             setAuthState(prev => ({
               ...prev,
               profile: userData.profile as UserProfile | null,

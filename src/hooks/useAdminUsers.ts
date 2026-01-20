@@ -20,6 +20,7 @@ interface UserData {
   role: string;
   created_at: string;
   last_sign_in_at?: string;
+  last_activity?: string;
   email_confirmed_at?: string;
   is_active: boolean;
   country?: string;
@@ -109,6 +110,7 @@ export const useAdminUsers = () => {
         role: user.role,
         created_at: user.created_at,
         last_sign_in_at: user.last_sign_in_at,
+        last_activity: user.last_activity, // New field for activity tracking
         email_confirmed_at: user.email_confirmed_at,
         is_active: user.is_active,
         country: user.country,
@@ -274,8 +276,9 @@ export const useAdminUsers = () => {
         const dateB = new Date(b.created_at).getTime();
         return filters.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
       } else if (filters.sortBy === 'last_activity') {
-        const dateA = a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : 0;
-        const dateB = b.last_sign_in_at ? new Date(b.last_sign_in_at).getTime() : 0;
+        // Use last_activity field from profiles (populated via update_last_activity RPC)
+        const dateA = (a as any).last_activity ? new Date((a as any).last_activity).getTime() : (a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : 0);
+        const dateB = (b as any).last_activity ? new Date((b as any).last_activity).getTime() : (b.last_sign_in_at ? new Date(b.last_sign_in_at).getTime() : 0);
         return filters.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
       }
       return 0;

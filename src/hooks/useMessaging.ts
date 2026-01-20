@@ -109,6 +109,11 @@ export function useMessaging() {
       .from('messages')
       .insert({ conversation_id: conversationId, sender_id: user.id, content: content.trim() });
     if (error) throw error;
+    
+    // Track activity on message send
+    try {
+      await supabase.rpc('update_last_activity');
+    } catch (e) { /* silent */ }
   }, [user]);
 
   const markAsRead = useCallback(async (conversationId: string) => {

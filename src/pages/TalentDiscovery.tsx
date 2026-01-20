@@ -366,7 +366,7 @@ const TalentDiscovery = () => {
           rating: 0, // Column doesn't exist in talent_profiles table
           reviews_count: 0, // Column doesn't exist in talent_profiles table
           response_rate: 0, // Column doesn't exist in talent_profiles table
-          last_active: profile.updated_at, // Use profile updated_at as fallback
+          last_active: (profile as any).last_activity || profile.updated_at, // Use last_activity first, then updated_at as fallback
           created_at: profile.created_at,
           updated_at: profile.updated_at,
           academy_name: academyInfo?.academyName,

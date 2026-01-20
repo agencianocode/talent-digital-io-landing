@@ -196,6 +196,12 @@ class MarketplaceService {
         .single();
 
       if (error) throw error;
+      
+      // Track activity
+      try {
+        await supabase.rpc('update_last_activity');
+      } catch (e) { /* silent */ }
+      
       return data as TalentService;
     } catch (error) {
       console.error('Error creating service:', error);

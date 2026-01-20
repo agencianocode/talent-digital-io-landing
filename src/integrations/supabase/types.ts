@@ -1638,6 +1638,7 @@ export type Database = {
           full_name: string | null
           hide_location: boolean | null
           id: string
+          last_activity: string | null
           linkedin: string | null
           notification_preferences: Json | null
           phone: string | null
@@ -1658,6 +1659,7 @@ export type Database = {
           full_name?: string | null
           hide_location?: boolean | null
           id?: string
+          last_activity?: string | null
           linkedin?: string | null
           notification_preferences?: Json | null
           phone?: string | null
@@ -1678,6 +1680,7 @@ export type Database = {
           full_name?: string | null
           hide_location?: boolean | null
           id?: string
+          last_activity?: string | null
           linkedin?: string | null
           notification_preferences?: Json | null
           phone?: string | null
@@ -2727,6 +2730,7 @@ export type Database = {
               error: true
             } & "Could not choose the best candidate function between: public.switch_user_role(new_role => text), public.switch_user_role(new_role => user_role). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
           }
+      update_last_activity: { Args: never; Returns: undefined }
       update_profile_completeness: {
         Args: { user_uuid: string }
         Returns: number

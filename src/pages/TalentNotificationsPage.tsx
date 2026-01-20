@@ -69,6 +69,11 @@ const TalentNotificationsPage = () => {
 
       if (error) throw error;
 
+      // Track activity
+      try {
+        await supabase.rpc('update_last_activity');
+      } catch (e) { /* silent */ }
+
       // Update local state
       setNotifications(prev =>
         prev.map(n => (n.id === id ? { ...n, read: true, read_at: new Date().toISOString() } : n))
@@ -97,6 +102,11 @@ const TalentNotificationsPage = () => {
       const { error } = await query;
 
       if (error) throw error;
+
+      // Track activity
+      try {
+        await supabase.rpc('update_last_activity');
+      } catch (e) { /* silent */ }
 
       // Update local state
       setNotifications(prev =>
