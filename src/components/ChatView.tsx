@@ -319,7 +319,7 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
     );
   };
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
       {/* Chat Header */}
       <div className="p-4 border-b border-border bg-card flex-shrink-0">
         <div className="flex items-center space-x-3">
