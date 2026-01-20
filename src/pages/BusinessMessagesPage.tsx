@@ -22,6 +22,8 @@ const BusinessMessagesPage = () => {
     archiveConversation,
     unarchiveConversation,
     getOrCreateConversation,
+    updateMessage,
+    deleteMessage,
   } = useSupabaseMessages();
   
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -273,6 +275,8 @@ const BusinessMessagesPage = () => {
           conversation={activeConversation as any}
           messages={activeMessages as any}
           onSendMessage={handleSendMessage}
+          onEditMessage={updateMessage}
+          onDeleteMessage={deleteMessage}
         />
       ) : (
         <div className="flex-1 flex items-center justify-center bg-background">

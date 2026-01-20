@@ -1122,6 +1122,7 @@ export type Database = {
           conversation_uuid: string | null
           created_at: string
           delivered_at: string | null
+          edited_at: string | null
           file_name: string | null
           file_size: number | null
           file_url: string | null
@@ -1129,6 +1130,7 @@ export type Database = {
           is_read: boolean
           label: string | null
           message_type: string
+          original_content: string | null
           read_at: string | null
           recipient_id: string
           sender_id: string
@@ -1145,6 +1147,7 @@ export type Database = {
           conversation_uuid?: string | null
           created_at?: string
           delivered_at?: string | null
+          edited_at?: string | null
           file_name?: string | null
           file_size?: number | null
           file_url?: string | null
@@ -1152,6 +1155,7 @@ export type Database = {
           is_read?: boolean
           label?: string | null
           message_type?: string
+          original_content?: string | null
           read_at?: string | null
           recipient_id: string
           sender_id: string
@@ -1168,6 +1172,7 @@ export type Database = {
           conversation_uuid?: string | null
           created_at?: string
           delivered_at?: string | null
+          edited_at?: string | null
           file_name?: string | null
           file_size?: number | null
           file_url?: string | null
@@ -1175,6 +1180,7 @@ export type Database = {
           is_read?: boolean
           label?: string | null
           message_type?: string
+          original_content?: string | null
           read_at?: string | null
           recipient_id?: string
           sender_id?: string
