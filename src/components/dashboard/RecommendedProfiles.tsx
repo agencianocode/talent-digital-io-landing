@@ -23,6 +23,7 @@ interface RecommendedProfile {
   email: string;
   video_presentation_url: string | null;
   updated_at: string;
+  last_activity: string | null;
   is_verified: boolean;
 }
 
@@ -181,7 +182,7 @@ const RecommendedProfiles: React.FC = () => {
         // Step 4: Get talent profiles for verified users
         const { data: talentProfiles } = await supabase
           .from('talent_profiles')
-          .select('user_id, title, bio, skills, experience_level, video_presentation_url, primary_category_id, updated_at')
+          .select('user_id, title, bio, skills, experience_level, video_presentation_url, primary_category_id')
           .in('user_id', verifiedUserIds);
 
         if (!talentProfiles || talentProfiles.length === 0) {
@@ -194,7 +195,7 @@ const RecommendedProfiles: React.FC = () => {
         const talentUserIds = talentProfiles.map(tp => tp.user_id);
         const { data: profilesData } = await supabase
           .from('profiles')
-          .select('user_id, full_name, avatar_url, city, country, profile_completeness')
+          .select('user_id, full_name, avatar_url, city, country, profile_completeness, last_activity, updated_at')
           .in('user_id', talentUserIds);
 
         // Step 6: Get categories to filter by opportunity categories
@@ -243,7 +244,8 @@ const RecommendedProfiles: React.FC = () => {
               profile_completeness: profileData.profile_completeness || 0,
               email: userIdToEmail[tp.user_id] || '',
               video_presentation_url: tp.video_presentation_url,
-              updated_at: tp.updated_at,
+              updated_at: profileData.updated_at,
+              last_activity: profileData.last_activity,
               is_verified: true, // All are verified since we filtered by academy students
               primary_category_id: tp.primary_category_id
             };
@@ -273,9 +275,9 @@ const RecommendedProfiles: React.FC = () => {
           const bComplete = (b.profile_completeness || 0) === 100 ? 1 : 0;
           if (aComplete !== bComplete) return bComplete - aComplete;
 
-          // 2. Last activity (most recent first)
-          const aDate = new Date(a.updated_at || 0).getTime();
-          const bDate = new Date(b.updated_at || 0).getTime();
+          // 2. Last activity (most recent first) - usar last_activity
+          const aDate = new Date(a.last_activity || a.updated_at || 0).getTime();
+          const bDate = new Date(b.last_activity || b.updated_at || 0).getTime();
           if (aDate !== bDate) return bDate - aDate;
 
           // 3. Has video first
@@ -409,7 +411,7 @@ const RecommendedProfiles: React.FC = () => {
                         <h4 className="font-semibold text-base truncate">{profile.full_name}</h4>
                         {profile.video_presentation_url && (
                           <span title="Tiene video de presentación">
-                            <Video className="h-4 w-4 text-primary flex-shrink-0" />
+                            <Video className="h-4 w-4 text-primary stroke-[2.5] flex-shrink-0" />
                           </span>
                         )}
                       </div>
