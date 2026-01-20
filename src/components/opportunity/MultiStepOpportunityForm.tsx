@@ -117,6 +117,13 @@ const MultiStepOpportunityForm = ({
   console.log('📋 MultiStepOpportunityForm - company:', company);
   console.log('📋 MultiStepOpportunityForm - business_type:', company?.business_type);
   console.log('📋 MultiStepOpportunityForm - Is Academy?:', company?.business_type === 'academy');
+  // Calculate default deadline date (2 months from now)
+  const getDefaultDeadlineDate = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 2);
+    return date;
+  };
+  
   const [formData, setFormData] = useState<FormData>({
     // Step 1 defaults
     category: '',
@@ -131,7 +138,7 @@ const MultiStepOpportunityForm = ({
     contractorsCount: 1,
     preferredTimezone: '',
     preferredLanguages: [],
-    deadlineDate: null,
+    deadlineDate: getDefaultDeadlineDate(),
     isAcademyExclusive: false,
     
     // Step 2 defaults
@@ -291,14 +298,19 @@ const MultiStepOpportunityForm = ({
     }
   };
 
+  const [showStepErrors, setShowStepErrors] = useState(false);
+
   const handleNext = () => {
     if (validateStep(currentStep)) {
+      setShowStepErrors(false);
       if (currentStep < 3) {
         setCurrentStep(currentStep + 1);
       } else {
         // Show publish modal on step 3
         setShowPublishModal(true);
       }
+    } else {
+      setShowStepErrors(true);
     }
   };
 
@@ -356,6 +368,7 @@ const MultiStepOpportunityForm = ({
             }}
             onChange={updateFormData}
             company={company}
+            showErrors={showStepErrors}
           />
         );
       case 2:
