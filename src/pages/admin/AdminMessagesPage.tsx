@@ -518,16 +518,16 @@ const AdminMessagesPage = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar activeTab="messages" onTabChange={handleTabChange} />
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 md:h-16 border-b flex items-center px-3 md:px-4 bg-card sticky top-0 z-10">
+        <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+          <header className="h-14 md:h-16 border-b flex items-center px-3 md:px-4 bg-card flex-shrink-0">
             <SidebarTrigger className="flex-shrink-0" />
             <h1 className="ml-4 text-lg font-semibold">Mensajes</h1>
           </header>
-          <div className="flex flex-1 overflow-hidden" style={{ height: 'calc(100vh - 3.5rem)' }}>
+          <div className="flex flex-1 min-h-0">
             {/* Conversations List */}
-            <div className="w-80 border-r flex flex-col bg-card h-full">
+            <div className="w-80 border-r flex flex-col bg-card">
               {/* Search and Filter */}
-              <div className="p-3 border-b space-y-2">
+              <div className="p-3 border-b space-y-2 flex-shrink-0">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -566,7 +566,7 @@ const AdminMessagesPage = () => {
               </div>
               
               {/* Conversations */}
-              <ScrollArea className="flex-1">
+              <ScrollArea className="flex-1 min-h-0">
                 {isLoading ? (
                   <div className="p-4 text-center text-muted-foreground">
                     Cargando conversaciones...
@@ -626,27 +626,25 @@ const AdminMessagesPage = () => {
             </div>
             
             {/* Chat View */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
-              {activeConversation ? (
-                <ChatView
-                  conversation={activeConversation as any}
-                  messages={activeMessages as any}
-                  onSendMessage={handleSendMessage}
-                  onEditMessage={updateMessage}
-                  onDeleteMessage={deleteMessage}
-                />
-              ) : (
-                <div className="flex-1 flex items-center justify-center bg-background">
-                  <div className="text-center">
-                    <MessageCircle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground mb-2">Selecciona una conversación</p>
-                    <p className="text-sm text-muted-foreground">
-                      {isLoading ? 'Cargando...' : `${conversations.length} conversaciones disponibles`}
-                    </p>
-                  </div>
+            {activeConversation ? (
+              <ChatView
+                conversation={activeConversation as any}
+                messages={activeMessages as any}
+                onSendMessage={handleSendMessage}
+                onEditMessage={updateMessage}
+                onDeleteMessage={deleteMessage}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center bg-background">
+                <div className="text-center">
+                  <MessageCircle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-2">Selecciona una conversación</p>
+                  <p className="text-sm text-muted-foreground">
+                    {isLoading ? 'Cargando...' : `${conversations.length} conversaciones disponibles`}
+                  </p>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
