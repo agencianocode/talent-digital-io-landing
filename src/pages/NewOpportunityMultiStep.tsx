@@ -233,17 +233,40 @@ const NewOpportunityMultiStep = () => {
           throw error;
         }
       } else {
-        // INSERT solo la primera vez
+        // INSERT solo la primera vez - con manejo de reintentos para slugs duplicados
         console.log('🆕 Creating new opportunity');
-        const { data: insertedData, error } = await supabase
-          .from('opportunities')
-          .insert([opportunityData])
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error creating opportunity:', error);
-          throw error;
+        
+        let retries = 3;
+        let insertError: any = null;
+        let insertedData: any = null;
+        
+        while (retries > 0) {
+          const { data, error } = await supabase
+            .from('opportunities')
+            .insert([opportunityData])
+            .select()
+            .single();
+          
+          if (error) {
+            // Si es error de slug duplicado, esperar un poco y reintentar
+            if (error.message?.includes('opportunities_slug_unique')) {
+              console.log(`⚠️ Slug conflict, retrying... (${retries} attempts left)`);
+              retries--;
+              // Pequeña espera para permitir que el trigger genere un slug diferente
+              await new Promise(resolve => setTimeout(resolve, 100));
+              continue;
+            }
+            insertError = error;
+            break;
+          }
+          
+          insertedData = data;
+          break;
+        }
+        
+        if (insertError) {
+          console.error('Error creating opportunity:', insertError);
+          throw insertError;
         }
 
         // Guardar el ID para futuros updates
@@ -257,8 +280,11 @@ const NewOpportunityMultiStep = () => {
       const isDraft = (formData as any).status === 'draft' && !formData.publishToFeed;
       
       if (isDraft) {
-        toast.success('¡Borrador guardado exitosamente!');
+        // No toast for auto-save drafts to avoid spam
+        // toast.success('¡Borrador guardado exitosamente!');
         // No redirect for drafts - let user continue editing
+        setLoading(false);
+        isSubmittingRef.current = false;
         return;
       }
       
