@@ -59,26 +59,16 @@ const BusinessDashboard = () => {
           return;
         }
 
-        // 1) Intentar usar tabla de vistas granulares
-        const { data: viewsRows, error: viewsErr } = await (supabase as any)
+        // Obtener vistas solo para las oportunidades activas de esta empresa
+        const { data: viewsRows, error: viewsErr } = await supabase
           .from('opportunity_views')
-          .select('opportunity_id');
+          .select('opportunity_id')
+          .in('opportunity_id', activeOpportunityIds);
 
         let aggregated: Record<string, number> = {};
         if (!viewsErr && viewsRows) {
           viewsRows.forEach((row: any) => {
-            if (!activeOpportunityIds.includes(row.opportunity_id)) return;
             aggregated[row.opportunity_id] = (aggregated[row.opportunity_id] || 0) + 1;
-          });
-        } else {
-          // 2) Fallback: sumar views_count desde opportunity_shares si existe
-          const { data: sharesRows, error: sharesErr } = await (supabase as any)
-            .from('opportunity_shares')
-            .select('opportunity_id, views_count');
-          if (sharesErr) throw sharesErr;
-          (sharesRows || []).forEach((row: any) => {
-            if (!activeOpportunityIds.includes(row.opportunity_id)) return;
-            aggregated[row.opportunity_id] = (aggregated[row.opportunity_id] || 0) + (row.views_count || 0);
           });
         }
 

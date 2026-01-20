@@ -142,48 +142,11 @@ const RecommendedProfiles: React.FC = () => {
           return;
         }
 
-        // Step 3: Get user emails to filter by verified
-        const { data: allUserEmails } = await supabase
-          .rpc('get_all_users_for_admin') as {
-            data: Array<{ user_id: string; full_name: string; created_at: string; role: string }> | null;
-            error: any;
-          };
-
-        // Get emails for all users
-        const userIdsToCheck = (allUserEmails || []).map(u => u.user_id);
-        
-        const { data: userEmailsData } = await supabase
-          .rpc('get_user_emails_by_ids', { user_ids: userIdsToCheck }) as {
-            data: Array<{ user_id: string; email: string; avatar_url: string | null }> | null;
-            error: any;
-          };
-
-        // Create map of user_id to email
-        const userIdToEmail: Record<string, string> = {};
-        const avatarUrlMap: Record<string, string | null> = {};
-        (userEmailsData || []).forEach(item => {
-          userIdToEmail[item.user_id] = item.email.toLowerCase();
-          if (item.avatar_url) {
-            avatarUrlMap[item.user_id] = item.avatar_url;
-          }
-        });
-
-        // Get verified user IDs
-        const verifiedUserIds = Object.entries(userIdToEmail)
-          .filter(([_, email]) => verifiedEmails.has(email))
-          .map(([userId, _]) => userId);
-
-        if (verifiedUserIds.length === 0) {
-          setProfiles([]);
-          setLoading(false);
-          return;
-        }
-
-        // Step 4: Get talent profiles for verified users
+        // Step 3: Get all talent profiles with their profile data
+        // We'll join profiles and filter by verified emails later
         const { data: talentProfiles } = await supabase
           .from('talent_profiles')
-          .select('user_id, title, bio, skills, experience_level, video_presentation_url, primary_category_id')
-          .in('user_id', verifiedUserIds);
+          .select('user_id, title, bio, skills, experience_level, video_presentation_url, primary_category_id');
 
         if (!talentProfiles || talentProfiles.length === 0) {
           setProfiles([]);
@@ -191,12 +154,40 @@ const RecommendedProfiles: React.FC = () => {
           return;
         }
 
-        // Step 5: Get profile data
         const talentUserIds = talentProfiles.map(tp => tp.user_id);
+
+        // Step 4: Get profile data and match with verified emails using RPC
+        const { data: userEmailsData } = await supabase
+          .rpc('get_user_emails_by_ids', { user_ids: talentUserIds }) as {
+            data: Array<{ user_id: string; email: string; avatar_url: string | null }> | null;
+            error: any;
+          };
+
+        // Create map of user_id to email
+        const userIdToEmail: Record<string, string> = {};
+        (userEmailsData || []).forEach(item => {
+          userIdToEmail[item.user_id] = item.email.toLowerCase();
+        });
+
+        // Filter to only verified users
+        const verifiedTalentProfiles = talentProfiles.filter(tp => {
+          const email = userIdToEmail[tp.user_id];
+          return email && verifiedEmails.has(email);
+        });
+
+        if (verifiedTalentProfiles.length === 0) {
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+
+        const verifiedUserIds = verifiedTalentProfiles.map(tp => tp.user_id);
+
+        // Step 5: Get profile data
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('user_id, full_name, avatar_url, city, country, profile_completeness, last_activity, updated_at')
-          .in('user_id', talentUserIds);
+          .in('user_id', verifiedUserIds);
 
         // Step 6: Get categories to filter by opportunity categories
         let categoryIds: string[] = [];
@@ -214,7 +205,7 @@ const RecommendedProfiles: React.FC = () => {
         }
 
         // Step 7: Build profiles with all data
-        const enrichedProfiles = talentProfiles
+        const enrichedProfiles = verifiedTalentProfiles
           .map(tp => {
             const profileData = (profilesData || []).find(p => p.user_id === tp.user_id);
             if (!profileData) return null;
@@ -227,10 +218,9 @@ const RecommendedProfiles: React.FC = () => {
             
             if (!hasRealName || !hasAvatar) return null;
 
-            const profileAvatarUrl = profileData.avatar_url;
-            const metadataAvatarUrl = avatarUrlMap[tp.user_id];
-            const rawAvatarUrl = profileAvatarUrl || metadataAvatarUrl || null;
-            const finalAvatarUrl = rawAvatarUrl && !rawAvatarUrl.startsWith('blob:') ? rawAvatarUrl : '';
+            const finalAvatarUrl = profileData.avatar_url && !profileData.avatar_url.startsWith('blob:') 
+              ? profileData.avatar_url 
+              : '';
 
             return {
               id: tp.user_id,
@@ -246,7 +236,7 @@ const RecommendedProfiles: React.FC = () => {
               video_presentation_url: tp.video_presentation_url,
               updated_at: profileData.updated_at,
               last_activity: profileData.last_activity,
-              is_verified: true, // All are verified since we filtered by academy students
+              is_verified: true,
               primary_category_id: tp.primary_category_id
             };
           })
