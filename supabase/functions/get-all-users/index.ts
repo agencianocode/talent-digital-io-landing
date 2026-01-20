@@ -75,14 +75,28 @@ serve(async (req) => {
     const profilesWithAvatars = profiles?.filter(p => p.avatar_url) || [];
     console.log(`DEBUG: Total profiles: ${profiles?.length || 0}, Profiles with avatars: ${profilesWithAvatars.length}`);
 
-    // Get all talent profiles (for country data)
+    // Get all talent profiles (for country data and completeness calculation)
     const { data: talentProfiles, error: talentError } = await supabaseAdmin
       .from('talent_profiles')
-      .select('user_id, country');
+      .select('user_id, country, city, primary_category_id, title, experience_level, skills, bio');
 
     if (talentError) {
       console.error('Talent profiles error:', talentError);
     }
+
+    // Get all talent education records
+    const { data: educationData, error: educationError } = await supabaseAdmin
+      .from('talent_education')
+      .select('user_id');
+
+    if (educationError) {
+      console.error('Education error:', educationError);
+    }
+
+    // Build set of users with education
+    const usersWithEducation = new Set<string>(
+      (educationData || []).map(e => e.user_id)
+    );
 
     // Get all user roles
     const { data: roles, error: rolesError } = await supabaseAdmin
@@ -268,6 +282,54 @@ serve(async (req) => {
       const hasTalentProfile = !!talentProfile;
       const hasCompletedOnboarding = hasRealName && hasAvatar && (userRole.includes('business') || hasTalentProfile);
 
+      // Calculate profile completeness based on 10 criteria (10% each)
+      const calculateProfileCompleteness = (): number => {
+        let score = 0;
+        
+        // 1. Profile Picture (10%)
+        if (hasAvatar) score += 10;
+        
+        // 2. Full Name (10%)
+        if (hasRealName) score += 10;
+        
+        // 3. Country (10%)
+        if (profile?.country || talentProfile?.country) score += 10;
+        
+        // 4. City (10%)
+        if (talentProfile?.city) score += 10;
+        
+        // 5. Primary Category (10%)
+        if (talentProfile?.primary_category_id) score += 10;
+        
+        // 6. Professional Title (10%)
+        if (talentProfile?.title) score += 10;
+        
+        // 7. Experience Level - valid values only (10%)
+        const validExperienceLevels = ['0-1', '1-3', '3-6', '6+'];
+        if (talentProfile?.experience_level && validExperienceLevels.includes(talentProfile.experience_level)) {
+          score += 10;
+        }
+        
+        // 8. Skills - min 3 (10%)
+        if (Array.isArray(talentProfile?.skills) && talentProfile.skills.length >= 3) {
+          score += 10;
+        }
+        
+        // 9. Bio - min 50 chars (10%)
+        if (talentProfile?.bio && talentProfile.bio.length >= 50) {
+          score += 10;
+        }
+        
+        // 10. Academic Education - min 1 record (10%)
+        if (usersWithEducation.has(user.id)) {
+          score += 10;
+        }
+        
+        return score;
+      };
+
+      const profile_completeness = calculateProfileCompleteness();
+
       return {
         id: user.id,
         email: user.email,
@@ -284,7 +346,8 @@ serve(async (req) => {
         company_roles: companyRoles,
         is_company_admin: isCompanyAdmin,
         has_companies: hasCompanies,
-        has_completed_onboarding: hasCompletedOnboarding
+        has_completed_onboarding: hasCompletedOnboarding,
+        profile_completeness
       };
     });
 

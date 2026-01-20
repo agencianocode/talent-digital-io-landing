@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import ConversationsList from '@/components/ConversationsList';
 import ChatView from '@/components/ChatView';
@@ -41,6 +41,15 @@ interface AdminMessage {
 const AdminMessagesPage = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const { user } = useSupabaseAuth();
+  const navigate = useNavigate();
+
+  const handleTabChange = (value: string) => {
+    if (value === 'messages') {
+      navigate('/admin/messages');
+    } else {
+      navigate(`/admin?tab=${value}`);
+    }
+  };
   
   const [conversations, setConversations] = useState<AdminConversation[]>([]);
   const [messagesByConversation, setMessagesByConversation] = useState<Record<string, AdminMessage[]>>({});
@@ -378,7 +387,7 @@ const AdminMessagesPage = () => {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full bg-background">
-          <AdminSidebar activeTab="messages" onTabChange={() => {}} />
+        <AdminSidebar activeTab="messages" onTabChange={handleTabChange} />
           <div className="flex-1 flex flex-col min-w-0">
             <header className="h-14 md:h-16 border-b flex items-center px-3 md:px-4 bg-card sticky top-0 z-10">
               <SidebarTrigger className="flex-shrink-0" />
@@ -400,7 +409,7 @@ const AdminMessagesPage = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <AdminSidebar activeTab="messages" onTabChange={() => {}} />
+        <AdminSidebar activeTab="messages" onTabChange={handleTabChange} />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 md:h-16 border-b flex items-center px-3 md:px-4 bg-card sticky top-0 z-10">
             <SidebarTrigger className="flex-shrink-0" />

@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
+// ScrollArea removed - using native overflow for better scroll control
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
@@ -320,7 +320,7 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-background h-full">
+    <div className="flex-1 flex flex-col bg-background h-full overflow-hidden">
       {/* Chat Header */}
       <div className="p-4 border-b border-border bg-card flex-shrink-0">
         <div className="flex items-center space-x-3">
@@ -342,7 +342,7 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+      <div className="flex-1 overflow-y-auto p-4" ref={scrollAreaRef}>
         <div className="space-y-4">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
@@ -431,7 +431,7 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
           
           <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Message Input */}
       <div className="p-4 border-t border-border bg-card flex-shrink-0">
