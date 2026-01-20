@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth, isBusinessRole } from '@/contexts/SupabaseAuthContext';
@@ -62,18 +62,66 @@ const NewOpportunityMultiStep = () => {
   
   // Estado para rastrear si ya existe un borrador (previene duplicados)
   const [opportunityId, setOpportunityId] = useState<string | null>(null);
+  const [isInitializingDraft, setIsInitializingDraft] = useState(false);
   // Ref para prevenir doble-clic
   const isSubmittingRef = useRef(false);
+  const draftInitializedRef = useRef(false);
 
   // Debug: Log company info
   console.log('🏢 NewOpportunityMultiStep - activeCompany:', activeCompany);
-  console.log('🏢 NewOpportunityMultiStep - business_type:', activeCompany?.business_type);
-  console.log('🏢 NewOpportunityMultiStep - Is Academy?:', activeCompany?.business_type === 'academy');
+  console.log('🏢 NewOpportunityMultiStep - opportunityId:', opportunityId);
 
   // Función para generar un enlace único de invitación
   const generateInvitationLink = (opportunityId: string) => {
     return `${window.location.origin}/opportunity/invite/${opportunityId}`;
   };
+
+  // DRAFT-FIRST: Crear borrador vacío inmediatamente al cargar
+  useEffect(() => {
+    const initDraft = async () => {
+      // Solo crear si no hay ID, hay empresa activa, y no se está inicializando ya
+      if (opportunityId || !activeCompany || draftInitializedRef.current || isInitializingDraft) {
+        return;
+      }
+
+      draftInitializedRef.current = true;
+      setIsInitializingDraft(true);
+
+      try {
+        console.log('📝 Creating initial draft for company:', activeCompany.id);
+        
+        const { data, error } = await supabase
+          .from('opportunities')
+          .insert({
+            company_id: activeCompany.id,
+            title: '',
+            description: '',
+            category: 'General',
+            type: 'Tiempo Completo',
+            status: 'draft',
+            is_active: false
+          })
+          .select('id')
+          .single();
+
+        if (error) {
+          console.error('Error creating initial draft:', error);
+          return;
+        }
+
+        if (data) {
+          console.log('✅ Draft initialized with ID:', data.id);
+          setOpportunityId(data.id);
+        }
+      } catch (error) {
+        console.error('Error in initDraft:', error);
+      } finally {
+        setIsInitializingDraft(false);
+      }
+    };
+
+    initDraft();
+  }, [activeCompany, opportunityId, isInitializingDraft]);
 
   // Verificar permisos
   if (!user || !isBusinessRole(userRole)) {
@@ -113,6 +161,13 @@ const NewOpportunityMultiStep = () => {
     // Prevenir doble-clic y envíos múltiples
     if (isSubmittingRef.current || loading) {
       console.log('⚠️ Submission already in progress, ignoring...');
+      return opportunityId;
+    }
+
+    // DRAFT-FIRST: Siempre debe existir un opportunityId
+    if (!opportunityId) {
+      console.error('❌ No opportunityId found - draft should have been created on mount');
+      toast.error('Error: El borrador no se inicializó correctamente. Recarga la página.');
       return null;
     }
     
@@ -218,70 +273,16 @@ const NewOpportunityMultiStep = () => {
         external_application_url: formData.externalApplicationUrl || null,
       };
 
-      let insertedOpportunityId = opportunityId;
+      // DRAFT-FIRST: Siempre UPDATE, nunca INSERT
+      console.log('📝 Updating opportunity:', opportunityId);
+      const { error } = await supabase
+        .from('opportunities')
+        .update(opportunityData)
+        .eq('id', opportunityId);
 
-      // Si ya existe un borrador, hacer UPDATE en lugar de INSERT
-      if (opportunityId) {
-        console.log('📝 Updating existing opportunity:', opportunityId);
-        const { error } = await supabase
-          .from('opportunities')
-          .update(opportunityData)
-          .eq('id', opportunityId);
-
-        if (error) {
-          console.error('Error updating opportunity:', error);
-          throw error;
-        }
-      } else {
-        // INSERT solo la primera vez - con manejo de reintentos para slugs duplicados
-        console.log('🆕 Creating new opportunity');
-        
-        let retries = 3;
-        let insertError: any = null;
-        let insertedData: any = null;
-        
-        while (retries > 0) {
-          const { data, error } = await supabase
-            .from('opportunities')
-            .insert([opportunityData])
-            .select()
-            .single();
-          
-          if (error) {
-            // Si es error de slug duplicado, esperar un poco y reintentar
-            if (error.message?.includes('opportunities_slug_unique')) {
-              console.log(`⚠️ Slug conflict, retrying... (${retries} attempts left)`);
-              retries--;
-              if (retries === 0) {
-                // Capturar el error cuando se agotan los reintentos
-                insertError = error;
-                break;
-              }
-              // Pequeña espera para permitir que el trigger genere un slug diferente
-              await new Promise(resolve => setTimeout(resolve, 100));
-              continue;
-            }
-            insertError = error;
-            break;
-          }
-          
-          insertedData = data;
-          break;
-        }
-        
-        if (insertError) {
-          console.error('Error creating opportunity:', insertError);
-          throw insertError;
-        }
-
-        // Validar que la inserción fue exitosa
-        if (!insertedData) {
-          throw new Error('No se pudo crear la oportunidad. Por favor intenta de nuevo.');
-        }
-
-        // Guardar el ID para futuros updates
-        setOpportunityId(insertedData.id);
-        insertedOpportunityId = insertedData.id;
+      if (error) {
+        console.error('Error updating opportunity:', error);
+        throw error;
       }
 
       // Check if this is a draft save (only when explicitly saving as draft, not when publishing)
@@ -289,12 +290,9 @@ const NewOpportunityMultiStep = () => {
       
       if (isDraft) {
         // No toast for auto-save drafts to avoid spam
-        // toast.success('¡Borrador guardado exitosamente!');
-        // No redirect for drafts - let user continue editing
         setLoading(false);
         isSubmittingRef.current = false;
-        // Retornar el ID para que el formulario hijo pueda rastrearlo
-        return insertedOpportunityId;
+        return opportunityId;
       }
       
       if (formData.publishToFeed) {
@@ -302,24 +300,22 @@ const NewOpportunityMultiStep = () => {
         navigate('/business-dashboard/opportunities');
       } else {
         // Generar enlace de invitación para oportunidades privadas
-        if (insertedOpportunityId) {
-          const inviteLink = generateInvitationLink(insertedOpportunityId);
-          
-          // Actualizar la oportunidad con el enlace de invitación
-          await supabase
-            .from('opportunities')
-            .update({ invitation_link: inviteLink } as any)
-            .eq('id', insertedOpportunityId);
-          
-          // Mostrar modal con enlace de invitación
-          setInvitationLink(inviteLink);
-          setOpportunityTitle(formData.title);
-          setShowInvitationModal(true);
-          toast.success('¡Oportunidad guardada como invitación privada!');
-        }
+        const inviteLink = generateInvitationLink(opportunityId);
+        
+        // Actualizar la oportunidad con el enlace de invitación
+        await supabase
+          .from('opportunities')
+          .update({ invitation_link: inviteLink } as any)
+          .eq('id', opportunityId);
+        
+        // Mostrar modal con enlace de invitación
+        setInvitationLink(inviteLink);
+        setOpportunityTitle(formData.title);
+        setShowInvitationModal(true);
+        toast.success('¡Oportunidad guardada como invitación privada!');
       }
       
-      return insertedOpportunityId;
+      return opportunityId;
       
     } catch (error: any) {
       console.error('Error saving opportunity:', error);
