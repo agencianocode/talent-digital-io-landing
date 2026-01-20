@@ -8,7 +8,8 @@ interface UserFilters {
   countryFilter: string;
   dateRange: string;
   companyRoleFilter: string;
-  sortBy: 'name' | 'date';
+  completenessFilter: string;
+  sortBy: 'name' | 'date' | 'last_activity';
   sortOrder: 'asc' | 'desc';
 }
 
@@ -30,6 +31,7 @@ interface UserData {
   auth_provider?: string;
   is_google_auth?: boolean;
   has_completed_onboarding?: boolean;
+  profile_completeness?: number;
 }
 
 export const useAdminUsers = () => {
@@ -43,6 +45,7 @@ export const useAdminUsers = () => {
     countryFilter: 'all',
     dateRange: 'all',
     companyRoleFilter: 'all',
+    completenessFilter: 'all',
     sortBy: 'date',
     sortOrder: 'desc'
   });
@@ -116,7 +119,8 @@ export const useAdminUsers = () => {
         has_companies: user.has_companies || false,
         auth_provider: user.auth_provider,
         is_google_auth: user.is_google_auth || false,
-        has_completed_onboarding: user.has_completed_onboarding
+        has_completed_onboarding: user.has_completed_onboarding,
+        profile_completeness: user.profile_completeness || 0
       }));
 
       // Debug después del mapeo para ver qué llega finalmente al frontend
@@ -202,6 +206,32 @@ export const useAdminUsers = () => {
     }
     // When "all" is selected, include ALL users regardless of country field
 
+    // Profile completeness filter
+    if (filters.completenessFilter !== 'all') {
+      switch (filters.completenessFilter) {
+        case 'complete':
+          filtered = filtered.filter(user => user.profile_completeness === 100);
+          break;
+        case 'incomplete':
+          filtered = filtered.filter(user => 
+            user.profile_completeness !== undefined && 
+            user.profile_completeness > 0 && 
+            user.profile_completeness < 100
+          );
+          break;
+        case 'unverified':
+          filtered = filtered.filter(user => !user.email_confirmed_at);
+          break;
+        case 'zero':
+          filtered = filtered.filter(user => 
+            user.has_completed_onboarding === false || 
+            user.profile_completeness === 0 ||
+            user.profile_completeness === undefined
+          );
+          break;
+      }
+    }
+
     // Date range filter
     if (filters.dateRange !== 'all') {
       const now = new Date();
@@ -242,6 +272,10 @@ export const useAdminUsers = () => {
       } else if (filters.sortBy === 'date') {
         const dateA = new Date(a.created_at).getTime();
         const dateB = new Date(b.created_at).getTime();
+        return filters.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      } else if (filters.sortBy === 'last_activity') {
+        const dateA = a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : 0;
+        const dateB = b.last_sign_in_at ? new Date(b.last_sign_in_at).getTime() : 0;
         return filters.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
       }
       return 0;
