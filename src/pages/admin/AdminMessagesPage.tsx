@@ -11,11 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Search, User, Building2, Shield, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, User, Building2, Shield, MessageCircle, Settings } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { AutomatedMessagesConfig } from '@/components/admin/AutomatedMessagesConfig';
 
 interface AdminConversation {
   id: string;
@@ -100,6 +102,7 @@ const AdminMessagesPage = () => {
   const [messagesByConversation, setMessagesByConversation] = useState<Record<string, AdminMessage[]>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
   // Load all conversations from the conversations table (admin view)
   const loadConversations = useCallback(async () => {
@@ -514,6 +517,19 @@ const AdminMessagesPage = () => {
     );
   }
 
+  if (showConfig) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AdminSidebar activeTab="messages" onTabChange={handleTabChange} />
+          <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+            <AutomatedMessagesConfig onClose={() => setShowConfig(false)} />
+          </div>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -528,14 +544,25 @@ const AdminMessagesPage = () => {
             <div className="w-80 border-r flex flex-col bg-card">
               {/* Search and Filter */}
               <div className="p-3 border-b space-y-2 flex-shrink-0">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar conversaciones..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-9"
-                  />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar conversaciones..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 h-9"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 flex-shrink-0"
+                    onClick={() => setShowConfig(true)}
+                    title="Configuración de mensajes automatizados"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
                 </div>
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
                   <SelectTrigger className="h-9">

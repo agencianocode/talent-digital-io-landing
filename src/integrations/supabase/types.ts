@@ -482,6 +482,36 @@ export type Database = {
         }
         Relationships: []
       }
+      automated_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          message_content: string
+          sender_id: string
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message_content: string
+          sender_id: string
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message_content?: string
+          sender_id?: string
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           academy_slug: string | null
