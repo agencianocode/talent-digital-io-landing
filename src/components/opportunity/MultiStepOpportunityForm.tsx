@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, Save } from 'lucide-react';
@@ -115,6 +115,10 @@ const MultiStepOpportunityForm = ({
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Ref para prevenir múltiples envíos simultáneos (protección contra doble-clic)
+  const isSubmittingRef = useRef(false);
   
   // Debug: Log company info
   console.log('📋 MultiStepOpportunityForm - company:', company);
@@ -216,12 +220,12 @@ const MultiStepOpportunityForm = ({
     }
   };
 
-  // Autoguardado cada 2 minutos - solo si hay opportunityId (draft ya existe)
+  // Autoguardado cada 2 minutos - solo si hay opportunityId y no se está enviando
   const autoSaveData = useAutoSave({
     data: formData,
     onSave: saveDraft,
     interval: 120000, // 2 minutos
-    enabled: !isLoading && !isSaving && !!opportunityId && !!formData.title?.trim(),
+    enabled: !isLoading && !isSaving && !isSubmitting && !isSubmittingRef.current && !!opportunityId && !!formData.title?.trim(),
     storageKey: undefined // No usar localStorage - todo se guarda en DB
   });
 
@@ -329,16 +333,44 @@ const MultiStepOpportunityForm = ({
     }
   };
 
-  const handlePublishToFeed = () => {
+  const handlePublishToFeed = async () => {
+    // Protección contra múltiples envíos
+    if (isSubmittingRef.current || isSubmitting) {
+      console.log('⚠️ Already submitting, ignoring click');
+      return;
+    }
+    
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
     setShowPublishModal(false);
-    // Submit form with publish flag
-    onSubmit({ ...formData, publishToFeed: true });
+    
+    try {
+      console.log('🚀 Publishing to feed...');
+      await onSubmit({ ...formData, publishToFeed: true });
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
-  const handleKeepPrivate = () => {
+  const handleKeepPrivate = async () => {
+    // Protección contra múltiples envíos
+    if (isSubmittingRef.current || isSubmitting) {
+      console.log('⚠️ Already submitting, ignoring click');
+      return;
+    }
+    
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
     setShowPublishModal(false);
-    // Submit form without publish flag
-    onSubmit({ ...formData, publishToFeed: false });
+    
+    try {
+      console.log('🔒 Keeping private...');
+      await onSubmit({ ...formData, publishToFeed: false });
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   const handleBack = () => {
@@ -662,9 +694,10 @@ const MultiStepOpportunityForm = ({
       {/* Publish Job Modal */}
       <PublishJobModal
         isOpen={showPublishModal}
-        onClose={() => setShowPublishModal(false)}
+        onClose={() => !isSubmitting && setShowPublishModal(false)}
         onPublishToFeed={handlePublishToFeed}
         onKeepPrivate={handleKeepPrivate}
+        isSubmitting={isSubmitting}
       />
     </div>
   );
