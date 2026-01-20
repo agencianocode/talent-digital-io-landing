@@ -16,6 +16,7 @@ interface SupabaseOpportunity {
   category: string;
   salary_min: number | null;
   salary_max: number | null;
+  salary_is_public?: boolean | null;
   currency: string | null;
   status: 'draft' | 'active' | 'paused' | 'closed' | null;
   created_at: string;

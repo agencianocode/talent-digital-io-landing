@@ -413,7 +413,9 @@ const TalentOpportunitiesSearch = () => {
                             </span>
                           </div>
 
-                          {(opportunity.salary_min || opportunity.salary_max) && (
+                          {/* Solo mostrar salario si es público o el usuario ya aplicó */}
+                          {(opportunity.salary_min || opportunity.salary_max) && 
+                           (opportunity.salary_is_public !== false || hasApplied(opportunity.id)) && (
                             <div className="flex items-center gap-1 text-green-600 font-medium">
                               <DollarSign className="h-4 w-4" />
                               {opportunity.salary_min && opportunity.salary_max

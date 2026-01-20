@@ -392,7 +392,9 @@ const OpportunityDetail = () => {
                 <Badge variant="outline">{opportunity.category}</Badge>
               </div>
               
-              {opportunity.salary_min && (
+              {/* Solo mostrar salario si es público, el usuario aplicó, o es el propietario */}
+              {opportunity.salary_min && 
+               (opportunity.salary_is_public !== false || applied || !isTalentRole(userRole)) && (
                 <div className="flex items-center gap-2 text-sm">
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                   <span>
