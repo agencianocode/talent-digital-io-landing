@@ -615,25 +615,42 @@ export const useMessages = (companyId?: string) => {
       // First get the original message to store original_content
       const { data: originalMessage, error: fetchError } = await supabase
         .from('messages' as any)
-        .select('content, original_content')
+        .select('content, original_content, conversation_id')
         .eq('id', messageId)
         .eq('sender_id', user.id)
         .single();
 
       if (fetchError) throw fetchError;
 
+      const editedAt = new Date().toISOString();
+      const originalContent = (originalMessage as any).original_content || (originalMessage as any).content;
+      const conversationId = (originalMessage as any).conversation_id;
+
       const { error } = await supabase
         .from('messages' as any)
         .update({
           content: newContent,
-          edited_at: new Date().toISOString(),
+          edited_at: editedAt,
           // Only set original_content on first edit
-          original_content: (originalMessage as any).original_content || (originalMessage as any).content,
+          original_content: originalContent,
         })
         .eq('id', messageId)
         .eq('sender_id', user.id); // Only sender can edit their own messages
 
       if (error) throw error;
+      
+      // Update local state immediately for responsive UI
+      setMessagesByConversation(prev => {
+        const updated = { ...prev };
+        if (conversationId && updated[conversationId]) {
+          updated[conversationId] = updated[conversationId].map(msg => 
+            msg.id === messageId 
+              ? { ...msg, content: newContent, edited_at: editedAt, original_content: originalContent }
+              : msg
+          );
+        }
+        return updated;
+      });
       
       toast({
         title: "Éxito",
@@ -668,6 +685,18 @@ export const useMessages = (companyId?: string) => {
     try {
       setIsLoading(true);
       
+      // First get the conversation_id to update local state
+      const { data: messageData, error: fetchError } = await supabase
+        .from('messages' as any)
+        .select('conversation_id')
+        .eq('id', messageId)
+        .eq('sender_id', user.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const conversationId = (messageData as any)?.conversation_id;
+
       const { error } = await supabase
         .from('messages' as any)
         .delete()
@@ -675,6 +704,17 @@ export const useMessages = (companyId?: string) => {
         .eq('sender_id', user.id); // Only sender can delete their own messages
 
       if (error) throw error;
+      
+      // Update local state immediately for responsive UI
+      if (conversationId) {
+        setMessagesByConversation(prev => {
+          const updated = { ...prev };
+          if (updated[conversationId]) {
+            updated[conversationId] = updated[conversationId].filter(msg => msg.id !== messageId);
+          }
+          return updated;
+        });
+      }
       
       toast({
         title: "Éxito",

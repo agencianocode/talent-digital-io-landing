@@ -141,7 +141,7 @@ export function AdminSidebar({
       <SidebarFooter className="border-t p-4 bg-background">
         {/* Bottom navigation: Mensajes y Notificaciones */}
         <div className="space-y-2 mb-4">
-          {customization?.show_chat !== false && <SidebarMenuButton onClick={() => onTabChange("chat")} isActive={activeTab === "chat"} className={cn("cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors", activeTab === "chat" ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300" : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800")}>
+          {customization?.show_chat !== false && <SidebarMenuButton onClick={() => navigate("/admin/messages")} isActive={window.location.pathname.startsWith("/admin/messages")} className={cn("cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors", window.location.pathname.startsWith("/admin/messages") ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 hover:text-purple-700 dark:hover:text-purple-300" : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800")}>
               <MessageSquare className="h-4 w-4 flex-shrink-0" />
               {!collapsed && <>
                   <span className="flex-1 truncate">Mensajes</span>
