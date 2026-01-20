@@ -10,13 +10,15 @@ interface PublishJobModalProps {
   onClose: () => void;
   onPublishToFeed: () => void;
   onKeepPrivate: () => void;
+  isSubmitting?: boolean;
 }
 
 const PublishJobModal: React.FC<PublishJobModalProps> = ({
   isOpen,
   onClose,
   onPublishToFeed,
-  onKeepPrivate
+  onKeepPrivate,
+  isSubmitting = false
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -95,21 +97,23 @@ const PublishJobModal: React.FC<PublishJobModalProps> = ({
             </p>
           </DialogHeader>
 
-          {/* Action buttons */}
+{/* Action buttons */}
           <div className="space-y-3">
             <Button
               onClick={onPublishToFeed}
-              className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white font-medium"
+              disabled={isSubmitting}
+              className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Publicar en el feed
+              {isSubmitting ? 'Publicando...' : 'Publicar en el feed'}
             </Button>
             
             <Button
               onClick={onKeepPrivate}
+              disabled={isSubmitting}
               variant="outline"
-              className="w-full h-12 border-gray-300 text-gray-700 hover:bg-gray-50 font-medium"
+              className="w-full h-12 border-gray-300 text-gray-700 hover:bg-gray-50 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Mantener solo por invitación
+              {isSubmitting ? 'Guardando...' : 'Mantener solo por invitación'}
             </Button>
           </div>
         </div>
