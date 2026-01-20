@@ -484,30 +484,6 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                             Copiar enlace
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => handleShareOpportunity(opportunity, 'whatsapp')}
-                          >
-                            <Share2 className="h-4 w-4 mr-2" />
-                            WhatsApp
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleShareOpportunity(opportunity, 'linkedin')}
-                          >
-                            <Share2 className="h-4 w-4 mr-2" />
-                            LinkedIn
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleShareOpportunity(opportunity, 'twitter')}
-                          >
-                            <Share2 className="h-4 w-4 mr-2" />
-                            X (Twitter)
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleShareOpportunity(opportunity, 'email')}
-                          >
-                            <Mail className="h-4 w-4 mr-2" />
-                            Email
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
                             onClick={() => handleToggleStatus(opportunity.id, opportunity.status || 'draft')}
                           >
                             {opportunity.status === 'active' ? (
@@ -594,30 +570,6 @@ export const OpportunityList = ({ onApplicationsView, useMockData = false }: Opp
                         >
                           <Share2 className="h-4 w-4 mr-2" />
                           Copiar enlace
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleShareOpportunity(opportunity, 'whatsapp')}
-                        >
-                          <Share2 className="h-4 w-4 mr-2" />
-                          WhatsApp
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleShareOpportunity(opportunity, 'linkedin')}
-                        >
-                          <Share2 className="h-4 w-4 mr-2" />
-                          LinkedIn
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleShareOpportunity(opportunity, 'twitter')}
-                        >
-                          <Share2 className="h-4 w-4 mr-2" />
-                          X (Twitter)
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleShareOpportunity(opportunity, 'email')}
-                        >
-                          <Mail className="h-4 w-4 mr-2" />
-                          Email
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => handleToggleStatus(opportunity.id, opportunity.status || 'draft')}
