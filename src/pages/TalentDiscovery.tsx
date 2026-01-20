@@ -702,9 +702,9 @@ const TalentDiscovery = () => {
       // 4. Tiene video (true/false)
       // Los perfiles incompletos siempre al final
       filtered.sort((a, b) => {
-        // 1. Perfil completo primero
-        const aComplete = (a.profile_completeness || 0) >= 100 ? 1 : 0;
-        const bComplete = (b.profile_completeness || 0) >= 100 ? 1 : 0;
+        // 1. Perfil completo primero (usar is_complete que ya se calcula con los 10 campos unificados)
+        const aComplete = a.is_complete ? 1 : 0;
+        const bComplete = b.is_complete ? 1 : 0;
         if (aComplete !== bComplete) return bComplete - aComplete;
         
         // 2. Última actividad (más reciente primero)
@@ -1142,7 +1142,7 @@ const TalentDiscovery = () => {
                       {/* Talent Cards - Componente Unificado con Paginación */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {paginatedTalents.map((talent) => {
-                          const isIncomplete = (talent.profile_completeness || 0) < 98;
+                          const isIncomplete = !talent.is_complete;
                           return (
                             <UnifiedTalentCard
                               key={talent.id}
