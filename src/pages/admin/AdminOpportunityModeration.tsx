@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { stripHtml } from '@/lib/utils';
 import { 
   Briefcase, 
@@ -15,7 +16,8 @@ import {
   Eye,
   AlertTriangle,
   FileText,
-  Trash2
+  Trash2,
+  Pause
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -32,6 +34,7 @@ import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import AdminOpportunityFilters from '@/components/admin/AdminOpportunityFilters';
 import AdminOpportunityDetail from '@/components/admin/AdminOpportunityDetail';
+import BulkOpportunityActionModal from '@/components/admin/BulkOpportunityActionModal';
 import { useAdminOpportunities } from '@/hooks/useAdminOpportunities';
 
 interface AdminOpportunityModerationProps {
@@ -52,11 +55,18 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
     totalPages,
     setCurrentPage,
     deleteOpportunity,
+    bulkPauseOpportunities,
+    bulkDeleteOpportunities,
     refetch
   } = useAdminOpportunities();
 
   const [opportunityToDelete, setOpportunityToDelete] = useState<{ id: string; title: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<'pause' | 'delete' | null>(null);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
 
   const handleDeleteOpportunity = async () => {
     if (!opportunityToDelete) return;
@@ -71,6 +81,50 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
       toast.error('No se pudo eliminar la oportunidad');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // Bulk selection handlers
+  const handleSelectOpportunity = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(i => i !== id));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(opportunities.map(o => o.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const isAllSelected = opportunities.length > 0 && selectedIds.length === opportunities.length;
+  const isSomeSelected = selectedIds.length > 0;
+
+  const handleBulkAction = async (message?: string) => {
+    if (!bulkAction || selectedIds.length === 0) return;
+    
+    try {
+      setIsBulkLoading(true);
+      
+      if (bulkAction === 'pause') {
+        await bulkPauseOpportunities(selectedIds, message);
+        toast.success(`${selectedIds.length} oportunidad(es) pausada(s) correctamente`);
+      } else {
+        await bulkDeleteOpportunities(selectedIds, message);
+        toast.success(`${selectedIds.length} oportunidad(es) eliminada(s) correctamente`);
+      }
+      
+      setSelectedIds([]);
+      setBulkAction(null);
+    } catch (err) {
+      console.error('Error performing bulk action:', err);
+      toast.error(`Error al ${bulkAction === 'pause' ? 'pausar' : 'eliminar'} las oportunidades`);
+    } finally {
+      setIsBulkLoading(false);
     }
   };
 
@@ -232,12 +286,54 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
         companies={companies}
       />
 
+      {/* Bulk Actions Bar */}
+      {isSomeSelected && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardContent className="py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">
+              {selectedIds.length} oportunidad(es) seleccionada(s)
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBulkAction('pause')}
+                disabled={isBulkLoading}
+              >
+                <Pause className="h-4 w-4 mr-1" />
+                Pausar
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setBulkAction('delete')}
+                disabled={isBulkLoading}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Eliminar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Opportunities List */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5" />
-            Lista de Oportunidades
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5" />
+              Lista de Oportunidades
+            </div>
+            {opportunities.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={handleSelectAll}
+                />
+                <span className="text-sm font-normal text-muted-foreground">Seleccionar todas</span>
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -245,12 +341,12 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
             <div className="space-y-4">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-4 p-4 border rounded-lg animate-pulse">
-                  <div className="h-12 w-12 bg-gray-200 rounded-lg"></div>
+                  <div className="h-12 w-12 bg-muted rounded-lg"></div>
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 w-1/3 bg-gray-200 rounded"></div>
-                    <div className="h-3 w-1/2 bg-gray-200 rounded"></div>
+                    <div className="h-4 w-1/3 bg-muted rounded"></div>
+                    <div className="h-3 w-1/2 bg-muted rounded"></div>
                   </div>
-                  <div className="h-6 w-16 bg-gray-200 rounded"></div>
+                  <div className="h-6 w-16 bg-muted rounded"></div>
                 </div>
               ))}
             </div>
@@ -270,6 +366,12 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
               {opportunities.map((opportunity) => (
                 <div key={opportunity.id} className="flex flex-col p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-3 sm:gap-4">
                   <div className="flex items-start gap-3 sm:gap-4">
+                    {/* Checkbox */}
+                    <Checkbox
+                      checked={selectedIds.includes(opportunity.id)}
+                      onCheckedChange={(checked) => handleSelectOpportunity(opportunity.id, !!checked)}
+                      className="mt-3"
+                    />
                     {/* Company Logo */}
                     <div className="flex-shrink-0">
                       {opportunity.company_logo ? (
@@ -434,6 +536,16 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
           onOpportunityUpdate={handleOpportunityUpdate}
         />
       )}
+
+      {/* Bulk Action Modal */}
+      <BulkOpportunityActionModal
+        isOpen={bulkAction !== null}
+        onClose={() => setBulkAction(null)}
+        action={bulkAction || 'pause'}
+        opportunityCount={selectedIds.length}
+        onConfirm={handleBulkAction}
+        isLoading={isBulkLoading}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!opportunityToDelete} onOpenChange={(open) => !open && setOpportunityToDelete(null)}>
