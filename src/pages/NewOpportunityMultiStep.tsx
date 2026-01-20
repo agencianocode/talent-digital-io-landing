@@ -268,6 +268,7 @@ const NewOpportunityMultiStep = () => {
         is_academy_exclusive: (formData as any).isAcademyExclusive || false,
         company_id: activeCompany.id,
         status: formData.publishToFeed ? 'active' : ((formData as any).status === 'draft' ? 'draft' : 'active') as 'active',
+        is_public: formData.publishToFeed === true,
         application_instructions: formData.applicationInstructions,
         is_external_application: formData.isExternalApplication,
         external_application_url: formData.externalApplicationUrl || null,
