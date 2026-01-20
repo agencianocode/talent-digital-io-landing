@@ -523,7 +523,7 @@ const AdminMessagesPage = () => {
             <SidebarTrigger className="flex-shrink-0" />
             <h1 className="ml-4 text-lg font-semibold">Mensajes</h1>
           </header>
-          <div className="flex flex-1 overflow-hidden" style={{ height: 'calc(100vh - 4rem)' }}>
+          <div className="flex flex-1 h-[calc(100vh-4rem)] min-h-0 overflow-hidden">
             {/* Conversations List */}
             <div className="w-80 border-r flex flex-col bg-card">
               {/* Search and Filter */}
@@ -626,7 +626,7 @@ const AdminMessagesPage = () => {
             </div>
             
             {/* Chat View */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               {activeConversation ? (
                 <ChatView
                   conversation={activeConversation as any}
