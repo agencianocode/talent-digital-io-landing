@@ -371,7 +371,8 @@ const PublicOpportunity = () => {
                   </span>
                 </div>
                 
-                {opportunity.salary_min && (
+                {/* Solo mostrar salario si es público */}
+                {opportunity.salary_min && opportunity.salary_is_public !== false && (
                   <div className="flex items-center gap-3">
                     <DollarSign className="h-4 w-4 text-gray-500" />
                     <span className="text-sm text-gray-700">

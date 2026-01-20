@@ -316,17 +316,20 @@ const TalentDashboard = () => {
                         
                         {/* Metadatos - Columna en móvil, fila en desktop */}
                         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 font-['Inter']">
-                          <span className="flex items-center gap-1 whitespace-nowrap">
-                            <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                            <span className="truncate">
-                              {opportunity.salary_min && opportunity.salary_max
-                                ? `$${opportunity.salary_min}-${opportunity.salary_max} ${opportunity.currency || 'USD'}`
-                                : opportunity.salary_min
-                                ? `$${opportunity.salary_min} ${opportunity.currency || 'USD'}`
-                                : 'A Convenir'
-                              }
+                          {/* Solo mostrar salario si es público */}
+                          {opportunity.salary_is_public !== false && (
+                            <span className="flex items-center gap-1 whitespace-nowrap">
+                              <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                              <span className="truncate">
+                                {opportunity.salary_min && opportunity.salary_max
+                                  ? `$${opportunity.salary_min}-${opportunity.salary_max} ${opportunity.currency || 'USD'}`
+                                  : opportunity.salary_min
+                                  ? `$${opportunity.salary_min} ${opportunity.currency || 'USD'}`
+                                  : 'A Convenir'
+                                }
+                              </span>
                             </span>
-                          </span>
+                          )}
                           <span className="flex items-center gap-1">
                             <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                             Ver postulantes

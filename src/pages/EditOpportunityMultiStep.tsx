@@ -326,13 +326,26 @@ const EditOpportunityMultiStep = () => {
         requirements += `Idiomas preferidos: ${formData.preferredLanguages.join(', ')}\n`;
       }
 
+      // Mapear locationType a etiquetas en español
+      const locationTypeLabels: Record<string, string> = {
+        'remote': 'Remoto',
+        'onsite': 'Presencial',
+        'hybrid': 'Híbrido'
+      };
+      const locationType = formData.locationType || 'remote';
+      const locationLabel = locationTypeLabels[locationType] || 'Remoto';
+      
       const opportunityData = {
         title: formData.title,
         description: formData.description,
         requirements: requirements.trim(),
         category: selectedCategory,
         type: formData.contractType || 'Tiempo Completo',
-        location: formData.preferredTimezone || 'Remoto',
+        location: locationType === 'remote' 
+          ? locationLabel 
+          : formData.location 
+            ? `${locationLabel} - ${formData.location}`
+            : locationLabel,
         salary_min: salaryMin,
         salary_max: salaryMax,
         skills: formData.skills,
