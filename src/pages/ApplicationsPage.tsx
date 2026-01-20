@@ -1,48 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSupabaseAuth, isBusinessRole } from "@/contexts/SupabaseAuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
-import { useSupabaseOpportunities } from "@/hooks/useSupabaseOpportunities";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Eye, MessageSquare, Calendar } from "lucide-react";
+import { Search } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { ApplicationsLoading } from "@/components/ui/enhanced-loading";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
-
-interface Application {
-  id: string;
-  opportunity_id: string;
-  user_id: string;
-  cover_letter: string;
-  status: string;
-  created_at: string;
-  profiles: {
-    full_name: string;
-    avatar_url?: string;
-  } | null;
-  opportunities: {
-    title: string;
-    company_id: string;
-  } | null;
-}
+import { ApplicantCard, ApplicationDetailModal, BulkActionsBar } from "@/components/applications";
+import type { ApplicantCardData } from "@/components/applications";
+import { sendNotification } from "@/lib/notifications";
 
 const ApplicationsPage = () => {
   const navigate = useNavigate();
   const { userRole } = useSupabaseAuth();
-  const { activeCompany, hasPermission } = useCompany();
-  const { updateApplicationStatus } = useSupabaseOpportunities();
-  const [applications, setApplications] = useState<Application[]>([]);
+  const { activeCompany } = useCompany();
+  const [applications, setApplications] = useState<ApplicantCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  // Detail modal state
+  const [selectedApplication, setSelectedApplication] = useState<ApplicantCardData | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Handle URL filters
   useEffect(() => {
@@ -57,27 +44,15 @@ const ApplicationsPage = () => {
   // Setup real-time notifications and updates
   useRealTimeNotifications({
     onNewApplication: () => {
-      // Refresh applications list when new one arrives
       fetchApplications();
     },
     onApplicationUpdate: () => {
-      // Refresh when applications are updated
       fetchApplications();
     },
     enableSound: true
   });
 
-  useEffect(() => {
-    if (isBusinessRole(userRole)) {
-      if (activeCompany) {
-        fetchApplications();
-      } else {
-        setIsLoading(false);
-      }
-    }
-  }, [userRole, activeCompany]);
-
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     if (!activeCompany) {
       setIsLoading(false);
       return;
@@ -86,102 +61,219 @@ const ApplicationsPage = () => {
     try {
       setIsLoading(true);
       
-      // Get applications and related data separately to avoid join issues
+      // Get opportunities for this company
+      const { data: opportunitiesData } = await supabase
+        .from('opportunities')
+        .select('id, title')
+        .eq('company_id', activeCompany.id);
+
+      const companyOpportunityIds = (opportunitiesData || []).map(opp => opp.id);
+      const opportunityTitles = Object.fromEntries(
+        (opportunitiesData || []).map(opp => [opp.id, opp.title])
+      );
+
+      if (companyOpportunityIds.length === 0) {
+        setApplications([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Get applications for company opportunities
       const { data: applicationsData, error: applicationsError } = await supabase
         .from('applications')
-        .select('*')
+        .select('id, user_id, status, created_at, internal_rating, is_viewed, viewed_at, external_form_completed, opportunity_id')
+        .in('opportunity_id', companyOpportunityIds)
         .order('created_at', { ascending: false });
 
       if (applicationsError) throw applicationsError;
 
-      // Get opportunities for this company
-      const { data: opportunitiesData } = await supabase
-        .from('opportunities')
-        .select('id, title, company_id')
-        .eq('company_id', activeCompany.id);
-
-      // Filter applications for this company's opportunities
-      const companyOpportunityIds = (opportunitiesData || []).map(opp => opp.id);
-      const companyApplications = (applicationsData || []).filter(app => 
-        companyOpportunityIds.includes(app.opportunity_id)
-      );
-
-      // Enrich with profile and opportunity data
+      // Enrich with profile data
       const enrichedApplications = await Promise.all(
-        companyApplications.map(async (app) => {
-          const [profileResult, opportunityResult] = await Promise.all([
-            supabase.from('profiles').select('full_name, avatar_url').eq('user_id', app.user_id).single(),
-            supabase.from('opportunities').select('title, company_id').eq('id', app.opportunity_id).single()
-          ]);
+        (applicationsData || []).map(async (app) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('user_id', app.user_id)
+            .single();
 
           return {
             ...app,
-            profiles: profileResult.data || null,
-            opportunities: opportunityResult.data || null
-          };
+            opportunity_title: opportunityTitles[app.opportunity_id],
+            profile: profileData || undefined,
+          } as ApplicantCardData;
         })
       );
 
-      setApplications(enrichedApplications as Application[]);
+      setApplications(enrichedApplications);
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast.error('Error al cargar las aplicaciones');
     } finally {
       setIsLoading(false);
     }
+  }, [activeCompany]);
+
+  useEffect(() => {
+    if (isBusinessRole(userRole) && activeCompany) {
+      fetchApplications();
+    } else {
+      setIsLoading(false);
+    }
+  }, [userRole, activeCompany, fetchApplications]);
+
+  // Selection handlers
+  const handleSelect = (id: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(id);
+      } else {
+        newSet.delete(id);
+      }
+      return newSet;
+    });
   };
 
-  const handleStatusUpdate = async (applicationId: string, newStatus: string) => {
+  const handleClearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  // Application detail handlers
+  const handleOpenDetail = (application: ApplicantCardData) => {
+    setSelectedApplication(application);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setIsDetailModalOpen(false);
+    setSelectedApplication(null);
+    fetchApplications(); // Refresh to update view status
+  };
+
+  const handleViewProfile = (userId: string) => {
+    navigate(`/business-dashboard/talent-profile/${userId}`);
+  };
+
+  const handleContact = (userId: string) => {
+    navigate(`/business-dashboard/messages?recipient=${userId}`);
+  };
+
+  const handleStatusChange = async (applicationId: string, status: string, message?: string) => {
     try {
-      await updateApplicationStatus(applicationId, newStatus);
-      toast.success(`Estado actualizado a ${getStatusText(newStatus)}`);
-      fetchApplications(); // Refresh the list
+      const { error } = await supabase
+        .from('applications')
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      // Get application user_id and opportunity info
+      const application = applications.find(app => app.id === applicationId);
+      if (application && message) {
+        // Send notification with message
+        const statusLabels: Record<string, string> = {
+          accepted: 'aceptada',
+          rejected: 'no seleccionada',
+          hired: 'contratado'
+        };
+
+        await sendNotification({
+          userId: application.user_id,
+          type: `application_${status}`,
+          title: `Tu aplicación ha sido ${statusLabels[status] || status}`,
+          message: message,
+          actionUrl: '/talent-dashboard/applications',
+        });
+
+        // Also send as a direct message
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user?.id) {
+          await supabase.from('messages').insert({
+            sender_id: userData.user.id,
+            recipient_id: application.user_id,
+            content: message,
+            conversation_id: `app_${applicationId}`,
+            message_type: 'application_update',
+          });
+        }
+      }
+
+      toast.success(`Aplicación ${status === 'accepted' ? 'aceptada' : status === 'rejected' ? 'rechazada' : 'actualizada'}`);
+      fetchApplications();
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('Error updating application status:', error);
       toast.error('Error al actualizar el estado');
     }
   };
 
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return "bg-yellow-100 text-yellow-800";
-      case 'reviewed':
-        return "bg-blue-100 text-blue-800";
-      case 'accepted':
-        return "bg-green-100 text-green-800";
-      case 'rejected':
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+  // Bulk action handlers
+  const handleBulkRate = async (rating: number) => {
+    try {
+      const ids = Array.from(selectedIds);
+      
+      const { error } = await supabase
+        .from('applications')
+        .update({ internal_rating: rating })
+        .in('id', ids);
+
+      if (error) throw error;
+
+      toast.success(`${ids.length} aplicaciones calificadas con ${rating} estrellas`);
+      handleClearSelection();
+      fetchApplications();
+    } catch (error) {
+      console.error('Error bulk rating:', error);
+      toast.error('Error al calificar las aplicaciones');
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'Pendiente';
-      case 'reviewed':
-        return 'Revisada';
-      case 'accepted':
-        return 'Aceptada';
-      case 'rejected':
-        return 'Rechazada';
-      default:
-        return status;
+  const handleBulkMessage = async (message: string) => {
+    try {
+      const ids = Array.from(selectedIds);
+      const { data: userData } = await supabase.auth.getUser();
+      
+      if (!userData?.user?.id) {
+        toast.error('Error de autenticación');
+        return;
+      }
+
+      // Get user_ids for selected applications
+      const selectedApps = applications.filter(app => ids.includes(app.id));
+      
+      // Send message to each user
+      for (const app of selectedApps) {
+        await supabase.from('messages').insert({
+          sender_id: userData.user.id,
+          recipient_id: app.user_id,
+          content: message,
+          conversation_id: `bulk_${Date.now()}`,
+          message_type: 'bulk_message',
+        });
+      }
+
+      toast.success(`Mensaje enviado a ${ids.length} candidatos`);
+      handleClearSelection();
+    } catch (error) {
+      console.error('Error sending bulk message:', error);
+      toast.error('Error al enviar los mensajes');
     }
   };
 
+  // Filtering
   const filteredApplications = applications.filter(app => {
     const matchesSearch = !searchTerm || 
-      app.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.opportunities?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.cover_letter?.toLowerCase().includes(searchTerm.toLowerCase());
+      app.profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.opportunity_title?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = !statusFilter || statusFilter === "all" || app.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
+
+  const pendingCount = applications.filter(app => app.status === 'pending').length;
 
   if (!isBusinessRole(userRole)) {
     return (
@@ -217,9 +309,9 @@ const ApplicationsPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             Aplicaciones Recibidas
-            {filteredApplications.filter(app => app.status === 'pending').length > 0 && (
+            {pendingCount > 0 && (
               <Badge variant="destructive" className="animate-pulse">
-                {filteredApplications.filter(app => app.status === 'pending').length} nuevas
+                {pendingCount} nuevas
               </Badge>
             )}
           </h1>
@@ -241,7 +333,7 @@ const ApplicationsPage = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             type="text"
-            placeholder="Buscar por nombre, oportunidad o mensaje..."
+            placeholder="Buscar por nombre u oportunidad..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -257,6 +349,7 @@ const ApplicationsPage = () => {
             <SelectItem value="reviewed">Revisadas</SelectItem>
             <SelectItem value="accepted">Aceptadas</SelectItem>
             <SelectItem value="rejected">Rechazadas</SelectItem>
+            <SelectItem value="hired">Contratados</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -277,103 +370,40 @@ const ApplicationsPage = () => {
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {filteredApplications.map((application) => (
-            <Card key={application.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={application.profiles?.avatar_url} />
-                      <AvatarFallback>
-                        {application.profiles?.full_name?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-lg">
-                        {application.profiles?.full_name || 'Usuario'}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Aplicó a: {application.opportunities?.title}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge className={getStatusBadgeClass(application.status)}>
-                      {getStatusText(application.status)}
-                    </Badge>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      {format(new Date(application.created_at), 'dd MMM yyyy', { locale: es })}
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4">
-                  <h4 className="font-medium mb-2">Mensaje de aplicación:</h4>
-                  <p className="text-sm text-muted-foreground bg-secondary p-3 rounded-lg">
-                    {application.cover_letter || 'Sin mensaje'}
-                  </p>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                                         <Button
-                       variant="outline"
-                       size="sm"
-                       onClick={() => navigate(`/business-dashboard/talent-profile/${application.user_id}`)}
-                     >
-                       <Eye className="h-4 w-4 mr-1" />
-                       Ver Perfil
-                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-1" />
-                      Contactar
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    {hasPermission('admin') && application.status === 'pending' && (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={() => handleStatusUpdate(application.id, 'accepted')}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          Aceptar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleStatusUpdate(application.id, 'rejected')}
-                          className="border-red-300 text-red-600 hover:bg-red-50"
-                        >
-                          Rechazar
-                        </Button>
-                      </>
-                    )}
-                    {hasPermission('admin') && application.status === 'pending' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleStatusUpdate(application.id, 'reviewed')}
-                      >
-                        Marcar como Revisada
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <ApplicantCard
+              key={application.id}
+              application={application}
+              isSelected={selectedIds.has(application.id)}
+              onSelect={handleSelect}
+              onClick={handleOpenDetail}
+              showOpportunity={true}
+            />
           ))}
         </div>
       )}
+
+      {/* Bulk Actions Bar */}
+      <BulkActionsBar
+        selectedCount={selectedIds.size}
+        onClearSelection={handleClearSelection}
+        onBulkRate={handleBulkRate}
+        onBulkMessage={handleBulkMessage}
+      />
+
+      {/* Application Detail Modal */}
+      <ApplicationDetailModal
+        application={selectedApplication}
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetail}
+        onStatusChange={handleStatusChange}
+        onViewProfile={handleViewProfile}
+        onContact={handleContact}
+        opportunityTitle={selectedApplication?.opportunity_title}
+      />
     </div>
   );
 };
 
-export default ApplicationsPage; 
+export default ApplicationsPage;
