@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MapPin, Eye, MessageSquare, Clock } from 'lucide-react';
+import { MapPin, Eye, MessageSquare, Clock, Video } from 'lucide-react';
 import { stripHtml } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -26,6 +26,7 @@ export interface UnifiedTalentCardProps {
   lastActive?: string | null;
   userEmail?: string; // Para mostrar badge de academia
   isProfileIncomplete?: boolean; // Para mostrar badge de perfil incompleto
+  hasVideo?: boolean; // Para mostrar icono de video
   
   // Acciones
   primaryAction?: {
@@ -58,6 +59,7 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
   lastActive,
   userEmail,
   isProfileIncomplete = false,
+  hasVideo = false,
   primaryAction,
   secondaryAction,
   showBio = true,
@@ -112,9 +114,16 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
                 Perfil incompleto
               </Badge>
             )}
-            <h3 className="font-semibold text-base sm:text-lg text-foreground truncate">
-              {fullName}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-base sm:text-lg text-foreground truncate">
+                {fullName}
+              </h3>
+              {hasVideo && (
+                <span title="Tiene video de presentación">
+                  <Video className="h-4 w-4 text-primary flex-shrink-0" />
+                </span>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground truncate mb-1">
               {title}
             </p>

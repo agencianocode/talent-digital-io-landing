@@ -1142,7 +1142,7 @@ const TalentDiscovery = () => {
                       {/* Talent Cards - Componente Unificado con Paginación */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {paginatedTalents.map((talent) => {
-                          const isIncomplete = (talent.profile_completeness || 0) < 100;
+                          const isIncomplete = (talent.profile_completeness || 0) < 98;
                           return (
                             <UnifiedTalentCard
                               key={talent.id}
@@ -1157,6 +1157,7 @@ const TalentDiscovery = () => {
                               userEmail={talent.email || undefined}
                               lastActive={talent.last_active || talent.updated_at}
                               isProfileIncomplete={isIncomplete}
+                              hasVideo={!!talent.video_presentation_url}
                               primaryAction={{
                                 label: 'Ver Perfil',
                                 onClick: () => handleViewProfile(talent.user_id)
