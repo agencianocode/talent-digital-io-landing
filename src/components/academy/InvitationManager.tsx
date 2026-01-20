@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useDraftProtection } from '@/hooks/useDraftProtection';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -67,6 +68,24 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<{ id: string; email: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
+
+  // Draft protection - saves form data when switching windows
+  const { hasStoredDraft, restoreDraft, clearDraft, draftChecked } = useDraftProtection({
+    storageKey: `invitation-manager-draft-${academyId}`,
+    data: { emailList, message },
+    onRestore: (data) => {
+      setEmailList(data.emailList);
+      setMessage(data.message);
+    },
+  });
+
+  // Show restore prompt when draft is detected
+  useEffect(() => {
+    if (draftChecked && hasStoredDraft) {
+      setShowRestorePrompt(true);
+    }
+  }, [draftChecked, hasStoredDraft]);
 
   // Generate invitation links
   const activeInviteLink = `${window.location.origin}/accept-academy-invitation?academy=${academyId}&status=enrolled`;
@@ -337,6 +356,37 @@ export const InvitationManager: React.FC<InvitationManagerProps> = ({ academyId 
 
   return (
     <div className="space-y-6">
+      {/* Draft Restore Prompt */}
+      {showRestorePrompt && (
+        <div className="bg-muted border border-border rounded-lg p-4 flex items-center justify-between">
+          <div>
+            <p className="font-medium">Se encontró un borrador guardado</p>
+            <p className="text-sm text-muted-foreground">¿Deseas restaurar tu trabajo anterior?</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                clearDraft();
+                setShowRestorePrompt(false);
+              }}
+            >
+              Descartar
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                restoreDraft();
+                setShowRestorePrompt(false);
+              }}
+            >
+              Restaurar
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

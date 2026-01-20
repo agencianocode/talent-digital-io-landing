@@ -19,6 +19,8 @@ const TalentMessagesPage = () => {
     markAsUnread,
     archiveConversation,
     unarchiveConversation,
+    updateMessage,
+    deleteMessage,
   } = useSupabaseMessages();
   
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -156,6 +158,8 @@ const TalentMessagesPage = () => {
         conversation={activeConversation as any}
         messages={activeMessages as any}
         onSendMessage={handleSendMessage}
+        onEditMessage={updateMessage}
+        onDeleteMessage={deleteMessage}
       />
     </div>
   );

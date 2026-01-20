@@ -85,6 +85,7 @@ const OpportunitiesLanding = lazy(() => import('./pages/OpportunitiesLanding'));
 
 // Lazy load otras páginas
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const AdminMessagesPage = lazy(() => import('./pages/admin/AdminMessagesPage'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const PublicOpportunity = lazy(() => import('./pages/PublicOpportunity'));
 const PublicCompany = lazy(() => import('./pages/PublicCompany'));
@@ -446,6 +447,13 @@ function App() {
                       <Route path="/admin" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <AdminPanel />
+                        </Suspense>
+                      } />
+                      
+                      {/* Admin Messages - Full page layout */}
+                      <Route path="/admin/messages/:conversationId?" element={
+                        <Suspense fallback={<LoadingSkeleton type="list" />}>
+                          <AdminMessagesPage />
                         </Suspense>
                       } />
 
