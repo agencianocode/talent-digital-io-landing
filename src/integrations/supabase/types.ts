@@ -2388,10 +2388,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
-      generate_opportunity_slug:
-        | { Args: { opp_id: string; title: string }; Returns: string }
-        | { Args: { opp_id: string; title: string }; Returns: string }
-        | { Args: { opp_id: string; title: string }; Returns: string }
+      generate_opportunity_slug: {
+        Args: { opp_id: string; title: string }
+        Returns: string
+      }
       get_academy_graduate_applications: {
         Args: { p_academy_id: string }
         Returns: {
