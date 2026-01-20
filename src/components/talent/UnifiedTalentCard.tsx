@@ -110,7 +110,7 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
           <div className="flex-1 min-w-0">
             {/* Badge de perfil incompleto */}
             {isProfileIncomplete && (
-              <Badge variant="outline" className="text-xs mb-1 border-amber-400 text-amber-600 bg-amber-50">
+              <Badge variant="outline" className="text-xs mb-1 border-muted-foreground/30 text-muted-foreground bg-muted/50">
                 Perfil incompleto
               </Badge>
             )}
@@ -120,7 +120,7 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
               </h3>
               {hasVideo && (
                 <span title="Tiene video de presentación">
-                  <Video className="h-4 w-4 text-primary flex-shrink-0" />
+                  <Video className="h-4 w-4 text-primary stroke-[2.5] flex-shrink-0" />
                 </span>
               )}
             </div>
