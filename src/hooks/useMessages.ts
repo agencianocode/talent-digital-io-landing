@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { AuthContext } from '@/contexts/SupabaseAuthContext';
 
 export interface Message {
   id: string;
@@ -59,7 +59,10 @@ export interface SendMessageData {
 }
 
 export const useMessages = (companyId?: string) => {
-  const { user } = useSupabaseAuth();
+  // Use context directly with fallback to prevent crashes during HMR/initialization
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user ?? null;
+  
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
