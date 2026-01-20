@@ -626,25 +626,27 @@ const AdminMessagesPage = () => {
             </div>
             
             {/* Chat View */}
-            {activeConversation ? (
-              <ChatView
-                conversation={activeConversation as any}
-                messages={activeMessages as any}
-                onSendMessage={handleSendMessage}
-                onEditMessage={updateMessage}
-                onDeleteMessage={deleteMessage}
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center bg-background">
-                <div className="text-center">
-                  <MessageCircle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground mb-2">Selecciona una conversación</p>
-                  <p className="text-sm text-muted-foreground">
-                    {isLoading ? 'Cargando...' : `${conversations.length} conversaciones disponibles`}
-                  </p>
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              {activeConversation ? (
+                <ChatView
+                  conversation={activeConversation as any}
+                  messages={activeMessages as any}
+                  onSendMessage={handleSendMessage}
+                  onEditMessage={updateMessage}
+                  onDeleteMessage={deleteMessage}
+                />
+              ) : (
+                <div className="flex-1 flex items-center justify-center bg-background">
+                  <div className="text-center">
+                    <MessageCircle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground mb-2">Selecciona una conversación</p>
+                    <p className="text-sm text-muted-foreground">
+                      {isLoading ? 'Cargando...' : `${conversations.length} conversaciones disponibles`}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
