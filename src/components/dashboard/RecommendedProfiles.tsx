@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
-import { Users, MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, MapPin, Clock, ChevronLeft, ChevronRight, Video } from 'lucide-react';
 import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
 import { stripHtml } from '@/lib/utils';
 
@@ -21,6 +21,9 @@ interface RecommendedProfile {
   location: string;
   profile_completeness: number;
   email: string;
+  video_presentation_url: string | null;
+  updated_at: string;
+  is_verified: boolean;
 }
 
 const RecommendedProfiles: React.FC = () => {
@@ -32,20 +35,19 @@ const RecommendedProfiles: React.FC = () => {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
 
-  // Funciones de scroll suave - scrollea exactamente una card
+  // Funciones de scroll suave
   const scrollLeft = () => {
-    const cardWidth = 288; // w-72 = 288px
-    const gap = 16; // gap-4 = 16px
+    const cardWidth = 288;
+    const gap = 16;
     scrollContainerRef.current?.scrollBy({ left: -(cardWidth + gap), behavior: 'smooth' });
   };
 
   const scrollRight = () => {
-    const cardWidth = 288; // w-72 = 288px
-    const gap = 16; // gap-4 = 16px
+    const cardWidth = 288;
+    const gap = 16;
     scrollContainerRef.current?.scrollBy({ left: cardWidth + gap, behavior: 'smooth' });
   };
 
-  // Detectar si hay overflow y actualizar flechas
   const checkScrollButtons = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -63,12 +65,10 @@ const RecommendedProfiles: React.FC = () => {
     );
   };
 
-  // Actualizar flechas cuando cambie el contenido o tamaño de ventana
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    // Check inicial con delay para asegurar que el DOM está listo
     setTimeout(checkScrollButtons, 100);
 
     container.addEventListener('scroll', checkScrollButtons);
@@ -85,142 +85,212 @@ const RecommendedProfiles: React.FC = () => {
       try {
         setLoading(true);
 
-        // Get active opportunities for this company to find relevant skills
-        const { data: activeOpportunities } = await supabase
+        if (!activeCompany?.id) {
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+
+        // Step 1: Get opportunities by priority (active > draft > closed)
+        let targetCategories: string[] = [];
+
+        // Try active opportunities first
+        const { data: activeOpps } = await supabase
           .from('opportunities')
-          .select('skills, category, experience_levels')
-          .eq('company_id', activeCompany?.id || '')
+          .select('category')
+          .eq('company_id', activeCompany.id)
           .eq('status', 'active');
 
-        // Extract relevant skills and criteria
-        const relevantSkills = new Set<string>();
-        const relevantExperienceLevels = new Set<string>();
-        
-        (activeOpportunities || []).forEach(opp => {
-          if (opp.skills) {
-            opp.skills.forEach((skill: string) => relevantSkills.add(skill.toLowerCase()));
+        if (activeOpps && activeOpps.length > 0) {
+          targetCategories = [...new Set(activeOpps.map(o => o.category).filter(Boolean))];
+        } else {
+          // Try draft opportunities
+          const { data: draftOpps } = await supabase
+            .from('opportunities')
+            .select('category')
+            .eq('company_id', activeCompany.id)
+            .eq('status', 'draft');
+
+          if (draftOpps && draftOpps.length > 0) {
+            targetCategories = [...new Set(draftOpps.map(o => o.category).filter(Boolean))];
+          } else {
+            // Try closed opportunities
+            const { data: closedOpps } = await supabase
+              .from('opportunities')
+              .select('category')
+              .eq('company_id', activeCompany.id)
+              .eq('status', 'closed');
+
+            if (closedOpps && closedOpps.length > 0) {
+              targetCategories = [...new Set(closedOpps.map(o => o.category).filter(Boolean))];
+            }
           }
-          if (opp.experience_levels) {
-            opp.experience_levels.forEach((level: string) => relevantExperienceLevels.add(level));
-          }
-        });
+        }
 
-        // Get all talent profiles
-        const { data: talentProfiles, error } = await supabase
-          .from('talent_profiles')
-          .select('user_id, title, bio, skills, experience_level, availability')
-          .limit(50);
+        // Step 2: Get verified students (academy students with active status)
+        const { data: academyStudents } = await supabase
+          .from('academy_students')
+          .select('student_email')
+          .eq('status', 'active');
 
-        if (error) {
-          console.error('Error fetching talent profiles:', error);
+        const verifiedEmails = new Set((academyStudents || []).map(s => s.student_email.toLowerCase()));
+
+        if (verifiedEmails.size === 0) {
           setProfiles([]);
           setLoading(false);
           return;
         }
 
-        // Get user profiles data (without completeness filter)
-        const userIds = (talentProfiles || []).map(tp => tp.user_id);
+        // Step 3: Get user emails to filter by verified
+        const { data: allUserEmails } = await supabase
+          .rpc('get_all_users_for_admin') as {
+            data: Array<{ user_id: string; full_name: string; created_at: string; role: string }> | null;
+            error: any;
+          };
+
+        // Get emails for all users
+        const userIdsToCheck = (allUserEmails || []).map(u => u.user_id);
         
-        if (userIds.length === 0) {
-          setProfiles([]);
-          setLoading(false);
-          return;
-        }
-
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, avatar_url, city, country, profile_completeness')
-          .in('user_id', userIds);
-
-        if (profilesError) {
-          console.error('Error fetching profiles data:', profilesError);
-          setProfiles([]);
-          setLoading(false);
-          return;
-        }
-
-        // Obtener emails y avatar_urls de auth.users usando RPC
-        const { data: userEmails, error: emailsError } = await supabase
-          .rpc('get_user_emails_by_ids', { user_ids: userIds }) as { 
+        const { data: userEmailsData } = await supabase
+          .rpc('get_user_emails_by_ids', { user_ids: userIdsToCheck }) as {
             data: Array<{ user_id: string; email: string; avatar_url: string | null }> | null;
             error: any;
           };
 
-        if (emailsError) {
-          console.error('Error fetching user emails:', emailsError);
-        }
-
-        // Crear un mapa de user_id a email y avatar_url (desde user_metadata)
-        const emailMap: Record<string, string> = {};
+        // Create map of user_id to email
+        const userIdToEmail: Record<string, string> = {};
         const avatarUrlMap: Record<string, string | null> = {};
-        if (userEmails) {
-          userEmails.forEach((item: any) => {
-            emailMap[item.user_id] = item.email;
-            // Store avatar_url from user_metadata as fallback
-            if (item.avatar_url) {
-              avatarUrlMap[item.user_id] = item.avatar_url;
-            }
-          });
+        (userEmailsData || []).forEach(item => {
+          userIdToEmail[item.user_id] = item.email.toLowerCase();
+          if (item.avatar_url) {
+            avatarUrlMap[item.user_id] = item.avatar_url;
+          }
+        });
+
+        // Get verified user IDs
+        const verifiedUserIds = Object.entries(userIdToEmail)
+          .filter(([_, email]) => verifiedEmails.has(email))
+          .map(([userId, _]) => userId);
+
+        if (verifiedUserIds.length === 0) {
+          setProfiles([]);
+          setLoading(false);
+          return;
         }
 
-        // Score and sort profiles
-        const scoredProfiles = (talentProfiles || [])
-          .map(profile => {
-            const profileData = (profilesData || []).find(p => p.user_id === profile.user_id);
+        // Step 4: Get talent profiles for verified users
+        const { data: talentProfiles } = await supabase
+          .from('talent_profiles')
+          .select('user_id, title, bio, skills, experience_level, video_presentation_url, primary_category_id, updated_at')
+          .in('user_id', verifiedUserIds);
+
+        if (!talentProfiles || talentProfiles.length === 0) {
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
+
+        // Step 5: Get profile data
+        const talentUserIds = talentProfiles.map(tp => tp.user_id);
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url, city, country, profile_completeness')
+          .in('user_id', talentUserIds);
+
+        // Step 6: Get categories to filter by opportunity categories
+        let categoryIds: string[] = [];
+        if (targetCategories.length > 0) {
+          const { data: categories } = await supabase
+            .from('professional_categories')
+            .select('id, name');
+
+          if (categories) {
+            // Map category names to IDs (categories might be stored by name in opportunities)
+            categoryIds = categories
+              .filter(c => targetCategories.includes(c.name))
+              .map(c => c.id);
+          }
+        }
+
+        // Step 7: Build profiles with all data
+        const enrichedProfiles = talentProfiles
+          .map(tp => {
+            const profileData = (profilesData || []).find(p => p.user_id === tp.user_id);
             if (!profileData) return null;
+
+            // Check if user has completed onboarding (real name + avatar)
+            const hasRealName = profileData.full_name && 
+              !profileData.full_name.includes('@') && 
+              profileData.full_name.length > 2;
+            const hasAvatar = !!profileData.avatar_url;
             
-            let relevanceScore = 0;
-            
-            // Skills matching
-            if (profile.skills && relevantSkills.size > 0) {
-              const matchingSkills = profile.skills.filter((skill: string) => 
-                relevantSkills.has(skill.toLowerCase())
-              );
-              relevanceScore += matchingSkills.length * 15;
-            }
-            
-            // Experience level matching
-            if (profile.experience_level && relevantExperienceLevels.has(profile.experience_level)) {
-              relevanceScore += 20;
-            }
-            
-            // Profile completeness
-            relevanceScore += (profileData.profile_completeness || 0) / 5;
-            
-            // Content quality
-            if (profile.title && profile.title.length > 10) relevanceScore += 8;
-            if (profile.bio && profile.bio.length > 50) relevanceScore += 7;
-            if (profile.skills && profile.skills.length >= 3) relevanceScore += 5;
-            
-            // Use avatar_url from profiles first, then fallback to user_metadata
+            if (!hasRealName || !hasAvatar) return null;
+
             const profileAvatarUrl = profileData.avatar_url;
-            const metadataAvatarUrl = avatarUrlMap[profile.user_id];
-            // Filter out blob URLs (temporary URLs that won't work)
+            const metadataAvatarUrl = avatarUrlMap[tp.user_id];
             const rawAvatarUrl = profileAvatarUrl || metadataAvatarUrl || null;
             const finalAvatarUrl = rawAvatarUrl && !rawAvatarUrl.startsWith('blob:') ? rawAvatarUrl : '';
-            
+
             return {
-              id: profile.user_id,
+              id: tp.user_id,
               full_name: profileData.full_name || 'Candidato',
               avatar_url: finalAvatarUrl,
-              title: profile.title || 'Profesional',
-              bio: profile.bio || '',
-              skills: profile.skills || [],
-              experience_level: profile.experience_level || 'Sin especificar',
+              title: tp.title || 'Profesional',
+              bio: tp.bio || '',
+              skills: tp.skills || [],
+              experience_level: tp.experience_level || 'Sin especificar',
               location: [profileData.city, profileData.country].filter(Boolean).join(', ') || 'Sin ubicación',
               profile_completeness: profileData.profile_completeness || 0,
-              email: emailMap[profile.user_id] || '',
-              relevanceScore
+              email: userIdToEmail[tp.user_id] || '',
+              video_presentation_url: tp.video_presentation_url,
+              updated_at: tp.updated_at,
+              is_verified: true, // All are verified since we filtered by academy students
+              primary_category_id: tp.primary_category_id
             };
           })
-          .filter(Boolean)
-          .sort((a, b) => (b?.relevanceScore || 0) - (a?.relevanceScore || 0))
-          .slice(0, 6) as (RecommendedProfile & { relevanceScore: number })[];
+          .filter(Boolean) as (RecommendedProfile & { primary_category_id: string | null })[];
 
-        const formattedProfiles = scoredProfiles.map(({ relevanceScore, ...profile }) => profile);
-        setProfiles(formattedProfiles);
+        // Step 8: Filter by category if applicable
+        let filteredProfiles = enrichedProfiles;
+        if (categoryIds.length > 0) {
+          const categoryFiltered = enrichedProfiles.filter(p => 
+            p.primary_category_id && categoryIds.includes(p.primary_category_id)
+          );
+          // Only use category filter if we have results, otherwise show all verified
+          if (categoryFiltered.length > 0) {
+            filteredProfiles = categoryFiltered;
+          }
+        }
+
+        // Step 9: Apply default sorting (same as TalentDiscovery)
+        // 1st: Profile 100% complete (>=98)
+        // 2nd: Last activity (latest first)
+        // 3rd: Verified (all are verified here)
+        // 4th: Has video
+        const sortedProfiles = filteredProfiles.sort((a, b) => {
+          // 1. Profile complete first
+          const aComplete = (a.profile_completeness || 0) >= 98 ? 1 : 0;
+          const bComplete = (b.profile_completeness || 0) >= 98 ? 1 : 0;
+          if (aComplete !== bComplete) return bComplete - aComplete;
+
+          // 2. Last activity (most recent first)
+          const aDate = new Date(a.updated_at || 0).getTime();
+          const bDate = new Date(b.updated_at || 0).getTime();
+          if (aDate !== bDate) return bDate - aDate;
+
+          // 3. Has video first
+          const aVideo = a.video_presentation_url ? 1 : 0;
+          const bVideo = b.video_presentation_url ? 1 : 0;
+          return bVideo - aVideo;
+        });
+
+        // Step 10: Take first 12 profiles
+        const finalProfiles = sortedProfiles.slice(0, 12).map(({ primary_category_id, ...profile }) => profile);
+        setProfiles(finalProfiles);
+
       } catch (error) {
         console.error('Error in loadRecommendedProfiles:', error);
+        setProfiles([]);
       } finally {
         setLoading(false);
       }
@@ -265,7 +335,7 @@ const RecommendedProfiles: React.FC = () => {
               Perfiles Recomendados
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Candidatos destacados para tus oportunidades activas
+              Candidatos verificados por academias
             </p>
           </div>
           <Button 
@@ -282,7 +352,6 @@ const RecommendedProfiles: React.FC = () => {
       <CardContent className="overflow-x-hidden">
         {profiles.length > 0 ? (
           <div className="relative">
-            {/* Botón Izquierda */}
             {showLeftArrow && (
               <Button
                 variant="outline"
@@ -294,7 +363,6 @@ const RecommendedProfiles: React.FC = () => {
               </Button>
             )}
 
-            {/* Flex horizontal con scroll controlado por flechas - contenido en esta sección */}
             <div 
               ref={scrollContainerRef}
               className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory"
@@ -314,7 +382,6 @@ const RecommendedProfiles: React.FC = () => {
                   className="flex-shrink-0 w-72 border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-white flex flex-col h-[420px] cursor-pointer snap-start"
                   onClick={() => navigate(`/business-dashboard/talent-profile/${profile.id}`)}
                 >
-                  {/* Contenido que crece */}
                   <div className="flex-1 flex flex-col">
                     {/* Avatar y Badge de Academia */}
                     <div className="flex items-start gap-3 mb-3">
@@ -324,7 +391,6 @@ const RecommendedProfiles: React.FC = () => {
                           {profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      {/* Badge de Academia */}
                       {profile.email && (
                         <div className="flex-1 min-w-0">
                           <TalentCardAcademyBadge 
@@ -337,9 +403,16 @@ const RecommendedProfiles: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Nombre y Título */}
+                    {/* Nombre y Título con icono de video */}
                     <div className="mb-3">
-                      <h4 className="font-semibold text-base mb-1 truncate">{profile.full_name}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-base truncate">{profile.full_name}</h4>
+                        {profile.video_presentation_url && (
+                          <span title="Tiene video de presentación">
+                            <Video className="h-4 w-4 text-primary flex-shrink-0" />
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
                         {profile.title}
                       </p>
@@ -371,7 +444,7 @@ const RecommendedProfiles: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Bio (opcional) - Crece para llenar espacio */}
+                    {/* Bio */}
                     <div className="flex-1 mb-3">
                       {profile.bio && (
                         <p className="text-xs text-muted-foreground line-clamp-3">
@@ -381,7 +454,7 @@ const RecommendedProfiles: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Botón - Siempre al final */}
+                  {/* Botón */}
                   <Button 
                     size="sm" 
                     variant="outline" 
@@ -397,7 +470,6 @@ const RecommendedProfiles: React.FC = () => {
               ))}
             </div>
 
-            {/* Botón Derecha */}
             {showRightArrow && (
               <Button
                 variant="outline"
@@ -416,7 +488,7 @@ const RecommendedProfiles: React.FC = () => {
             <p className="text-xs">
               {!activeCompany?.id 
                 ? 'Configura tu empresa para ver recomendaciones'
-                : 'Los candidatos aparecerán aquí cuando completen sus perfiles'
+                : 'Los candidatos verificados por academias aparecerán aquí'
               }
             </p>
           </div>
