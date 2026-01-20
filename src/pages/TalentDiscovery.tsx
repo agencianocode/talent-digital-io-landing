@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,7 +13,9 @@ import {
   MessageCircle,
   Plus,
   ChevronDown,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -48,6 +50,7 @@ interface RealTalent {
   is_featured?: boolean;
   is_verified?: boolean;
   is_premium?: boolean;
+  is_suspended?: boolean;
   rating?: number;
   reviews_count?: number;
   response_rate?: number;
@@ -65,6 +68,8 @@ interface TalentStats {
   categories: string[];
   countries: string[];
 }
+
+const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48, 96];
 
 const TalentDiscovery = () => {
   const navigate = useNavigate();
@@ -88,7 +93,13 @@ const TalentDiscovery = () => {
   );
   const [remoteFilter, setRemoteFilter] = useState<string>('all');
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
+  const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(24);
+  
   const [stats, setStats] = useState<TalentStats>({
     total: 0,
     featured: 0,
@@ -406,50 +417,43 @@ const TalentDiscovery = () => {
         } as any;
       }) || [];
 
-      // Filtrar talentos que tengan información mínima para mostrarse
-      // Excluir perfiles prácticamente vacíos o sin formación académica
-      const talentsWithMinimumInfo = talents.filter(talent => {
-        // Validar nombre: no vacío, no "Sin nombre", y no solo espacios
-        const hasName = talent.full_name && 
-                       talent.full_name.trim() !== '' && 
-                       talent.full_name.trim() !== 'Sin nombre' &&
-                       talent.full_name.trim().length >= 2;
+      // Filtrar talentos: ahora mostramos todos los que tengan onboarding completo (nombre real y avatar)
+      // Los que no tengan perfil 100% completo mostrarán etiqueta "Perfil incompleto"
+      const talentsWithOnboarding = talents.filter(talent => {
+        // Excluir usuarios suspendidos
+        if (talent.is_suspended) {
+          console.log('🚫 Usuario suspendido excluido:', talent.full_name);
+          return false;
+        }
         
-        // Validar bio: al menos 50 caracteres, no "Sin descripción", y no solo espacios
-        const bioTrimmed = talent.bio?.trim() || '';
-        const hasBio = bioTrimmed.length >= 50 && 
-                      bioTrimmed !== 'Sin descripción' &&
-                      bioTrimmed !== 'Sin descripcion';
+        // Validar nombre: no vacío, no "Sin nombre", no email-derived
+        const hasRealName = talent.full_name && 
+                           talent.full_name.trim() !== '' && 
+                           talent.full_name.trim() !== 'Sin nombre' &&
+                           talent.full_name.trim().length >= 2 &&
+                           !talent.full_name.includes('@'); // No email-derived
         
-        // Validar título: no vacío, no "Talento Digital", y no solo espacios
-        const titleTrimmed = talent.title?.trim() || '';
-        const hasTitle = titleTrimmed !== '' && 
-                        titleTrimmed !== 'Talento Digital' &&
-                        titleTrimmed.length >= 3;
+        // Validar avatar
+        const hasAvatar = !!talent.avatar_url;
         
-        // Validar educación: debe tener al menos un registro de formación académica
-        const hasEducation = usersWithEducation.has(talent.user_id);
+        // Usuario completó onboarding si tiene nombre real y avatar
+        const completedOnboarding = hasRealName && hasAvatar;
         
-        // Requiere nombre, bio (>=50 chars), título, y educación
-        const meetsMinimum = hasName && hasBio && hasTitle && hasEducation;
-        
-        if (!meetsMinimum) {
-          console.log('🚫 Perfil filtrado:', {
+        if (!completedOnboarding) {
+          console.log('🚫 Onboarding incompleto:', {
             name: talent.full_name,
-            hasName,
-            hasBio: `${hasBio} (${bioTrimmed.length} chars)`,
-            hasTitle,
-            hasEducation
+            hasRealName,
+            hasAvatar
           });
         }
         
-        return meetsMinimum;
+        return completedOnboarding;
       });
 
-      console.log('📊 Perfiles totales:', talents.length, '| Con info mínima:', talentsWithMinimumInfo.length, '| Filtrados:', talents.length - talentsWithMinimumInfo.length);
+      console.log('📊 Perfiles totales:', talents.length, '| Con onboarding completo:', talentsWithOnboarding.length, '| Filtrados:', talents.length - talentsWithOnboarding.length);
 
       // Enhance existing talents with better data
-      const enhancedTalents = talentsWithMinimumInfo.map(talent => {
+      const enhancedTalents = talentsWithOnboarding.map(talent => {
         // If this is Fabian Segura, enhance his data
         if (talent.full_name === 'Fabian Segura' || talent.user_id === '1c1c3c4f-3587-4e47-958b-9529d0620d26') {
           return {
@@ -459,7 +463,6 @@ const TalentDiscovery = () => {
             city: talent.city || 'Cali',
             country: talent.country || 'Colombia',
             is_featured: true,
-            // is_verified: usar el valor real calculado desde academy_students
             is_premium: talent.is_premium,
             video_presentation_url: talent.video_presentation_url || 'https://youtu.be/kcOrTOT7Kko',
             portfolio_url: talent.portfolio_url || 'https://fabiansegura.com/portfolio',
@@ -500,8 +503,9 @@ const TalentDiscovery = () => {
   }, []);
 
   useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when filters change
     applyFilters();
-  }, [searchTerm, categoryFilter, countryFilter, experienceFilter, contractTypeFilter, remoteFilter, showFeaturedOnly, allTalents]);
+  }, [searchTerm, categoryFilter, countryFilter, experienceFilter, contractTypeFilter, remoteFilter, showFeaturedOnly, showVerifiedOnly, allTalents]);
 
   useEffect(() => {
     // Update URL params
@@ -686,28 +690,51 @@ const TalentDiscovery = () => {
         filtered = filtered.filter(talent => talent.is_featured);
       }
       
-      // Sort: Premium > Certified > Featured > Others
+      // Verified only filter (academy verified)
+      if (showVerifiedOnly) {
+        filtered = filtered.filter(talent => talent.is_verified);
+      }
+      
+      // NUEVO ORDENAMIENTO:
+      // 1. Perfil 100% completo (true/false)
+      // 2. Última actividad (fecha, más reciente primero)
+      // 3. Verificado por academia (true/false)
+      // 4. Tiene video (true/false)
+      // Los perfiles incompletos siempre al final
       filtered.sort((a, b) => {
-        const getPriority = (t: RealTalent) => {
-          if (t.is_premium) return 3;
-          if (t.is_verified) return 2; // verified can mean certified
-          if (t.is_featured) return 1;
-          return 0;
-        };
+        // 1. Perfil completo primero
+        const aComplete = (a.profile_completeness || 0) >= 100 ? 1 : 0;
+        const bComplete = (b.profile_completeness || 0) >= 100 ? 1 : 0;
+        if (aComplete !== bComplete) return bComplete - aComplete;
         
-        const priorityA = getPriority(a);
-        const priorityB = getPriority(b);
+        // 2. Última actividad (más reciente primero)
+        const aLastActive = a.last_active ? new Date(a.last_active).getTime() : 0;
+        const bLastActive = b.last_active ? new Date(b.last_active).getTime() : 0;
+        if (aLastActive !== bLastActive) return bLastActive - aLastActive;
         
-        if (priorityA !== priorityB) return priorityB - priorityA;
+        // 3. Verificado por academia
+        const aVerified = a.is_verified ? 1 : 0;
+        const bVerified = b.is_verified ? 1 : 0;
+        if (aVerified !== bVerified) return bVerified - aVerified;
         
-        // If same priority, sort by profile completeness
-        return (b.profile_completeness || 0) - (a.profile_completeness || 0);
+        // 4. Tiene video
+        const aHasVideo = a.video_presentation_url ? 1 : 0;
+        const bHasVideo = b.video_presentation_url ? 1 : 0;
+        return bHasVideo - aHasVideo;
       });
       
       setFilteredTalents(filtered);
       setIsLoading(false);
     }, 300);
   };
+
+  // Calcular paginación
+  const totalPages = Math.ceil(filteredTalents.length / itemsPerPage);
+  const paginatedTalents = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredTalents.slice(startIndex, endIndex);
+  }, [filteredTalents, currentPage, itemsPerPage]);
 
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [selectedTalent, setSelectedTalent] = useState<RealTalent | null>(null);
@@ -995,6 +1022,21 @@ const TalentDiscovery = () => {
             </SelectContent>
           </Select>
 
+          {/* Verified Only Checkbox */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="verified-only"
+              checked={showVerifiedOnly}
+              onCheckedChange={(checked) => setShowVerifiedOnly(!!checked)}
+            />
+            <label
+              htmlFor="verified-only"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer whitespace-nowrap"
+            >
+              Solo verificados por academias
+            </label>
+          </div>
+
           {/* Clear Filters */}
           <Button 
             variant="outline" 
@@ -1006,16 +1048,49 @@ const TalentDiscovery = () => {
               setContractTypeFilter([]);
               setRemoteFilter('all');
               setShowFeaturedOnly(false);
+              setShowVerifiedOnly(false);
             }}
           >
             Limpiar Filtros
           </Button>
         </div>
 
-        {/* Results count */}
-        <div className="text-sm text-muted-foreground">
-          {filteredTalents.length} talentos encontrados
-          {searchTerm && ` para "${searchTerm}"`}
+        {/* Results count and pagination controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            {filteredTalents.length} talentos encontrados
+            {searchTerm && ` para "${searchTerm}"`}
+            {filteredTalents.length > 0 && (
+              <span className="ml-2">
+                (Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, filteredTalents.length)}-{Math.min(currentPage * itemsPerPage, filteredTalents.length)})
+              </span>
+            )}
+          </div>
+          
+          {/* Items per page selector */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Por página:</span>
+              <Select 
+                value={String(itemsPerPage)} 
+                onValueChange={(value) => {
+                  setItemsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[80px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ITEMS_PER_PAGE_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={String(option)}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1063,37 +1138,68 @@ const TalentDiscovery = () => {
                       </CardContent>
                     </Card>
                   ) : (
-                    /* Talent Cards - Componente Unificado */
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredTalents.map((talent) => {
-                        return (
-                          <UnifiedTalentCard
-                            key={talent.id}
-                            userId={talent.user_id}
-                            fullName={talent.full_name}
-                            title={talent.title}
-                            avatarUrl={talent.avatar_url}
-                            city={talent.city || undefined}
-                            country={talent.country || undefined}
-                            bio={talent.bio}
-                            skills={talent.skills}
-                            userEmail={talent.email || undefined}
-                            lastActive={talent.last_active || talent.updated_at}
-                            primaryAction={{
-                              label: 'Ver Perfil',
-                              onClick: () => handleViewProfile(talent.user_id)
-                            }}
-                            secondaryAction={{
-                              label: 'Contactar',
-                              icon: <MessageCircle className="h-4 w-4 mr-2" />,
-                              onClick: () => handleContactTalent(talent)
-                            }}
-                            showBio={true}
-                            maxSkills={3}
-                          />
-                        );
-                      })}
-                    </div>
+                    <>
+                      {/* Talent Cards - Componente Unificado con Paginación */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {paginatedTalents.map((talent) => {
+                          const isIncomplete = (talent.profile_completeness || 0) < 100;
+                          return (
+                            <UnifiedTalentCard
+                              key={talent.id}
+                              userId={talent.user_id}
+                              fullName={talent.full_name}
+                              title={talent.title}
+                              avatarUrl={talent.avatar_url}
+                              city={talent.city || undefined}
+                              country={talent.country || undefined}
+                              bio={talent.bio}
+                              skills={talent.skills}
+                              userEmail={talent.email || undefined}
+                              lastActive={talent.last_active || talent.updated_at}
+                              isProfileIncomplete={isIncomplete}
+                              primaryAction={{
+                                label: 'Ver Perfil',
+                                onClick: () => handleViewProfile(talent.user_id)
+                              }}
+                              secondaryAction={{
+                                label: 'Contactar',
+                                icon: <MessageCircle className="h-4 w-4 mr-2" />,
+                                onClick: () => handleContactTalent(talent)
+                              }}
+                              showBio={true}
+                              maxSkills={3}
+                            />
+                          );
+                        })}
+                      </div>
+
+                      {/* Pagination Controls */}
+                      {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-4 mt-8">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            <ChevronLeft className="h-4 w-4 mr-1" />
+                            Anterior
+                          </Button>
+                          <span className="text-sm text-muted-foreground">
+                            Página {currentPage} de {totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            Siguiente
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                          </Button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}

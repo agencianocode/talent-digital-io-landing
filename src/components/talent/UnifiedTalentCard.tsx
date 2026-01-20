@@ -25,6 +25,7 @@ export interface UnifiedTalentCardProps {
   // Estado del perfil
   lastActive?: string | null;
   userEmail?: string; // Para mostrar badge de academia
+  isProfileIncomplete?: boolean; // Para mostrar badge de perfil incompleto
   
   // Acciones
   primaryAction?: {
@@ -56,6 +57,7 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
   skills = [],
   lastActive,
   userEmail,
+  isProfileIncomplete = false,
   primaryAction,
   secondaryAction,
   showBio = true,
@@ -104,6 +106,12 @@ export const UnifiedTalentCard: React.FC<UnifiedTalentCardProps> = ({
           </div>
           
           <div className="flex-1 min-w-0">
+            {/* Badge de perfil incompleto */}
+            {isProfileIncomplete && (
+              <Badge variant="outline" className="text-xs mb-1 border-amber-400 text-amber-600 bg-amber-50">
+                Perfil incompleto
+              </Badge>
+            )}
             <h3 className="font-semibold text-base sm:text-lg text-foreground truncate">
               {fullName}
             </h3>
