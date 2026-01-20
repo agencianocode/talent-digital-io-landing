@@ -269,6 +269,11 @@ export const useSupabaseOpportunities = () => {
 
       if (error) throw error;
       
+      // Track activity on application
+      try {
+        await supabase.rpc('update_last_activity');
+      } catch (e) { /* silent */ }
+      
       // Notification is handled by database trigger (notify_new_applicant)
       
       // Refresh applications

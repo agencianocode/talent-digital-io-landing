@@ -369,6 +369,11 @@ export const useProfileData = () => {
       // Dispatch event for other components
       window.dispatchEvent(new CustomEvent('profileUpdated'));
       
+      // Track activity on profile update
+      try {
+        await supabase.rpc('update_last_activity');
+      } catch (e) { /* silent */ }
+      
       toast.success('Perfil actualizado correctamente');
       return true;
     } catch (err: any) {

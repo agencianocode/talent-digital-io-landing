@@ -68,6 +68,11 @@ export const useExperience = () => {
       console.log('✅ Experience added successfully:', insertedData);
       toast.success('Experiencia agregada exitosamente');
       
+      // Track activity
+      try {
+        await supabase.rpc('update_last_activity');
+      } catch (e) { /* silent */ }
+      
       // Update state immediately with the new data
       setExperiences(prev => {
         const newExperiences = [...prev, insertedData as any];
