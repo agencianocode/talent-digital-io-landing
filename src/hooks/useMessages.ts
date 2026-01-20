@@ -17,6 +17,8 @@ export interface Message {
   read_at?: string;
   created_at: string;
   updated_at: string;
+  edited_at?: string;
+  original_content?: string;
   // Related data
   sender?: {
     full_name: string;
@@ -596,6 +598,62 @@ export const useMessages = (companyId?: string) => {
     }
   }, [user]);
 
+  // Update a message (edit)
+  const updateMessage = useCallback(async (messageId: string, newContent: string): Promise<boolean> => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Debes estar autenticado para editar mensajes",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // First get the original message to store original_content
+      const { data: originalMessage, error: fetchError } = await supabase
+        .from('messages' as any)
+        .select('content, original_content')
+        .eq('id', messageId)
+        .eq('sender_id', user.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { error } = await supabase
+        .from('messages' as any)
+        .update({
+          content: newContent,
+          edited_at: new Date().toISOString(),
+          // Only set original_content on first edit
+          original_content: (originalMessage as any).original_content || (originalMessage as any).content,
+        })
+        .eq('id', messageId)
+        .eq('sender_id', user.id); // Only sender can edit their own messages
+
+      if (error) throw error;
+      
+      toast({
+        title: "Éxito",
+        description: "Mensaje editado correctamente",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating message:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo editar el mensaje",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, toast]);
+
   // Delete a message
   const deleteMessage = useCallback(async (messageId: string): Promise<boolean> => {
     if (!user) {
@@ -1127,6 +1185,7 @@ export const useMessages = (companyId?: string) => {
     unarchiveConversation,
     deleteConversation,
     getOrCreateConversation,
+    updateMessage,
     deleteMessage,
     getUnreadCount,
     // Legacy functions

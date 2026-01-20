@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { Send, MessageCircle, Paperclip, X, File, Download, Image as ImageIcon } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
+import { MessageActions } from '@/components/messaging/MessageActions';
 
 interface Message {
   id: string;
@@ -28,6 +29,7 @@ interface Message {
   is_read: boolean;
   read_at?: string;
   delivered_at?: string;
+  edited_at?: string;
   sender?: {
     full_name: string;
     avatar_url?: string;
@@ -50,9 +52,11 @@ interface ChatViewProps {
   conversation: Conversation | null;
   messages: Message[];
   onSendMessage: (content: string, fileUrl?: string, fileName?: string, fileSize?: number, fileType?: string) => void;
+  onEditMessage?: (messageId: string, newContent: string) => Promise<boolean>;
+  onDeleteMessage?: (messageId: string) => Promise<boolean>;
 }
 
-const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessage }) => {
+const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessage, onEditMessage, onDeleteMessage }) => {
   const { user } = useSupabaseAuth();
   const [messageText, setMessageText] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -364,11 +368,23 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
                       </Avatar>
                     )}
                     
-                    <div className={`rounded-lg px-3 py-2 ${
+                    <div className={`relative group rounded-lg px-3 py-2 ${
                       isOwnMessage 
                         ? 'bg-primary text-primary-foreground' 
                         : 'bg-secondary text-foreground'
                     }`}>
+                      {/* Message Actions (Edit/Delete) - Only for own messages */}
+                      {isOwnMessage && onEditMessage && onDeleteMessage && (
+                        <MessageActions
+                          messageId={message.id}
+                          content={message.content || ''}
+                          createdAt={message.created_at}
+                          onEdit={onEditMessage}
+                          onDelete={onDeleteMessage}
+                          isOwnMessage={isOwnMessage}
+                        />
+                      )}
+                      
                       {message.content && (
                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                       )}
@@ -379,6 +395,9 @@ const ChatView: React.FC<ChatViewProps> = ({ conversation, messages, onSendMessa
                           : 'text-muted-foreground'
                       }`}>
                         {format(new Date(message.created_at), 'HH:mm')}
+                        {message.edited_at && (
+                          <span className="italic">(editado)</span>
+                        )}
                         {renderReadReceipt(message, isOwnMessage)}
                       </p>
                     </div>
