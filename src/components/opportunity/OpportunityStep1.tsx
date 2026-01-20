@@ -41,6 +41,7 @@ interface OpportunityStep1Props {
   data: OpportunityStep1Data;
   onChange: (data: Partial<OpportunityStep1Data>) => void;
   company?: Company | null;
+  showErrors?: boolean;
 }
 
 // Skills now handled dynamically based on category templates and user input
@@ -478,7 +479,7 @@ const languageOptions = [
   'Alemán'
 ];
 
-const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) => {
+const OpportunityStep1 = ({ data, onChange, company, showErrors = false }: OpportunityStep1Props) => {
   // State for expanding sections
   const [showTimezoneSection, setShowTimezoneSection] = useState(false);
   const [showLanguagesSection, setShowLanguagesSection] = useState(false);
@@ -486,6 +487,19 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
   const [showSkillSuggestions, setShowSkillSuggestions] = useState(false);
   const [toolInput, setToolInput] = useState('');
   const [showToolSuggestions, setShowToolSuggestions] = useState(false);
+
+  // Error states for required fields
+  const hasError = {
+    category: showErrors && !data.category?.trim(),
+    title: showErrors && !data.title?.trim(),
+    description: showErrors && !data.description?.trim(),
+    contractType: showErrors && !data.contractType?.trim(),
+    locationType: showErrors && !data.locationType?.trim(),
+    skills: showErrors && (!data.skills || data.skills.length === 0),
+    experienceLevels: showErrors && (!data.experienceLevels || data.experienceLevels.length === 0),
+    contractorsCount: showErrors && data.contractorsCount <= 0,
+    deadlineDate: showErrors && !data.deadlineDate,
+  };
 
   // Debug: Log company info
   console.log('🏢 OpportunityStep1 - Company:', company);
@@ -800,7 +814,7 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
           Categoría *
         </Label>
         <Select value={data.category} onValueChange={handleCategoryChange}>
-          <SelectTrigger className="h-12">
+          <SelectTrigger className={`h-12 ${hasError.category ? 'border-destructive ring-1 ring-destructive' : ''}`}>
             <SelectValue placeholder="Selecciona una categoría" />
           </SelectTrigger>
           <SelectContent>
@@ -811,6 +825,9 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
             ))}
           </SelectContent>
         </Select>
+        {hasError.category && (
+          <p className="text-xs text-destructive">Este campo es obligatorio</p>
+        )}
       </div>
 
       {/* Category Templates */}
@@ -829,7 +846,7 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
           Tipo de contrato *
         </Label>
         <Select value={data.contractType} onValueChange={(value) => onChange({ contractType: value })}>
-          <SelectTrigger className="h-12">
+          <SelectTrigger className={`h-12 ${hasError.contractType ? 'border-destructive ring-1 ring-destructive' : ''}`}>
             <SelectValue placeholder="Selecciona tipo de contrato" />
           </SelectTrigger>
           <SelectContent>
@@ -840,6 +857,9 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
             ))}
           </SelectContent>
         </Select>
+        {hasError.contractType && (
+          <p className="text-xs text-destructive">Este campo es obligatorio</p>
+        )}
       </div>
 
       {/* Professional Title */}
@@ -852,27 +872,37 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
           placeholder="Añadir un título descriptivo"
           value={data.title}
           onChange={(e) => onChange({ title: e.target.value })}
-          className="h-12"
+          className={`h-12 ${hasError.title ? 'border-destructive ring-1 ring-destructive' : ''}`}
         />
-        <div className="text-xs text-gray-500 text-right">
-          {data.title.length} / 100
+        <div className="flex justify-between">
+          {hasError.title && (
+            <p className="text-xs text-destructive">Este campo es obligatorio</p>
+          )}
+          <div className="text-xs text-gray-500 text-right ml-auto">
+            {data.title.length} / 100
+          </div>
         </div>
       </div>
 
       {/* Job Description */}
       <div className="space-y-2">
         <Label htmlFor="description" className="text-sm font-medium text-gray-900">
-          Descripción del trabajo
+          Descripción del trabajo *
         </Label>
-        <div className="space-y-1">
+        <div className={`space-y-1 ${hasError.description ? 'ring-1 ring-destructive rounded-md' : ''}`}>
           <RichTextEditor
             value={data.description || ''}
             onChange={(html) => onChange({ description: html })}
             placeholder="Describe las responsabilidades, objetivos y detalles del puesto. Puedes usar formato de texto (negrita, listas, etc.)"
             className="min-h-[360px]"
           />
-          <div className="text-xs text-gray-500 text-right">
-            {getPlainTextLength(data.description || '')} caracteres
+          <div className="flex justify-between pt-1">
+            {hasError.description && (
+              <p className="text-xs text-destructive">Este campo es obligatorio</p>
+            )}
+            <div className="text-xs text-gray-500 text-right ml-auto">
+              {getPlainTextLength(data.description || '')} caracteres
+            </div>
           </div>
         </div>
       </div>
@@ -880,9 +910,9 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
       {/* Skills */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-900">
-          Habilidades
+          Habilidades *
         </Label>
-        <div className="space-y-2">
+        <div className={`space-y-2 ${hasError.skills ? 'ring-1 ring-destructive rounded-lg p-2' : ''}`}>
           {/* Display selected skills as chips */}
           {data.skills && data.skills.length > 0 && (
             <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg min-h-[48px]">
@@ -987,6 +1017,9 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
               })}
               </div>
             </div>
+          )}
+          {hasError.skills && (
+            <p className="text-xs text-destructive mt-1">Selecciona al menos 1 habilidad</p>
           )}
         </div>
         <div className="text-xs text-gray-500 text-right">
@@ -1189,9 +1222,9 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
       {/* Experience Levels */}
       <div className="space-y-3">
         <Label className="text-sm font-medium text-gray-900">
-          Nivel de experiencia (puede seleccionar múltiples)
+          Nivel de experiencia (puede seleccionar múltiples) *
         </Label>
-        <div className="space-y-2">
+        <div className={`space-y-2 ${hasError.experienceLevels ? 'ring-1 ring-destructive rounded-lg p-2' : ''}`}>
           {experienceLevelOptions.map((level) => (
             <div key={level.value} className="flex items-center space-x-2">
               <Checkbox
@@ -1205,6 +1238,9 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
             </div>
           ))}
         </div>
+        {hasError.experienceLevels && (
+          <p className="text-xs text-destructive">Selecciona al menos 1 nivel de experiencia</p>
+        )}
       </div>
 
       {/* Work Modality */}
@@ -1213,7 +1249,7 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
           Modalidad de trabajo *
         </Label>
         <Select value={data.locationType} onValueChange={(value) => onChange({ locationType: value })}>
-          <SelectTrigger className="h-12">
+          <SelectTrigger className={`h-12 ${hasError.locationType ? 'border-destructive ring-1 ring-destructive' : ''}`}>
             <SelectValue placeholder="Selecciona modalidad" />
           </SelectTrigger>
           <SelectContent>
@@ -1224,6 +1260,9 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
             ))}
           </SelectContent>
         </Select>
+        {hasError.locationType && (
+          <p className="text-xs text-destructive">Este campo es obligatorio</p>
+        )}
       </div>
 
       {/* Location - Moved right after Work Modality */}
@@ -1337,7 +1376,7 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="h-12 w-full justify-start text-left font-normal"
+              className={`h-12 w-full justify-start text-left font-normal ${hasError.deadlineDate ? 'border-destructive ring-1 ring-destructive' : ''}`}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {data.deadlineDate ? format(data.deadlineDate, 'PPP') : 'Seleccionar fecha'}
@@ -1353,8 +1392,13 @@ const OpportunityStep1 = ({ data, onChange, company }: OpportunityStep1Props) =>
             />
           </PopoverContent>
         </Popover>
-        <div className="text-xs text-gray-500">
-          La oportunidad se cerrará automáticamente cuando pase esta fecha. Máximo 6 meses en adelante.
+        <div className="flex justify-between">
+          {hasError.deadlineDate && (
+            <p className="text-xs text-destructive">Este campo es obligatorio</p>
+          )}
+          <div className="text-xs text-gray-500 ml-auto">
+            La oportunidad se cerrará automáticamente cuando pase esta fecha. Máximo 6 meses en adelante.
+          </div>
         </div>
       </div>
 
