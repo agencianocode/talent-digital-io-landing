@@ -112,6 +112,7 @@ Deno.serve(async (req) => {
       'team': 'team_member_added',
       'marketplace': 'marketplace_reports',
       'opportunity': 'opportunity_reports',
+      'milestone': 'new_application', // Business milestones use same config as new applications
       'moderation': 'content_approval',
       'system': 'system_errors',
       'security': 'security_alerts',
@@ -243,6 +244,24 @@ Deno.serve(async (req) => {
           if (opportunity) {
             additionalData.opportunityTitle = opportunity.title;
             additionalData.companyName = (opportunity.companies as any)?.name || '';
+          }
+        }
+
+        // For milestone notifications (business user milestones)
+        if (notification.type === 'milestone' && notification.data?.opportunity_id) {
+          const { data: opportunity } = await supabase
+            .from('opportunities')
+            .select('title, companies(name)')
+            .eq('id', notification.data.opportunity_id)
+            .single();
+          
+          if (opportunity) {
+            additionalData.opportunityTitle = opportunity.title;
+            additionalData.companyName = (opportunity.companies as any)?.name || '';
+          }
+          // Also include milestone count if available
+          if (notification.data?.milestone) {
+            additionalData.milestoneCount = String(notification.data.milestone);
           }
         }
 
