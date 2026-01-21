@@ -239,6 +239,71 @@ Deno.serve(async (req) => {
           }
         }
 
+        // For message notifications, get sender name
+        if (notification.type === 'message') {
+          // Try to extract from message (format: "Nombre te envió un mensaje")
+          const messageMatch = notification.message.match(/^(.+?) te envió/);
+          if (messageMatch) {
+            additionalData.senderName = messageMatch[1];
+          }
+          
+          // Also try from notification.data if it has sender_id
+          if (notification.data?.sender_id) {
+            const { data: senderProfile } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('user_id', notification.data.sender_id)
+              .single();
+            
+            if (senderProfile?.full_name) {
+              additionalData.senderName = senderProfile.full_name;
+            }
+          }
+        }
+
+        // For team/membership notifications, get company name
+        if (['team', 'membership', 'membership_request'].includes(notification.type)) {
+          if (notification.data?.company_id) {
+            const { data: company } = await supabase
+              .from('companies')
+              .select('name')
+              .eq('id', notification.data.company_id)
+              .single();
+            
+            if (company?.name) {
+              additionalData.companyName = company.name;
+            }
+          }
+          
+          // Also extract from message if has format "Nombre solicitó unirse a Empresa"
+          const companyMatch = notification.message.match(/unirse a (.+)$/);
+          if (companyMatch) {
+            additionalData.companyName = companyMatch[1];
+          }
+        }
+
+        // For moderation notifications
+        if (notification.type === 'moderation') {
+          // Extract opportunity title from message if present
+          const oppMatch = notification.message.match(/"(.+?)"/);
+          if (oppMatch) {
+            additionalData.opportunityTitle = oppMatch[1];
+          }
+          
+          if (notification.data?.opportunity_id) {
+            const { data: opportunity } = await supabase
+              .from('opportunities')
+              .select('title, companies(name)')
+              .eq('id', notification.data.opportunity_id)
+              .single();
+            
+            if (opportunity) {
+              additionalData.opportunityTitle = opportunity.title;
+              additionalData.companyName = (opportunity.companies as any)?.name || '';
+            }
+          }
+        }
+
         console.log('Additional data for email variables:', additionalData);
 
         const { data: emailData, error: emailError } = await supabase.functions.invoke(
@@ -257,6 +322,8 @@ Deno.serve(async (req) => {
                 candidateName: additionalData.candidateName,
                 opportunityTitle: additionalData.opportunityTitle,
                 companyName: additionalData.companyName,
+                senderName: additionalData.senderName,
+                applicationStatus: additionalData.applicationStatus,
               },
               // Include marketplace request data if present
               ...(notification.type === 'marketplace' && notification.data ? {
