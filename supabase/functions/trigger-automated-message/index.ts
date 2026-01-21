@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
           conversation_id: conversationId,
           conversation_uuid: conversationUuid,
           content: processedContent,
-          message_type: is_test ? 'automated_test' : 'automated',
+          message_type: 'text',
           is_read: false,
           delivered_at: new Date().toISOString(),
         })
