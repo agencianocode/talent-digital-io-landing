@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/contexts/SupabaseAuthContext';
+import { sendNotification } from '@/lib/notifications';
 
 export interface Message {
   id: string;
@@ -985,10 +986,9 @@ export const useMessages = (companyId?: string) => {
           return updated; // Return new array
         });
         
-        // Create notification for recipient
+        // Create notification for recipient using unified notification system
         try {
           // Determine recipient's dashboard URL based on their role
-          // Check if recipient is a company (has company_id) or talent (has talent profile)
           const { data: companyData } = await supabase
             .from('companies')
             .select('id')
@@ -998,13 +998,28 @@ export const useMessages = (companyId?: string) => {
           const isRecipientCompany = !!companyData;
           const dashboardPrefix = isRecipientCompany ? 'business-dashboard' : 'talent-dashboard';
           
-          await supabase.from('notifications' as any).insert({
-            user_id: otherParticipantId,
+          // Get sender's name for the notification
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('user_id', user.id)
+            .single();
+          
+          const senderName = senderProfile?.full_name || 'Alguien';
+          
+          // Use sendNotification for proper processing (email, push, etc.)
+          await sendNotification({
+            userId: otherParticipantId,
             type: 'message',
             title: 'Nuevo mensaje',
-            message: content.substring(0, 100),
-            action_url: `/${dashboardPrefix}/messages/${conversationId}`,
-            read: false
+            message: `${senderName} te envió un mensaje`,
+            actionUrl: `/${dashboardPrefix}/messages/${conversationId}`,
+            data: {
+              sender_id: user.id,
+              sender_name: senderName,
+              conversation_id: conversationId,
+              message_preview: content.substring(0, 100),
+            }
           });
         } catch (notifError) {
           console.error('Error creating notification:', notifError);

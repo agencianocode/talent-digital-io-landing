@@ -99,9 +99,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Map notification type to config ID
+    // Map notification type to config ID (CORRECTED MAPPINGS)
     const typeToConfigMap: Record<string, string> = {
-      'application': 'new_application',
+      // Application status notifications → application_status
       'application_status': 'application_status',
       'application_reviewed': 'application_status',
       'application_accepted': 'application_status',
@@ -109,10 +109,18 @@ Deno.serve(async (req) => {
       'application_hired': 'application_status',
       'opportunity_closed_auto': 'application_status',
       'opportunity_closed_manual': 'application_status',
+      // New application notifications → new_application
+      'application': 'new_application',
+      'new_applicant': 'new_application',
+      // Message notifications → new_message
+      'message': 'new_message',
+      'new_message': 'new_message',
+      // Milestone notifications → application_milestone
+      'milestone': 'application_milestone',
+      // Other mappings
       'team': 'team_member_added',
       'marketplace': 'marketplace_reports',
       'opportunity': 'opportunity_reports',
-      'milestone': 'new_application', // Business milestones use same config as new applications
       'moderation': 'content_approval',
       'system': 'system_errors',
       'security': 'security_alerts',
