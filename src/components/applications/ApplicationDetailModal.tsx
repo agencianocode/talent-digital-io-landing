@@ -145,18 +145,31 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
       // Enviar notificación al talento sobre el cambio de estado
       if (wasStatusPending) {
-        await sendNotification({
-          userId: application.user_id,
-          type: 'application_reviewed', // Tipo específico para reviewed
-          title: 'Tu aplicación está en revisión 🔍',
-          message: `Tu aplicación a ${opportunityTitle || 'una oportunidad'} fue vista y está en revisión.`,
-          actionUrl: `/talent-dashboard/applications`,
-          data: {
-            opportunity_id: application.opportunity_id,
-            application_id: application.id,
-            applicationStatus: 'En revisión',
-          },
-        });
+        // Validar que tenemos opportunity_id
+        if (!application.opportunity_id) {
+          console.error('[ApplicationDetailModal] Cannot send notification: missing opportunity_id for application', application.id);
+        } else {
+          console.log('[ApplicationDetailModal] Sending application_reviewed notification:', {
+            userId: application.user_id,
+            opportunityId: application.opportunity_id,
+            applicationId: application.id,
+          });
+
+          const result = await sendNotification({
+            userId: application.user_id,
+            type: 'application_reviewed',
+            title: 'Tu aplicación está en revisión 🔍',
+            message: `Tu aplicación a ${opportunityTitle || 'una oportunidad'} fue vista y está en revisión.`,
+            actionUrl: `/talent-dashboard/applications`,
+            data: {
+              opportunity_id: application.opportunity_id,
+              application_id: application.id,
+              applicationStatus: 'En revisión',
+            },
+          });
+
+          console.log('[ApplicationDetailModal] Notification result:', result);
+        }
       }
     } catch (error) {
       console.error('Error marking application as viewed:', error);
@@ -261,18 +274,31 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       const notificationMessage = message || statusToMessage[status] || `El estado de tu aplicación cambió a ${getStatusLabel(status, true)}.`;
 
       // Enviar notificación al talento
-      await sendNotification({
-        userId: application.user_id,
-        type: notificationType,
-        title: notificationTitle,
-        message: notificationMessage,
-        actionUrl: `/talent-dashboard/applications`,
-        data: {
-          opportunity_id: application.opportunity_id,
-          application_id: application.id,
-          applicationStatus: getStatusLabel(status, true),
-        },
-      });
+      if (!application.opportunity_id) {
+        console.error('[ApplicationDetailModal] Cannot send status notification: missing opportunity_id');
+      } else {
+        console.log('[ApplicationDetailModal] Sending status notification:', {
+          userId: application.user_id,
+          type: notificationType,
+          status,
+          opportunityId: application.opportunity_id,
+        });
+
+        const result = await sendNotification({
+          userId: application.user_id,
+          type: notificationType,
+          title: notificationTitle,
+          message: notificationMessage,
+          actionUrl: `/talent-dashboard/applications`,
+          data: {
+            opportunity_id: application.opportunity_id,
+            application_id: application.id,
+            applicationStatus: getStatusLabel(status, true),
+          },
+        });
+
+        console.log('[ApplicationDetailModal] Status notification result:', result);
+      }
 
       toast.success(`Estado actualizado a "${getStatusLabel(status)}"`);
     } catch (error) {
