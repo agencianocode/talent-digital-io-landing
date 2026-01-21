@@ -83,13 +83,16 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   useEffect(() => {
     if (application && isOpen) {
       setCurrentStatus(application.status);
-      loadApplicationDetails();
-      markAsViewed();
+      // FIX: Chain calls sequentially to ensure opportunityId is available before markAsViewed
+      loadApplicationDetails().then((loadedOpportunityId) => {
+        markAsViewed(loadedOpportunityId);
+      });
     }
   }, [application, isOpen]);
 
-  const loadApplicationDetails = async () => {
-    if (!application) return;
+  // Returns the opportunityId for immediate use in markAsViewed
+  const loadApplicationDetails = async (): Promise<string | null> => {
+    if (!application) return null;
 
     try {
       const { data, error } = await supabase
@@ -113,12 +116,17 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
         opportunityId: resolvedOpportunityId,
         hasOpportunityId: !!resolvedOpportunityId,
       });
+      
+      // Return the ID for immediate use (avoiding React state race condition)
+      return resolvedOpportunityId;
     } catch (error) {
       console.error('[ApplicationDetailModal] Error loading application details:', error);
+      return null;
     }
   };
 
-  const markAsViewed = async () => {
+  // Accepts opportunityId as parameter to avoid race condition with React state
+  const markAsViewed = async (loadedOpportunityId?: string | null) => {
     if (!application) return;
 
     try {
@@ -134,14 +142,24 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
         return;
       }
 
-      // If already viewed, skip
-      if (currentApp.is_viewed) {
-        console.log('[ApplicationDetailModal] Application already viewed, skipping markAsViewed');
+      // Use passed opportunityId (from loadApplicationDetails) OR fetch from DB/state/props
+      const resolvedOpportunityId = loadedOpportunityId || currentApp.opportunity_id || opportunityId || application.opportunity_id;
+      const wasStatusPending = currentApp.status === 'pending';
+      const alreadyViewed = currentApp.is_viewed;
+
+      console.log('[ApplicationDetailModal] markAsViewed called:', {
+        applicationId: application.id,
+        loadedOpportunityId,
+        resolvedOpportunityId,
+        wasStatusPending,
+        alreadyViewed,
+      });
+
+      // If already viewed, skip DB update but still log
+      if (alreadyViewed) {
+        console.log('[ApplicationDetailModal] Application already viewed, skipping DB update');
         return;
       }
-
-      const wasStatusPending = currentApp.status === 'pending';
-      const resolvedOpportunityId = currentApp.opportunity_id || opportunityId || application.opportunity_id;
 
       // Update local state for immediate UI feedback
       if (wasStatusPending) {
@@ -176,10 +194,16 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
         newStatus: wasStatusPending ? 'reviewed' : currentApp.status,
       });
 
-      // Send notification to talent about status change
+      // Send notification to talent about status change to 'reviewed'
       if (wasStatusPending) {
         if (!resolvedOpportunityId) {
-          console.error('[ApplicationDetailModal] Cannot send reviewed notification: missing opportunity_id for application', application.id);
+          console.error('[ApplicationDetailModal] CRITICAL: Cannot send reviewed notification - missing opportunity_id:', {
+            applicationId: application.id,
+            loadedOpportunityId,
+            stateOpportunityId: opportunityId,
+            propOpportunityId: application.opportunity_id,
+            dbOpportunityId: currentApp.opportunity_id,
+          });
         } else {
           console.log('[ApplicationDetailModal] Sending application_reviewed notification:', {
             userId: application.user_id,
@@ -201,7 +225,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
               },
             });
 
-            console.log('[ApplicationDetailModal] Reviewed notification result:', result);
+            console.log('[ApplicationDetailModal] Reviewed notification sent successfully:', result);
           } catch (notifError) {
             console.error('[ApplicationDetailModal] Error sending reviewed notification:', notifError);
           }
