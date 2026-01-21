@@ -6,11 +6,8 @@
 // supabase secrets set VAPID_PRIVATE_KEY=2oRKfbj19zWW6wB1BlhhLv56NRnhJM_XgNyVcrpVYd8
 // supabase secrets set VAPID_SUBJECT=mailto:tu-email@talentdigital.io
 
-// @ts-ignore - Deno imports
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-// @ts-ignore - Deno imports
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.5';
-// @ts-ignore - Deno imports
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import webpush from 'npm:web-push@3.6.6';
 
 // VAPID Keys - Configurar como secretos en Supabase

@@ -2,7 +2,7 @@
 // Fetches a single marketplace service with related profile data. Admin-only.
 // Uses service role key and enforces admin check via user_roles.
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://app.talentodigital.io',
