@@ -110,26 +110,26 @@ const AdminEmailTemplates: React.FC = () => {
     footer_link: 'https://app.talentodigital.io',
   });
 
-  // Draft protection
+  // Pending restore state for when templates haven't loaded yet
+  const [pendingRestore, setPendingRestore] = useState<{
+    templateId: string | null;
+    subject: string;
+    unifiedContent: UnifiedContent;
+  } | null>(null);
+
+  // Draft protection with auto-restore
   const handleRestoreDraft = useCallback((data: {
     templateId: string | null;
     subject: string;
     unifiedContent: UnifiedContent;
   }) => {
-    // Find the template to restore
+    // Store for restoration once templates are loaded
     if (data.templateId) {
-      const template = templates.find(t => t.id === data.templateId);
-      if (template) {
-        setSelectedTemplate(template);
-        setSubject(data.subject);
-        setUnifiedContent(data.unifiedContent);
-        setActiveView('edit');
-        toast.success('Borrador restaurado');
-      }
+      setPendingRestore(data);
     }
-  }, [templates]);
+  }, []);
 
-  const { hasStoredDraft, restoreDraft, clearDraft, draftChecked } = useDraftProtection({
+  const { clearDraft } = useDraftProtection({
     storageKey: 'admin-email-template-draft',
     data: {
       templateId: selectedTemplate?.id || null,
@@ -138,29 +138,26 @@ const AdminEmailTemplates: React.FC = () => {
     },
     onRestore: handleRestoreDraft,
     maxAgeHours: 24,
+    autoPromptRestore: true,
   });
 
   useEffect(() => {
     loadTemplates();
   }, []);
 
-  // Show restore prompt when draft is detected and templates are loaded
+  // Auto-restore when templates are loaded and there's a pending restore
   useEffect(() => {
-    if (draftChecked && hasStoredDraft && templates.length > 0 && activeView === 'list') {
-      // Toast with restore option
-      toast.info('Tienes un borrador guardado', {
-        action: {
-          label: 'Restaurar',
-          onClick: () => restoreDraft(),
-        },
-        cancel: {
-          label: 'Descartar',
-          onClick: () => clearDraft(),
-        },
-        duration: 10000,
-      });
+    if (pendingRestore && templates.length > 0) {
+      const template = templates.find(t => t.id === pendingRestore.templateId);
+      if (template) {
+        setSelectedTemplate(template);
+        setSubject(pendingRestore.subject);
+        setUnifiedContent(pendingRestore.unifiedContent);
+        setActiveView('edit');
+      }
+      setPendingRestore(null);
     }
-  }, [draftChecked, hasStoredDraft, templates.length, activeView, restoreDraft, clearDraft]);
+  }, [templates, pendingRestore]);
 
   const loadTemplates = async () => {
     try {
