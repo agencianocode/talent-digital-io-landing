@@ -25,6 +25,22 @@ export const MESSAGE_VARIABLES = {
     label: 'Título de oportunidad',
     example: 'Desarrollador Frontend',
   },
+  // Variables específicas por template
+  application_status: {
+    key: '{{application_status}}',
+    label: 'Estado de aplicación',
+    example: 'En revisión',
+  },
+  candidate_name: {
+    key: '{{candidate_name}}',
+    label: 'Nombre del candidato',
+    example: 'María López',
+  },
+  sender_name: {
+    key: '{{sender_name}}',
+    label: 'Nombre del remitente',
+    example: 'Carlos Pérez',
+  },
 };
 
 // Variables disponibles según el tipo de trigger
@@ -45,6 +61,24 @@ export const RECIPIENT_NOTES: Record<string, string> = {
   new_opportunity: 'El mensaje se enviará al propietario de la empresa que publicó la nueva oportunidad',
 };
 
+// Variables específicas por template (no aparecen en botones, solo en copy)
+export const TEMPLATE_SPECIFIC_VARIABLES: Record<string, Array<{ key: string; label: string; example: string }>> = {
+  'application-status': [
+    MESSAGE_VARIABLES.application_status,
+  ],
+  'new-application': [
+    MESSAGE_VARIABLES.opportunity_title,
+    MESSAGE_VARIABLES.candidate_name,
+  ],
+  'new-opportunity': [
+    MESSAGE_VARIABLES.opportunity_title,
+    MESSAGE_VARIABLES.company_name,
+  ],
+  'new-message': [
+    MESSAGE_VARIABLES.sender_name,
+  ],
+};
+
 // Función para sustituir variables en un mensaje
 export const substituteVariables = (
   template: string,
@@ -54,6 +88,9 @@ export const substituteVariables = (
     fullName?: string;
     companyName?: string;
     opportunityTitle?: string;
+    applicationStatus?: string;
+    candidateName?: string;
+    senderName?: string;
   }
 ): string => {
   return template
@@ -61,7 +98,10 @@ export const substituteVariables = (
     .replace(/\{\{last_name\}\}/gi, context.lastName || '')
     .replace(/\{\{full_name\}\}/gi, context.fullName || '')
     .replace(/\{\{company_name\}\}/gi, context.companyName || '')
-    .replace(/\{\{opportunity_title\}\}/gi, context.opportunityTitle || '');
+    .replace(/\{\{opportunity_title\}\}/gi, context.opportunityTitle || '')
+    .replace(/\{\{application_status\}\}/gi, context.applicationStatus || '')
+    .replace(/\{\{candidate_name\}\}/gi, context.candidateName || '')
+    .replace(/\{\{sender_name\}\}/gi, context.senderName || '');
 };
 
 // Variables disponibles para templates de email (subset)
@@ -80,5 +120,8 @@ export const generatePreview = (template: string): string => {
     fullName: MESSAGE_VARIABLES.full_name.example,
     companyName: MESSAGE_VARIABLES.company_name.example,
     opportunityTitle: MESSAGE_VARIABLES.opportunity_title.example,
+    applicationStatus: MESSAGE_VARIABLES.application_status.example,
+    candidateName: MESSAGE_VARIABLES.candidate_name.example,
+    senderName: MESSAGE_VARIABLES.sender_name.example,
   });
 };
