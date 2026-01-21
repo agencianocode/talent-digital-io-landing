@@ -29,6 +29,7 @@ interface NotificationEmailRequest {
     companyName?: string;
     senderName?: string;
     applicationStatus?: string;
+    messagePreview?: string;
   };
 }
 
@@ -178,6 +179,7 @@ const handler = async (req: Request): Promise<Response> => {
       candidate_name: data?.candidateName || userName || '',
       sender_name: data?.senderName || '',
       application_status: data?.applicationStatus || '',
+      message_preview: data?.messagePreview || message || '',
       action_url: fullActionUrl,
     };
 
