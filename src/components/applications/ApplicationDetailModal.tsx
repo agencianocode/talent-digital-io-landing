@@ -286,7 +286,19 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   };
 
   const handleStatusChangeConfirm = async (status: string, message?: string) => {
-    if (!application) return;
+    // VISIBLE LOGGING - Start of function
+    console.log('=== INICIO handleStatusChangeConfirm ===', { 
+      status, 
+      message: message?.substring(0, 50), 
+      applicationId: application?.id,
+      userId: application?.user_id,
+      timestamp: new Date().toISOString()
+    });
+
+    if (!application) {
+      console.error('=== ERROR: No application object ===');
+      return;
+    }
 
     try {
       // CRITICAL FIX: Ensure we have opportunityId before proceeding
