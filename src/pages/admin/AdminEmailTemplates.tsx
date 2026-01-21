@@ -29,7 +29,7 @@ import { EmailRichTextEditor } from '@/components/admin/EmailTemplateEditor';
 import { EmailPreview } from '@/components/admin/EmailPreview';
 import { useDraftProtection } from '@/hooks/useDraftProtection';
 import { useAdminCustomization } from '@/hooks/useAdminCustomization';
-import { EMAIL_TEMPLATE_VARIABLES } from '@/utils/messageVariables';
+import { EMAIL_TEMPLATE_VARIABLES, TEMPLATE_SPECIFIC_VARIABLES } from '@/utils/messageVariables';
 
 interface EmailTemplate {
   id: string;
@@ -567,7 +567,7 @@ const AdminEmailTemplates: React.FC = () => {
                 <CardTitle className="text-base">Cuerpo del Email</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {/* Variable selector */}
+                {/* Variable selector - Variables comunes */}
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm text-muted-foreground">Variables:</span>
                   {EMAIL_TEMPLATE_VARIABLES.map((v) => (
@@ -584,6 +584,26 @@ const AdminEmailTemplates: React.FC = () => {
                     </button>
                   ))}
                 </div>
+
+                {/* Variables específicas del template - Solo informativo */}
+                {selectedTemplate?.id && TEMPLATE_SPECIFIC_VARIABLES[selectedTemplate.id] && (
+                  <div className="bg-primary/5 border border-primary/20 p-3 rounded-md">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Variables específicas disponibles para este template:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {TEMPLATE_SPECIFIC_VARIABLES[selectedTemplate.id]!.map((v) => (
+                        <span 
+                          key={v.key} 
+                          className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-mono"
+                        >
+                          {v.key} <span className="text-muted-foreground">→ {v.example}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <EmailRichTextEditor
                   value={unifiedContent.body_content}
                   onChange={(v) => updateContent('body_content', v)}
