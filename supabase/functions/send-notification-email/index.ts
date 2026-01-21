@@ -15,6 +15,7 @@ import { WelcomeAcademy } from './_templates/welcome-academy.tsx';
 import { AcademyExclusiveOpportunityEmail } from './_templates/academy-exclusive-opportunity.tsx';
 import { MarketplaceRequest } from './_templates/marketplace-request.tsx';
 import { CompleteProfileReminder } from './_templates/complete-profile-reminder.tsx';
+import { UnifiedEmail } from './_templates/unified-email.tsx';
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
@@ -33,6 +34,14 @@ interface NotificationEmailRequest {
   actionText?: string;
   missingItems?: string[];
   reminderType?: 'first' | 'second';
+  // Additional data for variable substitution
+  data?: {
+    opportunityTitle?: string;
+    candidateName?: string;
+    companyName?: string;
+    senderName?: string;
+    applicationStatus?: string;
+  };
 }
 
 // Map notification types to template IDs in database
@@ -85,13 +94,24 @@ const getTemplateComponent = (type: string) => {
   }
 };
 
+// Substitute variables in content
+const substituteVariables = (text: string, variables: Record<string, string>): string => {
+  if (!text) return '';
+  let result = text;
+  Object.entries(variables).forEach(([key, value]) => {
+    const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi');
+    result = result.replace(regex, value || '');
+  });
+  return result;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { to, userName, type, title, message, actionUrl, actionText, missingItems, reminderType }: NotificationEmailRequest =
+    const { to, userName, type, title, message, actionUrl, actionText, missingItems, reminderType, data }: NotificationEmailRequest =
       await req.json();
 
     console.log('Sending notification email:', { to, type, title });
@@ -101,9 +121,38 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Load global styles from admin_customization
+    let globalStyles = {
+      buttonColor: '#667eea',
+      buttonTextColor: '#ffffff',
+      headerColor1: '#667eea',
+      headerColor2: '#764ba2',
+      headerTextColor: 'white',
+    };
+
+    try {
+      const { data: customization } = await supabase
+        .from('admin_customization')
+        .select('email_header_color1, email_header_color2, email_button_color, email_button_text_color, email_header_text_color')
+        .single();
+
+      if (customization) {
+        globalStyles = {
+          buttonColor: customization.email_button_color || globalStyles.buttonColor,
+          buttonTextColor: customization.email_button_text_color || globalStyles.buttonTextColor,
+          headerColor1: customization.email_header_color1 || globalStyles.headerColor1,
+          headerColor2: customization.email_header_color2 || globalStyles.headerColor2,
+          headerTextColor: customization.email_header_text_color || globalStyles.headerTextColor,
+        };
+        console.log('Loaded global styles from admin_customization:', globalStyles);
+      }
+    } catch (styleError) {
+      console.log('Using default global styles:', styleError);
+    }
+
     // Try to get custom template content from database
     const templateId = getTemplateId(type);
-    let dbContent: Record<string, string> | null = null;
+    let dbContent: Record<string, any> | null = null;
     let customSubject: string | null = null;
 
     try {
@@ -114,44 +163,95 @@ const handler = async (req: Request): Promise<Response> => {
         .single();
 
       if (dbTemplate && dbTemplate.is_active) {
-        dbContent = dbTemplate.content as Record<string, string>;
+        dbContent = dbTemplate.content as Record<string, any>;
         customSubject = dbTemplate.subject;
-        console.log('Using custom template from database:', templateId);
+        console.log('Using custom template from database:', templateId, dbContent);
       }
     } catch (dbError) {
       console.log('No custom template found, using defaults:', dbError);
     }
 
-    // Get the appropriate template component
-    const TemplateComponent = getTemplateComponent(type);
-
-    // Build props based on template type
-    let templateProps: any = {
-      userName,
-      title,
-      message,
-      actionUrl: actionUrl ? `https://app.talentodigital.io${actionUrl}` : undefined,
-      actionText,
+    // Build variables for substitution
+    const fullActionUrl = actionUrl ? `https://app.talentodigital.io${actionUrl}` : 'https://app.talentodigital.io';
+    const firstName = userName?.split(' ')[0] || userName || '';
+    
+    const variables: Record<string, string> = {
+      first_name: firstName,
+      last_name: userName?.split(' ').slice(1).join(' ') || '',
+      full_name: userName || '',
+      user_name: userName || '',
+      company_name: data?.companyName || '',
+      opportunity_title: data?.opportunityTitle || '',
+      candidate_name: data?.candidateName || '',
+      sender_name: data?.senderName || '',
+      application_status: data?.applicationStatus || '',
+      action_url: fullActionUrl,
     };
 
-    // Add specific props for complete-profile-reminder
-    if (type === 'complete-profile-reminder') {
-      templateProps = {
-        userName,
-        missingItems: missingItems || [],
-        reminderType: reminderType || 'first',
+    let html: string;
+
+    // Check if we should use the unified template (has body_content from UnifiedContent structure)
+    const useUnifiedTemplate = dbContent && ('body_content' in dbContent);
+
+    if (useUnifiedTemplate) {
+      console.log('Using unified template with custom content');
+      
+      // Process content with variable substitution
+      const processedContent = {
+        header_enabled: dbContent.header_enabled ?? true,
+        header_title: substituteVariables(dbContent.header_title || '🚀 TalentoDigital', variables),
+        body_content: substituteVariables(dbContent.body_content || '', variables),
+        button_enabled: dbContent.button_enabled ?? true,
+        button_text: substituteVariables(dbContent.button_text || actionText || 'Ver más', variables),
+        button_link: substituteVariables(dbContent.button_link || fullActionUrl, variables),
+        secondary_enabled: dbContent.secondary_enabled ?? false,
+        secondary_content: substituteVariables(dbContent.secondary_content || '', variables),
+        footer_content: substituteVariables(dbContent.footer_content || '', variables),
       };
-    }
 
-    // Merge database content with template props (DB overrides defaults)
-    if (dbContent) {
-      templateProps = { ...templateProps, ...dbContent };
-    }
+      // Render the unified template
+      html = await renderAsync(
+        React.createElement(UnifiedEmail, {
+          userName,
+          subject: customSubject || title,
+          content: processedContent,
+          globalStyles,
+        })
+      );
+    } else {
+      console.log('Using legacy hardcoded template:', type);
+      
+      // Get the appropriate template component (legacy behavior)
+      const TemplateComponent = getTemplateComponent(type);
 
-    // Render the React Email template
-    const html = await renderAsync(
-      React.createElement(TemplateComponent, templateProps)
-    );
+      // Build props based on template type
+      let templateProps: any = {
+        userName,
+        title,
+        message,
+        actionUrl: fullActionUrl,
+        actionText,
+      };
+
+      // Add specific props for complete-profile-reminder
+      if (type === 'complete-profile-reminder') {
+        templateProps = {
+          userName,
+          missingItems: missingItems || [],
+          reminderType: reminderType || 'first',
+        };
+      }
+
+      // Merge database content with template props (DB overrides defaults) for legacy templates
+      if (dbContent) {
+        templateProps = { ...templateProps, ...dbContent };
+      }
+
+      // Render the React Email template
+      html = await renderAsync(
+        React.createElement(TemplateComponent, templateProps)
+      );
+    }
 
     // Use custom subject from DB if available, otherwise use provided title
     const emailSubject = customSubject || title;
