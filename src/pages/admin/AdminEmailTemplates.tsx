@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { EmailTemplateCard } from '@/components/admin/EmailTemplateCard';
 import { EmailRichTextEditor } from '@/components/admin/EmailTemplateEditor';
 import { EmailPreview } from '@/components/admin/EmailPreview';
+import { useDraftProtection } from '@/hooks/useDraftProtection';
 
 interface EmailTemplate {
   id: string;
@@ -109,9 +110,57 @@ const AdminEmailTemplates: React.FC = () => {
     footer_link: 'https://app.talentodigital.io',
   });
 
+  // Draft protection
+  const handleRestoreDraft = useCallback((data: {
+    templateId: string | null;
+    subject: string;
+    unifiedContent: UnifiedContent;
+  }) => {
+    // Find the template to restore
+    if (data.templateId) {
+      const template = templates.find(t => t.id === data.templateId);
+      if (template) {
+        setSelectedTemplate(template);
+        setSubject(data.subject);
+        setUnifiedContent(data.unifiedContent);
+        setActiveView('edit');
+        toast.success('Borrador restaurado');
+      }
+    }
+  }, [templates]);
+
+  const { hasStoredDraft, restoreDraft, clearDraft, draftChecked } = useDraftProtection({
+    storageKey: 'admin-email-template-draft',
+    data: {
+      templateId: selectedTemplate?.id || null,
+      subject,
+      unifiedContent,
+    },
+    onRestore: handleRestoreDraft,
+    maxAgeHours: 24,
+  });
+
   useEffect(() => {
     loadTemplates();
   }, []);
+
+  // Show restore prompt when draft is detected and templates are loaded
+  useEffect(() => {
+    if (draftChecked && hasStoredDraft && templates.length > 0 && activeView === 'list') {
+      // Toast with restore option
+      toast.info('Tienes un borrador guardado', {
+        action: {
+          label: 'Restaurar',
+          onClick: () => restoreDraft(),
+        },
+        cancel: {
+          label: 'Descartar',
+          onClick: () => clearDraft(),
+        },
+        duration: 10000,
+      });
+    }
+  }, [draftChecked, hasStoredDraft, templates.length, activeView, restoreDraft, clearDraft]);
 
   const loadTemplates = async () => {
     try {
@@ -187,6 +236,7 @@ const AdminEmailTemplates: React.FC = () => {
   };
 
   const handleBack = () => {
+    clearDraft(); // Clear draft when going back after editing
     setActiveView('list');
     setSelectedTemplate(null);
   };

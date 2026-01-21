@@ -57,15 +57,9 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
               textAlign: 'center',
             }}
           >
-            <div className="flex items-center justify-center gap-2 mb-2">
-              {/* Logo placeholder */}
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-white text-lg">🎯</span>
-              </div>
-              <h1 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
-                {headerTitle || 'TalentoDigital'}
-              </h1>
-            </div>
+            <h1 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
+              {headerTitle || 'TalentoDigital'}
+            </h1>
           </div>
         )}
 
