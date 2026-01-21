@@ -112,26 +112,46 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   };
 
   const markAsViewed = async () => {
-    if (!application || application.is_viewed) return;
-
-    // Actualizar estado local PRIMERO para UI inmediato
-    const wasStatusPending = application.status === 'pending';
-    if (wasStatusPending) {
-      setCurrentStatus('reviewed');
-    }
+    if (!application) return;
 
     try {
+      // CRITICAL: Fetch the REAL current state from DB to avoid stale props
+      const { data: currentApp, error: fetchError } = await supabase
+        .from('applications')
+        .select('status, is_viewed, opportunity_id')
+        .eq('id', application.id)
+        .single();
+
+      if (fetchError || !currentApp) {
+        console.error('[ApplicationDetailModal] Error fetching current application state:', fetchError);
+        return;
+      }
+
+      // If already viewed, skip
+      if (currentApp.is_viewed) {
+        console.log('[ApplicationDetailModal] Application already viewed, skipping markAsViewed');
+        return;
+      }
+
+      const wasStatusPending = currentApp.status === 'pending';
+      const opportunityId = currentApp.opportunity_id || application.opportunity_id;
+
+      // Update local state for immediate UI feedback
+      if (wasStatusPending) {
+        setCurrentStatus('reviewed');
+      }
+
       const { data: userData } = await supabase.auth.getUser();
       const viewedBy = userData?.user?.id;
 
-      // Si está en pending y no ha sido vista, cambiar a reviewed automáticamente
+      // Build updates
       const updates: Record<string, any> = {
         is_viewed: true,
         viewed_at: new Date().toISOString(),
         viewed_by: viewedBy,
       };
 
-      // Solo cambiar a 'reviewed' si el estado actual es 'pending'
+      // Only change to 'reviewed' if current DB status is 'pending'
       if (wasStatusPending) {
         updates.status = 'reviewed';
       }
@@ -143,36 +163,45 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
       if (error) throw error;
 
-      // Enviar notificación al talento sobre el cambio de estado
+      console.log('[ApplicationDetailModal] Application marked as viewed successfully:', {
+        applicationId: application.id,
+        statusChanged: wasStatusPending,
+        newStatus: wasStatusPending ? 'reviewed' : currentApp.status,
+      });
+
+      // Send notification to talent about status change
       if (wasStatusPending) {
-        // Validar que tenemos opportunity_id
-        if (!application.opportunity_id) {
+        if (!opportunityId) {
           console.error('[ApplicationDetailModal] Cannot send notification: missing opportunity_id for application', application.id);
         } else {
           console.log('[ApplicationDetailModal] Sending application_reviewed notification:', {
             userId: application.user_id,
-            opportunityId: application.opportunity_id,
+            opportunityId,
             applicationId: application.id,
           });
 
-          const result = await sendNotification({
-            userId: application.user_id,
-            type: 'application_reviewed',
-            title: 'Tu aplicación está en revisión 🔍',
-            message: `Tu aplicación a ${opportunityTitle || 'una oportunidad'} fue vista y está en revisión.`,
-            actionUrl: `/talent-dashboard/applications`,
-            data: {
-              opportunity_id: application.opportunity_id,
-              application_id: application.id,
-              applicationStatus: 'En revisión',
-            },
-          });
+          try {
+            const result = await sendNotification({
+              userId: application.user_id,
+              type: 'application_reviewed',
+              title: 'Tu aplicación está en revisión 🔍',
+              message: `Tu aplicación a ${opportunityTitle || 'una oportunidad'} fue vista y está en revisión.`,
+              actionUrl: `/talent-dashboard/applications`,
+              data: {
+                opportunity_id: opportunityId,
+                application_id: application.id,
+                applicationStatus: 'En revisión',
+              },
+            });
 
-          console.log('[ApplicationDetailModal] Notification result:', result);
+            console.log('[ApplicationDetailModal] Notification result:', result);
+          } catch (notifError) {
+            console.error('[ApplicationDetailModal] Error sending notification:', notifError);
+          }
         }
       }
     } catch (error) {
-      console.error('Error marking application as viewed:', error);
+      console.error('[ApplicationDetailModal] Error marking application as viewed:', error);
     }
   };
 
