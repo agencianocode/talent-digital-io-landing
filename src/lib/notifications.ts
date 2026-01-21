@@ -50,20 +50,25 @@ export async function sendNotification(params: {
     });
 
     if (error) {
-      console.error('Error sending notification:', error);
+      console.error('[sendNotification] Error creating notification:', error);
       return { success: false, error };
     }
 
     // If notification was created, process it for multi-channel delivery
     if (data) {
-      // The database trigger will automatically call process-notification edge function
-      // But we can also call it explicitly for immediate processing
-      const { error: processError } = await supabase.functions.invoke('process-notification', {
+      console.log('[sendNotification] Notification created:', data, 'Type:', params.type);
+      
+      // The database trigger will automatically call process-notification edge function via pg_net
+      // But we also call it explicitly for immediate processing
+      const { data: processResult, error: processError } = await supabase.functions.invoke('process-notification', {
         body: { notification_id: data },
       });
 
       if (processError) {
-        console.error('Error processing notification:', processError);
+        console.error('[sendNotification] Error invoking process-notification:', processError);
+        // El trigger de BD debería procesarlo como respaldo via pg_net
+      } else {
+        console.log('[sendNotification] Process result:', processResult);
       }
     }
 
