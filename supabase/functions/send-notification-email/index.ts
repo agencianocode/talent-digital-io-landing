@@ -57,6 +57,7 @@ const getTemplateId = (type: string): string => {
     'opportunity_closed_manual': 'opportunity-closed-manual',
     'opportunity': 'new-opportunity',
     'academy-exclusive': 'new-opportunity',
+    'milestone': 'milestone', // Business milestone notifications
     'message': 'new-message',
     'team': 'membership-request',
     'marketplace': 'new-message',
