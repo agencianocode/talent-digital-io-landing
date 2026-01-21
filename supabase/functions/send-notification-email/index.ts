@@ -208,6 +208,22 @@ const handler = async (req: Request): Promise<Response> => {
       : 'https://app.talentodigital.io';
     const firstName = userName?.split(' ')[0] || userName || '';
     
+    // Status translation map for Spanish display (fallback if process-notification didn't translate)
+    const translateStatus = (status: string | undefined): string => {
+      if (!status) return '';
+      const statusMap: Record<string, string> = {
+        'pending': 'Pendiente',
+        'reviewed': 'En revisión',
+        'accepted': 'Aceptada',
+        'rejected': 'Rechazada',
+        'hired': 'Contratado',
+        'interview': 'En entrevista',
+        'shortlisted': 'Preseleccionado'
+      };
+      // If already translated or not in map, return as-is with first letter capitalized
+      return statusMap[status.toLowerCase()] || (status.charAt(0).toUpperCase() + status.slice(1).toLowerCase());
+    };
+
     const variables: Record<string, string> = {
       first_name: firstName,
       last_name: userName?.split(' ').slice(1).join(' ') || '',
@@ -217,7 +233,7 @@ const handler = async (req: Request): Promise<Response> => {
       opportunity_title: data?.opportunityTitle || '',
       candidate_name: data?.candidateName || userName || '',
       sender_name: data?.senderName || '',
-      application_status: data?.applicationStatus || '',
+      application_status: translateStatus(data?.applicationStatus),
       message_preview: data?.messagePreview || message || '',
       action_url: fullActionUrl,
     };
