@@ -172,16 +172,33 @@ Deno.serve(async (req) => {
     // Use the first matching preference found
     const userPrefs = userPrefsArray && userPrefsArray.length > 0 ? userPrefsArray[0] : null;
 
-    // If user has disabled this notification type, skip
-    if (userPrefs && !userPrefs.enabled) {
-      console.log('User has disabled this notification type:', configId, 'preference found:', userPrefs.notification_type);
+    // Determine channel preferences independently
+    // userPrefs.enabled controls Web App (in-app) visibility
+    // userPrefs.email controls email delivery
+    // userPrefs.push controls push notifications
+    const webAppEnabled = !userPrefs || userPrefs.enabled;
+    const emailPrefsEnabled = !userPrefs || userPrefs.email;
+    const pushPrefsEnabled = !userPrefs || userPrefs.push;
+
+    console.log('User channel preferences:', {
+      configId,
+      preferenceType: userPrefs?.notification_type || 'none (defaults apply)',
+      webApp: webAppEnabled,
+      email: emailPrefsEnabled,
+      push: pushPrefsEnabled,
+    });
+
+    // Check if ALL channels are disabled - only then skip entirely
+    const allChannelsDisabled = !webAppEnabled && !emailPrefsEnabled && !pushPrefsEnabled;
+    if (allChannelsDisabled) {
+      console.log('All channels disabled for this notification type:', configId);
+      // Mark as processed to prevent re-processing
+      await supabase.from('notifications').update({ processed: true }).eq('id', notification_id);
       return new Response(
-        JSON.stringify({ success: true, message: 'Notification disabled by user' }),
+        JSON.stringify({ success: true, message: 'All channels disabled by user' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('User preferences found:', userPrefs ? userPrefs.notification_type : 'none (defaults apply)');
 
     const results = {
       email: false,
@@ -189,8 +206,8 @@ Deno.serve(async (req) => {
       push: false,
     };
 
-    // Send email notification if enabled (check both config and user prefs)
-    const emailEnabled = config.email && (!userPrefs || userPrefs.email);
+    // Send email notification if enabled (check both admin config AND user email preference)
+    const emailEnabled = config.email && emailPrefsEnabled;
     if (emailEnabled) {
       try {
         console.log('Sending email notification...');
@@ -554,7 +571,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Send SMS notification if enabled (check both config and user prefs)
+    // Send SMS notification if enabled (check both admin config AND user sms preference)
     const smsEnabled = config.sms && (!userPrefs || userPrefs.sms);
     if (smsEnabled) {
       console.log('SMS notifications not yet implemented');
@@ -563,8 +580,8 @@ Deno.serve(async (req) => {
       results.sms = false;
     }
 
-    // Send push notification if enabled (check both config and user prefs)
-    const pushEnabled = config.push && (!userPrefs || userPrefs.push);
+    // Send push notification if enabled (check both admin config AND user push preference)
+    const pushEnabled = config.push && pushPrefsEnabled;
     if (pushEnabled) {
       try {
         console.log('Sending push notification...');
