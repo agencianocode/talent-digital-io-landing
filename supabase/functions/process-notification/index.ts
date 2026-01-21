@@ -273,16 +273,20 @@ Deno.serve(async (req) => {
           }
         }
 
-        // For message notifications, get sender name
+        // For message notifications, get sender name and message preview
         if (notification.type === 'message') {
-          // Try to extract from message (format: "Nombre te envió un mensaje")
-          const messageMatch = notification.message.match(/^(.+?) te envió/);
-          if (messageMatch) {
-            additionalData.senderName = messageMatch[1];
+          // Try from notification.data if it has sender_name directly
+          if (notification.data?.sender_name) {
+            additionalData.senderName = notification.data.sender_name;
           }
           
-          // Also try from notification.data if it has sender_id
-          if (notification.data?.sender_id) {
+          // If message_preview is explicitly in data, use it
+          if (notification.data?.message_preview) {
+            additionalData.messagePreview = notification.data.message_preview;
+          }
+          
+          // Try from notification.data if it has sender_id
+          if (notification.data?.sender_id && !additionalData.senderName) {
             const { data: senderProfile } = await supabase
               .from('profiles')
               .select('full_name')
@@ -293,6 +297,86 @@ Deno.serve(async (req) => {
               additionalData.senderName = senderProfile.full_name;
             }
           }
+          
+          // If data is empty or incomplete, try to get from most recent message
+          if (!additionalData.senderName || !additionalData.messagePreview) {
+            console.log('Missing message data, attempting to fetch from messages table...');
+            
+            // Get the most recent unread message to this user (within last hour to be safe)
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+            const { data: recentMessage, error: msgError } = await supabase
+              .from('messages')
+              .select('content, sender_id')
+              .eq('recipient_id', notification.user_id)
+              .gte('created_at', oneHourAgo)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+            
+            if (recentMessage && !msgError) {
+              // Get sender's name
+              if (!additionalData.senderName && recentMessage.sender_id) {
+                const { data: senderProfile } = await supabase
+                  .from('profiles')
+                  .select('full_name')
+                  .eq('user_id', recentMessage.sender_id)
+                  .single();
+                
+                if (senderProfile?.full_name) {
+                  additionalData.senderName = senderProfile.full_name;
+                  console.log('Found sender name from messages table:', senderProfile.full_name);
+                }
+              }
+              
+              // Get message preview (truncate to 150 chars)
+              if (!additionalData.messagePreview && recentMessage.content) {
+                additionalData.messagePreview = recentMessage.content.substring(0, 150);
+                if (recentMessage.content.length > 150) {
+                  additionalData.messagePreview += '...';
+                }
+                console.log('Found message preview from messages table');
+              }
+            } else {
+              console.log('Could not fetch recent message:', msgError?.message);
+            }
+          }
+          
+          // Try to extract sender name from message (format: "Nombre te envió un mensaje")
+          if (!additionalData.senderName) {
+            const messageMatch = notification.message.match(/^(.+?) te envió/);
+            if (messageMatch) {
+              additionalData.senderName = messageMatch[1];
+            }
+          }
+          
+          // Fallback: use notification.message as preview if still empty
+          if (!additionalData.messagePreview) {
+            additionalData.messagePreview = notification.message || '';
+          }
+          
+          // If we still don't have senderName, try to get company name from context
+          if (!additionalData.senderName && notification.data?.company_id) {
+            const { data: company } = await supabase
+              .from('companies')
+              .select('name')
+              .eq('id', notification.data.company_id)
+              .single();
+            
+            if (company?.name) {
+              additionalData.senderName = company.name;
+            }
+          }
+          
+          // Final fallback for sender name
+          if (!additionalData.senderName) {
+            additionalData.senderName = 'Alguien';
+            console.log('Using fallback sender name: Alguien');
+          }
+          
+          console.log('Final message notification data:', {
+            senderName: additionalData.senderName,
+            messagePreviewLength: additionalData.messagePreview?.length || 0
+          });
         }
 
         // For team/membership notifications, get company name
@@ -426,6 +510,7 @@ Deno.serve(async (req) => {
                 companyName: additionalData.companyName,
                 senderName: additionalData.senderName,
                 applicationStatus: additionalData.applicationStatus,
+                messagePreview: additionalData.messagePreview,
               },
               // Include marketplace request data if present
               ...(notification.type === 'marketplace' && notification.data ? {
