@@ -314,6 +314,31 @@ Deno.serve(async (req) => {
         // For application_status and specific status notifications, extract status label
         const applicationStatusTypes = ['application_status', 'application_reviewed', 'application_accepted', 'application_rejected', 'application_hired', 'opportunity_closed_auto', 'opportunity_closed_manual'];
         if (applicationStatusTypes.includes(notification.type)) {
+          // SECURITY: Validate user role - these notifications are only for talent
+          const { data: userRole } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', notification.user_id)
+            .single();
+          
+          if (userRole?.role && ['freemium_business', 'premium_business', 'academy_premium'].includes(userRole.role)) {
+            console.log('BLOCKED: Talent notification sent to business user:', {
+              notification_id: notification.id,
+              type: notification.type,
+              user_role: userRole.role,
+              user_id: notification.user_id
+            });
+            // Mark as processed but don't send email
+            await supabase
+              .from('notifications')
+              .update({ processed: true })
+              .eq('id', notification_id);
+            return new Response(
+              JSON.stringify({ success: true, message: 'Blocked: talent notification to business user', skipped: true }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
           // Try to get status from notification.data
           if (notification.data?.applicationStatus) {
             additionalData.applicationStatus = notification.data.applicationStatus;
@@ -337,6 +362,17 @@ Deno.serve(async (req) => {
               additionalData.opportunityTitle = opportunity.title;
               additionalData.companyName = (opportunity.companies as any)?.name || '';
             }
+          }
+          
+          // VALIDATION: Check required data for these notification types
+          if (!additionalData.opportunityTitle || !additionalData.companyName) {
+            console.warn('Missing required data for application status email:', {
+              notification_id: notification.id,
+              type: notification.type,
+              opportunityTitle: additionalData.opportunityTitle,
+              companyName: additionalData.companyName
+            });
+            // Still proceed but log warning - the template will show empty values
           }
         }
 
