@@ -109,6 +109,12 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   const markAsViewed = async () => {
     if (!application || application.is_viewed) return;
 
+    // Actualizar estado local PRIMERO para UI inmediato
+    const wasStatusPending = application.status === 'pending';
+    if (wasStatusPending) {
+      setCurrentStatus('reviewed');
+    }
+
     try {
       const { data: userData } = await supabase.auth.getUser();
       const viewedBy = userData?.user?.id;
@@ -121,9 +127,8 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       };
 
       // Solo cambiar a 'reviewed' si el estado actual es 'pending'
-      if (application.status === 'pending') {
+      if (wasStatusPending) {
         updates.status = 'reviewed';
-        setCurrentStatus('reviewed');
       }
 
       const { error } = await supabase
@@ -134,7 +139,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       if (error) throw error;
 
       // Enviar notificación al talento sobre el cambio de estado
-      if (application.status === 'pending') {
+      if (wasStatusPending) {
         await sendNotification({
           userId: application.user_id,
           type: 'application_status',

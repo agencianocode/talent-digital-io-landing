@@ -145,9 +145,20 @@ const ApplicationsPage = () => {
   };
 
   const handleCloseDetail = () => {
+    // Actualizar estado local sin recargar para mejor UX
+    if (selectedApplication) {
+      setApplications(prev => prev.map(app => 
+        app.id === selectedApplication.id 
+          ? { 
+              ...app, 
+              is_viewed: true, 
+              status: app.status === 'pending' ? 'reviewed' : app.status 
+            }
+          : app
+      ));
+    }
     setIsDetailModalOpen(false);
     setSelectedApplication(null);
-    fetchApplications(); // Refresh to update view status
   };
 
   const handleViewProfile = (userId: string) => {
