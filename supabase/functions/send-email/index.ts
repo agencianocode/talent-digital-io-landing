@@ -3,7 +3,7 @@ import { Webhook } from 'https://esm.sh/standardwebhooks@1.0.0'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { DynamicEmail } from './_templates/dynamic-email.tsx'
+import { UnifiedEmail } from './_templates/unified-email.tsx'
 
 // Initialize with better error handling
 const resendApiKey = Deno.env.get('RESEND_API_KEY')
@@ -41,73 +41,82 @@ const getTemplateId = (emailActionType: string): string => {
   }
 }
 
-// Default templates as fallback
+// Default templates as fallback (UnifiedContent format)
 const getDefaultTemplate = (emailActionType: string) => {
   switch (emailActionType) {
     case 'signup':
       return {
         subject: '¡Bienvenido a TalentoDigital! Confirma tu cuenta',
         content: {
-          title: '🚀 TalentoDigital',
-          heading: '¡Bienvenido a TalentoDigital!',
-          preview: 'Confirma tu cuenta en TalentoDigital',
-          greeting: 'Hola,',
-          intro: 'Gracias por registrarte en TalentoDigital. Solo falta un paso para activar tu cuenta.',
+          header_enabled: true,
+          header_title: '🚀 ¡Bienvenido a TalentoDigital!',
+          body_content: '<p>Hola,</p><p>¡Gracias por registrarte en TalentoDigital!</p><p>Solo falta un paso para activar tu cuenta y comenzar a explorar las mejores oportunidades.</p>',
+          button_enabled: true,
           button_text: 'Confirmar mi cuenta',
-          link_instruction: 'O copia y pega este enlace en tu navegador:',
-          security_notice: 'Si no creaste esta cuenta, puedes ignorar este email.',
-          expiry_notice: 'Este enlace expirará en 24 horas.',
-          footer_text: '© 2025 TalentoDigital - Conectamos talento con oportunidades',
+          button_link: '{{action_url}}',
+          secondary_enabled: true,
+          secondary_content: '<p>Si no creaste esta cuenta, puedes ignorar este email.</p><p>Este enlace expirará en 24 horas.</p>',
+          footer_content: '<p>© 2025 TalentoDigital - Conectamos talento con oportunidades</p>',
         }
       }
     case 'magiclink':
       return {
         subject: 'Accede a TalentoDigital con tu enlace mágico',
         content: {
-          title: '🚀 TalentoDigital',
-          heading: '¡Accede a tu cuenta!',
-          preview: 'Accede a TalentoDigital con tu enlace de acceso',
-          greeting: 'Hola,',
-          intro: 'Hemos recibido una solicitud para acceder a tu cuenta de TalentoDigital usando tu email',
+          header_enabled: true,
+          header_title: '🚀 TalentoDigital',
+          body_content: '<p>Hola,</p><p>Hemos recibido una solicitud para acceder a tu cuenta de TalentoDigital.</p><p>Haz clic en el botón de abajo para iniciar sesión de forma segura.</p>',
+          button_enabled: true,
           button_text: 'Acceder a TalentoDigital',
-          link_instruction: 'O copia y pega este enlace en tu navegador:',
-          security_notice: 'Si no solicitaste este acceso, puedes ignorar este email de forma segura.',
-          expiry_notice: 'Este enlace expirará en 1 hora por seguridad.',
-          footer_text: '© 2025 TalentoDigital - Conectamos talento con oportunidades',
-          footer_link_text: 'Visita nuestra plataforma',
+          button_link: '{{action_url}}',
+          secondary_enabled: true,
+          secondary_content: '<p>Si no solicitaste este acceso, puedes ignorar este email de forma segura.</p><p>Este enlace expirará en 1 hora por seguridad.</p>',
+          footer_content: '<p>© 2025 TalentoDigital - Conectamos talento con oportunidades</p>',
         }
       }
     case 'recovery':
       return {
         subject: 'Restablece tu contraseña en TalentoDigital',
         content: {
-          title: '🚀 TalentoDigital',
-          heading: 'Restablecer contraseña',
-          preview: 'Restablece tu contraseña en TalentoDigital',
-          greeting: 'Hola,',
-          intro: 'Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en TalentoDigital.',
+          header_enabled: true,
+          header_title: '🔐 Restablecer Contraseña',
+          body_content: '<p>Hola,</p><p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en TalentoDigital.</p><p>Haz clic en el botón de abajo para crear una nueva contraseña.</p>',
+          button_enabled: true,
           button_text: 'Restablecer contraseña',
-          link_instruction: 'O copia y pega este enlace en tu navegador:',
-          security_notice: 'Si no solicitaste este cambio, puedes ignorar este email. Tu contraseña permanecerá sin cambios.',
-          expiry_notice: 'Este enlace expirará en 1 hora por seguridad.',
-          footer_text: '© 2025 TalentoDigital - Conectamos talento con oportunidades',
+          button_link: '{{action_url}}',
+          secondary_enabled: true,
+          secondary_content: '<p>Si no solicitaste este cambio, puedes ignorar este email. Tu contraseña permanecerá sin cambios.</p><p>Este enlace expirará en 1 hora por seguridad.</p>',
+          footer_content: '<p>© 2025 TalentoDigital - Conectamos talento con oportunidades</p>',
         }
       }
     default:
       return {
         subject: 'TalentoDigital',
         content: {
-          title: '🚀 TalentoDigital',
-          heading: 'TalentoDigital',
-          preview: 'TalentoDigital',
-          greeting: 'Hola,',
-          intro: '',
+          header_enabled: true,
+          header_title: '🚀 TalentoDigital',
+          body_content: '<p>Hola,</p><p>Gracias por usar TalentoDigital.</p>',
+          button_enabled: true,
           button_text: 'Continuar',
-          footer_text: '© 2025 TalentoDigital',
+          button_link: '{{action_url}}',
+          secondary_enabled: false,
+          secondary_content: '',
+          footer_content: '<p>© 2025 TalentoDigital</p>',
         }
       }
   }
 }
+
+// Substitute variables in content
+const substituteVariables = (text: string, variables: Record<string, string>): string => {
+  if (!text) return '';
+  let result = text;
+  Object.entries(variables).forEach(([key, value]) => {
+    const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi');
+    result = result.replace(regex, value || '');
+  });
+  return result;
+};
 
 // Use fetch for email sending
 const sendEmail = async (to: string, subject: string, html: string) => {
@@ -139,7 +148,7 @@ const corsHeaders = {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log('Email function started')
+  console.log('📧 Email function started')
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -189,11 +198,37 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Try to fetch template from database
       const templateId = getTemplateId(email_action_type)
-      console.log(`Looking for template: ${templateId}`)
+      console.log(`📋 Looking for template: ${templateId}`)
+      
+      // Load global styles from admin_customization
+      let globalStyles = {
+        buttonColor: '#667eea',
+        buttonTextColor: '#ffffff',
+        headerColor1: '#667eea',
+        headerColor2: '#764ba2',
+        headerTextColor: 'white',
+      };
       
       if (SUPABASE_SERVICE_KEY) {
         try {
           const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+          
+          // Load global styles
+          const { data: customization } = await supabase
+            .from('admin_customization')
+            .select('email_header_color1, email_header_color2, email_button_color, email_button_text_color, email_header_text_color')
+            .single();
+
+          if (customization) {
+            globalStyles = {
+              buttonColor: customization.email_button_color || globalStyles.buttonColor,
+              buttonTextColor: customization.email_button_text_color || globalStyles.buttonTextColor,
+              headerColor1: customization.email_header_color1 || globalStyles.headerColor1,
+              headerColor2: customization.email_header_color2 || globalStyles.headerColor2,
+              headerTextColor: customization.email_header_text_color || globalStyles.headerTextColor,
+            };
+            console.log('🎨 Loaded global styles from admin_customization');
+          }
           
           const { data: template, error } = await supabase
             .from('email_templates')
@@ -203,27 +238,27 @@ const handler = async (req: Request): Promise<Response> => {
             .single()
           
           if (error) {
-            console.log(`Template fetch error: ${error.message}, using default`)
+            console.log(`⚠️ Template fetch error: ${error.message}, using default`)
           }
           
           if (template) {
-            console.log(`Using database template: ${templateId}`)
+            console.log(`✅ Using database template: ${templateId}`)
             subject = template.subject
             emailContent = template.content as Record<string, any>
           } else {
-            console.log(`Template ${templateId} not found, using default`)
+            console.log(`📝 Template ${templateId} not found, using default`)
             const defaultTemplate = getDefaultTemplate(email_action_type)
             subject = defaultTemplate.subject
             emailContent = defaultTemplate.content
           }
         } catch (dbError) {
-          console.error('Database error, using default template:', dbError)
+          console.error('⚠️ Database error, using default template:', dbError)
           const defaultTemplate = getDefaultTemplate(email_action_type)
           subject = defaultTemplate.subject
           emailContent = defaultTemplate.content
         }
       } else {
-        console.log('No service key, using default template')
+        console.log('⚠️ No service key, using default template')
         const defaultTemplate = getDefaultTemplate(email_action_type)
         subject = defaultTemplate.subject
         emailContent = defaultTemplate.content
@@ -232,21 +267,42 @@ const handler = async (req: Request): Promise<Response> => {
       // Build the action URL
       const actionUrl = `${SUPABASE_URL}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}`
       
-      console.log('Generating email template...')
+      // Variables for substitution
+      const variables: Record<string, string> = {
+        action_url: actionUrl,
+        user_email: user.email,
+      };
+      
+      // Process content with variable substitution
+      const processedContent = {
+        header_enabled: emailContent.header_enabled ?? true,
+        header_title: substituteVariables(emailContent.header_title || '🚀 TalentoDigital', variables),
+        body_content: substituteVariables(emailContent.body_content || '', variables),
+        button_enabled: emailContent.button_enabled ?? true,
+        button_text: substituteVariables(emailContent.button_text || 'Continuar', variables),
+        button_link: substituteVariables(emailContent.button_link || actionUrl, variables),
+        secondary_enabled: emailContent.secondary_enabled ?? false,
+        secondary_content: substituteVariables(emailContent.secondary_content || '', variables),
+        footer_content: substituteVariables(emailContent.footer_content || '', variables),
+      };
+      
+      console.log('📄 Generating email template...')
 
+      // ALL auth emails now use UnifiedEmail
       const html = await renderAsync(
-        React.createElement(DynamicEmail, {
-          actionUrl,
-          userEmail: user.email,
-          content: emailContent,
+        React.createElement(UnifiedEmail, {
+          userName: user.email,
+          subject,
+          content: processedContent,
+          globalStyles,
         })
       )
 
-      console.log('Sending email via Resend...')
+      console.log('📤 Sending email via Resend...')
 
       await sendEmail(user.email, subject, html);
 
-      console.log(`${email_action_type} email sent successfully to ${user.email}`)
+      console.log(`✅ ${email_action_type} email sent successfully to ${user.email}`)
       return { success: true }
     }
 
@@ -258,7 +314,7 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error: any) {
-    console.error('Error in send-email function:', error)
+    console.error('❌ Error in send-email function:', error)
     return new Response(
       JSON.stringify({
         error: {
