@@ -289,6 +289,27 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
     if (!application) return;
 
     try {
+      // CRITICAL FIX: Ensure we have opportunityId before proceeding
+      // First try state, then props, then fallback to DB query
+      let resolvedOpportunityId = opportunityId || application.opportunity_id;
+      
+      if (!resolvedOpportunityId) {
+        console.log('[handleStatusChangeConfirm] opportunityId missing from state/props, fetching from DB...');
+        const { data: appData, error: fetchError } = await supabase
+          .from('applications')
+          .select('opportunity_id')
+          .eq('id', application.id)
+          .single();
+        
+        if (!fetchError && appData?.opportunity_id) {
+          resolvedOpportunityId = appData.opportunity_id;
+          setOpportunityId(resolvedOpportunityId); // Update state for future use
+          console.log('[handleStatusChangeConfirm] Fetched opportunityId from DB:', resolvedOpportunityId);
+        } else {
+          console.error('[handleStatusChangeConfirm] CRITICAL: Failed to fetch opportunityId from DB:', fetchError);
+        }
+      }
+
       // Actualizar en BD
       const { error } = await supabase
         .from('applications')
@@ -333,21 +354,20 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       const notificationTitle = statusToTitle[status] || `Tu aplicación fue ${getStatusLabel(status, true).toLowerCase()}`;
       const notificationMessage = message || statusToMessage[status] || `El estado de tu aplicación cambió a ${getStatusLabel(status, true)}.`;
 
-      // Enviar notificación al talento usando opportunityId del estado local
-      const resolvedOpportunityId = opportunityId || application.opportunity_id;
-      
+      // Send notification to talent
       if (!resolvedOpportunityId) {
-        console.error('[ApplicationDetailModal] Cannot send status notification: missing opportunity_id', {
+        console.error('[handleStatusChangeConfirm] CRITICAL: Cannot send notification - no opportunityId available after all attempts:', {
           applicationId: application.id,
           stateOpportunityId: opportunityId,
           propOpportunityId: application.opportunity_id,
         });
       } else {
-        console.log('[ApplicationDetailModal] Sending status notification:', {
+        console.log('[handleStatusChangeConfirm] Sending status notification:', {
           userId: application.user_id,
           type: notificationType,
           status,
           opportunityId: resolvedOpportunityId,
+          applicationId: application.id,
         });
 
         try {
@@ -364,9 +384,13 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
             },
           });
 
-          console.log('[ApplicationDetailModal] Status notification result:', result);
+          console.log('[handleStatusChangeConfirm] Notification sent successfully:', {
+            result,
+            notificationType,
+            userId: application.user_id,
+          });
         } catch (notifError) {
-          console.error('[ApplicationDetailModal] Error sending status notification:', notifError);
+          console.error('[handleStatusChangeConfirm] Error sending notification:', notifError);
         }
       }
 
