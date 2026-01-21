@@ -18,7 +18,6 @@ import {
   CheckCircle,
   Eye,
   MessageCircle,
-  User,
   AlertCircle,
   FileText,
   Download,
@@ -29,14 +28,14 @@ import {
   Target,
   TrendingUp,
   CheckCircle2,
-  XCircle,
-  Percent
+  Percent,
+  Layers
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'sonner';
 
-interface ApplicationDetail {
+interface ApplicationDetailData {
   id: string;
   opportunity_id: string;
   status: string;
@@ -63,6 +62,8 @@ interface ApplicationDetail {
     currency?: string;
     status: string;
     created_at: string;
+    deadline_date?: string | null;
+    skills?: string[];
     companies: {
       name: string;
       logo_url?: string;
@@ -72,11 +73,18 @@ interface ApplicationDetail {
   };
 }
 
+interface TalentProfileData {
+  primary_category_id: string | null;
+  secondary_category_id: string | null;
+  skills: string[] | null;
+}
+
 const ApplicationDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useSupabaseAuth();
-  const [application, setApplication] = useState<ApplicationDetail | null>(null);
+  const [application, setApplication] = useState<ApplicationDetailData | null>(null);
+  const [talentProfile, setTalentProfile] = useState<TalentProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -87,6 +95,7 @@ const ApplicationDetail = () => {
   useEffect(() => {
     if (id && user) {
       fetchApplicationDetail();
+      fetchTalentProfile();
     }
   }, [id, user]);
 
@@ -121,6 +130,8 @@ const ApplicationDetail = () => {
             currency,
             status,
             created_at,
+            deadline_date,
+            skills,
             companies (
               name,
               logo_url,
@@ -138,7 +149,6 @@ const ApplicationDetail = () => {
       const applicationData = data as any;
       setApplication(applicationData);
       
-      // Inicializar datos para edición
       setEditData({
         cover_letter: applicationData.cover_letter || '',
         resume_url: applicationData.resume_url || ''
@@ -153,14 +163,42 @@ const ApplicationDetail = () => {
     }
   };
 
-  // Estados disponibles
+  const fetchTalentProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('talent_profiles')
+        .select('primary_category_id, secondary_category_id, skills')
+        .eq('user_id', user?.id || '')
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setTalentProfile(data);
+    } catch (error) {
+      console.error('Error fetching talent profile:', error);
+    }
+  };
+
+  // Estados disponibles para talent view
   const applicationStates = [
     { value: 'pending', label: 'Enviada', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'reviewed', label: 'En revisión', color: 'bg-blue-100 text-blue-800' },
-    { value: 'accepted', label: 'Aceptada - En evaluación', color: 'bg-green-100 text-green-800' },
+    { value: 'reviewed', label: 'En Revisión', color: 'bg-blue-100 text-blue-800' },
+    { value: 'accepted', label: 'Aceptada', color: 'bg-green-100 text-green-800' },
     { value: 'rejected', label: 'Rechazada', color: 'bg-red-100 text-red-800' },
-    { value: 'hired', label: 'Contratado', color: 'bg-purple-100 text-purple-800' }
+    { value: 'hired', label: 'Contratado', color: 'bg-purple-100 text-purple-800' },
+    { value: 'closed', label: 'Cerrada', color: 'bg-gray-100 text-gray-800' }
   ];
+
+  // Determinar el estado a mostrar considerando oportunidades cerradas
+  const getDisplayStatus = (): string => {
+    if (!application) return 'pending';
+    const oppStatus = application.opportunities?.status;
+    const appStatus = application.status;
+    
+    if (oppStatus === 'closed' && appStatus !== 'rejected' && appStatus !== 'hired') {
+      return 'closed';
+    }
+    return appStatus;
+  };
 
   const getStatusBadgeClass = (status: string) => {
     const state = applicationStates.find(s => s.value === status);
@@ -172,7 +210,6 @@ const ApplicationDetail = () => {
     return state ? state.label : status;
   };
 
-  // Manejar edición
   const handleSaveEdit = async () => {
     try {
       const { error } = await supabase
@@ -197,7 +234,6 @@ const ApplicationDetail = () => {
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    // Restaurar datos originales
     if (application) {
       setEditData({
         cover_letter: application.cover_letter || '',
@@ -206,7 +242,6 @@ const ApplicationDetail = () => {
     }
   };
 
-  // Función para obtener el icono del tipo de archivo
   const getFileIcon = (url: string) => {
     const extension = url.split('.').pop()?.toLowerCase();
     
@@ -230,7 +265,6 @@ const ApplicationDetail = () => {
     }
   };
 
-  // Función para obtener el nombre del archivo desde la URL
   const getFileName = (url: string) => {
     try {
       const urlObj = new URL(url);
@@ -242,147 +276,134 @@ const ApplicationDetail = () => {
     }
   };
 
-  // Función para calcular la puntuación de match
-  const calculateMatchScore = () => {
-    if (!application?.opportunities) return { score: 0, details: [] };
+  // Calculate compatibility score based on new formula
+  const calculateCompatibilityScore = () => {
+    if (!application?.opportunities || !talentProfile) {
+      return { total: 0, category: 0, skills: 0, tools: 0, details: [] };
+    }
 
     const opportunity = application.opportunities;
-    const requirements = opportunity.requirements || '';
-    const matchDetails = [];
+    const details = [];
 
-    // Extraer habilidades requeridas
-    const skillsMatch = requirements.match(/Habilidades:\s*([^\n]+)/i);
-    const requiredSkills = skillsMatch?.[1] ? skillsMatch[1].split(',').map(s => s.trim().toLowerCase()) : [];
+    // 1. Category Match (33.33%)
+    let categoryScore = 0;
+    const oppCategory = opportunity.category?.toLowerCase().replace(/\s+/g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "") || '';
+    const primaryCat = talentProfile.primary_category_id?.toLowerCase() || '';
+    const secondaryCat = talentProfile.secondary_category_id?.toLowerCase() || '';
     
-    // Extraer herramientas requeridas
+    if (oppCategory && (primaryCat.includes(oppCategory) || oppCategory.includes(primaryCat) ||
+        secondaryCat.includes(oppCategory) || oppCategory.includes(secondaryCat))) {
+      categoryScore = 100;
+    }
+    
+    details.push({
+      category: 'Categoría',
+      score: categoryScore,
+      maxScore: 100,
+      icon: Layers,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+      description: categoryScore === 100 ? 'Tu categoría coincide con la oportunidad' : 'La categoría no coincide'
+    });
+
+    // 2. Skills Match (33.33%)
+    let skillsScore = 0;
+    const oppSkills = opportunity.skills || [];
+    const talentSkills = talentProfile.skills || [];
+    
+    if (oppSkills.length > 0 && talentSkills.length > 0) {
+      const oppSkillsLower = oppSkills.map(s => s.toLowerCase().trim());
+      const talentSkillsLower = talentSkills.map(s => s.toLowerCase().trim());
+      
+      const matchedSkills = oppSkillsLower.filter(skill => 
+        talentSkillsLower.some(ts => ts.includes(skill) || skill.includes(ts))
+      );
+      
+      skillsScore = Math.round((matchedSkills.length / oppSkills.length) * 100);
+    } else if (oppSkills.length === 0) {
+      skillsScore = 100; // No skills required = perfect match
+    }
+    
+    details.push({
+      category: 'Habilidades',
+      score: skillsScore,
+      maxScore: 100,
+      icon: Target,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+      description: oppSkills.length === 0 ? 'Sin requisitos de habilidades' : `${Math.round(skillsScore)}% de las habilidades requeridas`
+    });
+
+    // 3. Tools Match (33.33%) - Parse from requirements
+    let toolsScore = 0;
+    const requirements = opportunity.requirements || '';
     const toolsMatch = requirements.match(/Herramientas:\s*([^\n]+)/i);
     const requiredTools = toolsMatch?.[1] ? toolsMatch[1].split(',').map(t => t.trim().toLowerCase()) : [];
-
-    // Extraer idiomas requeridos
-    const languagesMatch = requirements.match(/Idiomas preferidos:\s*([^\n]+)/i);
-    const requiredLanguages = languagesMatch?.[1] ? languagesMatch[1].split(',').map(l => l.trim().toLowerCase()) : [];
-
-    // Extraer zona horaria
-    const timezoneMatch = requirements.match(/Zona horaria preferida:\s*([^\n]+)/i);
-    const requiredTimezone = timezoneMatch?.[1] ? timezoneMatch[1].trim() : '';
-
-    // Simular perfil del usuario (en una implementación real, esto vendría de la base de datos)
-    const userProfile = {
-      skills: ['cierre de ventas', 'negociación', 'crm', 'prospección', 'cold calling'], // Ejemplo
-      tools: ['hubspot', 'salesforce', 'zoom', 'linkedin sales navigator'], // Ejemplo
-      languages: ['español', 'inglés'], // Ejemplo
-      timezone: 'UTC-5 (EST) - Estados Unidos (Costa Este), Colombia' // Ejemplo
-    };
-
-    let totalScore = 0;
-    let maxScore = 0;
-
-    // Calcular match de habilidades (40% del score)
-    if (requiredSkills.length > 0) {
-      maxScore += 40;
-      const matchedSkills = requiredSkills.filter(skill => 
-        userProfile.skills.some(userSkill => 
-          userSkill.toLowerCase().includes(skill) || skill.includes(userSkill.toLowerCase())
-        )
-      );
-      const skillsScore = (matchedSkills.length / requiredSkills.length) * 40;
-      totalScore += skillsScore;
+    
+    if (requiredTools.length > 0 && talentSkills.length > 0) {
+      const talentSkillsLower = talentSkills.map(s => s.toLowerCase().trim());
       
-      matchDetails.push({
-        category: 'Habilidades',
-        score: Math.round(skillsScore),
-        maxScore: 40,
-        matched: matchedSkills,
-        required: requiredSkills,
-        icon: Target,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-100'
-      });
-    }
-
-    // Calcular match de herramientas (30% del score)
-    if (requiredTools.length > 0) {
-      maxScore += 30;
       const matchedTools = requiredTools.filter(tool => 
-        userProfile.tools.some(userTool => 
-          userTool.toLowerCase().includes(tool) || tool.includes(userTool.toLowerCase())
-        )
+        talentSkillsLower.some(ts => ts.includes(tool) || tool.includes(ts))
       );
-      const toolsScore = (matchedTools.length / requiredTools.length) * 30;
-      totalScore += toolsScore;
       
-      matchDetails.push({
-        category: 'Herramientas',
-        score: Math.round(toolsScore),
-        maxScore: 30,
-        matched: matchedTools,
-        required: requiredTools,
-        icon: TrendingUp,
-        color: 'text-green-600',
-        bgColor: 'bg-green-100'
-      });
+      toolsScore = Math.round((matchedTools.length / requiredTools.length) * 100);
+    } else if (requiredTools.length === 0) {
+      toolsScore = 100; // No tools required = perfect match
     }
+    
+    details.push({
+      category: 'Herramientas',
+      score: toolsScore,
+      maxScore: 100,
+      icon: TrendingUp,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+      description: requiredTools.length === 0 ? 'Sin requisitos de herramientas' : `${Math.round(toolsScore)}% de las herramientas requeridas`
+    });
 
-    // Calcular match de idiomas (20% del score)
-    if (requiredLanguages.length > 0) {
-      maxScore += 20;
-      const matchedLanguages = requiredLanguages.filter(lang => 
-        userProfile.languages.some(userLang => 
-          userLang.toLowerCase().includes(lang) || lang.includes(userLang.toLowerCase())
-        )
-      );
-      const languagesScore = (matchedLanguages.length / requiredLanguages.length) * 20;
-      totalScore += languagesScore;
-      
-      matchDetails.push({
-        category: 'Idiomas',
-        score: Math.round(languagesScore),
-        maxScore: 20,
-        matched: matchedLanguages,
-        required: requiredLanguages,
-        icon: CheckCircle2,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-100'
-      });
-    }
-
-    // Calcular match de zona horaria (10% del score)
-    if (requiredTimezone) {
-      maxScore += 10;
-      const timezoneMatch = userProfile.timezone.toLowerCase().includes(requiredTimezone.toLowerCase()) ||
-                           requiredTimezone.toLowerCase().includes(userProfile.timezone.toLowerCase());
-      const timezoneScore = timezoneMatch ? 10 : 0;
-      totalScore += timezoneScore;
-      
-      matchDetails.push({
-        category: 'Zona Horaria',
-        score: timezoneScore,
-        maxScore: 10,
-        matched: timezoneMatch ? [requiredTimezone] : [],
-        required: [requiredTimezone],
-        icon: XCircle,
-        color: 'text-orange-600',
-        bgColor: 'bg-orange-100'
-      });
-    }
-
-    const finalScore = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    // Total score (average of three)
+    const totalScore = Math.round((categoryScore + skillsScore + toolsScore) / 3);
 
     return {
-      score: finalScore,
-      details: matchDetails,
-      totalPossible: maxScore,
-      achieved: Math.round(totalScore)
+      total: totalScore,
+      category: categoryScore,
+      skills: skillsScore,
+      tools: toolsScore,
+      details
     };
   };
 
-  // Generar timeline de la aplicación
+  // Calculate application progress based on dates
+  const calculateApplicationProgress = () => {
+    if (!application?.opportunities) return { progress: 0, daysRemaining: null };
+    
+    const opportunity = application.opportunities;
+    const publishDate = new Date(opportunity.created_at);
+    const deadlineDate = opportunity.deadline_date ? new Date(opportunity.deadline_date) : null;
+    const today = new Date();
+    
+    if (!deadlineDate) {
+      return { progress: 50, daysRemaining: null }; // No deadline = show 50%
+    }
+    
+    const totalDuration = deadlineDate.getTime() - publishDate.getTime();
+    const elapsed = today.getTime() - publishDate.getTime();
+    
+    if (totalDuration <= 0) return { progress: 100, daysRemaining: 0 };
+    
+    const progress = Math.min(100, Math.max(0, Math.round((elapsed / totalDuration) * 100)));
+    const daysRemaining = Math.max(0, Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+    
+    return { progress, daysRemaining };
+  };
+
+  // Generate application timeline
   const generateApplicationTimeline = () => {
     if (!application) return [];
 
     const timeline = [];
 
-    // 1. Aplicación enviada
     timeline.push({
       id: 'applied',
       title: 'Aplicación enviada',
@@ -393,7 +414,6 @@ const ApplicationDetail = () => {
       color: 'text-green-600'
     });
 
-    // 2. Aplicación vista (si tiene viewed_at)
     if (application.viewed_at) {
       timeline.push({
         id: 'viewed',
@@ -406,7 +426,6 @@ const ApplicationDetail = () => {
       });
     }
 
-    // 3. Contacto inicial (si tiene contacted_at)
     if (application.contacted_at) {
       timeline.push({
         id: 'contacted',
@@ -419,15 +438,14 @@ const ApplicationDetail = () => {
       });
     }
 
-    // 4. Estado actual
-    const currentStatus = application.status;
+    const currentStatus = getDisplayStatus();
     let currentStep = null;
 
     switch (currentStatus) {
       case 'pending':
         currentStep = {
           id: 'review',
-          title: 'En revisión',
+          title: 'Enviada',
           description: 'Tu aplicación está siendo evaluada por el equipo de recursos humanos',
           date: application.updated_at,
           icon: Clock,
@@ -438,7 +456,7 @@ const ApplicationDetail = () => {
       case 'reviewed':
         currentStep = {
           id: 'reviewed',
-          title: 'Aplicación revisada',
+          title: 'En Revisión',
           description: 'Tu perfil ha sido evaluado, esperando próximos pasos',
           date: application.updated_at,
           icon: CheckCircle,
@@ -446,22 +464,11 @@ const ApplicationDetail = () => {
           color: 'text-blue-600'
         };
         break;
-      case 'interview_scheduled':
-        currentStep = {
-          id: 'interview',
-          title: 'Entrevista programada',
-          description: 'Se ha programado una entrevista contigo',
-          date: application.updated_at,
-          icon: User,
-          status: 'current',
-          color: 'text-purple-600'
-        };
-        break;
       case 'accepted':
         currentStep = {
           id: 'accepted',
-          title: '¡Aplicación aceptada!',
-          description: '¡Felicidades! Has sido seleccionado para esta posición',
+          title: 'Aceptada',
+          description: 'Has sido seleccionado para continuar en el proceso',
           date: application.updated_at,
           icon: CheckCircle,
           status: 'completed',
@@ -471,12 +478,34 @@ const ApplicationDetail = () => {
       case 'rejected':
         currentStep = {
           id: 'rejected',
-          title: 'Aplicación no seleccionada',
+          title: 'Rechazada',
           description: 'Gracias por tu interés, pero no fuiste seleccionado para esta posición',
           date: application.updated_at,
           icon: AlertCircle,
           status: 'completed',
           color: 'text-red-600'
+        };
+        break;
+      case 'hired':
+        currentStep = {
+          id: 'hired',
+          title: 'Contratado',
+          description: '¡Felicidades! Has sido contratado para esta posición',
+          date: application.updated_at,
+          icon: CheckCircle2,
+          status: 'completed',
+          color: 'text-purple-600'
+        };
+        break;
+      case 'closed':
+        currentStep = {
+          id: 'closed',
+          title: 'Oportunidad Cerrada',
+          description: 'Esta oportunidad ya no está disponible',
+          date: application.updated_at,
+          icon: AlertCircle,
+          status: 'completed',
+          color: 'text-gray-600'
         };
         break;
     }
@@ -485,8 +514,7 @@ const ApplicationDetail = () => {
       timeline.push(currentStep);
     }
 
-    // 5. Próximos pasos (si no está completado)
-    if (currentStatus !== 'accepted' && currentStatus !== 'rejected') {
+    if (currentStatus !== 'accepted' && currentStatus !== 'rejected' && currentStatus !== 'hired' && currentStatus !== 'closed') {
       let nextStep = null;
 
       switch (currentStatus) {
@@ -512,17 +540,6 @@ const ApplicationDetail = () => {
             color: 'text-gray-400'
           };
           break;
-        case 'interview_scheduled':
-          nextStep = {
-            id: 'next_decision',
-            title: 'Próximo: Decisión',
-            description: 'Después de la entrevista, recibirás una respuesta final',
-            date: null,
-            icon: CheckCircle,
-            status: 'upcoming',
-            color: 'text-gray-400'
-          };
-          break;
       }
 
       if (nextStep) {
@@ -540,539 +557,531 @@ const ApplicationDetail = () => {
 
   if (loading) {
     return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+          <div className="h-32 bg-gray-200 rounded"></div>
         </div>
+      </div>
     );
   }
 
   if (!application) {
     return (
-        <div className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="p-8 text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Aplicación no encontrada
-              </h3>
-              <p className="text-gray-600 mb-4">
-                La aplicación que buscas no existe o no tienes permisos para verla.
-              </p>
-              <Button onClick={() => navigate('/talent-dashboard/applications')}>
-                Volver a Mis Postulaciones
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Aplicación no encontrada
+            </h3>
+            <p className="text-gray-600 mb-4">
+              La aplicación que buscas no existe o no tienes permisos para verla.
+            </p>
+            <Button onClick={() => navigate('/talent-dashboard/applications')}>
+              Volver a Mis Postulaciones
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
+  const displayStatus = getDisplayStatus();
+  const compatibilityData = calculateCompatibilityScore();
+  const progressData = calculateApplicationProgress();
+
   return (
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/talent-dashboard/applications')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold text-foreground">
+            Detalles de Aplicación
+          </h1>
+        </div>
+        {!isEditing && (
           <Button
-            variant="ghost"
-            onClick={() => navigate('/talent-dashboard/applications')}
+            onClick={() => setIsEditing(true)}
             className="flex items-center gap-2"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Volver
+            <Edit3 className="h-4 w-4" />
+            Editar
           </Button>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Detalles de Aplicación
-            </h1>
-          </div>
-          {!isEditing && (
+        )}
+        {isEditing && (
+          <div className="flex gap-2">
             <Button
-              onClick={() => setIsEditing(true)}
+              onClick={handleSaveEdit}
               className="flex items-center gap-2"
             >
-              <Edit3 className="h-4 w-4" />
-              Editar
+              <Save className="h-4 w-4" />
+              Guardar
             </Button>
-          )}
-          {isEditing && (
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSaveEdit}
-                className="flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                Guardar
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleCancelEdit}
-                className="flex items-center gap-2"
-              >
-                <X className="h-4 w-4" />
-                Cancelar
-              </Button>
+            <Button
+              variant="outline"
+              onClick={handleCancelEdit}
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Cancelar
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Opportunity Link Card - TOP */}
+      <Card className="shadow-md hover:shadow-lg transition-shadow mb-6">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary-glow/10 rounded-xl flex items-center justify-center">
+                {application.opportunities?.companies?.logo_url ? (
+                  <img 
+                    src={application.opportunities.companies.logo_url} 
+                    alt={application.opportunities?.companies?.name}
+                    className="w-8 h-8 object-contain rounded-lg"
+                  />
+                ) : (
+                  <Briefcase className="h-6 w-6 text-primary" />
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">
+                  {application.opportunities?.title}
+                </h2>
+                <p className="text-muted-foreground">
+                  {application.opportunities?.companies?.name}
+                </p>
+              </div>
             </div>
-          )}
-        </div>
+            <Button 
+              onClick={() => navigate(`/opportunities/${application.opportunity_id}`)}
+              variant="outline"
+              size="lg"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Ver detalles de la oportunidad
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Layout Principal - Grid Responsivo Mejorado */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sidebar - Información de la Aplicación */}
-          <div className="lg:col-span-1 space-y-6 order-2 lg:order-1">
-            {/* Estado y Match Score Card */}
-            <Card className="border-t-4 border-t-primary shadow-lg animate-fade-in">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-gradient-to-br from-primary/20 to-primary-glow/20 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg">Estado de tu Aplicación</CardTitle>
+      {/* Layout Principal - Grid Responsivo */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sidebar - Left Column */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Estado de Aplicación Card */}
+          <Card className="border-t-4 border-t-primary shadow-lg">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-gradient-to-br from-primary/20 to-primary-glow/20 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-primary" />
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                  <span className="text-sm font-medium text-muted-foreground">Estado actual</span>
-                  <Badge className={getStatusBadgeClass(application.status)} variant="secondary">
-                    {getStatusText(application.status)}
-                  </Badge>
+                <CardTitle className="text-lg">Estado de tu Aplicación</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <span className="text-sm font-medium text-muted-foreground">Estado actual</span>
+                <Badge className={getStatusBadgeClass(displayStatus)} variant="secondary">
+                  {getStatusText(displayStatus)}
+                </Badge>
+              </div>
+              
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4 flex-shrink-0" />
+                  <span>Aplicado el {new Date(application.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
                 </div>
-                
-                <div className="space-y-3 text-sm">
+                {application.viewed_at && (
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-4 w-4 flex-shrink-0" />
-                    <span>Aplicado el {new Date(application.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                    <Eye className="h-4 w-4 flex-shrink-0" />
+                    <span>Vista el {new Date(application.viewed_at).toLocaleDateString('es-ES')}</span>
                   </div>
-                  {application.viewed_at && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Eye className="h-4 w-4 flex-shrink-0" />
-                      <span>Vista el {new Date(application.viewed_at).toLocaleDateString('es-ES')}</span>
-                    </div>
-                  )}
-                  {application.contacted_at && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MessageCircle className="h-4 w-4 flex-shrink-0" />
-                      <span>Contactado el {new Date(application.contacted_at).toLocaleDateString('es-ES')}</span>
-                    </div>
-                  )}
-                </div>
+                )}
+                {application.contacted_at && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MessageCircle className="h-4 w-4 flex-shrink-0" />
+                    <span>Contactado el {new Date(application.contacted_at).toLocaleDateString('es-ES')}</span>
+                  </div>
+                )}
+              </div>
 
-                {(() => {
-                  const matchData = calculateMatchScore();
+              {/* Application Progress Bar */}
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">Progreso de Oportunidad</span>
+                  <span className="text-sm text-muted-foreground">{progressData.progress}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-primary to-primary-glow rounded-full transition-all duration-500"
+                    style={{ width: `${progressData.progress}%` }}
+                  />
+                </div>
+                {application.opportunities?.deadline_date && (
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    Cierre: {new Date(application.opportunities.deadline_date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    {progressData.daysRemaining !== null && progressData.daysRemaining > 0 && (
+                      <span className="text-primary ml-1">({progressData.daysRemaining} días restantes)</span>
+                    )}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Timeline - Moved to Left Column */}
+          <Card className="border-l-4 border-l-primary shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <Clock className="h-5 w-5 text-primary" />
+                </div>
+                Progreso de la Aplicación
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {generateApplicationTimeline().map((step, index) => {
+                  const IconComponent = step.icon;
+                  const isLast = index === generateApplicationTimeline().length - 1;
+                  
                   return (
-                    <div className="pt-4 border-t">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Compatibilidad</span>
-                        <span className="text-2xl font-bold text-primary">{matchData.score}%</span>
+                    <div key={step.id} className="flex items-start gap-3 group">
+                      <div className="flex flex-col items-center">
+                        <div className={`p-2 rounded-xl shadow-sm group-hover:scale-110 transition-transform ${
+                          step.status === 'completed' ? 'bg-gradient-to-br from-green-100 to-emerald-100' :
+                          step.status === 'current' ? 'bg-gradient-to-br from-yellow-100 to-amber-100' :
+                          'bg-muted'
+                        }`}>
+                          <IconComponent className={`h-4 w-4 ${
+                            step.status === 'completed' ? 'text-green-600' :
+                            step.status === 'current' ? 'text-yellow-600' :
+                            'text-muted-foreground'
+                          }`} />
+                        </div>
+                        {!isLast && (
+                          <div className={`w-0.5 h-8 mt-1 ${
+                            step.status === 'completed' ? 'bg-green-200' : 'bg-border'
+                          }`} />
+                        )}
                       </div>
-                      <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-primary to-primary-glow rounded-full transition-all duration-500 animate-scale-in"
-                          style={{ width: `${matchData.score}%` }}
-                        />
+                      
+                      <div className="flex-1 pb-2">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h4 className={`font-semibold text-sm ${
+                            step.status === 'completed' ? 'text-green-700' :
+                            step.status === 'current' ? 'text-yellow-700' :
+                            'text-muted-foreground'
+                          }`}>
+                            {step.title}
+                          </h4>
+                          {step.status === 'current' && (
+                            <Badge variant="default" className="text-xs animate-pulse">
+                              Actual
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {step.description}
+                        </p>
+                        {step.date && (
+                          <p className="text-xs text-muted-foreground/70 mt-0.5">
+                            {new Date(step.date).toLocaleDateString('es-ES', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );
-                })()}
-              </CardContent>
-            </Card>
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Tu Carta de Presentación */}
-            {(application.cover_letter || isEditing) && (
-              <Card className="shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="p-2 bg-accent/20 rounded-lg">
-                      <FileText className="h-4 w-4 text-accent-foreground" />
-                    </div>
-                    Tu Carta de Presentación
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isEditing ? (
-                    <Textarea
-                      value={editData.cover_letter}
-                      onChange={(e) => setEditData({ ...editData, cover_letter: e.target.value })}
-                      placeholder="Escribe tu carta de presentación..."
-                      className="min-h-[200px] resize-none"
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                      {application.cover_letter}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* CV Adjunto */}
-            {(application.resume_url || isEditing) && (
-              <Card className="shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="p-2 bg-secondary/20 rounded-lg">
-                      <Download className="h-4 w-4 text-secondary-foreground" />
-                    </div>
-                    CV Adjunto
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={editData.resume_url}
-                        onChange={(e) => setEditData({ ...editData, resume_url: e.target.value })}
-                        placeholder="URL del CV..."
-                        className="w-full px-3 py-2 border rounded-lg"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Ingresa la URL de tu CV o portafolio
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {(() => {
-                        const fileInfo = getFileIcon(application.resume_url || '');
-                        const IconComponent = fileInfo.icon;
-                        return (
-                          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors group">
-                            <div className={`p-2 ${fileInfo.bgColor} rounded-lg group-hover:scale-110 transition-transform`}>
-                              <IconComponent className={`h-5 w-5 ${fileInfo.color}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{getFileName(application.resume_url || '')}</p>
-                              <p className="text-xs text-muted-foreground">Haz clic para abrir</p>
-                            </div>
-                            <a
-                              href={application.resume_url || '#'}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-shrink-0"
-                            >
-                              <Button size="sm" variant="ghost">
-                                <ExternalLink className="h-4 w-4" />
-                              </Button>
-                            </a>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Detalles de Compatibilidad */}
-            {(() => {
-              const matchData = calculateMatchScore();
-              return matchData.details.length > 0 && (
-                <Card className="shadow-md">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <div className="p-2 bg-primary/20 rounded-lg">
-                        <Percent className="h-4 w-4 text-primary" />
-                      </div>
-                      Análisis de Compatibilidad
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {matchData.details.map((detail, index) => {
-                      const IconComponent = detail.icon;
-                      const percentage = (detail.score / detail.maxScore) * 100;
-                      return (
-                        <div key={index} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className={`p-1.5 ${detail.bgColor} rounded-lg`}>
-                                <IconComponent className={`h-3.5 w-3.5 ${detail.color}`} />
-                              </div>
-                              <span className="text-sm font-medium">{detail.category}</span>
-                            </div>
-                            <span className="text-sm font-semibold">{Math.round(percentage)}%</span>
-                          </div>
-                          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                            <div 
-                              className={`h-full ${detail.bgColor} rounded-full transition-all duration-500`}
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                          {detail.matched.length > 0 && (
-                            <p className="text-xs text-muted-foreground">
-                              Coincide: {detail.matched.join(', ')}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-              );
-            })()}
-          </div>
-
-          {/* Columna Principal - Información de la Oportunidad */}
-          <div className="lg:col-span-2 space-y-6 order-1 lg:order-2">
-
-            {/* Grid de Metadatos - Información Clave */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {application.opportunities?.location && (
-                <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col items-center text-center gap-2">
-                      <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl">
-                        <MapPin className="h-5 w-5 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground font-medium mb-0.5">Ubicación</p>
-                        <p className="text-sm font-semibold">{application.opportunities.location}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {application.opportunities?.type && (
-                <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col items-center text-center gap-2">
-                      <div className="p-3 bg-gradient-to-br from-purple-100 to-violet-100 rounded-xl">
-                        <Briefcase className="h-5 w-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground font-medium mb-0.5">Tipo</p>
-                        <p className="text-sm font-semibold">{application.opportunities.type}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {(application.opportunities?.salary_min || application.opportunities?.salary_max) && (
-                <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col items-center text-center gap-2">
-                      <div className="p-3 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-xl">
-                        <DollarSign className="h-5 w-5 text-yellow-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground font-medium mb-0.5">Salario</p>
-                        <p className="text-sm font-semibold">
-                          {application.opportunities.salary_min && application.opportunities.salary_max
-                            ? `$${application.opportunities.salary_min.toLocaleString()} - $${application.opportunities.salary_max.toLocaleString()}`
-                            : application.opportunities.salary_min
-                            ? `$${application.opportunities.salary_min.toLocaleString()}`
-                            : `$${application.opportunities.salary_max?.toLocaleString()}`
-                          }
-                          {application.opportunities.currency && ` ${application.opportunities.currency}`}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
-                <CardContent className="p-4">
-                  <div className="flex flex-col items-center text-center gap-2">
-                    <div className="p-3 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-xl">
-                      <Calendar className="h-5 w-5 text-indigo-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground font-medium mb-0.5">Publicado</p>
-                      <p className="text-sm font-semibold">
-                        {new Date(application.opportunities?.created_at).toLocaleDateString('es-ES')}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Carta de Presentación - Ancho completo */}
+          {/* CV Adjunto */}
+          {(application.resume_url || isEditing) && (
             <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <FileText className="h-4 w-4 text-purple-600" />
+                  <div className="p-2 bg-secondary/20 rounded-lg">
+                    <Download className="h-4 w-4 text-secondary-foreground" />
                   </div>
-                  Carta de Presentación
+                  CV Adjunto
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {isEditing ? (
-                  <Textarea
-                    value={editData.cover_letter}
-                    onChange={(e) => setEditData({...editData, cover_letter: e.target.value})}
-                    rows={8}
-                    placeholder="Escribe tu carta de presentación..."
-                    className="resize-none"
-                  />
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editData.resume_url}
+                      onChange={(e) => setEditData({ ...editData, resume_url: e.target.value })}
+                      placeholder="URL del CV..."
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Ingresa la URL de tu CV o portafolio
+                    </p>
+                  </div>
                 ) : (
-                  <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                    {application.cover_letter || 'Sin carta de presentación'}
-                  </p>
+                  <div className="space-y-2">
+                    {(() => {
+                      const fileInfo = getFileIcon(application.resume_url || '');
+                      const IconComponent = fileInfo.icon;
+                      return (
+                        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors group">
+                          <div className={`p-2 ${fileInfo.bgColor} rounded-lg group-hover:scale-110 transition-transform`}>
+                            <IconComponent className={`h-5 w-5 ${fileInfo.color}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{getFileName(application.resume_url || '')}</p>
+                            <p className="text-xs text-muted-foreground">Haz clic para abrir</p>
+                          </div>
+                          <a
+                            href={application.resume_url || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-shrink-0"
+                          >
+                            <Button size="sm" variant="ghost">
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          </a>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 )}
               </CardContent>
             </Card>
+          )}
+        </div>
 
-            {/* Botón para ver la oportunidad */}
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <Button 
-                  onClick={() => navigate(`/opportunities/${application.opportunity_id}`)}
-                  className="w-full"
-                  variant="outline"
-                  size="lg"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Ver detalles de la oportunidad
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Timeline de la aplicación */}
-            <Card className="border-l-4 border-l-primary shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="p-2 bg-primary/20 rounded-lg">
-                    <Clock className="h-5 w-5 text-primary" />
-                  </div>
-                  Progreso de la Aplicación
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {generateApplicationTimeline().map((step, index) => {
-                    const IconComponent = step.icon;
-                    const isLast = index === generateApplicationTimeline().length - 1;
-                    
-                    return (
-                      <div key={step.id} className="flex items-start gap-3 group">
-                        {/* Icono y línea conectora */}
-                        <div className="flex flex-col items-center">
-                          <div className={`p-2.5 rounded-xl shadow-sm group-hover:scale-110 transition-transform ${
-                            step.status === 'completed' ? 'bg-gradient-to-br from-green-100 to-emerald-100' :
-                            step.status === 'current' ? 'bg-gradient-to-br from-yellow-100 to-amber-100' :
-                            'bg-muted'
-                          }`}>
-                            <IconComponent className={`h-5 w-5 ${
-                              step.status === 'completed' ? 'text-green-600' :
-                              step.status === 'current' ? 'text-yellow-600' :
-                              'text-muted-foreground'
-                            }`} />
-                          </div>
-                          {!isLast && (
-                            <div className={`w-0.5 h-10 mt-2 ${
-                              step.status === 'completed' ? 'bg-green-200' : 'bg-border'
-                            }`} />
-                          )}
-                        </div>
-                        
-                        {/* Contenido del paso */}
-                        <div className="flex-1 pb-4">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className={`font-semibold ${
-                              step.status === 'completed' ? 'text-green-700' :
-                              step.status === 'current' ? 'text-yellow-700' :
-                              'text-muted-foreground'
-                            }`}>
-                              {step.title}
-                            </h4>
-                            {step.status === 'current' && (
-                              <Badge variant="default" className="text-xs animate-pulse">
-                                Actual
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-1">
-                            {step.description}
-                          </p>
-                          {step.date && (
-                            <p className="text-xs text-muted-foreground/70">
-                              {new Date(step.date).toLocaleDateString('es-ES', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Información de la Empresa y Oportunidad */}
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="p-2 bg-secondary/20 rounded-lg">
-                    <Building className="h-5 w-5 text-secondary-foreground" />
-                  </div>
-                  Información de la Empresa
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {/* Header con Logo y Título de Oportunidad */}
-                  <div className="flex items-start gap-4 pb-4 border-b">
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary-glow/10 rounded-xl flex items-center justify-center shadow-sm ring-2 ring-primary/20 flex-shrink-0">
-                      {application.opportunities?.companies?.logo_url ? (
-                        <img 
-                          src={application.opportunities.companies.logo_url} 
-                          alt={application.opportunities?.companies?.name}
-                          className="w-12 h-12 object-contain rounded-lg"
-                        />
-                      ) : (
-                        <Building className="h-8 w-8 text-primary" />
-                      )}
+        {/* Right Column - Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Grid de Metadatos */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {application.opportunities?.location && (
+              <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
+                <CardContent className="p-4">
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl">
+                      <MapPin className="h-5 w-5 text-green-600" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold mb-1">
-                        {application.opportunities?.title}
-                      </h3>
-                      <p className="text-lg font-medium text-muted-foreground">
-                        {application.opportunities?.companies?.name}
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium mb-0.5">Ubicación</p>
+                      <p className="text-sm font-semibold">{application.opportunities.location}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {application.opportunities?.type && (
+              <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
+                <CardContent className="p-4">
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <div className="p-3 bg-gradient-to-br from-purple-100 to-violet-100 rounded-xl">
+                      <Briefcase className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium mb-0.5">Tipo</p>
+                      <p className="text-sm font-semibold">{application.opportunities.type}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {(application.opportunities?.salary_min || application.opportunities?.salary_max) && (
+              <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
+                <CardContent className="p-4">
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <div className="p-3 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-xl">
+                      <DollarSign className="h-5 w-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium mb-0.5">Salario</p>
+                      <p className="text-sm font-semibold">
+                        {application.opportunities.salary_min && application.opportunities.salary_max
+                          ? `$${application.opportunities.salary_min.toLocaleString()} - $${application.opportunities.salary_max.toLocaleString()}`
+                          : application.opportunities.salary_min
+                          ? `$${application.opportunities.salary_min.toLocaleString()}`
+                          : `$${application.opportunities.salary_max?.toLocaleString()}`
+                        }
+                        {application.opportunities.currency && ` ${application.opportunities.currency}`}
                       </p>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            )}
 
-                  {/* Website */}
-                  {application.opportunities?.companies?.website && (
-                    <div>
-                      <a 
-                        href={application.opportunities.companies.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary-glow inline-flex items-center gap-1 hover:underline"
-                      >
-                        {application.opportunities.companies.website}
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    </div>
-                  )}
-                  
-                  {/* Descripción de la Empresa */}
-                  {application.opportunities?.companies?.description && (
-                    <div>
-                      <h4 className="font-semibold text-sm text-muted-foreground mb-2">Descripción</h4>
-                      <p className="text-muted-foreground leading-relaxed">
-                        {application.opportunities.companies.description}
-                      </p>
-                    </div>
-                  )}
+            <Card className="hover:shadow-lg transition-all hover:scale-105 duration-200">
+              <CardContent className="p-4">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="p-3 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-xl">
+                    <Calendar className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium mb-0.5">Publicado</p>
+                    <p className="text-sm font-semibold">
+                      {new Date(application.opportunities?.created_at).toLocaleDateString('es-ES')}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* Cover Letter - Full Width */}
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <FileText className="h-4 w-4 text-purple-600" />
+                </div>
+                Carta de Presentación
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <Textarea
+                  value={editData.cover_letter}
+                  onChange={(e) => setEditData({...editData, cover_letter: e.target.value})}
+                  rows={8}
+                  placeholder="Escribe tu carta de presentación..."
+                  className="resize-none"
+                />
+              ) : (
+                <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                  {application.cover_letter || 'Sin carta de presentación'}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Compatibility Analysis - Moved to Right Column */}
+          <Card className="shadow-md">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <Percent className="h-4 w-4 text-primary" />
+                  </div>
+                  Análisis de Compatibilidad
+                </CardTitle>
+                <span className="text-2xl font-bold text-primary">{compatibilityData.total}%</span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="w-full bg-muted rounded-full h-3 overflow-hidden mb-4">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-primary-glow rounded-full transition-all duration-500"
+                  style={{ width: `${compatibilityData.total}%` }}
+                />
+              </div>
+              
+              {compatibilityData.details.map((detail, index) => {
+                const IconComponent = detail.icon;
+                return (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1.5 ${detail.bgColor} rounded-lg`}>
+                          <IconComponent className={`h-3.5 w-3.5 ${detail.color}`} />
+                        </div>
+                        <span className="text-sm font-medium">{detail.category}</span>
+                      </div>
+                      <span className="text-sm font-semibold">{detail.score}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                      <div 
+                        className={`h-full ${detail.bgColor} rounded-full transition-all duration-500`}
+                        style={{ width: `${detail.score}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {detail.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          {/* Company Information */}
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-2 bg-secondary/20 rounded-lg">
+                  <Building className="h-5 w-5 text-secondary-foreground" />
+                </div>
+                Información de la Empresa
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-primary/10 to-primary-glow/10 rounded-xl flex items-center justify-center shadow-sm ring-2 ring-primary/20 flex-shrink-0">
+                    {application.opportunities?.companies?.logo_url ? (
+                      <img 
+                        src={application.opportunities.companies.logo_url} 
+                        alt={application.opportunities?.companies?.name}
+                        className="w-10 h-10 object-contain rounded-lg"
+                      />
+                    ) : (
+                      <Building className="h-7 w-7 text-primary" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-bold">
+                      {application.opportunities?.companies?.name}
+                    </h3>
+                    {application.opportunities?.companies?.website && (
+                      <a 
+                        href={application.opportunities.companies.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary-glow inline-flex items-center gap-1 text-sm hover:underline"
+                      >
+                        {application.opportunities.companies.website}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                
+                {application.opportunities?.companies?.description && (
+                  <div>
+                    <h4 className="font-semibold text-sm text-muted-foreground mb-2">Descripción</h4>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {application.opportunities.companies.description}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+    </div>
   );
 };
 
