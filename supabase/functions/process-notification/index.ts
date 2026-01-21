@@ -144,28 +144,44 @@ Deno.serve(async (req) => {
 
     console.log('Notification config:', config);
 
-    // Get user's personal preferences
-    const { data: userPrefs, error: userPrefsError } = await supabase
+    // Define legacy preference mappings for backwards compatibility
+    const legacyPreferenceMap: Record<string, string[]> = {
+      'application_status': ['application_status', 'application_updates'],
+      'new_message': ['new_message', 'messages'],
+      'new_application': ['new_application', 'new_applications'],
+      'application_milestone': ['application_milestone', 'opportunity_milestones'],
+      'team_member_added': ['team_member_added', 'team_requests'],
+    };
+
+    // Get preference types to check (including legacy fallbacks)
+    const preferenceTypesToCheck = legacyPreferenceMap[configId] || [configId];
+    
+    console.log('Checking user preferences for types:', preferenceTypesToCheck);
+
+    // Get user's personal preferences - check all possible preference type names
+    const { data: userPrefsArray, error: userPrefsError } = await supabase
       .from('user_notification_preferences')
       .select('*')
       .eq('user_id', notification.user_id)
-      .eq('notification_type', configId)
-      .single();
+      .in('notification_type', preferenceTypesToCheck);
 
-    if (userPrefsError && userPrefsError.code !== 'PGRST116') {
+    if (userPrefsError) {
       console.error('Error fetching user preferences:', userPrefsError);
     }
 
+    // Use the first matching preference found
+    const userPrefs = userPrefsArray && userPrefsArray.length > 0 ? userPrefsArray[0] : null;
+
     // If user has disabled this notification type, skip
     if (userPrefs && !userPrefs.enabled) {
-      console.log('User has disabled this notification type:', configId);
+      console.log('User has disabled this notification type:', configId, 'preference found:', userPrefs.notification_type);
       return new Response(
         JSON.stringify({ success: true, message: 'Notification disabled by user' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('User preferences:', userPrefs);
+    console.log('User preferences found:', userPrefs ? userPrefs.notification_type : 'none (defaults apply)');
 
     const results = {
       email: false,
