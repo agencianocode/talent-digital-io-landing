@@ -3,18 +3,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { Resend } from 'npm:resend@2.0.0';
 import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import * as React from 'npm:react@18.3.1';
-import { ApplicationNotification } from './_templates/application-notification.tsx';
-import { OpportunityNotification } from './_templates/opportunity-notification.tsx';
-import { MessageNotification } from './_templates/message-notification.tsx';
-import { TeamNotification } from './_templates/team-notification.tsx';
-import { MarketplaceNotification } from './_templates/marketplace-notification.tsx';
-import { ModerationNotification } from './_templates/moderation-notification.tsx';
-import { WelcomeTalent } from './_templates/welcome-talent.tsx';
-import { WelcomeBusiness } from './_templates/welcome-business.tsx';
-import { WelcomeAcademy } from './_templates/welcome-academy.tsx';
-import { AcademyExclusiveOpportunityEmail } from './_templates/academy-exclusive-opportunity.tsx';
-import { MarketplaceRequest } from './_templates/marketplace-request.tsx';
-import { CompleteProfileReminder } from './_templates/complete-profile-reminder.tsx';
 import { UnifiedEmail } from './_templates/unified-email.tsx';
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
@@ -52,54 +40,38 @@ const getTemplateId = (type: string): string => {
     'application_accepted': 'application-accepted',
     'application_rejected': 'application-rejected',
     'application_hired': 'application-hired',
-    'application_status': 'application-status', // Fallback for generic status
+    'application_status': 'application-status',
     'opportunity_closed_auto': 'opportunity-closed-auto',
     'opportunity_closed_manual': 'opportunity-closed-manual',
     'opportunity': 'new-opportunity',
     'academy-exclusive': 'new-opportunity',
-    'milestone': 'milestone', // Business milestone notifications
+    'milestone': 'milestone',
     'message': 'new-message',
     'team': 'membership-request',
-    'marketplace': 'new-message',
-    'marketplace_request': 'new-message',
-    'moderation': 'new-message',
+    'marketplace': 'marketplace-request',
+    'marketplace_request': 'marketplace-request',
+    'moderation': 'moderation',
     'welcome-talent': 'welcome-talent',
     'welcome-business': 'welcome-business',
-    'welcome-academy': 'welcome-business',
+    'welcome-academy': 'welcome-academy',
     'complete-profile-reminder': 'onboarding-reminder',
   };
   return mapping[type] || type;
 };
 
-const getTemplateComponent = (type: string) => {
-  switch (type) {
-    case 'application':
-      return ApplicationNotification;
-    case 'opportunity':
-      return OpportunityNotification;
-    case 'academy-exclusive':
-      return AcademyExclusiveOpportunityEmail;
-    case 'message':
-      return MessageNotification;
-    case 'team':
-      return TeamNotification;
-    case 'marketplace':
-      return MarketplaceNotification;
-    case 'marketplace_request':
-      return MarketplaceRequest;
-    case 'moderation':
-      return ModerationNotification;
-    case 'welcome-talent':
-      return WelcomeTalent;
-    case 'welcome-business':
-      return WelcomeBusiness;
-    case 'welcome-academy':
-      return WelcomeAcademy;
-    case 'complete-profile-reminder':
-      return CompleteProfileReminder;
-    default:
-      return ApplicationNotification;
-  }
+// Default template fallback (UnifiedContent format)
+const getDefaultTemplate = (type: string, title: string, message: string): Record<string, any> => {
+  return {
+    header_enabled: true,
+    header_title: '🚀 TalentoDigital',
+    body_content: `<p>Hola <strong>{{first_name}}</strong>,</p><p>${message}</p>`,
+    button_enabled: true,
+    button_text: 'Ver más',
+    button_link: '{{action_url}}',
+    secondary_enabled: false,
+    secondary_content: '',
+    footer_content: '<p>© 2025 TalentoDigital - Conectamos talento con oportunidades</p>',
+  };
 };
 
 // Substitute variables in content
@@ -122,7 +94,8 @@ const handler = async (req: Request): Promise<Response> => {
     const { to, userName, type, title, message, actionUrl, actionText, missingItems, reminderType, data }: NotificationEmailRequest =
       await req.json();
 
-    console.log('Sending notification email:', { to, type, title });
+    console.log('📧 Sending notification email:', { to, type, title });
+    console.log('📊 Data received:', data);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -152,35 +125,47 @@ const handler = async (req: Request): Promise<Response> => {
           headerColor2: customization.email_header_color2 || globalStyles.headerColor2,
           headerTextColor: customization.email_header_text_color || globalStyles.headerTextColor,
         };
-        console.log('Loaded global styles from admin_customization:', globalStyles);
+        console.log('🎨 Loaded global styles from admin_customization');
       }
     } catch (styleError) {
-      console.log('Using default global styles:', styleError);
+      console.log('⚠️ Using default global styles');
     }
 
     // Try to get custom template content from database
     const templateId = getTemplateId(type);
+    console.log('📋 Looking for template:', templateId);
+    
     let dbContent: Record<string, any> | null = null;
     let customSubject: string | null = null;
 
     try {
-      const { data: dbTemplate } = await supabase
+      const { data: dbTemplate, error: templateError } = await supabase
         .from('email_templates')
         .select('content, subject, is_active')
         .eq('id', templateId)
         .single();
 
-      if (dbTemplate && dbTemplate.is_active) {
+      if (templateError) {
+        console.log('⚠️ Template fetch error:', templateError.message);
+      } else if (dbTemplate && dbTemplate.is_active) {
         dbContent = dbTemplate.content as Record<string, any>;
         customSubject = dbTemplate.subject;
-        console.log('Using custom template from database:', templateId, dbContent);
+        console.log('✅ Using custom template from database:', templateId);
       }
     } catch (dbError) {
-      console.log('No custom template found, using defaults:', dbError);
+      console.log('⚠️ No custom template found, using defaults');
+    }
+
+    // Use default template if no database template found
+    if (!dbContent) {
+      console.log('📝 Using default template for type:', type);
+      dbContent = getDefaultTemplate(type, title, message);
     }
 
     // Build variables for substitution
-    const fullActionUrl = actionUrl ? `https://app.talentodigital.io${actionUrl}` : 'https://app.talentodigital.io';
+    const fullActionUrl = actionUrl 
+      ? (actionUrl.startsWith('http') ? actionUrl : `https://app.talentodigital.io${actionUrl}`)
+      : 'https://app.talentodigital.io';
     const firstName = userName?.split(' ')[0] || userName || '';
     
     const variables: Record<string, string> = {
@@ -190,82 +175,45 @@ const handler = async (req: Request): Promise<Response> => {
       user_name: userName || '',
       company_name: data?.companyName || '',
       opportunity_title: data?.opportunityTitle || '',
-      candidate_name: data?.candidateName || '',
+      candidate_name: data?.candidateName || userName || '',
       sender_name: data?.senderName || '',
       application_status: data?.applicationStatus || '',
       action_url: fullActionUrl,
     };
 
-    console.log('Data received for variable substitution:', data);
-    console.log('Variables prepared for template:', variables);
+    console.log('🔧 Variables prepared for template:', variables);
 
-    let html: string;
+    // Process content with variable substitution
+    const processedContent = {
+      header_enabled: dbContent.header_enabled ?? true,
+      header_title: substituteVariables(dbContent.header_title || '🚀 TalentoDigital', variables),
+      body_content: substituteVariables(dbContent.body_content || message, variables),
+      button_enabled: dbContent.button_enabled ?? true,
+      button_text: substituteVariables(dbContent.button_text || actionText || 'Ver más', variables),
+      button_link: substituteVariables(dbContent.button_link || fullActionUrl, variables),
+      secondary_enabled: dbContent.secondary_enabled ?? false,
+      secondary_content: substituteVariables(dbContent.secondary_content || '', variables),
+      footer_content: substituteVariables(dbContent.footer_content || '', variables),
+    };
 
-    // Check if we should use the unified template (has body_content from UnifiedContent structure)
-    const useUnifiedTemplate = dbContent && ('body_content' in dbContent);
+    console.log('📄 Processed content:', {
+      header_title: processedContent.header_title,
+      body_preview: processedContent.body_content.substring(0, 100) + '...',
+      button_text: processedContent.button_text,
+    });
 
-    if (useUnifiedTemplate) {
-      console.log('Using unified template with custom content');
-      
-      // Process content with variable substitution
-      const processedContent = {
-        header_enabled: dbContent.header_enabled ?? true,
-        header_title: substituteVariables(dbContent.header_title || '🚀 TalentoDigital', variables),
-        body_content: substituteVariables(dbContent.body_content || '', variables),
-        button_enabled: dbContent.button_enabled ?? true,
-        button_text: substituteVariables(dbContent.button_text || actionText || 'Ver más', variables),
-        button_link: substituteVariables(dbContent.button_link || fullActionUrl, variables),
-        secondary_enabled: dbContent.secondary_enabled ?? false,
-        secondary_content: substituteVariables(dbContent.secondary_content || '', variables),
-        footer_content: substituteVariables(dbContent.footer_content || '', variables),
-      };
-
-      // Render the unified template
-      html = await renderAsync(
-        React.createElement(UnifiedEmail, {
-          userName,
-          subject: customSubject || title,
-          content: processedContent,
-          globalStyles,
-        })
-      );
-    } else {
-      console.log('Using legacy hardcoded template:', type);
-      
-      // Get the appropriate template component (legacy behavior)
-      const TemplateComponent = getTemplateComponent(type);
-
-      // Build props based on template type
-      let templateProps: any = {
+    // Render the unified template - ALL emails use UnifiedEmail now
+    const html = await renderAsync(
+      React.createElement(UnifiedEmail, {
         userName,
-        title,
-        message,
-        actionUrl: fullActionUrl,
-        actionText,
-      };
-
-      // Add specific props for complete-profile-reminder
-      if (type === 'complete-profile-reminder') {
-        templateProps = {
-          userName,
-          missingItems: missingItems || [],
-          reminderType: reminderType || 'first',
-        };
-      }
-
-      // Merge database content with template props (DB overrides defaults) for legacy templates
-      if (dbContent) {
-        templateProps = { ...templateProps, ...dbContent };
-      }
-
-      // Render the React Email template
-      html = await renderAsync(
-        React.createElement(TemplateComponent, templateProps)
-      );
-    }
+        subject: customSubject || title,
+        content: processedContent,
+        globalStyles,
+      })
+    );
 
     // Use custom subject from DB if available, otherwise use provided title
-    const emailSubject = customSubject || title;
+    const emailSubject = substituteVariables(customSubject || title, variables);
 
     const emailResponse = await resend.emails.send({
       from: 'TalentoDigital Notificaciones <notificaciones@app.talentodigital.io>',
@@ -274,7 +222,7 @@ const handler = async (req: Request): Promise<Response> => {
       html,
     });
 
-    console.log('Email sent successfully:', emailResponse);
+    console.log('✅ Email sent successfully:', emailResponse);
 
     return new Response(JSON.stringify(emailResponse), {
       status: 200,
@@ -284,7 +232,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error('Error in send-notification-email function:', error);
+    console.error('❌ Error in send-notification-email function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
