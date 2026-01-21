@@ -155,10 +155,10 @@ const ApplicationDetail = () => {
 
   // Estados disponibles
   const applicationStates = [
-    { value: 'pending', label: 'En revisión', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'reviewed', label: 'Revisada', color: 'bg-blue-100 text-blue-800' },
-    { value: 'contacted', label: 'Contactado', color: 'bg-green-100 text-green-800' },
-    { value: 'rejected', label: 'Rechazado', color: 'bg-red-100 text-red-800' },
+    { value: 'pending', label: 'Enviada', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'reviewed', label: 'En revisión', color: 'bg-blue-100 text-blue-800' },
+    { value: 'accepted', label: 'Aceptada', color: 'bg-green-100 text-green-800' },
+    { value: 'rejected', label: 'Rechazada', color: 'bg-red-100 text-red-800' },
     { value: 'hired', label: 'Contratado', color: 'bg-purple-100 text-purple-800' }
   ];
 
@@ -890,46 +890,47 @@ const ApplicationDetail = () => {
               </Card>
             </div>
 
-            {/* Descripción y Requisitos */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Descripción */}
-              {application.opportunities?.description && (
-                <Card className="shadow-md hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <FileText className="h-4 w-4 text-blue-600" />
-                      </div>
-                      Descripción
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                      {application.opportunities.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+            {/* Carta de Presentación - Ancho completo */}
+            <Card className="shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <FileText className="h-4 w-4 text-purple-600" />
+                  </div>
+                  Carta de Presentación
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isEditing ? (
+                  <Textarea
+                    value={editData.cover_letter}
+                    onChange={(e) => setEditData({...editData, cover_letter: e.target.value})}
+                    rows={8}
+                    placeholder="Escribe tu carta de presentación..."
+                    className="resize-none"
+                  />
+                ) : (
+                  <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                    {application.cover_letter || 'Sin carta de presentación'}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
-              {/* Requisitos */}
-              {application.opportunities?.requirements && (
-                <Card className="shadow-md hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <div className="p-2 bg-orange-100 rounded-lg">
-                        <Target className="h-4 w-4 text-orange-600" />
-                      </div>
-                      Requisitos
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                      {application.opportunities.requirements}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            {/* Botón para ver la oportunidad */}
+            <Card className="shadow-md hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <Button 
+                  onClick={() => navigate(`/opportunities/${application.opportunity_id}`)}
+                  className="w-full"
+                  variant="outline"
+                  size="lg"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Ver detalles de la oportunidad
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* Timeline de la aplicación */}
             <Card className="border-l-4 border-l-primary shadow-lg">

@@ -7,22 +7,24 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Star,
   User,
   MessageSquare,
-  Check,
-  X,
-  Briefcase,
   Calendar,
   FileCheck,
   FileX,
   Save,
-  
   Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -43,6 +45,19 @@ interface ApplicationDetailModalProps {
   opportunityTitle?: string;
 }
 
+const STATUS_OPTIONS = [
+  { value: 'pending', label: 'Nueva', labelTalent: 'Enviada' },
+  { value: 'reviewed', label: 'En revisión', labelTalent: 'En revisión' },
+  { value: 'accepted', label: 'Aceptada', labelTalent: 'Aceptada' },
+  { value: 'rejected', label: 'Rechazada', labelTalent: 'Rechazada' },
+  { value: 'hired', label: 'Contratado', labelTalent: 'Contratado' },
+];
+
+const getStatusLabel = (status: string, forTalent: boolean = false) => {
+  const option = STATUS_OPTIONS.find(s => s.value === status);
+  return option ? (forTalent ? option.labelTalent : option.label) : status;
+};
+
 const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   application,
   isOpen,
@@ -59,15 +74,14 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   const [isSavingRating, setIsSavingRating] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
   const [externalFormCompleted, setExternalFormCompleted] = useState<boolean | null>(null);
-  const [showAcceptModal, setShowAcceptModal] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [showHiredModal, setShowHiredModal] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(application?.status || 'pending');
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (application && isOpen) {
-      // Load additional data
+      setCurrentStatus(application.status);
       loadApplicationDetails();
-      // Mark as viewed if not already
       markAsViewed();
     }
   }, [application, isOpen]);
@@ -87,9 +101,6 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       setCoverLetter(data.cover_letter || '');
       setRating(data.internal_rating || 0);
       setExternalFormCompleted(data.external_form_completed);
-      
-      // Load internal notes from a custom field or related table if exists
-      // For now using cover_letter as placeholder
     } catch (error) {
       console.error('Error loading application details:', error);
     }
@@ -102,25 +113,39 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       const { data: userData } = await supabase.auth.getUser();
       const viewedBy = userData?.user?.id;
 
+      // Si está en pending y no ha sido vista, cambiar a reviewed automáticamente
+      const updates: Record<string, any> = {
+        is_viewed: true,
+        viewed_at: new Date().toISOString(),
+        viewed_by: viewedBy,
+      };
+
+      // Solo cambiar a 'reviewed' si el estado actual es 'pending'
+      if (application.status === 'pending') {
+        updates.status = 'reviewed';
+        setCurrentStatus('reviewed');
+      }
+
       const { error } = await supabase
         .from('applications')
-        .update({
-          is_viewed: true,
-          viewed_at: new Date().toISOString(),
-          viewed_by: viewedBy,
-        })
+        .update(updates)
         .eq('id', application.id);
 
       if (error) throw error;
 
-      // Send notification to applicant about first view
-      if (!application.is_viewed) {
+      // Enviar notificación al talento sobre el cambio de estado
+      if (application.status === 'pending') {
         await sendNotification({
           userId: application.user_id,
-          type: 'application_viewed',
-          title: 'Tu aplicación fue vista',
-          message: `¡Buenas noticias! Una empresa ha visto tu aplicación${opportunityTitle ? ` para "${opportunityTitle}"` : ''}. Esto no significa que ya tomaron una decisión, pero tu perfil está siendo considerado en el proceso de selección.`,
+          type: 'application_status',
+          title: 'Tu aplicación está siendo revisada',
+          message: `Tu aplicación para "${opportunityTitle || 'una oportunidad'}" está siendo revisada por la empresa.`,
           actionUrl: `/talent-dashboard/applications`,
+          data: {
+            opportunity_id: application.opportunity_id,
+            application_id: application.id,
+            applicationStatus: 'En revisión',
+          },
         });
       }
     } catch (error) {
@@ -133,8 +158,6 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
     setIsSavingNotes(true);
     try {
-      // For now, we'll store notes in a way that can be retrieved
-      // In a production app, you might want a separate notes table
       toast.success('Notas guardadas');
     } catch (error) {
       console.error('Error saving notes:', error);
@@ -163,6 +186,60 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       toast.error('Error al guardar la calificación');
     } finally {
       setIsSavingRating(false);
+    }
+  };
+
+  const handleStatusSelect = (newStatus: string) => {
+    if (newStatus === currentStatus) return;
+    
+    // Para estados que requieren mensaje, mostrar modal
+    if (['accepted', 'rejected', 'hired'].includes(newStatus)) {
+      setPendingStatus(newStatus);
+      setShowStatusModal(true);
+    } else {
+      // Para reviewed, cambiar directamente
+      handleStatusChangeConfirm(newStatus);
+    }
+  };
+
+  const handleStatusChangeConfirm = async (status: string, message?: string) => {
+    if (!application) return;
+
+    try {
+      // Actualizar en BD
+      const { error } = await supabase
+        .from('applications')
+        .update({ 
+          status, 
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', application.id);
+
+      if (error) throw error;
+
+      setCurrentStatus(status);
+
+      // Llamar al callback para actualizar la lista
+      onStatusChange(application.id, status, message);
+
+      // Enviar notificación al talento
+      await sendNotification({
+        userId: application.user_id,
+        type: 'application_status',
+        title: `Tu aplicación fue ${getStatusLabel(status, true).toLowerCase()}`,
+        message: message || `El estado de tu aplicación para "${opportunityTitle || 'una oportunidad'}" cambió a ${getStatusLabel(status, true)}.`,
+        actionUrl: `/talent-dashboard/applications`,
+        data: {
+          opportunity_id: application.opportunity_id,
+          application_id: application.id,
+          applicationStatus: getStatusLabel(status, true),
+        },
+      });
+
+      toast.success(`Estado actualizado a "${getStatusLabel(status)}"`);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Error al actualizar el estado');
     }
   };
 
@@ -218,6 +295,25 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                   </span>
                 </div>
               )}
+            </div>
+
+            <Separator />
+
+            {/* Status Dropdown */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Estado de la aplicación</Label>
+              <Select value={currentStatus} onValueChange={handleStatusSelect}>
+                <SelectTrigger className="w-full max-w-xs">
+                  <SelectValue placeholder="Seleccionar estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <Separator />
@@ -309,76 +405,27 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                   Contactar
                 </Button>
               </div>
-
-              {/* Status Actions Row */}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => setShowAcceptModal(true)}
-                >
-                  <Check className="h-4 w-4 mr-2" />
-                  Aceptar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-red-300 text-red-600 hover:bg-red-50"
-                  onClick={() => setShowRejectModal(true)}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Rechazar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-purple-300 text-purple-600 hover:bg-purple-50"
-                  onClick={() => setShowHiredModal(true)}
-                >
-                  <Briefcase className="h-4 w-4 mr-2" />
-                  Marcar como contratado
-                </Button>
-              </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Accept Modal */}
-      <StatusChangeModal
-        isOpen={showAcceptModal}
-        onClose={() => setShowAcceptModal(false)}
-        type="accept"
-        onConfirm={(message) => {
-          onStatusChange(application.id, 'accepted', message);
-          setShowAcceptModal(false);
-          onClose();
-        }}
-      />
-
-      {/* Reject Modal */}
-      <StatusChangeModal
-        isOpen={showRejectModal}
-        onClose={() => setShowRejectModal(false)}
-        type="reject"
-        onConfirm={(message) => {
-          onStatusChange(application.id, 'rejected', message);
-          setShowRejectModal(false);
-          onClose();
-        }}
-      />
-
-      {/* Hired Modal */}
-      <StatusChangeModal
-        isOpen={showHiredModal}
-        onClose={() => setShowHiredModal(false)}
-        type="hired"
-        onConfirm={(message) => {
-          onStatusChange(application.id, 'hired', message);
-          setShowHiredModal(false);
-          onClose();
-        }}
-      />
+      {/* Status Change Modal */}
+      {pendingStatus && (
+        <StatusChangeModal
+          isOpen={showStatusModal}
+          onClose={() => {
+            setShowStatusModal(false);
+            setPendingStatus(null);
+          }}
+          type={pendingStatus as 'accepted' | 'rejected' | 'hired'}
+          onConfirm={(message) => {
+            handleStatusChangeConfirm(pendingStatus, message);
+            setShowStatusModal(false);
+            setPendingStatus(null);
+          }}
+        />
+      )}
     </>
   );
 };
@@ -387,7 +434,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 interface StatusChangeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'accept' | 'reject' | 'hired';
+  type: 'accepted' | 'rejected' | 'hired';
   onConfirm: (message: string) => void;
 }
 
@@ -398,18 +445,18 @@ const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
   onConfirm,
 }) => {
   const defaultMessages = {
-    accept: `¡Hola!
+    accepted: `¡Hola!
 
 Queremos informarte que tu aplicación ha avanzado en nuestro proceso de selección. Nos gustaría conocerte mejor y platicar sobre los siguientes pasos.
 
 Pronto nos pondremos en contacto contigo para coordinar una conversación.
 
 ¡Gracias por tu interés en formar parte de nuestro equipo!`,
-    reject: `¡Hola!
+    rejected: `¡Hola!
 
 Agradecemos mucho tu interés en esta oportunidad y el tiempo que dedicaste a aplicar. Después de revisar cuidadosamente tu perfil, hemos decidido continuar con otros candidatos cuyos perfiles se ajustan más a lo que buscamos en este momento.
 
-Esto no significa que no valores tu experiencia; simplemente tenemos necesidades muy específicas para esta posición.
+Esto no significa que no valoremos tu experiencia; simplemente tenemos necesidades muy específicas para esta posición.
 
 Te animamos a seguir buscando oportunidades y te deseamos mucho éxito en tu carrera profesional. ¡Sigue adelante!`,
     hired: `¡Felicidades!
@@ -422,26 +469,26 @@ Pronto recibirás más información sobre los siguientes pasos y todo lo relacio
   };
 
   const titles = {
-    accept: 'Aceptar aplicación',
-    reject: 'Rechazar aplicación',
+    accepted: 'Aceptar aplicación',
+    rejected: 'Rechazar aplicación',
     hired: 'Marcar como contratado',
   };
 
   const descriptions = {
-    accept: 'Este mensaje será enviado al candidato para notificarle que su aplicación ha sido aceptada.',
-    reject: 'Este mensaje será enviado al candidato para notificarle el resultado. Recuerda ser empático.',
+    accepted: 'Este mensaje será enviado al candidato para notificarle que su aplicación ha sido aceptada.',
+    rejected: 'Este mensaje será enviado al candidato para notificarle el resultado. Recuerda ser empático.',
     hired: 'Este mensaje será enviado al candidato para felicitarlo por su contratación.',
   };
 
   const buttonLabels = {
-    accept: 'Confirmar aceptación',
-    reject: 'Confirmar rechazo',
+    accepted: 'Confirmar aceptación',
+    rejected: 'Confirmar rechazo',
     hired: 'Confirmar contratación',
   };
 
   const buttonStyles = {
-    accept: 'bg-green-600 hover:bg-green-700',
-    reject: 'bg-red-600 hover:bg-red-700',
+    accepted: 'bg-green-600 hover:bg-green-700',
+    rejected: 'bg-red-600 hover:bg-red-700',
     hired: 'bg-purple-600 hover:bg-purple-700',
   };
 
