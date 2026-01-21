@@ -22,7 +22,7 @@ const ApplicationStatusBadge: React.FC<ApplicationStatusBadgeProps> = ({ status 
         };
       case 'accepted':
         return {
-          label: 'Aceptada',
+          label: 'Aceptada - En evaluación',
           variant: 'secondary' as const,
           className: 'bg-green-100 text-green-800 hover:bg-green-100'
         };

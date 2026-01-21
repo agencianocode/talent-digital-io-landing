@@ -48,6 +48,13 @@ interface NotificationEmailRequest {
 const getTemplateId = (type: string): string => {
   const mapping: Record<string, string> = {
     'application': 'new-application',
+    'application_reviewed': 'application-reviewed',
+    'application_accepted': 'application-accepted',
+    'application_rejected': 'application-rejected',
+    'application_hired': 'application-hired',
+    'application_status': 'application-status', // Fallback for generic status
+    'opportunity_closed_auto': 'opportunity-closed-auto',
+    'opportunity_closed_manual': 'opportunity-closed-manual',
     'opportunity': 'new-opportunity',
     'academy-exclusive': 'new-opportunity',
     'message': 'new-message',
