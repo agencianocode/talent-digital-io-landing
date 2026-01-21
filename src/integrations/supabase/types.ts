@@ -196,6 +196,10 @@ export type Database = {
           contact_email: string | null
           contact_phone: string | null
           created_at: string
+          email_footer_content: string | null
+          email_header_color1: string | null
+          email_header_color2: string | null
+          email_header_text_color: string | null
           enable_academy_features: boolean | null
           enable_chat: boolean | null
           enable_marketplace: boolean | null
@@ -235,6 +239,10 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
+          email_footer_content?: string | null
+          email_header_color1?: string | null
+          email_header_color2?: string | null
+          email_header_text_color?: string | null
           enable_academy_features?: boolean | null
           enable_chat?: boolean | null
           enable_marketplace?: boolean | null
@@ -274,6 +282,10 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
+          email_footer_content?: string | null
+          email_header_color1?: string | null
+          email_header_color2?: string | null
+          email_header_text_color?: string | null
           enable_academy_features?: boolean | null
           enable_chat?: boolean | null
           enable_marketplace?: boolean | null

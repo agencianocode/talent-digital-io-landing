@@ -6,30 +6,29 @@ interface EmailPreviewProps {
   headerTitle: string;
   headerColor1: string;
   headerColor2: string;
+  headerTextColor: 'white' | 'black';
   bodyContent: string;
   buttonEnabled: boolean;
   buttonText: string;
   buttonLink: string;
   secondaryEnabled: boolean;
   secondaryContent: string;
-  footerText: string;
-  footerLink: string;
+  footerContent: string;
 }
 
 export const EmailPreview: React.FC<EmailPreviewProps> = ({
-  subject,
   headerEnabled,
   headerTitle,
   headerColor1,
   headerColor2,
+  headerTextColor,
   bodyContent,
   buttonEnabled,
   buttonText,
   buttonLink,
   secondaryEnabled,
   secondaryContent,
-  footerText,
-  footerLink,
+  footerContent,
 }) => {
   // Convert HTML content to email-safe HTML
   const processHtmlContent = (html: string) => {
@@ -40,6 +39,16 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
       .replace(/<a /g, '<a style="color: #2563eb; text-decoration: underline;" ')
       .replace(/<p>/g, '<p style="color: #555; font-size: 16px; line-height: 1.6; margin: 0 0 16px 0;">')
       .replace(/<p><\/p>/g, '<p style="margin: 0 0 16px 0;">&nbsp;</p>');
+  };
+
+  // Process footer HTML - smaller text and links styled appropriately
+  const processFooterHtml = (html: string) => {
+    return html
+      .replace(/<strong>/g, '<strong style="font-weight: 600;">')
+      .replace(/<em>/g, '<em style="font-style: italic;">')
+      .replace(/<a /g, '<a style="color: #6366f1; text-decoration: none;" ')
+      .replace(/<p>/g, '<p style="color: #888; font-size: 12px; line-height: 1.4; margin: 0 0 8px 0;">')
+      .replace(/<p><\/p>/g, '<p style="margin: 0 0 8px 0;">&nbsp;</p>');
   };
 
   return (
@@ -57,26 +66,14 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
               textAlign: 'center',
             }}
           >
-            <h1 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
+            <h1 style={{ color: headerTextColor, margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
               {headerTitle || 'TalentoDigital'}
             </h1>
           </div>
         )}
 
-        {/* Main Title from Subject */}
-        <div style={{ padding: '30px 30px 0 30px', textAlign: 'center' }}>
-          <h2 style={{ 
-            color: '#1a1a1a', 
-            fontSize: '24px', 
-            fontWeight: 'bold', 
-            margin: '0 0 20px 0' 
-          }}>
-            {subject || 'Asunto del email'}
-          </h2>
-        </div>
-
         {/* Body Content */}
-        <div style={{ padding: '0 30px 30px 30px' }}>
+        <div style={{ padding: '30px' }}>
           <div 
             dangerouslySetInnerHTML={{ __html: processHtmlContent(bodyContent) || '<p style="color: #555;">Contenido del email...</p>' }}
           />
@@ -112,31 +109,15 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
           </div>
         )}
 
-        {/* Footer */}
+        {/* Footer with rich text */}
         <div style={{ 
           borderTop: '1px solid #e5e7eb', 
           padding: '20px 30px', 
           textAlign: 'center' 
         }}>
-          <p style={{ 
-            color: '#888', 
-            fontSize: '12px', 
-            margin: '0 0 8px 0' 
-          }}>
-            {footerText || '© 2025 TalentoDigital - Conectamos talento con oportunidades'}
-          </p>
-          {footerLink && (
-            <a 
-              href={footerLink}
-              style={{ 
-                color: '#6366f1', 
-                fontSize: '12px', 
-                textDecoration: 'none' 
-              }}
-            >
-              Visita nuestra plataforma
-            </a>
-          )}
+          <div 
+            dangerouslySetInnerHTML={{ __html: processFooterHtml(footerContent) || '<p style="color: #888; font-size: 12px;">© 2025 TalentoDigital</p>' }}
+          />
         </div>
       </div>
     </div>
