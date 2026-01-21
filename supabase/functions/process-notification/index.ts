@@ -487,9 +487,24 @@ Deno.serve(async (req) => {
           // For application status notifications TO TALENT, candidateName is the recipient
           additionalData.candidateName = userName;
           
-          // Try to get status from notification.data
-          if (notification.data?.applicationStatus) {
-            additionalData.applicationStatus = notification.data.applicationStatus;
+          // Status translation map for Spanish display
+          const statusTranslationMap: Record<string, string> = {
+            'pending': 'Pendiente',
+            'reviewed': 'En revisión',
+            'accepted': 'Aceptada',
+            'rejected': 'Rechazada',
+            'hired': 'Contratado',
+            'interview': 'En entrevista',
+            'shortlisted': 'Preseleccionado'
+          };
+          
+          // Try to get status from notification.data - check multiple possible field names
+          const rawStatus = notification.data?.new_status || notification.data?.applicationStatus || notification.data?.status;
+          if (rawStatus) {
+            // Translate status to Spanish if in map, otherwise capitalize
+            additionalData.applicationStatus = statusTranslationMap[rawStatus.toLowerCase()] || 
+              (rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase());
+            console.log('Mapped application status:', rawStatus, '->', additionalData.applicationStatus);
           }
           
           // Also try to extract from title (format: "Tu aplicación fue aceptada")
@@ -498,8 +513,16 @@ Deno.serve(async (req) => {
             additionalData.applicationStatus = statusMatch[1].charAt(0).toUpperCase() + statusMatch[1].slice(1).toLowerCase();
           }
           
-          // Get opportunity info if available
-          if (notification.data?.opportunity_id) {
+          // Try to get opportunity info from notification.data FIRST (for test notifications or pre-populated data)
+          if (notification.data?.opportunity_title) {
+            additionalData.opportunityTitle = notification.data.opportunity_title;
+          }
+          if (notification.data?.company_name) {
+            additionalData.companyName = notification.data.company_name;
+          }
+          
+          // If not in data, try to fetch from DB using opportunity_id
+          if (notification.data?.opportunity_id && (!additionalData.opportunityTitle || !additionalData.companyName)) {
             const { data: opportunity } = await supabase
               .from('opportunities')
               .select('title, companies(name)')
@@ -507,8 +530,12 @@ Deno.serve(async (req) => {
               .single();
             
             if (opportunity) {
-              additionalData.opportunityTitle = opportunity.title;
-              additionalData.companyName = (opportunity.companies as any)?.name || '';
+              if (!additionalData.opportunityTitle) {
+                additionalData.opportunityTitle = opportunity.title;
+              }
+              if (!additionalData.companyName) {
+                additionalData.companyName = (opportunity.companies as any)?.name || '';
+              }
             }
           }
           
