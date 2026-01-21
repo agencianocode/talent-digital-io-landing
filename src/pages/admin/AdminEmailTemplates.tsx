@@ -5,6 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   Mail, 
   Save, 
@@ -13,6 +20,7 @@ import {
   Loader2,
   Eye,
   Edit,
+  Settings,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -20,6 +28,7 @@ import { EmailTemplateCard } from '@/components/admin/EmailTemplateCard';
 import { EmailRichTextEditor } from '@/components/admin/EmailTemplateEditor';
 import { EmailPreview } from '@/components/admin/EmailPreview';
 import { useDraftProtection } from '@/hooks/useDraftProtection';
+import { useAdminCustomization } from '@/hooks/useAdminCustomization';
 
 interface EmailTemplate {
   id: string;
@@ -35,16 +44,12 @@ interface EmailTemplate {
 interface UnifiedContent {
   header_enabled: boolean;
   header_title: string;
-  header_color1: string;
-  header_color2: string;
   body_content: string;
   button_enabled: boolean;
   button_text: string;
   button_link: string;
   secondary_enabled: boolean;
   secondary_content: string;
-  footer_text: string;
-  footer_link: string;
 }
 
 // Convert legacy content to unified format
@@ -72,16 +77,12 @@ const convertToUnifiedContent = (content: Record<string, any>): UnifiedContent =
   return {
     header_enabled: content.header_enabled ?? true,
     header_title: content.header_title || content.title || 'TalentoDigital',
-    header_color1: content.header_color1 || '#8B5CF6',
-    header_color2: content.header_color2 || '#D946EF',
     body_content: content.body_content || bodyContent || '<p>Contenido del email...</p>',
     button_enabled: content.button_enabled ?? !!(content.button_text),
     button_text: content.button_text || '',
     button_link: content.button_link || '{{action_url}}',
     secondary_enabled: content.secondary_enabled ?? !!(secondaryContent),
     secondary_content: content.secondary_content || secondaryContent,
-    footer_text: content.footer_text || '© 2025 TalentoDigital - Conectamos talento con oportunidades',
-    footer_link: content.footer_link || 'https://app.talentodigital.io',
   };
 };
 
@@ -92,22 +93,28 @@ const AdminEmailTemplates: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeView, setActiveView] = useState<'list' | 'edit'>('list');
+  const [showGlobalSettings, setShowGlobalSettings] = useState(false);
+  
+  // Global settings from admin customization
+  const { customization, updateCustomization, saving: savingGlobal } = useAdminCustomization();
+  
+  // Local state for global settings dialog
+  const [globalHeaderColor1, setGlobalHeaderColor1] = useState('#8B5CF6');
+  const [globalHeaderColor2, setGlobalHeaderColor2] = useState('#D946EF');
+  const [globalHeaderTextColor, setGlobalHeaderTextColor] = useState<'white' | 'black'>('white');
+  const [globalFooterContent, setGlobalFooterContent] = useState('<p>© 2025 TalentoDigital - Conectamos talento con oportunidades</p><p><a href="https://app.talentodigital.io">Visita nuestra plataforma</a></p>');
   
   // Editor state
   const [subject, setSubject] = useState('');
   const [unifiedContent, setUnifiedContent] = useState<UnifiedContent>({
     header_enabled: true,
     header_title: 'TalentoDigital',
-    header_color1: '#8B5CF6',
-    header_color2: '#D946EF',
     body_content: '',
     button_enabled: false,
     button_text: '',
     button_link: '',
     secondary_enabled: false,
     secondary_content: '',
-    footer_text: '© 2025 TalentoDigital - Conectamos talento con oportunidades',
-    footer_link: 'https://app.talentodigital.io',
   });
 
   // Pending restore state for when templates haven't loaded yet
@@ -116,6 +123,16 @@ const AdminEmailTemplates: React.FC = () => {
     subject: string;
     unifiedContent: UnifiedContent;
   } | null>(null);
+
+  // Update local state when customization loads
+  useEffect(() => {
+    if (customization) {
+      setGlobalHeaderColor1(customization.email_header_color1 || '#8B5CF6');
+      setGlobalHeaderColor2(customization.email_header_color2 || '#D946EF');
+      setGlobalHeaderTextColor((customization.email_header_text_color as 'white' | 'black') || 'white');
+      setGlobalFooterContent(customization.email_footer_content || '<p>© 2025 TalentoDigital - Conectamos talento con oportunidades</p><p><a href="https://app.talentodigital.io">Visita nuestra plataforma</a></p>');
+    }
+  }, [customization]);
 
   // Draft protection with auto-restore
   const handleRestoreDraft = useCallback((data: {
@@ -201,7 +218,6 @@ const AdminEmailTemplates: React.FC = () => {
         // Keep some legacy fields for backwards compatibility with edge functions
         greeting: unifiedContent.body_content.match(/<p>([^<]*)<\/p>/)?.[1] || '',
         button_text: unifiedContent.button_text,
-        footer_text: unifiedContent.footer_text,
       };
 
       const { error } = await supabase
@@ -229,6 +245,18 @@ const AdminEmailTemplates: React.FC = () => {
       toast.error('Error al guardar el template');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveGlobalSettings = async () => {
+    const success = await updateCustomization({
+      email_header_color1: globalHeaderColor1,
+      email_header_color2: globalHeaderColor2,
+      email_header_text_color: globalHeaderTextColor,
+      email_footer_content: globalFooterContent,
+    });
+    if (success) {
+      setShowGlobalSettings(false);
     }
   };
 
@@ -270,6 +298,10 @@ const AdminEmailTemplates: React.FC = () => {
               Gestiona y personaliza los templates de email de la plataforma
             </p>
           </div>
+          <Button variant="outline" onClick={() => setShowGlobalSettings(true)}>
+            <Settings className="h-4 w-4 mr-2" />
+            Configuración Global
+          </Button>
         </div>
 
         {/* Search */}
@@ -303,6 +335,109 @@ const AdminEmailTemplates: React.FC = () => {
             No se encontraron templates que coincidan con la búsqueda
           </div>
         )}
+
+        {/* Global Settings Dialog */}
+        <Dialog open={showGlobalSettings} onOpenChange={setShowGlobalSettings}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Configuración Global de Emails</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6 pt-4">
+              {/* Header Gradient Colors */}
+              <div className="space-y-3">
+                <Label className="text-base font-medium">Gradiente del Header</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Color 1 (Inicio)</Label>
+                    <div className="flex gap-2 mt-1">
+                      <input
+                        type="color"
+                        value={globalHeaderColor1}
+                        onChange={(e) => setGlobalHeaderColor1(e.target.value)}
+                        className="w-12 h-10 rounded border cursor-pointer"
+                      />
+                      <Input
+                        value={globalHeaderColor1}
+                        onChange={(e) => setGlobalHeaderColor1(e.target.value)}
+                        placeholder="#8B5CF6"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Color 2 (Fin)</Label>
+                    <div className="flex gap-2 mt-1">
+                      <input
+                        type="color"
+                        value={globalHeaderColor2}
+                        onChange={(e) => setGlobalHeaderColor2(e.target.value)}
+                        className="w-12 h-10 rounded border cursor-pointer"
+                      />
+                      <Input
+                        value={globalHeaderColor2}
+                        onChange={(e) => setGlobalHeaderColor2(e.target.value)}
+                        placeholder="#D946EF"
+                      />
+                    </div>
+                  </div>
+                </div>
+                {/* Preview of gradient */}
+                <div 
+                  className="h-12 rounded-lg"
+                  style={{ background: `linear-gradient(135deg, ${globalHeaderColor1} 0%, ${globalHeaderColor2} 100%)` }}
+                />
+              </div>
+
+              {/* Header Text Color */}
+              <div className="space-y-3">
+                <Label className="text-base font-medium">Color del Texto del Header</Label>
+                <RadioGroup
+                  value={globalHeaderTextColor}
+                  onValueChange={(v) => setGlobalHeaderTextColor(v as 'white' | 'black')}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="white" id="text-white" />
+                    <Label htmlFor="text-white" className="flex items-center gap-2 cursor-pointer">
+                      <span className="w-6 h-6 rounded border bg-white"></span>
+                      Blanco
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="black" id="text-black" />
+                    <Label htmlFor="text-black" className="flex items-center gap-2 cursor-pointer">
+                      <span className="w-6 h-6 rounded border bg-black"></span>
+                      Negro
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Footer Content */}
+              <div className="space-y-3">
+                <Label className="text-base font-medium">Contenido del Footer</Label>
+                <p className="text-sm text-muted-foreground">
+                  Este footer se usará en todos los emails. Puedes incluir links y formato.
+                </p>
+                <EmailRichTextEditor
+                  value={globalFooterContent}
+                  onChange={setGlobalFooterContent}
+                  placeholder="Texto del footer con links..."
+                  minHeight={80}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowGlobalSettings(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveGlobalSettings} disabled={savingGlobal}>
+                  {savingGlobal ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                  Guardar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -356,11 +491,11 @@ const AdminEmailTemplates: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Header Section */}
+            {/* Header Section - Only title, colors are global */}
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Header con Gradiente</CardTitle>
+                  <CardTitle className="text-base">Header</CardTitle>
                   <Switch
                     checked={unifiedContent.header_enabled}
                     onCheckedChange={(v) => updateContent('header_enabled', v)}
@@ -377,40 +512,9 @@ const AdminEmailTemplates: React.FC = () => {
                       placeholder="TalentoDigital"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Color 1 (Inicio)</Label>
-                      <div className="flex gap-2 mt-1">
-                        <input
-                          type="color"
-                          value={unifiedContent.header_color1}
-                          onChange={(e) => updateContent('header_color1', e.target.value)}
-                          className="w-12 h-10 rounded border cursor-pointer"
-                        />
-                        <Input
-                          value={unifiedContent.header_color1}
-                          onChange={(e) => updateContent('header_color1', e.target.value)}
-                          placeholder="#8B5CF6"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Color 2 (Fin)</Label>
-                      <div className="flex gap-2 mt-1">
-                        <input
-                          type="color"
-                          value={unifiedContent.header_color2}
-                          onChange={(e) => updateContent('header_color2', e.target.value)}
-                          className="w-12 h-10 rounded border cursor-pointer"
-                        />
-                        <Input
-                          value={unifiedContent.header_color2}
-                          onChange={(e) => updateContent('header_color2', e.target.value)}
-                          placeholder="#D946EF"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Los colores del gradiente se configuran en "Configuración Global".
+                  </p>
                 </CardContent>
               )}
             </Card>
@@ -489,28 +593,15 @@ const AdminEmailTemplates: React.FC = () => {
               )}
             </Card>
 
-            {/* Footer */}
+            {/* Footer info */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Footer</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>Texto del Footer</Label>
-                  <Input
-                    value={unifiedContent.footer_text}
-                    onChange={(e) => updateContent('footer_text', e.target.value)}
-                    placeholder="© 2025 TalentoDigital..."
-                  />
-                </div>
-                <div>
-                  <Label>Link del Footer</Label>
-                  <Input
-                    value={unifiedContent.footer_link}
-                    onChange={(e) => updateContent('footer_link', e.target.value)}
-                    placeholder="https://app.talentodigital.io"
-                  />
-                </div>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  El contenido del footer se configura globalmente para todos los emails desde "Configuración Global".
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -521,16 +612,16 @@ const AdminEmailTemplates: React.FC = () => {
             subject={subject}
             headerEnabled={unifiedContent.header_enabled}
             headerTitle={unifiedContent.header_title}
-            headerColor1={unifiedContent.header_color1}
-            headerColor2={unifiedContent.header_color2}
+            headerColor1={globalHeaderColor1}
+            headerColor2={globalHeaderColor2}
+            headerTextColor={globalHeaderTextColor}
             bodyContent={unifiedContent.body_content}
             buttonEnabled={unifiedContent.button_enabled}
             buttonText={unifiedContent.button_text}
             buttonLink={unifiedContent.button_link}
             secondaryEnabled={unifiedContent.secondary_enabled}
             secondaryContent={unifiedContent.secondary_content}
-            footerText={unifiedContent.footer_text}
-            footerLink={unifiedContent.footer_link}
+            footerContent={globalFooterContent}
           />
         </TabsContent>
       </Tabs>
