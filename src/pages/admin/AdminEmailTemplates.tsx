@@ -29,6 +29,7 @@ import { EmailRichTextEditor } from '@/components/admin/EmailTemplateEditor';
 import { EmailPreview } from '@/components/admin/EmailPreview';
 import { useDraftProtection } from '@/hooks/useDraftProtection';
 import { useAdminCustomization } from '@/hooks/useAdminCustomization';
+import { EMAIL_TEMPLATE_VARIABLES } from '@/utils/messageVariables';
 
 interface EmailTemplate {
   id: string;
@@ -50,6 +51,7 @@ interface UnifiedContent {
   button_link: string;
   secondary_enabled: boolean;
   secondary_content: string;
+  footer_content: string;
 }
 
 // Convert legacy content to unified format
@@ -83,6 +85,7 @@ const convertToUnifiedContent = (content: Record<string, any>): UnifiedContent =
     button_link: content.button_link || '{{action_url}}',
     secondary_enabled: content.secondary_enabled ?? !!(secondaryContent),
     secondary_content: content.secondary_content || secondaryContent,
+    footer_content: content.footer_content || '<p>© 2025 TalentoDigital - Conectamos talento con oportunidades</p>',
   };
 };
 
@@ -102,7 +105,8 @@ const AdminEmailTemplates: React.FC = () => {
   const [globalHeaderColor1, setGlobalHeaderColor1] = useState('#8B5CF6');
   const [globalHeaderColor2, setGlobalHeaderColor2] = useState('#D946EF');
   const [globalHeaderTextColor, setGlobalHeaderTextColor] = useState<'white' | 'black'>('white');
-  const [globalFooterContent, setGlobalFooterContent] = useState('<p>© 2025 TalentoDigital - Conectamos talento con oportunidades</p><p><a href="https://app.talentodigital.io">Visita nuestra plataforma</a></p>');
+  const [globalButtonColor, setGlobalButtonColor] = useState('#4f46e5');
+  const [globalButtonTextColor, setGlobalButtonTextColor] = useState<'white' | 'black'>('white');
   
   // Editor state
   const [subject, setSubject] = useState('');
@@ -115,6 +119,7 @@ const AdminEmailTemplates: React.FC = () => {
     button_link: '',
     secondary_enabled: false,
     secondary_content: '',
+    footer_content: '<p>© 2025 TalentoDigital - Conectamos talento con oportunidades</p>',
   });
 
   // Pending restore state for when templates haven't loaded yet
@@ -130,7 +135,8 @@ const AdminEmailTemplates: React.FC = () => {
       setGlobalHeaderColor1(customization.email_header_color1 || '#8B5CF6');
       setGlobalHeaderColor2(customization.email_header_color2 || '#D946EF');
       setGlobalHeaderTextColor((customization.email_header_text_color as 'white' | 'black') || 'white');
-      setGlobalFooterContent(customization.email_footer_content || '<p>© 2025 TalentoDigital - Conectamos talento con oportunidades</p><p><a href="https://app.talentodigital.io">Visita nuestra plataforma</a></p>');
+      setGlobalButtonColor(customization.email_button_color || '#4f46e5');
+      setGlobalButtonTextColor((customization.email_button_text_color as 'white' | 'black') || 'white');
     }
   }, [customization]);
 
@@ -253,7 +259,8 @@ const AdminEmailTemplates: React.FC = () => {
       email_header_color1: globalHeaderColor1,
       email_header_color2: globalHeaderColor2,
       email_header_text_color: globalHeaderTextColor,
-      email_footer_content: globalFooterContent,
+      email_button_color: globalButtonColor,
+      email_button_text_color: globalButtonTextColor,
     });
     if (success) {
       setShowGlobalSettings(false);
@@ -412,18 +419,53 @@ const AdminEmailTemplates: React.FC = () => {
                 </RadioGroup>
               </div>
 
-              {/* Footer Content */}
+              {/* Button Colors */}
               <div className="space-y-3">
-                <Label className="text-base font-medium">Contenido del Footer</Label>
-                <p className="text-sm text-muted-foreground">
-                  Este footer se usará en todos los emails. Puedes incluir links y formato.
-                </p>
-                <EmailRichTextEditor
-                  value={globalFooterContent}
-                  onChange={setGlobalFooterContent}
-                  placeholder="Texto del footer con links..."
-                  minHeight={80}
-                />
+                <Label className="text-base font-medium">Colores del Botón</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Color de Fondo</Label>
+                    <div className="flex gap-2 mt-1">
+                      <input
+                        type="color"
+                        value={globalButtonColor}
+                        onChange={(e) => setGlobalButtonColor(e.target.value)}
+                        className="w-12 h-10 rounded border cursor-pointer"
+                      />
+                      <Input
+                        value={globalButtonColor}
+                        onChange={(e) => setGlobalButtonColor(e.target.value)}
+                        placeholder="#4f46e5"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Color del Texto</Label>
+                    <RadioGroup
+                      value={globalButtonTextColor}
+                      onValueChange={(v) => setGlobalButtonTextColor(v as 'white' | 'black')}
+                      className="flex gap-2 mt-1"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="white" id="btn-text-white" />
+                        <Label htmlFor="btn-text-white" className="cursor-pointer">Blanco</Label>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <RadioGroupItem value="black" id="btn-text-black" />
+                        <Label htmlFor="btn-text-black" className="cursor-pointer">Negro</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+                {/* Preview of button */}
+                <div className="flex justify-center">
+                  <span 
+                    className="inline-block px-6 py-2 rounded-md font-bold text-sm"
+                    style={{ backgroundColor: globalButtonColor, color: globalButtonTextColor }}
+                  >
+                    Botón de ejemplo
+                  </span>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
@@ -524,7 +566,24 @@ const AdminEmailTemplates: React.FC = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Cuerpo del Email</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
+                {/* Variable selector */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Variables:</span>
+                  {EMAIL_TEMPLATE_VARIABLES.map((v) => (
+                    <button
+                      key={v.key}
+                      type="button"
+                      onClick={() => {
+                        updateContent('body_content', unifiedContent.body_content + v.key);
+                      }}
+                      className="text-xs bg-muted hover:bg-muted/80 px-2 py-1 rounded transition-colors"
+                      title={`Ejemplo: ${v.example}`}
+                    >
+                      {v.label}
+                    </button>
+                  ))}
+                </div>
                 <EmailRichTextEditor
                   value={unifiedContent.body_content}
                   onChange={(v) => updateContent('body_content', v)}
@@ -593,14 +652,20 @@ const AdminEmailTemplates: React.FC = () => {
               )}
             </Card>
 
-            {/* Footer info */}
+            {/* Footer - Per template */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Footer</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  El contenido del footer se configura globalmente para todos los emails desde "Configuración Global".
+              <CardContent className="space-y-4">
+                <EmailRichTextEditor
+                  value={unifiedContent.footer_content}
+                  onChange={(v) => updateContent('footer_content', v)}
+                  placeholder="Contenido del footer (copyright, links, etc.)..."
+                  minHeight={80}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Este footer es específico para este email.
                 </p>
               </CardContent>
             </Card>
@@ -619,9 +684,11 @@ const AdminEmailTemplates: React.FC = () => {
             buttonEnabled={unifiedContent.button_enabled}
             buttonText={unifiedContent.button_text}
             buttonLink={unifiedContent.button_link}
+            buttonColor={globalButtonColor}
+            buttonTextColor={globalButtonTextColor}
             secondaryEnabled={unifiedContent.secondary_enabled}
             secondaryContent={unifiedContent.secondary_content}
-            footerContent={globalFooterContent}
+            footerContent={unifiedContent.footer_content}
           />
         </TabsContent>
       </Tabs>
