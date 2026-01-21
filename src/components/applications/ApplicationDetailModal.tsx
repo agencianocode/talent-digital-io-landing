@@ -77,6 +77,8 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   const [currentStatus, setCurrentStatus] = useState(application?.status || 'pending');
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  // Estado local para opportunity_id - garantiza disponibilidad para notificaciones
+  const [opportunityId, setOpportunityId] = useState<string | null>(null);
 
   useEffect(() => {
     if (application && isOpen) {
@@ -102,12 +104,17 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       setRating(data.internal_rating || 0);
       setExternalFormCompleted(data.external_form_completed);
       
-      // Ensure opportunity_id is available for notifications
-      if (!application.opportunity_id && data.opportunity_id) {
-        application.opportunity_id = data.opportunity_id;
-      }
+      // Guardar opportunity_id en estado local para notificaciones
+      const resolvedOpportunityId = data.opportunity_id || application.opportunity_id;
+      setOpportunityId(resolvedOpportunityId);
+      
+      console.log('[ApplicationDetailModal] Loaded details:', {
+        applicationId: application.id,
+        opportunityId: resolvedOpportunityId,
+        hasOpportunityId: !!resolvedOpportunityId,
+      });
     } catch (error) {
-      console.error('Error loading application details:', error);
+      console.error('[ApplicationDetailModal] Error loading application details:', error);
     }
   };
 
@@ -134,7 +141,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       }
 
       const wasStatusPending = currentApp.status === 'pending';
-      const opportunityId = currentApp.opportunity_id || application.opportunity_id;
+      const resolvedOpportunityId = currentApp.opportunity_id || opportunityId || application.opportunity_id;
 
       // Update local state for immediate UI feedback
       if (wasStatusPending) {
@@ -171,12 +178,12 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
       // Send notification to talent about status change
       if (wasStatusPending) {
-        if (!opportunityId) {
-          console.error('[ApplicationDetailModal] Cannot send notification: missing opportunity_id for application', application.id);
+        if (!resolvedOpportunityId) {
+          console.error('[ApplicationDetailModal] Cannot send reviewed notification: missing opportunity_id for application', application.id);
         } else {
           console.log('[ApplicationDetailModal] Sending application_reviewed notification:', {
             userId: application.user_id,
-            opportunityId,
+            opportunityId: resolvedOpportunityId,
             applicationId: application.id,
           });
 
@@ -188,15 +195,15 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
               message: `Tu aplicación a ${opportunityTitle || 'una oportunidad'} fue vista y está en revisión.`,
               actionUrl: `/talent-dashboard/applications`,
               data: {
-                opportunity_id: opportunityId,
+                opportunity_id: resolvedOpportunityId,
                 application_id: application.id,
                 applicationStatus: 'En revisión',
               },
             });
 
-            console.log('[ApplicationDetailModal] Notification result:', result);
+            console.log('[ApplicationDetailModal] Reviewed notification result:', result);
           } catch (notifError) {
-            console.error('[ApplicationDetailModal] Error sending notification:', notifError);
+            console.error('[ApplicationDetailModal] Error sending reviewed notification:', notifError);
           }
         }
       }
@@ -302,31 +309,41 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       const notificationTitle = statusToTitle[status] || `Tu aplicación fue ${getStatusLabel(status, true).toLowerCase()}`;
       const notificationMessage = message || statusToMessage[status] || `El estado de tu aplicación cambió a ${getStatusLabel(status, true)}.`;
 
-      // Enviar notificación al talento
-      if (!application.opportunity_id) {
-        console.error('[ApplicationDetailModal] Cannot send status notification: missing opportunity_id');
+      // Enviar notificación al talento usando opportunityId del estado local
+      const resolvedOpportunityId = opportunityId || application.opportunity_id;
+      
+      if (!resolvedOpportunityId) {
+        console.error('[ApplicationDetailModal] Cannot send status notification: missing opportunity_id', {
+          applicationId: application.id,
+          stateOpportunityId: opportunityId,
+          propOpportunityId: application.opportunity_id,
+        });
       } else {
         console.log('[ApplicationDetailModal] Sending status notification:', {
           userId: application.user_id,
           type: notificationType,
           status,
-          opportunityId: application.opportunity_id,
+          opportunityId: resolvedOpportunityId,
         });
 
-        const result = await sendNotification({
-          userId: application.user_id,
-          type: notificationType,
-          title: notificationTitle,
-          message: notificationMessage,
-          actionUrl: `/talent-dashboard/applications`,
-          data: {
-            opportunity_id: application.opportunity_id,
-            application_id: application.id,
-            applicationStatus: getStatusLabel(status, true),
-          },
-        });
+        try {
+          const result = await sendNotification({
+            userId: application.user_id,
+            type: notificationType,
+            title: notificationTitle,
+            message: notificationMessage,
+            actionUrl: `/talent-dashboard/applications`,
+            data: {
+              opportunity_id: resolvedOpportunityId,
+              application_id: application.id,
+              applicationStatus: getStatusLabel(status, true),
+            },
+          });
 
-        console.log('[ApplicationDetailModal] Status notification result:', result);
+          console.log('[ApplicationDetailModal] Status notification result:', result);
+        } catch (notifError) {
+          console.error('[ApplicationDetailModal] Error sending status notification:', notifError);
+        }
       }
 
       toast.success(`Estado actualizado a "${getStatusLabel(status)}"`);
