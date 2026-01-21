@@ -46,6 +46,7 @@ interface Application {
     currency?: string;
     status: string;
     created_at: string;
+    deadline_date?: string | null;
     companies: {
       name: string;
       logo_url?: string;
@@ -112,6 +113,7 @@ const TalentOpportunities = () => {
             currency,
             status,
             created_at,
+            deadline_date,
             companies (
               id,
               name,
@@ -134,16 +136,29 @@ const TalentOpportunities = () => {
 
   // Estados disponibles para filtros
   const applicationStates = [
-    { value: 'pending', label: 'En revisión', color: 'bg-yellow-100 text-yellow-800', borderColor: 'border-yellow-400', bgHover: 'hover:bg-yellow-50' },
-    { value: 'reviewed', label: 'Revisada', color: 'bg-blue-100 text-blue-800', borderColor: 'border-blue-400', bgHover: 'hover:bg-blue-50' },
-    { value: 'contacted', label: 'Contactado', color: 'bg-green-100 text-green-800', borderColor: 'border-green-400', bgHover: 'hover:bg-green-50' },
-    { value: 'rejected', label: 'Rechazado', color: 'bg-red-100 text-red-800', borderColor: 'border-red-400', bgHover: 'hover:bg-red-50' },
-    { value: 'hired', label: 'Contratado', color: 'bg-purple-100 text-purple-800', borderColor: 'border-purple-400', bgHover: 'hover:bg-purple-50' }
+    { value: 'pending', label: 'Enviada', color: 'bg-yellow-100 text-yellow-800', borderColor: 'border-yellow-400', bgHover: 'hover:bg-yellow-50' },
+    { value: 'reviewed', label: 'En Revisión', color: 'bg-blue-100 text-blue-800', borderColor: 'border-blue-400', bgHover: 'hover:bg-blue-50' },
+    { value: 'accepted', label: 'Aceptada', color: 'bg-green-100 text-green-800', borderColor: 'border-green-400', bgHover: 'hover:bg-green-50' },
+    { value: 'rejected', label: 'Rechazada', color: 'bg-red-100 text-red-800', borderColor: 'border-red-400', bgHover: 'hover:bg-red-50' },
+    { value: 'hired', label: 'Contratado', color: 'bg-purple-100 text-purple-800', borderColor: 'border-purple-400', bgHover: 'hover:bg-purple-50' },
+    { value: 'closed', label: 'Cerrada', color: 'bg-gray-100 text-gray-800', borderColor: 'border-gray-400', bgHover: 'hover:bg-gray-50' }
   ];
 
   // Manejar click en card de filtro
   const handleCardClick = (status: string) => {
     setStatusFilter(prev => prev === status ? "" : status);
+  };
+
+  // Determinar el estado a mostrar considerando oportunidades cerradas
+  const getDisplayStatus = (app: Application): string => {
+    const oppStatus = app.opportunities?.status;
+    const appStatus = app.status;
+    
+    // Si la oportunidad está cerrada y el estado no es rechazada ni contratado, mostrar "Cerrada"
+    if (oppStatus === 'closed' && appStatus !== 'rejected' && appStatus !== 'hired') {
+      return 'closed';
+    }
+    return appStatus;
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -156,13 +171,13 @@ const TalentOpportunities = () => {
     return state ? state.label : status;
   };
 
-  // Contar aplicaciones por estado
+  // Contar aplicaciones por estado (considerando oportunidades cerradas)
   const getApplicationCount = (status: string) => {
     if (!status) return applications.length;
-    return applications.filter(app => app.status === status).length;
+    return applications.filter(app => getDisplayStatus(app) === status).length;
   };
 
-  // Filtrar aplicaciones
+  // Filtrar aplicaciones (considerando display status)
   const filteredApplications = applications.filter(app => {
     // Filtro por término de búsqueda
     if (searchTerm) {
@@ -174,9 +189,10 @@ const TalentOpportunities = () => {
       if (!matchesSearch) return false;
     }
 
-    // Filtro por estado
-    if (statusFilter && statusFilter !== "" && app.status !== statusFilter) {
-      return false;
+    // Filtro por estado (usando displayStatus)
+    if (statusFilter && statusFilter !== "") {
+      const displayStatus = getDisplayStatus(app);
+      if (displayStatus !== statusFilter) return false;
     }
 
     return true;
@@ -380,8 +396,8 @@ const TalentOpportunities = () => {
                                 {application.opportunities?.companies?.name}
                               </p>
                             </div>
-                            <Badge className={getStatusBadgeClass(application.status)}>
-                              {getStatusText(application.status)}
+                            <Badge className={getStatusBadgeClass(getDisplayStatus(application))}>
+                              {getStatusText(getDisplayStatus(application))}
                             </Badge>
                           </div>
 
