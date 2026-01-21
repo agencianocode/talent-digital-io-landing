@@ -48,6 +48,7 @@ const getTemplateId = (type: string): string => {
     'academy-exclusive': 'new-opportunity',
     'milestone': 'milestone',
     'message': 'new-message',
+    'new_message': 'new-message',
     'team': 'membership-request',
     'marketplace': 'marketplace-request',
     'marketplace_request': 'marketplace-request',
