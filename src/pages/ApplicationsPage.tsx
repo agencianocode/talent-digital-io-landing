@@ -13,7 +13,7 @@ import { ApplicationsLoading } from "@/components/ui/enhanced-loading";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import { ApplicantCard, ApplicationDetailModal, BulkActionsBar } from "@/components/applications";
 import type { ApplicantCardData } from "@/components/applications";
-import { sendNotification } from "@/lib/notifications";
+
 
 const ApplicationsPage = () => {
   const navigate = useNavigate();
@@ -169,55 +169,12 @@ const ApplicationsPage = () => {
     navigate(`/business-dashboard/messages?recipient=${userId}`);
   };
 
-  const handleStatusChange = async (applicationId: string, status: string, message?: string) => {
-    try {
-      const { error } = await supabase
-        .from('applications')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', applicationId);
-
-      if (error) throw error;
-
-      // Get application user_id and opportunity info
-      const application = applications.find(app => app.id === applicationId);
-      if (application && message) {
-        // Send notification with message
-        const statusLabels: Record<string, string> = {
-          accepted: 'aceptada',
-          rejected: 'no seleccionada',
-          hired: 'contratado'
-        };
-
-        await sendNotification({
-          userId: application.user_id,
-          type: `application_${status}`,
-          title: `Tu aplicación ha sido ${statusLabels[status] || status}`,
-          message: message,
-          actionUrl: '/talent-dashboard/applications',
-        });
-
-        // Also send as a direct message
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData?.user?.id) {
-          await supabase.from('messages').insert({
-            sender_id: userData.user.id,
-            recipient_id: application.user_id,
-            content: message,
-            conversation_id: `app_${applicationId}`,
-            message_type: 'application_update',
-          });
-        }
-      }
-
-      toast.success(`Aplicación ${status === 'accepted' ? 'aceptada' : status === 'rejected' ? 'rechazada' : 'actualizada'}`);
-      fetchApplications();
-    } catch (error) {
-      console.error('Error updating application status:', error);
-      toast.error('Error al actualizar el estado');
-    }
+  // SIMPLIFIED: The modal (ApplicationDetailModal) handles DB updates and notifications
+  // This callback only refreshes the UI after the modal completes its work
+  const handleStatusChange = async (applicationId: string, status: string, _message?: string) => {
+    console.log('[ApplicationsPage.handleStatusChange] Called - UI refresh only', { applicationId, status });
+    toast.success(`Aplicación ${status === 'accepted' ? 'aceptada' : status === 'rejected' ? 'rechazada' : 'actualizada'}`);
+    fetchApplications();
   };
 
   // Bulk action handlers
