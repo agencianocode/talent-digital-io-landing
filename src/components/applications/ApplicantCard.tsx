@@ -18,7 +18,7 @@ export interface ApplicantCardData {
   is_viewed?: boolean;
   viewed_at?: string | null;
   external_form_completed?: boolean | null;
-  opportunity_id?: string;
+  opportunity_id: string;  // Required for notification system
   opportunity_title?: string;
   profile?: {
     full_name?: string;

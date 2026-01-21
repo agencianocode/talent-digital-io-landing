@@ -92,7 +92,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
     try {
       const { data, error } = await supabase
         .from('applications')
-        .select('cover_letter, internal_rating, external_form_completed')
+        .select('cover_letter, internal_rating, external_form_completed, opportunity_id')
         .eq('id', application.id)
         .single();
 
@@ -101,6 +101,11 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       setCoverLetter(data.cover_letter || '');
       setRating(data.internal_rating || 0);
       setExternalFormCompleted(data.external_form_completed);
+      
+      // Ensure opportunity_id is available for notifications
+      if (!application.opportunity_id && data.opportunity_id) {
+        application.opportunity_id = data.opportunity_id;
+      }
     } catch (error) {
       console.error('Error loading application details:', error);
     }
