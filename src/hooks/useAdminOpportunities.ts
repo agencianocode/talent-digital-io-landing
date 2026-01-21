@@ -357,15 +357,21 @@ export const useAdminOpportunities = () => {
           .in('id', uniqueCompanyIds);
 
         if (companies) {
-          const notifications = companies.map(company => ({
-            user_id: company.user_id,
-            title: 'Oportunidades Pausadas',
-            message: message,
-            type: 'opportunity_status',
-            company_id: company.id,
-          }));
-
-          await supabase.from('notifications').insert(notifications);
+          // Send notifications using RPC for proper email/push processing
+          for (const company of companies) {
+            try {
+              await supabase.rpc('send_notification', {
+                p_user_id: company.user_id,
+                p_type: 'opportunity_status',
+                p_title: 'Oportunidades Pausadas',
+                p_message: message,
+                p_action_url: '/business-dashboard/opportunities',
+                p_data: JSON.stringify({ companyId: company.id })
+              });
+            } catch (notifError) {
+              console.warn('Failed to create notification:', notifError);
+            }
+          }
         }
       }
     } catch (err) {
@@ -421,15 +427,21 @@ export const useAdminOpportunities = () => {
           .in('id', uniqueCompanyIds);
 
         if (companies) {
-          const notifications = companies.map(company => ({
-            user_id: company.user_id,
-            title: 'Oportunidades Eliminadas',
-            message: message,
-            type: 'opportunity_status',
-            company_id: company.id,
-          }));
-
-          await supabase.from('notifications').insert(notifications);
+          // Send notifications using RPC for proper email/push processing
+          for (const company of companies) {
+            try {
+              await supabase.rpc('send_notification', {
+                p_user_id: company.user_id,
+                p_type: 'opportunity_status',
+                p_title: 'Oportunidades Eliminadas',
+                p_message: message,
+                p_action_url: '/business-dashboard/opportunities',
+                p_data: JSON.stringify({ companyId: company.id })
+              });
+            } catch (notifError) {
+              console.warn('Failed to create notification:', notifError);
+            }
+          }
         }
       }
     } catch (err) {

@@ -98,17 +98,18 @@ Deno.serve(async (req) => {
           .single();
 
         if (!existingNotif) {
-          // Create notification
-          const { error: notifError } = await supabase
-            .from('notifications')
-            .insert({
-              user_id: (opp.companies as any).user_id,
-              type: 'opportunity',
-              title: '📊 Oportunidad sin postulantes',
-              message: `Tu oportunidad "${opp.title}" lleva 5 días publicada sin postulantes. ¿Necesitas ajustarla?`,
-              action_url: `/business-dashboard/opportunities/${opp.id}`,
-              read: false
-            });
+          // Create notification using RPC for proper email/push processing
+          const { error: notifError } = await supabase.rpc('send_notification', {
+            p_user_id: (opp.companies as any).user_id,
+            p_type: 'opportunity',
+            p_title: '📊 Oportunidad sin postulantes',
+            p_message: `Tu oportunidad "${opp.title}" lleva 5 días publicada sin postulantes. ¿Necesitas ajustarla?`,
+            p_action_url: `/business-dashboard/opportunities/${opp.id}`,
+            p_data: JSON.stringify({
+              opportunityId: opp.id,
+              opportunityTitle: opp.title
+            })
+          });
 
           if (notifError) {
             console.error('Error creating notification:', notifError);

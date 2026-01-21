@@ -112,20 +112,24 @@ serve(async (req) => {
       );
     }
 
-    // Create in-app notification for talent
-    await supabase.from('notifications').insert({
-      user_id: talentUserId,
-      type: 'message',
-      title: '📬 Nueva solicitud de contacto',
-      message: `${requesterName}${requesterCompany ? ` de ${requesterCompany}` : ''} quiere contactarte desde tu perfil público`,
-      action_url: '/talent-dashboard/contact-requests',
-      data: {
+    // Create in-app notification for talent using RPC for proper email/push processing
+    const { error: notifError } = await supabase.rpc('send_notification', {
+      p_user_id: talentUserId,
+      p_type: 'contact_request',
+      p_title: '📬 Nueva solicitud de contacto',
+      p_message: `${requesterName}${requesterCompany ? ` de ${requesterCompany}` : ''} quiere contactarte desde tu perfil público`,
+      p_action_url: '/talent-dashboard/contact-requests',
+      p_data: JSON.stringify({
         contact_request_id: contactRequest.id,
         requester_email: requesterEmail,
-        requester_name: requesterName
-      },
-      read: false
+        requester_name: requesterName,
+        sender_name: requesterName
+      })
     });
+
+    if (notifError) {
+      console.warn('Failed to create notification via RPC:', notifError);
+    }
 
     // Optionally send email notification (disabled if email is not available)
     // Skipped to avoid dependency on auth.users; in-app notification above is enough for now.

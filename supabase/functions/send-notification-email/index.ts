@@ -36,27 +36,65 @@ interface NotificationEmailRequest {
 // Map notification types to template IDs in database
 const getTemplateId = (type: string): string => {
   const mapping: Record<string, string> = {
+    // Application notifications
     'application': 'new-application',
     'application_reviewed': 'application-reviewed',
     'application_accepted': 'application-accepted',
     'application_rejected': 'application-rejected',
     'application_hired': 'application-hired',
     'application_status': 'application-status',
+    
+    // Opportunity notifications
+    'opportunity': 'new-opportunity',
+    'opportunity_status': 'opportunity-status',
+    'opportunity_closed': 'opportunity-closed-auto',
     'opportunity_closed_auto': 'opportunity-closed-auto',
     'opportunity_closed_manual': 'opportunity-closed-manual',
-    'opportunity': 'new-opportunity',
     'academy-exclusive': 'new-opportunity',
+    
+    // Milestone notifications
     'milestone': 'milestone',
+    
+    // Message notifications (unified)
     'message': 'new-message',
     'new_message': 'new-message',
+    'contact_request': 'new-message',
+    
+    // Team/Membership notifications
     'team': 'membership-request',
+    'company-invitation': 'company-invitation',
+    'company_invitation': 'company-invitation',
+    'membership-approved': 'membership-approved',
+    'membership_approved': 'membership-approved',
+    
+    // Profile notifications
+    'profile-view': 'profile-view',
+    'profile_view': 'profile-view',
+    
+    // Marketplace notifications
     'marketplace': 'marketplace-request',
     'marketplace_request': 'marketplace-request',
+    
+    // Moderation notifications
     'moderation': 'moderation',
+    
+    // Welcome/Onboarding notifications
     'welcome-talent': 'welcome-talent',
     'welcome-business': 'welcome-business',
     'welcome-academy': 'welcome-academy',
     'complete-profile-reminder': 'onboarding-reminder',
+    
+    // Admin notifications
+    'new_user_registration': 'admin-new-user',
+    'new_company_registration': 'admin-new-company',
+    'company_upgrade_request': 'admin-upgrade-request',
+    'opportunity_reports': 'admin-report',
+    'marketplace_reports': 'admin-report',
+    'user_reports': 'admin-report',
+    'content_approval': 'admin-report',
+    'system_errors': 'admin-system-error',
+    'security_alerts': 'admin-security-alert',
+    'publishing_request': 'admin-publishing-request',
   };
   return mapping[type] || type;
 };
