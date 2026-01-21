@@ -100,17 +100,19 @@ Deno.serve(async (req) => {
       opportunitiesClosed++;
       console.log(`✅ Closed opportunity: ${opp.title}`);
 
-      // Create notification for the company owner
-      const { error: notifError } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: (opp.companies as any).user_id,
-          type: 'opportunity',
-          title: '📅 Oportunidad cerrada por fecha límite',
-          message: `Tu oportunidad "${opp.title}" se ha cerrado automáticamente al alcanzar su fecha límite. Puedes reabrirla y establecer una nueva fecha desde tu dashboard.`,
-          action_url: `/business-dashboard/opportunities/${opp.id}`,
-          read: false
-        });
+      // Create notification for the company owner using RPC for proper email/push processing
+      const { error: notifError } = await supabase.rpc('send_notification', {
+        p_user_id: (opp.companies as any).user_id,
+        p_type: 'opportunity_closed_auto',
+        p_title: '📅 Oportunidad cerrada por fecha límite',
+        p_message: `Tu oportunidad "${opp.title}" se ha cerrado automáticamente al alcanzar su fecha límite. Puedes reabrirla y establecer una nueva fecha desde tu dashboard.`,
+        p_action_url: `/business-dashboard/opportunities/${opp.id}`,
+        p_data: JSON.stringify({
+          opportunityId: opp.id,
+          opportunityTitle: opp.title,
+          companyName: (opp.companies as any).name
+        })
+      });
 
       if (notifError) {
         console.error('Error creating notification:', notifError);

@@ -440,23 +440,24 @@ export const useSupabaseOpportunities = () => {
 
       if (updateError) throw updateError;
 
-      // Send notifications to all applicants
+      // Send notifications to all applicants using RPC for proper email/push processing
       if (applicants && applicants.length > 0) {
-        const notifications = applicants.map(applicant => ({
-          user_id: applicant.user_id,
-          type: 'opportunity',
-          title: 'Oportunidad cerrada',
-          message: `La oportunidad "${opportunityData.title}" ha sido cerrada por la empresa`,
-          action_url: `/talent-dashboard/opportunities`,
-          read: false
-        }));
-
-        try {
-          await supabase
-            .from('notifications' as any)
-            .insert(notifications);
-        } catch (notifError) {
-          console.warn('Failed to create notifications:', notifError);
+        for (const applicant of applicants) {
+          try {
+            await supabase.rpc('send_notification', {
+              p_user_id: applicant.user_id,
+              p_type: 'opportunity_closed_manual',
+              p_title: 'Oportunidad cerrada',
+              p_message: `La oportunidad "${opportunityData.title}" ha sido cerrada por la empresa`,
+              p_action_url: '/talent-dashboard/opportunities',
+              p_data: JSON.stringify({
+                opportunityId: opportunityId,
+                opportunityTitle: opportunityData.title
+              })
+            });
+          } catch (notifError) {
+            console.warn('Failed to create notification for applicant:', notifError);
+          }
         }
       }
       
