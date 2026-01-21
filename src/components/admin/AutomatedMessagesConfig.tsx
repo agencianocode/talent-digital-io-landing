@@ -11,9 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, Edit2, ArrowLeft, Building2, GraduationCap, User, Briefcase, Megaphone, ChevronDown, Info, Eye } from 'lucide-react';
+import { Plus, Trash2, Edit2, ArrowLeft, Building2, GraduationCap, User, Briefcase, Megaphone, ChevronDown, Info, Eye, Send } from 'lucide-react';
 import { MESSAGE_VARIABLES, VARIABLES_BY_TRIGGER, RECIPIENT_NOTES, generatePreview } from '@/utils/messageVariables';
-
+import { TestAutomatedMessageModal } from './TestAutomatedMessageModal';
 interface AutomatedMessage {
   id: string;
   trigger_type: string;
@@ -51,6 +51,7 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [variablesOpen, setVariablesOpen] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
+  const [testingMessage, setTestingMessage] = useState<AutomatedMessage | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Form state
@@ -354,23 +355,34 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
                           {message.message_content}
                         </p>
                       </div>
-                      <div className="flex items-center justify-end gap-2 pt-2">
+                      <div className="flex items-center justify-between pt-2">
                         <Button
-                          variant="ghost"
+                          variant="secondary"
                           size="sm"
-                          onClick={() => setDeleteConfirmId(message.id)}
+                          onClick={() => setTestingMessage(message)}
+                          disabled={!message.is_active}
                         >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Eliminar
+                          <Send className="h-4 w-4 mr-1" />
+                          Probar
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenForm(message)}
-                        >
-                          <Edit2 className="h-4 w-4 mr-1" />
-                          Editar
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteConfirmId(message.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Eliminar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenForm(message)}
+                          >
+                            <Edit2 className="h-4 w-4 mr-1" />
+                            Editar
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -556,6 +568,15 @@ export const AutomatedMessagesConfig = ({ onClose }: AutomatedMessagesConfigProp
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Test Automated Message Modal */}
+      {testingMessage && (
+        <TestAutomatedMessageModal
+          isOpen={!!testingMessage}
+          onClose={() => setTestingMessage(null)}
+          message={testingMessage}
+        />
+      )}
     </div>
   );
 };
