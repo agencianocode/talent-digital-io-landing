@@ -31,6 +31,53 @@ import { useDraftProtection } from '@/hooks/useDraftProtection';
 import { useAdminCustomization } from '@/hooks/useAdminCustomization';
 import { EMAIL_TEMPLATE_VARIABLES, TEMPLATE_SPECIFIC_VARIABLES } from '@/utils/messageVariables';
 
+// Categorías de templates
+type TemplateCategory = 'autenticacion' | 'empresa' | 'talento' | 'academia' | 'global';
+
+const TEMPLATE_CATEGORIES: Record<string, TemplateCategory> = {
+  // Autenticación
+  'confirm-signup': 'autenticacion',
+  'magic-link': 'autenticacion',
+  'reset-password': 'autenticacion',
+  // Empresa
+  'welcome-business': 'empresa',
+  'new-application': 'empresa',
+  'milestone': 'empresa',
+  'company-invitation': 'empresa',
+  'membership-request': 'empresa',
+  'membership-approved': 'empresa',
+  // Talento
+  'welcome-talent': 'talento',
+  'application-reviewed': 'talento',
+  'application-accepted': 'talento',
+  'application-rejected': 'talento',
+  'application-hired': 'talento',
+  'application-status': 'talento',
+  'opportunity-closed-auto': 'talento',
+  'opportunity-closed-manual': 'talento',
+  'new-opportunity': 'talento',
+  'profile-view': 'talento',
+  'onboarding-reminder': 'talento',
+  // Academia
+  'welcome-academy': 'academia',
+  // Global
+  'new-message': 'global',
+  'marketplace-request': 'global',
+  'moderation': 'global',
+};
+
+const CATEGORY_INFO: Record<TemplateCategory, { label: string; icon: string; description: string }> = {
+  autenticacion: { label: 'Autenticación', icon: '🔐', description: 'Registro, acceso y contraseña' },
+  empresa: { label: 'Empresa', icon: '🏢', description: 'Templates para perfiles de empresa' },
+  talento: { label: 'Talento', icon: '👤', description: 'Templates para perfiles de talento' },
+  academia: { label: 'Academia', icon: '🎓', description: 'Templates para perfiles de academia' },
+  global: { label: 'Global', icon: '🌐', description: 'Templates globales y mensajería' },
+};
+
+const getTemplateCategory = (templateId: string): TemplateCategory => {
+  return TEMPLATE_CATEGORIES[templateId] || 'global';
+};
+
 interface EmailTemplate {
   id: string;
   name: string;
@@ -96,6 +143,7 @@ const AdminEmailTemplates: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeView, setActiveView] = useState<'list' | 'edit'>('list');
+  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
   
   // Global settings from admin customization
@@ -277,11 +325,24 @@ const AdminEmailTemplates: React.FC = () => {
     setUnifiedContent(prev => ({ ...prev, [key]: value }));
   };
 
-  const filteredTemplates = templates.filter(t => 
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.subject.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTemplates = templates.filter(t => {
+    const matchesSearch = 
+      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.subject.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = selectedCategory === 'all' || getTemplateCategory(t.id) === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
+
+  // Group templates by category for display
+  const groupedTemplates = filteredTemplates.reduce((acc, template) => {
+    const category = getTemplateCategory(template.id);
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(template);
+    return acc;
+  }, {} as Record<TemplateCategory, EmailTemplate[]>);
 
   if (loading) {
     return (
@@ -311,31 +372,101 @@ const AdminEmailTemplates: React.FC = () => {
           </Button>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar templates..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar templates..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          {/* Category Filters */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={selectedCategory === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedCategory('all')}
+            >
+              Todos ({templates.length})
+            </Button>
+            {(Object.entries(CATEGORY_INFO) as [TemplateCategory, typeof CATEGORY_INFO[TemplateCategory]][]).map(([key, info]) => {
+              const count = templates.filter(t => getTemplateCategory(t.id) === key).length;
+              if (count === 0) return null;
+              return (
+                <Button
+                  key={key}
+                  variant={selectedCategory === key ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory(key)}
+                  className="gap-1"
+                >
+                  <span>{info.icon}</span>
+                  {info.label} ({count})
+                </Button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Templates Grid */}
-        <div className="grid gap-3">
-          {filteredTemplates.map((template) => (
-            <EmailTemplateCard
-              key={template.id}
-              id={template.id}
-              name={template.name}
-              subject={template.subject}
-              description={template.description}
-              isActive={template.is_active || false}
-              onClick={() => handleSelectTemplate(template)}
-            />
-          ))}
-        </div>
+        {/* Templates grouped by category */}
+        {selectedCategory === 'all' ? (
+          // Show grouped view when "all" is selected
+          <div className="space-y-6">
+            {(Object.entries(CATEGORY_INFO) as [TemplateCategory, typeof CATEGORY_INFO[TemplateCategory]][]).map(([category, info]) => {
+              const categoryTemplates = groupedTemplates[category];
+              if (!categoryTemplates || categoryTemplates.length === 0) return null;
+              
+              return (
+                <div key={category} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{info.icon}</span>
+                    <h2 className="text-lg font-semibold">{info.label}</h2>
+                    <span className="text-sm text-muted-foreground">— {info.description}</span>
+                  </div>
+                  <div className="grid gap-3">
+                    {categoryTemplates.map((template) => (
+                      <EmailTemplateCard
+                        key={template.id}
+                        id={template.id}
+                        name={template.name}
+                        subject={template.subject}
+                        description={template.description}
+                        isActive={template.is_active || false}
+                        onClick={() => handleSelectTemplate(template)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          // Show flat list when a specific category is selected
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">{CATEGORY_INFO[selectedCategory].icon}</span>
+              <h2 className="text-lg font-semibold">{CATEGORY_INFO[selectedCategory].label}</h2>
+              <span className="text-sm text-muted-foreground">— {CATEGORY_INFO[selectedCategory].description}</span>
+            </div>
+            <div className="grid gap-3">
+              {filteredTemplates.map((template) => (
+                <EmailTemplateCard
+                  key={template.id}
+                  id={template.id}
+                  name={template.name}
+                  subject={template.subject}
+                  description={template.description}
+                  isActive={template.is_active || false}
+                  onClick={() => handleSelectTemplate(template)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {filteredTemplates.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
