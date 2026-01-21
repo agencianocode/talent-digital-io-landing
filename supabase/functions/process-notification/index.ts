@@ -304,6 +304,34 @@ Deno.serve(async (req) => {
           }
         }
 
+        // For application_status notifications, extract status label
+        if (notification.type === 'application_status') {
+          // Try to get status from notification.data
+          if (notification.data?.applicationStatus) {
+            additionalData.applicationStatus = notification.data.applicationStatus;
+          }
+          
+          // Also try to extract from title (format: "Tu aplicación fue aceptada")
+          const statusMatch = notification.title.match(/(enviada|en revisión|aceptada|rechazada|contratado)/i);
+          if (statusMatch && !additionalData.applicationStatus) {
+            additionalData.applicationStatus = statusMatch[1].charAt(0).toUpperCase() + statusMatch[1].slice(1).toLowerCase();
+          }
+          
+          // Get opportunity info if available
+          if (notification.data?.opportunity_id) {
+            const { data: opportunity } = await supabase
+              .from('opportunities')
+              .select('title, companies(name)')
+              .eq('id', notification.data.opportunity_id)
+              .single();
+            
+            if (opportunity) {
+              additionalData.opportunityTitle = opportunity.title;
+              additionalData.companyName = (opportunity.companies as any)?.name || '';
+            }
+          }
+        }
+
         console.log('Additional data for email variables:', additionalData);
 
         const { data: emailData, error: emailError } = await supabase.functions.invoke(

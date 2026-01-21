@@ -6,17 +6,17 @@ interface ApplicationStatusBadgeProps {
 }
 
 const ApplicationStatusBadge: React.FC<ApplicationStatusBadgeProps> = ({ status }) => {
-  const getStatusConfig = (status: string) => {
+  const getStatusConfig = (status: string, forTalent: boolean = false) => {
     switch (status) {
       case 'pending':
         return {
-          label: 'Pendiente',
+          label: forTalent ? 'Enviada' : 'Nueva',
           variant: 'secondary' as const,
           className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
         };
       case 'reviewed':
         return {
-          label: 'En Revisión',
+          label: 'En revisión',
           variant: 'secondary' as const,
           className: 'bg-blue-100 text-blue-800 hover:bg-blue-100'
         };
@@ -31,6 +31,12 @@ const ApplicationStatusBadge: React.FC<ApplicationStatusBadgeProps> = ({ status 
           label: 'Rechazada',
           variant: 'secondary' as const,
           className: 'bg-red-100 text-red-800 hover:bg-red-100'
+        };
+      case 'hired':
+        return {
+          label: 'Contratado',
+          variant: 'secondary' as const,
+          className: 'bg-purple-100 text-purple-800 hover:bg-purple-100'
         };
       default:
         return {

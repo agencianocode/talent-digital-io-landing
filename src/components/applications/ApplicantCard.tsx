@@ -37,17 +37,15 @@ interface ApplicantCardProps {
 const getStatusConfig = (status: string) => {
   switch (status) {
     case 'pending':
-      return { label: 'Pendiente', className: 'bg-yellow-100 text-yellow-800' };
+      return { label: 'Nueva', className: 'bg-yellow-100 text-yellow-800' };
     case 'reviewed':
-      return { label: 'Revisada', className: 'bg-blue-100 text-blue-800' };
+      return { label: 'En revisión', className: 'bg-blue-100 text-blue-800' };
     case 'accepted':
       return { label: 'Aceptada', className: 'bg-green-100 text-green-800' };
     case 'rejected':
       return { label: 'Rechazada', className: 'bg-red-100 text-red-800' };
     case 'hired':
       return { label: 'Contratado', className: 'bg-purple-100 text-purple-800' };
-    case 'contacted':
-      return { label: 'Contactado', className: 'bg-indigo-100 text-indigo-800' };
     default:
       return { label: status, className: 'bg-gray-100 text-gray-800' };
   }
