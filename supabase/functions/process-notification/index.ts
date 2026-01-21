@@ -307,7 +307,8 @@ Deno.serve(async (req) => {
         }
 
         // For message notifications, get sender name and message preview
-        if (notification.type === 'message') {
+        // Support both 'message' (legacy) and 'new_message' (current trigger)
+        if (notification.type === 'message' || notification.type === 'new_message') {
           // Try from notification.data if it has sender_name directly
           if (notification.data?.sender_name) {
             additionalData.senderName = notification.data.sender_name;
