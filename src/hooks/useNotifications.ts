@@ -66,7 +66,7 @@ export const useNotifications = (companyId?: string) => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
         },
-        async (payload) => {
+        (payload) => {
           console.log('[useNotifications] New notification received via Realtime:', payload);
           
           // Check if notification is for the current company
@@ -76,25 +76,7 @@ export const useNotifications = (companyId?: string) => {
             return;
           }
           
-          // Automatically process the notification to send emails
-          const notificationId = newNotification?.id;
-          if (notificationId) {
-            try {
-              console.log('[useNotifications] Auto-processing notification:', notificationId);
-              const { error } = await supabase.functions.invoke('process-notification', {
-                body: { notification_id: notificationId }
-              });
-              
-              if (error) {
-                console.error('[useNotifications] Error auto-processing notification:', error);
-              } else {
-                console.log('[useNotifications] Notification processed successfully');
-              }
-            } catch (error) {
-              console.error('[useNotifications] Exception auto-processing notification:', error);
-            }
-          }
-          
+          // Just update the counter - processing is handled by database trigger or the creating function
           fetchUnreadCount();
         }
       )

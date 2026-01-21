@@ -157,7 +157,8 @@ Deno.serve(async (req) => {
 
     console.log('Notification created:', notification.id);
 
-    // Process the notification (sends email, push, etc.)
+    // Process the notification immediately (sends email, push, etc.)
+    // Note: This is the single point of processing for test notifications
     const { data: processResult, error: processError } = await supabase.functions.invoke(
       'process-notification',
       {
@@ -169,7 +170,7 @@ Deno.serve(async (req) => {
 
     if (processError) {
       console.error('Error processing notification:', processError);
-      throw new Error(`Failed to process notification: ${processError.message}`);
+      // Don't throw - notification was created, just processing failed
     }
 
     console.log('Notification processed:', processResult);

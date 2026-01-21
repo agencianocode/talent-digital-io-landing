@@ -55,6 +55,15 @@ Deno.serve(async (req) => {
       throw new Error(`Notification not found: ${notificationError?.message}`);
     }
 
+    // Prevent duplicate processing - check if already processed
+    if (notification.processed) {
+      console.log('Notification already processed, skipping:', notification_id);
+      return new Response(
+        JSON.stringify({ success: true, message: 'Already processed', skipped: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log('Notification details:', notification);
 
     // Get user details
