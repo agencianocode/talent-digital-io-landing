@@ -1,6 +1,6 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Webhook } from 'https://esm.sh/standardwebhooks@1.0.0'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { UnifiedEmail } from './_templates/unified-email.tsx'
