@@ -102,6 +102,11 @@ Deno.serve(async (req) => {
     // Map notification type to config ID
     const typeToConfigMap: Record<string, string> = {
       'application': 'new_application',
+      'application_status': 'application_status',
+      'application_accepted': 'application_status',
+      'application_rejected': 'application_status',
+      'application_hired': 'application_status',
+      'application_reviewed': 'application_status',
       'team': 'team_member_added',
       'marketplace': 'marketplace_reports',
       'opportunity': 'opportunity_reports',
