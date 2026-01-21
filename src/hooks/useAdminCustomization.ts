@@ -43,7 +43,8 @@ export interface AdminCustomization {
   email_header_color1: string;
   email_header_color2: string;
   email_header_text_color: 'white' | 'black';
-  email_footer_content: string;
+  email_button_color: string;
+  email_button_text_color: string;
 }
 
 export const useAdminCustomization = () => {

@@ -11,6 +11,8 @@ interface EmailPreviewProps {
   buttonEnabled: boolean;
   buttonText: string;
   buttonLink: string;
+  buttonColor: string;
+  buttonTextColor: string;
   secondaryEnabled: boolean;
   secondaryContent: string;
   footerContent: string;
@@ -26,6 +28,8 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
   buttonEnabled,
   buttonText,
   buttonLink,
+  buttonColor,
+  buttonTextColor,
   secondaryEnabled,
   secondaryContent,
   footerContent,
@@ -87,8 +91,8 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
               href={buttonLink || '#'}
               style={{
                 display: 'inline-block',
-                backgroundColor: headerEnabled ? headerColor1 : '#4f46e5',
-                color: 'white',
+                backgroundColor: buttonColor || '#4f46e5',
+                color: buttonTextColor || 'white',
                 padding: '14px 30px',
                 borderRadius: '6px',
                 textDecoration: 'none',

@@ -196,7 +196,8 @@ export type Database = {
           contact_email: string | null
           contact_phone: string | null
           created_at: string
-          email_footer_content: string | null
+          email_button_color: string | null
+          email_button_text_color: string | null
           email_header_color1: string | null
           email_header_color2: string | null
           email_header_text_color: string | null
@@ -239,7 +240,8 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
-          email_footer_content?: string | null
+          email_button_color?: string | null
+          email_button_text_color?: string | null
           email_header_color1?: string | null
           email_header_color2?: string | null
           email_header_text_color?: string | null
@@ -282,7 +284,8 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
-          email_footer_content?: string | null
+          email_button_color?: string | null
+          email_button_text_color?: string | null
           email_header_color1?: string | null
           email_header_color2?: string | null
           email_header_text_color?: string | null

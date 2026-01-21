@@ -5,6 +5,11 @@ export const MESSAGE_VARIABLES = {
     label: 'Primer nombre',
     example: 'Juan',
   },
+  last_name: {
+    key: '{{last_name}}',
+    label: 'Apellido',
+    example: 'García',
+  },
   full_name: {
     key: '{{full_name}}',
     label: 'Nombre completo',
@@ -45,6 +50,7 @@ export const substituteVariables = (
   template: string,
   context: {
     firstName?: string;
+    lastName?: string;
     fullName?: string;
     companyName?: string;
     opportunityTitle?: string;
@@ -52,15 +58,25 @@ export const substituteVariables = (
 ): string => {
   return template
     .replace(/\{\{first_name\}\}/gi, context.firstName || '')
+    .replace(/\{\{last_name\}\}/gi, context.lastName || '')
     .replace(/\{\{full_name\}\}/gi, context.fullName || '')
     .replace(/\{\{company_name\}\}/gi, context.companyName || '')
     .replace(/\{\{opportunity_title\}\}/gi, context.opportunityTitle || '');
 };
 
+// Variables disponibles para templates de email (subset)
+export const EMAIL_TEMPLATE_VARIABLES = [
+  MESSAGE_VARIABLES.first_name,
+  MESSAGE_VARIABLES.last_name,
+  MESSAGE_VARIABLES.full_name,
+  MESSAGE_VARIABLES.company_name,
+];
+
 // Genera un preview con datos de ejemplo
 export const generatePreview = (template: string): string => {
   return substituteVariables(template, {
     firstName: MESSAGE_VARIABLES.first_name.example,
+    lastName: MESSAGE_VARIABLES.last_name.example,
     fullName: MESSAGE_VARIABLES.full_name.example,
     companyName: MESSAGE_VARIABLES.company_name.example,
     opportunityTitle: MESSAGE_VARIABLES.opportunity_title.example,
