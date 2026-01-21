@@ -358,6 +358,9 @@ Deno.serve(async (req) => {
             );
           }
           
+          // For application status notifications TO TALENT, candidateName is the recipient
+          additionalData.candidateName = userName;
+          
           // Try to get status from notification.data
           if (notification.data?.applicationStatus) {
             additionalData.applicationStatus = notification.data.applicationStatus;
