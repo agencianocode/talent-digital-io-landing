@@ -41,7 +41,7 @@ const getStatusConfig = (status: string) => {
     case 'reviewed':
       return { label: 'En revisión', className: 'bg-blue-100 text-blue-800' };
     case 'accepted':
-      return { label: 'Aceptada', className: 'bg-green-100 text-green-800' };
+      return { label: 'Aceptada - En evaluación', className: 'bg-green-100 text-green-800' };
     case 'rejected':
       return { label: 'Rechazada', className: 'bg-red-100 text-red-800' };
     case 'hired':

@@ -103,10 +103,12 @@ Deno.serve(async (req) => {
     const typeToConfigMap: Record<string, string> = {
       'application': 'new_application',
       'application_status': 'application_status',
+      'application_reviewed': 'application_status',
       'application_accepted': 'application_status',
       'application_rejected': 'application_status',
       'application_hired': 'application_status',
-      'application_reviewed': 'application_status',
+      'opportunity_closed_auto': 'application_status',
+      'opportunity_closed_manual': 'application_status',
       'team': 'team_member_added',
       'marketplace': 'marketplace_reports',
       'opportunity': 'opportunity_reports',
@@ -309,8 +311,9 @@ Deno.serve(async (req) => {
           }
         }
 
-        // For application_status notifications, extract status label
-        if (notification.type === 'application_status') {
+        // For application_status and specific status notifications, extract status label
+        const applicationStatusTypes = ['application_status', 'application_reviewed', 'application_accepted', 'application_rejected', 'application_hired', 'opportunity_closed_auto', 'opportunity_closed_manual'];
+        if (applicationStatusTypes.includes(notification.type)) {
           // Try to get status from notification.data
           if (notification.data?.applicationStatus) {
             additionalData.applicationStatus = notification.data.applicationStatus;

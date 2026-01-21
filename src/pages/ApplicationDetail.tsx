@@ -157,7 +157,7 @@ const ApplicationDetail = () => {
   const applicationStates = [
     { value: 'pending', label: 'Enviada', color: 'bg-yellow-100 text-yellow-800' },
     { value: 'reviewed', label: 'En revisión', color: 'bg-blue-100 text-blue-800' },
-    { value: 'accepted', label: 'Aceptada', color: 'bg-green-100 text-green-800' },
+    { value: 'accepted', label: 'Aceptada - En evaluación', color: 'bg-green-100 text-green-800' },
     { value: 'rejected', label: 'Rechazada', color: 'bg-red-100 text-red-800' },
     { value: 'hired', label: 'Contratado', color: 'bg-purple-100 text-purple-800' }
   ];

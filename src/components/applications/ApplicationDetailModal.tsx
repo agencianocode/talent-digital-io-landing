@@ -48,7 +48,7 @@ interface ApplicationDetailModalProps {
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Nueva', labelTalent: 'Enviada' },
   { value: 'reviewed', label: 'En revisión', labelTalent: 'En revisión' },
-  { value: 'accepted', label: 'Aceptada', labelTalent: 'Aceptada' },
+  { value: 'accepted', label: 'Aceptada - Candidato en evaluación', labelTalent: 'Aceptada - En evaluación' },
   { value: 'rejected', label: 'Rechazada', labelTalent: 'Rechazada' },
   { value: 'hired', label: 'Contratado', labelTalent: 'Contratado' },
 ];
@@ -142,9 +142,9 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       if (wasStatusPending) {
         await sendNotification({
           userId: application.user_id,
-          type: 'application_status',
-          title: 'Tu aplicación está siendo revisada',
-          message: `Tu aplicación para "${opportunityTitle || 'una oportunidad'}" está siendo revisada por la empresa.`,
+          type: 'application_reviewed', // Tipo específico para reviewed
+          title: 'Tu aplicación está en revisión 🔍',
+          message: `Tu aplicación a ${opportunityTitle || 'una oportunidad'} fue vista y está en revisión.`,
           actionUrl: `/talent-dashboard/applications`,
           data: {
             opportunity_id: application.opportunity_id,
@@ -227,12 +227,40 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       // Llamar al callback para actualizar la lista
       onStatusChange(application.id, status, message);
 
+      // Mapear estado a tipo de notificación específico
+      const statusToNotificationType: Record<string, string> = {
+        'reviewed': 'application_reviewed',
+        'accepted': 'application_accepted',
+        'rejected': 'application_rejected',
+        'hired': 'application_hired',
+      };
+
+      // Mapear estado a título de notificación
+      const statusToTitle: Record<string, string> = {
+        'reviewed': 'Tu aplicación está en revisión 🔍',
+        'accepted': 'Avanzaste en el proceso 🎉',
+        'rejected': 'Actualización sobre tu aplicación',
+        'hired': '¡Felicitaciones! Fuiste contratado 🎉',
+      };
+
+      // Mapear estado a mensaje de notificación
+      const statusToMessage: Record<string, string> = {
+        'reviewed': `Tu aplicación a ${opportunityTitle || 'una oportunidad'} fue vista y está en revisión.`,
+        'accepted': `¡Buenas noticias! Tu perfil fue aceptado para la siguiente etapa en ${opportunityTitle || 'una oportunidad'}.`,
+        'rejected': `Gracias por postularte a ${opportunityTitle || 'una oportunidad'}. En esta ocasión, la empresa decidió avanzar con otros perfiles.`,
+        'hired': `¡Felicitaciones! Fuiste seleccionado/a y contratado/a para ${opportunityTitle || 'una oportunidad'}.`,
+      };
+
+      const notificationType = statusToNotificationType[status] || 'application_status';
+      const notificationTitle = statusToTitle[status] || `Tu aplicación fue ${getStatusLabel(status, true).toLowerCase()}`;
+      const notificationMessage = message || statusToMessage[status] || `El estado de tu aplicación cambió a ${getStatusLabel(status, true)}.`;
+
       // Enviar notificación al talento
       await sendNotification({
         userId: application.user_id,
-        type: 'application_status',
-        title: `Tu aplicación fue ${getStatusLabel(status, true).toLowerCase()}`,
-        message: message || `El estado de tu aplicación para "${opportunityTitle || 'una oportunidad'}" cambió a ${getStatusLabel(status, true)}.`,
+        type: notificationType,
+        title: notificationTitle,
+        message: notificationMessage,
         actionUrl: `/talent-dashboard/applications`,
         data: {
           opportunity_id: application.opportunity_id,
