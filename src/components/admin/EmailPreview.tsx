@@ -42,7 +42,8 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
   };
 
   // Process footer HTML - smaller text and links styled appropriately
-  const processFooterHtml = (html: string) => {
+  const processFooterHtml = (html: string | undefined) => {
+    if (!html) return '';
     return html
       .replace(/<strong>/g, '<strong style="font-weight: 600;">')
       .replace(/<em>/g, '<em style="font-style: italic;">')
