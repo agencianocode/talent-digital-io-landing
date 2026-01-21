@@ -37,6 +37,14 @@ export async function sendNotification(params: {
   actionUrl?: string;
   data?: Record<string, any>;
 }) {
+  // HIGH VISIBILITY LOGGING
+  console.log('=== sendNotification CALLED ===', {
+    userId: params.userId,
+    type: params.type,
+    title: params.title,
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     // Call the database function to create notification
     // This will automatically check if notifications are enabled
@@ -56,25 +64,36 @@ export async function sendNotification(params: {
 
     // If notification was created, process it for multi-channel delivery
     if (data) {
-      console.log('[sendNotification] Notification created:', data, 'Type:', params.type);
-      
-      // The database trigger will automatically call process-notification edge function via pg_net
-      // But we also call it explicitly for immediate processing
-      const { data: processResult, error: processError } = await supabase.functions.invoke('process-notification', {
-        body: { notification_id: data },
+      console.log('[sendNotification] Notification created successfully:', {
+        notificationId: data,
+        type: params.type,
+        userId: params.userId,
       });
+      
+      // Call process-notification edge function for immediate processing
+      // The DB trigger also calls it as a backup via pg_net
+      try {
+        const { data: processResult, error: processError } = await supabase.functions.invoke('process-notification', {
+          body: { notification_id: data },
+        });
 
-      if (processError) {
-        console.error('[sendNotification] Error invoking process-notification:', processError);
-        // El trigger de BD debería procesarlo como respaldo via pg_net
-      } else {
-        console.log('[sendNotification] Process result:', processResult);
+        if (processError) {
+          console.error('[sendNotification] Error invoking process-notification:', processError);
+          // The DB trigger should process it as backup via pg_net
+        } else {
+          console.log('[sendNotification] Process result:', processResult);
+        }
+      } catch (invokeError) {
+        console.error('[sendNotification] Exception invoking Edge Function:', invokeError);
+        // The DB trigger should process it as backup
       }
+    } else {
+      console.warn('[sendNotification] No notification ID returned - notification may be disabled');
     }
 
     return { success: true, notificationId: data };
   } catch (error) {
-    console.error('Exception sending notification:', error);
+    console.error('[sendNotification] Exception:', error);
     return { success: false, error };
   }
 }
