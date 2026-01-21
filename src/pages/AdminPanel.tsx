@@ -58,6 +58,7 @@ const AdminPanel: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [companyFilterId, setCompanyFilterId] = useState<string | null>(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Check if we should auto-filter unread messages
   const shouldFilterUnread = searchParams.get('unread') === 'true';
@@ -145,9 +146,16 @@ const AdminPanel: React.FC = () => {
     loadStats();
   }, [requests]);
 
-  // Show loading while authentication is being checked
-  if (authLoading) {
-    console.log('AdminPanel: Showing loading state - authLoading:', authLoading);
+  // Mark initial load as complete once auth and role are ready
+  useEffect(() => {
+    if (!authLoading && userRole) {
+      setInitialLoadComplete(true);
+    }
+  }, [authLoading, userRole]);
+
+  // Show loading ONLY during initial load, not during session re-verification
+  if (authLoading && !initialLoadComplete) {
+    console.log('AdminPanel: Showing loading state - initial auth loading');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -155,13 +163,14 @@ const AdminPanel: React.FC = () => {
     );
   }
 
-  // Enhanced validation with better logging
-  if (!isAuthenticated) {
+  // Redirect if not authenticated (but only after loading completes)
+  if (!isAuthenticated && !authLoading) {
     console.log('AdminPanel: User not authenticated, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
-  if (!userRole) {
+  // Show role loading ONLY during initial load
+  if (!userRole && !initialLoadComplete) {
     console.log('AdminPanel: No user role available, showing loading');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -170,9 +179,9 @@ const AdminPanel: React.FC = () => {
     );
   }
 
-  if (userRole !== 'admin') {
+  // Redirect non-admins only when we have a role
+  if (userRole && userRole !== 'admin') {
     console.log('AdminPanel: User role is not admin:', userRole, '- redirecting to appropriate dashboard');
-    // Redirect to appropriate dashboard based on role
     const redirectPath = isBusinessRole(userRole) ? '/business-dashboard' : '/talent-dashboard';
     return <Navigate to={redirectPath} replace />;
   }
