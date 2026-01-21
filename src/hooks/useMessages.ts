@@ -457,8 +457,24 @@ export const useMessages = (companyId?: string) => {
     try {
       setIsLoading(true);
       
+      // Buscar conversation_uuid existente para mantener consistencia
+      let conversationUuid: string | null = null;
+      const { data: existingMessage } = await supabase
+        .from('messages' as any)
+        .select('conversation_uuid')
+        .eq('conversation_id', messageData.conversation_id)
+        .not('conversation_uuid', 'is', null)
+        .limit(1)
+        .maybeSingle();
+
+      if ((existingMessage as any)?.conversation_uuid) {
+        conversationUuid = (existingMessage as any).conversation_uuid;
+        console.log('[sendMessage] Found existing conversation_uuid:', conversationUuid);
+      }
+      
       console.log('[sendMessage] Inserting message with data:', {
         conversation_id: messageData.conversation_id,
+        conversation_uuid: conversationUuid,
         recipient_id: messageData.recipient_id,
         message_type: messageData.message_type,
         content: messageData.content,
@@ -472,6 +488,7 @@ export const useMessages = (companyId?: string) => {
         .from('messages' as any)
         .insert({
           conversation_id: messageData.conversation_id,
+          conversation_uuid: conversationUuid,
           sender_id: user.id,
           recipient_id: messageData.recipient_id,
           message_type: messageData.message_type,
