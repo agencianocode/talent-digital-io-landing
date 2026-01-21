@@ -188,6 +188,9 @@ const handler = async (req: Request): Promise<Response> => {
       action_url: fullActionUrl,
     };
 
+    console.log('Data received for variable substitution:', data);
+    console.log('Variables prepared for template:', variables);
+
     let html: string;
 
     // Check if we should use the unified template (has body_content from UnifiedContent structure)

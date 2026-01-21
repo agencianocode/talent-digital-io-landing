@@ -178,6 +178,69 @@ Deno.serve(async (req) => {
 
         console.log('Sending email to:', userEmail);
 
+        // Extract additional data for variable substitution
+        let additionalData: Record<string, string> = {};
+
+        // For application notifications, get candidate name and opportunity title
+        if (notification.type === 'application') {
+          // Try to extract from message first (format: "Nombre aplicó a \"Título\"")
+          const messageMatch = notification.message.match(/^(.+?) aplicó a "(.+)"$/);
+          if (messageMatch) {
+            additionalData.candidateName = messageMatch[1];
+            additionalData.opportunityTitle = messageMatch[2];
+          }
+
+          // Also try to get from database using IDs in notification.data
+          if (notification.data?.opportunity_id) {
+            const { data: opportunity } = await supabase
+              .from('opportunities')
+              .select('title, companies(name)')
+              .eq('id', notification.data.opportunity_id)
+              .single();
+            
+            if (opportunity) {
+              additionalData.opportunityTitle = opportunity.title;
+              additionalData.companyName = (opportunity.companies as any)?.name || '';
+            }
+          }
+
+          if (notification.data?.application_id) {
+            const { data: application } = await supabase
+              .from('applications')
+              .select('user_id')
+              .eq('id', notification.data.application_id)
+              .single();
+            
+            if (application?.user_id) {
+              const { data: applicantProfile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('user_id', application.user_id)
+                .single();
+              
+              if (applicantProfile?.full_name) {
+                additionalData.candidateName = applicantProfile.full_name;
+              }
+            }
+          }
+        }
+
+        // For opportunity notifications
+        if (notification.type === 'opportunity' && notification.data?.opportunity_id) {
+          const { data: opportunity } = await supabase
+            .from('opportunities')
+            .select('title, companies(name)')
+            .eq('id', notification.data.opportunity_id)
+            .single();
+          
+          if (opportunity) {
+            additionalData.opportunityTitle = opportunity.title;
+            additionalData.companyName = (opportunity.companies as any)?.name || '';
+          }
+        }
+
+        console.log('Additional data for email variables:', additionalData);
+
         const { data: emailData, error: emailError } = await supabase.functions.invoke(
           'send-notification-email',
           {
@@ -189,6 +252,12 @@ Deno.serve(async (req) => {
               message: notification.message,
               actionUrl: notification.action_url,
               actionText: 'Ver detalles',
+              // Include enriched data for variable substitution
+              data: {
+                candidateName: additionalData.candidateName,
+                opportunityTitle: additionalData.opportunityTitle,
+                companyName: additionalData.companyName,
+              },
               // Include marketplace request data if present
               ...(notification.type === 'marketplace' && notification.data ? {
                 contactName: notification.data.contact_name,
