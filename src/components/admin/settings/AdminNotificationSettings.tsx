@@ -235,13 +235,37 @@ const AdminNotificationSettings: React.FC = () => {
         
         // Load notifications array
         const notificationsSetting = data.find(s => s.key === 'notifications');
-        const loadedNotifications = notificationsSetting && notificationsSetting.value
-          ? JSON.parse(notificationsSetting.value)
-          : defaultNotifications;
+        
+        let finalNotifications = defaultNotifications;
+        
+        if (notificationsSetting && notificationsSetting.value) {
+          const savedNotifications = JSON.parse(notificationsSetting.value);
+          
+          // Sincronizar: usar defaultNotifications como base, 
+          // pero mantener las preferencias guardadas del usuario
+          finalNotifications = defaultNotifications.map(defaultNotif => {
+            const savedNotif = savedNotifications.find(
+              (s: NotificationType) => s.id === defaultNotif.id
+            );
+            
+            // Si existe en los guardados, mantener sus preferencias
+            if (savedNotif) {
+              return {
+                ...defaultNotif,
+                enabled: savedNotif.enabled,
+                email: savedNotif.email,
+                push: savedNotif.push,
+              };
+            }
+            
+            // Si no existe, usar los valores por defecto
+            return defaultNotif;
+          });
+        }
 
         form.reset({
           admin_email: adminEmailSetting?.value || '',
-          notifications: loadedNotifications,
+          notifications: finalNotifications,
         });
       }
     } catch (error) {
