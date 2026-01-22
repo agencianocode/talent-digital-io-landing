@@ -130,7 +130,7 @@ const defaultNotifications: NotificationType[] = [
     push: false,
   },
   
-  // === Soporte y Feedback ===
+  // === Soporte y Feedback (Admin) ===
   {
     id: 'new_bug_report',
     name: 'Nuevos Reportes de Problemas',
@@ -159,6 +159,40 @@ const defaultNotifications: NotificationType[] = [
     id: 'new_feedback_comment_admin',
     name: 'Comentarios en Sugerencias',
     description: 'Recibir notificaciones cuando un usuario comente en una sugerencia.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  
+  // === Soporte y Feedback (Usuarios) ===
+  {
+    id: 'bug_report_status_change',
+    name: 'Cambio de Estado de Reporte',
+    description: 'Notificación para usuarios cuando cambie el estado de su reporte.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'bug_report_new_comment',
+    name: 'Respuesta en Reporte',
+    description: 'Notificación para usuarios cuando reciban una respuesta en su reporte.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'feedback_status_change',
+    name: 'Cambio de Estado de Sugerencia',
+    description: 'Notificación para usuarios cuando cambie el estado de su sugerencia.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'feedback_new_comment',
+    name: 'Respuesta en Sugerencia',
+    description: 'Notificación para usuarios cuando reciban una respuesta en su sugerencia.',
     enabled: true,
     email: true,
     push: true,
