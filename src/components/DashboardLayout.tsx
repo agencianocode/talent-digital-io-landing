@@ -124,7 +124,7 @@ const DashboardLayout = () => {
               <nav className="p-4">
                 <ul className="space-y-2">
                   {navigationItems.map(item => <li key={item.to}>
-                      <NavLink to={item.to} onClick={closeMobileMenu} className={({
+                      <NavLink to={item.to} end={item.to === "/business-dashboard"} onClick={closeMobileMenu} className={({
                   isActive
                 }) => cn("flex items-center gap-3 px-3 py-3 rounded-md transition-colors", isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
                         <item.icon className="h-5 w-5" />
