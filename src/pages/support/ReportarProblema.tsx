@@ -31,23 +31,19 @@ interface BugReport {
   status: string;
   created_at: string;
   user_id: string;
-  profiles?: {
-    full_name: string | null;
-    avatar_url: string | null;
-  };
+  profile_name?: string | null;
+  profile_avatar?: string | null;
   comments_count?: number;
 }
 
 interface Comment {
   id: string;
   content: string;
-  is_admin_reply: boolean;
+  is_admin_reply: boolean | null;
   created_at: string;
   user_id: string;
-  profiles?: {
-    full_name: string | null;
-    avatar_url: string | null;
-  };
+  profile_name?: string | null;
+  profile_avatar?: string | null;
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -60,7 +56,6 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 
 const ReportarProblema = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { user, profile } = useSupabaseAuth();
   
   const [reports, setReports] = useState<BugReport[]>([]);
@@ -101,13 +96,23 @@ const ReportarProblema = () => {
     try {
       const { data, error } = await supabase
         .from('bug_reports')
-        .select(`
-          *,
-          profiles:user_id (full_name, avatar_url)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      // Get user ids to fetch profiles
+      const userIds = [...new Set((data || []).map(r => r.user_id))];
+      
+      // Fetch profiles separately
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', userIds);
+      
+      const profilesMap = new Map(
+        (profilesData || []).map(p => [p.user_id, p])
+      );
 
       // Get comment counts
       const reportsWithCounts = await Promise.all(
@@ -116,7 +121,15 @@ const ReportarProblema = () => {
             .from('bug_report_comments')
             .select('*', { count: 'exact', head: true })
             .eq('bug_report_id', report.id);
-          return { ...report, comments_count: count || 0 };
+          
+          const userProfile = profilesMap.get(report.user_id);
+          
+          return { 
+            ...report, 
+            comments_count: count || 0,
+            profile_name: userProfile?.full_name || null,
+            profile_avatar: userProfile?.avatar_url || null
+          };
         })
       );
 
@@ -134,28 +147,55 @@ const ReportarProblema = () => {
       // Load report
       const { data: reportData, error: reportError } = await supabase
         .from('bug_reports')
-        .select(`
-          *,
-          profiles:user_id (full_name, avatar_url)
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
       if (reportError) throw reportError;
-      setSelectedReport(reportData as BugReport);
+
+      // Fetch profile for the report owner
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('user_id', reportData.user_id)
+        .single();
+
+      setSelectedReport({
+        ...reportData,
+        profile_name: profileData?.full_name || null,
+        profile_avatar: profileData?.avatar_url || null
+      } as BugReport);
 
       // Load comments
       const { data: commentsData, error: commentsError } = await supabase
         .from('bug_report_comments')
-        .select(`
-          *,
-          profiles:user_id (full_name, avatar_url)
-        `)
+        .select('*')
         .eq('bug_report_id', id)
         .order('created_at', { ascending: true });
 
       if (commentsError) throw commentsError;
-      setComments((commentsData || []) as Comment[]);
+
+      // Fetch profiles for comments
+      const commentUserIds = [...new Set((commentsData || []).map(c => c.user_id))];
+      const { data: commentProfilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', commentUserIds);
+      
+      const commentProfilesMap = new Map(
+        (commentProfilesData || []).map(p => [p.user_id, p])
+      );
+
+      const commentsWithProfiles = (commentsData || []).map(comment => {
+        const commentProfile = commentProfilesMap.get(comment.user_id);
+        return {
+          ...comment,
+          profile_name: commentProfile?.full_name || null,
+          profile_avatar: commentProfile?.avatar_url || null
+        };
+      });
+
+      setComments(commentsWithProfiles as Comment[]);
 
       // Check subscription
       if (user) {
@@ -286,7 +326,7 @@ const ReportarProblema = () => {
     }
   };
 
-  const getInitials = (name: string | null) => {
+  const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
     const parts = name.split(' ');
     if (parts.length >= 2) {
@@ -297,7 +337,7 @@ const ReportarProblema = () => {
 
   // Render report detail
   if (selectedReport) {
-    const status = statusLabels[selectedReport.status] || statusLabels.open;
+    const statusInfo = statusLabels[selectedReport.status] || statusLabels.open;
 
     return (
       <SupportPageLayout title="TalentoDigital.io Reportes de Problemas">
@@ -316,17 +356,17 @@ const ReportarProblema = () => {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className={status.color}>{status.label}</Badge>
+                    <Badge className={statusInfo?.color ?? 'bg-gray-100 text-gray-700'}>{statusInfo?.label ?? 'Abierto'}</Badge>
                   </div>
                   <CardTitle className="text-xl">{selectedReport.title}</CardTitle>
                   <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={selectedReport.profiles?.avatar_url || undefined} />
+                      <AvatarImage src={selectedReport.profile_avatar || undefined} />
                       <AvatarFallback className="text-xs">
-                        {getInitials(selectedReport.profiles?.full_name)}
+                        {getInitials(selectedReport.profile_name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span>{selectedReport.profiles?.full_name || 'Usuario'}</span>
+                    <span>{selectedReport.profile_name || 'Usuario'}</span>
                     <span>•</span>
                     <Clock className="h-3 w-3" />
                     <span>{new Date(selectedReport.created_at).toLocaleDateString()}</span>
@@ -390,15 +430,15 @@ const ReportarProblema = () => {
                       className={`flex gap-3 ${comment.is_admin_reply ? 'bg-primary/5 -mx-4 px-4 py-3 rounded-lg' : ''}`}
                     >
                       <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarImage src={comment.profiles?.avatar_url || undefined} />
+                        <AvatarImage src={comment.profile_avatar || undefined} />
                         <AvatarFallback className="text-xs">
-                          {getInitials(comment.profiles?.full_name)}
+                          {getInitials(comment.profile_name)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm">
-                            {comment.profiles?.full_name || 'Usuario'}
+                            {comment.profile_name || 'Usuario'}
                           </span>
                           {comment.is_admin_reply && (
                             <Badge variant="default" className="text-xs">Admin</Badge>
@@ -499,15 +539,15 @@ const ReportarProblema = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="image">URL de imagen (opcional)</Label>
+                  <Label htmlFor="image_url">URL de imagen (opcional)</Label>
                   <Input
-                    id="image"
+                    id="image_url"
                     placeholder="https://..."
                     value={createForm.image_url}
                     onChange={(e) => setCreateForm(prev => ({ ...prev, image_url: e.target.value }))}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Puedes subir una captura a un servicio como imgur.com y pegar el link aquí
+                    Puedes incluir una captura de pantalla
                   </p>
                 </div>
               </div>
@@ -516,7 +556,8 @@ const ReportarProblema = () => {
                   Cancelar
                 </Button>
                 <Button onClick={handleCreateReport} disabled={creating}>
-                  {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reportar'}
+                  {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Reportar
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -524,40 +565,52 @@ const ReportarProblema = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : reports.length === 0 ? (
           <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              No hay reportes de problemas aún. ¡Sé el primero en reportar uno!
+            <CardContent className="text-center py-12">
+              <p className="text-muted-foreground mb-4">No hay reportes aún</p>
+              <Button onClick={() => setIsCreateOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Reportar un problema
+              </Button>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-3">
             {reports.map(report => {
-              const status = statusLabels[report.status] || statusLabels.open;
-              
+              const statusInfo = statusLabels[report.status] ?? statusLabels.open;
               return (
                 <Card 
                   key={report.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  className="hover:border-primary/50 transition-colors cursor-pointer"
                   onClick={() => setSearchParams({ id: report.id })}
                 >
-                  <CardContent className="py-4">
-                    <div className="flex items-start justify-between gap-4">
+                  <CardContent className="p-4">
+                    <div className="flex gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge className={status.color}>{status.label}</Badge>
+                          <Badge className={statusInfo?.color ?? 'bg-gray-100 text-gray-700'}>{statusInfo?.label ?? 'Abierto'}</Badge>
                         </div>
                         <h3 className="font-medium truncate">{report.title}</h3>
                         <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3" />
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={report.profile_avatar || undefined} />
+                              <AvatarFallback className="text-xs">
+                                {getInitials(report.profile_name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{report.profile_name || 'Usuario'}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="h-4 w-4" />
                             <span>{report.comments_count || 0}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
+                            <Clock className="h-4 w-4" />
                             <span>{new Date(report.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>

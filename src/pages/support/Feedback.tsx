@@ -39,11 +39,9 @@ interface Suggestion {
   created_at: string;
   user_id: string;
   category_id: string | null;
-  category?: FeedbackCategory;
-  profiles?: {
-    full_name: string | null;
-    avatar_url: string | null;
-  };
+  category?: FeedbackCategory | null;
+  profile_name?: string | null;
+  profile_avatar?: string | null;
   comments_count?: number;
   has_voted?: boolean;
 }
@@ -51,13 +49,11 @@ interface Suggestion {
 interface Comment {
   id: string;
   content: string;
-  is_admin_reply: boolean;
+  is_admin_reply: boolean | null;
   created_at: string;
   user_id: string;
-  profiles?: {
-    full_name: string | null;
-    avatar_url: string | null;
-  };
+  profile_name?: string | null;
+  profile_avatar?: string | null;
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -116,7 +112,6 @@ const Feedback = () => {
           .from('feedback_suggestions')
           .select(`
             *,
-            profiles:user_id (full_name, avatar_url),
             feedback_categories:category_id (id, name)
           `)
           .order('votes_count', { ascending: false })
@@ -126,6 +121,19 @@ const Feedback = () => {
       if (suggestionsRes.error) throw suggestionsRes.error;
 
       setCategories((categoriesRes.data || []) as FeedbackCategory[]);
+
+      // Get user ids to fetch profiles
+      const userIds = [...new Set((suggestionsRes.data || []).map(s => s.user_id))];
+      
+      // Fetch profiles separately
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', userIds);
+      
+      const profilesMap = new Map(
+        (profilesData || []).map(p => [p.user_id, p])
+      );
 
       // Get comment counts and user votes
       const suggestionsWithData = await Promise.all(
@@ -143,11 +151,15 @@ const Feedback = () => {
               .maybeSingle() : Promise.resolve({ data: null })
           ]);
           
+          const userProfile = profilesMap.get(suggestion.user_id);
+          
           return { 
             ...suggestion, 
             category: suggestion.feedback_categories,
             comments_count: commentsRes.count || 0,
-            has_voted: !!voteRes.data
+            has_voted: !!voteRes.data,
+            profile_name: userProfile?.full_name || null,
+            profile_avatar: userProfile?.avatar_url || null
           };
         })
       );
@@ -168,13 +180,19 @@ const Feedback = () => {
         .from('feedback_suggestions')
         .select(`
           *,
-          profiles:user_id (full_name, avatar_url),
           feedback_categories:category_id (id, name)
         `)
         .eq('id', id)
         .single();
 
       if (suggestionError) throw suggestionError;
+
+      // Fetch profile for the suggestion owner
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('user_id', suggestionData.user_id)
+        .single();
 
       // Check user vote
       let hasVoted = false;
@@ -191,21 +209,41 @@ const Feedback = () => {
       setSelectedSuggestion({
         ...suggestionData,
         category: suggestionData.feedback_categories,
-        has_voted: hasVoted
+        has_voted: hasVoted,
+        profile_name: profileData?.full_name || null,
+        profile_avatar: profileData?.avatar_url || null
       } as Suggestion);
 
       // Load comments
       const { data: commentsData, error: commentsError } = await supabase
         .from('feedback_comments')
-        .select(`
-          *,
-          profiles:user_id (full_name, avatar_url)
-        `)
+        .select('*')
         .eq('suggestion_id', id)
         .order('created_at', { ascending: true });
 
       if (commentsError) throw commentsError;
-      setComments((commentsData || []) as Comment[]);
+
+      // Fetch profiles for comments
+      const commentUserIds = [...new Set((commentsData || []).map(c => c.user_id))];
+      const { data: commentProfilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', commentUserIds);
+      
+      const commentProfilesMap = new Map(
+        (commentProfilesData || []).map(p => [p.user_id, p])
+      );
+
+      const commentsWithProfiles = (commentsData || []).map(comment => {
+        const commentProfile = commentProfilesMap.get(comment.user_id);
+        return {
+          ...comment,
+          profile_name: commentProfile?.full_name || null,
+          profile_avatar: commentProfile?.avatar_url || null
+        };
+      });
+
+      setComments(commentsWithProfiles as Comment[]);
 
       // Check subscription
       if (user) {
@@ -392,7 +430,7 @@ const Feedback = () => {
     }
   };
 
-  const getInitials = (name: string | null) => {
+  const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
     const parts = name.split(' ');
     if (parts.length >= 2) {
@@ -403,7 +441,7 @@ const Feedback = () => {
 
   // Render suggestion detail
   if (selectedSuggestion) {
-    const status = statusLabels[selectedSuggestion.status] || statusLabels.new;
+    const statusInfo = statusLabels[selectedSuggestion.status] || statusLabels.new;
 
     return (
       <SupportPageLayout title="TalentoDigital.io Feedback">
@@ -434,7 +472,7 @@ const Feedback = () => {
 
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge className={status.color}>{status.label}</Badge>
+                      <Badge className={statusInfo?.color ?? 'bg-gray-100 text-gray-700'}>{statusInfo?.label ?? 'Nueva'}</Badge>
                       {selectedSuggestion.category && (
                         <Badge variant="outline">{selectedSuggestion.category.name}</Badge>
                       )}
@@ -442,12 +480,12 @@ const Feedback = () => {
                     <CardTitle className="text-xl">{selectedSuggestion.title}</CardTitle>
                     <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={selectedSuggestion.profiles?.avatar_url || undefined} />
+                        <AvatarImage src={selectedSuggestion.profile_avatar || undefined} />
                         <AvatarFallback className="text-xs">
-                          {getInitials(selectedSuggestion.profiles?.full_name)}
+                          {getInitials(selectedSuggestion.profile_name)}
                         </AvatarFallback>
                       </Avatar>
-                      <span>{selectedSuggestion.profiles?.full_name || 'Usuario'}</span>
+                      <span>{selectedSuggestion.profile_name || 'Usuario'}</span>
                       <span>•</span>
                       <Clock className="h-3 w-3" />
                       <span>{new Date(selectedSuggestion.created_at).toLocaleDateString()}</span>
@@ -504,15 +542,15 @@ const Feedback = () => {
                       className={`flex gap-3 ${comment.is_admin_reply ? 'bg-primary/5 -mx-4 px-4 py-3 rounded-lg' : ''}`}
                     >
                       <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarImage src={comment.profiles?.avatar_url || undefined} />
+                        <AvatarImage src={comment.profile_avatar || undefined} />
                         <AvatarFallback className="text-xs">
-                          {getInitials(comment.profiles?.full_name)}
+                          {getInitials(comment.profile_name)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm">
-                            {comment.profiles?.full_name || 'Usuario'}
+                            {comment.profile_name || 'Usuario'}
                           </span>
                           {comment.is_admin_reply && (
                             <Badge variant="default" className="text-xs">Admin</Badge>
@@ -576,9 +614,9 @@ const Feedback = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold">Sugerencias y Mejoras</h2>
+            <h2 className="text-2xl font-bold">Sugerencias de Mejora</h2>
             <p className="text-muted-foreground">
-              Vota por las funcionalidades que te gustaría ver
+              Vota por las ideas que te gustaría ver implementadas
             </p>
           </div>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -606,7 +644,7 @@ const Feedback = () => {
                   <Label htmlFor="description">Descripción *</Label>
                   <Textarea
                     id="description"
-                    placeholder="Explica en detalle qué te gustaría que agregáramos o mejoráramos"
+                    placeholder="Explica en detalle qué te gustaría ver y por qué sería útil"
                     value={createForm.description}
                     onChange={(e) => setCreateForm(prev => ({ ...prev, description: e.target.value }))}
                     rows={5}
@@ -623,9 +661,7 @@ const Feedback = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -636,7 +672,8 @@ const Feedback = () => {
                   Cancelar
                 </Button>
                 <Button onClick={handleCreateSuggestion} disabled={creating}>
-                  {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear sugerencia'}
+                  {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Crear sugerencia
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -644,54 +681,66 @@ const Feedback = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : suggestions.length === 0 ? (
           <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              No hay sugerencias aún. ¡Sé el primero en sugerir una mejora!
+            <CardContent className="text-center py-12">
+              <p className="text-muted-foreground mb-4">No hay sugerencias aún</p>
+              <Button onClick={() => setIsCreateOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Sé el primero en sugerir
+              </Button>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-3">
             {suggestions.map(suggestion => {
-              const status = statusLabels[suggestion.status] || statusLabels.new;
-              
+              const statusInfo = statusLabels[suggestion.status] ?? statusLabels.new;
               return (
                 <Card 
                   key={suggestion.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  className="hover:border-primary/50 transition-colors cursor-pointer"
                   onClick={() => setSearchParams({ id: suggestion.id })}
                 >
-                  <CardContent className="py-4">
-                    <div className="flex items-start gap-4">
+                  <CardContent className="p-4">
+                    <div className="flex gap-4">
                       {/* Vote button */}
                       <Button
                         variant={suggestion.has_voted ? "default" : "outline"}
                         size="sm"
-                        className="flex flex-col h-auto py-2 px-3 flex-shrink-0"
+                        className="flex flex-col h-auto py-2 px-3"
                         onClick={(e) => handleVote(suggestion, e)}
                       >
                         <ChevronUp className="h-4 w-4" />
-                        <span className="text-sm font-bold">{suggestion.votes_count}</span>
+                        <span className="text-sm font-bold">{suggestion.votes_count ?? 0}</span>
                       </Button>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <Badge className={status.color}>{status.label}</Badge>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge className={statusInfo?.color ?? 'bg-gray-100 text-gray-700'}>{statusInfo?.label ?? 'Nueva'}</Badge>
                           {suggestion.category && (
                             <Badge variant="outline">{suggestion.category.name}</Badge>
                           )}
                         </div>
-                        <h3 className="font-medium">{suggestion.title}</h3>
+                        <h3 className="font-medium truncate">{suggestion.title}</h3>
                         <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3" />
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={suggestion.profile_avatar || undefined} />
+                              <AvatarFallback className="text-xs">
+                                {getInitials(suggestion.profile_name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{suggestion.profile_name || 'Usuario'}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="h-4 w-4" />
                             <span>{suggestion.comments_count || 0}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
+                            <Clock className="h-4 w-4" />
                             <span>{new Date(suggestion.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
