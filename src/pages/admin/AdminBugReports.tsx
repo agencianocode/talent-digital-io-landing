@@ -6,22 +6,22 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { 
   Search, 
   Bug,
   MessageSquare,
   Send,
   ArrowLeft,
-  AlertTriangle,
-  CheckCircle,
   Clock,
-  XCircle
+  MoreVertical,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 interface BugReport {
   id: string;
@@ -49,18 +49,38 @@ interface Comment {
   profile_avatar: string | null;
 }
 
-interface Category {
-  id: string;
-  name: string;
-}
-
-const statusOptions = [
-  { value: 'open', label: 'Abierto', icon: AlertTriangle, color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'in_review', label: 'En revisión', icon: Clock, color: 'bg-blue-100 text-blue-800' },
-  { value: 'in_progress', label: 'En progreso', icon: Clock, color: 'bg-purple-100 text-purple-800' },
-  { value: 'resolved', label: 'Resuelto', icon: CheckCircle, color: 'bg-green-100 text-green-800' },
-  { value: 'closed', label: 'Cerrado', icon: XCircle, color: 'bg-gray-100 text-gray-800' },
-];
+const statusLabels: Record<string, { label: string; color: string; helperText?: string }> = {
+  open: { 
+    label: 'Abierto', 
+    color: 'bg-blue-100 text-blue-700',
+    helperText: 'Estamos al tanto del problema y lo vamos a revisar.'
+  },
+  reviewing: { 
+    label: 'En revisión', 
+    color: 'bg-yellow-100 text-yellow-700',
+    helperText: 'El equipo está analizando este problema.'
+  },
+  in_review: { 
+    label: 'En revisión', 
+    color: 'bg-yellow-100 text-yellow-700',
+    helperText: 'El equipo está analizando este problema.'
+  },
+  in_progress: { 
+    label: 'En progreso', 
+    color: 'bg-purple-100 text-purple-700',
+    helperText: 'Estamos trabajando activamente en resolver este problema.'
+  },
+  resolved: { 
+    label: 'Resuelto', 
+    color: 'bg-green-100 text-green-700',
+    helperText: 'Este problema ha sido resuelto.'
+  },
+  closed: { 
+    label: 'Cerrado', 
+    color: 'bg-gray-100 text-gray-700',
+    helperText: 'Este reporte ha sido cerrado.'
+  },
+};
 
 const priorityOptions = [
   { value: 'low', label: 'Baja', color: 'bg-gray-100 text-gray-800' },
@@ -70,9 +90,8 @@ const priorityOptions = [
 ];
 
 const AdminBugReports: React.FC = () => {
-  const { user } = useSupabaseAuth();
+  const { user, profile } = useSupabaseAuth();
   const [reports, setReports] = useState<BugReport[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -84,18 +103,14 @@ const AdminBugReports: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Delete confirmation
+  const [deleteReportId, setDeleteReportId] = useState<string | null>(null);
+  const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
+
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Load categories
-      const { data: categoriesData } = await supabase
-        .from('bug_report_categories')
-        .select('id, name')
-        .eq('is_active', true);
       
-      setCategories(categoriesData || []);
-      
-      // Load reports with comments count
       const { data: reportsData, error } = await supabase
         .from('bug_reports')
         .select('*')
@@ -103,7 +118,6 @@ const AdminBugReports: React.FC = () => {
       
       if (error) throw error;
       
-      // Get unique user IDs and fetch profiles
       const userIds = [...new Set((reportsData || []).map(r => r.user_id))];
       const { data: profilesData } = await supabase
         .from('profiles')
@@ -112,19 +126,18 @@ const AdminBugReports: React.FC = () => {
       
       const profilesMap = new Map((profilesData || []).map(p => [p.user_id, p]));
       
-      // Get comments count for each report
       const reportsWithData = await Promise.all((reportsData || []).map(async (report) => {
         const { count } = await supabase
           .from('bug_report_comments')
           .select('*', { count: 'exact', head: true })
           .eq('bug_report_id', report.id);
         
-        const profile = profilesMap.get(report.user_id);
+        const userProfile = profilesMap.get(report.user_id);
         
         return {
           ...report,
-          profile_name: profile?.full_name || null,
-          profile_avatar: profile?.avatar_url || null,
+          profile_name: userProfile?.full_name || null,
+          profile_avatar: userProfile?.avatar_url || null,
           comments_count: count || 0,
         };
       }));
@@ -148,7 +161,6 @@ const AdminBugReports: React.FC = () => {
       
       if (error) throw error;
       
-      // Get profiles for commenters
       const userIds = [...new Set((data || []).map(c => c.user_id))];
       const { data: profilesData } = await supabase
         .from('profiles')
@@ -158,11 +170,11 @@ const AdminBugReports: React.FC = () => {
       const profilesMap = new Map((profilesData || []).map(p => [p.user_id, p]));
       
       const commentsWithProfiles = (data || []).map(comment => {
-        const profile = profilesMap.get(comment.user_id);
+        const userProfile = profilesMap.get(comment.user_id);
         return {
           ...comment,
-          profile_name: profile?.full_name || null,
-          profile_avatar: profile?.avatar_url || null,
+          profile_name: userProfile?.full_name || null,
+          profile_avatar: userProfile?.avatar_url || null,
         };
       });
       
@@ -260,56 +272,139 @@ const AdminBugReports: React.FC = () => {
     }
   };
 
+  const handleDeleteReport = async () => {
+    if (!deleteReportId) return;
+    
+    try {
+      // Delete comments first
+      await supabase
+        .from('bug_report_comments')
+        .delete()
+        .eq('bug_report_id', deleteReportId);
+      
+      // Delete subscriptions
+      await supabase
+        .from('bug_report_subscriptions')
+        .delete()
+        .eq('bug_report_id', deleteReportId);
+      
+      // Delete the report
+      const { error } = await supabase
+        .from('bug_reports')
+        .delete()
+        .eq('id', deleteReportId);
+      
+      if (error) throw error;
+      
+      toast.success('Reporte eliminado');
+      setDeleteReportId(null);
+      setSelectedReport(null);
+      loadData();
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      toast.error('Error al eliminar el reporte');
+    }
+  };
+
+  const handleDeleteComment = async () => {
+    if (!deleteCommentId || !selectedReport) return;
+    
+    try {
+      const { error } = await supabase
+        .from('bug_report_comments')
+        .delete()
+        .eq('id', deleteCommentId);
+      
+      if (error) throw error;
+      
+      toast.success('Comentario eliminado');
+      setDeleteCommentId(null);
+      loadComments(selectedReport.id);
+      loadData();
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast.error('Error al eliminar el comentario');
+    }
+  };
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0]?.[0] || ''}${parts[1]?.[0] || ''}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   const getStatusInfo = (status: string) => {
-    return statusOptions.find(s => s.value === status) || statusOptions[0];
+    return statusLabels[status] || statusLabels.open;
   };
 
   const getPriorityInfo = (priority: string | null) => {
     return priorityOptions.find(p => p.value === priority) || null;
   };
 
-  const getCategoryName = (categoryId: string | null) => {
-    if (!categoryId) return null;
-    return categories.find(c => c.id === categoryId)?.name || null;
-  };
-
-  // Detail view
+  // Detail view - matching user view style
   if (selectedReport) {
+    const statusInfo = getStatusInfo(selectedReport.status);
+    const priorityInfo = getPriorityInfo(selectedReport.priority);
+
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-4xl">
         <Button variant="ghost" onClick={() => setSelectedReport(null)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver a la lista
         </Button>
 
+        {/* Report Card - matching user view */}
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <CardTitle className="text-xl">{selectedReport.title}</CardTitle>
-                <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={selectedReport.profile_avatar || undefined} />
-                    <AvatarFallback>{selectedReport.profile_name?.[0] || 'U'}</AvatarFallback>
-                  </Avatar>
-                  <span>{selectedReport.profile_name || 'Usuario'}</span>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <Badge className={statusInfo?.color ?? 'bg-gray-100 text-gray-700'}>
+                    {statusInfo?.label ?? 'Abierto'}
+                  </Badge>
+                  {priorityInfo && (
+                    <Badge className={priorityInfo.color}>{priorityInfo.label}</Badge>
+                  )}
+                </div>
+                {statusInfo?.helperText && (
+                  <p className="text-sm text-muted-foreground mb-2">{statusInfo.helperText}</p>
+                )}
+                <CardTitle className="text-lg sm:text-xl">{selectedReport.title}</CardTitle>
+                <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+                      <AvatarImage src={selectedReport.profile_avatar || undefined} />
+                      <AvatarFallback className="text-xs">
+                        {getInitials(selectedReport.profile_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs sm:text-sm">{selectedReport.profile_name || 'Usuario'}</span>
+                  </div>
                   <span>•</span>
-                  <span>{formatDistanceToNow(new Date(selectedReport.created_at), { addSuffix: true, locale: es })}</span>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    <span className="text-xs sm:text-sm">{new Date(selectedReport.created_at).toLocaleDateString()}</span>
+                  </div>
                 </div>
               </div>
+              
+              {/* Admin controls */}
               <div className="flex items-center gap-2">
                 <Select value={selectedReport.status} onValueChange={(v) => handleStatusChange(selectedReport.id, v)}>
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-[130px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {statusOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    {Object.entries(statusLabels).map(([value, info]) => (
+                      <SelectItem key={value} value={value}>{info.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <Select value={selectedReport.priority || ''} onValueChange={(v) => handlePriorityChange(selectedReport.id, v)}>
-                  <SelectTrigger className="w-[130px]">
+                  <SelectTrigger className="w-[110px]">
                     <SelectValue placeholder="Prioridad" />
                   </SelectTrigger>
                   <SelectContent>
@@ -318,73 +413,179 @@ const AdminBugReports: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      className="text-destructive"
+                      onClick={() => setDeleteReportId(selectedReport.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Eliminar reporte
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h4 className="font-medium mb-2">Descripción</h4>
-              <p className="text-muted-foreground whitespace-pre-wrap">{selectedReport.description}</p>
-            </div>
-            
+          <CardContent>
+            <p className="whitespace-pre-wrap text-sm sm:text-base">{selectedReport.description}</p>
             {selectedReport.image_url && (
-              <div>
-                <h4 className="font-medium mb-2">Imagen adjunta</h4>
+              <div className="mt-4">
                 <img 
                   src={selectedReport.image_url} 
-                  alt="Captura del problema" 
-                  className="max-w-md rounded-lg border"
+                  alt="Imagen del reporte"
+                  className="max-w-full rounded-lg border"
                 />
               </div>
             )}
+          </CardContent>
+        </Card>
 
-            <div className="border-t pt-6">
-              <h4 className="font-medium mb-4 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Comentarios ({comments.length})
-              </h4>
-              
-              <div className="space-y-4 mb-4">
+        {/* Comments Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
+              Comentarios ({comments.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {comments.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4 text-sm">
+                No hay comentarios aún
+              </p>
+            ) : (
+              <div className="space-y-4">
                 {comments.map(comment => (
-                  <div key={comment.id} className={`flex gap-3 ${comment.is_admin_reply ? 'ml-8' : ''}`}>
-                    <Avatar className="h-8 w-8 flex-shrink-0">
+                  <div 
+                    key={comment.id}
+                    className={`flex gap-2 sm:gap-3 ${comment.is_admin_reply ? 'bg-primary/5 -mx-4 px-4 py-3 rounded-lg' : ''}`}
+                  >
+                    <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
                       <AvatarImage src={comment.profile_avatar || undefined} />
-                      <AvatarFallback>{comment.profile_name?.[0] || 'U'}</AvatarFallback>
+                      <AvatarFallback className="text-xs">
+                        {getInitials(comment.profile_name)}
+                      </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{comment.profile_name || 'Usuario'}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                        <span className="font-medium text-xs sm:text-sm">
+                          {comment.profile_name || 'Usuario'}
+                        </span>
                         {comment.is_admin_reply && (
-                          <Badge variant="secondary" className="text-xs">Admin</Badge>
+                          <Badge variant="default" className="text-[10px] sm:text-xs">Equipo de Talento Digital</Badge>
                         )}
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: es })}
+                        <span className="text-[10px] sm:text-xs text-muted-foreground">
+                          {new Date(comment.created_at).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="text-sm mt-1">{comment.content}</p>
+                      <p className="text-xs sm:text-sm mt-1 whitespace-pre-wrap">{comment.content}</p>
                     </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0">
+                          <MoreVertical className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={() => setDeleteCommentId(comment.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 ))}
               </div>
-              
-              <div className="flex gap-2">
-                <Textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Escribe un comentario..."
-                  className="flex-1"
-                />
-                <Button onClick={handleAddComment} disabled={!newComment.trim() || isSubmitting}>
-                  <Send className="h-4 w-4" />
-                </Button>
+            )}
+
+            {/* Add comment */}
+            <div className="border-t pt-4 mt-4">
+              <div className="flex gap-2 sm:gap-3">
+                <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
+                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarFallback className="text-xs">
+                    {getInitials(profile?.full_name || null)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-2">
+                  <Textarea
+                    placeholder="Escribe un comentario..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    rows={3}
+                    className="text-sm"
+                  />
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={handleAddComment}
+                      disabled={isSubmitting || !newComment.trim()}
+                      size="sm"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Comentar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Delete Report Confirmation */}
+        <AlertDialog open={!!deleteReportId} onOpenChange={() => setDeleteReportId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Eliminar reporte?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. Se eliminarán también todos los comentarios asociados.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteReport} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Comment Confirmation */}
+        <AlertDialog open={!!deleteCommentId} onOpenChange={() => setDeleteCommentId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Eliminar comentario?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteComment} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
 
+  // List view
   return (
     <div className="space-y-6">
       <div>
@@ -413,8 +614,8 @@ const AdminBugReports: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                {statusOptions.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                {Object.entries(statusLabels).map(([value, info]) => (
+                  <SelectItem key={value} value={value}>{info.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -433,10 +634,10 @@ const AdminBugReports: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Reports List */}
+      {/* Reports List - matching user view card style */}
       {isLoading ? (
-        <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : filteredReports.length === 0 ? (
         <Card>
@@ -448,51 +649,65 @@ const AdminBugReports: React.FC = () => {
       ) : (
         <div className="space-y-3">
           {filteredReports.map(report => {
-            const reportStatusInfo = getStatusInfo(report.status);
+            const statusInfo = getStatusInfo(report.status);
             const priorityInfo = getPriorityInfo(report.priority);
-            const categoryName = getCategoryName(report.category_id);
-            const StatusIcon = reportStatusInfo?.icon || AlertTriangle;
             
             return (
               <Card 
-                key={report.id} 
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => setSelectedReport(report)}
+                key={report.id}
+                className="hover:border-primary/50 transition-colors"
               >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-2">
-                        <h3 className="font-medium">{report.title}</h3>
-                        <Badge className={reportStatusInfo?.color || 'bg-gray-100 text-gray-800'}>
-                          <StatusIcon className="h-3 w-3 mr-1" />
-                          {reportStatusInfo?.label || report.status}
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex gap-3 sm:gap-4">
+                    <div 
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => setSelectedReport(report)}
+                    >
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <Badge className={`text-xs ${statusInfo?.color ?? 'bg-gray-100 text-gray-700'}`}>
+                          {statusInfo?.label ?? 'Abierto'}
                         </Badge>
                         {priorityInfo && (
-                          <Badge className={priorityInfo.color}>
-                            {priorityInfo.label}
-                          </Badge>
+                          <Badge className={`text-xs ${priorityInfo.color}`}>{priorityInfo.label}</Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                        {report.description}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <h3 className="font-medium text-sm sm:text-base truncate">{report.title}</h3>
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Avatar className="h-5 w-5">
+                          <Avatar className="h-4 w-4 sm:h-5 sm:w-5">
                             <AvatarImage src={report.profile_avatar || undefined} />
-                            <AvatarFallback className="text-xs">{report.profile_name?.[0] || 'U'}</AvatarFallback>
+                            <AvatarFallback className="text-[10px] sm:text-xs">
+                              {getInitials(report.profile_name)}
+                            </AvatarFallback>
                           </Avatar>
-                          <span>{report.profile_name || 'Usuario'}</span>
+                          <span className="hidden sm:inline">{report.profile_name || 'Usuario'}</span>
                         </div>
-                        {categoryName && <span>• {categoryName}</span>}
-                        <span>• {formatDistanceToNow(new Date(report.created_at), { addSuffix: true, locale: es })}</span>
-                        <span className="flex items-center gap-1">
-                          <MessageSquare className="h-3 w-3" />
-                          {report.comments_count}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span>{report.comments_count || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span>{new Date(report.created_at).toLocaleDateString()}</span>
+                        </div>
                       </div>
                     </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="flex-shrink-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={() => setDeleteReportId(report.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>
@@ -500,6 +715,24 @@ const AdminBugReports: React.FC = () => {
           })}
         </div>
       )}
+
+      {/* Delete Report Confirmation */}
+      <AlertDialog open={!!deleteReportId} onOpenChange={() => setDeleteReportId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar reporte?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminarán también todos los comentarios asociados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteReport} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
