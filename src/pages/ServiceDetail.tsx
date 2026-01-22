@@ -226,17 +226,32 @@ const ServiceDetail: React.FC = () => {
 
       console.log('[ServiceDetail] Service state updated successfully');
 
-      // Increment view count (solo si no es vista de propietario)
+      // Increment view count and record view (solo si no es vista de propietario)
       const isOwnerViewCheck = location.pathname.includes('/my-services/');
       if (id && !isOwnerViewCheck) {
         try {
+          // Get current user
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          
+          // Only record if not the owner
+          if (!currentUser || currentUser.id !== serviceData.user_id) {
+            // Insert into marketplace_service_views (trigger will send notification)
+            await supabase.from('marketplace_service_views').insert({
+              service_id: id,
+              service_owner_id: serviceData.user_id,
+              viewer_id: currentUser?.id || null
+            });
+            console.log('[ServiceDetail] View recorded for notification');
+          }
+          
+          // Increment counter
           await supabase
             .from('marketplace_services')
             .update({ views_count: serviceData.views_count + 1 })
             .eq('id', id);
         } catch (viewError) {
-          console.warn('[ServiceDetail] Error incrementing view count:', viewError);
-          // No fallar si no se puede incrementar las vistas
+          console.warn('[ServiceDetail] Error recording view:', viewError);
+          // No fallar si no se puede registrar la vista
         }
       }
     } catch (err) {

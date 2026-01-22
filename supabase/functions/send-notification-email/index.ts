@@ -74,6 +74,8 @@ const getTemplateId = (type: string): string => {
     // Marketplace notifications
     'marketplace': 'marketplace-request',
     'marketplace_request': 'marketplace-request',
+    'marketplace_view': 'marketplace-view',
+    'marketplace-view': 'marketplace-view',
     
     // Moderation notifications
     'moderation': 'moderation',
