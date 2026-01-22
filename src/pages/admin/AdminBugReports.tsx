@@ -55,11 +55,6 @@ const statusLabels: Record<string, { label: string; color: string; helperText?: 
     color: 'bg-blue-100 text-blue-700',
     helperText: 'Estamos al tanto del problema y lo vamos a revisar.'
   },
-  reviewing: { 
-    label: 'En revisión', 
-    color: 'bg-yellow-100 text-yellow-700',
-    helperText: 'El equipo está analizando este problema.'
-  },
   in_review: { 
     label: 'En revisión', 
     color: 'bg-yellow-100 text-yellow-700',

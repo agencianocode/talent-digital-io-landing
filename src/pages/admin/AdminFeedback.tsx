@@ -64,7 +64,6 @@ const FEEDBACK_CATEGORIES: Category[] = [
 
 const statusLabels: Record<string, { label: string; color: string; helperText?: string }> = {
   new: { label: 'Nueva', color: 'bg-blue-100 text-blue-700', helperText: 'El equipo aún no la revisó' },
-  reviewing: { label: 'En revisión', color: 'bg-yellow-100 text-yellow-700', helperText: 'Estamos evaluando esta sugerencia' },
   in_review: { label: 'En revisión', color: 'bg-yellow-100 text-yellow-700', helperText: 'Estamos evaluando esta sugerencia' },
   planned: { label: 'Planeada', color: 'bg-purple-100 text-purple-700', helperText: 'Esta mejora entra en nuestro roadmap' },
   in_development: { label: 'En desarrollo', color: 'bg-orange-100 text-orange-700', helperText: 'Estamos trabajando en esta mejora' },
