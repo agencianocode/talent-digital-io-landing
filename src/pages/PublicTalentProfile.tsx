@@ -762,6 +762,7 @@ const PublicTalentProfile = () => {
                 talentName={userProfile.full_name || 'Talento'}
                 talentAvatar={userProfile.avatar_url || undefined}
                 onContact={handleContactTalent}
+                isPublicView={true}
               />
             )}
           </div>

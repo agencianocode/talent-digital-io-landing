@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Users, MapPin, Clock, ChevronLeft, ChevronRight, Video } from 'lucide-react';
 import { TalentCardAcademyBadge } from '@/components/talent/TalentCardAcademyBadge';
-import { stripHtml } from '@/lib/utils';
+import { stripHtml, getExperienceLevelLabel } from '@/lib/utils';
 
 interface RecommendedProfile {
   id: string;
@@ -418,7 +418,7 @@ const RecommendedProfiles: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">{profile.experience_level}</span>
+                        <span className="truncate">{getExperienceLevelLabel(profile.experience_level)}</span>
                       </div>
                     </div>
 
