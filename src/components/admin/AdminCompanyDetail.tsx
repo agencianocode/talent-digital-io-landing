@@ -780,14 +780,59 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Tipo de Empresa Selector */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">
-                      Tipo de negocio: <span className="font-medium">{companyData.business_type === 'academy' ? 'Academia' : 'Empresa'}</span>
-                    </p>
+                    <Label className="text-sm text-muted-foreground mb-2 block">Tipo de negocio</Label>
+                    <Select
+                      value={companyData.business_type || 'company'}
+                      onValueChange={async (value) => {
+                        try {
+                          const { error } = await supabase
+                            .from('companies')
+                            .update({ business_type: value, updated_at: new Date().toISOString() })
+                            .eq('id', companyData.id);
+                          
+                          if (error) throw error;
+                          toast.success(`Tipo de empresa actualizado a ${value === 'academy' ? 'Academia' : 'Empresa'}`);
+                          onCompanyUpdate?.();
+                          await loadCompanyDetail();
+                        } catch (err) {
+                          console.error('Error updating business type:', err);
+                          toast.error('Error al actualizar el tipo de empresa');
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="company">
+                          <div className="flex items-center gap-2">
+                            <Briefcase className="h-4 w-4" />
+                            Empresa
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="academy">
+                          <div className="flex items-center gap-2">
+                            <GraduationCap className="h-4 w-4" />
+                            Academia
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
                     <p className="text-sm text-muted-foreground">
                       Miembros activos: <span className="font-medium">{companyData.users.filter(u => u.status === 'accepted').length}</span>
                     </p>
+                  </div>
+                </div>
+
+                {/* Suscripción Selector */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-3 border-t">
+                  <div className="flex-1">
+                    <Label className="text-sm text-muted-foreground">Suscripción actual</Label>
                   </div>
                   <div className="flex gap-2">
                     <Button
