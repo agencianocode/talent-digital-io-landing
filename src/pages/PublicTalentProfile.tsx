@@ -139,6 +139,10 @@ const PublicTalentProfile = () => {
   const educationRef = useRef<Education[]>([]);
   const workExperienceRef = useRef<WorkExperience[]>([]);
   
+  // Ref to prevent duplicate view recording (React Strict Mode / re-renders)
+  const hasRecordedViewRef = useRef(false);
+  const lastViewedIdRef = useRef<string | null>(null);
+  
   const { 
     isContactModalOpen, 
     setIsContactModalOpen, 
@@ -153,6 +157,14 @@ const PublicTalentProfile = () => {
   // Record profile view for notifications - defined BEFORE useEffect
   const recordProfileView = async () => {
     if (!talentId) return;
+    
+    // Prevent duplicate execution within same component lifecycle
+    if (hasRecordedViewRef.current && lastViewedIdRef.current === talentId) {
+      console.log('⏭️ Skipping duplicate profile view recording');
+      return;
+    }
+    hasRecordedViewRef.current = true;
+    lastViewedIdRef.current = talentId;
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -170,6 +182,13 @@ const PublicTalentProfile = () => {
       console.warn('Could not record profile view:', error);
     }
   };
+
+  // Reset ref when profile ID changes
+  useEffect(() => {
+    if (talentId !== lastViewedIdRef.current) {
+      hasRecordedViewRef.current = false;
+    }
+  }, [talentId]);
 
   useEffect(() => {
     if (talentId) {

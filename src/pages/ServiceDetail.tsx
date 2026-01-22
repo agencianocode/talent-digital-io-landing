@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -95,6 +95,10 @@ const ServiceDetail: React.FC = () => {
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   
+  // Ref to prevent duplicate view recording (React Strict Mode / re-renders)
+  const hasRecordedViewRef = useRef(false);
+  const lastViewedIdRef = useRef<string | null>(null);
+  
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   
   // Detectar si viene de /my-services (es propietario)
@@ -104,6 +108,13 @@ const ServiceDetail: React.FC = () => {
   const requestsForService = isOwnerView 
     ? serviceRequests.filter(req => req.service_id === id)
     : [];
+  
+  // Reset view ref when service ID changes
+  useEffect(() => {
+    if (id !== lastViewedIdRef.current) {
+      hasRecordedViewRef.current = false;
+    }
+  }, [id]);
 
   useEffect(() => {
     if (!id) {
@@ -229,29 +240,37 @@ const ServiceDetail: React.FC = () => {
       // Increment view count and record view (solo si no es vista de propietario)
       const isOwnerViewCheck = location.pathname.includes('/my-services/');
       if (id && !isOwnerViewCheck) {
-        try {
-          // Get current user
-          const { data: { user: currentUser } } = await supabase.auth.getUser();
+        // Prevent duplicate view recording within same component lifecycle
+        if (hasRecordedViewRef.current && lastViewedIdRef.current === id) {
+          console.log('[ServiceDetail] ⏭️ Skipping duplicate view recording');
+        } else {
+          hasRecordedViewRef.current = true;
+          lastViewedIdRef.current = id;
           
-          // Only record if not the owner
-          if (!currentUser || currentUser.id !== serviceData.user_id) {
-            // Record view - cada visita se registra, el trigger maneja deduplicación de notificaciones (12h)
-            const { error: viewError } = await supabase
-              .from('marketplace_service_views')
-              .insert({
-                service_id: id,
-                service_owner_id: serviceData.user_id,
-                viewer_id: currentUser?.id || null
-              });
+          try {
+            // Get current user
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
             
-            if (viewError) {
-              console.warn('[ServiceDetail] Error recording view:', viewError);
-            } else {
-              console.log('[ServiceDetail] View recorded - trigger handles 12h notification dedup');
+            // Only record if not the owner
+            if (!currentUser || currentUser.id !== serviceData.user_id) {
+              // Record view - cada visita se registra, el trigger maneja deduplicación de notificaciones (12h)
+              const { error: viewError } = await supabase
+                .from('marketplace_service_views')
+                .insert({
+                  service_id: id,
+                  service_owner_id: serviceData.user_id,
+                  viewer_id: currentUser?.id || null
+                });
+              
+              if (viewError) {
+                console.warn('[ServiceDetail] Error recording view:', viewError);
+              } else {
+                console.log('[ServiceDetail] View recorded - trigger handles 12h notification dedup');
+              }
             }
+          } catch (viewError) {
+            console.warn('[ServiceDetail] Error recording view:', viewError);
           }
-        } catch (viewError) {
-          console.warn('[ServiceDetail] Error recording view:', viewError);
         }
       }
     } catch (err) {
