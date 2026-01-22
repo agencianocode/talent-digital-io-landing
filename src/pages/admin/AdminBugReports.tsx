@@ -403,11 +403,12 @@ const AdminBugReports: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={selectedReport.priority || ''} onValueChange={(v) => handlePriorityChange(selectedReport.id, v)}>
+                <Select value={selectedReport.priority || 'none'} onValueChange={(v) => handlePriorityChange(selectedReport.id, v === 'none' ? '' : v)}>
                   <SelectTrigger className="w-[110px]">
                     <SelectValue placeholder="Prioridad" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">Sin prioridad</SelectItem>
                     {priorityOptions.map(opt => (
                       <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                     ))}
