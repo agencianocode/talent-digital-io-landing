@@ -594,7 +594,7 @@ const AdminHelpCenter: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="none">Sin subcategoría</SelectItem>
                     {categories
-                      .filter(c => c.main_category === articleForm.main_category)
+                      .filter(c => c.is_active !== false)
                       .map(cat => (
                         <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                       ))

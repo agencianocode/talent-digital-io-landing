@@ -2,7 +2,8 @@ import React from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Bold, Italic, List, ListOrdered } from 'lucide-react';
+import Link from '@tiptap/extension-link';
+import { Bold, Italic, List, ListOrdered, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Toggle } from '@/components/ui/toggle';
 
@@ -39,6 +40,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       }),
       Placeholder.configure({
         placeholder,
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-primary underline cursor-pointer',
+        },
       }),
     ],
     content: value,
@@ -141,6 +148,25 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           title="Lista numerada"
         >
           <ListOrdered className="h-4 w-4" />
+        </Toggle>
+        <div className="w-px h-4 bg-border mx-1" />
+        <Toggle
+          size="sm"
+          pressed={editor.isActive('link')}
+          onPressedChange={() => {
+            if (editor.isActive('link')) {
+              editor.chain().focus().unsetLink().run();
+            } else {
+              const url = window.prompt('URL del enlace:');
+              if (url) {
+                editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+              }
+            }
+          }}
+          aria-label="Hipervínculo"
+          title="Agregar enlace"
+        >
+          <LinkIcon className="h-4 w-4" />
         </Toggle>
       </div>
       
