@@ -9,6 +9,7 @@ interface UserFilters {
   dateRange: string;
   companyRoleFilter: string;
   completenessFilter: string;
+  subscriptionFilter: string;
   sortBy: 'name' | 'date' | 'last_activity';
   sortOrder: 'asc' | 'desc';
 }
@@ -52,6 +53,7 @@ export const useAdminUsers = () => {
     dateRange: 'all',
     companyRoleFilter: 'all',
     completenessFilter: 'all',
+    subscriptionFilter: 'all',
     sortBy: 'date',
     sortOrder: 'desc'
   });
@@ -164,20 +166,48 @@ export const useAdminUsers = () => {
       );
     }
 
-    // Role filter
+    // Role filter - now contextual
     if (filters.roleFilter !== 'all') {
-      filtered = filtered.filter(user => user.role === filters.roleFilter);
-      
-      // Company role filter (only applies to business roles)
-      const isBusinessRole = ['freemium_business', 'premium_business', 'academy_premium'].includes(filters.roleFilter);
-      if (isBusinessRole && filters.companyRoleFilter !== 'all') {
-        if (filters.companyRoleFilter === 'admin_owner') {
-          filtered = filtered.filter(user => user.is_company_admin === true);
-        } else if (filters.companyRoleFilter === 'viewer') {
+      switch (filters.roleFilter) {
+        case 'admin':
+          filtered = filtered.filter(user => user.role === 'admin');
+          break;
+        case 'owner':
+          filtered = filtered.filter(user => user.primary_company_role === 'owner');
+          break;
+        case 'company_admin':
+          filtered = filtered.filter(user => user.primary_company_role === 'admin');
+          break;
+        case 'company_member':
+          filtered = filtered.filter(user => user.primary_company_role === 'viewer');
+          break;
+        case 'talent':
           filtered = filtered.filter(user => 
-            user.company_roles?.includes('viewer') && !user.is_company_admin
+            !user.has_companies && 
+            (user.role === 'freemium_talent' || user.role === 'premium_talent')
           );
-        }
+          break;
+      }
+    }
+
+    // Subscription filter
+    if (filters.subscriptionFilter && filters.subscriptionFilter !== 'all') {
+      if (filters.subscriptionFilter === 'premium') {
+        filtered = filtered.filter(user => 
+          user.role === 'admin' ||
+          user.role === 'premium_talent' ||
+          user.role === 'premium_business' ||
+          user.role === 'academy_premium' ||
+          user.is_premium_company
+        );
+      } else if (filters.subscriptionFilter === 'freemium') {
+        filtered = filtered.filter(user => 
+          user.role !== 'admin' &&
+          user.role !== 'premium_talent' &&
+          user.role !== 'premium_business' &&
+          user.role !== 'academy_premium' &&
+          !user.is_premium_company
+        );
       }
     }
 
