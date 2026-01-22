@@ -174,6 +174,31 @@ const defaultNotifications: NotificationType[] = [
     email: true,
     push: true,
   },
+  // Soporte y Feedback
+  {
+    id: 'new_bug_report',
+    name: 'Nuevos Reportes de Problemas',
+    description: 'Recibir notificaciones cuando un usuario reporte un problema.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'new_bug_report_comment_admin',
+    name: 'Comentarios en Reportes de Problemas',
+    description: 'Recibir notificaciones cuando un usuario comente en un reporte.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'new_feedback',
+    name: 'Nuevas Sugerencias de Mejora',
+    description: 'Recibir notificaciones cuando un usuario sugiera una mejora.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
 ];
 
 const AdminNotificationSettings: React.FC = () => {
