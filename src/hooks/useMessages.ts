@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/contexts/SupabaseAuthContext';
-import { sendNotification } from '@/lib/notifications';
+// Note: sendNotification removed - DB trigger handles message notifications automatically
 
 export interface Message {
   id: string;
@@ -986,44 +986,8 @@ export const useMessages = (companyId?: string) => {
           return updated; // Return new array
         });
         
-        // Create notification for recipient using unified notification system
-        try {
-          // Determine recipient's dashboard URL based on their role
-          const { data: companyData } = await supabase
-            .from('companies')
-            .select('id')
-            .eq('user_id', otherParticipantId)
-            .maybeSingle();
-          
-          const isRecipientCompany = !!companyData;
-          const dashboardPrefix = isRecipientCompany ? 'business-dashboard' : 'talent-dashboard';
-          
-          // Get sender's name for the notification
-          const { data: senderProfile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('user_id', user.id)
-            .single();
-          
-          const senderName = senderProfile?.full_name || 'Alguien';
-          
-          // Use sendNotification for proper processing (email, push, etc.)
-          await sendNotification({
-            userId: otherParticipantId,
-            type: 'message',
-            title: 'Nuevo mensaje',
-            message: `${senderName} te envió un mensaje`,
-            actionUrl: `/${dashboardPrefix}/messages/${conversationId}`,
-            data: {
-              sender_id: user.id,
-              sender_name: senderName,
-              conversation_id: conversationId,
-              message_preview: content.substring(0, 100),
-            }
-          });
-        } catch (notifError) {
-          console.error('Error creating notification:', notifError);
-        }
+        // Note: Notification is created by DB trigger 'trigger_notify_new_message'
+        // No need to call sendNotification here - it causes duplicate emails
         
         // Don't reload - let the local state update persist
       }
