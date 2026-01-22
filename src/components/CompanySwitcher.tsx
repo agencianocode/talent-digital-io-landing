@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Building, Plus, ChevronDown, Users, FileText, GraduationCap } from 'lucide-react';
+import { Building, Plus, ChevronDown, Users, FileText, GraduationCap, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import CreateCompanyDialog from '@/components/CreateCompanyDialog';
 
 interface CompanySwitcherProps {
@@ -25,7 +34,6 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
   const { 
     activeCompany, 
     userCompanies, 
-    userRoles,
     currentUserRole,
     switchCompany, 
     isLoading,
@@ -33,12 +41,38 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
   } = useCompany();
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
-  const getCompanyTypeIcon = (businessType?: string) => {
-    if (businessType === 'academy') {
-      return <GraduationCap className="h-3 w-3 text-muted-foreground" />;
+  // Determine subscription badge based on company status
+  const getSubscriptionBadge = (company?: { status?: string; business_type?: string }) => {
+    if (!company) return null;
+    
+    const isAcademy = company.business_type === 'academy';
+    const isPremium = company.status === 'premium' || company.status === 'active';
+    
+    if (isPremium) {
+      if (isAcademy) {
+        return (
+          <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-0 text-[10px] px-1.5 py-0 h-4 font-medium gap-1">
+            <GraduationCap className="h-2.5 w-2.5" />
+            Premium
+          </Badge>
+        );
+      }
+      return (
+        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0 text-[10px] px-1.5 py-0 h-4 font-medium gap-1">
+          <Building className="h-2.5 w-2.5" />
+          Premium
+        </Badge>
+      );
     }
-    return <Building className="h-3 w-3 text-muted-foreground" />;
+    
+    // Freemium
+    return (
+      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-0 text-[10px] px-1.5 py-0 h-4 font-medium">
+        Free
+      </Badge>
+    );
   };
 
   if (isLoading) {
@@ -52,8 +86,6 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
     );
   }
 
-  // Don't show create button if we have no companies but are still loading
-  // This prevents flashing the button during initial load after registration
   if (userCompanies.length === 0 && !isLoading) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
@@ -84,6 +116,8 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
     );
   }
 
+  const otherCompanies = userCompanies.filter(company => company.id !== activeCompany?.id);
+
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <DropdownMenu>
@@ -98,12 +132,9 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
               </Avatar>
               <div className="flex-1 text-left">
                 <p className="text-sm font-medium">{activeCompany?.name || 'Seleccionar empresa'}</p>
-                {currentUserRole && (
-                  <div className="flex items-center gap-1">
-                    {getCompanyTypeIcon(activeCompany?.business_type)}
-                    <span className="text-xs text-muted-foreground capitalize">
-                      {currentUserRole.role}
-                    </span>
+                {activeCompany && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    {getSubscriptionBadge(activeCompany)}
                   </div>
                 )}
               </div>
@@ -112,55 +143,9 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
-          {/* Company Selection - Only show other companies */}
-          {userCompanies.filter(company => company.id !== activeCompany?.id).map((company) => {
-            // Get role from userRoles for this specific company
-            const companyRole = userRoles.find(r => r.company_id === company.id);
-            const userRole = companyRole?.role || (company.user_id === activeCompany?.user_id ? 'owner' : 'viewer');
-            
-            return (
-              <DropdownMenuItem 
-                key={company.id} 
-                onClick={() => switchCompany(company.id)}
-                className="p-3"
-              >
-                <div className="flex items-center gap-3 w-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={company.logo_url} alt={company.name} />
-                    <AvatarFallback className="text-xs">
-                      {company.name.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col items-start min-w-0 flex-1">
-                    <div className="font-medium text-sm truncate">
-                      {company.name}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {getCompanyTypeIcon(company.business_type)}
-                      <span className="text-xs text-muted-foreground capitalize">
-                        {userRole}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </DropdownMenuItem>
-            );
-          })}
-          
-          {showCreateButton && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar empresa
-              </DropdownMenuItem>
-            </>
-          )}
-          
-          {/* Company Management Options */}
+          {/* Company Management Options - First */}
           {activeCompany && (
             <>
-              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate('/business-dashboard/company-profile')}>
                 <FileText className="h-4 w-4 mr-2" />
                 Detalles del negocio
@@ -171,6 +156,57 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
                   Gestión de usuarios
                 </DropdownMenuItem>
               )}
+              <DropdownMenuItem onClick={() => setIsSubscriptionModalOpen(true)}>
+                <CreditCard className="h-4 w-4 mr-2" />
+                Suscripción
+              </DropdownMenuItem>
+            </>
+          )}
+          
+          {/* Company Selection - Other companies */}
+          {otherCompanies.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                Empresas
+              </DropdownMenuLabel>
+              {otherCompanies.map((company) => {
+                return (
+                  <DropdownMenuItem 
+                    key={company.id} 
+                    onClick={() => switchCompany(company.id)}
+                    className="p-3"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={company.logo_url} alt={company.name} />
+                        <AvatarFallback className="text-xs">
+                          {company.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col items-start min-w-0 flex-1">
+                        <div className="font-medium text-sm truncate">
+                          {company.name}
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {getSubscriptionBadge(company)}
+                        </div>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                );
+              })}
+            </>
+          )}
+          
+          {/* Add Company - Last */}
+          {showCreateButton && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar empresa
+              </DropdownMenuItem>
             </>
           )}
         </DropdownMenuContent>
@@ -185,6 +221,26 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
           }}
         />
       )}
+
+      {/* Subscription Coming Soon Modal */}
+      <Dialog open={isSubscriptionModalOpen} onOpenChange={setIsSubscriptionModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Próximamente
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              Próximamente nuevas funcionalidades y planes Premium para empresas y academias.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end pt-4">
+            <Button onClick={() => setIsSubscriptionModalOpen(false)}>
+              Entendido
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
