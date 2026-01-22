@@ -235,40 +235,19 @@ const ServiceDetail: React.FC = () => {
           
           // Only record if not the owner
           if (!currentUser || currentUser.id !== serviceData.user_id) {
-            // Record view - El trigger notify_marketplace_service_view creará la notificación
-            if (currentUser?.id) {
-              // Usuario autenticado: usar upsert para evitar duplicados
-              const { error: viewError } = await supabase
-                .from('marketplace_service_views')
-                .upsert({
-                  service_id: id,
-                  service_owner_id: serviceData.user_id,
-                  viewer_id: currentUser.id
-                }, {
-                  onConflict: 'service_id,viewer_id',
-                  ignoreDuplicates: true
-                });
-              
-              if (viewError) {
-                console.warn('[ServiceDetail] Error recording view:', viewError);
-              } else {
-                console.log('[ServiceDetail] View recorded for authenticated user');
-              }
+            // Record view - cada visita se registra, el trigger maneja deduplicación de notificaciones (12h)
+            const { error: viewError } = await supabase
+              .from('marketplace_service_views')
+              .insert({
+                service_id: id,
+                service_owner_id: serviceData.user_id,
+                viewer_id: currentUser?.id || null
+              });
+            
+            if (viewError) {
+              console.warn('[ServiceDetail] Error recording view:', viewError);
             } else {
-              // Usuario anónimo: simplemente insertar
-              const { error: viewError } = await supabase
-                .from('marketplace_service_views')
-                .insert({
-                  service_id: id,
-                  service_owner_id: serviceData.user_id,
-                  viewer_id: null
-                });
-              
-              if (viewError) {
-                console.warn('[ServiceDetail] Error recording anonymous view:', viewError);
-              } else {
-                console.log('[ServiceDetail] Anonymous view recorded');
-              }
+              console.log('[ServiceDetail] View recorded - trigger handles 12h notification dedup');
             }
           }
         } catch (viewError) {
