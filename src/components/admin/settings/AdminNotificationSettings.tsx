@@ -46,6 +46,7 @@ const notificationSettingsSchema = z.object({
 type NotificationSettingsFormData = z.infer<typeof notificationSettingsSchema>;
 
 const defaultNotifications: NotificationType[] = [
+  // === Usuarios y Empresas ===
   {
     id: 'new_user_registration',
     name: 'Nuevos Registros de Usuario',
@@ -94,6 +95,8 @@ const defaultNotifications: NotificationType[] = [
     email: true,
     push: false,
   },
+  
+  // === Reportes y Moderación ===
   {
     id: 'opportunity_reports',
     name: 'Reportes de Oportunidades',
@@ -126,6 +129,42 @@ const defaultNotifications: NotificationType[] = [
     email: true,
     push: false,
   },
+  
+  // === Soporte y Feedback ===
+  {
+    id: 'new_bug_report',
+    name: 'Nuevos Reportes de Problemas',
+    description: 'Recibir notificaciones cuando un usuario reporte un problema.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'new_bug_report_comment_admin',
+    name: 'Comentarios en Reportes de Problemas',
+    description: 'Recibir notificaciones cuando un usuario comente en un reporte.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'new_feedback',
+    name: 'Nuevas Sugerencias de Mejora',
+    description: 'Recibir notificaciones cuando un usuario sugiera una mejora.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'new_feedback_comment_admin',
+    name: 'Comentarios en Sugerencias',
+    description: 'Recibir notificaciones cuando un usuario comente en una sugerencia.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  
+  // === Sistema ===
   {
     id: 'system_errors',
     name: 'Errores del Sistema',
@@ -157,47 +196,6 @@ const defaultNotifications: NotificationType[] = [
     enabled: false,
     email: true,
     push: false,
-  },
-  {
-    id: 'profile_view',
-    name: 'Vistas de Perfil',
-    description: 'Notificación cuando alguien vea tu perfil de talento.',
-    enabled: true,
-    email: true,
-    push: true,
-  },
-  {
-    id: 'marketplace_view',
-    name: 'Vistas de Servicios',
-    description: 'Notificación cuando alguien vea tu servicio en el marketplace.',
-    enabled: true,
-    email: true,
-    push: true,
-  },
-  // Soporte y Feedback
-  {
-    id: 'new_bug_report',
-    name: 'Nuevos Reportes de Problemas',
-    description: 'Recibir notificaciones cuando un usuario reporte un problema.',
-    enabled: true,
-    email: true,
-    push: true,
-  },
-  {
-    id: 'new_bug_report_comment_admin',
-    name: 'Comentarios en Reportes de Problemas',
-    description: 'Recibir notificaciones cuando un usuario comente en un reporte.',
-    enabled: true,
-    email: true,
-    push: true,
-  },
-  {
-    id: 'new_feedback',
-    name: 'Nuevas Sugerencias de Mejora',
-    description: 'Recibir notificaciones cuando un usuario sugiera una mejora.',
-    enabled: true,
-    email: true,
-    push: true,
   },
 ];
 
