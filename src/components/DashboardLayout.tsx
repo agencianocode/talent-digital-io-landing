@@ -77,8 +77,9 @@ const DashboardLayout = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={closeMobileMenu}>
-          <div className="fixed left-0 top-0 h-full w-80 bg-card border-r" onClick={e => e.stopPropagation()}>
-            <div className="p-4 border-b">
+          <div className="fixed left-0 top-0 h-full w-80 bg-card border-r flex flex-col" onClick={e => e.stopPropagation()}>
+            {/* Header - Fixed */}
+            <div className="p-4 border-b flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold">TalentoDigital.io</h2>
                 <Button variant="ghost" size="sm" onClick={closeMobileMenu} className="p-2">
@@ -88,56 +89,91 @@ const DashboardLayout = () => {
               <CompanySwitcher />
             </div>
             
-            <nav className="p-4">
-              <ul className="space-y-2">
-                {navigationItems.map(item => <li key={item.to}>
-                    <NavLink to={item.to} onClick={closeMobileMenu} className={({
-                isActive
-              }) => cn("flex items-center gap-3 px-3 py-3 rounded-md transition-colors", isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
-                      <item.icon className="h-5 w-5" />
-                      {item.label}
-                      {item.label === "Mi Academia" && <Badge className="ml-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] px-1.5 py-0 h-4">
-                          Pro
+            {/* Scrollable Navigation Area */}
+            <div className="flex-1 overflow-y-auto">
+              <nav className="p-4">
+                <ul className="space-y-2">
+                  {navigationItems.map(item => <li key={item.to}>
+                      <NavLink to={item.to} onClick={closeMobileMenu} className={({
+                  isActive
+                }) => cn("flex items-center gap-3 px-3 py-3 rounded-md transition-colors", isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
+                        <item.icon className="h-5 w-5" />
+                        {item.label}
+                        {item.label === "Mi Academia" && <Badge className="ml-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] px-1.5 py-0 h-4">
+                            Pro
+                          </Badge>}
+                      </NavLink>
+                    </li>)}
+                  
+                  {/* Messages Link */}
+                  <li>
+                    <NavLink to="/business-dashboard/messages" onClick={closeMobileMenu} className={({
+                  isActive
+                }) => cn("flex items-center gap-3 px-3 py-3 rounded-md transition-colors", isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
+                      <MessageSquare className="h-5 w-5" />
+                      Mensajes
+                      {unreadCount > 0 && <Badge variant="destructive" className="ml-auto text-xs">
+                          {unreadCount > 9 ? '9+' : unreadCount}
                         </Badge>}
                     </NavLink>
-                  </li>)}
-              </ul>
-            </nav>
+                  </li>
+                  
+                  {/* Notifications Link */}
+                  <li>
+                    <NavLink to="/business-dashboard/notifications" onClick={closeMobileMenu} className={({
+                  isActive
+                }) => cn("flex items-center gap-3 px-3 py-3 rounded-md transition-colors", isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
+                      <Bell className="h-5 w-5" />
+                      Notificaciones
+                      <NotificationCenter />
+                    </NavLink>
+                  </li>
+                </ul>
+              </nav>
+            </div>
 
-            <div className="p-4 border-t mt-auto">
-              <div className="flex items-center gap-3 mb-4">
-                {profile?.avatar_url || user?.user_metadata?.avatar_url ? <img src={profile?.avatar_url || user?.user_metadata?.avatar_url || ''} alt={profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario'} className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                    {(profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'U').split(' ').map((n: string) => n[0]).join('')}
-                  </div>}
-                <div>
-                  <p className="text-sm font-medium">{profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario'}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => {
-              navigate('/business-dashboard/profile');
-              closeMobileMenu();
-            }}>
-                  <User className="h-4 w-4 mr-2" />
-                  Mi Perfil
-                </Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => {
-              navigate('/business-dashboard/settings/company');
-              closeMobileMenu();
-            }}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Configuración
-                </Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => {
-              handleLogout();
-              closeMobileMenu();
-            }}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Cerrar Sesión
-                </Button>
-              </div>
+            {/* Footer - Fixed with User Dropdown */}
+            <div className="p-4 border-t flex-shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-start p-2.5 h-auto hover:bg-muted">
+                    <div className="flex items-center gap-3 w-full">
+                      {profile?.avatar_url || user?.user_metadata?.avatar_url ? <img src={profile?.avatar_url || user?.user_metadata?.avatar_url || ''} alt={profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario'} className="w-10 h-10 rounded-full object-cover flex-shrink-0" /> : <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium flex-shrink-0">
+                          {(profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'U').split(' ').map((n: string) => n[0]).join('')}
+                        </div>}
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="text-sm font-medium truncate">{profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64 bg-popover border">
+                  <DropdownMenuItem onClick={() => {
+                navigate('/business-dashboard/profile');
+                closeMobileMenu();
+              }} className="cursor-pointer">
+                    <User className="h-4 w-4 mr-2" />
+                    Mi Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                navigate('/business-dashboard/settings/company');
+                closeMobileMenu();
+              }} className="cursor-pointer">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configuración
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => {
+                handleLogout();
+                closeMobileMenu();
+              }} className="cursor-pointer text-red-600 focus:text-red-600">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Cerrar Sesión
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>}
