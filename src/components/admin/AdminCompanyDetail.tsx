@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,6 +74,7 @@ interface CompanyDetail {
   status: string;
   business_type?: string;
   academy_slug?: string;
+  students_premium_enabled?: boolean;
   owner: {
     id: string;
     full_name: string;
@@ -110,9 +112,15 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [isUpdatingSubscription, setIsUpdatingSubscription] = useState(false);
   
-  // New state for modals
+  // Modals state
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [pendingSubscription, setPendingSubscription] = useState<'freemium' | 'premium' | null>(null);
+  const [showBusinessTypeModal, setShowBusinessTypeModal] = useState(false);
+  const [pendingBusinessType, setPendingBusinessType] = useState<string | null>(null);
+  const [showStudentsPremiumModal, setShowStudentsPremiumModal] = useState(false);
+  const [isUpdatingStudentsPremium, setIsUpdatingStudentsPremium] = useState(false);
+  const [academyStudentsCount, setAcademyStudentsCount] = useState({ enrolled: 0, graduated: 0 });
+  
   const [showSuspendDialog, setShowSuspendDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isSuspending, setIsSuspending] = useState(false);
@@ -223,6 +231,7 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         status: company.status || 'active',
         business_type: company.business_type || 'company',
         academy_slug: company.academy_slug || undefined,
+        students_premium_enabled: company.students_premium_enabled || false,
         owner: {
           id: company.user_id,
           full_name: ownerProfile?.full_name || 'Propietario',
@@ -233,6 +242,21 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         opportunitiesCount: opportunitiesCount || 0,
         servicesCount: servicesCount || 0
       });
+
+      // Load academy students count if it's an academy
+      if (company.business_type === 'academy') {
+        const { data: studentsData } = await supabase
+          .from('academy_students')
+          .select('status')
+          .eq('academy_id', companyId)
+          .in('status', ['enrolled', 'graduated', 'active']);
+        
+        if (studentsData) {
+          const enrolled = studentsData.filter(s => s.status === 'enrolled' || s.status === 'active').length;
+          const graduated = studentsData.filter(s => s.status === 'graduated').length;
+          setAcademyStudentsCount({ enrolled, graduated });
+        }
+      }
     } catch (err) {
       console.error('Error loading company details:', err);
       setError(err instanceof Error ? err.message : 'Error al cargar la empresa');
@@ -452,6 +476,91 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
       toast.error(err instanceof Error ? err.message : 'Error al actualizar la suscripción');
     } finally {
       setIsUpdatingSubscription(false);
+    }
+  };
+
+  const handleBusinessTypeChange = (value: string) => {
+    if (!companyData) return;
+    
+    // If changing to academy or changing from academy, show confirmation
+    if (value === 'academy' || companyData.business_type === 'academy') {
+      setPendingBusinessType(value);
+      setShowBusinessTypeModal(true);
+    } else {
+      // Simple change without modal
+      executeBusinessTypeChange(value);
+    }
+  };
+
+  const executeBusinessTypeChange = async (value: string) => {
+    if (!companyData) return;
+    
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .update({ business_type: value, updated_at: new Date().toISOString() })
+        .eq('id', companyData.id);
+      
+      if (error) throw error;
+      
+      // If changing to academy, subscription will be auto-set to premium by trigger
+      const message = value === 'academy' 
+        ? 'Tipo actualizado a Academia. La suscripción se estableció automáticamente a Premium.'
+        : 'Tipo de empresa actualizado a Empresa';
+      
+      toast.success(message);
+      setShowBusinessTypeModal(false);
+      setPendingBusinessType(null);
+      onCompanyUpdate?.();
+      await loadCompanyDetail();
+    } catch (err) {
+      console.error('Error updating business type:', err);
+      toast.error('Error al actualizar el tipo de empresa');
+    }
+  };
+
+  const handleConfirmBusinessTypeChange = async () => {
+    if (!pendingBusinessType) return;
+    await executeBusinessTypeChange(pendingBusinessType);
+  };
+
+  const handleToggleStudentsPremium = () => {
+    setShowStudentsPremiumModal(true);
+  };
+
+  const handleConfirmStudentsPremium = async () => {
+    if (!companyData) return;
+    
+    const newValue = !companyData.students_premium_enabled;
+    setIsUpdatingStudentsPremium(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No active session');
+
+      const { data, error } = await supabase.functions.invoke('admin-bulk-update-academy-students', {
+        body: { academyId: companyData.id, enablePremium: newValue },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const message = newValue 
+        ? `Premium activado. ${data.studentsUpdated} estudiantes actualizados a premium_talent.`
+        : `Premium desactivado. Los nuevos estudiantes recibirán freemium.`;
+      
+      toast.success(message);
+      setShowStudentsPremiumModal(false);
+      onCompanyUpdate?.();
+      await loadCompanyDetail();
+    } catch (err) {
+      console.error('Error updating students premium:', err);
+      toast.error(err instanceof Error ? err.message : 'Error al actualizar premium de estudiantes');
+    } finally {
+      setIsUpdatingStudentsPremium(false);
     }
   };
 
@@ -786,22 +895,7 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
                     <Label className="text-sm text-muted-foreground mb-2 block">Tipo de negocio</Label>
                     <Select
                       value={companyData.business_type || 'company'}
-                      onValueChange={async (value) => {
-                        try {
-                          const { error } = await supabase
-                            .from('companies')
-                            .update({ business_type: value, updated_at: new Date().toISOString() })
-                            .eq('id', companyData.id);
-                          
-                          if (error) throw error;
-                          toast.success(`Tipo de empresa actualizado a ${value === 'academy' ? 'Academia' : 'Empresa'}`);
-                          onCompanyUpdate?.();
-                          await loadCompanyDetail();
-                        } catch (err) {
-                          console.error('Error updating business type:', err);
-                          toast.error('Error al actualizar el tipo de empresa');
-                        }
-                      }}
+                      onValueChange={handleBusinessTypeChange}
                     >
                       <SelectTrigger className="w-[180px]">
                         <SelectValue />
@@ -833,28 +927,55 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-3 border-t">
                   <div className="flex-1">
                     <Label className="text-sm text-muted-foreground">Suscripción actual</Label>
+                    {companyData.business_type === 'academy' && (
+                      <p className="text-xs text-muted-foreground mt-1">Las academias siempre son Premium</p>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={companyData.status === 'premium' ? 'outline' : 'default'}
-                      size="sm"
-                      disabled={companyData.status !== 'premium'}
-                      onClick={() => handleOpenSubscriptionModal('freemium')}
-                    >
-                      Freemium
-                    </Button>
-                    <Button
-                      variant={companyData.status === 'premium' ? 'default' : 'outline'}
-                      size="sm"
-                      disabled={companyData.status === 'premium'}
-                      onClick={() => handleOpenSubscriptionModal('premium')}
-                      className={companyData.status === 'premium' ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : ''}
-                    >
-                      <Crown className="h-4 w-4 mr-2" />
-                      Premium
-                    </Button>
-                  </div>
+                  <Select
+                    value={companyData.status === 'premium' ? 'premium' : 'freemium'}
+                    onValueChange={(value) => handleOpenSubscriptionModal(value as 'freemium' | 'premium')}
+                    disabled={companyData.business_type === 'academy'}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="freemium">Freemium</SelectItem>
+                      <SelectItem value="premium">
+                        <div className="flex items-center gap-2">
+                          <Crown className="h-4 w-4" />
+                          Premium
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {/* Toggle de Premium para Estudiantes (solo para academias premium) */}
+                {companyData.business_type === 'academy' && companyData.status === 'premium' && (
+                  <div className="flex flex-col gap-3 pt-3 border-t">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <Label className="font-medium">Incluir premium para estudiantes</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Otorga acceso premium a todos los estudiantes activos y graduados 
+                          ({academyStudentsCount.enrolled} inscritos, {academyStudentsCount.graduated} graduados)
+                        </p>
+                      </div>
+                      <Switch
+                        checked={companyData.students_premium_enabled || false}
+                        onCheckedChange={handleToggleStudentsPremium}
+                        disabled={isUpdatingStudentsPremium}
+                      />
+                    </div>
+                    {companyData.students_premium_enabled && (
+                      <p className="text-xs text-emerald-600 flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        Los nuevos estudiantes recibirán premium automáticamente
+                      </p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -1112,6 +1233,58 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isDeleting ? 'Eliminando...' : 'Eliminar Permanentemente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Business Type Confirmation Modal */}
+      <AlertDialog open={showBusinessTypeModal} onOpenChange={setShowBusinessTypeModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cambiar Tipo de Negocio</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingBusinessType === 'academy' 
+                ? 'Al cambiar a Academia, la suscripción se actualizará automáticamente a Premium y podrás gestionar estudiantes. ¿Deseas continuar?'
+                : 'Al cambiar de Academia a Empresa, la suscripción Premium se mantendrá pero perderás las funcionalidades de academia. ¿Deseas continuar?'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingBusinessType(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmBusinessTypeChange}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Students Premium Confirmation Modal */}
+      <AlertDialog open={showStudentsPremiumModal} onOpenChange={setShowStudentsPremiumModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {companyData?.students_premium_enabled ? 'Desactivar Premium para Estudiantes' : 'Activar Premium para Estudiantes'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {!companyData?.students_premium_enabled 
+                ? `Esta acción otorgará suscripción premium a ${academyStudentsCount.enrolled + academyStudentsCount.graduated} estudiantes actuales y a todos los nuevos estudiantes que se unan a la academia.`
+                : 'Los estudiantes actuales mantendrán su suscripción actual, pero los nuevos estudiantes recibirán suscripción freemium.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUpdatingStudentsPremium}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmStudentsPremium}
+              disabled={isUpdatingStudentsPremium}
+            >
+              {isUpdatingStudentsPremium ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Actualizando...
+                </>
+              ) : (
+                'Confirmar'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

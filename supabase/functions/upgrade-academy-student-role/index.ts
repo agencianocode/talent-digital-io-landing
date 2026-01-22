@@ -32,7 +32,7 @@ serve(async (req) => {
     // Verify that the academy exists and is of type 'academy'
     const { data: academy, error: academyError } = await supabaseAdmin
       .from('companies')
-      .select('id, name, business_type')
+      .select('id, name, business_type, students_premium_enabled')
       .eq('id', academyId)
       .single();
 
@@ -77,6 +77,19 @@ serve(async (req) => {
       console.log('User is not enrolled in this academy');
       return new Response(
         JSON.stringify({ error: 'Usuario no está inscrito en esta academia', upgraded: false }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if the academy has students premium enabled
+    if (!academy.students_premium_enabled) {
+      console.log('Academy does not have students premium enabled');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          upgraded: false, 
+          message: 'Academia no incluye premium para estudiantes'
+        }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
