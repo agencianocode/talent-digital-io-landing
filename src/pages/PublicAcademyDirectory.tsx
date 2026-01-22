@@ -29,6 +29,10 @@ interface Graduate {
   experience_count?: number;
   social_links_count?: number;
   services_count?: number;
+  // Additional fields for unified sorting (same as TalentDiscovery)
+  last_activity?: string | null;
+  is_complete?: boolean;
+  is_verified?: boolean; // Always true for academy students
 }
 
 interface AcademyInfo {
@@ -155,49 +159,31 @@ export default function PublicAcademyDirectory() {
       console.log('🚫 Hidden (pending/inactive):', pendingOrInactive);
       console.log('🚫 Hidden (incomplete onboarding - no real name or photo):', incompleteOnboarding);
 
-      // Función para calcular completitud expandida del perfil
-      const calculateProfileCompleteness = (student: Graduate): number => {
-        let score = 0;
-        
-        // Nombre real (10 pts)
-        if (student.student_name && !student.student_name.includes('@')) score += 10;
-        
-        // Foto de perfil (15 pts)
-        if (student.avatar_url) score += 15;
-        
-        // Título profesional (15 pts)
-        if (student.title) score += 15;
-        
-        // Ubicación (10 pts)
-        if (student.city || student.country) score += 10;
-        
-        // Bio (10 pts)
-        if (student.bio && student.bio.length > 0) score += 10;
-        
-        // Skills - al menos 3 (10 pts)
-        if (student.skills && student.skills.length >= 3) score += 10;
-        
-        // Video presentación (15 pts)
-        if (student.video_presentation_url) score += 15;
-        
-        // Experiencia laboral - al menos 1 (10 pts)
-        if (student.experience_count && student.experience_count >= 1) score += 10;
-        
-        // Educación - al menos 1 (5 pts)
-        if (student.education_count && student.education_count >= 1) score += 5;
-        
-        // Redes sociales - al menos 1 (5 pts)
-        if (student.social_links_count && student.social_links_count >= 1) score += 5;
-        
-        // Servicios ofrecidos - al menos 1 (10 pts)
-        if (student.services_count && student.services_count >= 1) score += 10;
-        
-        return score;
-      };
-
-      // Ordenar por completitud (más completos primero)
-      const sortByCompleteness = (students: Graduate[]): Graduate[] => {
-        return [...students].sort((a, b) => calculateProfileCompleteness(b) - calculateProfileCompleteness(a));
+      // Función de ordenamiento unificada (misma lógica que TalentDiscovery):
+      // 1. Perfil 100% completo (is_complete)
+      // 2. Última actividad (last_activity, más reciente primero)
+      // 3. Verificado por academia (siempre true para estudiantes de academia)
+      // 4. Tiene video (video_presentation_url)
+      const sortByUnifiedCriteria = (students: Graduate[]): Graduate[] => {
+        return [...students].sort((a, b) => {
+          // 1. Perfil completo primero
+          const aComplete = a.is_complete ? 1 : 0;
+          const bComplete = b.is_complete ? 1 : 0;
+          if (aComplete !== bComplete) return bComplete - aComplete;
+          
+          // 2. Última actividad (más reciente primero)
+          const aLastActive = a.last_activity ? new Date(a.last_activity).getTime() : 0;
+          const bLastActive = b.last_activity ? new Date(b.last_activity).getTime() : 0;
+          if (aLastActive !== bLastActive) return bLastActive - aLastActive;
+          
+          // 3. Verificado por academia (todos los estudiantes de academia están verificados)
+          // No aplica diferenciación aquí
+          
+          // 4. Tiene video
+          const aHasVideo = a.video_presentation_url ? 1 : 0;
+          const bHasVideo = b.video_presentation_url ? 1 : 0;
+          return bHasVideo - aHasVideo;
+        });
       };
 
       if (visibleStudents.length > 0) {
@@ -207,6 +193,7 @@ export default function PublicAcademyDirectory() {
           // Fetch all extended profile data in parallel
           const [
             talentProfilesResult,
+            profilesResult,
             educationResult,
             experienceResult,
             socialLinksResult,
@@ -215,6 +202,10 @@ export default function PublicAcademyDirectory() {
             supabase
               .from('talent_profiles')
               .select('user_id, skills, video_presentation_url')
+              .in('user_id', userIds),
+            supabase
+              .from('profiles')
+              .select('user_id, last_activity, profile_completeness')
               .in('user_id', userIds),
             supabase
               .from('talent_education')
@@ -260,6 +251,7 @@ export default function PublicAcademyDirectory() {
           // Combine all data
           const studentsWithAllData = visibleStudents.map((student: Graduate) => {
             const talentProfile = (talentProfilesResult.data || []).find(tp => tp.user_id === student.user_id);
+            const profileData = (profilesResult.data || []).find(p => p.user_id === student.user_id);
             return {
               ...student,
               skills: talentProfile?.skills || [],
@@ -267,13 +259,17 @@ export default function PublicAcademyDirectory() {
               education_count: educationCounts.get(student.user_id || '') || 0,
               experience_count: experienceCounts.get(student.user_id || '') || 0,
               social_links_count: socialLinksCounts.get(student.user_id || '') || 0,
-              services_count: servicesCounts.get(student.user_id || '') || 0
+              services_count: servicesCounts.get(student.user_id || '') || 0,
+              // Additional fields for unified sorting
+              last_activity: profileData?.last_activity || null,
+              is_complete: (profileData?.profile_completeness ?? 0) === 100,
+              is_verified: true // All academy students are verified
             };
           });
           
-          setGraduates(sortByCompleteness(studentsWithAllData));
+          setGraduates(sortByUnifiedCriteria(studentsWithAllData));
         } else {
-          setGraduates(sortByCompleteness(visibleStudents));
+          setGraduates(sortByUnifiedCriteria(visibleStudents));
         }
       } else {
         setGraduates(visibleStudents);
