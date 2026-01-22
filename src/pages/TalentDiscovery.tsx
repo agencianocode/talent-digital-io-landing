@@ -15,8 +15,12 @@ import {
   ChevronDown,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Filter,
+  RotateCcw
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useMessages } from '@/hooks/useMessages';
@@ -95,6 +99,7 @@ const TalentDiscovery = () => {
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -751,21 +756,64 @@ const TalentDiscovery = () => {
           </div>
         </div>
 
-      {/* Search and Compact Filters in one row */}
+      {/* Search and Filter Button */}
       <div className="flex flex-col gap-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            type="text"
-            placeholder="Buscar por nombre, título, skills o categoría..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Buscar por nombre, título, skills o categoría..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
+              className="gap-2"
+            >
+              <Filter className="h-4 w-4" />
+              Filtros
+              {(categoryFilter.length + countryFilter.length + experienceFilter.length + contractTypeFilter.length + (remoteFilter !== 'all' ? 1 : 0) + (showVerifiedOnly ? 1 : 0)) > 0 && (
+                <Badge variant="destructive" className="ml-1 px-1.5 py-0 text-xs">
+                  {categoryFilter.length + countryFilter.length + experienceFilter.length + contractTypeFilter.length + (remoteFilter !== 'all' ? 1 : 0) + (showVerifiedOnly ? 1 : 0)}
+                </Badge>
+              )}
+              <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersExpanded ? 'rotate-180' : ''}`} />
+            </Button>
+
+            {(categoryFilter.length + countryFilter.length + experienceFilter.length + contractTypeFilter.length + (remoteFilter !== 'all' ? 1 : 0) + (showVerifiedOnly ? 1 : 0)) > 0 && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setSearchTerm('');
+                  setCategoryFilter([]);
+                  setCountryFilter([]);
+                  setExperienceFilter([]);
+                  setContractTypeFilter([]);
+                  setRemoteFilter('all');
+                  setShowFeaturedOnly(false);
+                  setShowVerifiedOnly(false);
+                }}
+                className="gap-2 text-muted-foreground"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Limpiar
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Horizontal Filters */}
-        <div className="flex flex-wrap gap-3 items-center">
+        {/* Collapsible Filters */}
+        <Collapsible open={isFiltersExpanded} onOpenChange={setIsFiltersExpanded}>
+          <CollapsibleContent>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex flex-wrap gap-3 items-center">
           {/* Category Filter */}
           <Popover>
             <PopoverTrigger asChild>
@@ -993,24 +1041,11 @@ const TalentDiscovery = () => {
               Solo verificados por academias
             </label>
           </div>
-
-          {/* Clear Filters */}
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              setSearchTerm('');
-              setCategoryFilter([]);
-              setCountryFilter([]);
-              setExperienceFilter([]);
-              setContractTypeFilter([]);
-              setRemoteFilter('all');
-              setShowFeaturedOnly(false);
-              setShowVerifiedOnly(false);
-            }}
-          >
-            Limpiar Filtros
-          </Button>
-        </div>
+                </div>
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* Results count and pagination controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
