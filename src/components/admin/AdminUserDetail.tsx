@@ -509,14 +509,16 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
                   {user.companies.map((company) => (
                     <div 
                       key={company.id} 
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                      onClick={() => {
-                        if (onNavigateToCompany) {
-                          onNavigateToCompany(company.id);
-                        }
-                      }}
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                     >
-                      <div className="min-w-0 flex-1">
+                      <div 
+                        className="min-w-0 flex-1 cursor-pointer"
+                        onClick={() => {
+                          if (onNavigateToCompany) {
+                            onNavigateToCompany(company.id);
+                          }
+                        }}
+                      >
                         <p className="font-medium text-sm sm:text-base truncate hover:text-primary">{company.name}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground">
                           Se unió {formatDistanceToNow(new Date(company.joined_at), { 
@@ -525,7 +527,41 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
                           })}
                         </p>
                       </div>
-                      <Badge variant="outline" className="w-fit">{company.role}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Select 
+                          value={company.role} 
+                          onValueChange={async (newRole) => {
+                            // Update company role for this user
+                            try {
+                              const { data: { session } } = await supabase.auth.getSession();
+                              if (!session) throw new Error('No session');
+                              
+                              const { error } = await supabase
+                                .from('company_user_roles')
+                                .update({ role: newRole as 'owner' | 'admin' | 'viewer' })
+                                .eq('company_id', company.id)
+                                .eq('user_id', user.id);
+                              
+                              if (error) throw error;
+                              toast.success(`Rol actualizado a ${newRole === 'owner' ? 'Propietario' : newRole === 'admin' ? 'Admin' : 'Miembro'}`);
+                              loadUserDetail();
+                              onUserUpdate();
+                            } catch (err) {
+                              console.error('Error updating company role:', err);
+                              toast.error('Error al actualizar el rol');
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="owner">👑 Propietario</SelectItem>
+                            <SelectItem value="admin">⚙️ Admin</SelectItem>
+                            <SelectItem value="viewer">👤 Miembro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   ))}
                 </div>

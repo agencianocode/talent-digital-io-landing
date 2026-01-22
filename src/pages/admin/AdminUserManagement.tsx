@@ -156,22 +156,42 @@ const AdminUserManagement: React.FC = () => {
     }
   };
 
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Admin</Badge>;
-      case 'premium_business':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Empresa Premium</Badge>;
-      case 'freemium_business':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Empresa Freemium</Badge>;
+  const getRoleBadge = (user: any) => {
+    // Contextual role display
+    // Priority: Admin > Owner > Company Admin > Member > Talent
+    if (user.role === 'admin') {
+      return <Badge variant="secondary" className="bg-purple-100 text-purple-800">🛡️ Admin</Badge>;
+    }
+    
+    // For users with companies, show their company role
+    if (user.has_companies && user.primary_company_role) {
+      const isPremium = user.is_premium_company;
+      const premiumSuffix = isPremium ? ' ⭐' : '';
+      
+      switch (user.primary_company_role) {
+        case 'owner':
+          return <Badge variant="secondary" className="bg-amber-100 text-amber-800">👑 Owner{premiumSuffix}</Badge>;
+        case 'admin':
+          return <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">⚙️ Admin Empresa{premiumSuffix}</Badge>;
+        case 'viewer':
+          return <Badge variant="secondary" className="bg-blue-100 text-blue-800">👤 Miembro{premiumSuffix}</Badge>;
+      }
+    }
+    
+    // For talent users
+    switch (user.role) {
       case 'premium_talent':
-        return <Badge variant="secondary" className="bg-orange-100 text-orange-800">Talento Premium</Badge>;
+        return <Badge variant="secondary" className="bg-orange-100 text-orange-800">⭐ Talento Premium</Badge>;
       case 'freemium_talent':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800">Talento Freemium</Badge>;
+        return <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">💼 Talento</Badge>;
+      case 'premium_business':
+        return <Badge variant="secondary" className="bg-amber-100 text-amber-800">Empresa Premium</Badge>;
+      case 'freemium_business':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Empresa</Badge>;
       case 'academy_premium':
-        return <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">Academia Premium</Badge>;
+        return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Academia Premium</Badge>;
       default:
-        return <Badge variant="outline">{role}</Badge>;
+        return <Badge variant="outline">{user.role}</Badge>;
     }
   };
 
@@ -365,7 +385,7 @@ const AdminUserManagement: React.FC = () => {
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
                         <h3 className="font-medium text-sm sm:text-base truncate">{user.full_name}</h3>
                         <div className="flex flex-wrap gap-1">
-                          {getRoleBadge(user.role)}
+                          {getRoleBadge(user)}
                           {getStatusBadge(user)}
                           {/* Badge de onboarding incompleto */}
                           {user.has_completed_onboarding === false && (
@@ -411,7 +431,9 @@ const AdminUserManagement: React.FC = () => {
                         {user.companies_count > 0 && (
                           <span className="flex items-center gap-1">
                             <Building className="h-3 w-3 flex-shrink-0" />
-                            <span className="truncate">{user.companies_count} empresa{user.companies_count > 1 ? 's' : ''}</span>
+                            <span className="truncate">
+                              {user.primary_company_name || `${user.companies_count} empresa${user.companies_count > 1 ? 's' : ''}`}
+                            </span>
                           </span>
                         )}
                       </div>

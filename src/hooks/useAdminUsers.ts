@@ -33,6 +33,11 @@ interface UserData {
   is_google_auth?: boolean;
   has_completed_onboarding?: boolean;
   profile_completeness?: number;
+  // New contextual fields
+  primary_company_role?: string;
+  primary_company_name?: string;
+  primary_company_id?: string;
+  is_premium_company?: boolean;
 }
 
 export const useAdminUsers = () => {
@@ -122,7 +127,12 @@ export const useAdminUsers = () => {
         auth_provider: user.auth_provider,
         is_google_auth: user.is_google_auth || false,
         has_completed_onboarding: user.has_completed_onboarding,
-        profile_completeness: user.profile_completeness || 0
+        profile_completeness: user.profile_completeness || 0,
+        // New contextual fields
+        primary_company_role: user.primary_company_role || null,
+        primary_company_name: user.primary_company_name || null,
+        primary_company_id: user.primary_company_id || null,
+        is_premium_company: user.is_premium_company || false
       }));
 
       // Debug después del mapeo para ver qué llega finalmente al frontend
