@@ -158,6 +158,22 @@ const defaultNotifications: NotificationType[] = [
     email: true,
     push: false,
   },
+  {
+    id: 'profile_view',
+    name: 'Vistas de Perfil',
+    description: 'Notificación cuando alguien vea tu perfil de talento.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'marketplace_view',
+    name: 'Vistas de Servicios',
+    description: 'Notificación cuando alguien vea tu servicio en el marketplace.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
 ];
 
 const AdminNotificationSettings: React.FC = () => {
