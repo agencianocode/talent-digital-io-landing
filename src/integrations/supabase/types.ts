@@ -553,6 +553,7 @@ export type Database = {
           size: string | null
           social_links: Json | null
           status: string
+          students_premium_enabled: boolean | null
           team_values: string | null
           updated_at: string
           user_id: string
@@ -584,6 +585,7 @@ export type Database = {
           size?: string | null
           social_links?: Json | null
           status?: string
+          students_premium_enabled?: boolean | null
           team_values?: string | null
           updated_at?: string
           user_id: string
@@ -615,6 +617,7 @@ export type Database = {
           size?: string | null
           social_links?: Json | null
           status?: string
+          students_premium_enabled?: boolean | null
           team_values?: string | null
           updated_at?: string
           user_id?: string
