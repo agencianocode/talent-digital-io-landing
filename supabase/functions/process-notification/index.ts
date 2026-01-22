@@ -137,6 +137,20 @@ Deno.serve(async (req) => {
       // Premium approved
       'premium_approved': 'premium_approved',
       'premium-approved': 'premium_approved',
+      
+      // ===== SUPPORT & FEEDBACK NOTIFICATIONS =====
+      // Bug Report notifications (to users)
+      'bug_report_new_comment': 'bug_report_new_comment',
+      'bug_report_status_change': 'bug_report_status_change',
+      // Bug Report notifications (to admins)
+      'new_bug_report': 'new_bug_report',
+      'new_bug_report_comment_admin': 'new_bug_report_comment_admin',
+      // Feedback notifications (to users)
+      'feedback_new_comment': 'feedback_new_comment',
+      'feedback_status_change': 'feedback_status_change',
+      // Feedback notifications (to admins)
+      'new_feedback': 'new_feedback',
+      'new_feedback_comment_admin': 'new_feedback_comment_admin',
     };
 
     const configId = typeToConfigMap[notification.type] || notification.type;
@@ -581,6 +595,46 @@ Deno.serve(async (req) => {
           }
         }
 
+        // ===== SUPPORT & FEEDBACK NOTIFICATIONS =====
+        const supportNotificationTypes = [
+          'bug_report_new_comment', 'bug_report_status_change', 'new_bug_report', 'new_bug_report_comment_admin',
+          'feedback_new_comment', 'feedback_status_change', 'new_feedback', 'new_feedback_comment_admin'
+        ];
+        
+        if (supportNotificationTypes.includes(notification.type)) {
+          // Status translation map for support tickets
+          const supportStatusTranslationMap: Record<string, string> = {
+            'open': 'Abierto',
+            'in_review': 'En revisión',
+            'in_progress': 'En progreso',
+            'resolved': 'Resuelto',
+            'closed': 'Cerrado',
+            'planned': 'Planeado',
+            'implemented': 'Implementado',
+            'rejected': 'Rechazado'
+          };
+          
+          // Extract data from notification.data
+          if (notification.data?.report_title) {
+            additionalData.report_title = notification.data.report_title;
+          }
+          if (notification.data?.suggestion_title) {
+            additionalData.suggestion_title = notification.data.suggestion_title;
+          }
+          if (notification.data?.new_status) {
+            const rawStatus = notification.data.new_status;
+            additionalData.new_status = supportStatusTranslationMap[rawStatus] || rawStatus;
+          }
+          if (notification.data?.comment_preview) {
+            additionalData.comment_preview = notification.data.comment_preview;
+          }
+          if (notification.data?.commenter_name) {
+            additionalData.commenter_name = notification.data.commenter_name;
+          }
+          
+          console.log('Support notification additional data:', additionalData);
+        }
+
         console.log('Additional data for email variables:', additionalData);
 
         const { data: emailData, error: emailError } = await supabase.functions.invoke(
@@ -608,6 +662,12 @@ Deno.serve(async (req) => {
                 applications_count: additionalData.applications_count,
                 deadline_date: additionalData.deadline_date,
                 tracking_type: additionalData.tracking_type,
+                // Support & Feedback data
+                report_title: additionalData.report_title,
+                suggestion_title: additionalData.suggestion_title,
+                new_status: additionalData.new_status,
+                comment_preview: additionalData.comment_preview,
+                commenter_name: additionalData.commenter_name,
               },
               // Include marketplace request data if present
               ...(notification.type === 'marketplace' && notification.data ? {
