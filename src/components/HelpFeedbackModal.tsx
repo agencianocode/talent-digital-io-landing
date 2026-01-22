@@ -73,7 +73,7 @@ const HelpFeedbackModal = ({ isOpen, onClose }: HelpFeedbackModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl p-0 bg-white rounded-2xl shadow-2xl border-0">
+      <DialogContent className="max-w-4xl p-0 bg-white rounded-2xl shadow-2xl border-0">
         {/* Header */}
         <div className="relative p-8 pb-6">
           <h2 className="text-2xl font-semibold text-gray-900 text-center">

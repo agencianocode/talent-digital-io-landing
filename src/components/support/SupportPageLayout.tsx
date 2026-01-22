@@ -1,7 +1,8 @@
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Navigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface SupportPageLayoutProps {
   title: string;
@@ -32,12 +33,28 @@ const SupportPageLayout = ({ title, children }: SupportPageLayoutProps) => {
     return name.substring(0, 2).toUpperCase();
   };
 
+  const handleBackToApp = () => {
+    window.location.href = '/dashboard';
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Minimalist Header */}
       <header className="h-14 border-b bg-card sticky top-0 z-50">
         <div className="container mx-auto h-full flex items-center justify-between px-4">
-          <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleBackToApp}
+              className="gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Volver a la app</span>
+            </Button>
+            <div className="h-6 w-px bg-border hidden sm:block" />
+            <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+          </div>
           
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:block">
