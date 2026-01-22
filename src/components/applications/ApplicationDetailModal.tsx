@@ -40,6 +40,7 @@ interface ApplicationDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onStatusChange: (applicationId: string, status: string, message?: string) => void;
+  onRatingChange?: (applicationId: string, rating: number) => void;
   onViewProfile: (userId: string) => void;
   onContact: (userId: string) => void;
   opportunityTitle?: string;
@@ -63,6 +64,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   isOpen,
   onClose,
   onStatusChange,
+  onRatingChange,
   onViewProfile,
   onContact,
   opportunityTitle,
@@ -264,6 +266,9 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
       if (error) throw error;
       toast.success('Calificación guardada');
+      
+      // Notify parent component to update UI immediately
+      onRatingChange?.(application.id, newRating);
     } catch (error) {
       console.error('Error saving rating:', error);
       toast.error('Error al guardar la calificación');
@@ -335,8 +340,32 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
       setCurrentStatus(status);
 
-      // Llamar al callback para actualizar la lista
+      // Llamar al callback para actualizar la lista inmediatamente (antes de enviar notificaciones)
       onStatusChange(application.id, status, message);
+
+      // Enviar mensaje al talento si hay un mensaje personalizado (para accepted, rejected, hired)
+      if (message && message.trim() && ['accepted', 'rejected', 'hired'].includes(status)) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const conversationId = [user.id, application.user_id].sort().join('_');
+            
+            await supabase.from('messages').insert({
+              sender_id: user.id,
+              recipient_id: application.user_id,
+              content: message,
+              conversation_id: conversationId,
+              message_type: 'text',
+              is_read: false,
+            });
+            
+            console.log('[handleStatusChangeConfirm] Message sent to talent inbox');
+          }
+        } catch (msgError) {
+          console.error('[handleStatusChangeConfirm] Error sending message:', msgError);
+          // Don't fail the status change if message fails
+        }
+      }
 
       // Mapear estado a tipo de notificación específico
       const statusToNotificationType: Record<string, string> = {
