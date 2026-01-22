@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 
-type MainCategory = 'empresas' | 'academias' | 'talento';
+type MainCategory = 'empresas' | 'academias' | 'talento' | 'todas';
 
 interface Category {
   id: string;
@@ -185,7 +185,10 @@ const HelpCenter = () => {
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       article.content.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesCategory = !currentMainCategory || article.main_category === currentMainCategory;
+    // Los artículos con main_category 'todas' aparecen en todas las categorías
+    const matchesCategory = !currentMainCategory || 
+      article.main_category === currentMainCategory ||
+      article.main_category === 'todas';
     
     return matchesSearch && matchesCategory;
   });
