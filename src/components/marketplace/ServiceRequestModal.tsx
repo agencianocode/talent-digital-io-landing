@@ -228,17 +228,7 @@ Puedes responder a esta conversación para continuar la comunicación.
       // Service request created successfully
       console.log('Service request created successfully');
       
-      // Send notification to service owner (email)
-      try {
-        await supabase.rpc('notify_service_inquiry', {
-          p_service_id: service.id,
-          p_inquirer_id: user.id,
-          p_message: formData.message
-        });
-      } catch (notificationError) {
-        console.error('Error sending notification:', notificationError);
-        // No fallar la solicitud si falla la notificación
-      }
+      // Notification is handled automatically by database trigger on_service_inquiry
       
       toast({
         title: "Solicitud enviada",
