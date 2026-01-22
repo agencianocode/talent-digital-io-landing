@@ -68,10 +68,20 @@ const TEMPLATE_CATEGORIES: Record<string, TemplateCategory> = {
   'admin-system-error': 'admin',
   'admin-publishing-request': 'admin',
   'admin-upgrade-request': 'admin',
+  // Soporte y Feedback - Admin
+  'admin-new-bug-report': 'admin',
+  'admin-bug-report-comment': 'admin',
+  'admin-new-feedback': 'admin',
   // Global
   'new-message': 'global',
   'marketplace-request': 'global',
+  'marketplace-view': 'global',
   'moderation': 'global',
+  // Soporte y Feedback - Usuarios
+  'bug-report-status': 'global',
+  'bug-report-comment': 'global',
+  'feedback-status': 'global',
+  'feedback-comment': 'global',
 };
 
 const CATEGORY_INFO: Record<TemplateCategory, { label: string; icon: string; description: string }> = {

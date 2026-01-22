@@ -104,6 +104,15 @@ const getTemplateId = (type: string): string => {
     // Premium approved notifications
     'premium-approved': 'premium-approved',
     'premium_approved': 'premium-approved',
+    
+    // Support & Feedback notifications
+    'new_bug_report': 'admin-new-bug-report',
+    'new_bug_report_comment_admin': 'admin-bug-report-comment',
+    'bug_report_status_change': 'bug-report-status',
+    'bug_report_new_comment': 'bug-report-comment',
+    'new_feedback': 'admin-new-feedback',
+    'feedback_status_change': 'feedback-status',
+    'feedback_new_comment': 'feedback-comment',
   };
   return mapping[type] || type;
 };
