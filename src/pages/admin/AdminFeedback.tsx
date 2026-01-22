@@ -55,6 +55,14 @@ interface Category {
   name: string;
 }
 
+// Hardcoded feedback categories (no database dependency)
+const FEEDBACK_CATEGORIES: Category[] = [
+  { id: 'nuevas-funcionalidades', name: 'Nuevas funcionalidades' },
+  { id: 'mejora-experiencia', name: 'Mejora de experiencia' },
+  { id: 'notificaciones-comunicacion', name: 'Notificaciones y comunicación' },
+  { id: 'otros', name: 'Otros' },
+];
+
 const statusOptions = [
   { value: 'new', label: 'Nueva', icon: Sparkles, color: 'bg-blue-100 text-blue-800' },
   { value: 'in_review', label: 'En revisión', icon: Clock, color: 'bg-yellow-100 text-yellow-800' },
@@ -82,13 +90,8 @@ const AdminFeedback: React.FC = () => {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Load categories
-      const { data: categoriesData } = await supabase
-        .from('feedback_categories')
-        .select('id, name')
-        .eq('is_active', true);
-      
-      setCategories(categoriesData || []);
+      // Use hardcoded categories
+      setCategories(FEEDBACK_CATEGORIES);
       
       // Load suggestions
       const { data: suggestionsData, error } = await supabase
