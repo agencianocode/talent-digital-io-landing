@@ -137,6 +137,7 @@ const getTemplateId = (type: string): string => {
     'bug_report_status_change': 'bug-report-status',
     'bug_report_new_comment': 'bug-report-comment',
     'new_feedback': 'admin-new-feedback',
+    'new_feedback_comment_admin': 'admin-new-feedback',
     'feedback_status_change': 'feedback-status',
     'feedback_new_comment': 'feedback-comment',
   };
@@ -173,6 +174,10 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Add random delay to avoid rate limiting when multiple emails are sent simultaneously
+  const randomDelay = Math.floor(Math.random() * 500) + 100; // 100-600ms
+  await new Promise(resolve => setTimeout(resolve, randomDelay));
 
   try {
     const { to, userName, type, title, message, actionUrl, actionText, missingItems, reminderType, data }: NotificationEmailRequest =
