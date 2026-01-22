@@ -159,13 +159,10 @@ const PublicTalentProfile = () => {
       // Only record if user is authenticated and not viewing their own profile
       if (user && user.id !== talentId) {
         console.log('📊 Recording profile view for:', talentId);
-        // Usar upsert para evitar duplicados - el trigger notificará al talento
-        await supabase.from('profile_views').upsert({
+        // Insertar cada visita - el trigger maneja deduplicación de notificaciones (12h)
+        await supabase.from('profile_views').insert({
           profile_user_id: talentId,
           viewer_id: user.id
-        }, {
-          onConflict: 'profile_user_id,viewer_id',
-          ignoreDuplicates: true
         });
       }
     } catch (error) {

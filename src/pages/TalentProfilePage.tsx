@@ -77,15 +77,12 @@ const TalentProfilePage = () => {
       
       // Only record view if viewer is authenticated and not viewing own profile
       if (user && user.id !== id) {
-        // Usar upsert para evitar duplicados - el trigger notificará al talento
+        // Insertar cada visita - el trigger maneja deduplicación de notificaciones (12h)
         const { error } = await supabase
           .from('profile_views')
-          .upsert({
+          .insert({
             profile_user_id: id,
             viewer_id: user.id
-          }, {
-            onConflict: 'profile_user_id,viewer_id',
-            ignoreDuplicates: true
           });
         
         if (error) {
