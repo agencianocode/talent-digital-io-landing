@@ -198,6 +198,64 @@ const defaultNotifications: NotificationType[] = [
     push: true,
   },
   
+  // === Notificaciones de Usuario ===
+  {
+    id: 'new_message',
+    name: 'Mensajes Nuevos',
+    description: 'Notificación cuando un usuario recibe un nuevo mensaje.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'application_status',
+    name: 'Estado de Aplicaciones',
+    description: 'Notificación cuando cambia el estado de una aplicación.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'new_application',
+    name: 'Nuevas Aplicaciones',
+    description: 'Notificación cuando una empresa recibe una nueva aplicación.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'application_milestone',
+    name: 'Hitos de Aplicación',
+    description: 'Notificación cuando una aplicación alcanza un hito.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'profile_view',
+    name: 'Vistas de Perfil',
+    description: 'Notificación cuando alguien ve un perfil de talento.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'marketplace_view',
+    name: 'Vistas de Marketplace',
+    description: 'Notificación cuando alguien ve un servicio del marketplace.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  {
+    id: 'premium_approved',
+    name: 'Aprobación Premium',
+    description: 'Notificación cuando se aprueba una cuenta premium.',
+    enabled: true,
+    email: true,
+    push: true,
+  },
+  
   // === Sistema ===
   {
     id: 'system_errors',
