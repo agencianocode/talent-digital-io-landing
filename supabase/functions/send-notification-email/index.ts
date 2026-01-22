@@ -77,6 +77,9 @@ const getTemplateId = (type: string): string => {
     'marketplace_view': 'marketplace-view',
     'marketplace-view': 'marketplace-view',
     
+    // Opportunity tracking notifications
+    'opportunity_tracking': 'opportunity-14-days-active',
+    
     // Moderation notifications
     'moderation': 'moderation',
     
@@ -178,7 +181,19 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Try to get custom template content from database
-    const templateId = getTemplateId(type);
+    let templateId = getTemplateId(type);
+    
+    // For opportunity_tracking, select template based on tracking_type
+    if (type === 'opportunity_tracking' && data?.tracking_type) {
+      const trackingTemplateMap: Record<string, string> = {
+        '14_days_active': 'opportunity-14-days-active',
+        '7_days_expiring': 'opportunity-7-days-expiring',
+        'expired': 'opportunity-expired',
+      };
+      templateId = trackingTemplateMap[data.tracking_type] || templateId;
+      console.log('📋 Opportunity tracking template selected:', templateId, 'for type:', data.tracking_type);
+    }
+    
     console.log('📋 Looking for template:', templateId);
     
     let dbContent: Record<string, any> | null = null;
@@ -249,6 +264,10 @@ const handler = async (req: Request): Promise<Response> => {
       profile_name: data?.profile_name || data?.profileName || '',
       // Premium approved variables
       user_type: data?.user_type || data?.userType || '',
+      // Opportunity tracking variables
+      views_count: data?.views_count || '0',
+      applications_count: data?.applications_count || '0',
+      deadline_date: data?.deadline_date || '',
     };
 
     console.log('🔧 Variables prepared for template:', variables);

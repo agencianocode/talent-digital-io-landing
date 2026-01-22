@@ -1512,6 +1512,35 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunity_notification_logs: {
+        Row: {
+          id: string
+          notification_type: string
+          opportunity_id: string
+          sent_at: string | null
+        }
+        Insert: {
+          id?: string
+          notification_type: string
+          opportunity_id: string
+          sent_at?: string | null
+        }
+        Update: {
+          id?: string
+          notification_type?: string
+          opportunity_id?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_notification_logs_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunity_shares: {
         Row: {
           created_at: string
@@ -2458,6 +2487,10 @@ export type Database = {
       calculate_profile_completeness: {
         Args: { user_uuid: string }
         Returns: number
+      }
+      check_opportunity_tracking_notifications: {
+        Args: never
+        Returns: undefined
       }
       claim_company_from_directory: {
         Args: { directory_company_id: string; user_uuid: string }
