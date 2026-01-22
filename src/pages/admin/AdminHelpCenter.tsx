@@ -88,7 +88,6 @@ const AdminHelpCenter: React.FC = () => {
   const [categoryForm, setCategoryForm] = useState({
     name: '',
     description: '',
-    main_category: 'empresas',
     display_order: 0,
   });
   
@@ -104,7 +103,8 @@ const AdminHelpCenter: React.FC = () => {
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('help_center_categories')
         .select('*')
-        .order('display_order');
+        .order('display_order', { ascending: true })
+        .order('name', { ascending: true });
       
       if (categoriesError) throw categoriesError;
       setCategories(categoriesData || []);
@@ -221,8 +221,8 @@ const AdminHelpCenter: React.FC = () => {
       const categoryData = {
         name: categoryForm.name,
         description: categoryForm.description || null,
-        main_category: categoryForm.main_category,
         display_order: categoryForm.display_order,
+        main_category: 'general',
       };
       
       if (editingCategory) {
@@ -304,7 +304,6 @@ const AdminHelpCenter: React.FC = () => {
     setCategoryForm({
       name: '',
       description: '',
-      main_category: 'empresas',
       display_order: 0,
     });
   };
@@ -327,7 +326,6 @@ const AdminHelpCenter: React.FC = () => {
     setCategoryForm({
       name: category.name,
       description: category.description || '',
-      main_category: category.main_category,
       display_order: category.display_order || 0,
     });
     setIsCategoryDialogOpen(true);
@@ -353,7 +351,7 @@ const AdminHelpCenter: React.FC = () => {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsCategoryDialogOpen(true)}>
             <FolderOpen className="h-4 w-4 mr-2" />
-            Nueva Categoría
+            Nueva Subcategoría
           </Button>
           <Button onClick={() => setIsArticleDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
@@ -641,7 +639,7 @@ const AdminHelpCenter: React.FC = () => {
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}</DialogTitle>
+            <DialogTitle>{editingCategory ? 'Editar subcategoría' : 'Nueva subcategoría'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -650,7 +648,7 @@ const AdminHelpCenter: React.FC = () => {
                 id="category-name"
                 value={categoryForm.name}
                 onChange={(e) => setCategoryForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nombre de la categoría"
+                placeholder="Nombre de la subcategoría"
               />
             </div>
             <div>
@@ -659,24 +657,8 @@ const AdminHelpCenter: React.FC = () => {
                 id="category-description"
                 value={categoryForm.description}
                 onChange={(e) => setCategoryForm(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Descripción de la categoría"
+                placeholder="Descripción de la subcategoría"
               />
-            </div>
-            <div>
-              <Label>Categoría Principal</Label>
-              <Select 
-                value={categoryForm.main_category} 
-                onValueChange={(value) => setCategoryForm(prev => ({ ...prev, main_category: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {mainCategories.map(cat => (
-                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div>
               <Label htmlFor="category-order">Orden de visualización</Label>
