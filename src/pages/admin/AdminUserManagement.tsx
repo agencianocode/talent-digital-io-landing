@@ -156,43 +156,42 @@ const AdminUserManagement: React.FC = () => {
     }
   };
 
-  const getRoleBadge = (user: any) => {
-    // Contextual role display
-    // Priority: Admin > Owner > Company Admin > Member > Talent
+  // Badge for user ROLE (Superadmin, Owner, Admin Empresa, Miembro, Talento)
+  const getUserRoleBadge = (user: any) => {
+    // Priority: Superadmin > Owner > Admin Empresa > Miembro > Talento
     if (user.role === 'admin') {
-      return <Badge variant="secondary" className="bg-purple-100 text-purple-800">🛡️ Admin</Badge>;
+      return <Badge variant="secondary" className="bg-purple-100 text-purple-800">🛡️ Superadmin</Badge>;
     }
     
     // For users with companies, show their company role
     if (user.has_companies && user.primary_company_role) {
-      const isPremium = user.is_premium_company;
-      const premiumSuffix = isPremium ? ' ⭐' : '';
-      
       switch (user.primary_company_role) {
         case 'owner':
-          return <Badge variant="secondary" className="bg-amber-100 text-amber-800">👑 Owner{premiumSuffix}</Badge>;
+          return <Badge variant="secondary" className="bg-amber-100 text-amber-800">👑 Owner</Badge>;
         case 'admin':
-          return <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">⚙️ Admin Empresa{premiumSuffix}</Badge>;
+          return <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">⚙️ Admin Empresa</Badge>;
         case 'viewer':
-          return <Badge variant="secondary" className="bg-blue-100 text-blue-800">👤 Miembro{premiumSuffix}</Badge>;
+          return <Badge variant="secondary" className="bg-slate-100 text-slate-800">👤 Miembro</Badge>;
       }
     }
     
-    // For talent users
-    switch (user.role) {
-      case 'premium_talent':
-        return <Badge variant="secondary" className="bg-orange-100 text-orange-800">⭐ Talento Premium</Badge>;
-      case 'freemium_talent':
-        return <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">💼 Talento</Badge>;
-      case 'premium_business':
-        return <Badge variant="secondary" className="bg-amber-100 text-amber-800">Empresa Premium</Badge>;
-      case 'freemium_business':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Empresa</Badge>;
-      case 'academy_premium':
-        return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Academia Premium</Badge>;
-      default:
-        return <Badge variant="outline">{user.role}</Badge>;
+    // For talent users (no company)
+    return <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">💼 Talento</Badge>;
+  };
+
+  // Badge for SUBSCRIPTION (Freemium/Premium)
+  const getSubscriptionBadge = (user: any) => {
+    // Determine subscription based on role
+    const isPremium = user.role === 'admin' || 
+                      user.role === 'premium_talent' || 
+                      user.role === 'premium_business' || 
+                      user.role === 'academy_premium' ||
+                      user.is_premium_company;
+    
+    if (isPremium) {
+      return <Badge variant="secondary" className="bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200">⭐ Premium</Badge>;
     }
+    return <Badge variant="outline" className="text-muted-foreground">Free</Badge>;
   };
 
   const getStatusBadge = (user: any) => {
@@ -382,10 +381,11 @@ const AdminUserManagement: React.FC = () => {
 
                     {/* User Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
                         <h3 className="font-medium text-sm sm:text-base truncate">{user.full_name}</h3>
                         <div className="flex flex-wrap gap-1">
-                          {getRoleBadge(user)}
+                          {getUserRoleBadge(user)}
+                          {getSubscriptionBadge(user)}
                           {getStatusBadge(user)}
                           {/* Badge de onboarding incompleto */}
                           {user.has_completed_onboarding === false && (

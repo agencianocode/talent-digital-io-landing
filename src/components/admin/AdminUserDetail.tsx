@@ -71,6 +71,7 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [newRole, setNewRole] = useState('');
+  const [newSubscription, setNewSubscription] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [showPasswordReset, setShowPasswordReset] = useState(false);
 
@@ -125,6 +126,9 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
 
       setUser(userDetail);
       setNewRole(userDetails.role);
+      // Determine subscription based on role
+      const isPremium = ['admin', 'premium_talent', 'premium_business', 'academy_premium'].includes(userDetails.role);
+      setNewSubscription(isPremium ? 'premium' : 'freemium');
     } catch (error) {
       console.error('Error loading user detail:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
@@ -190,6 +194,60 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
     } catch (error) {
       console.error('Error updating role:', error);
       toast.error(error instanceof Error ? error.message : 'Error al actualizar el rol');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleSubscriptionChange = async () => {
+    if (!user) return;
+
+    // Determine the new role based on subscription and current context
+    let newRoleForSubscription: string;
+    
+    if (newSubscription === 'premium') {
+      // If user has companies, make them premium_business
+      if (user.companies && user.companies.length > 0) {
+        newRoleForSubscription = 'premium_business';
+      } else {
+        newRoleForSubscription = 'premium_talent';
+      }
+    } else {
+      // Freemium
+      if (user.companies && user.companies.length > 0) {
+        newRoleForSubscription = 'freemium_business';
+      } else {
+        newRoleForSubscription = 'freemium_talent';
+      }
+    }
+
+    if (newRoleForSubscription === user.role) {
+      toast.info('La suscripción ya está configurada correctamente');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const { data, error } = await supabase.functions.invoke('admin-change-user-role', {
+        body: { userId, newRole: newRoleForSubscription },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setUser((prev) => prev ? { ...prev, role: newRoleForSubscription } : prev);
+      toast.success(`Suscripción actualizada a ${newSubscription === 'premium' ? 'Premium' : 'Freemium'}`);
+      onUserUpdate();
+      loadUserDetail();
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      toast.error(error instanceof Error ? error.message : 'Error al actualizar la suscripción');
     } finally {
       setIsUpdating(false);
     }
@@ -576,6 +634,31 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {/* Cambiar Suscripción */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <Label className="w-full sm:w-32 text-sm font-medium">Suscripción:</Label>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 flex-1">
+                    <Select value={newSubscription} onValueChange={setNewSubscription}>
+                      <SelectTrigger className="w-full sm:w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="freemium">Free</SelectItem>
+                        <SelectItem value="premium">⭐ Premium</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      onClick={handleSubscriptionChange}
+                      disabled={isUpdating}
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Actualizar
+                    </Button>
+                  </div>
+                </div>
+
                 {/* Cambiar Rol */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <Label htmlFor="role-select" className="w-full sm:w-32 text-sm font-medium">Cambiar Rol:</Label>
@@ -585,12 +668,11 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                        <SelectItem value="academy_premium">Academia Premium</SelectItem>
-                        <SelectItem value="premium_business">Empresa Premium</SelectItem>
-                        <SelectItem value="freemium_business">Empresa Freemium</SelectItem>
-                        <SelectItem value="premium_talent">Talento Premium</SelectItem>
-                        <SelectItem value="freemium_talent">Talento Freemium</SelectItem>
+                        <SelectItem value="admin">🛡️ Superadmin</SelectItem>
+                        <SelectItem value="premium_business">👑 Owner Empresa</SelectItem>
+                        <SelectItem value="freemium_business">⚙️ Admin Empresa</SelectItem>
+                        <SelectItem value="premium_talent">👤 Miembro Empresa</SelectItem>
+                        <SelectItem value="freemium_talent">💼 Talento</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button 
