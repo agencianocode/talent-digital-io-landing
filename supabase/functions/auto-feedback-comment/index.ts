@@ -21,17 +21,17 @@ serve(async (req: Request) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     
-    const { bug_report_id } = await req.json()
+    const { suggestion_id } = await req.json()
     
-    if (!bug_report_id) {
-      console.error('No bug_report_id provided')
+    if (!suggestion_id) {
+      console.error('No suggestion_id provided')
       return new Response(
-        JSON.stringify({ error: 'bug_report_id is required' }),
+        JSON.stringify({ error: 'suggestion_id is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log(`Scheduling auto-comment for bug report: ${bug_report_id}`)
+    console.log(`Scheduling auto-comment for feedback suggestion: ${suggestion_id}`)
 
     // Use EdgeRuntime.waitUntil for background processing
     const backgroundTask = async () => {
@@ -42,30 +42,23 @@ serve(async (req: Request) => {
         
         console.log(`Using admin user ID: ${ADMIN_USER_ID}`)
 
-        // Get admin profile for name and avatar
-        const { data: adminProfile } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url')
-          .eq('user_id', ADMIN_USER_ID)
-          .single()
-
-        // Check if the bug report still exists
-        const { data: bugReport, error: reportError } = await supabase
-          .from('bug_reports')
+        // Check if the suggestion still exists
+        const { data: suggestion, error: suggestionError } = await supabase
+          .from('feedback_suggestions')
           .select('id, title')
-          .eq('id', bug_report_id)
+          .eq('id', suggestion_id)
           .single()
 
-        if (reportError || !bugReport) {
-          console.log('Bug report not found, skipping auto-comment')
+        if (suggestionError || !suggestion) {
+          console.log('Suggestion not found, skipping auto-comment')
           return
         }
 
         // Check if an auto-comment already exists (to prevent duplicates)
         const { data: existingComment } = await supabase
-          .from('bug_report_comments')
+          .from('feedback_comments')
           .select('id')
-          .eq('bug_report_id', bug_report_id)
+          .eq('suggestion_id', suggestion_id)
           .eq('user_id', ADMIN_USER_ID)
           .eq('is_admin_reply', true)
           .limit(1)
@@ -77,14 +70,14 @@ serve(async (req: Request) => {
         }
 
         // Create the automated comment
-        const commentContent = `Gracias por reportarlo 🙌
+        const commentContent = `Gracias por la sugerencia 💜
 
-Ya estamos al tanto del problema y el equipo de TalentoDigital lo va a revisar.`
+El equipo de TalentoDigital la va a revisar.`
 
         const { error: insertError } = await supabase
-          .from('bug_report_comments')
+          .from('feedback_comments')
           .insert({
-            bug_report_id: bug_report_id,
+            suggestion_id: suggestion_id,
             user_id: ADMIN_USER_ID,
             content: commentContent,
             is_admin_reply: true
@@ -95,7 +88,7 @@ Ya estamos al tanto del problema y el equipo de TalentoDigital lo va a revisar.`
           return
         }
 
-        console.log(`Auto-comment posted successfully for bug report: ${bug_report_id}`)
+        console.log(`Auto-comment posted successfully for feedback suggestion: ${suggestion_id}`)
         
       } catch (bgError) {
         console.error('Background task error:', bgError)
@@ -112,7 +105,7 @@ Ya estamos al tanto del problema y el equipo de TalentoDigital lo va a revisar.`
     )
 
   } catch (error) {
-    console.error('Error in auto-bug-report-comment:', error)
+    console.error('Error in auto-feedback-comment:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
