@@ -32,6 +32,9 @@ import { AdminProfileSettings } from '@/components/admin/AdminProfileSettings';
 import AdminSettings from './admin/AdminSettings';
 import { AdminPublishingRequests } from './admin/AdminPublishingRequests';
 import AdminEmailTemplates from './admin/AdminEmailTemplates';
+import AdminHelpCenter from './admin/AdminHelpCenter';
+import AdminBugReports from './admin/AdminBugReports';
+import AdminFeedback from './admin/AdminFeedback';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
@@ -441,6 +444,18 @@ const AdminPanel: React.FC = () => {
 
             {activeTab === "email-templates" && (
               <AdminEmailTemplates />
+            )}
+
+            {activeTab === "help-center" && (
+              <AdminHelpCenter />
+            )}
+
+            {activeTab === "bug-reports" && (
+              <AdminBugReports />
+            )}
+
+            {activeTab === "feedback" && (
+              <AdminFeedback />
             )}
 
             {activeTab === "chat" && (

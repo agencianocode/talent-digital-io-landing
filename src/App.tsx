@@ -97,6 +97,11 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 // Testing pages
 const TestNotifications = lazy(() => import('./pages/testing/TestNotifications'));
 
+// Support pages
+const HelpCenter = lazy(() => import('./pages/support/HelpCenter'));
+const ReportarProblema = lazy(() => import('./pages/support/ReportarProblema'));
+const Feedback = lazy(() => import('./pages/support/Feedback'));
+
 // Platform settings loader component
 const PlatformSettingsLoader = ({ children }: { children: React.ReactNode }) => {
   usePlatformSettings();
@@ -452,6 +457,23 @@ function App() {
                       <Route path="/test-notifications" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <TestNotifications />
+                        </Suspense>
+                      } />
+
+                      {/* Support Pages */}
+                      <Route path="/help-center" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <HelpCenter />
+                        </Suspense>
+                      } />
+                      <Route path="/reportar-problema" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <ReportarProblema />
+                        </Suspense>
+                      } />
+                      <Route path="/feedback" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <Feedback />
                         </Suspense>
                       } />
 
