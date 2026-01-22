@@ -235,23 +235,40 @@ const ServiceDetail: React.FC = () => {
           
           // Only record if not the owner
           if (!currentUser || currentUser.id !== serviceData.user_id) {
-            // Upsert into marketplace_service_views - ignora duplicados para usuarios registrados
-            // El trigger update_service_views_count actualizará views_count automáticamente
-            const { error: viewError } = await supabase
-              .from('marketplace_service_views')
-              .upsert({
-                service_id: id,
-                service_owner_id: serviceData.user_id,
-                viewer_id: currentUser?.id || null
-              }, {
-                onConflict: currentUser?.id ? 'service_id,viewer_id' : undefined,
-                ignoreDuplicates: !!currentUser?.id
-              });
-            
-            if (viewError) {
-              console.warn('[ServiceDetail] Error recording view:', viewError);
+            // Record view - El trigger notify_marketplace_service_view creará la notificación
+            if (currentUser?.id) {
+              // Usuario autenticado: usar upsert para evitar duplicados
+              const { error: viewError } = await supabase
+                .from('marketplace_service_views')
+                .upsert({
+                  service_id: id,
+                  service_owner_id: serviceData.user_id,
+                  viewer_id: currentUser.id
+                }, {
+                  onConflict: 'service_id,viewer_id',
+                  ignoreDuplicates: true
+                });
+              
+              if (viewError) {
+                console.warn('[ServiceDetail] Error recording view:', viewError);
+              } else {
+                console.log('[ServiceDetail] View recorded for authenticated user');
+              }
             } else {
-              console.log('[ServiceDetail] View recorded - trigger will update count');
+              // Usuario anónimo: simplemente insertar
+              const { error: viewError } = await supabase
+                .from('marketplace_service_views')
+                .insert({
+                  service_id: id,
+                  service_owner_id: serviceData.user_id,
+                  viewer_id: null
+                });
+              
+              if (viewError) {
+                console.warn('[ServiceDetail] Error recording anonymous view:', viewError);
+              } else {
+                console.log('[ServiceDetail] Anonymous view recorded');
+              }
             }
           }
         } catch (viewError) {
