@@ -406,14 +406,14 @@ const AdminFeedback: React.FC = () => {
                   </SelectContent>
                 </Select>
                 <Select 
-                  value={selectedSuggestion.category_id || ''} 
-                  onValueChange={(v) => handleCategoryChange(selectedSuggestion.id, v)}
+                  value={selectedSuggestion.category_id || 'none'} 
+                  onValueChange={(v) => handleCategoryChange(selectedSuggestion.id, v === 'none' ? '' : v)}
                 >
                   <SelectTrigger className="w-[150px]">
                     <SelectValue placeholder="Categoría" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin categoría</SelectItem>
+                    <SelectItem value="none">Sin categoría</SelectItem>
                     {categories.map(cat => (
                       <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                     ))}
