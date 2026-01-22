@@ -3,7 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
-import { Bold, Italic, List, ListOrdered, Link as LinkIcon } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Heading2, Type } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Toggle } from '@/components/ui/toggle';
 
@@ -114,6 +114,25 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       <div className="flex items-center gap-1 border-b border-input p-1 bg-muted/30">
         <Toggle
           size="sm"
+          pressed={!editor.isActive('heading')}
+          onPressedChange={() => editor.chain().focus().setParagraph().run()}
+          aria-label="Texto normal"
+          title="Texto normal"
+        >
+          <Type className="h-4 w-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          pressed={editor.isActive('heading', { level: 2 })}
+          onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          aria-label="Título H2"
+          title="Título H2"
+        >
+          <Heading2 className="h-4 w-4" />
+        </Toggle>
+        <div className="w-px h-4 bg-border mx-1" />
+        <Toggle
+          size="sm"
           pressed={editor.isActive('bold')}
           onPressedChange={() => editor.chain().focus().toggleBold().run()}
           aria-label="Negrita"
@@ -175,7 +194,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         <EditorContent editor={editor} />
       </div>
       
-      {/* Styles for placeholder and lists */}
+      {/* Styles for placeholder, lists and headings */}
       <style>{`
         .ProseMirror p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
@@ -183,6 +202,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           color: hsl(var(--muted-foreground));
           pointer-events: none;
           height: 0;
+        }
+        .ProseMirror h2 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin: 1rem 0 0.5rem 0;
+          line-height: 1.3;
         }
         .ProseMirror ul {
           list-style-type: disc;
@@ -202,6 +227,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         }
         .ProseMirror em {
           font-style: italic;
+        }
+        .ProseMirror a {
+          color: hsl(var(--primary));
+          text-decoration: underline;
         }
         .ProseMirror:focus {
           outline: none;
