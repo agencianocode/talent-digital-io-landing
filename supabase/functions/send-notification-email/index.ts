@@ -97,6 +97,10 @@ const getTemplateId = (type: string): string => {
     'system_errors': 'admin-system-error',
     'security_alerts': 'admin-security-alert',
     'publishing_request': 'admin-publishing-request',
+    
+    // Premium approved notifications
+    'premium-approved': 'premium-approved',
+    'premium_approved': 'premium-approved',
   };
   return mapping[type] || type;
 };
@@ -238,6 +242,13 @@ const handler = async (req: Request): Promise<Response> => {
       application_status: translateStatus(data?.applicationStatus),
       message_preview: data?.messagePreview || message || '',
       action_url: fullActionUrl,
+      // Marketplace view variables
+      viewer_name: data?.viewer_name || data?.viewerName || '',
+      service_title: data?.service_title || data?.serviceTitle || '',
+      // Profile view variables
+      profile_name: data?.profile_name || data?.profileName || '',
+      // Premium approved variables
+      user_type: data?.user_type || data?.userType || '',
     };
 
     console.log('🔧 Variables prepared for template:', variables);
