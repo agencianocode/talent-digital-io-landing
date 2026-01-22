@@ -378,15 +378,21 @@ const ApplicationDetail = () => {
   const calculateApplicationProgress = () => {
     if (!application?.opportunities) return { progress: 0, daysRemaining: null };
     
+    const currentStatus = getDisplayStatus();
     const opportunity = application.opportunities;
-    const publishDate = new Date(opportunity.created_at);
     const deadlineDate = opportunity.deadline_date ? new Date(opportunity.deadline_date) : null;
     const today = new Date();
+    
+    // If hired or opportunity closed, show 100%
+    if (currentStatus === 'hired' || currentStatus === 'closed') {
+      return { progress: 100, daysRemaining: 0 };
+    }
     
     if (!deadlineDate) {
       return { progress: 50, daysRemaining: null }; // No deadline = show 50%
     }
     
+    const publishDate = new Date(opportunity.created_at);
     const totalDuration = deadlineDate.getTime() - publishDate.getTime();
     const elapsed = today.getTime() - publishDate.getTime();
     
@@ -474,7 +480,29 @@ const ApplicationDetail = () => {
           status: 'completed',
           color: 'text-green-600'
         };
-        break;
+        // Add next steps for accepted applications
+        timeline.push(currentStep);
+        // Contact step (pending)
+        timeline.push({
+          id: 'contact_pending',
+          title: 'Contacto',
+          description: 'La empresa se pondrá en contacto contigo para continuar el proceso',
+          date: null,
+          icon: MessageCircle,
+          status: application.contacted_at ? 'completed' : 'current',
+          color: application.contacted_at ? 'text-green-600' : 'text-yellow-600'
+        });
+        // Hiring step (pending)
+        timeline.push({
+          id: 'hiring_pending',
+          title: 'Contratación',
+          description: 'Fase final del proceso de selección',
+          date: null,
+          icon: CheckCircle2,
+          status: 'pending',
+          color: 'text-muted-foreground'
+        });
+        return timeline; // Return early to avoid pushing currentStep twice
       case 'rejected':
         currentStep = {
           id: 'rejected',

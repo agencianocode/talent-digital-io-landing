@@ -124,10 +124,10 @@ const MultiStepOpportunityForm = ({
   console.log('📋 MultiStepOpportunityForm - company:', company);
   console.log('📋 MultiStepOpportunityForm - business_type:', company?.business_type);
   console.log('📋 MultiStepOpportunityForm - Is Academy?:', company?.business_type === 'academy');
-  // Calculate default deadline date (2 months from now)
+  // Calculate default deadline date (45 days from now)
   const getDefaultDeadlineDate = () => {
     const date = new Date();
-    date.setMonth(date.getMonth() + 2);
+    date.setDate(date.getDate() + 45);
     return date;
   };
   
