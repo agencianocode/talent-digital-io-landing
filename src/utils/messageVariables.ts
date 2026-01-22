@@ -41,6 +41,47 @@ export const MESSAGE_VARIABLES = {
     label: 'Nombre del remitente',
     example: 'Carlos Pérez',
   },
+  // Support & Feedback variables
+  report_title: {
+    key: '{{report_title}}',
+    label: 'Título del reporte',
+    example: 'Error al cargar página',
+  },
+  report_description: {
+    key: '{{report_description}}',
+    label: 'Descripción del reporte',
+    example: 'Cuando intento acceder a la sección de perfil...',
+  },
+  reporter_name: {
+    key: '{{reporter_name}}',
+    label: 'Nombre del reportador',
+    example: 'Ana García',
+  },
+  suggestion_title: {
+    key: '{{suggestion_title}}',
+    label: 'Título de sugerencia',
+    example: 'Agregar modo oscuro',
+  },
+  suggestion_description: {
+    key: '{{suggestion_description}}',
+    label: 'Descripción de sugerencia',
+    example: 'Sería útil tener un modo oscuro para...',
+  },
+  suggester_name: {
+    key: '{{suggester_name}}',
+    label: 'Nombre del sugeridor',
+    example: 'Pedro Martínez',
+  },
+  comment_preview: {
+    key: '{{comment_preview}}',
+    label: 'Vista previa de comentario',
+    example: 'Gracias por reportar este problema...',
+  },
+  new_status: {
+    key: '{{new_status}}',
+    label: 'Nuevo estado',
+    example: 'En revisión',
+  },
 };
 
 // Variables disponibles según el tipo de trigger
@@ -91,6 +132,15 @@ export const substituteVariables = (
     applicationStatus?: string;
     candidateName?: string;
     senderName?: string;
+    // Support & Feedback
+    reportTitle?: string;
+    reportDescription?: string;
+    reporterName?: string;
+    suggestionTitle?: string;
+    suggestionDescription?: string;
+    suggesterName?: string;
+    commentPreview?: string;
+    newStatus?: string;
   }
 ): string => {
   return template
@@ -101,7 +151,16 @@ export const substituteVariables = (
     .replace(/\{\{opportunity_title\}\}/gi, context.opportunityTitle || '')
     .replace(/\{\{application_status\}\}/gi, context.applicationStatus || '')
     .replace(/\{\{candidate_name\}\}/gi, context.candidateName || '')
-    .replace(/\{\{sender_name\}\}/gi, context.senderName || '');
+    .replace(/\{\{sender_name\}\}/gi, context.senderName || '')
+    // Support & Feedback
+    .replace(/\{\{report_title\}\}/gi, context.reportTitle || '')
+    .replace(/\{\{report_description\}\}/gi, context.reportDescription || '')
+    .replace(/\{\{reporter_name\}\}/gi, context.reporterName || '')
+    .replace(/\{\{suggestion_title\}\}/gi, context.suggestionTitle || '')
+    .replace(/\{\{suggestion_description\}\}/gi, context.suggestionDescription || '')
+    .replace(/\{\{suggester_name\}\}/gi, context.suggesterName || '')
+    .replace(/\{\{comment_preview\}\}/gi, context.commentPreview || '')
+    .replace(/\{\{new_status\}\}/gi, context.newStatus || '');
 };
 
 // Variables disponibles para templates de email (subset)
@@ -123,5 +182,14 @@ export const generatePreview = (template: string): string => {
     applicationStatus: MESSAGE_VARIABLES.application_status.example,
     candidateName: MESSAGE_VARIABLES.candidate_name.example,
     senderName: MESSAGE_VARIABLES.sender_name.example,
+    // Support & Feedback
+    reportTitle: MESSAGE_VARIABLES.report_title.example,
+    reportDescription: MESSAGE_VARIABLES.report_description.example,
+    reporterName: MESSAGE_VARIABLES.reporter_name.example,
+    suggestionTitle: MESSAGE_VARIABLES.suggestion_title.example,
+    suggestionDescription: MESSAGE_VARIABLES.suggestion_description.example,
+    suggesterName: MESSAGE_VARIABLES.suggester_name.example,
+    commentPreview: MESSAGE_VARIABLES.comment_preview.example,
+    newStatus: MESSAGE_VARIABLES.new_status.example,
   });
 };

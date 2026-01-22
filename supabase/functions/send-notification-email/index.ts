@@ -30,6 +30,32 @@ interface NotificationEmailRequest {
     senderName?: string;
     applicationStatus?: string;
     messagePreview?: string;
+    // Marketplace view
+    viewer_name?: string;
+    viewerName?: string;
+    service_title?: string;
+    serviceTitle?: string;
+    // Profile view
+    profile_name?: string;
+    profileName?: string;
+    // Premium
+    user_type?: string;
+    userType?: string;
+    // Opportunity tracking
+    tracking_type?: string;
+    views_count?: string;
+    applications_count?: string;
+    deadline_date?: string;
+    // Support & Feedback
+    report_title?: string;
+    report_description?: string;
+    reporter_name?: string;
+    suggestion_title?: string;
+    suggestion_description?: string;
+    suggester_name?: string;
+    comment_preview?: string;
+    new_status?: string;
+    status_label?: string;
   };
 }
 
@@ -254,6 +280,26 @@ const handler = async (req: Request): Promise<Response> => {
       return statusMap[status.toLowerCase()] || (status.charAt(0).toUpperCase() + status.slice(1).toLowerCase());
     };
 
+    // Support & Feedback status translation
+    const translateSupportStatus = (status: string | undefined): string => {
+      if (!status) return '';
+      const statusMap: Record<string, string> = {
+        // Bug report statuses
+        'open': 'Abierto',
+        'in_review': 'En revisión',
+        'in_progress': 'En progreso',
+        'resolved': 'Resuelto',
+        'closed': 'Cerrado',
+        // Feedback statuses
+        'new': 'Nueva',
+        'planned': 'Planeada',
+        'in_development': 'En desarrollo',
+        'implemented': 'Implementada',
+        'rejected': 'Rechazada'
+      };
+      return statusMap[status.toLowerCase()] || (status.charAt(0).toUpperCase() + status.slice(1).toLowerCase());
+    };
+
     const variables: Record<string, string> = {
       first_name: firstName,
       last_name: userName?.split(' ').slice(1).join(' ') || '',
@@ -277,6 +323,15 @@ const handler = async (req: Request): Promise<Response> => {
       views_count: data?.views_count || '0',
       applications_count: data?.applications_count || '0',
       deadline_date: data?.deadline_date || '',
+      // Support & Feedback variables
+      report_title: data?.report_title || '',
+      report_description: data?.report_description || '',
+      reporter_name: data?.reporter_name || '',
+      suggestion_title: data?.suggestion_title || '',
+      suggestion_description: data?.suggestion_description || '',
+      suggester_name: data?.suggester_name || '',
+      comment_preview: data?.comment_preview || '',
+      new_status: data?.status_label || translateSupportStatus(data?.new_status) || '',
     };
 
     console.log('🔧 Variables prepared for template:', variables);
