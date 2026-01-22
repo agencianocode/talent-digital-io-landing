@@ -117,9 +117,13 @@ Deno.serve(async (req) => {
       'new_message': 'new_message',
       // Milestone notifications → application_milestone
       'milestone': 'application_milestone',
+      // Profile and Marketplace view notifications
+      'profile_view': 'profile_views',
+      'marketplace_view': 'marketplace_view',
       // Other mappings
       'team': 'team_member_added',
       'marketplace': 'marketplace_reports',
+      'marketplace_request': 'marketplace_reports',
       'opportunity': 'opportunity_reports',
       'moderation': 'content_approval',
       'system': 'system_errors',
@@ -128,6 +132,9 @@ Deno.serve(async (req) => {
       'welcome-talent': 'new_user_registration',
       'welcome-business': 'new_company_registration',
       'welcome-academy': 'new_user_registration',
+      // Premium approved
+      'premium_approved': 'premium_approved',
+      'premium-approved': 'premium_approved',
     };
 
     const configId = typeToConfigMap[notification.type] || notification.type;
