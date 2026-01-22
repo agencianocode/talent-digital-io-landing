@@ -235,7 +235,7 @@ const DashboardLayout = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          {/* Feedback Card */}
+          {/* Support & Feedback Card */}
           <div className="mt-4">
             <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
               <CardContent className="p-4">
@@ -244,12 +244,12 @@ const DashboardLayout = () => {
                     <MessageSquare className="h-5 w-5 text-purple-600" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-sm text-gray-900">¿Cómo podemos mejorar?</h4>
-                    <p className="text-xs text-gray-600">Tu feedback nos ayuda a crecer</p>
+                    <h4 className="font-semibold text-sm text-gray-900">Soporte y feedback</h4>
+                    <p className="text-xs text-gray-600">Encontrá ayuda, reportá problemas o sugerí mejoras</p>
                   </div>
                 </div>
                 <Button size="sm" className="w-full mt-3 bg-purple-600 hover:bg-purple-700" onClick={() => setIsHelpModalOpen(true)}>
-                  Enviar feedback
+                  Soporte
                 </Button>
               </CardContent>
             </Card>
