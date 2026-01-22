@@ -59,6 +59,7 @@ class MarketplaceService {
       const to = from + limit - 1;
       
       const { data, error, count } = await query
+        .order('views_count', { ascending: false })
         .order('created_at', { ascending: false })
         .range(from, to);
 
