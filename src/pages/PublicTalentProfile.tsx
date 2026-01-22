@@ -152,8 +152,29 @@ const PublicTalentProfile = () => {
   useEffect(() => {
     if (talentId) {
       fetchTalentProfile();
+      recordProfileView();
     }
   }, [talentId]);
+
+  // Record profile view for notifications
+  const recordProfileView = async () => {
+    if (!talentId) return;
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      // Only record if user is authenticated and not viewing their own profile
+      if (user && user.id !== talentId) {
+        console.log('📊 Recording profile view for:', talentId);
+        await supabase.from('profile_views').insert({
+          profile_user_id: talentId,
+          viewer_id: user.id
+        });
+      }
+    } catch (error) {
+      // Silent fail - don't interrupt user experience
+      console.warn('Could not record profile view:', error);
+    }
+  };
 
   const fetchTalentProfile = async () => {
     try {

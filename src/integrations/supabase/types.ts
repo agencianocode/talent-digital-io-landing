@@ -1069,6 +1069,41 @@ export type Database = {
           },
         ]
       }
+      marketplace_service_views: {
+        Row: {
+          created_at: string | null
+          id: string
+          service_id: string
+          service_owner_id: string
+          viewed_at: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          service_id: string
+          service_owner_id: string
+          viewed_at?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          service_id?: string
+          service_owner_id?: string
+          viewed_at?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_service_views_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_services: {
         Row: {
           category: string
