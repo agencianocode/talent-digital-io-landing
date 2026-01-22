@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
       // Milestone notifications → application_milestone
       'milestone': 'application_milestone',
       // Profile and Marketplace view notifications
-      'profile_view': 'profile_views',
+      'profile_view': 'profile_view',
       'marketplace_view': 'marketplace_view',
       // Other mappings
       'team': 'team_member_added',
@@ -420,6 +420,17 @@ Deno.serve(async (req) => {
           });
         }
 
+        // For marketplace_view notifications, extract viewer and service info
+        if (notification.type === 'marketplace_view') {
+          if (notification.data?.viewer_name) {
+            additionalData.viewer_name = notification.data.viewer_name;
+          }
+          if (notification.data?.service_title) {
+            additionalData.service_title = notification.data.service_title;
+          }
+          console.log('Marketplace view additional data:', additionalData);
+        }
+
         // For team/membership notifications, get company name
         if (['team', 'membership', 'membership_request'].includes(notification.type)) {
           if (notification.data?.company_id) {
@@ -579,6 +590,8 @@ Deno.serve(async (req) => {
                 senderName: additionalData.senderName,
                 applicationStatus: additionalData.applicationStatus,
                 messagePreview: additionalData.messagePreview,
+                viewer_name: additionalData.viewer_name,
+                service_title: additionalData.service_title,
               },
               // Include marketplace request data if present
               ...(notification.type === 'marketplace' && notification.data ? {
