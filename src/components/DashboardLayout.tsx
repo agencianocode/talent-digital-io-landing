@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Home, LogOut, Briefcase, MessageSquare, User, Settings, Menu, X, ChevronDown, Search, GraduationCap, Bell, Store } from "lucide-react";
+import { Home, LogOut, Briefcase, MessageSquare, User, Settings, Menu, X, ChevronDown, Search, GraduationCap, Bell, Store, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import CompanySwitcher from "@/components/CompanySwitcher";
@@ -13,6 +13,7 @@ import HelpFeedbackModal from "@/components/HelpFeedbackModal";
 import NotificationCenter from "@/components/NotificationCenter";
 import { useSupabaseMessages } from "@/contexts/SupabaseMessagesContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 const DashboardLayout = () => {
   const {
     user,
@@ -59,6 +60,35 @@ const DashboardLayout = () => {
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
+
+  // Scroll indicator for mobile menu
+  const mobileNavRef = useRef<HTMLDivElement>(null);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+
+  useEffect(() => {
+    const checkScroll = () => {
+      if (mobileNavRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = mobileNavRef.current;
+        const hasMoreContent = scrollHeight > clientHeight;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+        setShowScrollIndicator(hasMoreContent && !isAtBottom);
+      }
+    };
+
+    const navElement = mobileNavRef.current;
+    if (navElement) {
+      checkScroll();
+      navElement.addEventListener('scroll', checkScroll);
+      window.addEventListener('resize', checkScroll);
+    }
+
+    return () => {
+      if (navElement) {
+        navElement.removeEventListener('scroll', checkScroll);
+      }
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [isMobileMenuOpen]);
   return <div className="min-h-screen bg-background flex flex-col lg:flex-row">
       {/* Mobile Header */}
       <header className="lg:hidden border-b bg-card p-4">
@@ -90,7 +120,7 @@ const DashboardLayout = () => {
             </div>
             
             {/* Scrollable Navigation Area */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto relative" ref={mobileNavRef}>
               <nav className="p-4">
                 <ul className="space-y-2">
                   {navigationItems.map(item => <li key={item.to}>
@@ -130,10 +160,37 @@ const DashboardLayout = () => {
                   </li>
                 </ul>
               </nav>
+              
+              {/* Scroll Indicator */}
+              {showScrollIndicator && (
+                <div className="sticky bottom-0 left-0 right-0 flex justify-center py-2 bg-gradient-to-t from-card via-card to-transparent pointer-events-none">
+                  <div className="flex flex-col items-center text-muted-foreground animate-bounce">
+                    <ChevronDown className="h-5 w-5" />
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Footer - Fixed with User Dropdown */}
-            <div className="p-4 border-t flex-shrink-0">
+            {/* Footer - Fixed with User Dropdown and Support Card */}
+            <div className="p-4 border-t flex-shrink-0 space-y-4">
+              {/* Support & Feedback Card - Mobile */}
+              <Card 
+                className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 border-purple-200 dark:border-purple-800 cursor-pointer transition-all hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 group"
+                onClick={() => {
+                  setIsHelpModalOpen(true);
+                  closeMobileMenu();
+                }}
+              >
+                <CardContent className="p-3">
+                  <h4 className="font-semibold text-sm text-foreground mb-1">Soporte y feedback</h4>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">Ayuda, problemas o mejoras</p>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-purple-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* User Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="w-full justify-start p-2.5 h-auto hover:bg-muted">
@@ -168,7 +225,7 @@ const DashboardLayout = () => {
                   <DropdownMenuItem onClick={() => {
                 handleLogout();
                 closeMobileMenu();
-              }} className="cursor-pointer text-red-600 focus:text-red-600">
+              }} className="cursor-pointer text-destructive focus:text-destructive">
                     <LogOut className="h-4 w-4 mr-2" />
                     Cerrar Sesión
                   </DropdownMenuItem>
@@ -264,7 +321,7 @@ const DashboardLayout = () => {
                 Configuración
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                 <LogOut className="h-4 w-4 mr-2" />
                 Cerrar Sesión
               </DropdownMenuItem>
@@ -273,20 +330,16 @@ const DashboardLayout = () => {
           
           {/* Support & Feedback Card */}
           <div className="mt-4">
-            <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+            <Card 
+              className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 border-purple-200 dark:border-purple-800 cursor-pointer transition-all hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 group"
+              onClick={() => setIsHelpModalOpen(true)}
+            >
               <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    <MessageSquare className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-sm text-gray-900">Soporte y feedback</h4>
-                    <p className="text-xs text-gray-600">Encontrá ayuda, reportá problemas o sugerí mejoras</p>
-                  </div>
+                <h4 className="font-semibold text-sm text-foreground mb-2">Soporte y feedback</h4>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">Ayuda, problemas o mejoras</p>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-purple-600" />
                 </div>
-                <Button size="sm" className="w-full mt-3 bg-purple-600 hover:bg-purple-700" onClick={() => setIsHelpModalOpen(true)}>
-                  Soporte
-                </Button>
               </CardContent>
             </Card>
           </div>
