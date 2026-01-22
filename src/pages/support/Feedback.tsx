@@ -294,6 +294,16 @@ const Feedback = () => {
           user_id: user.id
         });
 
+      // Trigger automated admin comment after 1 minute
+      try {
+        await supabase.functions.invoke('auto-feedback-comment', {
+          body: { suggestion_id: data.id }
+        });
+        console.log('Auto-feedback-comment function triggered');
+      } catch (fnError) {
+        console.error('Error triggering auto-comment:', fnError);
+      }
+
       toast.success('Sugerencia creada exitosamente');
       setIsCreateOpen(false);
       setCreateForm({ title: '', description: '', category_id: '' });
