@@ -2762,6 +2762,17 @@ export type Database = {
         | {
             Args: {
               p_action_url?: string
+              p_data?: Json
+              p_message: string
+              p_title: string
+              p_type: string
+              p_user_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_action_url?: string
               p_company_id?: string
               p_data?: Json
               p_message: string

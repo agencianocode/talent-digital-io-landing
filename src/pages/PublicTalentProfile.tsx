@@ -149,14 +149,7 @@ const PublicTalentProfile = () => {
     userEmail || undefined
   );
 
-  useEffect(() => {
-    if (talentId) {
-      fetchTalentProfile();
-      recordProfileView();
-    }
-  }, [talentId]);
-
-  // Record profile view for notifications
+  // Record profile view for notifications - defined BEFORE useEffect
   const recordProfileView = async () => {
     if (!talentId) return;
     
@@ -175,6 +168,13 @@ const PublicTalentProfile = () => {
       console.warn('Could not record profile view:', error);
     }
   };
+
+  useEffect(() => {
+    if (talentId) {
+      fetchTalentProfile();
+      recordProfileView();
+    }
+  }, [talentId]);
 
   const fetchTalentProfile = async () => {
     try {
