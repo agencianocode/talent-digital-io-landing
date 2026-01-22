@@ -1,4 +1,4 @@
-import { LayoutDashboard, UserCog, Building2, Briefcase, ShoppingBag, MessageSquare, User, Bell, LogOut, Settings, ChevronDown, FileText, Mail } from "lucide-react";
+import { LayoutDashboard, UserCog, Building2, Briefcase, ShoppingBag, MessageSquare, User, Bell, LogOut, Settings, ChevronDown, FileText, Mail, HelpCircle, Bug, Lightbulb } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,22 @@ const navigationItems = [{
   title: "Templates Email",
   value: "email-templates",
   icon: Mail,
-  showKey: 'show_dashboard' // Always show for admins
+  showKey: 'show_dashboard'
+}, {
+  title: "Help Center",
+  value: "help-center",
+  icon: HelpCircle,
+  showKey: 'show_dashboard'
+}, {
+  title: "Reportes Problemas",
+  value: "bug-reports",
+  icon: Bug,
+  showKey: 'show_dashboard'
+}, {
+  title: "Feedback",
+  value: "feedback",
+  icon: Lightbulb,
+  showKey: 'show_dashboard'
 }];
 interface AdminSidebarProps {
   activeTab: string;
