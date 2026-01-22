@@ -479,7 +479,10 @@ const HelpCenter = () => {
           <div className="grid md:grid-cols-3 gap-6">
             {mainCategories.map(category => {
               const Icon = category.icon;
-              const articleCount = articles.filter(a => a.main_category === category.id).length;
+              // Include articles from this category + global articles ('todas')
+              const articleCount = articles.filter(a => 
+                a.main_category === category.id || a.main_category === 'todas'
+              ).length;
               
               return (
                 <Card 
