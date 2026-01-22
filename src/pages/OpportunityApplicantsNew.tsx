@@ -190,12 +190,36 @@ const OpportunityApplicantsNew = () => {
     navigate(`/business-dashboard/messages?user=${userId}`);
   };
 
-  // SIMPLIFIED: The modal (ApplicationDetailModal) handles DB updates and notifications
-  // This callback only refreshes the UI after the modal completes its work
+  // Callback for rating changes - updates UI immediately without full refetch
+  const handleRatingChange = (applicationId: string, rating: number) => {
+    setApplications(prev => prev.map(app => 
+      app.id === applicationId 
+        ? { ...app, internal_rating: rating }
+        : app
+    ));
+    // Also update selectedApplication if it's the one being rated
+    if (selectedApplication?.id === applicationId) {
+      setSelectedApplication(prev => prev ? { ...prev, internal_rating: rating } : null);
+    }
+  };
+
+  // Callback for status changes - updates UI immediately
   const handleStatusChange = async (applicationId: string, status: string, _message?: string) => {
-    console.log('[OpportunityApplicantsNew.handleStatusChange] Called - UI refresh only', { applicationId, status });
+    console.log('[OpportunityApplicantsNew.handleStatusChange] Called - UI update', { applicationId, status });
+    
+    // Update local state immediately for responsive UI
+    setApplications(prev => prev.map(app => 
+      app.id === applicationId 
+        ? { ...app, status }
+        : app
+    ));
+    
+    // Also update selectedApplication if it's open
+    if (selectedApplication?.id === applicationId) {
+      setSelectedApplication(prev => prev ? { ...prev, status } : null);
+    }
+    
     toast.success(`Aplicación ${status === 'accepted' ? 'aceptada' : status === 'rejected' ? 'rechazada' : 'actualizada'}`);
-    fetchData();
   };
 
   // Bulk action handlers
@@ -626,6 +650,7 @@ const OpportunityApplicantsNew = () => {
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetail}
         onStatusChange={handleStatusChange}
+        onRatingChange={handleRatingChange}
         onViewProfile={handleViewProfile}
         onContact={handleContact}
         opportunityTitle={opportunity?.title}

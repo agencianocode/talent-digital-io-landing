@@ -32,7 +32,7 @@ import { useAdminCustomization } from '@/hooks/useAdminCustomization';
 import { EMAIL_TEMPLATE_VARIABLES, TEMPLATE_SPECIFIC_VARIABLES } from '@/utils/messageVariables';
 
 // Categorías de templates
-type TemplateCategory = 'autenticacion' | 'empresa' | 'talento' | 'academia' | 'global';
+type TemplateCategory = 'autenticacion' | 'empresa' | 'talento' | 'academia' | 'admin' | 'global';
 
 const TEMPLATE_CATEGORIES: Record<string, TemplateCategory> = {
   // Autenticación
@@ -60,6 +60,14 @@ const TEMPLATE_CATEGORIES: Record<string, TemplateCategory> = {
   'onboarding-reminder': 'talento',
   // Academia
   'welcome-academy': 'academia',
+  // Admin
+  'admin-new-user': 'admin',
+  'admin-new-company': 'admin',
+  'admin-report': 'admin',
+  'admin-security-alert': 'admin',
+  'admin-system-error': 'admin',
+  'admin-publishing-request': 'admin',
+  'admin-upgrade-request': 'admin',
   // Global
   'new-message': 'global',
   'marketplace-request': 'global',
@@ -71,6 +79,7 @@ const CATEGORY_INFO: Record<TemplateCategory, { label: string; icon: string; des
   empresa: { label: 'Empresa', icon: '🏢', description: 'Templates para perfiles de empresa' },
   talento: { label: 'Talento', icon: '👤', description: 'Templates para perfiles de talento' },
   academia: { label: 'Academia', icon: '🎓', description: 'Templates para perfiles de academia' },
+  admin: { label: 'Admin', icon: '🛡️', description: 'Notificaciones para administradores' },
   global: { label: 'Global', icon: '🌐', description: 'Templates globales y mensajería' },
 };
 

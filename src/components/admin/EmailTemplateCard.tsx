@@ -21,16 +21,28 @@ export const EmailTemplateCard: React.FC<EmailTemplateCardProps> = ({
   onClick,
 }) => {
   const getCategoryInfo = (templateId: string) => {
+    // Autenticación
     if (['magic-link', 'confirm-signup', 'reset-password'].includes(templateId)) {
       return { label: 'Autenticación', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
     }
-    if (['welcome-talent', 'welcome-business'].includes(templateId)) {
-      return { label: 'Bienvenida', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' };
-    }
-    if (['company-invitation', 'membership-request', 'membership-approved'].includes(templateId)) {
+    // Empresa
+    if (['welcome-business', 'new-application', 'milestone', 'company-invitation', 'membership-request', 'membership-approved'].includes(templateId)) {
       return { label: 'Empresa', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' };
     }
-    return { label: 'Notificación', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' };
+    // Talento
+    if (['welcome-talent', 'application-reviewed', 'application-accepted', 'application-rejected', 'application-hired', 'application-status', 'opportunity-closed-auto', 'opportunity-closed-manual', 'new-opportunity', 'profile-view', 'onboarding-reminder'].includes(templateId)) {
+      return { label: 'Talento', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' };
+    }
+    // Academia
+    if (['welcome-academy'].includes(templateId)) {
+      return { label: 'Academia', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' };
+    }
+    // Admin
+    if (['admin-new-user', 'admin-new-company', 'admin-report', 'admin-security-alert', 'admin-system-error', 'admin-publishing-request', 'admin-upgrade-request'].includes(templateId)) {
+      return { label: 'Admin', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
+    }
+    // Global
+    return { label: 'Global', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' };
   };
 
   const category = getCategoryInfo(id);
