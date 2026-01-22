@@ -68,10 +68,38 @@ const TalentProfilePage = () => {
   // Mensajería existente basada en tabla messages
   const { getOrCreateConversation, sendMessage } = useMessages();
 
+  // Record profile view for notifications
+  const recordProfileView = async () => {
+    if (!id) return;
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Only record view if viewer is authenticated and not viewing own profile
+      if (user && user.id !== id) {
+        const { error } = await supabase
+          .from('profile_views')
+          .insert({
+            profile_user_id: id,
+            viewer_id: user.id
+          });
+        
+        if (error) {
+          console.warn('Could not record profile view:', error);
+        } else {
+          console.log('✅ Profile view recorded successfully');
+        }
+      }
+    } catch (error) {
+      console.warn('Could not record profile view:', error);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       console.log('Fetching talent profile for user ID:', id);
       fetchTalentProfile();
+      recordProfileView();
     }
   }, [id]);
 

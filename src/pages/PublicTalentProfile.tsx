@@ -119,7 +119,8 @@ interface SocialLink {
 }
 
 const PublicTalentProfile = () => {
-  const { talentId } = useParams<{ talentId: string }>();
+  const { talentId: talentIdParam, id: idParam } = useParams<{ talentId?: string; id?: string }>();
+  const talentId = talentIdParam || idParam; // Support both route params
   
   const [talentProfile, setTalentProfile] = useState<TalentProfile | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
