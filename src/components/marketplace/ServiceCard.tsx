@@ -21,23 +21,33 @@ import { stripHtml } from '@/lib/utils';
 
 interface ServiceCardProps {
   service: MarketplaceService;
-  onRequestService: (service: MarketplaceService) => void;
+  onRequestService?: (service: MarketplaceService) => void;
+  variant?: 'default' | 'public';  // 'public' for public profile context with single "Ver" CTA
+  hideUserInfo?: boolean;  // Hide user info when shown in talent profile
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({
   service,
-  onRequestService
+  onRequestService,
+  variant = 'default',
+  hideUserInfo = false
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { categories: marketplaceCategories } = useMarketplaceCategories();
   const category = marketplaceCategories.find(cat => cat.name === service.category);
 
-  // Detect if user is in talent or business context
+  // Detect context for routing
   const isTalentContext = location.pathname.startsWith('/talent-dashboard');
-  const serviceDetailPath = isTalentContext 
-    ? `/talent-dashboard/marketplace/service/${service.id}`
-    : `/business-dashboard/marketplace/service/${service.id}`;
+  const isBusinessContext = location.pathname.startsWith('/business-dashboard');
+  const isPublicContext = variant === 'public' || (!isTalentContext && !isBusinessContext);
+  
+  // Determine the correct path based on context
+  const serviceDetailPath = isPublicContext 
+    ? `/service/${service.id}`
+    : isTalentContext 
+      ? `/talent-dashboard/marketplace/service/${service.id}`
+      : `/business-dashboard/marketplace/service/${service.id}`;
 
   const getInitials = (name: string) => {
     return name
@@ -74,31 +84,33 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col">
-        {/* User Info */}
-        <div className="flex items-center gap-3 mb-4">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={service.user_avatar} />
-            <AvatarFallback className="text-xs">
-              {getInitials(service.user_name)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <p className="text-sm font-medium">{service.user_name}</p>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <MapPin className="h-3 w-3" />
-              <span>{service.location}</span>
+        {/* User Info - hide when in talent profile context */}
+        {!hideUserInfo && (
+          <div className="flex items-center gap-3 mb-4">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={service.user_avatar} />
+              <AvatarFallback className="text-xs">
+                {getInitials(service.user_name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{service.user_name}</p>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3" />
+                <span>{service.location}</span>
+              </div>
             </div>
+            {service.rating != null && service.rating > 0 && service.reviews_count > 0 && (
+              <div className="flex items-center gap-1">
+                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs font-medium">{service.rating}</span>
+                <span className="text-xs text-muted-foreground">
+                  ({service.reviews_count})
+                </span>
+              </div>
+            )}
           </div>
-          {service.rating != null && service.rating > 0 && service.reviews_count > 0 && (
-            <div className="flex items-center gap-1">
-              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs font-medium">{service.rating}</span>
-              <span className="text-xs text-muted-foreground">
-                ({service.reviews_count})
-              </span>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Tags */}
         {service.tags.length > 0 && (
@@ -161,18 +173,20 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             className="flex-1"
             size="sm"
           >
-            Ver Detalles
+            {variant === 'public' ? 'Ver' : 'Ver Detalles'}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRequestService(service);
-            }}
-          >
-            <MessageSquare className="h-4 w-4" />
-          </Button>
+          {variant !== 'public' && onRequestService && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRequestService(service);
+              }}
+            >
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -90,6 +90,7 @@ const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const PublicOpportunity = lazy(() => import('./pages/PublicOpportunity'));
 const PublicCompany = lazy(() => import('./pages/PublicCompany'));
 const PublicAcademyDirectory = lazy(() => import('./pages/PublicAcademyDirectory'));
+const PublicServiceDetail = lazy(() => import('./pages/PublicServiceDetail'));
 const AcademyLandingPage = lazy(() => import('./pages/AcademyLandingPage'));
 const WelcomePage = lazy(() => import('./pages/WelcomePage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -502,6 +503,13 @@ function App() {
                       <Route path="/academy/:slug" element={
                         <Suspense fallback={<LoadingSkeleton type="card" />}>
                           <PublicAcademyDirectory />
+                        </Suspense>
+                      } />
+
+                      {/* Public Service Detail */}
+                      <Route path="/service/:id" element={
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <PublicServiceDetail />
                         </Suspense>
                       } />
 
