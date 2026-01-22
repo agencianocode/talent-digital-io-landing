@@ -18,6 +18,15 @@ export const NOTIFICATION_TYPES = {
   PERFORMANCE_ISSUES: 'performance_issues',
   SECURITY_ALERTS: 'security_alerts',
   BACKUP_STATUS: 'backup_status',
+  // Soporte y Feedback - Para usuarios
+  BUG_REPORT_STATUS: 'bug_report_status_change',
+  BUG_REPORT_COMMENT: 'bug_report_new_comment',
+  FEEDBACK_STATUS: 'feedback_status_change',
+  FEEDBACK_COMMENT: 'feedback_new_comment',
+  // Soporte y Feedback - Para admins
+  NEW_BUG_REPORT: 'new_bug_report',
+  NEW_BUG_REPORT_COMMENT_ADMIN: 'new_bug_report_comment_admin',
+  NEW_FEEDBACK: 'new_feedback',
 } as const;
 
 /**
