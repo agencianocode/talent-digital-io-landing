@@ -581,14 +581,14 @@ const AdminHelpCenter: React.FC = () => {
               <div>
                 <Label>Subcategoría</Label>
                 <Select 
-                  value={articleForm.category_id} 
-                  onValueChange={(value) => setArticleForm(prev => ({ ...prev, category_id: value }))}
+                  value={articleForm.category_id || 'none'} 
+                  onValueChange={(value) => setArticleForm(prev => ({ ...prev, category_id: value === 'none' ? '' : value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin subcategoría</SelectItem>
+                    <SelectItem value="none">Sin subcategoría</SelectItem>
                     {categories
                       .filter(c => c.main_category === articleForm.main_category)
                       .map(cat => (
