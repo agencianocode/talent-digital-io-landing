@@ -235,23 +235,27 @@ const ServiceDetail: React.FC = () => {
           
           // Only record if not the owner
           if (!currentUser || currentUser.id !== serviceData.user_id) {
-            // Insert into marketplace_service_views (trigger will send notification)
-            await supabase.from('marketplace_service_views').insert({
-              service_id: id,
-              service_owner_id: serviceData.user_id,
-              viewer_id: currentUser?.id || null
-            });
-            console.log('[ServiceDetail] View recorded for notification');
+            // Upsert into marketplace_service_views - ignora duplicados para usuarios registrados
+            // El trigger update_service_views_count actualizará views_count automáticamente
+            const { error: viewError } = await supabase
+              .from('marketplace_service_views')
+              .upsert({
+                service_id: id,
+                service_owner_id: serviceData.user_id,
+                viewer_id: currentUser?.id || null
+              }, {
+                onConflict: currentUser?.id ? 'service_id,viewer_id' : undefined,
+                ignoreDuplicates: !!currentUser?.id
+              });
+            
+            if (viewError) {
+              console.warn('[ServiceDetail] Error recording view:', viewError);
+            } else {
+              console.log('[ServiceDetail] View recorded - trigger will update count');
+            }
           }
-          
-          // Increment counter
-          await supabase
-            .from('marketplace_services')
-            .update({ views_count: serviceData.views_count + 1 })
-            .eq('id', id);
         } catch (viewError) {
           console.warn('[ServiceDetail] Error recording view:', viewError);
-          // No fallar si no se puede registrar la vista
         }
       }
     } catch (err) {

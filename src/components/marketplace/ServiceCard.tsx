@@ -10,7 +10,9 @@ import {
   MessageSquare, 
   MapPin,
   Clock,
-  DollarSign
+  DollarSign,
+  Video,
+  Link2
 } from 'lucide-react';
 import { MarketplaceService } from '@/hooks/useMarketplaceServices';
 import { useMarketplaceCategories } from '@/hooks/useMarketplaceCategories';
@@ -54,16 +56,13 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              {category && (
+            {category && (
+              <div className="mb-2">
                 <Badge variant="secondary">
                   {category.name}
                 </Badge>
-              )}
-              <Badge variant="outline" className="text-xs">
-                {normalizeDeliveryTime(service.delivery_time)}
-              </Badge>
-            </div>
+              </div>
+            )}
             <h3 className="font-semibold text-lg line-clamp-2 mb-2">
               {service.title}
             </h3>
@@ -126,6 +125,15 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           <div className="flex items-center gap-1">
             <MessageSquare className="h-3 w-3" />
             <span>{service.requests_count} solicitudes</span>
+          </div>
+          {/* Media icons */}
+          <div className="flex items-center gap-2 ml-auto">
+            {service.demo_url && (
+              <Video className="h-4 w-4 text-primary" />
+            )}
+            {service.portfolio_url && (
+              <Link2 className="h-4 w-4 text-primary" />
+            )}
           </div>
         </div>
 
