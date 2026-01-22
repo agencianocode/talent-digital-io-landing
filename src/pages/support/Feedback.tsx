@@ -710,12 +710,10 @@ const Feedback = () => {
     );
   }
 
-  // Fixed category options for the modal
+  // Real category UUIDs from the database
   const categoryOptions = [
-    { id: 'nuevas-funcionalidades', name: 'Nuevas funcionalidades' },
-    { id: 'mejora-experiencia', name: 'Mejora de experiencia' },
-    { id: 'notificaciones-comunicacion', name: 'Notificaciones y comunicación' },
-    { id: 'otros', name: 'Otros' },
+    { id: 'f7c38fb5-09d8-42ef-b282-09bc737ac589', name: 'Nuevas funcionalidades' },
+    { id: 'f96be51a-f5ef-4be6-8f67-eb0900f0fbc3', name: 'Otros' },
   ];
 
   // Render suggestions list
