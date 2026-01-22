@@ -32,7 +32,7 @@ import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { sendNotification } from '@/lib/notifications';
+// Note: sendNotification removed - DB trigger 'notify_application_status_change' handles notifications automatically
 import { ApplicantCardData } from './ApplicantCard';
 
 interface ApplicationDetailModalProps {
@@ -196,42 +196,10 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
         newStatus: wasStatusPending ? 'reviewed' : currentApp.status,
       });
 
-      // Send notification to talent about status change to 'reviewed'
+      // Note: Notification is handled by DB trigger 'notify_application_status_change'
+      // No need to call sendNotification here - it causes duplicate emails
       if (wasStatusPending) {
-        if (!resolvedOpportunityId) {
-          console.error('[ApplicationDetailModal] CRITICAL: Cannot send reviewed notification - missing opportunity_id:', {
-            applicationId: application.id,
-            loadedOpportunityId,
-            stateOpportunityId: opportunityId,
-            propOpportunityId: application.opportunity_id,
-            dbOpportunityId: currentApp.opportunity_id,
-          });
-        } else {
-          console.log('[ApplicationDetailModal] Sending application_reviewed notification:', {
-            userId: application.user_id,
-            opportunityId: resolvedOpportunityId,
-            applicationId: application.id,
-          });
-
-          try {
-            const result = await sendNotification({
-              userId: application.user_id,
-              type: 'application_reviewed',
-              title: 'Tu aplicación está en revisión 🔍',
-              message: `Tu aplicación a ${opportunityTitle || 'una oportunidad'} fue vista y está en revisión.`,
-              actionUrl: `/talent-dashboard/applications`,
-              data: {
-                opportunity_id: resolvedOpportunityId,
-                application_id: application.id,
-                applicationStatus: 'En revisión',
-              },
-            });
-
-            console.log('[ApplicationDetailModal] Reviewed notification sent successfully:', result);
-          } catch (notifError) {
-            console.error('[ApplicationDetailModal] Error sending reviewed notification:', notifError);
-          }
-        }
+        console.log('[ApplicationDetailModal] Status changed to reviewed - notification handled by DB trigger');
       }
     } catch (error) {
       console.error('[ApplicationDetailModal] Error marking application as viewed:', error);
@@ -367,73 +335,9 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
         }
       }
 
-      // Mapear estado a tipo de notificación específico
-      const statusToNotificationType: Record<string, string> = {
-        'reviewed': 'application_reviewed',
-        'accepted': 'application_accepted',
-        'rejected': 'application_rejected',
-        'hired': 'application_hired',
-      };
-
-      // Mapear estado a título de notificación
-      const statusToTitle: Record<string, string> = {
-        'reviewed': 'Tu aplicación está en revisión 🔍',
-        'accepted': 'Avanzaste en el proceso 🎉',
-        'rejected': 'Actualización sobre tu aplicación',
-        'hired': '¡Felicitaciones! Fuiste contratado 🎉',
-      };
-
-      // Mapear estado a mensaje de notificación
-      const statusToMessage: Record<string, string> = {
-        'reviewed': `Tu aplicación a ${opportunityTitle || 'una oportunidad'} fue vista y está en revisión.`,
-        'accepted': `¡Buenas noticias! Tu perfil fue aceptado para la siguiente etapa en ${opportunityTitle || 'una oportunidad'}.`,
-        'rejected': `Gracias por postularte a ${opportunityTitle || 'una oportunidad'}. En esta ocasión, la empresa decidió avanzar con otros perfiles.`,
-        'hired': `¡Felicitaciones! Fuiste seleccionado/a y contratado/a para ${opportunityTitle || 'una oportunidad'}.`,
-      };
-
-      const notificationType = statusToNotificationType[status] || 'application_status';
-      const notificationTitle = statusToTitle[status] || `Tu aplicación fue ${getStatusLabel(status, true).toLowerCase()}`;
-      const notificationMessage = message || statusToMessage[status] || `El estado de tu aplicación cambió a ${getStatusLabel(status, true)}.`;
-
-      // Send notification to talent
-      if (!resolvedOpportunityId) {
-        console.error('[handleStatusChangeConfirm] CRITICAL: Cannot send notification - no opportunityId available after all attempts:', {
-          applicationId: application.id,
-          stateOpportunityId: opportunityId,
-          propOpportunityId: application.opportunity_id,
-        });
-      } else {
-        console.log('[handleStatusChangeConfirm] Sending status notification:', {
-          userId: application.user_id,
-          type: notificationType,
-          status,
-          opportunityId: resolvedOpportunityId,
-          applicationId: application.id,
-        });
-
-        try {
-          const result = await sendNotification({
-            userId: application.user_id,
-            type: notificationType,
-            title: notificationTitle,
-            message: notificationMessage,
-            actionUrl: `/talent-dashboard/applications`,
-            data: {
-              opportunity_id: resolvedOpportunityId,
-              application_id: application.id,
-              applicationStatus: getStatusLabel(status, true),
-            },
-          });
-
-          console.log('[handleStatusChangeConfirm] Notification sent successfully:', {
-            result,
-            notificationType,
-            userId: application.user_id,
-          });
-        } catch (notifError) {
-          console.error('[handleStatusChangeConfirm] Error sending notification:', notifError);
-        }
-      }
+      // Note: Notification is handled by DB trigger 'notify_application_status_change'
+      // The trigger automatically sends notification when application.status changes
+      console.log('[handleStatusChangeConfirm] Status updated - notification handled by DB trigger');
 
       toast.success(`Estado actualizado a "${getStatusLabel(status)}"`);
     } catch (error) {
