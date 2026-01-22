@@ -44,25 +44,34 @@ Deno.serve(async (req) => {
 
     console.log('Processing notification:', notification_id);
 
-    // Get notification details
-    const { data: notification, error: notificationError } = await supabase
+    // ATOMIC LOCK: Claim this notification for exclusive processing
+    // This UPDATE only succeeds if processed=false, preventing race conditions
+    // where multiple instances try to process the same notification simultaneously
+    const { data: claimedNotification, error: claimError } = await supabase
       .from('notifications')
-      .select('*')
+      .update({ processed: true })
       .eq('id', notification_id)
-      .single();
+      .eq('processed', false)  // Only claim if not already processed
+      .select('*')
+      .maybeSingle();
 
-    if (notificationError || !notification) {
-      throw new Error(`Notification not found: ${notificationError?.message}`);
+    // Check if we successfully claimed the notification
+    if (claimError) {
+      console.error('Error claiming notification:', claimError);
+      throw new Error(`Failed to claim notification: ${claimError.message}`);
     }
 
-    // Prevent duplicate processing - check if already processed
-    if (notification.processed) {
-      console.log('Notification already processed, skipping:', notification_id);
+    if (!claimedNotification) {
+      // Either notification doesn't exist, or another instance already claimed it
+      console.log('Notification already processed or not found, skipping:', notification_id);
       return new Response(
-        JSON.stringify({ success: true, message: 'Already processed', skipped: true }),
+        JSON.stringify({ success: true, message: 'Already processed or not found', skipped: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const notification = claimedNotification;
+    console.log('Notification claimed for exclusive processing:', notification_id);
 
     console.log('Notification details:', notification);
 
@@ -733,20 +742,10 @@ Deno.serve(async (req) => {
 
     console.log('Notification processing results:', results);
 
-    // Marcar la notificación como procesada para evitar reenvíos
+    // Note: Notification was already marked as processed at the start (atomic lock)
+    // This prevents race conditions where multiple instances process the same notification
     const anyChannelSent = results.email || results.push || results.sms;
-    if (anyChannelSent) {
-      const { error: updateError } = await supabase
-        .from('notifications')
-        .update({ processed: true })
-        .eq('id', notification_id);
-
-      if (updateError) {
-        console.error('Error marking notification as processed:', updateError);
-      } else {
-        console.log('Notification marked as processed');
-      }
-    }
+    console.log('Notification processing complete. Channels sent:', { email: results.email, push: results.push, sms: results.sms });
 
     return new Response(
       JSON.stringify({
