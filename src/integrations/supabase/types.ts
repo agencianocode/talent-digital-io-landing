@@ -527,6 +527,141 @@ export type Database = {
         }
         Relationships: []
       }
+      bug_report_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      bug_report_comments: {
+        Row: {
+          bug_report_id: string
+          content: string
+          created_at: string
+          id: string
+          is_admin_reply: boolean | null
+          user_id: string
+        }
+        Insert: {
+          bug_report_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_admin_reply?: boolean | null
+          user_id: string
+        }
+        Update: {
+          bug_report_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_admin_reply?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_report_comments_bug_report_id_fkey"
+            columns: ["bug_report_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bug_report_subscriptions: {
+        Row: {
+          bug_report_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bug_report_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bug_report_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_report_subscriptions_bug_report_id_fkey"
+            columns: ["bug_report_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bug_reports: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          priority: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          image_url?: string | null
+          priority?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          priority?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_reports_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "bug_report_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           academy_slug: string | null
@@ -874,6 +1009,282 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      feedback_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      feedback_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_admin_reply: boolean | null
+          suggestion_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_admin_reply?: boolean | null
+          suggestion_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_admin_reply?: boolean | null
+          suggestion_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_comments_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          suggestion_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          suggestion_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          suggestion_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_subscriptions_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_suggestions: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          votes_count: number | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          votes_count?: number | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          votes_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_suggestions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_votes: {
+        Row: {
+          created_at: string
+          id: string
+          suggestion_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          suggestion_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          suggestion_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_votes_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      help_center_articles: {
+        Row: {
+          category_id: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          main_category: string
+          status: string
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          main_category: string
+          status?: string
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          main_category?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_center_articles_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "help_center_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      help_center_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          main_category: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          main_category: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          main_category?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      help_center_votes: {
+        Row: {
+          article_id: string
+          created_at: string
+          feedback: string | null
+          id: string
+          is_helpful: boolean
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          is_helpful: boolean
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          is_helpful?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_center_votes_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "help_center_articles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       industries: {
         Row: {
