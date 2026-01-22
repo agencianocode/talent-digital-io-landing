@@ -71,31 +71,15 @@ export async function sendNotification(params: {
       return { success: false, error };
     }
 
-    // If notification was created, process it for multi-channel delivery
+    // If notification was created, the DB trigger will process it via pg_net
     if (data) {
       console.log('[sendNotification] Notification created successfully:', {
         notificationId: data,
         type: params.type,
         userId: params.userId,
       });
-      
-      // Call process-notification edge function for immediate processing
-      // The DB trigger also calls it as a backup via pg_net
-      try {
-        const { data: processResult, error: processError } = await supabase.functions.invoke('process-notification', {
-          body: { notification_id: data },
-        });
-
-        if (processError) {
-          console.error('[sendNotification] Error invoking process-notification:', processError);
-          // The DB trigger should process it as backup via pg_net
-        } else {
-          console.log('[sendNotification] Process result:', processResult);
-        }
-      } catch (invokeError) {
-        console.error('[sendNotification] Exception invoking Edge Function:', invokeError);
-        // The DB trigger should process it as backup
-      }
+      // NOTE: Removed duplicate Edge Function call - DB trigger handles this exclusively
+      // This prevents race conditions that caused duplicate emails
     } else {
       console.warn('[sendNotification] No notification ID returned - notification may be disabled');
     }
