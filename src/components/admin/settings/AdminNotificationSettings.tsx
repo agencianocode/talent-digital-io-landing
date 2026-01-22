@@ -321,17 +321,29 @@ const AdminNotificationSettings: React.FC = () => {
         throw error;
       }
 
+      let finalNotifications = defaultNotifications;
+      let adminEmail = '';
+      let needsAutoSync = false;
+
       if (data && data.length > 0) {
         // Load admin email
         const adminEmailSetting = data.find(s => s.key === 'admin_email');
+        adminEmail = adminEmailSetting?.value || '';
         
         // Load notifications array
         const notificationsSetting = data.find(s => s.key === 'notifications');
         
-        let finalNotifications = defaultNotifications;
-        
         if (notificationsSetting && notificationsSetting.value) {
-          const savedNotifications = JSON.parse(notificationsSetting.value);
+          const savedNotifications = JSON.parse(notificationsSetting.value) as NotificationType[];
+          const savedIds = savedNotifications.map(n => n.id);
+          
+          // Detectar tipos nuevos que no están en la DB
+          const newTypesNotInDb = defaultNotifications.filter(n => !savedIds.includes(n.id));
+          
+          if (newTypesNotInDb.length > 0) {
+            console.log('Auto-syncing new notification types:', newTypesNotInDb.map(n => n.id));
+            needsAutoSync = true;
+          }
           
           // Sincronizar: usar defaultNotifications como base, 
           // pero mantener las preferencias guardadas del usuario
@@ -354,12 +366,50 @@ const AdminNotificationSettings: React.FC = () => {
             return defaultNotif;
           });
         }
-
-        form.reset({
-          admin_email: adminEmailSetting?.value || '',
-          notifications: finalNotifications,
-        });
+      } else {
+        // No hay configuración guardada, necesita sync inicial
+        needsAutoSync = true;
+        console.log('No notification settings found, auto-syncing all default types');
       }
+
+      // Auto-sync: guardar automáticamente si hay tipos nuevos
+      if (needsAutoSync) {
+        const settingsToSave = [
+          {
+            key: 'admin_email',
+            value: adminEmail,
+            type: 'string',
+            category: 'notifications'
+          },
+          {
+            key: 'notifications',
+            value: JSON.stringify(finalNotifications),
+            type: 'json',
+            category: 'notifications'
+          }
+        ];
+
+        // Delete existing and insert new
+        await supabase
+          .from('admin_settings')
+          .delete()
+          .eq('category', 'notifications');
+
+        const { error: insertError } = await supabase
+          .from('admin_settings')
+          .insert(settingsToSave);
+
+        if (insertError) {
+          console.error('Error auto-syncing notification settings:', insertError);
+        } else {
+          console.log('Successfully auto-synced notification settings to database');
+        }
+      }
+
+      form.reset({
+        admin_email: adminEmail,
+        notifications: finalNotifications,
+      });
     } catch (error) {
       console.error('Error loading notification settings:', error);
       toast.error('Error al cargar la configuración de notificaciones');
