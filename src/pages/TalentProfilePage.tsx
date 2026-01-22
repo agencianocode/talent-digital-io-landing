@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,9 +68,21 @@ const TalentProfilePage = () => {
   // Mensajería existente basada en tabla messages
   const { getOrCreateConversation, sendMessage } = useMessages();
 
+  // Ref to prevent duplicate view recording (React Strict Mode / re-renders)
+  const hasRecordedViewRef = useRef(false);
+  const lastViewedIdRef = useRef<string | null>(null);
+
   // Record profile view for notifications
   const recordProfileView = async () => {
     if (!id) return;
+    
+    // Prevent duplicate execution within same component lifecycle
+    if (hasRecordedViewRef.current && lastViewedIdRef.current === id) {
+      console.log('⏭️ Skipping duplicate profile view recording');
+      return;
+    }
+    hasRecordedViewRef.current = true;
+    lastViewedIdRef.current = id;
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -95,6 +107,13 @@ const TalentProfilePage = () => {
       console.warn('Could not record profile view:', error);
     }
   };
+
+  // Reset ref when profile ID changes
+  useEffect(() => {
+    if (id !== lastViewedIdRef.current) {
+      hasRecordedViewRef.current = false;
+    }
+  }, [id]);
 
   useEffect(() => {
     if (id) {
