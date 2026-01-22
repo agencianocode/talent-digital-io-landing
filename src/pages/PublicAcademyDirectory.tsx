@@ -373,7 +373,7 @@ export default function PublicAcademyDirectory() {
                       bio={graduate.bio || undefined}
                       skills={graduate.skills}
                       userEmail={graduate.student_email}
-                      lastActive={graduate.enrollment_date || undefined}
+                      lastActive={graduate.last_activity || undefined}
                       primaryAction={{
                         label: 'Ver Perfil',
                         onClick: () => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')
@@ -413,7 +413,7 @@ export default function PublicAcademyDirectory() {
                 bio={graduate.bio || undefined}
                 skills={graduate.skills}
                 userEmail={graduate.student_email}
-                lastActive={graduate.graduation_date || undefined}
+                lastActive={graduate.last_activity || undefined}
                       primaryAction={{
                         label: 'Ver Perfil',
                         onClick: () => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')
@@ -461,7 +461,7 @@ export default function PublicAcademyDirectory() {
                 bio={graduate.bio || undefined}
                 skills={graduate.skills}
                 userEmail={graduate.student_email}
-                lastActive={graduate.graduation_date || graduate.enrollment_date || undefined}
+                lastActive={graduate.last_activity || undefined}
                 primaryAction={{
                   label: 'Ver Perfil',
                   onClick: () => graduate.user_id && window.open(`/profile/${graduate.user_id}`, '_blank')
