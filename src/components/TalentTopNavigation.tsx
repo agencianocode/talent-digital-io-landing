@@ -125,7 +125,7 @@ const TalentTopNavigation = () => {
           {/* Right side - Notifications and Profile */}
           <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Messages */}
-            <Tooltip content="Mensajes">
+            <Tooltip content="Mensajes" position="bottom">
               <div className="relative hidden sm:block">
                 <Button 
                   variant="ghost" 
@@ -144,7 +144,7 @@ const TalentTopNavigation = () => {
             </Tooltip>
 
             {/* Notifications */}
-            <Tooltip content="Notificaciones">
+            <Tooltip content="Notificaciones" position="bottom">
               <div className="relative hidden sm:block">
                 <Button 
                   variant="ghost" 
@@ -163,7 +163,7 @@ const TalentTopNavigation = () => {
             </Tooltip>
 
             {/* Help Button */}
-            <Tooltip content="Soporte y feedback">
+            <Tooltip content="Soporte y feedback" position="bottom">
               <div className="relative hidden sm:block">
                 <Button 
                   variant="ghost" 
