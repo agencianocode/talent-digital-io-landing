@@ -21,7 +21,10 @@ import {
   Briefcase,
   ShoppingBag,
   AlertTriangle,
-  X
+  X,
+  Crown,
+  GraduationCap,
+  Loader2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -54,6 +57,8 @@ interface CompanyDetail {
   created_at: string;
   updated_at: string;
   user_id: string;
+  status: string;
+  business_type?: string;
   owner: {
     id: string;
     full_name: string;
@@ -89,6 +94,7 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState('viewer');
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [isUpdatingSubscription, setIsUpdatingSubscription] = useState(false);
 
   const loadCompanyDetail = async () => {
     if (!companyId) return;
@@ -192,6 +198,8 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         created_at: company.created_at,
         updated_at: company.updated_at,
         user_id: company.user_id,
+        status: company.status || 'active',
+        business_type: company.business_type || 'company',
         owner: {
           id: company.user_id,
           full_name: ownerProfile?.full_name || 'Propietario',
@@ -384,11 +392,67 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
     }
   };
 
+  const handleSubscriptionChange = async (newSubscription: 'freemium' | 'premium') => {
+    if (!companyData) return;
+
+    const currentSubscription = companyData.status === 'premium' ? 'premium' : 'freemium';
+    if (newSubscription === currentSubscription) return;
+
+    setIsUpdatingSubscription(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No active session');
+
+      const { data, error } = await supabase.functions.invoke('admin-change-company-subscription', {
+        body: { companyId: companyData.id, newSubscription },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(`Suscripción actualizada a ${newSubscription === 'premium' ? 'Premium' : 'Freemium'}. ${data.membersUpdated} miembros actualizados.`);
+      onCompanyUpdate?.();
+      await loadCompanyDetail();
+    } catch (err) {
+      console.error('Error updating subscription:', err);
+      toast.error(err instanceof Error ? err.message : 'Error al actualizar la suscripción');
+    } finally {
+      setIsUpdatingSubscription(false);
+    }
+  };
+
+  const getSubscriptionBadge = () => {
+    if (!companyData) return null;
+    const isPremium = companyData.status === 'premium';
+    const isAcademy = companyData.business_type === 'academy';
+
+    if (isPremium) {
+      return isAcademy ? (
+        <Badge className="bg-purple-100 text-purple-700 border-purple-200 gap-1">
+          <GraduationCap className="h-3 w-3" />
+          Premium Academia
+        </Badge>
+      ) : (
+        <Badge className="bg-green-100 text-green-700 border-green-200 gap-1">
+          <Crown className="h-3 w-3" />
+          Premium Empresa
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-amber-100 text-amber-700 border-amber-200">
+        Free
+      </Badge>
+    );
+  };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'owner':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Propietario</Badge>;
+        return <Badge variant="secondary" className="bg-amber-100 text-amber-800">Propietario</Badge>;
       case 'admin':
         return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Admin</Badge>;
       case 'viewer':
@@ -401,9 +465,9 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'accepted':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Activo</Badge>;
+        return <Badge variant="default" className="bg-emerald-100 text-emerald-800">Activo</Badge>;
       case 'pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pendiente</Badge>;
+        return <Badge variant="secondary" className="bg-amber-100 text-amber-800">Pendiente</Badge>;
       case 'declined':
         return <Badge variant="destructive">Rechazado</Badge>;
       default:
@@ -541,6 +605,59 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
                   )}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Subscription Management */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Crown className="h-5 w-5" />
+                  Suscripción
+                </CardTitle>
+                {getSubscriptionBadge()}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">
+                    Tipo de negocio: <span className="font-medium">{companyData.business_type === 'academy' ? 'Academia' : 'Empresa'}</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Miembros activos: <span className="font-medium">{companyData.users.filter(u => u.status === 'accepted').length}</span>
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={companyData.status === 'premium' ? 'outline' : 'default'}
+                    size="sm"
+                    disabled={isUpdatingSubscription || companyData.status !== 'premium'}
+                    onClick={() => handleSubscriptionChange('freemium')}
+                  >
+                    {isUpdatingSubscription ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : null}
+                    Freemium
+                  </Button>
+                  <Button
+                    variant={companyData.status === 'premium' ? 'default' : 'outline'}
+                    size="sm"
+                    disabled={isUpdatingSubscription || companyData.status === 'premium'}
+                    onClick={() => handleSubscriptionChange('premium')}
+                    className={companyData.status === 'premium' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+                  >
+                    {isUpdatingSubscription ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : null}
+                    Premium
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground border-t pt-3">
+                ⚠️ Cambiar la suscripción actualizará el rol de todos los miembros de esta empresa.
+              </p>
             </CardContent>
           </Card>
 

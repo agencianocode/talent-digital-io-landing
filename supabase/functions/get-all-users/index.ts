@@ -117,10 +117,10 @@ serve(async (req) => {
       console.error('Company counts error:', companyError);
     }
 
-    // Get company user roles (for admin/owner/viewer detection)
+    // Get company user roles with company details (for admin/owner/viewer detection and primary company)
     const { data: companyRolesData, error: companyRolesError } = await supabaseAdmin
       .from('company_user_roles')
-      .select('user_id, role')
+      .select('user_id, role, company_id, companies(id, name, status, business_type)')
       .eq('status', 'accepted');
 
     if (companyRolesError) {
@@ -132,6 +132,35 @@ serve(async (req) => {
     companyCounts?.forEach(c => {
       const count = companyCountsMap.get(c.user_id) || 0;
       companyCountsMap.set(c.user_id, count + 1);
+    });
+    
+    // Build user company info map (for contextual role display)
+    const userCompanyInfoMap = new Map<string, { 
+      company_role: string; 
+      primary_company_name: string;
+      primary_company_id: string;
+      is_premium_company: boolean;
+    }>();
+    
+    companyRolesData?.forEach(cr => {
+      if (!cr.user_id) return;
+      const existing = userCompanyInfoMap.get(cr.user_id);
+      const company = cr.companies as any;
+      const isPremium = company?.status === 'premium';
+      
+      // Role priority: owner > admin > viewer
+      const rolePriority: Record<string, number> = { owner: 3, admin: 2, viewer: 1 };
+      const currentPriority = rolePriority[cr.role] || 0;
+      const existingPriority = existing ? (rolePriority[existing.company_role] || 0) : -1;
+      
+      if (!existing || currentPriority > existingPriority) {
+        userCompanyInfoMap.set(cr.user_id, {
+          company_role: cr.role,
+          primary_company_name: company?.name || 'Empresa',
+          primary_company_id: cr.company_id,
+          is_premium_company: isPremium
+        });
+      }
     });
 
     // Combine all data
@@ -330,6 +359,9 @@ serve(async (req) => {
 
       const profile_completeness = calculateProfileCompleteness();
 
+      // Get contextual company info
+      const companyInfo = userCompanyInfoMap.get(user.id);
+
       return {
         id: user.id,
         email: user.email,
@@ -339,6 +371,7 @@ serve(async (req) => {
         created_at: profile?.created_at || user.created_at,
         updated_at: profile?.updated_at || user.updated_at,
         last_sign_in_at: user.last_sign_in_at,
+        last_activity: profile?.last_activity || null,
         email_confirmed_at: user.email_confirmed_at,
         is_active: !user.banned_until,
         country: profile?.country || talentProfile?.country || null,
@@ -347,7 +380,12 @@ serve(async (req) => {
         is_company_admin: isCompanyAdmin,
         has_companies: hasCompanies,
         has_completed_onboarding: hasCompletedOnboarding,
-        profile_completeness
+        profile_completeness,
+        // New fields for contextual role display
+        primary_company_role: companyInfo?.company_role || null,
+        primary_company_name: companyInfo?.primary_company_name || null,
+        primary_company_id: companyInfo?.primary_company_id || null,
+        is_premium_company: companyInfo?.is_premium_company || false
       };
     });
 

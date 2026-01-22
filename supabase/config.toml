@@ -2,3 +2,6 @@ project_id = "wyrieetebfzmgffxecpz"
 
 [functions.trigger-automated-message]
 verify_jwt = false
+
+[functions.admin-change-company-subscription]
+verify_jwt = false
