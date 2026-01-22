@@ -9,6 +9,7 @@ import {
   Store, 
   MessageCircle, 
   Bell, 
+  HelpCircle,
   ChevronDown,
   Menu,
   X
@@ -18,6 +19,7 @@ import { useProfileData } from '@/hooks/useProfileData';
 import { useSupabaseMessages } from '@/contexts/SupabaseMessagesContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import PremiumBadge from '@/components/PremiumBadge';
+import HelpFeedbackModal from '@/components/HelpFeedbackModal';
 
 const TalentTopNavigation = () => {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ const TalentTopNavigation = () => {
   const { unreadCount: unreadNotificationsCount } = useNotifications(); // Talent doesn't filter by company
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   // Listen for profile updates
   useEffect(() => {
@@ -150,6 +153,19 @@ const TalentTopNavigation = () => {
                     {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
                   </Badge>
                 )}
+              </Button>
+            </div>
+
+            {/* Help Button */}
+            <div className="relative hidden sm:block">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2"
+                onClick={() => setIsHelpModalOpen(true)}
+                title="Soporte y feedback"
+              >
+                <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
               </Button>
             </div>
 
@@ -292,6 +308,17 @@ const TalentTopNavigation = () => {
                   variant="ghost"
                   className="flex items-center gap-2 justify-start mobile-nav-item text-foreground hover:bg-muted hover:text-foreground"
                   onClick={() => {
+                    setIsHelpModalOpen(true);
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <HelpCircle className="w-4 h-4" />
+                  Soporte y feedback
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 justify-start mobile-nav-item text-foreground hover:bg-muted hover:text-foreground"
+                  onClick={() => {
                     navigate('/talent-dashboard/profile');
                     setIsMenuOpen(false);
                   }}
@@ -319,6 +346,9 @@ const TalentTopNavigation = () => {
           </div>
         )}
       </div>
+
+      {/* Help & Feedback Modal */}
+      <HelpFeedbackModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
     </header>
   );
 };
