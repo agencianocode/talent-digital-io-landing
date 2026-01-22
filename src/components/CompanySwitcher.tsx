@@ -48,26 +48,27 @@ const CompanySwitcher: React.FC<CompanySwitcherProps> = ({
     if (!company) return null;
     
     const isAcademy = company.business_type === 'academy';
-    const isPremium = company.status === 'premium' || company.status === 'active';
+    // Only 'premium' status is Premium, 'active' is just approved/freemium
+    const isPremium = company.status === 'premium';
     
     if (isPremium) {
       if (isAcademy) {
         return (
-          <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-0 text-[10px] px-1.5 py-0 h-4 font-medium gap-1">
-            <GraduationCap className="h-2.5 w-2.5" />
+          <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-0 text-[10px] px-1.5 py-0 h-4 font-medium gap-0.5">
+            <GraduationCap className="h-2 w-2" />
             Premium
           </Badge>
         );
       }
       return (
-        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0 text-[10px] px-1.5 py-0 h-4 font-medium gap-1">
-          <Building className="h-2.5 w-2.5" />
+        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0 text-[10px] px-1.5 py-0 h-4 font-medium gap-0.5">
+          <Building className="h-2 w-2" />
           Premium
         </Badge>
       );
     }
     
-    // Freemium
+    // Freemium (active, pending, or any other status)
     return (
       <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-0 text-[10px] px-1.5 py-0 h-4 font-medium">
         Free
