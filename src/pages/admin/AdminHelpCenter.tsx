@@ -57,6 +57,7 @@ interface Vote {
 }
 
 const mainCategories = [
+  { value: 'todas', label: 'Todas (General)' },
   { value: 'empresas', label: 'Empresas' },
   { value: 'academias', label: 'Academias' },
   { value: 'talento', label: 'Talento' },
@@ -428,11 +429,16 @@ const AdminHelpCenter: React.FC = () => {
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
                             <h3 className="font-medium truncate">{article.title}</h3>
                             <Badge variant={article.status === 'published' ? 'default' : 'secondary'}>
                               {article.status === 'published' ? 'Publicado' : 'Borrador'}
                             </Badge>
+                            {article.main_category === 'todas' && (
+                              <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
+                                Global
+                              </Badge>
+                            )}
                             {article.video_url && (
                               <Badge variant="outline" className="flex items-center gap-1">
                                 <Video className="h-3 w-3" />
