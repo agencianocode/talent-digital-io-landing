@@ -156,7 +156,8 @@ const AdminUserManagement: React.FC = () => {
     }
   };
 
-  // Badge for user ROLE (Superadmin, Owner, Admin Empresa, Miembro, Talento)
+  // Badge for user ROLE - Must match dropdown in AdminUserDetail
+  // Options: Superadmin, Owner Empresa, Admin Empresa, Miembro Empresa, Talento
   const getUserRoleBadge = (user: any) => {
     // Priority: Superadmin > Owner > Admin Empresa > Miembro > Talento
     if (user.role === 'admin') {
@@ -167,11 +168,11 @@ const AdminUserManagement: React.FC = () => {
     if (user.has_companies && user.primary_company_role) {
       switch (user.primary_company_role) {
         case 'owner':
-          return <Badge variant="secondary" className="bg-amber-100 text-amber-800">👑 Owner</Badge>;
+          return <Badge variant="secondary" className="bg-amber-100 text-amber-800">👑 Owner Empresa</Badge>;
         case 'admin':
           return <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">⚙️ Admin Empresa</Badge>;
         case 'viewer':
-          return <Badge variant="secondary" className="bg-slate-100 text-slate-800">👤 Miembro</Badge>;
+          return <Badge variant="secondary" className="bg-slate-100 text-slate-800">👤 Miembro Empresa</Badge>;
       }
     }
     

@@ -169,6 +169,47 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
     };
   }, [userId]);
 
+  // Get the contextual role value for the dropdown (matches what user sees in list)
+  const getContextualRoleValue = () => {
+    if (!user) return 'talento';
+    if (user.role === 'admin') return 'admin';
+    
+    // Check if user has companies to determine their contextual role
+    if (user.companies && user.companies.length > 0) {
+      // Get highest company role
+      const hasOwner = user.companies.some((c: any) => c.role === 'owner');
+      const hasAdmin = user.companies.some((c: any) => c.role === 'admin');
+      
+      if (hasOwner) return 'owner_empresa';
+      if (hasAdmin) return 'admin_empresa';
+      return 'miembro_empresa';
+    }
+    
+    return 'talento';
+  };
+
+  // Handle contextual role change - this may need to update both user_roles AND company_user_roles
+  const handleContextualRoleChange = (contextualRole: string) => {
+    // Map contextual role to database role
+    switch (contextualRole) {
+      case 'admin':
+        setNewRole('admin');
+        break;
+      case 'owner_empresa':
+      case 'admin_empresa':
+      case 'miembro_empresa':
+        // For company roles, we use the current subscription level
+        const isPremium = ['admin', 'premium_talent', 'premium_business', 'academy_premium'].includes(user?.role || '');
+        setNewRole(isPremium ? 'premium_business' : 'freemium_business');
+        break;
+      case 'talento':
+      default:
+        const isPremiumTalent = ['admin', 'premium_talent', 'premium_business', 'academy_premium'].includes(user?.role || '');
+        setNewRole(isPremiumTalent ? 'premium_talent' : 'freemium_talent');
+        break;
+    }
+  };
+
   const handleRoleChange = async () => {
     if (!user || newRole === user.role) return;
 
@@ -659,20 +700,21 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({
                   </div>
                 </div>
 
-                {/* Cambiar Rol */}
+                {/* Cambiar Rol - Contextual role display, NOT database role */}
+                {/* This shows user's role type. Company-specific roles are managed in the "Empresas Asociadas" section */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <Label htmlFor="role-select" className="w-full sm:w-32 text-sm font-medium">Cambiar Rol:</Label>
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 flex-1">
-                    <Select value={newRole} onValueChange={setNewRole}>
+                    <Select value={getContextualRoleValue()} onValueChange={handleContextualRoleChange}>
                       <SelectTrigger className="w-full sm:w-48">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="admin">🛡️ Superadmin</SelectItem>
-                        <SelectItem value="premium_business">👑 Owner Empresa</SelectItem>
-                        <SelectItem value="freemium_business">⚙️ Admin Empresa</SelectItem>
-                        <SelectItem value="premium_talent">👤 Miembro Empresa</SelectItem>
-                        <SelectItem value="freemium_talent">💼 Talento</SelectItem>
+                        <SelectItem value="owner_empresa">👑 Owner Empresa</SelectItem>
+                        <SelectItem value="admin_empresa">⚙️ Admin Empresa</SelectItem>
+                        <SelectItem value="miembro_empresa">👤 Miembro Empresa</SelectItem>
+                        <SelectItem value="talento">💼 Talento</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button 
