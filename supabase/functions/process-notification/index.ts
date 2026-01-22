@@ -120,6 +120,8 @@ Deno.serve(async (req) => {
       // Profile and Marketplace view notifications
       'profile_view': 'profile_view',
       'marketplace_view': 'marketplace_view',
+      // Opportunity tracking notifications
+      'opportunity_tracking': 'opportunity_expiring',
       // Other mappings
       'team': 'team_member_added',
       'marketplace': 'marketplace_reports',
@@ -431,6 +433,16 @@ Deno.serve(async (req) => {
           console.log('Marketplace view additional data:', additionalData);
         }
 
+        // For opportunity_tracking notifications, extract all data from notification.data
+        if (notification.type === 'opportunity_tracking') {
+          additionalData.opportunityTitle = notification.data?.opportunity_title || '';
+          additionalData.views_count = notification.data?.views_count?.toString() || '0';
+          additionalData.applications_count = notification.data?.applications_count?.toString() || '0';
+          additionalData.deadline_date = notification.data?.deadline_date || '';
+          additionalData.tracking_type = notification.data?.tracking_type || '';
+          console.log('Opportunity tracking additional data:', additionalData);
+        }
+
         // For team/membership notifications, get company name
         if (['team', 'membership', 'membership_request'].includes(notification.type)) {
           if (notification.data?.company_id) {
@@ -592,6 +604,10 @@ Deno.serve(async (req) => {
                 messagePreview: additionalData.messagePreview,
                 viewer_name: additionalData.viewer_name,
                 service_title: additionalData.service_title,
+                views_count: additionalData.views_count,
+                applications_count: additionalData.applications_count,
+                deadline_date: additionalData.deadline_date,
+                tracking_type: additionalData.tracking_type,
               },
               // Include marketplace request data if present
               ...(notification.type === 'marketplace' && notification.data ? {
