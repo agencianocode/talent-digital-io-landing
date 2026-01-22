@@ -12,7 +12,8 @@ import {
   HelpCircle,
   ChevronDown,
   Menu,
-  X
+  X,
+  Settings
 } from 'lucide-react';
 import { useSupabaseAuth, isPremiumRole } from '@/contexts/SupabaseAuthContext';
 import { useProfileData } from '@/hooks/useProfileData';
@@ -20,6 +21,7 @@ import { useSupabaseMessages } from '@/contexts/SupabaseMessagesContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import PremiumBadge from '@/components/PremiumBadge';
 import HelpFeedbackModal from '@/components/HelpFeedbackModal';
+import { Tooltip } from "@/components/ui/tooltip";
 
 const TalentTopNavigation = () => {
   const navigate = useNavigate();
@@ -123,51 +125,56 @@ const TalentTopNavigation = () => {
           {/* Right side - Notifications and Profile */}
           <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Messages */}
-            <div className="relative hidden sm:block">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="p-2"
-                onClick={() => navigate('/talent-dashboard/messages')}
-              >
-                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                {unreadMessagesCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0">
-                    {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
-                  </Badge>
-                )}
-              </Button>
-            </div>
+            <Tooltip content="Mensajes">
+              <div className="relative hidden sm:block">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-2"
+                  onClick={() => navigate('/talent-dashboard/messages')}
+                >
+                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                  {unreadMessagesCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0">
+                      {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                    </Badge>
+                  )}
+                </Button>
+              </div>
+            </Tooltip>
 
             {/* Notifications */}
-            <div className="relative hidden sm:block">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="p-2"
-                onClick={() => navigate('/talent-dashboard/notifications')}
-              >
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                {unreadNotificationsCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0">
-                    {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
-                  </Badge>
-                )}
-              </Button>
-            </div>
+            <Tooltip content="Notificaciones">
+              <div className="relative hidden sm:block">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-2"
+                  onClick={() => navigate('/talent-dashboard/notifications')}
+                >
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                  {unreadNotificationsCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0">
+                      {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                    </Badge>
+                  )}
+                </Button>
+              </div>
+            </Tooltip>
 
             {/* Help Button */}
-            <div className="relative hidden sm:block">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="p-2"
-                onClick={() => setIsHelpModalOpen(true)}
-                title="Soporte y feedback"
-              >
-                <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-              </Button>
-            </div>
+            <Tooltip content="Soporte y feedback">
+              <div className="relative hidden sm:block">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-2"
+                  onClick={() => setIsHelpModalOpen(true)}
+                >
+                  <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                </Button>
+              </div>
+            </Tooltip>
 
             {/* Profile Dropdown */}
             <div className="relative hidden sm:block">
@@ -330,6 +337,17 @@ const TalentTopNavigation = () => {
                     </AvatarFallback>
                   </Avatar>
                   Mi Perfil
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 justify-start mobile-nav-item text-foreground hover:bg-muted hover:text-foreground"
+                  onClick={() => {
+                    navigate('/talent-dashboard/settings');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <Settings className="w-4 h-4" />
+                  Configuración
                 </Button>
                 <Button
                   variant="ghost"
