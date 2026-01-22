@@ -34,7 +34,7 @@ const SupportPageLayout = ({ title, children }: SupportPageLayoutProps) => {
   };
 
   const handleBackToApp = () => {
-    window.location.href = '/dashboard';
+    window.location.href = 'https://app.talentodigital.io';
   };
 
   return (
