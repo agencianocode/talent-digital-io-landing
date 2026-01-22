@@ -375,11 +375,13 @@ const AdminOpportunityModeration: React.FC<AdminOpportunityModerationProps> = ({
                     {/* Company Logo */}
                     <div className="flex-shrink-0">
                       {opportunity.company_logo ? (
-                        <img 
-                          src={opportunity.company_logo} 
-                          alt={opportunity.company_name}
-                          className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg object-cover border"
-                        />
+                        <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg overflow-hidden border bg-muted">
+                          <img 
+                            src={opportunity.company_logo} 
+                            alt={opportunity.company_name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                       ) : (
                         <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-primary/10 flex items-center justify-center border">
                           <Building className="h-6 w-6 text-primary" />

@@ -373,15 +373,17 @@ const TalentOpportunities = () => {
                     <div className="flex-1">
                       <div className="flex items-start gap-4">
                         {/* Logo de la empresa */}
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden border bg-muted">
                           {application.opportunities?.companies?.logo_url ? (
                             <img 
                               src={application.opportunities.companies.logo_url} 
                               alt={application.opportunities?.companies?.name}
-                              className="w-8 h-8 object-contain"
+                              className="w-full h-full object-cover"
                             />
                           ) : (
-                            <Building className="h-6 w-6 text-gray-400" />
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Building className="h-6 w-6 text-muted-foreground" />
+                            </div>
                           )}
                         </div>
 

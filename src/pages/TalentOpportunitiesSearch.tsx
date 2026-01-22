@@ -312,7 +312,7 @@ const TalentOpportunitiesSearch = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-[1600px]">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -375,15 +375,17 @@ const TalentOpportunitiesSearch = () => {
                   <div className="flex-1">
                     <div className="flex items-start gap-4">
                       {/* Logo de la empresa */}
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border bg-muted">
                         {opportunity.companies?.logo_url ? (
                           <img 
                             src={opportunity.companies.logo_url} 
                             alt={opportunity.companies?.name}
-                            className="w-8 h-8 object-contain"
+                            className="w-full h-full object-cover"
                           />
                         ) : (
-                          <Building className="h-6 w-6 text-gray-400" />
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Building className="h-6 w-6 text-muted-foreground" />
+                          </div>
                         )}
                       </div>
 
