@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -330,6 +331,20 @@ const Feedback = () => {
           .eq('user_id', user.id);
         
         toast.success('Voto eliminado');
+        
+        // Update local state immediately
+        setSuggestions(prev => prev.map(s => 
+          s.id === suggestion.id 
+            ? { ...s, has_voted: false, votes_count: Math.max(0, (s.votes_count || 0) - 1) }
+            : s
+        ));
+        if (selectedSuggestion?.id === suggestion.id) {
+          setSelectedSuggestion(prev => prev ? { 
+            ...prev, 
+            has_voted: false, 
+            votes_count: Math.max(0, (prev.votes_count || 0) - 1) 
+          } : null);
+        }
       } else {
         // Add vote
         await supabase
@@ -347,14 +362,22 @@ const Feedback = () => {
             user_id: user.id
           }, { onConflict: 'suggestion_id,user_id' });
         
-        toast.success('¡Voto registrado!');
+        toast.success(`Votaste por "${suggestion.title}"`);
+        
+        // Update local state immediately
+        setSuggestions(prev => prev.map(s => 
+          s.id === suggestion.id 
+            ? { ...s, has_voted: true, votes_count: (s.votes_count || 0) + 1 }
+            : s
+        ));
+        if (selectedSuggestion?.id === suggestion.id) {
+          setSelectedSuggestion(prev => prev ? { 
+            ...prev, 
+            has_voted: true, 
+            votes_count: (prev.votes_count || 0) + 1 
+          } : null);
+        }
       }
-
-      // Refresh data
-      if (selectedSuggestion?.id === suggestion.id) {
-        loadSuggestionDetail(suggestion.id);
-      }
-      loadData();
     } catch (error) {
       console.error('Error voting:', error);
       toast.error('Error al votar');
@@ -698,6 +721,7 @@ const Feedback = () => {
           <div className="space-y-3">
             {suggestions.map(suggestion => {
               const statusInfo = statusLabels[suggestion.status] ?? statusLabels.new;
+              const showStatusBadge = suggestion.status !== 'new';
               return (
                 <Card 
                   key={suggestion.id}
@@ -706,20 +730,25 @@ const Feedback = () => {
                 >
                   <CardContent className="p-4">
                     <div className="flex gap-4">
-                      {/* Vote button */}
-                      <Button
-                        variant={suggestion.has_voted ? "default" : "outline"}
-                        size="sm"
-                        className="flex flex-col h-auto py-2 px-3"
-                        onClick={(e) => handleVote(suggestion, e)}
-                      >
-                        <ChevronUp className="h-4 w-4" />
-                        <span className="text-sm font-bold">{suggestion.votes_count ?? 0}</span>
-                      </Button>
+                      {/* Vote button with tooltip */}
+                      <Tooltip content="Votar">
+                        <Button
+                          variant={suggestion.has_voted ? "default" : "outline"}
+                          size="sm"
+                          className="flex flex-col h-auto py-2 px-4 min-w-[60px]"
+                          onClick={(e) => handleVote(suggestion, e)}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                          <span className="text-sm font-bold">{suggestion.votes_count ?? 0}</span>
+                          <span className="text-[10px] opacity-70">votos</span>
+                        </Button>
+                      </Tooltip>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge className={statusInfo?.color ?? 'bg-gray-100 text-gray-700'}>{statusInfo?.label ?? 'Nueva'}</Badge>
+                          {showStatusBadge && (
+                            <Badge className={statusInfo?.color ?? 'bg-gray-100 text-gray-700'}>{statusInfo?.label ?? 'Nueva'}</Badge>
+                          )}
                           {suggestion.category && (
                             <Badge variant="outline">{suggestion.category.name}</Badge>
                           )}

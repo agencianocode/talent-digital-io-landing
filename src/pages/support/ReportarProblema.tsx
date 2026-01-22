@@ -69,6 +69,7 @@ const ReportarProblema = () => {
 
   // Create report dialog
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     title: '',
     description: '',
@@ -244,10 +245,9 @@ const ReportarProblema = () => {
           user_id: user.id
         });
 
-      toast.success('Problema reportado exitosamente');
       setIsCreateOpen(false);
       setCreateForm({ title: '', description: '', image_url: '' });
-      setSearchParams({ id: data.id });
+      setIsSuccessOpen(true);
       loadReports();
     } catch (error) {
       console.error('Error creating report:', error);
@@ -558,6 +558,25 @@ const ReportarProblema = () => {
                 <Button onClick={handleCreateReport} disabled={creating}>
                   {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Reportar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Success Modal */}
+          <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>¡Problema reportado!</DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                <p className="text-muted-foreground">
+                  Tu problema fue reportado y recibirás correos de actualización una vez el equipo de soporte lo revise.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setIsSuccessOpen(false)}>
+                  Entendido
                 </Button>
               </DialogFooter>
             </DialogContent>
