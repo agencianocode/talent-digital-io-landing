@@ -1010,30 +1010,6 @@ export type Database = {
         }
         Relationships: []
       }
-      feedback_categories: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          is_active: boolean | null
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-        }
-        Relationships: []
-      }
       feedback_comments: {
         Row: {
           content: string
@@ -1132,15 +1108,7 @@ export type Database = {
           user_id?: string
           votes_count?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "feedback_suggestions_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "feedback_categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       feedback_votes: {
         Row: {

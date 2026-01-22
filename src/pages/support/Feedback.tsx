@@ -66,6 +66,19 @@ const statusLabels: Record<string, { label: string; color: string; helperText?: 
   rejected: { label: 'Rechazada', color: 'bg-gray-100 text-gray-700' },
 };
 
+// Hardcoded feedback categories (no database dependency)
+const FEEDBACK_CATEGORIES: FeedbackCategory[] = [
+  { id: 'nuevas-funcionalidades', name: 'Nuevas funcionalidades' },
+  { id: 'mejora-experiencia', name: 'Mejora de experiencia' },
+  { id: 'notificaciones-comunicacion', name: 'Notificaciones y comunicación' },
+  { id: 'otros', name: 'Otros' },
+];
+
+const getCategoryById = (categoryId: string | null): FeedbackCategory | null => {
+  if (!categoryId) return null;
+  return FEEDBACK_CATEGORIES.find(c => c.id === categoryId) || null;
+};
+
 const Feedback = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile } = useSupabaseAuth();
@@ -108,10 +121,7 @@ const Feedback = () => {
     try {
       const { data: suggestionsData, error: suggestionsError } = await supabase
         .from('feedback_suggestions')
-        .select(`
-          *,
-          feedback_categories:category_id (id, name)
-        `)
+        .select('*')
         .order('votes_count', { ascending: false });
 
       if (suggestionsError) throw suggestionsError;
@@ -149,7 +159,7 @@ const Feedback = () => {
           
           return { 
             ...suggestion, 
-            category: suggestion.feedback_categories,
+            category: getCategoryById(suggestion.category_id),
             comments_count: commentsRes.count || 0,
             has_voted: !!voteRes.data,
             profile_name: userProfile?.full_name || null,
@@ -172,10 +182,7 @@ const Feedback = () => {
       // Load suggestion
       const { data: suggestionData, error: suggestionError } = await supabase
         .from('feedback_suggestions')
-        .select(`
-          *,
-          feedback_categories:category_id (id, name)
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -202,7 +209,7 @@ const Feedback = () => {
 
       setSelectedSuggestion({
         ...suggestionData,
-        category: suggestionData.feedback_categories,
+        category: getCategoryById(suggestionData.category_id),
         has_voted: hasVoted,
         profile_name: profileData?.full_name || null,
         profile_avatar: profileData?.avatar_url || null
@@ -710,11 +717,8 @@ const Feedback = () => {
     );
   }
 
-  // Real category UUIDs from the database
-  const categoryOptions = [
-    { id: 'f7c38fb5-09d8-42ef-b282-09bc737ac589', name: 'Nuevas funcionalidades' },
-    { id: 'f96be51a-f5ef-4be6-8f67-eb0900f0fbc3', name: 'Otros' },
-  ];
+  // Hardcoded category options (no database dependency)
+  const categoryOptions = FEEDBACK_CATEGORIES;
 
   // Render suggestions list
   return (
