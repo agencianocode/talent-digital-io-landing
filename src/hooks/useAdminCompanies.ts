@@ -8,6 +8,8 @@ interface CompanyFilters {
   locationFilter: string;
   dateRange: string;
   statusFilter: string;
+  businessTypeFilter: string;
+  subscriptionFilter: string;
   sortBy: 'name' | 'date';
   sortOrder: 'asc' | 'desc';
 }
@@ -27,8 +29,11 @@ interface CompanyData {
   owner_name?: string;
   users_count: number;
   opportunities_count: number;
-  status: 'active' | 'inactive' | 'suspended' | 'pending';
+  status: 'active' | 'inactive' | 'suspended' | 'pending' | 'premium';
   is_active: boolean;
+  business_type?: string;
+  is_premium: boolean;
+  academy_slug?: string;
 }
 
 export const useAdminCompanies = () => {
@@ -42,6 +47,8 @@ export const useAdminCompanies = () => {
     locationFilter: 'all',
     dateRange: 'all',
     statusFilter: 'all',
+    businessTypeFilter: 'all',
+    subscriptionFilter: 'all',
     sortBy: 'date',
     sortOrder: 'desc'
   });
@@ -68,7 +75,9 @@ export const useAdminCompanies = () => {
           created_at,
           updated_at,
           user_id,
-          status
+          status,
+          business_type,
+          academy_slug
         `);
 
       if (companiesError) {
@@ -128,6 +137,7 @@ export const useAdminCompanies = () => {
           o.title.trim() !== ''
         ).length || 0;
         const ownerName = companyOwners.get(company.user_id) || 'Sin nombre';
+        const isPremium = company.status === 'premium';
 
         return {
           id: company.id,
@@ -144,8 +154,11 @@ export const useAdminCompanies = () => {
           owner_name: ownerName,
           users_count: usersCount,
           opportunities_count: opportunitiesCount,
-          status: (company.status as 'active' | 'inactive' | 'suspended' | 'pending') || 'active',
-          is_active: company.status === 'active'
+          status: (company.status as 'active' | 'inactive' | 'suspended' | 'pending' | 'premium') || 'active',
+          is_active: company.status === 'active' || company.status === 'premium',
+          business_type: company.business_type || undefined,
+          is_premium: isPremium,
+          academy_slug: company.academy_slug || undefined
         };
       }) || [];
 
@@ -288,7 +301,31 @@ export const useAdminCompanies = () => {
 
     // Status filter
     if (filters.statusFilter !== 'all') {
-      filtered = filtered.filter(company => company.status === filters.statusFilter);
+      if (filters.statusFilter === 'active') {
+        filtered = filtered.filter(company => company.status === 'active' || company.status === 'premium');
+      } else {
+        filtered = filtered.filter(company => company.status === filters.statusFilter);
+      }
+    }
+
+    // Business type filter
+    if (filters.businessTypeFilter !== 'all') {
+      filtered = filtered.filter(company => {
+        const bt = company.business_type || 'company';
+        if (filters.businessTypeFilter === 'academy') {
+          return bt === 'academy';
+        }
+        return bt !== 'academy';
+      });
+    }
+
+    // Subscription filter
+    if (filters.subscriptionFilter !== 'all') {
+      if (filters.subscriptionFilter === 'premium') {
+        filtered = filtered.filter(company => company.is_premium);
+      } else {
+        filtered = filtered.filter(company => !company.is_premium);
+      }
     }
 
     // Date range filter

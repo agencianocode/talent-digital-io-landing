@@ -2,13 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   Building, 
   Users, 
@@ -24,7 +34,10 @@ import {
   X,
   Crown,
   GraduationCap,
-  Loader2
+  Loader2,
+  ExternalLink,
+  Ban,
+  CheckCircle
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -59,6 +72,7 @@ interface CompanyDetail {
   user_id: string;
   status: string;
   business_type?: string;
+  academy_slug?: string;
   owner: {
     id: string;
     full_name: string;
@@ -95,6 +109,14 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
   const [newUserRole, setNewUserRole] = useState('viewer');
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [isUpdatingSubscription, setIsUpdatingSubscription] = useState(false);
+  
+  // New state for modals
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [pendingSubscription, setPendingSubscription] = useState<'freemium' | 'premium' | null>(null);
+  const [showSuspendDialog, setShowSuspendDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isSuspending, setIsSuspending] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadCompanyDetail = async () => {
     if (!companyId) return;
@@ -200,6 +222,7 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
         user_id: company.user_id,
         status: company.status || 'active',
         business_type: company.business_type || 'company',
+        academy_slug: company.academy_slug || undefined,
         owner: {
           id: company.user_id,
           full_name: ownerProfile?.full_name || 'Propietario',
@@ -392,11 +415,17 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
     }
   };
 
-  const handleSubscriptionChange = async (newSubscription: 'freemium' | 'premium') => {
+  const handleOpenSubscriptionModal = (subscription: 'freemium' | 'premium') => {
     if (!companyData) return;
-
     const currentSubscription = companyData.status === 'premium' ? 'premium' : 'freemium';
-    if (newSubscription === currentSubscription) return;
+    if (subscription === currentSubscription) return;
+    
+    setPendingSubscription(subscription);
+    setShowSubscriptionModal(true);
+  };
+
+  const handleConfirmSubscriptionChange = async () => {
+    if (!companyData || !pendingSubscription) return;
 
     setIsUpdatingSubscription(true);
     try {
@@ -404,7 +433,7 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
       if (!session) throw new Error('No active session');
 
       const { data, error } = await supabase.functions.invoke('admin-change-company-subscription', {
-        body: { companyId: companyData.id, newSubscription },
+        body: { companyId: companyData.id, newSubscription: pendingSubscription },
         headers: {
           Authorization: `Bearer ${session.access_token}`
         }
@@ -413,7 +442,9 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success(`Suscripción actualizada a ${newSubscription === 'premium' ? 'Premium' : 'Freemium'}. ${data.membersUpdated} miembros actualizados.`);
+      toast.success(`Suscripción actualizada a ${pendingSubscription === 'premium' ? 'Premium' : 'Freemium'}. ${data.membersUpdated} miembros actualizados.`);
+      setShowSubscriptionModal(false);
+      setPendingSubscription(null);
       onCompanyUpdate?.();
       await loadCompanyDetail();
     } catch (err) {
@@ -421,6 +452,88 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
       toast.error(err instanceof Error ? err.message : 'Error al actualizar la suscripción');
     } finally {
       setIsUpdatingSubscription(false);
+    }
+  };
+
+  const handleSuspendCompany = async () => {
+    if (!companyData) return;
+
+    setIsSuspending(true);
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .update({ status: 'suspended', updated_at: new Date().toISOString() })
+        .eq('id', companyData.id);
+
+      if (error) throw error;
+
+      toast.success('Empresa suspendida correctamente');
+      setShowSuspendDialog(false);
+      onCompanyUpdate?.();
+      await loadCompanyDetail();
+    } catch (err) {
+      console.error('Error suspending company:', err);
+      toast.error('Error al suspender la empresa');
+    } finally {
+      setIsSuspending(false);
+    }
+  };
+
+  const handleReactivateCompany = async () => {
+    if (!companyData) return;
+
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .update({ status: 'active', updated_at: new Date().toISOString() })
+        .eq('id', companyData.id);
+
+      if (error) throw error;
+
+      toast.success('Empresa reactivada correctamente');
+      onCompanyUpdate?.();
+      await loadCompanyDetail();
+    } catch (err) {
+      console.error('Error reactivating company:', err);
+      toast.error('Error al reactivar la empresa');
+    }
+  };
+
+  const handleDeleteCompany = async () => {
+    if (!companyData) return;
+
+    setIsDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No authenticated session');
+
+      const response = await fetch(
+        `https://wyrieetebfzmgffxecpz.supabase.co/functions/v1/admin-delete-company`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ companyId: companyData.id }),
+        }
+      );
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete company');
+      }
+
+      toast.success('Empresa eliminada correctamente');
+      setShowDeleteDialog(false);
+      onClose();
+      onCompanyUpdate?.();
+    } catch (err) {
+      console.error('Error deleting company:', err);
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar la empresa');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -436,14 +549,14 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
           Premium Academia
         </Badge>
       ) : (
-        <Badge className="bg-green-100 text-green-700 border-green-200 gap-1">
+        <Badge className="bg-gradient-to-r from-amber-400 to-amber-600 text-white border-0 gap-1">
           <Crown className="h-3 w-3" />
-          Premium Empresa
+          Premium
         </Badge>
       );
     }
     return (
-      <Badge className="bg-amber-100 text-amber-700 border-amber-200">
+      <Badge variant="outline">
         Free
       </Badge>
     );
@@ -452,11 +565,11 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'owner':
-        return <Badge variant="secondary" className="bg-amber-100 text-amber-800">Propietario</Badge>;
+        return <Badge variant="secondary" className="bg-amber-100 text-amber-800 gap-1"><Crown className="h-3 w-3" />Owner</Badge>;
       case 'admin':
         return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Admin</Badge>;
       case 'viewer':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Visualizador</Badge>;
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Miembro</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
@@ -475,6 +588,31 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
     }
   };
 
+  const getCompanyStatusBadge = () => {
+    if (!companyData) return null;
+    switch (companyData.status) {
+      case 'premium':
+      case 'active':
+        return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Activa</Badge>;
+      case 'suspended':
+        return <Badge variant="destructive">Suspendida</Badge>;
+      case 'pending':
+        return <Badge variant="secondary" className="bg-amber-100 text-amber-800">Pendiente</Badge>;
+      default:
+        return <Badge variant="outline">Inactiva</Badge>;
+    }
+  };
+
+  const getPublicProfileUrl = () => {
+    if (!companyData) return null;
+    return `/company/${companyData.id}`;
+  };
+
+  const getAcademyDirectoryUrl = () => {
+    if (!companyData?.academy_slug) return null;
+    return `/academy/${companyData.academy_slug}/directory`;
+  };
+
   if (isLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -484,7 +622,7 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
           </DialogHeader>
           <div className="space-y-4">
             <div className="animate-pulse">
-              <div className="h-32 bg-gray-200 rounded"></div>
+              <div className="h-32 bg-muted rounded"></div>
             </div>
           </div>
         </DialogContent>
@@ -500,7 +638,7 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
             <DialogTitle>Error</DialogTitle>
           </DialogHeader>
           <div className="text-center py-8">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-500" />
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-destructive" />
             <p>{error || 'No se pudo cargar la información de la empresa'}</p>
           </div>
         </DialogContent>
@@ -509,311 +647,431 @@ const AdminCompanyDetail: React.FC<AdminCompanyDetailProps> = ({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" />
-            Detalles de la Empresa
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building className="h-5 w-5" />
+              Detalles de la Empresa
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Información Básica</CardTitle>
-                <Button variant="outline" size="sm" onClick={handleEditToggle}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  {isEditing ? 'Cancelar' : 'Editar'}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isEditing ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label>Nombre</Label>
-                    <Input
-                      value={editData.name || ''}
-                      onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Descripción</Label>
-                    <RichTextEditor
-                      value={editData.description || ''}
-                      onChange={(value) => setEditData({ ...editData, description: value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Sitio web</Label>
-                    <Input
-                      value={editData.website || ''}
-                      onChange={(e) => setEditData({ ...editData, website: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Industria</Label>
-                    <Input
-                      value={editData.industry || ''}
-                      onChange={(e) => setEditData({ ...editData, industry: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Tamaño</Label>
-                    <Input
-                      value={editData.size || ''}
-                      onChange={(e) => setEditData({ ...editData, size: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Ubicación</Label>
-                    <Input
-                      value={editData.location || ''}
-                      onChange={(e) => setEditData({ ...editData, location: e.target.value })}
-                    />
-                  </div>
-                  <Button onClick={handleSaveChanges}>Guardar Cambios</Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Información Básica</CardTitle>
                   <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{companyData.name}</span>
-                  </div>
-                  {companyData.description && (
-                    <div 
-                      className="text-sm text-muted-foreground prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: companyData.description }}
-                    />
-                  )}
-                  {companyData.website && (
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <a href={companyData.website} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
-                        {companyData.website}
-                      </a>
-                    </div>
-                  )}
-                  {companyData.location && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{companyData.location}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Subscription Management */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5" />
-                  Suscripción
-                </CardTitle>
-                {getSubscriptionBadge()}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">
-                    Tipo de negocio: <span className="font-medium">{companyData.business_type === 'academy' ? 'Academia' : 'Empresa'}</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Miembros activos: <span className="font-medium">{companyData.users.filter(u => u.status === 'accepted').length}</span>
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant={companyData.status === 'premium' ? 'outline' : 'default'}
-                    size="sm"
-                    disabled={isUpdatingSubscription || companyData.status !== 'premium'}
-                    onClick={() => handleSubscriptionChange('freemium')}
-                  >
-                    {isUpdatingSubscription ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : null}
-                    Freemium
-                  </Button>
-                  <Button
-                    variant={companyData.status === 'premium' ? 'default' : 'outline'}
-                    size="sm"
-                    disabled={isUpdatingSubscription || companyData.status === 'premium'}
-                    onClick={() => handleSubscriptionChange('premium')}
-                    className={companyData.status === 'premium' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
-                  >
-                    {isUpdatingSubscription ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : null}
-                    Premium
-                  </Button>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground border-t pt-3">
-                ⚠️ Cambiar la suscripción actualizará el rol de todos los miembros de esta empresa.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Company Users */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Usuarios ({companyData.users.length})
-                </CardTitle>
-                <Button variant="outline" size="sm" onClick={() => setShowAddUser(true)}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Agregar Usuario
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {showAddUser && (
-                  <div className="border rounded-lg p-4 space-y-3 bg-muted/50">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Agregar Nuevo Usuario</h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setShowAddUser(false);
-                          setNewUserEmail('');
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Email del Usuario</Label>
-                      <Input
-                        type="email"
-                        placeholder="usuario@ejemplo.com"
-                        value={newUserEmail}
-                        onChange={(e) => setNewUserEmail(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Rol</Label>
-                      <Select value={newUserRole} onValueChange={setNewUserRole}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="viewer">Visualizador</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      onClick={handleAddUser}
-                      disabled={isAddingUser}
-                      className="w-full"
-                    >
-                      {isAddingUser ? 'Agregando...' : 'Agregar Usuario'}
+                    {getCompanyStatusBadge()}
+                    <Button variant="outline" size="sm" onClick={handleEditToggle}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      {isEditing ? 'Cancelar' : 'Editar'}
                     </Button>
                   </div>
-                )}
-
-                {companyData.users.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No hay usuarios en esta empresa
-                  </p>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Nombre</Label>
+                      <Input
+                        value={editData.name || ''}
+                        onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Descripción</Label>
+                      <RichTextEditor
+                        value={editData.description || ''}
+                        onChange={(value) => setEditData({ ...editData, description: value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Sitio web</Label>
+                      <Input
+                        value={editData.website || ''}
+                        onChange={(e) => setEditData({ ...editData, website: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Industria</Label>
+                      <Input
+                        value={editData.industry || ''}
+                        onChange={(e) => setEditData({ ...editData, industry: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Tamaño</Label>
+                      <Input
+                        value={editData.size || ''}
+                        onChange={(e) => setEditData({ ...editData, size: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Ubicación</Label>
+                      <Input
+                        value={editData.location || ''}
+                        onChange={(e) => setEditData({ ...editData, location: e.target.value })}
+                      />
+                    </div>
+                    <Button onClick={handleSaveChanges}>Guardar Cambios</Button>
+                  </div>
                 ) : (
                   <div className="space-y-2">
-                    {companyData.users.map((user) => (
-                      <div key={user.roleRowId} className="flex items-center justify-between py-3 border-b last:border-0">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={user.avatar_url || undefined} />
-                            <AvatarFallback>{user.full_name?.charAt(0) || 'U'}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">
-                              {user.full_name}
-                              {user.isPending && (
-                                <span className="ml-2 text-xs text-muted-foreground">(Pendiente)</span>
-                              )}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getRoleBadge(user.role)}
-                          {getStatusBadge(user.status)}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveUser(user.roleRowId)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{companyData.name}</span>
+                    </div>
+                    {companyData.description && (
+                      <div 
+                        className="text-sm text-muted-foreground prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: companyData.description }}
+                      />
+                    )}
+                    {companyData.website && (
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <a href={companyData.website} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
+                          {companyData.website}
+                        </a>
                       </div>
-                    ))}
+                    )}
+                    {companyData.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{companyData.location}</span>
+                      </div>
+                    )}
+                    
+                    {/* Quick Links */}
+                    <div className="flex flex-wrap gap-2 pt-3 border-t mt-4">
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={getPublicProfileUrl() || '#'} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Ver Perfil Público
+                        </a>
+                      </Button>
+                      {companyData.academy_slug && (
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={getAcademyDirectoryUrl() || '#'} target="_blank" rel="noopener noreferrer">
+                            <GraduationCap className="h-4 w-4 mr-2" />
+                            Ver Directorio Academia
+                          </a>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Company Statistics */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Estadísticas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Oportunidades</span>
+            {/* Subscription Management */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Crown className="h-5 w-5" />
+                    Suscripción
+                  </CardTitle>
+                  {getSubscriptionBadge()}
                 </div>
-                <Badge variant="secondary">{companyData.opportunitiesCount}</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Servicios</span>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">
+                      Tipo de negocio: <span className="font-medium">{companyData.business_type === 'academy' ? 'Academia' : 'Empresa'}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Miembros activos: <span className="font-medium">{companyData.users.filter(u => u.status === 'accepted').length}</span>
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={companyData.status === 'premium' ? 'outline' : 'default'}
+                      size="sm"
+                      disabled={companyData.status !== 'premium'}
+                      onClick={() => handleOpenSubscriptionModal('freemium')}
+                    >
+                      Freemium
+                    </Button>
+                    <Button
+                      variant={companyData.status === 'premium' ? 'default' : 'outline'}
+                      size="sm"
+                      disabled={companyData.status === 'premium'}
+                      onClick={() => handleOpenSubscriptionModal('premium')}
+                      className={companyData.status === 'premium' ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : ''}
+                    >
+                      <Crown className="h-4 w-4 mr-2" />
+                      Premium
+                    </Button>
+                  </div>
                 </div>
-                <Badge variant="secondary">{companyData.servicesCount}</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Creada</span>
-                </div>
-                <span className="text-sm text-muted-foreground">
-                  {formatDistanceToNow(new Date(companyData.created_at), { addSuffix: true, locale: es })}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Admin Notes */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Notas de Admin</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Agregar notas internas sobre esta empresa..."
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                rows={4}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </DialogContent>
-    </Dialog>
+            {/* Company Users */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Usuarios ({companyData.users.length})
+                  </CardTitle>
+                  <Button variant="outline" size="sm" onClick={() => setShowAddUser(true)}>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Agregar Usuario
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {showAddUser && (
+                    <div className="border rounded-lg p-4 space-y-3 bg-muted/50">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Agregar Nuevo Usuario</h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setShowAddUser(false);
+                            setNewUserEmail('');
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Email del Usuario</Label>
+                        <Input
+                          type="email"
+                          placeholder="usuario@ejemplo.com"
+                          value={newUserEmail}
+                          onChange={(e) => setNewUserEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Rol</Label>
+                        <Select value={newUserRole} onValueChange={setNewUserRole}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="viewer">Miembro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        onClick={handleAddUser}
+                        disabled={isAddingUser}
+                        className="w-full"
+                      >
+                        {isAddingUser ? 'Agregando...' : 'Agregar Usuario'}
+                      </Button>
+                    </div>
+                  )}
+
+                  {companyData.users.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No hay usuarios en esta empresa
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {companyData.users.map((user) => (
+                        <div key={user.roleRowId} className="flex items-center justify-between py-3 border-b last:border-0">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={user.avatar_url || undefined} />
+                              <AvatarFallback>{user.full_name?.charAt(0) || 'U'}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">
+                                {user.full_name}
+                                {user.isPending && (
+                                  <span className="ml-2 text-xs text-muted-foreground">(Pendiente)</span>
+                                )}
+                              </p>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getRoleBadge(user.role)}
+                            {getStatusBadge(user.status)}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveUser(user.roleRowId)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Company Statistics */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Estadísticas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Oportunidades</span>
+                  </div>
+                  <Badge variant="secondary">{companyData.opportunitiesCount}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Servicios</span>
+                  </div>
+                  <Badge variant="secondary">{companyData.servicesCount}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Creada</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {formatDistanceToNow(new Date(companyData.created_at), { addSuffix: true, locale: es })}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Admin Notes */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Notas de Admin</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  placeholder="Agregar notas internas sobre esta empresa..."
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  rows={4}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Admin Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-destructive">Acciones de Administrador</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-3">
+                {companyData.status === 'suspended' ? (
+                  <Button variant="outline" onClick={handleReactivateCompany}>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Reactivar Empresa
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={() => setShowSuspendDialog(true)} className="text-amber-600 hover:text-amber-700 hover:bg-amber-50">
+                    <Ban className="h-4 w-4 mr-2" />
+                    Suspender Empresa
+                  </Button>
+                )}
+                <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Eliminar Empresa
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Subscription Confirmation Modal */}
+      <Dialog open={showSubscriptionModal} onOpenChange={setShowSubscriptionModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Cambio de Suscripción</DialogTitle>
+            <DialogDescription>
+              {pendingSubscription === 'premium' 
+                ? 'Al cambiar a Premium, esta empresa podrá publicar en el marketplace sin necesidad de solicitud.'
+                : 'Al cambiar a Freemium, esta empresa perderá los beneficios premium.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              ⚠️ Este cambio actualizará automáticamente el rol de todos los miembros de la empresa.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSubscriptionModal(false)} disabled={isUpdatingSubscription}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirmSubscriptionChange} disabled={isUpdatingSubscription}>
+              {isUpdatingSubscription ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Actualizando...
+                </>
+              ) : (
+                `Cambiar a ${pendingSubscription === 'premium' ? 'Premium' : 'Freemium'}`
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Suspend Confirmation Dialog */}
+      <AlertDialog open={showSuspendDialog} onOpenChange={setShowSuspendDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Suspender empresa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Al suspender la empresa "{companyData.name}", sus miembros no podrán acceder y verán un mensaje de suspensión. 
+              Podrás reactivarla en cualquier momento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSuspending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSuspendCompany}
+              disabled={isSuspending}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {isSuspending ? 'Suspendiendo...' : 'Suspender'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar empresa permanentemente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará permanentemente la empresa "{companyData.name}" junto con todas sus oportunidades, 
+              postulaciones, cursos y miembros asociados. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCompany}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Eliminando...' : 'Eliminar Permanentemente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

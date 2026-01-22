@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X, Building, Users, MapPin, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, Filter, X, Building, Users, MapPin, ArrowUpDown, ArrowUp, ArrowDown, Crown, GraduationCap, Briefcase } from 'lucide-react';
 
 interface CompanyFilters {
   searchQuery: string;
@@ -13,6 +13,8 @@ interface CompanyFilters {
   locationFilter: string;
   dateRange: string;
   statusFilter: string;
+  businessTypeFilter: string;
+  subscriptionFilter: string;
   sortBy: 'name' | 'date';
   sortOrder: 'asc' | 'desc';
 }
@@ -47,6 +49,8 @@ const AdminCompanyFilters: React.FC<AdminCompanyFiltersProps> = ({
       locationFilter: 'all',
       dateRange: 'all',
       statusFilter: 'all',
+      businessTypeFilter: 'all',
+      subscriptionFilter: 'all',
       sortBy: 'date',
       sortOrder: 'desc'
     });
@@ -266,8 +270,58 @@ const AdminCompanyFilters: React.FC<AdminCompanyFiltersProps> = ({
           </div>
         </div>
 
-        {/* Filtro por Rango de Fechas y Ordenamiento */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Second Row: Business Type, Subscription, Date, Sort */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Filtro por Tipo de Negocio */}
+          <div>
+            <Select
+              value={filters.businessTypeFilter}
+              onValueChange={(value) => handleFilterChange('businessTypeFilter', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tipo de negocio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los tipos</SelectItem>
+                <SelectItem value="company">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    Empresa
+                  </div>
+                </SelectItem>
+                <SelectItem value="academy">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4" />
+                    Academia
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtro por Suscripción */}
+          <div>
+            <Select
+              value={filters.subscriptionFilter}
+              onValueChange={(value) => handleFilterChange('subscriptionFilter', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Suscripción" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las suscripciones</SelectItem>
+                <SelectItem value="premium">
+                  <div className="flex items-center gap-2">
+                    <Crown className="h-4 w-4" />
+                    Premium
+                  </div>
+                </SelectItem>
+                <SelectItem value="freemium">Freemium</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <Select
               value={filters.dateRange}
@@ -383,6 +437,24 @@ const AdminCompanyFilters: React.FC<AdminCompanyFiltersProps> = ({
                 <X 
                   className="h-3 w-3 cursor-pointer" 
                   onClick={() => handleFilterChange('statusFilter', 'all')}
+                />
+              </Badge>
+            )}
+            {filters.businessTypeFilter !== 'all' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Tipo: {filters.businessTypeFilter === 'academy' ? 'Academia' : 'Empresa'}
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => handleFilterChange('businessTypeFilter', 'all')}
+                />
+              </Badge>
+            )}
+            {filters.subscriptionFilter !== 'all' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                Suscripción: {filters.subscriptionFilter === 'premium' ? 'Premium' : 'Freemium'}
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => handleFilterChange('subscriptionFilter', 'all')}
                 />
               </Badge>
             )}

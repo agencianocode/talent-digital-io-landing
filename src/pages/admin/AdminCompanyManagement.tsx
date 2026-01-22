@@ -15,7 +15,12 @@ import {
   Eye,
   AlertTriangle,
   Crown,
-  Trash2
+  Trash2,
+  GraduationCap,
+  Briefcase as BriefcaseIcon,
+  ShoppingCart,
+  Store,
+  Coins
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -96,51 +101,50 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
     toast.success('Empresas actualizadas correctamente', { id: 'refresh-companies' });
   };
 
-  const getIndustryBadge = (industry?: string) => {
-    if (!industry) return <Badge variant="outline">No especificada</Badge>;
-    
-    const industryColors: Record<string, string> = {
-      technology: 'bg-blue-100 text-blue-800',
-      marketing: 'bg-green-100 text-green-800',
-      sales: 'bg-purple-100 text-purple-800',
-      consulting: 'bg-orange-100 text-orange-800',
-      education: 'bg-yellow-100 text-yellow-800',
-      healthcare: 'bg-red-100 text-red-800',
-      finance: 'bg-indigo-100 text-indigo-800',
-      other: 'bg-gray-100 text-gray-800'
-    };
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'premium':
+      case 'active':
+        return <Badge variant="default" className="bg-emerald-100 text-emerald-800 border-emerald-200">Activa</Badge>;
+      case 'suspended':
+        return <Badge variant="destructive">Suspendida</Badge>;
+      case 'pending':
+        return <Badge variant="secondary" className="bg-amber-100 text-amber-800">Pendiente</Badge>;
+      default:
+        return <Badge variant="outline">Inactiva</Badge>;
+    }
+  };
 
+  const getBusinessTypeBadge = (businessType?: string) => {
+    const typeConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
+      'digital_services': { label: 'Servicios digitales', icon: <Store className="h-3 w-3" />, className: 'bg-blue-100 text-blue-800' },
+      'digital_education': { label: 'Educación digital', icon: <GraduationCap className="h-3 w-3" />, className: 'bg-purple-100 text-purple-800' },
+      'academy': { label: 'Academia', icon: <GraduationCap className="h-3 w-3" />, className: 'bg-purple-100 text-purple-800' },
+      'in_person_services': { label: 'Servicios presenciales', icon: <BriefcaseIcon className="h-3 w-3" />, className: 'bg-green-100 text-green-800' },
+      'product_sales': { label: 'Venta de productos', icon: <ShoppingCart className="h-3 w-3" />, className: 'bg-orange-100 text-orange-800' },
+      'investments': { label: 'Inversiones', icon: <Coins className="h-3 w-3" />, className: 'bg-amber-100 text-amber-800' },
+    };
+    
+    const config = typeConfig[businessType || ''] || { label: businessType || 'Empresa', icon: <BriefcaseIcon className="h-3 w-3" />, className: 'bg-gray-100 text-gray-800' };
+    
     return (
-      <Badge variant="secondary" className={industryColors[industry] || 'bg-gray-100 text-gray-800'}>
-        {industry}
+      <Badge variant="secondary" className={`${config.className} flex items-center gap-1`}>
+        {config.icon}
+        {config.label}
       </Badge>
     );
   };
 
-  const getSizeBadge = (size?: string) => {
-    if (!size) return <Badge variant="outline">No especificado</Badge>;
-    
-    const sizeLabels: Record<string, string> = {
-      startup: 'Startup (1-10)',
-      small: 'Pequeña (11-50)',
-      medium: 'Mediana (51-200)',
-      large: 'Grande (201-1000)',
-      enterprise: 'Enterprise (1000+)'
-    };
-
-    return (
-      <Badge variant="outline">
-        {sizeLabels[size] || size}
-      </Badge>
-    );
-  };
-
-  const getStatusBadge = (isActive: boolean) => {
-    return (
-      <Badge variant={isActive ? "default" : "destructive"}>
-        {isActive ? "Activa" : "Inactiva"}
-      </Badge>
-    );
+  const getSubscriptionBadge = (isPremium: boolean) => {
+    if (isPremium) {
+      return (
+        <Badge className="bg-gradient-to-r from-amber-400 to-amber-600 text-white border-0 flex items-center gap-1">
+          <Crown className="h-3 w-3" />
+          Premium
+        </Badge>
+      );
+    }
+    return <Badge variant="outline">Free</Badge>;
   };
 
   if (error) {
@@ -258,9 +262,9 @@ const AdminCompanyManagement: React.FC<AdminCompanyManagementProps> = ({ onNavig
                       <div className="flex items-start flex-col gap-2 mb-2">
                         <h3 className="font-medium text-sm md:text-base">{company.name}</h3>
                         <div className="flex flex-wrap items-center gap-1.5">
-                          {getIndustryBadge(company.industry)}
-                          {getSizeBadge(company.size)}
-                          {getStatusBadge(company.is_active)}
+                          {getBusinessTypeBadge(company.business_type)}
+                          {getSubscriptionBadge(company.is_premium)}
+                          {getStatusBadge(company.status)}
                         </div>
                       </div>
                       
